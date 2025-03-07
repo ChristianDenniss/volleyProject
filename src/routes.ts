@@ -1,19 +1,28 @@
 import { Router } from "express";
-import pool from "./db/db";
+import { AppDataSource } from "../src/db/data-source"; // Import TypeORM DataSource
+import { User } from "../src/db/entities/User"; // Import your User entity
 
 const router = Router();
 
-router.get("/", async(req,res)=>{ res.json({'rsp':'hello'})});
+router.get("/", async (req, res) =>
+{
+    res.json({ rsp: "hello" });
+});
 
-// Test database connection
-router.get("/users", async (req, res) => {
-  try {
-    const result = await pool.query("SELECT * FROM users");
-    res.json(result.rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Server error");
-  }
+// Test database connection with TypeORM
+router.get("/users", async (req, res) =>
+{
+    try
+    {
+        const userRepository = AppDataSource.getRepository(User); // Get User repository
+        const users = await userRepository.find(); // Fetch all users
+        res.json(users);
+    }
+    catch (err)
+    {
+        console.error("Database error:", err);
+        res.status(500).send("Server error");
+    }
 });
 
 export default router;
