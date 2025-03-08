@@ -1,5 +1,5 @@
 import express from "express";
-import router from "./routes";
+import router from "./routes/routes";
 import dotenv from "dotenv";
 import { AppDataSource } from "./db/data-source";  // Import your AppDataSource
 

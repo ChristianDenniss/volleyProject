@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { AppDataSource } from "../src/db/data-source"; // Import TypeORM DataSource
-import { User } from "../src/db/entities/User"; // Import your User entity
+import { AppDataSource } from "../db/data-source"; // Import TypeORM DataSource
+import { User } from "../db/entities/User"; // Import your User entity
 
 const router = Router();
 
@@ -21,7 +21,7 @@ router.get("/users", async (req, res) =>
     catch (err)
     {
         console.error("Database error:", err);
-        res.status(500).send("Server error");
+        res.status(500).send("Failed to fetch users");
     }
 });
 
