@@ -15,7 +15,11 @@
   "dependencies": {
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
-    "pg": "^8.13.3"
+    "knex": "^3.1.0",
+    "pg": "^8.13.3",
+    "reflect-metadata": "^0.2.2",
+    "tsconfig-paths": "^4.2.0",
+    "typeorm": "^0.3.21"
   },
   "devDependencies": {
     "@types/express": "^5.0.0",
@@ -24,5 +28,6 @@
     "nodemon": "^3.1.9",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.2"
-  }
+  },
+  "type": "module"
 }
