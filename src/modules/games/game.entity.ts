@@ -11,9 +11,6 @@ export class Games {
     @Column()
     date!: Date;
 
-    @Column()
-    location!: string;
-
     @CreateDateColumn({ type: 'timestamp' })
     createdAt!: Date;
 

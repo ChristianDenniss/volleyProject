@@ -12,30 +12,26 @@ export class SeasonService {
     /**
      * Create a new season with validation
      */
-    async createSeason(name: string, year: number): Promise<Seasons> {
+    async createSeason(seasonNumber: number, startDate: Date, endDate: Date ): Promise<Seasons> {
         // Validation
-        if (!name) throw new Error("Season name is required");
-        if (!year) throw new Error("Year is required");
-        
-        // Validate year is reasonable
-        const currentYear = new Date().getFullYear();
-        if (year < 1900 || year > currentYear + 5) {
-            throw new Error(`Year must be between 1900 and ${currentYear + 5}`);
-        }
+        if (!seasonNumber) throw new Error("Season name is required");
+        if (!startDate) throw new Error("Start date is required");
+        if (!endDate) throw new Error("End date is required");
 
         // Check if season with same name and year already exists
         const existingSeason = await this.seasonRepository.findOne({
-            where: { name, year }
+            where: { seasonNumber }
         });
 
         if (existingSeason) {
-            throw new Error(`Season with name "${name}" and year ${year} already exists`);
+            throw new Error(`Season with name "${seasonNumber}" already exists`);
         }
 
         // Create new season
         const newSeason = new Seasons();
-        newSeason.name = name;
-        newSeason.year = year;
+        newSeason.seasonNumber = seasonNumber;
+        newSeason.startDate = startDate;
+        newSeason.endDate = endDate;
 
         return this.seasonRepository.save(newSeason);
     }
@@ -46,7 +42,7 @@ export class SeasonService {
     async getAllSeasons(): Promise<Seasons[]> {
         return this.seasonRepository.find({
             relations: ["teams", "games"],
-            order: { year: "DESC" } // Sort by most recent first
+            order: { seasonNumber: "DESC" } // Sort by most recent season
         });
     }
 
@@ -66,10 +62,10 @@ export class SeasonService {
         return season;
     }
 
-    /**
+        /**
      * Update a season with validation
      */
-    async updateSeason(id: number, name?: string, year?: number): Promise<Seasons> {
+    async updateSeason(id: number, seasonNumber: number, startDate: Date, endDate: Date): Promise<Seasons> {
         if (!id) throw new Error("Season ID is required");
 
         const season = await this.seasonRepository.findOne({
@@ -79,36 +75,34 @@ export class SeasonService {
 
         if (!season) throw new Error("Season not found");
 
-        if (name) season.name = name;
-        
-        if (year) {
-            // Validate year is reasonable
-            const currentYear = new Date().getFullYear();
-            if (year < 1900 || year > currentYear + 5) {
-                throw new Error(`Year must be between 1900 and ${currentYear + 5}`);
-            }
-            
-            // Check if another season with same name and year already exists
-            if (name || season.name) {
-                const nameToCheck = name || season.name;
-                const existingSeason = await this.seasonRepository.findOne({
-                    where: { 
-                        name: nameToCheck, 
-                        year,
-                        id: { $ne: id } as any // Not the current season
-                    }
-                });
-
-                if (existingSeason) {
-                    throw new Error(`Season with name "${nameToCheck}" and year ${year} already exists`);
-                }
-            }
-            
-            season.year = year;
+        // Update season number if provided
+        if (seasonNumber) {
+            season.seasonNumber = seasonNumber;
         }
 
+        // Update startDate and endDate if provided
+        if (startDate) {
+            season.startDate = startDate;
+        }
+        
+        if (endDate) {
+            season.endDate = endDate;
+        }
+
+        // Optional: Validate seasonNumber if necessary (e.g., if it's within a valid range)
+        if (seasonNumber && (seasonNumber < 1 || seasonNumber > 100)) {
+            throw new Error("Season number must be between 1 and 100");
+        }
+
+        // Optional: Validate startDate and endDate logic (e.g., startDate should not be after endDate)
+        if (startDate && endDate && startDate > endDate) {
+            throw new Error("Start date cannot be after end date");
+        }
+
+        // Save the updated season object
         return this.seasonRepository.save(season);
     }
+
 
     /**
      * Delete a season with validation

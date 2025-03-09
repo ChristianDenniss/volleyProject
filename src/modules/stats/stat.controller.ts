@@ -11,13 +11,19 @@ export class StatController {
     // Create a new stat entry
     createStat = async (req: Request, res: Response): Promise<void> => {
         try {
-            const { points, assists, blocks, digs, aces, playerId, gameId } = req.body;
+            const { spikingErrors, apeKills, apeAttempts, spikeKills, spikeAttempts, assists, blocks, digs, blockFollows, aces, miscErrors, playerId, gameId } = req.body;
             const savedStat = await this.statService.createStat(
-                points,
+                spikingErrors,
+                apeKills,
+                apeAttempts,
+                spikeKills,
+                spikeAttempts,
                 assists,
                 blocks,
                 digs,
+                blockFollows,
                 aces,
+                miscErrors,
                 playerId,
                 gameId
             );

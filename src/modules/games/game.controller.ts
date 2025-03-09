@@ -11,10 +11,9 @@ export class GameController {
     // Create a new game
     createGame = async (req: Request, res: Response): Promise<void> => {
         try {
-            const { date, location, seasonId, teamIds } = req.body;
+            const { date, seasonId, teamIds } = req.body;
             const savedGame = await this.gameService.createGame(
                 date,
-                location,
                 seasonId,
                 teamIds
             );
@@ -68,11 +67,10 @@ export class GameController {
     updateGame = async (req: Request, res: Response): Promise<void> => {
         try {
             const { id } = req.params;
-            const { date, location, seasonId, teamIds } = req.body;
+            const { date, seasonId, teamIds } = req.body;
             const updatedGame = await this.gameService.updateGame(
                 parseInt(id),
                 date,
-                location,
                 seasonId,
                 teamIds
             );

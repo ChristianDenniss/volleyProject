@@ -11,9 +11,6 @@ export class Players {
     name!: string;
 
     @Column()
-    jerseyNumber!: number;
-
-    @Column()
     position!: string;
 
     @CreateDateColumn({ type: 'timestamp' })

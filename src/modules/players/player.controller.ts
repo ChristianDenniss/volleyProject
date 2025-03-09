@@ -11,10 +11,9 @@ export class PlayerController {
     // Create a new player
     createPlayer = async (req: Request, res: Response): Promise<void> => {
         try {
-            const { name, jerseyNumber, position, teamId } = req.body;
+            const { name, position, teamId } = req.body;
             const savedPlayer = await this.playerService.createPlayer(
                 name, 
-                jerseyNumber, 
                 position, 
                 teamId
             );
@@ -68,11 +67,10 @@ export class PlayerController {
     updatePlayer = async (req: Request, res: Response): Promise<void> => {
         try {
             const { id } = req.params;
-            const { name, jerseyNumber, position, teamId } = req.body;
+            const { name, position, teamId } = req.body;
             const updatedPlayer = await this.playerService.updatePlayer(
                 parseInt(id),
                 name,
-                jerseyNumber,
                 position,
                 teamId
             );

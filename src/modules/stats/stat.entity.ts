@@ -6,9 +6,21 @@ import { Games } from '../games/game.entity';
 export class Stats {
     @PrimaryGeneratedColumn()
     id!: number;
+    
+    @Column()
+    spikingErrors!: number;
 
     @Column()
-    points!: number;
+    apeKills!: number;
+
+    @Column()
+    apeAttempts!: number;
+
+    @Column()
+    spikeKills!: number;
+
+    @Column()
+    spikeAttempts!: number;
 
     @Column()
     assists!: number;
@@ -20,7 +32,13 @@ export class Stats {
     digs!: number;
 
     @Column()
+    blockFollows!: number;
+
+    @Column()
     aces!: number;
+
+    @Column()
+    miscErrors!: number;
 
     @CreateDateColumn({ type: 'timestamp' })
     createdAt!: Date;

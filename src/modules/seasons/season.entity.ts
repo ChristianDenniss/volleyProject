@@ -8,10 +8,13 @@ export class Seasons {
     id!: number;
 
     @Column()
-    name!: string;
+    seasonNumber!: number;
 
     @Column()
-    year!: number;
+    startDate!: Date;
+
+    @Column()
+    endDate!: Date;
 
     @CreateDateColumn({ type: 'timestamp' })
     createdAt!: Date;

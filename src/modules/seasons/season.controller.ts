@@ -11,8 +11,8 @@ export class SeasonController {
     // Create a new season
     createSeason = async (req: Request, res: Response): Promise<void> => {
         try {
-            const { name, year } = req.body;
-            const savedSeason = await this.seasonService.createSeason(name, year);
+            const { seasonNumber, startDate, endDate } = req.body;
+            const savedSeason = await this.seasonService.createSeason(seasonNumber, startDate, endDate);
             res.status(201).json(savedSeason);
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : "Failed to create season";
@@ -61,11 +61,12 @@ export class SeasonController {
     updateSeason = async (req: Request, res: Response): Promise<void> => {
         try {
             const { id } = req.params;
-            const { name, year } = req.body;
+            const { seasonNumber, startDate, endDate  } = req.body;
             const updatedSeason = await this.seasonService.updateSeason(
                 parseInt(id),
-                name,
-                year
+                seasonNumber, 
+                startDate, 
+                endDate 
             );
             res.json(updatedSeason);
         } catch (error) {

@@ -18,10 +18,9 @@ export class GameService {
     /**
      * Create a new game with validation
      */
-    async createGame(date: Date, location: string, seasonId: number, teamIds: number[]): Promise<Games> {
+    async createGame(date: Date, seasonId: number, teamIds: number[]): Promise<Games> {
         // Validation
         if (!date) throw new Error("Game date is required");
-        if (!location) throw new Error("Game location is required");
         if (!seasonId) throw new Error("Season ID is required");
         if (!teamIds || !teamIds.length) throw new Error("At least one team ID is required");
         
@@ -53,7 +52,6 @@ export class GameService {
         // Create new game
         const newGame = new Games();
         newGame.date = gameDate;
-        newGame.location = location;
         newGame.season = season;
         newGame.teams = teams;
 
@@ -115,8 +113,6 @@ export class GameService {
             
             game.date = gameDate;
         }
-        
-        if (location) game.location = location;
 
         if (seasonId) {
             const season = await this.seasonRepository.findOneBy({ id: seasonId });
