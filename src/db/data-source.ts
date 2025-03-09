@@ -3,45 +3,44 @@ import { DataSource } from "typeorm";
 import dotenv from "dotenv";
 import { join } from "path";
 
+// Entities from modules
+import { Teams } from "../modules/teams/team.entity";
+import { Players } from "../modules/players/player.entity";
+import { Games } from "../modules/games/game.entity";
+import { Seasons } from "../modules/seasons/season.entity";
+import { Stats } from "../modules/stats/stat.entity";
+import { User } from "../modules/user/user.entity";
+
 dotenv.config();
 
-// List your entity imports manually
-import { Games } from "./entities/Games";
-import { Players } from "./entities/Players";
-import { Seasons } from "./entities/Seasons";
-import { Stats } from "./entities/Stats";
-import { Teams } from "./entities/Teams";
-import { User } from "./entities/User";
-
-// Define entities for development (using TypeScript)
+// Define entities
 const entities = [
-    Games,
-    Players,
-    Stats,
     Teams,
+    Players,
+    Games,
     Seasons,
-    User,
-    // Add all other entity classes here
+    Stats,
+    User
 ];
 
-// Define migration paths for development
-const migrations = [join(__dirname, "db/migrations", "*.ts")];
+// Define migration paths
+const migrations = [join(__dirname, "migrations", "*.ts")];
 
 // Configure AppDataSource
 export const AppDataSource = new DataSource({
     type: "postgres",
-    host: process.env.DB_HOST,
+    host: process.env.DB_HOST || "localhost",
     port: Number(process.env.DB_PORT) || 5432,
-    username: process.env.DB_USER,
-    password: process.env.DB_PASS,
-    database: process.env.DB_NAME,
-    synchronize: false, // Use migrations instead
-    logging: true,
+    username: process.env.DB_USER || "postgres",
+    password: process.env.DB_PASS || "postgres",
+    database: process.env.DB_NAME || "volleyball",
+    synchronize: process.env.NODE_ENV === 'development', // Only sync in development
+    logging: process.env.NODE_ENV === 'development',
     entities: process.env.NODE_ENV === 'production'
-        ? [join(__dirname, 'dist/db/entities/*.js')] // Use compiled JS files in production
-        : entities, // Use TS files for development
+        ? ["dist/modules/*/*.entity.js"] // Use compiled JS files in production
+        : entities, // Use entity objects for development
     migrations: process.env.NODE_ENV === 'production'
-        ? [join(__dirname, 'dist/db/migrations/*.js')] // Use compiled JS files in production
+        ? ["dist/db/migrations/*.js"] // Use compiled JS files in production
         : migrations, // Use TS migrations for development
     subscribers: [],
 });

@@ -1,9 +1,17 @@
 import { AppDataSource } from "./data-source";
-import { User } from "./entities/User";
+import { User } from "../modules/user/user.entity";
 
-const userRepository = AppDataSource.getRepository(User);
+/**
+ * Repository examples - use module services instead of direct queries in the application
+ * This file can be used for complex custom queries that don't fit into the service pattern
+ */
 
-export const getUsers = async () =>
-{
-    return await userRepository.find(); // Fetches all users
+export const userRepository = AppDataSource.getRepository(User);
+
+export const getUsers = async () => {
+    return await userRepository.find();
+};
+
+export const getUserById = async (id: number) => {
+    return await userRepository.findOneBy({ id });
 };
