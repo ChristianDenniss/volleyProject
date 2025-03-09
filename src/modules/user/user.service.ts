@@ -1,8 +1,8 @@
 import { Repository } from 'typeorm';
 import { AppDataSource } from '../../db/data-source';
 import { User } from './user.entity';
-import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 
 export class UserService {
     private userRepository: Repository<User>;
@@ -11,6 +11,17 @@ export class UserService {
     constructor() {
         this.userRepository = AppDataSource.getRepository(User);
         this.JWT_SECRET = process.env.JWT_SECRET || 'your-default-jwt-secret';
+    }
+    
+    // Simple password hashing using crypto
+    private hashPassword(password: string): string {
+        return crypto.createHash('sha256').update(password).digest('hex');
+    }
+    
+    // Simple password verification
+    private verifyPassword(plainPassword: string, hashedPassword: string): boolean {
+        const hashedInput = this.hashPassword(plainPassword);
+        return hashedInput === hashedPassword;
     }
 
     /**
@@ -42,8 +53,8 @@ export class UserService {
             }
         }
 
-        // Hash the password
-        const hashedPassword = await bcrypt.hash(password, 10);
+        // Hash the password with crypto
+        const hashedPassword = this.hashPassword(password);
 
         // Create new user
         const newUser = new User();
@@ -126,7 +137,7 @@ export class UserService {
 
         if (password) {
             if (password.length < 6) throw new Error("Password must be at least 6 characters long");
-            user.password = await bcrypt.hash(password, 10);
+            user.password = this.hashPassword(password);
         }
 
         if (role) {
@@ -161,7 +172,7 @@ export class UserService {
         const user = await this.userRepository.findOneBy({ username });
         if (!user) throw new Error("Invalid username or password");
 
-        const isPasswordValid = await bcrypt.compare(password, user.password);
+        const isPasswordValid = this.verifyPassword(password, user.password);
         if (!isPasswordValid) throw new Error("Invalid username or password");
 
         // Generate JWT token

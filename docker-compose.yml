@@ -9,7 +9,7 @@ services:
       - "3000:3000"                 # Explicitly set port to 3000
     environment:
       - NODE_ENV=development
-      - PORT=${PORT}                 # Pass PORT to the container
+      - PORT=3000                   # Hardcode PORT for reliability
       - DB_HOST=${DB_HOST}           # Database connection details for backend
       - DB_USER=${DB_USER}
       - DB_PASS=${DB_PASS}

@@ -1,13 +1,15 @@
 import '../../../__mocks__/data-source';
 import { UserService } from '../user.service';
 import { mockRepository, mockUser, mockUsers, mockToken } from '../../../__mocks__/fixtures';
-import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 
-// Mock bcrypt and jwt
-jest.mock('bcrypt', () => ({
-  hash: jest.fn().mockResolvedValue('hashed_password'),
-  compare: jest.fn().mockResolvedValue(true),
+// Mock crypto and jwt
+jest.mock('crypto', () => ({
+  createHash: jest.fn().mockReturnValue({
+    update: jest.fn().mockReturnThis(),
+    digest: jest.fn().mockReturnValue('hashed_password')
+  }),
 }));
 
 jest.mock('jsonwebtoken', () => ({
@@ -36,7 +38,7 @@ describe('UserService', () => {
       expect(mockRepository.findOne).toHaveBeenCalledWith({
         where: [{ username: 'testuser' }, { email: 'test@example.com' }],
       });
-      expect(bcrypt.hash).toHaveBeenCalledWith('password123', 10);
+      expect(crypto.createHash).toHaveBeenCalledWith('sha256');
       expect(mockRepository.save).toHaveBeenCalled();
       expect(result).toEqual(mockUser);
     });
@@ -181,7 +183,7 @@ describe('UserService', () => {
 
       await userService.updateUser(1, undefined, undefined, 'newpassword123');
 
-      expect(bcrypt.hash).toHaveBeenCalledWith('newpassword123', 10);
+      expect(crypto.createHash).toHaveBeenCalledWith('sha256');
     });
 
     it('should throw error if password is too short', async () => {
@@ -232,13 +234,12 @@ describe('UserService', () => {
   describe('authenticateUser', () => {
     it('should authenticate a user successfully', async () => {
       mockRepository.findOneBy.mockResolvedValueOnce(mockUser);
-      (bcrypt.compare as jest.Mock).mockResolvedValueOnce(true);
       (jwt.sign as jest.Mock).mockReturnValueOnce(mockToken);
 
       const result = await userService.authenticateUser('testuser', 'password123');
 
       expect(mockRepository.findOneBy).toHaveBeenCalledWith({ username: 'testuser' });
-      expect(bcrypt.compare).toHaveBeenCalledWith('password123', mockUser.password);
+      expect(crypto.createHash).toHaveBeenCalledWith('sha256'); 
       expect(jwt.sign).toHaveBeenCalled();
       expect(result).toEqual({ user: mockUser, token: mockToken });
     });
@@ -259,7 +260,11 @@ describe('UserService', () => {
 
     it('should throw error if password is invalid', async () => {
       mockRepository.findOneBy.mockResolvedValueOnce(mockUser);
-      (bcrypt.compare as jest.Mock).mockResolvedValueOnce(false);
+      // Force the crypto hash to return something different for verification
+      jest.spyOn(crypto, 'createHash').mockReturnValueOnce({
+        update: jest.fn().mockReturnThis(),
+        digest: jest.fn().mockReturnValue('different_hash')
+      } as any);
 
       await expect(userService.authenticateUser('testuser', 'wrongpassword')).rejects.toThrow('Invalid username or password');
     });

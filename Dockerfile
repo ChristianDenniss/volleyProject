@@ -1,14 +1,12 @@
-# Use official Node.js image
-FROM node:18
+# Use official Node.js image - use slim version for smaller image size
+FROM node:18-slim
 
 # Set working directory
 WORKDIR /app
 
 # Copy package.json and install dependencies
 COPY package.json package-lock.json ./
-# Install dependencies and rebuild bcrypt for the current platform
-RUN npm install
-RUN npm rebuild bcrypt --build-from-source
+RUN npm install --no-optional
 
 # Copy the source code
 COPY . .
@@ -16,7 +14,7 @@ COPY . .
 # Compile TypeScript
 RUN npm run build
 
-# Expose the application port (will be overridden by docker-compose PORT mapping)
+# Expose the application port 
 EXPOSE 3000
 
 # Start the application
