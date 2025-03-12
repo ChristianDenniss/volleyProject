@@ -1,6 +1,13 @@
 import { Repository } from 'typeorm';
 import { AppDataSource } from '../../db/data-source';
 import { Seasons } from './season.entity';
+import { MissingFieldError } from '../../errors/MissingFieldError';
+import { DuplicateError } from '../../errors/DuplicateError';
+import { NotFoundError } from '../../errors/NotFoundError';
+import { DateError } from '../../errors/DateErrors';
+import { OutOfBoundsError } from '../../errors/OutOfBoundsError';
+import { ConflictError } from '../../errors/ConflictError';
+
 
 export class SeasonService {
     private seasonRepository: Repository<Seasons>;
@@ -14,9 +21,9 @@ export class SeasonService {
      */
     async createSeason(seasonNumber: number, startDate: Date, endDate: Date ): Promise<Seasons> {
         // Validation
-        if (!seasonNumber) throw new Error("Season name is required");
-        if (!startDate) throw new Error("Start date is required");
-        if (!endDate) throw new Error("End date is required");
+        if (!seasonNumber) throw new MissingFieldError("Season name");
+        if (!startDate) throw new MissingFieldError("Start date");
+        if (!endDate) throw new MissingFieldError("End date");
 
         // Check if season with same name and year already exists
         const existingSeason = await this.seasonRepository.findOne({
@@ -24,7 +31,7 @@ export class SeasonService {
         });
 
         if (existingSeason) {
-            throw new Error(`Season with name "${seasonNumber}" already exists`);
+            throw new DuplicateError(`Season with name ${seasonNumber} already exists`);
         }
 
         // Create new season
@@ -50,14 +57,14 @@ export class SeasonService {
      * Get season by ID with validation
      */
     async getSeasonById(id: number): Promise<Seasons> {
-        if (!id) throw new Error("Season ID is required");
+        if (!id) throw new MissingFieldError("Season ID");
 
         const season = await this.seasonRepository.findOne({
             where: { id },
             relations: ["teams", "games"],
         });
 
-        if (!season) throw new Error("Season not found");
+        if (!season) throw new NotFoundError(`Season with ID ${id} not found`);
 
         return season;
     }
@@ -66,14 +73,14 @@ export class SeasonService {
      * Update a season with validation
      */
     async updateSeason(id: number, seasonNumber: number, startDate: Date, endDate: Date): Promise<Seasons> {
-        if (!id) throw new Error("Season ID is required");
+        if (!id) throw new MissingFieldError("Season ID");
 
         const season = await this.seasonRepository.findOne({
             where: { id },
             relations: ["teams", "games"],
         });
 
-        if (!season) throw new Error("Season not found");
+        if (!season) throw new NotFoundError(`Season with ID: ${id} not found`);
 
         // Update season number if provided
         if (seasonNumber) {
@@ -91,12 +98,12 @@ export class SeasonService {
 
         // Optional: Validate seasonNumber if necessary (e.g., if it's within a valid range)
         if (seasonNumber && (seasonNumber < 1 || seasonNumber > 100)) {
-            throw new Error("Season number must be between 1 and 100");
+            throw new OutOfBoundsError(`${seasonNumber} is out of bounds (less than 1 or greater than 100)`);
         }
 
         // Optional: Validate startDate and endDate logic (e.g., startDate should not be after endDate)
         if (startDate && endDate && startDate > endDate) {
-            throw new Error("Start date cannot be after end date");
+            throw new DateError(startDate, endDate);
         }
 
         // Save the updated season object
@@ -108,18 +115,18 @@ export class SeasonService {
      * Delete a season with validation
      */
     async deleteSeason(id: number): Promise<void> {
-        if (!id) throw new Error("Season ID is required");
+        if (!id) throw new MissingFieldError("Season ID");
 
         const season = await this.seasonRepository.findOne({
             where: { id },
             relations: ["teams", "games"],
         });
 
-        if (!season) throw new Error("Season not found");
+        if (!season) throw new NotFoundError(`Season with ID ${id} not found`);
 
         // Check if season has teams or games
         if ((season.teams && season.teams.length > 0) || (season.games && season.games.length > 0)) {
-            throw new Error("Cannot delete season with associated teams or games");
+            throw new ConflictError("Cannot delete season with associated teams or games");
         }
 
         await this.seasonRepository.remove(season);

@@ -78,14 +78,20 @@ export class StatController {
     updateStat = async (req: Request, res: Response): Promise<void> => {
         try {
             const { id } = req.params;
-            const { points, assists, blocks, digs, aces, playerId, gameId } = req.body;
+            const { spikingErrors, apeKills, apeAttempts, spikeKills, spikeAttempts, assists, blocks, digs, blockFollows, aces, miscErrors, playerId, gameId } = req.body;
             const updatedStat = await this.statService.updateStat(
                 parseInt(id),
-                points,
+                spikingErrors,
+                apeKills,
+                apeAttempts,
+                spikeKills,
+                spikeAttempts,
                 assists,
                 blocks,
                 digs,
+                blockFollows,
                 aces,
+                miscErrors,
                 playerId,
                 gameId
             );

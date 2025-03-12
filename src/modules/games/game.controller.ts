@@ -1,5 +1,11 @@
 import { Request, Response } from 'express';
 import { GameService } from './game.service';
+import { MissingFieldError}  from '../../errors/MissingFieldError';
+import { NotFoundError } from '../../errors/NotFoundError';
+import { ConflictError } from '../../errors/ConflictError';
+import { DuplicateError } from '../../errors/DuplicateError';
+import { DateError } from '../../errors/DateErrors';
+import { InvalidFormatError} from '../../errors/InvalidFormatError';
 
 export class GameController {
     private gameService: GameService;
@@ -12,23 +18,19 @@ export class GameController {
     createGame = async (req: Request, res: Response): Promise<void> => {
         try {
             const { date, seasonId, teamIds } = req.body;
-            const savedGame = await this.gameService.createGame(
-                date,
-                seasonId,
-                teamIds
-            );
-            
+            const savedGame = await this.gameService.createGame(date, seasonId, teamIds);
             res.status(201).json(savedGame);
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to create game";
-            
-            if (errorMessage.includes("required") || 
-                errorMessage.includes("not found") || 
-                errorMessage.includes("must have") ||
-                errorMessage.includes("Invalid")) {
-                res.status(400).json({ error: errorMessage });
+        } catch (error: unknown) {
+            if (error instanceof MissingFieldError || 
+                error instanceof NotFoundError || 
+                error instanceof InvalidFormatError || 
+                error instanceof DateError || 
+                error instanceof ConflictError || 
+                error instanceof DuplicateError) {
+                console.error("Custom error creating game:", error);
+                res.status(400).json({ error: error.message });
             } else {
-                console.error("Error creating game:", error);
+                console.error("Unexpected error creating game:", error);
                 res.status(500).json({ error: "Failed to create game" });
             }
         }
@@ -39,9 +41,19 @@ export class GameController {
         try {
             const games = await this.gameService.getAllGames();
             res.json(games);
-        } catch (error) {
-            console.error("Error fetching games:", error);
-            res.status(500).json({ error: "Failed to fetch games" });
+        } catch (error: unknown) {
+            if (error instanceof MissingFieldError || 
+                error instanceof NotFoundError || 
+                error instanceof InvalidFormatError || 
+                error instanceof DateError || 
+                error instanceof ConflictError || 
+                error instanceof DuplicateError) {
+                console.error("Custom error fetching games:", error);
+                res.status(400).json({ error: error.message });
+            } else {
+                console.error("Unexpected error fetching games:", error);
+                res.status(500).json({ error: "Failed to fetch games" });
+            }
         }
     };
 
@@ -51,13 +63,17 @@ export class GameController {
             const { id } = req.params;
             const game = await this.gameService.getGameById(parseInt(id));
             res.json(game);
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to fetch game";
-            
-            if (errorMessage.includes("not found")) {
-                res.status(404).json({ error: errorMessage });
+        } catch (error: unknown) {
+            if (error instanceof MissingFieldError || 
+                error instanceof NotFoundError || 
+                error instanceof InvalidFormatError || 
+                error instanceof DateError || 
+                error instanceof ConflictError || 
+                error instanceof DuplicateError) {
+                console.error("Custom error fetching game by ID:", error);
+                res.status(400).json({ error: error.message });
             } else {
-                console.error("Error fetching game by ID:", error);
+                console.error("Unexpected error fetching game by ID:", error);
                 res.status(500).json({ error: "Failed to fetch game" });
             }
         }
@@ -68,24 +84,19 @@ export class GameController {
         try {
             const { id } = req.params;
             const { date, seasonId, teamIds } = req.body;
-            const updatedGame = await this.gameService.updateGame(
-                parseInt(id),
-                date,
-                seasonId,
-                teamIds
-            );
+            const updatedGame = await this.gameService.updateGame(parseInt(id), date, seasonId, teamIds);
             res.json(updatedGame);
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to update game";
-            
-            if (errorMessage.includes("not found")) {
-                res.status(404).json({ error: errorMessage });
-            } else if (errorMessage.includes("required") || 
-                       errorMessage.includes("must have") ||
-                       errorMessage.includes("Invalid")) {
-                res.status(400).json({ error: errorMessage });
+        } catch (error: unknown) {
+            if (error instanceof MissingFieldError || 
+                error instanceof NotFoundError || 
+                error instanceof InvalidFormatError || 
+                error instanceof DateError || 
+                error instanceof ConflictError || 
+                error instanceof DuplicateError) {
+                console.error("Custom error updating game:", error);
+                res.status(400).json({ error: error.message });
             } else {
-                console.error("Error updating game:", error);
+                console.error("Unexpected error updating game:", error);
                 res.status(500).json({ error: "Failed to update game" });
             }
         }
@@ -97,15 +108,17 @@ export class GameController {
             const { id } = req.params;
             await this.gameService.deleteGame(parseInt(id));
             res.status(204).send();
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to delete game";
-            
-            if (errorMessage.includes("not found")) {
-                res.status(404).json({ error: errorMessage });
-            } else if (errorMessage.includes("Cannot delete")) {
-                res.status(400).json({ error: errorMessage });
+        } catch (error: unknown) {
+            if (error instanceof MissingFieldError || 
+                error instanceof NotFoundError || 
+                error instanceof InvalidFormatError || 
+                error instanceof DateError || 
+                error instanceof ConflictError || 
+                error instanceof DuplicateError) {
+                console.error("Custom error deleting game:", error);
+                res.status(400).json({ error: error.message });
             } else {
-                console.error("Error deleting game:", error);
+                console.error("Unexpected error deleting game:", error);
                 res.status(500).json({ error: "Failed to delete game" });
             }
         }
@@ -116,20 +129,24 @@ export class GameController {
         try {
             const { seasonId } = req.params;
             const games = await this.gameService.getGamesBySeasonId(parseInt(seasonId));
-            
+
             if (games.length === 0) {
                 res.status(404).json({ message: "No games found for the specified season" });
                 return;
             }
-            
+
             res.json(games);
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to fetch games by season";
-            
-            if (errorMessage.includes("not found") || errorMessage.includes("required")) {
-                res.status(400).json({ error: errorMessage });
+        } catch (error: unknown) {
+            if (error instanceof MissingFieldError || 
+                error instanceof NotFoundError || 
+                error instanceof InvalidFormatError || 
+                error instanceof DateError || 
+                error instanceof ConflictError || 
+                error instanceof DuplicateError) {
+                console.error("Custom error fetching games by season:", error);
+                res.status(400).json({ error: error.message });
             } else {
-                console.error("Error fetching games by season ID:", error);
+                console.error("Unexpected error fetching games by season:", error);
                 res.status(500).json({ error: "Failed to fetch games by season" });
             }
         }
@@ -140,20 +157,24 @@ export class GameController {
         try {
             const { teamId } = req.params;
             const games = await this.gameService.getGamesByTeamId(parseInt(teamId));
-            
+
             if (games.length === 0) {
                 res.status(404).json({ message: "No games found for the specified team" });
                 return;
             }
-            
+
             res.json(games);
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to fetch games by team";
-            
-            if (errorMessage.includes("not found") || errorMessage.includes("required")) {
-                res.status(400).json({ error: errorMessage });
+        } catch (error: unknown) {
+            if (error instanceof MissingFieldError || 
+                error instanceof NotFoundError || 
+                error instanceof InvalidFormatError || 
+                error instanceof DateError || 
+                error instanceof ConflictError || 
+                error instanceof DuplicateError) {
+                console.error("Custom error fetching games by team:", error);
+                res.status(400).json({ error: error.message });
             } else {
-                console.error("Error fetching games by team ID:", error);
+                console.error("Unexpected error fetching games by team:", error);
                 res.status(500).json({ error: "Failed to fetch games by team" });
             }
         }

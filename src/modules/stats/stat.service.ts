@@ -3,6 +3,12 @@ import { AppDataSource } from '../../db/data-source';
 import { Stats } from './stat.entity';
 import { Players } from '../players/player.entity';
 import { Games } from '../games/game.entity';
+import { MissingFieldError } from '../../errors/MissingFieldError';
+import { NegativeStatError } from '../../errors/NegativeStatError';
+import { NotFoundError } from '../../errors/NotFoundError';
+import { ConflictError } from '../../errors/ConflictError';
+import { DuplicateError } from '../../errors/DuplicateError';
+import { In } from "typeorm";
 
 export class StatService {
     private statRepository: Repository<Stats>;
@@ -34,32 +40,32 @@ export class StatService {
         gameId: number
     ): Promise<Stats> {
         // Validation for required fields
-        if (spikingErrors === undefined) throw new Error("Spiking errors is required");
-        if (apeKills === undefined) throw new Error("Ape kills is required");
-        if (apeAttempts === undefined) throw new Error("Ape attempts is required");
-        if (spikeKills === undefined) throw new Error("Spike kills is required");
-        if (spikeAttempts === undefined) throw new Error("Spike attempts is required");
-        if (assists === undefined) throw new Error("Assists is required");
-        if (blocks === undefined) throw new Error("Blocks is required");
-        if (digs === undefined) throw new Error("Digs is required");
-        if (blockFollows === undefined) throw new Error("Block follows is required");
-        if (aces === undefined) throw new Error("Aces is required");
-        if (miscErrors === undefined) throw new Error("Misc errors is required");
-        if (!playerId) throw new Error("Player ID is required");
-        if (!gameId) throw new Error("Game ID is required");
+        if (spikingErrors === undefined) throw new MissingFieldError("Spiking Errors");
+        if (apeKills === undefined) throw new MissingFieldError("Ape kills");
+        if (apeAttempts === undefined) throw new MissingFieldError("Ape attempts");
+        if (spikeKills === undefined) throw new MissingFieldError("Spike kills ");
+        if (spikeAttempts === undefined) throw new MissingFieldError("Spike attempts");
+        if (assists === undefined) throw new MissingFieldError("Assists");
+        if (blocks === undefined) throw new MissingFieldError("Block");
+        if (digs === undefined) throw new MissingFieldError("Digs");
+        if (blockFollows === undefined) throw new MissingFieldError("Block follows");
+        if (aces === undefined) throw new MissingFieldError("Aces");
+        if (miscErrors === undefined) throw new MissingFieldError("Misc errors");
+        if (!playerId) throw new MissingFieldError("Player ID is required");
+        if (!gameId) throw new MissingFieldError("Game ID is required");
 
         // Validate stats are non-negative
-        if (spikingErrors < 0) throw new Error("Spiking errors cannot be negative");
-        if (apeKills < 0) throw new Error("Ape kills cannot be negative");
-        if (apeAttempts < 0) throw new Error("Ape attempts cannot be negative");
-        if (spikeKills < 0) throw new Error("Spike kills cannot be negative");
-        if (spikeAttempts < 0) throw new Error("Spike attempts cannot be negative");
-        if (assists < 0) throw new Error("Assists cannot be negative");
-        if (blocks < 0) throw new Error("Blocks cannot be negative");
-        if (digs < 0) throw new Error("Digs cannot be negative");
-        if (blockFollows < 0) throw new Error("Block follows cannot be negative");
-        if (aces < 0) throw new Error("Aces cannot be negative");
-        if (miscErrors < 0) throw new Error("Misc errors cannot be negative");
+        if (spikingErrors < 0) throw new NegativeStatError("Spiking errors");
+        if (apeKills < 0) throw new NegativeStatError("Ape kills");
+        if (apeAttempts < 0) throw new NegativeStatError("Ape attempts");
+        if (spikeKills < 0) throw new NegativeStatError("Spike kills");
+        if (spikeAttempts < 0) throw new NegativeStatError("Spike attempts");
+        if (assists < 0) throw new NegativeStatError("Assists");
+        if (blocks < 0) throw new NegativeStatError("Blocks");
+        if (digs < 0) throw new NegativeStatError("Digs");
+        if (blockFollows < 0) throw new NegativeStatError("Block follows");
+        if (aces < 0) throw new NegativeStatError("Aces");
+        if (miscErrors < 0) throw new NegativeStatError("Misc errors");
 
         // Fetch player and game
         const player = await this.playerRepository.findOne({
@@ -67,21 +73,21 @@ export class StatService {
             relations: ["team"]
         });
         
-        if (!player) throw new Error("Player not found");
+        if (!player) throw new NotFoundError(`Player with ID: ${playerId} not found`);
 
         const game = await this.gameRepository.findOne({
             where: { id: gameId },
             relations: ["teams"]
         });
         
-        if (!game) throw new Error("Game not found");
+        if (!game) throw new NotFoundError(`Game with ID: ${gameId} not found`);
 
         // Check if player's team is part of the game
         const playerTeamId = player.team.id;
         const gameTeamIds = game.teams.map(team => team.id);
         
         if (!gameTeamIds.includes(playerTeamId)) {
-            throw new Error("Player's team is not part of this game");
+            throw new ConflictError(`Player teams id; ${playerTeamId}, does not belong to the teams in the game; ${gameTeamIds}`);
         }
 
         // Check if stat already exists for this player and game
@@ -93,7 +99,7 @@ export class StatService {
         });
 
         if (existingStat) {
-            throw new Error("Stats already exist for this player in this game");
+            throw new DuplicateError("Stats");
         }
 
         // Create new stat entry
@@ -134,68 +140,68 @@ export class StatService {
         playerId?: number,
         gameId?: number
     ): Promise<Stats> {
-        if (!id) throw new Error("Stat ID is required");
+        if (!id) throw new MissingFieldError("Stat ID");
 
         const stat = await this.statRepository.findOne({
             where: { id },
             relations: ["player", "game"],
         });
 
-        if (!stat) throw new Error("Stat not found");
+        if (!stat) throw new MissingFieldError("Stat");
 
         // Validate stats are non-negative if provided
         if (spikingErrors !== undefined) {
-            if (spikingErrors < 0) throw new Error("Spiking errors cannot be negative");
+            if (spikingErrors < 0) throw new NegativeStatError("Spiking");
             stat.spikingErrors = spikingErrors;
         }
 
         if (apeKills !== undefined) {
-            if (apeKills < 0) throw new Error("Ape kills cannot be negative");
+            if (apeKills < 0) throw new NegativeStatError("Ape kills");
             stat.apeKills = apeKills;
         }
 
         if (apeAttempts !== undefined) {
-            if (apeAttempts < 0) throw new Error("Ape attempts cannot be negative");
+            if (apeAttempts < 0) throw new NegativeStatError("Ape attempts");
             stat.apeAttempts = apeAttempts;
         }
 
         if (spikeKills !== undefined) {
-            if (spikeKills < 0) throw new Error("Spike kills cannot be negative");
+            if (spikeKills < 0) throw new NegativeStatError("Spike kills");
             stat.spikeKills = spikeKills;
         }
 
         if (spikeAttempts !== undefined) {
-            if (spikeAttempts < 0) throw new Error("Spike attempts cannot be negative");
+            if (spikeAttempts < 0) throw new NegativeStatError("Spike attempts");
             stat.spikeAttempts = spikeAttempts;
         }
 
         if (assists !== undefined) {
-            if (assists < 0) throw new Error("Assists cannot be negative");
+            if (assists < 0) throw new NegativeStatError("Assists");
             stat.assists = assists;
         }
 
         if (blocks !== undefined) {
-            if (blocks < 0) throw new Error("Blocks cannot be negative");
+            if (blocks < 0) throw new NegativeStatError("Blocks");
             stat.blocks = blocks;
         }
 
         if (digs !== undefined) {
-            if (digs < 0) throw new Error("Digs cannot be negative");
+            if (digs < 0) throw new NegativeStatError("Digs");
             stat.digs = digs;
         }
 
         if (blockFollows !== undefined) {
-            if (blockFollows < 0) throw new Error("Block follows cannot be negative");
+            if (blockFollows < 0) throw new NegativeStatError("Block follows");
             stat.blockFollows = blockFollows;
         }
 
         if (aces !== undefined) {
-            if (aces < 0) throw new Error("Aces cannot be negative");
+            if (aces < 0) throw new NegativeStatError("Aces");
             stat.aces = aces;
         }
 
         if (miscErrors !== undefined) {
-            if (miscErrors < 0) throw new Error("Misc errors cannot be negative");
+            if (miscErrors < 0) throw new NegativeStatError("Misc errors");
             stat.miscErrors = miscErrors;
         }
 
@@ -206,13 +212,14 @@ export class StatService {
                 relations: ["team"]
             });
 
-            if (!player) throw new Error("Player not found");
+            if (!player) throw new NotFoundError(`Player with ID: ${playerId} not found`);
 
             // If game is not changing, check if player's team is part of the existing game
             if (!gameId) {
                 const gameTeamIds = stat.game.teams.map(team => team.id);
                 if (!gameTeamIds.includes(player.team.id)) {
-                    throw new Error("Player's team is not part of this game");
+                    throw new ConflictError(`Player teams id; ${player.team.id}, does not belong to the teams in the game; ${gameTeamIds}`);
+                    //we can use same error here as before because its same situation but looking from game perspective
                 }
             }
 
@@ -226,14 +233,15 @@ export class StatService {
                 relations: ["teams"]
             });
 
-            if (!game) throw new Error("Game not found");
+            if (!game) throw new NotFoundError(`Game with ID: ${gameId} not found`);
 
             // If player is not changing, check if existing player's team is part of the new game
             if (!playerId) {
                 const playerTeamId = stat.player.team.id;
                 const gameTeamIds = game.teams.map(team => team.id);
-                if (!gameTeamIds.includes(playerTeamId)) {
-                    throw new Error("Player's team is not part of this game");
+                if (!gameTeamIds.includes(playerTeamId)) 
+                {
+                    throw new ConflictError(`Player teams id; ${playerTeamId}, does not belong to the teams in the game; ${gameTeamIds}`);
                 }
             }
 
@@ -249,7 +257,7 @@ export class StatService {
             relations: ['team'],
         });
 
-        if (!player) throw new Error('Player not found');
+        if (!player) throw new NotFoundError(`Player with ID: ${playerId} not found`);
 
         return this.statRepository.find({
             where: { player: { id: playerId } },
@@ -267,7 +275,7 @@ export class StatService {
             relations: ['player', 'game'],
         });
 
-        if (!stat) throw new Error('Stat not found');
+        if (!stat) throw new NotFoundError(`Stat with ID:${id} not found`);
         return stat;
     }
 
@@ -289,7 +297,7 @@ export class StatService {
             relations: ['player', 'game'],
         });
 
-        if (!stat) throw new Error('Stat not found');
+        if (!stat) throw new NotFoundError(`Stat with ID:${id} not found`); 
 
         await this.statRepository.remove(stat);
     }
@@ -303,7 +311,7 @@ export class StatService {
             relations: ['teams'], // Assuming stats are related to teams
         });
 
-        if (!game) throw new Error('Game not found');
+        if (!game) throw new NotFoundError(`Game with ID:${gameId} not found`);
 
         return this.statRepository.find({
             where: { game: { id: gameId } },

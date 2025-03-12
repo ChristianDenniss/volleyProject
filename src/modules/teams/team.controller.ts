@@ -66,7 +66,8 @@ export class TeamController {
                 gameIds
             );
             res.json(updatedTeam);
-        } catch (error) {
+        } catch (error) 
+        {
             const errorMessage = error instanceof Error ? error.message : "Failed to update team";
             if (errorMessage.includes("not found")) {
                 res.status(404).json({ error: errorMessage });

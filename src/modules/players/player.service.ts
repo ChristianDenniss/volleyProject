@@ -1,7 +1,9 @@
-import { Repository } from 'typeorm';
+import { Not, Repository } from 'typeorm';
 import { AppDataSource } from '../../db/data-source';
 import { Players } from './player.entity';
 import { Teams } from '../teams/team.entity';
+import { MissingFieldError } from '../../errors/MissingFieldError';
+import { NotFoundError } from '../../errors/NotFoundError';
 
 export class PlayerService {
     private playerRepository: Repository<Players>;
@@ -17,13 +19,13 @@ export class PlayerService {
      */
     async createPlayer(name: string, position: string, teamId: number): Promise<Players> {
         // Validation
-        if (!name) throw new Error("Player name is required");
-        if (!position) throw new Error("Position is required");
-        if (!teamId) throw new Error("Team ID is required");
+        if (!name) throw new MissingFieldError("Player name");
+        if (!position) throw new MissingFieldError("Position");
+        if (!teamId) throw new MissingFieldError("Team ID");
 
         // Fetch the team
         const team = await this.teamRepository.findOneBy({ id: teamId });
-        if (!team) throw new Error("Team not found");
+        if (!team) throw new NotFoundError(`Team with ID ${teamId} not found`);
 
         // Create new player
         const newPlayer = new Players();
@@ -47,14 +49,14 @@ export class PlayerService {
      * Get player by ID with validation
      */
     async getPlayerById(id: number): Promise<Players> {
-        if (!id) throw new Error("Player ID is required");
+        if (!id) throw new MissingFieldError("Player ID");
 
         const player = await this.playerRepository.findOne({
             where: { id },
             relations: ["team", "stats"],
         });
 
-        if (!player) throw new Error("Player not found");
+        if (!player) throw new NotFoundError(`Player with ID ${id} not found`);
 
         return player;
     }
@@ -69,14 +71,14 @@ export class PlayerService {
         position?: string, 
         teamId?: number
     ): Promise<Players> {
-        if (!id) throw new Error("Player ID is required");
+        if (!id) throw new MissingFieldError("Player ID");
 
         const player = await this.playerRepository.findOne({
             where: { id },
             relations: ["team", "stats"],
         });
 
-        if (!player) throw new Error("Player not found");
+        if (!player) throw new NotFoundError(`Player with ID ${id} not found`);
 
         if (name) player.name = name;
         
@@ -84,7 +86,7 @@ export class PlayerService {
 
         if (teamId) {
             const team = await this.teamRepository.findOneBy({ id: teamId });
-            if (!team) throw new Error("Team not found");
+            if (!team) throw new NotFoundError(`Team with ID ${teamId} not found`);
             player.team = team;
         }
 
@@ -95,14 +97,14 @@ export class PlayerService {
      * Delete a player with validation
      */
     async deletePlayer(id: number): Promise<void> {
-        if (!id) throw new Error("Player ID is required");
+        if (!id) throw new MissingFieldError("Player ID");
 
         const player = await this.playerRepository.findOne({
             where: { id },
             relations: ["team", "stats"],
         });
 
-        if (!player) throw new Error("Player not found");
+        if (!player) throw new NotFoundError(`Player with ID ${id} not found`);
 
         await this.playerRepository.remove(player);
     }
@@ -111,11 +113,11 @@ export class PlayerService {
      * Get players by team ID with validation
      */
     async getPlayersByTeamId(teamId: number): Promise<Players[]> {
-        if (!teamId) throw new Error("Team ID is required");
+        if (!teamId) throw new MissingFieldError("Team ID");
 
         // Check if team exists
         const team = await this.teamRepository.findOneBy({ id: teamId });
-        if (!team) throw new Error("Team not found");
+        if (!team) throw new NotFoundError(`Team with ID ${teamId} not found`);
 
         return this.playerRepository.find({
             where: { team: { id: teamId } },

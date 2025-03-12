@@ -3,6 +3,9 @@ import { AppDataSource } from '../../db/data-source';
 import { User } from './user.entity';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
+import { MissingFieldError } from '../../errors/MissingFieldError';
+import { DuplicateError } from '../../errors/DuplicateError';
+import { NotFoundError } from '../../errors/NotFoundError';
 
 export class UserService {
     private userRepository: Repository<User>;
@@ -29,9 +32,9 @@ export class UserService {
      */
     async createUser(username: string, email: string, password: string, role: string = 'user'): Promise<User> {
         // Validation
-        if (!username) throw new Error("Username is required");
-        if (!email) throw new Error("Email is required");
-        if (!password) throw new Error("Password is required");
+        if (!username) throw new MissingFieldError("Username");
+        if (!email) throw new MissingFieldError("Email");
+        if (!password) throw new MissingFieldError("Password");
         if (password.length < 6) throw new Error("Password must be at least 6 characters long");
         
         // Email validation
@@ -46,10 +49,13 @@ export class UserService {
         });
 
         if (existingUser) {
-            if (existingUser.username === username) {
-                throw new Error("Username already in use");
-            } else {
-                throw new Error("Email already in use");
+            if (existingUser.username === username) 
+            {
+                throw new DuplicateError(`Username ${username} already in use`);
+            } 
+            else 
+            {
+                throw new DuplicateError(`Email ${email} already in use`);
             }
         }
 
@@ -77,10 +83,10 @@ export class UserService {
      * Get user by ID with validation
      */
     async getUserById(id: number): Promise<User> {
-        if (!id) throw new Error("User ID is required");
+        if (!id) throw new MissingFieldError("User ID");
 
         const user = await this.userRepository.findOneBy({ id });
-        if (!user) throw new Error("User not found");
+        if (!user) throw new NotFoundError(`User with ID:${id} not found`);
 
         return user;
     }
@@ -89,10 +95,10 @@ export class UserService {
      * Get user by username with validation
      */
     async getUserByUsername(username: string): Promise<User> {
-        if (!username) throw new Error("Username is required");
+        if (!username) throw new MissingFieldError("Username");
 
         const user = await this.userRepository.findOneBy({ username });
-        if (!user) throw new Error("User not found");
+        if (!user) throw new NotFoundError(`User with username ${username} not found`);
 
         return user;
     }
@@ -107,16 +113,16 @@ export class UserService {
         password?: string,
         role?: string
     ): Promise<User> {
-        if (!id) throw new Error("User ID is required");
+        if (!id) throw new MissingFieldError("User ID");
 
         const user = await this.userRepository.findOneBy({ id });
-        if (!user) throw new Error("User not found");
+        if (!user) throw new NotFoundError(`User with ID:${id} not found`);
 
         // Check if username or email is already in use by another user
         if (username) {
             const existingUser = await this.userRepository.findOneBy({ username });
             if (existingUser && existingUser.id !== id) {
-                throw new Error("Username already in use");
+                throw new DuplicateError(`Username ${username} is already in use`);
             }
             user.username = username;
         }
@@ -130,7 +136,7 @@ export class UserService {
             
             const existingUser = await this.userRepository.findOneBy({ email });
             if (existingUser && existingUser.id !== id) {
-                throw new Error("Email already in use");
+                throw new DuplicateError(`Email ${email} is already in use`);
             }
             user.email = email;
         }
@@ -154,10 +160,10 @@ export class UserService {
      * Delete a user with validation
      */
     async deleteUser(id: number): Promise<void> {
-        if (!id) throw new Error("User ID is required");
+        if (!id) throw new MissingFieldError("User ID");
 
         const user = await this.userRepository.findOneBy({ id });
-        if (!user) throw new Error("User not found");
+        if (!user) throw new NotFoundError(`User with ID:${id} not found`);
 
         await this.userRepository.remove(user);
     }
@@ -166,8 +172,8 @@ export class UserService {
      * Authenticate user with validation
      */
     async authenticateUser(username: string, password: string): Promise<{ user: User, token: string }> {
-        if (!username) throw new Error("Username is required");
-        if (!password) throw new Error("Password is required");
+        if (!username) throw new MissingFieldError("Username");
+        if (!password) throw new MissingFieldError("Password");
 
         const user = await this.userRepository.findOneBy({ username });
         if (!user) throw new Error("Invalid username or password");
@@ -189,10 +195,10 @@ export class UserService {
      * Get current user by ID
      */
     async getProfile(userId: number): Promise<User> {
-        if (!userId) throw new Error("User ID is required");
+        if (!userId) throw new MissingFieldError("User ID");
         
         const user = await this.userRepository.findOneBy({ id: userId });
-        if (!user) throw new Error("User not found");
+        if (!user) throw new NotFoundError(`User with ID: ${userId} not found`);
             
         return user;
     }

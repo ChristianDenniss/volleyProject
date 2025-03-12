@@ -56,7 +56,7 @@ const mockSeasonEntity = {
 // Mock Team with properly typed season
 export const mockTeam = {
   id: 1,
-  name: 'Test Team',
+  name: 'Test Team1',
   season: mockSeasonEntity,
   players: [],
   games: [],

@@ -1,8 +1,12 @@
-import { Repository } from 'typeorm';
+import { Not, Repository } from 'typeorm';
 import { AppDataSource } from '../../db/data-source';
 import { Games } from './game.entity';
 import { Teams } from '../teams/team.entity';
 import { Seasons } from '../seasons/season.entity';
+import { MissingFieldError } from '../../errors/MissingFieldError';
+import { NotFoundError } from '../../errors/NotFoundError';
+import { ConflictError } from '../../errors/ConflictError';
+import { InvalidFormatError } from '../../errors/InvalidFormatError';
 
 export class GameService {
     private gameRepository: Repository<Games>;
@@ -20,9 +24,9 @@ export class GameService {
      */
     async createGame(date: Date, seasonId: number, teamIds: number[]): Promise<Games> {
         // Validation
-        if (!date) throw new Error("Game date is required");
-        if (!seasonId) throw new Error("Season ID is required");
-        if (!teamIds || !teamIds.length) throw new Error("At least one team ID is required");
+        if (!date) throw new MissingFieldError("Game date");
+        if (!seasonId) throw new MissingFieldError("Season ID");
+        if (!teamIds || !teamIds.length) throw new MissingFieldError("Team IDs");
         
         // Validate gameDate is not in the past
         const today = new Date();
@@ -31,22 +35,28 @@ export class GameService {
         
         // Validate date format
         if (isNaN(gameDate.getTime())) {
-            throw new Error("Invalid date format");
+            throw new InvalidFormatError("Invalid date format");
+        }
+
+        // Ensure game date is not in the past
+        if (gameDate < today) {
+            throw new InvalidFormatError("Game date cannot be in the past");
         }
 
         // Fetch the season
         const season = await this.seasonRepository.findOneBy({ id: seasonId });
-        if (!season) throw new Error("Season not found");
+        if (!season) throw new NotFoundError(`Season with ID ${seasonId} not found`);
 
         // Fetch teams
         const teams = await this.teamRepository.findByIds(teamIds);
         if (teams.length !== teamIds.length) {
-            throw new Error("Some teams were not found");
+            const missingTeams = teamIds.filter(id => !teams.some(team => team.id === id));
+            throw new NotFoundError(`Teams with IDs ${missingTeams.join(', ')} not found`);
         }
         
         // Ensure we have at least 2 teams for a game
         if (teams.length < 2) {
-            throw new Error("A game must have at least 2 teams");
+            throw new MissingFieldError("At least two teams are required for a game");
         }
 
         // Create new game
@@ -57,6 +67,7 @@ export class GameService {
 
         return this.gameRepository.save(newGame);
     }
+
 
     /**
      * Get all games
@@ -72,14 +83,14 @@ export class GameService {
      * Get game by ID with validation
      */
     async getGameById(id: number): Promise<Games> {
-        if (!id) throw new Error("Game ID is required");
+        if (!id) throw new MissingFieldError("Game ID");
 
         const game = await this.gameRepository.findOne({
             where: { id },
             relations: ["season", "teams", "stats", "stats.player"],
         });
 
-        if (!game) throw new Error("Game not found");
+        if (!game) throw new NotFoundError(`Game with ID ${id} not found`);
 
         return game;
     }
@@ -94,21 +105,21 @@ export class GameService {
         seasonId?: number, 
         teamIds?: number[]
     ): Promise<Games> {
-        if (!id) throw new Error("Game ID is required");
+        if (!id) throw new MissingFieldError("Game ID");
 
         const game = await this.gameRepository.findOne({
             where: { id },
             relations: ["season", "teams", "stats"],
         });
 
-        if (!game) throw new Error("Game not found");
+        if (!game) throw new NotFoundError(`Game with ID ${id} not found`);
 
         if (date) {
             const gameDate = new Date(date);
             
             // Validate date format
             if (isNaN(gameDate.getTime())) {
-                throw new Error("Invalid date format");
+                throw new InvalidFormatError("Invalid date format");
             }
             
             game.date = gameDate;
@@ -116,20 +127,21 @@ export class GameService {
 
         if (seasonId) {
             const season = await this.seasonRepository.findOneBy({ id: seasonId });
-            if (!season) throw new Error("Season not found");
+            if (!season) throw new NotFoundError(`Season with ID ${seasonId} not found`);
             game.season = season;
         }
 
         if (teamIds && teamIds.length > 0) {
             // Ensure we have at least 2 teams for a game
             if (teamIds.length < 2) {
-                throw new Error("A game must have at least 2 teams");
+                throw new MissingFieldError("At least two teams are required for a game");
             }
             
             const teams = await this.teamRepository.findByIds(teamIds);
             if (teams.length !== teamIds.length) {
-                throw new Error("Some teams were not found");
-            }
+            const missingTeams = teamIds.filter(id => !teams.some(team => team.id === id));
+            throw new NotFoundError(`Teams with IDs ${missingTeams.join(', ')} not found`);
+        }
             
             game.teams = teams;
         }
@@ -141,18 +153,18 @@ export class GameService {
      * Delete a game with validation
      */
     async deleteGame(id: number): Promise<void> {
-        if (!id) throw new Error("Game ID is required");
+        if (!id) throw new MissingFieldError("Game ID");
 
         const game = await this.gameRepository.findOne({
             where: { id },
             relations: ["stats"],
         });
 
-        if (!game) throw new Error("Game not found");
+        if (!game) throw new NotFoundError(`Game with ID ${id} not found`);
 
         // Check if game has stats
         if (game.stats && game.stats.length > 0) {
-            throw new Error("Cannot delete game with recorded stats");
+            throw new ConflictError(`Cannot delete game: ${id} as it has recorded stats`);
         }
 
         await this.gameRepository.remove(game);
@@ -162,11 +174,11 @@ export class GameService {
      * Get games by season ID with validation
      */
     async getGamesBySeasonId(seasonId: number): Promise<Games[]> {
-        if (!seasonId) throw new Error("Season ID is required");
+        if (!seasonId) throw new MissingFieldError("Season ID");
 
         // Check if season exists
         const season = await this.seasonRepository.findOneBy({ id: seasonId });
-        if (!season) throw new Error("Season not found");
+        if (!season) throw new NotFoundError(`Season with ID ${seasonId} not found`);
 
         return this.gameRepository.find({
             where: { season: { id: seasonId } },
@@ -179,7 +191,7 @@ export class GameService {
      * Get games by team ID with validation
      */
     async getGamesByTeamId(teamId: number): Promise<Games[]> {
-        if (!teamId) throw new Error("Team ID is required");
+        if (!teamId) throw new MissingFieldError("Team ID");
 
         // Check if team exists
         const team = await this.teamRepository.findOne({
@@ -187,7 +199,7 @@ export class GameService {
             relations: ["games"],
         });
         
-        if (!team) throw new Error("Team not found");
+        if (!team) throw new NotFoundError(`Team with ID ${teamId} not found`);
 
         // Extract game IDs from the team's games
         const gameIds = team.games.map(game => game.id);
