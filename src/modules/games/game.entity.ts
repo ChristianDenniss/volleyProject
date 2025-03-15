@@ -9,6 +9,12 @@ export class Games {
     id!: number;
 
     @Column()
+    team1Score!: number;
+
+    @Column()
+    team2Score!: number;
+
+    @Column()
     date!: Date;
 
     @CreateDateColumn({ type: 'timestamp' })

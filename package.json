@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "test": "jest",
     "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch",
     "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
     "dev": "nodemon src/index.ts",
@@ -40,5 +40,5 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.8.2"
   },
-  "type": "commonjs"
+  "type": "module"
 }

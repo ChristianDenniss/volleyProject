@@ -1,11 +1,11 @@
 import { Request, Response } from 'express';
 import { GameService } from './game.service';
-import { MissingFieldError}  from '../../errors/MissingFieldError';
+import { MissingFieldError } from '../../errors/MissingFieldError';
 import { NotFoundError } from '../../errors/NotFoundError';
 import { ConflictError } from '../../errors/ConflictError';
 import { DuplicateError } from '../../errors/DuplicateError';
 import { DateError } from '../../errors/DateErrors';
-import { InvalidFormatError} from '../../errors/InvalidFormatError';
+import { InvalidFormatError } from '../../errors/InvalidFormatError';
 
 export class GameController {
     private gameService: GameService;
@@ -17,10 +17,10 @@ export class GameController {
     // Create a new game
     createGame = async (req: Request, res: Response): Promise<void> => {
         try {
-            const { date, seasonId, teamIds } = req.body;
-            const savedGame = await this.gameService.createGame(date, seasonId, teamIds);
+            const { date, seasonId, teamIds, homeScore, awayScore } = req.body;
+            const savedGame = await this.gameService.createGame(date, seasonId, teamIds, homeScore, awayScore);
             res.status(201).json(savedGame);
-        } catch (error: unknown) {
+        } catch (error: any) {
             if (error instanceof MissingFieldError || 
                 error instanceof NotFoundError || 
                 error instanceof InvalidFormatError || 
@@ -83,8 +83,8 @@ export class GameController {
     updateGame = async (req: Request, res: Response): Promise<void> => {
         try {
             const { id } = req.params;
-            const { date, seasonId, teamIds } = req.body;
-            const updatedGame = await this.gameService.updateGame(parseInt(id), date, seasonId, teamIds);
+            const { date, seasonId, teamIds, homeScore, awayScore } = req.body;
+            const updatedGame = await this.gameService.updateGame(parseInt(id), date, seasonId, teamIds, homeScore, awayScore);
             res.json(updatedGame);
         } catch (error: unknown) {
             if (error instanceof MissingFieldError || 
@@ -176,6 +176,23 @@ export class GameController {
             } else {
                 console.error("Unexpected error fetching games by team:", error);
                 res.status(500).json({ error: "Failed to fetch games by team" });
+            }
+        }
+    };
+
+    // Get score for a game by ID
+    getGameScoreById = async (req: Request, res: Response): Promise<void> => {
+        try {
+            const { id } = req.params;
+            const score = await this.gameService.getScoreByGameId(parseInt(id));
+            res.json(score);
+        } catch (error: unknown) {
+            if (error instanceof NotFoundError) {
+                console.error("Game not found for score:", error);
+                res.status(404).json({ error: "Game not found" });
+            } else {
+                console.error("Unexpected error fetching score:", error);
+                res.status(500).json({ error: "Failed to fetch score" });
             }
         }
     };

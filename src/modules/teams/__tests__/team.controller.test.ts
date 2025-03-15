@@ -1,211 +1,228 @@
-import { Request, Response } from 'express';
-import { TeamController } from '../../modules/team/team.controller';
-import { TeamService } from '../../modules/teams/team.service.ts';
+import { TeamController } from '../team.controller';
+import { TeamService } from '../team.service';
 
-jest.mock('../services/teamService');
-
-const mockError = (errorMsg: string) => jest.fn().mockRejectedValueOnce(new Error(errorMsg));
-
-const getMockResponse = () =>
-{
-    const jsonMock = jest.fn().mockReturnThis();
-    const sendMock = jest.fn().mockReturnThis();
-    const statusMock = jest.fn().mockReturnValue({ json: jsonMock, send: sendMock });
-
-    return {
-        json: jsonMock,
-        status: statusMock,
-        send: sendMock,
-    } as unknown as Response;
+// Mock data
+const mockTeam = {
+  id: 1,
+  name: 'Test Team',
+  members: ['user1', 'user2'],
+  createdAt: new Date(),
+  updatedAt: new Date(),
 };
 
-describe('TeamController', () =>
-{
-    let teamController: TeamController;
-    let teamService: jest.Mocked<TeamService>;
+const mockTeams = [
+  mockTeam,
+  {
+    id: 2,
+    name: 'Another Team',
+    members: ['user3', 'user4'],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+];
 
-    beforeEach(() =>
-    {
-        teamService = new TeamService() as jest.Mocked<TeamService>;
-        teamController = new TeamController(teamService);
+// Mock the TeamService
+jest.mock('../team.service', () => {
+  return {
+    TeamService: jest.fn().mockImplementation(() => {
+      return {
+        createTeam: jest.fn(),
+        getAllTeams: jest.fn(),
+        getTeamById: jest.fn(),
+        updateTeam: jest.fn(),
+        deleteTeam: jest.fn(),
+      };
+    }),
+  };
+});
+
+describe('TeamController', () => {
+  let teamController;
+  let mockRequest;
+  let mockResponse;
+  let jsonMock;
+  let statusMock;
+  let sendMock;
+
+  beforeEach(() => {
+    jsonMock = jest.fn().mockReturnThis();
+    sendMock = jest.fn().mockReturnThis();
+    statusMock = jest.fn().mockReturnValue({ json: jsonMock, send: sendMock });
+
+    mockRequest = {};
+    mockResponse = {
+      json: jsonMock,
+      status: statusMock,
+      send: sendMock,
+    };
+
+    teamController = new TeamController();
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('createTeam', () => {
+    it('should create a team and return 201 status', async () => {
+      mockRequest.body = {
+        name: 'New Team',
+        members: ['user1', 'user2'],
+      };
+      teamController.teamService.createTeam.mockResolvedValueOnce(mockTeam);
+
+      await teamController.createTeam(mockRequest, mockResponse);
+
+      expect(teamController.teamService.createTeam).toHaveBeenCalledWith('New Team', ['user1', 'user2']);
+      expect(statusMock).toHaveBeenCalledWith(201);
+      expect(jsonMock).toHaveBeenCalledWith(mockTeam);
     });
 
-    describe('getTeamById', () =>
-    {
-        it('should return a team if found', async () =>
-        {
-            const mockTeam = { id: 1, name: 'Team A' };
-            teamService.getTeamById.mockResolvedValue(mockTeam);
+    it('should handle validation errors with 400 status', async () => {
+      mockRequest.body = {
+        name: '',
+        members: ['user1', 'user2'],
+      };
+      teamController.teamService.createTeam.mockRejectedValueOnce(new Error('Name is required'));
 
-            const req = { params: { id: '1' } } as Partial<Request>;
-            const res = getMockResponse();
+      await teamController.createTeam(mockRequest, mockResponse);
 
-            await teamController.getTeamById(req as Request, res);
-
-            expect(res.status).toHaveBeenCalledWith(200);
-            expect(res.json).toHaveBeenCalledWith(mockTeam);
-        });
-
-        it('should return 404 if team is not found', async () =>
-        {
-            teamService.getTeamById.mockResolvedValue(null);
-
-            const req = { params: { id: '999' } } as Partial<Request>;
-            const res = getMockResponse();
-
-            await teamController.getTeamById(req as Request, res);
-
-            expect(res.status).toHaveBeenCalledWith(404);
-            expect(res.json).toHaveBeenCalledWith({ error: 'Team not found' });
-        });
-
-        it('should return 500 on error', async () =>
-        {
-            teamService.getTeamById = mockError('Database error');
-
-            const req = { params: { id: '1' } } as Partial<Request>;
-            const res = getMockResponse();
-
-            await teamController.getTeamById(req as Request, res);
-
-            expect(res.status).toHaveBeenCalledWith(500);
-            expect(res.json).toHaveBeenCalledWith({ error: 'Internal server error' });
-        });
+      expect(statusMock).toHaveBeenCalledWith(400);
+      expect(jsonMock).toHaveBeenCalledWith({ error: 'Name is required' });
     });
 
-    describe('createTeam', () =>
-    {
-        it('should create a team', async () =>
-        {
-            const mockTeam = { id: 1, name: 'New Team' };
-            teamService.createTeam.mockResolvedValue(mockTeam);
+    it('should handle server errors with 500 status', async () => {
+      mockRequest.body = {
+        name: 'New Team',
+        members: ['user1', 'user2'],
+      };
+      teamController.teamService.createTeam.mockRejectedValueOnce(new Error('Database error'));
 
-            const req = { body: { name: 'New Team', seasonId: 1 } } as Partial<Request>;
-            const res = getMockResponse();
+      await teamController.createTeam(mockRequest, mockResponse);
 
-            await teamController.createTeam(req as Request, res);
+      expect(statusMock).toHaveBeenCalledWith(500);
+      expect(jsonMock).toHaveBeenCalledWith({ error: 'Failed to create team' });
+    });
+  });
 
-            expect(res.status).toHaveBeenCalledWith(201);
-            expect(res.json).toHaveBeenCalledWith(mockTeam);
-        });
+  describe('getTeams', () => {
+    it('should return all teams', async () => {
+      teamController.teamService.getAllTeams.mockResolvedValueOnce(mockTeams);
 
-        it('should return 400 if missing required fields', async () =>
-        {
-            const req = { body: { name: 'New Team' } } as Partial<Request>; // Missing seasonId
-            const res = getMockResponse();
+      await teamController.getTeams(mockRequest, mockResponse);
 
-            await teamController.createTeam(req as Request, res);
-
-            expect(res.status).toHaveBeenCalledWith(400);
-            expect(res.json).toHaveBeenCalledWith({ error: 'Missing required fields' });
-        });
-
-        it('should return 500 on error', async () =>
-        {
-            teamService.createTeam = mockError('Database error');
-
-            const req = { body: { name: 'New Team', seasonId: 1 } } as Partial<Request>;
-            const res = getMockResponse();
-
-            await teamController.createTeam(req as Request, res);
-
-            expect(res.status).toHaveBeenCalledWith(500);
-            expect(res.json).toHaveBeenCalledWith({ error: 'Internal server error' });
-        });
+      expect(teamController.teamService.getAllTeams).toHaveBeenCalled();
+      expect(jsonMock).toHaveBeenCalledWith(mockTeams);
     });
 
-    describe('updateTeam', () =>
-    {
-        it('should update a team if found', async () =>
-        {
-            const mockTeam = { id: 1, name: 'Updated Team' };
-            teamService.updateTeam.mockResolvedValue(mockTeam);
+    it('should handle server errors with 500 status', async () => {
+      teamController.teamService.getAllTeams.mockRejectedValueOnce(new Error('Database error'));
 
-            const req = { params: { id: '1' }, body: { name: 'Updated Team' } } as Partial<Request>;
-            const res = getMockResponse();
+      await teamController.getTeams(mockRequest, mockResponse);
 
-            await teamController.updateTeam(req as Request, res);
+      expect(statusMock).toHaveBeenCalledWith(500);
+      expect(jsonMock).toHaveBeenCalledWith({ error: 'Failed to fetch teams' });
+    });
+  });
 
-            expect(res.status).toHaveBeenCalledWith(200);
-            expect(res.json).toHaveBeenCalledWith(mockTeam);
-        });
+  describe('getTeamById', () => {
+    it('should return a team by id', async () => {
+      mockRequest.params = { id: '1' };
+      teamController.teamService.getTeamById.mockResolvedValueOnce(mockTeam);
 
-        it('should return 400 if no valid fields provided', async () =>
-        {
-            const req = { params: { id: '1' }, body: {} } as Partial<Request>;
-            const res = getMockResponse();
+      await teamController.getTeamById(mockRequest, mockResponse);
 
-            await teamController.updateTeam(req as Request, res);
-
-            expect(res.status).toHaveBeenCalledWith(400);
-            expect(res.json).toHaveBeenCalledWith({ error: 'No valid fields to update' });
-        });
-
-        it('should return 404 if team is not found', async () =>
-        {
-            teamService.updateTeam.mockResolvedValue(null);
-
-            const req = { params: { id: '999' }, body: { name: 'Updated Team' } } as Partial<Request>;
-            const res = getMockResponse();
-
-            await teamController.updateTeam(req as Request, res);
-
-            expect(res.status).toHaveBeenCalledWith(404);
-            expect(res.json).toHaveBeenCalledWith({ error: 'Team not found' });
-        });
-
-        it('should return 500 on error', async () =>
-        {
-            teamService.updateTeam = mockError('Database error');
-
-            const req = { params: { id: '1' }, body: { name: 'Updated Team' } } as Partial<Request>;
-            const res = getMockResponse();
-
-            await teamController.updateTeam(req as Request, res);
-
-            expect(res.status).toHaveBeenCalledWith(500);
-            expect(res.json).toHaveBeenCalledWith({ error: 'Internal server error' });
-        });
+      expect(teamController.teamService.getTeamById).toHaveBeenCalledWith(1);
+      expect(jsonMock).toHaveBeenCalledWith(mockTeam);
     });
 
-    describe('deleteTeam', () =>
-    {
-        it('should delete a team if found', async () =>
-        {
-            teamService.deleteTeam.mockResolvedValue(true);
+    it('should handle not found errors with 404 status', async () => {
+      mockRequest.params = { id: '999' };
+      teamController.teamService.getTeamById.mockRejectedValueOnce(new Error('Team not found'));
 
-            const req = { params: { id: '1' } } as Partial<Request>;
-            const res = getMockResponse();
+      await teamController.getTeamById(mockRequest, mockResponse);
 
-            await teamController.deleteTeam(req as Request, res);
-
-            expect(res.status).toHaveBeenCalledWith(204);
-        });
-
-        it('should return 404 if team is not found', async () =>
-        {
-            teamService.deleteTeam.mockResolvedValue(false);
-
-            const req = { params: { id: '999' } } as Partial<Request>;
-            const res = getMockResponse();
-
-            await teamController.deleteTeam(req as Request, res);
-
-            expect(res.status).toHaveBeenCalledWith(404);
-            expect(res.json).toHaveBeenCalledWith({ error: 'Team not found' });
-        });
-
-        it('should return 500 on error', async () =>
-        {
-            teamService.deleteTeam = mockError('Database error');
-
-            const req = { params: { id: '1' } } as Partial<Request>;
-            const res = getMockResponse();
-
-            await teamController.deleteTeam(req as Request, res);
-
-            expect(res.status).toHaveBeenCalledWith(500);
-            expect(res.json).toHaveBeenCalledWith({ error: 'Internal server error' });
-        });
+      expect(statusMock).toHaveBeenCalledWith(404);
+      expect(jsonMock).toHaveBeenCalledWith({ error: 'Team not found' });
     });
+
+    it('should handle server errors with 500 status', async () => {
+      mockRequest.params = { id: '1' };
+      teamController.teamService.getTeamById.mockRejectedValueOnce(new Error('Database error'));
+
+      await teamController.getTeamById(mockRequest, mockResponse);
+
+      expect(statusMock).toHaveBeenCalledWith(500);
+      expect(jsonMock).toHaveBeenCalledWith({ error: 'Failed to fetch team' });
+    });
+  });
+
+  describe('updateTeam', () => {
+    it('should update a team and return the updated team', async () => {
+      const updatedTeam = { ...mockTeam, name: 'Updated Team' };
+      mockRequest.params = { id: '1' };
+      mockRequest.body = { name: 'Updated Team' };
+      teamController.teamService.updateTeam.mockResolvedValueOnce(updatedTeam);
+
+      await teamController.updateTeam(mockRequest, mockResponse);
+
+      expect(teamController.teamService.updateTeam).toHaveBeenCalledWith(1, 'Updated Team', ['user1', 'user2']);
+      expect(jsonMock).toHaveBeenCalledWith(updatedTeam);
+    });
+
+    it('should handle not found errors with 404 status', async () => {
+      mockRequest.params = { id: '999' };
+      mockRequest.body = { name: 'Updated Team' };
+      teamController.teamService.updateTeam.mockRejectedValueOnce(new Error('Team not found'));
+
+      await teamController.updateTeam(mockRequest, mockResponse);
+
+      expect(statusMock).toHaveBeenCalledWith(404);
+      expect(jsonMock).toHaveBeenCalledWith({ error: 'Team not found' });
+    });
+
+    it('should handle server errors with 500 status', async () => {
+      mockRequest.params = { id: '1' };
+      mockRequest.body = { name: 'Updated Team' };
+      teamController.teamService.updateTeam.mockRejectedValueOnce(new Error('Database error'));
+
+      await teamController.updateTeam(mockRequest, mockResponse);
+
+      expect(statusMock).toHaveBeenCalledWith(500);
+      expect(jsonMock).toHaveBeenCalledWith({ error: 'Failed to update team' });
+    });
+  });
+
+  describe('deleteTeam', () => {
+    it('should delete a team and return 204 status', async () => {
+      mockRequest.params = { id: '1' };
+      teamController.teamService.deleteTeam.mockResolvedValueOnce();
+
+      await teamController.deleteTeam(mockRequest, mockResponse);
+
+      expect(teamController.teamService.deleteTeam).toHaveBeenCalledWith(1);
+      expect(statusMock).toHaveBeenCalledWith(204);
+      expect(sendMock).toHaveBeenCalled();
+    });
+
+    it('should handle not found errors with 404 status', async () => {
+      mockRequest.params = { id: '999' };
+      teamController.teamService.deleteTeam.mockRejectedValueOnce(new Error('Team not found'));
+
+      await teamController.deleteTeam(mockRequest, mockResponse);
+
+      expect(statusMock).toHaveBeenCalledWith(404);
+      expect(jsonMock).toHaveBeenCalledWith({ error: 'Team not found' });
+    });
+
+    it('should handle server errors with 500 status', async () => {
+      mockRequest.params = { id: '1' };
+      teamController.teamService.deleteTeam.mockRejectedValueOnce(new Error('Database error'));
+
+      await teamController.deleteTeam(mockRequest, mockResponse);
+
+      expect(statusMock).toHaveBeenCalledWith(500);
+      expect(jsonMock).toHaveBeenCalledWith({ error: 'Failed to delete team' });
+    });
+  });
 });

@@ -22,12 +22,19 @@ export class GameService {
     /**
      * Create a new game with validation
      */
-    async createGame(date: Date, seasonId: number, teamIds: number[]): Promise<Games> {
+    async createGame(
+        date: Date, 
+        seasonId: number, 
+        teamIds: number[], 
+        team1Score: number, 
+        team2Score: number
+    ): Promise<Games> {
         // Validation
         if (!date) throw new MissingFieldError("Game date");
         if (!seasonId) throw new MissingFieldError("Season ID");
         if (!teamIds || !teamIds.length) throw new MissingFieldError("Team IDs");
-        
+        if (team1Score === undefined || team2Score === undefined) throw new MissingFieldError("Scores");
+
         // Validate gameDate is not in the past
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -64,6 +71,8 @@ export class GameService {
         newGame.date = gameDate;
         newGame.season = season;
         newGame.teams = teams;
+        newGame.team1Score = team1Score;
+        newGame.team2Score = team2Score;
 
         return this.gameRepository.save(newGame);
     }
@@ -96,14 +105,32 @@ export class GameService {
     }
 
     /**
+     * Get the score by game ID
+     */
+    async getScoreByGameId(id: number): Promise<string> {
+        if (!id) throw new MissingFieldError("Game ID");
+
+        const game = await this.gameRepository.findOne({
+            where: { id },
+            relations: ["season", "teams", "stats"],
+        });
+
+        if (!game) throw new NotFoundError(`Game with ID ${id} not found`);
+
+        // Return the score as a string in the format "team1Score-team2Score"
+        return `${game.team1Score}-${game.team2Score}`;
+    }
+
+    /**
      * Update a game with validation
      */
     async updateGame(
         id: number, 
         date?: Date, 
-        location?: string, 
         seasonId?: number, 
-        teamIds?: number[]
+        teamIds?: number[], 
+        team1Score?: number, 
+        team2Score?: number
     ): Promise<Games> {
         if (!id) throw new MissingFieldError("Game ID");
 
@@ -139,11 +166,16 @@ export class GameService {
             
             const teams = await this.teamRepository.findByIds(teamIds);
             if (teams.length !== teamIds.length) {
-            const missingTeams = teamIds.filter(id => !teams.some(team => team.id === id));
-            throw new NotFoundError(`Teams with IDs ${missingTeams.join(', ')} not found`);
-        }
+                const missingTeams = teamIds.filter(id => !teams.some(team => team.id === id));
+                throw new NotFoundError(`Teams with IDs ${missingTeams.join(', ')} not found`);
+            }
             
             game.teams = teams;
+        }
+
+        if (team1Score !== undefined && team2Score !== undefined) {
+            game.team1Score = team1Score;
+            game.team2Score = team2Score;
         }
 
         return this.gameRepository.save(game);
