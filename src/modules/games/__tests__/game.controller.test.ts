@@ -1,13 +1,13 @@
-import { GameController } from '../game.controller';
-import { GameService } from '../game.service';
-import { mockGame, savedGame, mockGames, mockPlayer, mockTeam } from '../../../__mocks__/fixtures';
+import { GameController } from '../game.controller.js';
+import { GameService } from '../game.service.js';
+import { mockGame, savedGame, mockGames, mockPlayer, mockTeam } from '../../../__mocks__/fixtures.js';
 import { Request, Response } from 'express';
-import { MissingFieldError } from '../../../errors/MissingFieldError';
-import { NotFoundError } from '../../../errors/NotFoundError';
-import { ConflictError } from '../../../errors/ConflictError';
-import { DuplicateError } from '../../../errors/DuplicateError';
-import { DateError } from '../../../errors/DateErrors';
-import { InvalidFormatError } from '../../../errors/InvalidFormatError';
+import { MissingFieldError } from '../../../errors/MissingFieldError.js';
+import { NotFoundError } from '../../../errors/NotFoundError.js';
+import { ConflictError } from '../../../errors/ConflictError.js';
+import { DuplicateError } from '../../../errors/DuplicateError.js';
+import { DateError } from '../../../errors/DateErrors.js';
+import { InvalidFormatError } from '../../../errors/InvalidFormatError.js';
 
 // Mock GameService
 jest.mock('./game.service');

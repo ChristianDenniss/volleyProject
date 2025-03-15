@@ -1,5 +1,5 @@
-import { AppDataSource } from "./data-source";
-import { User } from "../modules/user/user.entity";
+import { AppDataSource } from "./data-source.js";
+import { User } from "../modules/user/user.entity.js";
 
 /**
  * Repository examples - use module services instead of direct queries in the application

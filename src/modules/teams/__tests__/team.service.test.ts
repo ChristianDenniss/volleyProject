@@ -1,5 +1,5 @@
-import '../../../__mocks__/data-source';
-import { TeamService } from '../team.service';
+import '../../../__mocks__/data-source.js';
+import { TeamService } from '../team.service.js';
 import { mockRepository, mockTeam, mockTeams, mockSeason } from '../../../__mocks__/fixtures';
 
 describe('TeamService', () => {

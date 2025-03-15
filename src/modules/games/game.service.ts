@@ -1,12 +1,12 @@
 import { Not, Repository } from 'typeorm';
-import { AppDataSource } from '../../db/data-source';
-import { Games } from './game.entity';
-import { Teams } from '../teams/team.entity';
-import { Seasons } from '../seasons/season.entity';
-import { MissingFieldError } from '../../errors/MissingFieldError';
-import { NotFoundError } from '../../errors/NotFoundError';
-import { ConflictError } from '../../errors/ConflictError';
-import { InvalidFormatError } from '../../errors/InvalidFormatError';
+import { AppDataSource } from '../../db/data-source.js';
+import { Games } from './game.entity.js';
+import { Teams } from '../teams/team.entity.js';
+import { Seasons } from '../seasons/season.entity.js';
+import { MissingFieldError } from '../../errors/MissingFieldError.js';
+import { NotFoundError } from '../../errors/NotFoundError.js';
+import { ConflictError } from '../../errors/ConflictError.js';
+import { InvalidFormatError } from '../../errors/InvalidFormatError.js';
 
 export class GameService {
     private gameRepository: Repository<Games>;

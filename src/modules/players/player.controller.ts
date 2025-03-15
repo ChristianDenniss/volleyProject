@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { PlayerService } from './player.service';
+import { PlayerService } from './player.service.js';
 
 export class PlayerController {
     private playerService: PlayerService;

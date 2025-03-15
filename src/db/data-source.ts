@@ -4,12 +4,12 @@ import dotenv from "dotenv";
 import { join } from "path";
 
 // Entities from modules
-import { Teams } from "../modules/teams/team.entity";
-import { Players } from "../modules/players/player.entity";
-import { Games } from "../modules/games/game.entity";
-import { Seasons } from "../modules/seasons/season.entity";
-import { Stats } from "../modules/stats/stat.entity";
-import { User } from "../modules/user/user.entity";
+import { Teams } from "../modules/teams/team.entity.js";
+import { Players } from "../modules/players/player.entity.js";
+import { Games } from "../modules/games/game.entity.js";
+import { Seasons } from "../modules/seasons/season.entity.js";
+import { Stats } from "../modules/stats/stat.entity.js";
+import { User } from "../modules/user/user.entity.js";
 
 dotenv.config();
 

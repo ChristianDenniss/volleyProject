@@ -2,8 +2,8 @@ import 'reflect-metadata';
 import { createServer } from 'http';
 import { createTerminus } from '@godaddy/terminus';
 import dotenv from 'dotenv';
-import createApp from './app';
-import { AppDataSource } from './db/data-source';
+import createApp from './app.js';
+import { AppDataSource } from './db/data-source.js';
 
 dotenv.config();
 const PORT = process.env.PORT || 5000;

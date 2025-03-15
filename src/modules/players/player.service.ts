@@ -1,9 +1,9 @@
 import { Not, Repository } from 'typeorm';
-import { AppDataSource } from '../../db/data-source';
-import { Players } from './player.entity';
-import { Teams } from '../teams/team.entity';
-import { MissingFieldError } from '../../errors/MissingFieldError';
-import { NotFoundError } from '../../errors/NotFoundError';
+import { AppDataSource } from '../../db/data-source.js';
+import { Players } from './player.entity.js';
+import { Teams } from '../teams/team.entity.js';
+import { MissingFieldError } from '../../errors/MissingFieldError.js';
+import { NotFoundError } from '../../errors/NotFoundError.js';
 
 export class PlayerService {
     private playerRepository: Repository<Players>;

@@ -1,10 +1,10 @@
 import { Application } from 'express';
-import { registerTeamRoutes } from './teams/team.routes';
-import { registerPlayerRoutes } from './players/player.routes';
-import { registerGameRoutes } from './games/game.routes';
-import { registerSeasonRoutes } from './seasons/season.routes';
-import { registerStatRoutes } from './stats/stat.routes';
-import { registerUserRoutes } from './user/user.routes';
+import { registerTeamRoutes } from './teams/team.routes.js';
+import { registerPlayerRoutes } from './players/player.routes.js';
+import { registerGameRoutes } from './games/game.routes.js';
+import { registerSeasonRoutes } from './seasons/season.routes.js';
+import { registerStatRoutes } from './stats/stat.routes.js';
+import { registerUserRoutes } from './user/user.routes.js';
 
 /**
  * Register all module routes with the Express application

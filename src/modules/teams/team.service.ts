@@ -1,14 +1,14 @@
 import { Repository } from 'typeorm';
-import { AppDataSource } from '../../db/data-source';
-import { Teams } from './team.entity';
-import { Players } from '../players/player.entity';
-import { Seasons } from '../seasons/season.entity';
-import { Games } from '../games/game.entity';
-import { MissingFieldError } from '../../errors/MissingFieldError';
-import { MultipleGamesNotFoundError } from '../../errors/MultipleGamesNotFoundError';
-import { MultiplePlayersNotFoundError } from '../../errors/MultiplePlayersNotFoundError';
-import { DuplicateError } from '../../errors/DuplicateError';
-import { NotFoundError } from '../../errors/NotFoundError';
+import { AppDataSource } from '../../db/data-source.js';
+import { Teams } from './team.entity.js';
+import { Players } from '../players/player.entity.js';
+import { Seasons } from '../seasons/season.entity.js';
+import { Games } from '../games/game.entity.js';
+import { MissingFieldError } from '../../errors/MissingFieldError.js';
+import { MultipleGamesNotFoundError } from '../../errors/MultipleGamesNotFoundError.js';
+import { MultiplePlayersNotFoundError } from '../../errors/MultiplePlayersNotFoundError.js';
+import { DuplicateError } from '../../errors/DuplicateError.js';
+import { NotFoundError } from '../../errors/NotFoundError.js';
 
 export class TeamService {
     private teamRepository: Repository<Teams>;

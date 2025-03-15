@@ -1,13 +1,13 @@
 import { Repository } from 'typeorm';
-import { AppDataSource } from '../../db/data-source';
-import { Stats } from './stat.entity';
-import { Players } from '../players/player.entity';
-import { Games } from '../games/game.entity';
-import { MissingFieldError } from '../../errors/MissingFieldError';
-import { NegativeStatError } from '../../errors/NegativeStatError';
-import { NotFoundError } from '../../errors/NotFoundError';
-import { ConflictError } from '../../errors/ConflictError';
-import { DuplicateError } from '../../errors/DuplicateError';
+import { AppDataSource } from '../../db/data-source.js';
+import { Stats } from './stat.entity.js';
+import { Players } from '../players/player.entity.js';
+import { Games } from '../games/game.entity.js';
+import { MissingFieldError } from '../../errors/MissingFieldError.js';
+import { NegativeStatError } from '../../errors/NegativeStatError.js';
+import { NotFoundError } from '../../errors/NotFoundError.js';
+import { ConflictError } from '../../errors/ConflictError.js';
+import { DuplicateError } from '../../errors/DuplicateError.js';
 import { In } from "typeorm";
 
 export class StatService {

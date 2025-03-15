@@ -1,5 +1,5 @@
 import { Application, Router } from 'express';
-import { StatController } from './stat.controller';
+import { StatController } from './stat.controller.js';
 
 export function registerStatRoutes(app: Application): void {
     const router = Router();

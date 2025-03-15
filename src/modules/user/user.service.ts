@@ -1,11 +1,11 @@
 import { Repository } from 'typeorm';
-import { AppDataSource } from '../../db/data-source';
-import { User } from './user.entity';
+import { AppDataSource } from '../../db/data-source.js';
+import { User } from './user.entity.js';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import { MissingFieldError } from '../../errors/MissingFieldError';
-import { DuplicateError } from '../../errors/DuplicateError';
-import { NotFoundError } from '../../errors/NotFoundError';
+import { MissingFieldError } from '../../errors/MissingFieldError.js';
+import { DuplicateError } from '../../errors/DuplicateError.js';
+import { NotFoundError } from '../../errors/NotFoundError.js';
 
 export class UserService {
     private userRepository: Repository<User>;

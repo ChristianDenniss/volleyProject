@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany } from 'typeorm';
-import { Teams } from '../teams/team.entity';
-import { Stats } from '../stats/stat.entity';
+import { Teams } from '../teams/team.entity.js';
+import { Stats } from '../stats/stat.entity.js';
 
 @Entity()
 export class Players {

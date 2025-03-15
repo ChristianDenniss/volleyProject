@@ -1,4 +1,4 @@
-import { CustomError } from "./CustomError";
+import { CustomError } from "./CustomError.js";
 
 export class DuplicateError extends CustomError {
     constructor(message: string) {

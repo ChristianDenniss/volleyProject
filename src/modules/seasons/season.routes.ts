@@ -1,5 +1,5 @@
 import { Application, Router } from 'express';
-import { SeasonController } from './season.controller';
+import { SeasonController } from './season.controller.js';
 
 export function registerSeasonRoutes(app: Application): void {
     const router = Router();

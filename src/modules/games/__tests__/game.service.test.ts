@@ -27,12 +27,17 @@ describe('GameService', () => {
     });
 
     it('should throw error if missing fields', async () => {
+      
       await expect(gameService.createGame(new Date(), 1, [], 2, 3)).rejects.toThrow(
         new MissingFieldError('Team IDs'),
       );
+
+      // @ts-expect-error: Testing behavior when scores are null
       await expect(gameService.createGame(null, 1, [1, 2], 2, 3)).rejects.toThrow(
         new MissingFieldError('Game date'),
       );
+
+      // @ts-expect-error: Testing behavior when scores are null
       await expect(gameService.createGame(new Date(), 1, [1, 2], null, 3)).rejects.toThrow(
         new MissingFieldError('Scores'),
       );
@@ -138,8 +143,8 @@ describe('GameService', () => {
     it('should update a game successfully', async () => {
       const updatedGame = { ...mockGame, team1Score: 3, team2Score: 4 };
       mockRepository.findOne.mockResolvedValueOnce(mockGame);
-      mockRepository.save.mockResolvedValueOnce(updatedGame);
-
+      mockRepository.save.mockResolvedValueOnce(updatedGame)    
+      // @ts-expect-error: Testing behavior when scores are null
       const result = await gameService.updateGame(1, null, null, [1, 2], 3, 4);
 
       expect(mockRepository.save).toHaveBeenCalled();
@@ -149,12 +154,15 @@ describe('GameService', () => {
     it('should throw error if game is not found', async () => {
       mockRepository.findOne.mockResolvedValueOnce(null);
 
+
+      // @ts-expect-error: Testing behavior when scores are null
       await expect(gameService.updateGame(999, null, null, [1, 2], 3, 4)).rejects.toThrow(
         new NotFoundError('Game with ID 999 not found'),
       );
     });
 
     it('should throw error if less than 2 teams are provided', async () => {
+    // @ts-expect-error: Testing behavior when scores are null
       await expect(gameService.updateGame(1, null, null, [1], 3, 4)).rejects.toThrow(
         new MissingFieldError('At least two teams are required for a game'),
       );

@@ -1,4 +1,4 @@
-import { mockRepository } from './fixtures';
+import { mockRepository } from './fixtures.js';
 
 // Mock all entity classes in one place
 jest.mock('../modules/user/user.entity', () => ({
@@ -13,7 +13,7 @@ jest.mock('../modules/user/user.entity', () => ({
   }
 }));
 
-jest.mock('../modules/teams/team.entity', () => ({
+jest.mock('../modules/teams/team.entity.js', () => ({
   Teams: class Teams {
     id = 0;
     name = '';
@@ -25,7 +25,7 @@ jest.mock('../modules/teams/team.entity', () => ({
   }
 }));
 
-jest.mock('../modules/seasons/season.entity', () => ({
+jest.mock('../modules/seasons/season.entity.js', () => ({
   Seasons: class Seasons {
     id = 0;
     name = '';
@@ -37,7 +37,7 @@ jest.mock('../modules/seasons/season.entity', () => ({
   }
 }));
 
-jest.mock('../modules/players/player.entity', () => ({
+jest.mock('../modules/players/player.entity.js', () => ({
   Players: class Players {
     id = 0;
     name = '';
@@ -50,7 +50,7 @@ jest.mock('../modules/players/player.entity', () => ({
   }
 }));
 
-jest.mock('../modules/games/game.entity', () => ({
+jest.mock('../modules/games/game.entity.js', () => ({
   Games: class Games {
     id = 0;
     date = new Date();
@@ -64,7 +64,7 @@ jest.mock('../modules/games/game.entity', () => ({
   }
 }));
 
-jest.mock('../modules/stats/stat.entity', () => ({
+jest.mock('../modules/stats/stat.entity.js', () => ({
   Stats: class Stats {
     id = 0;
     player = null;
@@ -103,7 +103,7 @@ jest.mock('typeorm', () => ({
 }));
 
 // Mock the data-source module
-jest.mock('../db/data-source', () => ({
+jest.mock('../db/data-source.js', () => ({
   AppDataSource: {
     initialize: jest.fn().mockResolvedValue(true),
     isInitialized: true,

@@ -1,11 +1,11 @@
 import { Request, Response } from 'express';
-import { GameService } from './game.service';
-import { MissingFieldError } from '../../errors/MissingFieldError';
-import { NotFoundError } from '../../errors/NotFoundError';
-import { ConflictError } from '../../errors/ConflictError';
-import { DuplicateError } from '../../errors/DuplicateError';
-import { DateError } from '../../errors/DateErrors';
-import { InvalidFormatError } from '../../errors/InvalidFormatError';
+import { GameService } from './game.service.js';
+import { MissingFieldError } from '../../errors/MissingFieldError.js';
+import { NotFoundError } from '../../errors/NotFoundError.js';
+import { ConflictError } from '../../errors/ConflictError.js';
+import { DuplicateError } from '../../errors/DuplicateError.js';
+import { DateError } from '../../errors/DateErrors.js';
+import { InvalidFormatError } from '../../errors/InvalidFormatError.js';
 
 export class GameController {
     private gameService: GameService;
@@ -41,8 +41,8 @@ export class GameController {
         try {
             const games = await this.gameService.getAllGames();
             res.json(games);
-        } catch (error: unknown) {
-            if (error instanceof MissingFieldError || 
+        } catch (error: any) {
+            if (error !instanceof MissingFieldError || 
                 error instanceof NotFoundError || 
                 error instanceof InvalidFormatError || 
                 error instanceof DateError || 
@@ -50,7 +50,9 @@ export class GameController {
                 error instanceof DuplicateError) {
                 console.error("Custom error fetching games:", error);
                 res.status(400).json({ error: error.message });
-            } else {
+            } 
+            else 
+            {
                 console.error("Unexpected error fetching games:", error);
                 res.status(500).json({ error: "Failed to fetch games" });
             }
@@ -63,7 +65,7 @@ export class GameController {
             const { id } = req.params;
             const game = await this.gameService.getGameById(parseInt(id));
             res.json(game);
-        } catch (error: unknown) {
+        } catch (error: any) {
             if (error instanceof MissingFieldError || 
                 error instanceof NotFoundError || 
                 error instanceof InvalidFormatError || 
@@ -86,7 +88,7 @@ export class GameController {
             const { date, seasonId, teamIds, homeScore, awayScore } = req.body;
             const updatedGame = await this.gameService.updateGame(parseInt(id), date, seasonId, teamIds, homeScore, awayScore);
             res.json(updatedGame);
-        } catch (error: unknown) {
+        } catch (error: any) {
             if (error instanceof MissingFieldError || 
                 error instanceof NotFoundError || 
                 error instanceof InvalidFormatError || 
@@ -108,7 +110,7 @@ export class GameController {
             const { id } = req.params;
             await this.gameService.deleteGame(parseInt(id));
             res.status(204).send();
-        } catch (error: unknown) {
+        } catch (error: any) {
             if (error instanceof MissingFieldError || 
                 error instanceof NotFoundError || 
                 error instanceof InvalidFormatError || 
@@ -136,7 +138,7 @@ export class GameController {
             }
 
             res.json(games);
-        } catch (error: unknown) {
+        } catch (error: any) {
             if (error instanceof MissingFieldError || 
                 error instanceof NotFoundError || 
                 error instanceof InvalidFormatError || 
@@ -164,7 +166,7 @@ export class GameController {
             }
 
             res.json(games);
-        } catch (error: unknown) {
+        } catch (error: any) {
             if (error instanceof MissingFieldError || 
                 error instanceof NotFoundError || 
                 error instanceof InvalidFormatError || 
@@ -186,7 +188,7 @@ export class GameController {
             const { id } = req.params;
             const score = await this.gameService.getScoreByGameId(parseInt(id));
             res.json(score);
-        } catch (error: unknown) {
+        } catch (error: any) {
             if (error instanceof NotFoundError) {
                 console.error("Game not found for score:", error);
                 res.status(404).json({ error: "Game not found" });

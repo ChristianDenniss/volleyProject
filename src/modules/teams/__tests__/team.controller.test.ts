@@ -1,5 +1,5 @@
-import { TeamController } from '../team.controller';
-import { TeamService } from '../team.service';
+import { TeamController } from '../team.controller.js';
+import { TeamService } from '../team.service.js';
 
 // Mock data
 const mockTeam = {

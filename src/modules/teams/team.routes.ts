@@ -1,5 +1,5 @@
 import { Application, Router } from 'express';
-import { TeamController } from './team.controller';
+import { TeamController } from './team.controller.js';
 
 export function registerTeamRoutes(app: Application): void {
     const router = Router();

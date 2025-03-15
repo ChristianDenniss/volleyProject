@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { SeasonService } from './season.service';
+import { SeasonService } from './season.service.js';
 
 export class SeasonController {
     private seasonService: SeasonService;
