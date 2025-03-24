@@ -1,4 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany } from 'typeorm';
+// I think this may be a circular depend issue occuring
 import { Teams } from '../teams/team.entity.js';
 import { Stats } from '../stats/stat.entity.js';
 
@@ -19,8 +20,8 @@ export class Players {
     @UpdateDateColumn({ type: 'timestamp' })
     updatedAt!: Date;
 
-    // Many-to-one relationship with teams, each player can have only 1 team
-    @ManyToOne(() => Teams, (team) => team.players)  
+    // Direct circular reference with Teams
+    @ManyToOne(() => Teams, (team) => team.players)
     team!: Teams;
 
     // One-to-many relationship with stats, a player can have many stats entries

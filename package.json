@@ -16,6 +16,8 @@
   "description": "",
   "dependencies": {
     "@godaddy/terminus": "^4.12.1",
+    "@nestjs/common": "^11.0.12",
+    "@nestjs/core": "^11.0.12",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
