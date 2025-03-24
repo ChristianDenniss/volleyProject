@@ -6,9 +6,10 @@
     "test": "jest",
     "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch",
     "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
-    "dev": "nodemon src/index.ts",
+    "dev": "NODE_OPTIONS=\"--loader ts-node/esm --experimental-specifier-resolution=node\" nodemon src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start:prod": "node --es-module-specifier-resolution=node dist/index.js",
+    "start": "NODE_OPTIONS=\"--loader ts-node/esm --experimental-specifier-resolution=node\" ts-node src/index.ts"
   },
   "keywords": [],
   "author": "",

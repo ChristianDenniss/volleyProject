@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
-import { Teams } from '../teams/team.entity.js';
-import { Games } from '../games/game.entity.js';
+import type { Teams } from '../teams/team.entity.js';
+import type { Games } from '../games/game.entity.js';
 
 @Entity()
 export class Seasons {
@@ -23,10 +23,10 @@ export class Seasons {
     updatedAt!: Date;
 
     // One-to-many relationship with teams, a season can have many teams
-    @OneToMany(() => Teams, (team) => team.season)
+    @OneToMany('Teams', 'season')
     teams!: Teams[];
 
     // One-to-many relationship with games, a season can have many games
-    @OneToMany(() => Games, (game) => game.season)
+    @OneToMany('Games', 'season')
     games!: Games[];
 }

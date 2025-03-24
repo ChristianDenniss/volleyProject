@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne } from 'typeorm';
-import { Players } from '../players/player.entity.js';
-import { Games } from '../games/game.entity.js';
+import type { Players } from '../players/player.entity.js';
+import type { Games } from '../games/game.entity.js';
 
 @Entity()
 export class Stats {
@@ -47,10 +47,10 @@ export class Stats {
     updatedAt!: Date;
 
     // Many-to-one relationship with players, each stat belongs to one player
-    @ManyToOne(() => Players, (player) => player.stats)
+    @ManyToOne('Players', 'stats')
     player!: Players;
 
     // Many-to-one relationship with games, each stat is for one game
-    @ManyToOne(() => Games, (game) => game.stats)
+    @ManyToOne('Games', 'stats')
     game!: Games;
 }

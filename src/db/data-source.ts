@@ -1,7 +1,12 @@
 import "reflect-metadata";
 import { DataSource } from "typeorm";
 import dotenv from "dotenv";
-import { join } from "path";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
+
+// Get the current file's directory in ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Entities from modules
 import { Teams } from "../modules/teams/team.entity.js";
@@ -24,7 +29,7 @@ const entities = [
 ];
 
 // Define migration paths
-const migrations = [join(__dirname, "migrations", "*.ts")];
+const migrations = [join(__dirname, "migrations", "*.js")]; // Use .js for compiled files
 
 // Configure AppDataSource
 export const AppDataSource = new DataSource({

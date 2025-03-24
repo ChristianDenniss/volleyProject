@@ -1,7 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, ManyToMany } from 'typeorm';
-import { Seasons } from '../seasons/season.entity.js';
-import { Players } from '../players/player.entity.js';
-import { Games } from '../games/game.entity.js';
+import type { Seasons } from '../seasons/season.entity.js';
+import type { Players } from '../players/player.entity.js';
+import type { Games } from '../games/game.entity.js';
 
 @Entity()
 export class Teams {
@@ -18,13 +18,13 @@ export class Teams {
     updatedAt!: Date;
 
     // Many-to-one relationship with seasons
-    @ManyToOne(() => Seasons, (season) => season.teams)
+    @ManyToOne('Seasons', 'teams')
     season!: Seasons;
 
     // One-to-many relationship with players
-    @OneToMany(() => Players, (player) => player.team)
+    @OneToMany('Players', 'team')
     players!: Players[];
 
-    @ManyToMany(() => Games, (game) => game.teams)
+    @ManyToMany('Games', 'teams')
     games!: Games[];
 }

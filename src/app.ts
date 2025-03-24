@@ -1,5 +1,5 @@
 import express, { Application } from 'express';
-import { registerModules } from './modules/index.js'; // Import from src/modules/index.ts
+import { registerModules } from './modules/index.js'; // Keep .js extension for TypeScript
 
 /**
  * Create and configure an Express application

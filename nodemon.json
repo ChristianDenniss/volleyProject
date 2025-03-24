@@ -1,6 +1,5 @@
 {
-    "watch": ["src"],
-    "ext": "ts",
-    "exec": "ts-node src/index.ts"
-  }
-  
+  "watch": ["src"],
+  "ext": "ts",
+  "exec": "NODE_OPTIONS=\"--loader ts-node/esm --experimental-specifier-resolution=node\" ts-node src/index.ts"
+}

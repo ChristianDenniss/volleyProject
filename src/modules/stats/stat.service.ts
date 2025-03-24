@@ -3,6 +3,7 @@ import { AppDataSource } from '../../db/data-source.js';
 import { Stats } from './stat.entity.js';
 import { Players } from '../players/player.entity.js';
 import { Games } from '../games/game.entity.js';
+import { Teams } from '../teams/team.entity.js';
 import { MissingFieldError } from '../../errors/MissingFieldError.js';
 import { NegativeStatError } from '../../errors/NegativeStatError.js';
 import { NotFoundError } from '../../errors/NotFoundError.js';
@@ -216,10 +217,12 @@ export class StatService {
 
             // If game is not changing, check if player's team is part of the existing game
             if (!gameId) {
-                const gameTeamIds = stat.game.teams.map(team => team.id);
-                if (!gameTeamIds.includes(player.team.id)) {
+                // Use find() to directly check if the player's team is in the game's teams
+                const isTeamInGame = stat.game.teams.some((team: Teams) => team.id === player.team.id);
+                
+                if (!isTeamInGame) {
+                    const gameTeamIds = stat.game.teams.map((team: Teams) => team.id); // Only used for error message
                     throw new ConflictError(`Player teams id; ${player.team.id}, does not belong to the teams in the game; ${gameTeamIds}`);
-                    //we can use same error here as before because its same situation but looking from game perspective
                 }
             }
 

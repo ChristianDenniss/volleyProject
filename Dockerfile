@@ -1,21 +1,26 @@
-# Use official Node.js image - use slim version for smaller image size
-FROM node:18-slim
+# Use official Node.js v20 image - use slim version for smaller image size
+FROM node:20-slim
 
 # Set working directory
 WORKDIR /app
 
-# Copy package.json and install dependencies
+# Copy package files for dependency installation
 COPY package.json package-lock.json ./
-RUN npm install --no-optional
+
+# For production, use:
+# RUN npm ci --omit=dev && npm cache clean --force
+# For development (keeping dev dependencies for ts-node):
+RUN npm ci && npm cache clean --force
 
 # Copy the source code
 COPY . .
 
-# Compile TypeScript
-RUN npm run build
-
 # Expose the application port 
 EXPOSE 3000
 
-# Start the application
-CMD ["node", "dist/server.js"]
+# Development mode with ts-node
+CMD ["npm", "run", "dev"]
+
+# For production, uncomment below and comment the dev CMD above:
+# RUN npm run build
+# CMD ["npm", "run", "start:prod"]

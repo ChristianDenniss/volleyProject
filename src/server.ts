@@ -38,3 +38,5 @@ async function startServer(): Promise<void> {
 }
 
 startServer().catch((error) => console.error('Server startup failed:', error));
+
+export {}; // Add empty export to ensure this is treated as an ESM module
