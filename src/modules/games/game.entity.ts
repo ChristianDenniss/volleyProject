@@ -29,7 +29,6 @@ export class Games {
 
     // Many-to-many relationship with teams, a game can have multiple teams
     @ManyToMany('Teams', 'games')
-    @JoinTable()
     teams!: Teams[];
 
     // One-to-many relationship with stats, a game can have many stats entries

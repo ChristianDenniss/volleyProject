@@ -36,6 +36,28 @@ export class GameController {
         }
     };
 
+    // Create multiple games (batch method)
+    createMultipleGames = async (req: Request, res: Response): Promise<void> => {
+        try {
+            const { gamesData } = req.body;  // Expect an array of game data
+            const savedGames = await this.gameService.createMultipleGames(gamesData);
+            res.status(201).json(savedGames);
+        } catch (error: any) {
+            if (error instanceof MissingFieldError || 
+                error instanceof NotFoundError || 
+                error instanceof InvalidFormatError || 
+                error instanceof DateError || 
+                error instanceof ConflictError || 
+                error instanceof DuplicateError) {
+                console.error("Custom error creating multiple games:", error);
+                res.status(400).json({ error: error.message });
+            } else {
+                console.error("Unexpected error creating multiple games:", error);
+                res.status(500).json({ error: "Failed to create multiple games" });
+            }
+        }
+    };
+
     // Get all games
     getGames = async (req: Request, res: Response): Promise<void> => {
         try {

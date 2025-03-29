@@ -1,4 +1,4 @@
-import { Not, Repository } from 'typeorm';
+import { Not, Repository, In } from 'typeorm';
 import { AppDataSource } from '../../db/data-source.js';
 import { Players } from './player.entity.js';
 import { Teams } from '../teams/team.entity.js';
@@ -124,4 +124,37 @@ export class PlayerService {
             relations: ["stats"],
         });
     }
+
+    /**
+ * Create multiple players at once with validation
+ */
+async createMultiplePlayers(playersData: { name: string, position: string, teamId: number }[]): Promise<Players[]> {
+    // Validation for each player
+    playersData.forEach(playerData => {
+        if (!playerData.name) throw new MissingFieldError("Player name");
+        if (!playerData.position) throw new MissingFieldError("Position");
+        if (!playerData.teamId) throw new MissingFieldError("Team ID");
+    });
+
+    // Fetch teams by their ids (for batch efficiency)
+    const teamIds = playersData.map(playerData => playerData.teamId);
+    const teams = await this.teamRepository.findBy({ id: In(teamIds) });
+
+    // Create players
+    const newPlayers = playersData.map(data => {
+        const team = teams.find(team => team.id === data.teamId);
+        if (!team) throw new NotFoundError(`Team with ID ${data.teamId} not found`);
+
+        const newPlayer = new Players();
+        newPlayer.name = data.name;
+        newPlayer.position = data.position;
+        newPlayer.team = team;
+        
+        return newPlayer;
+    });
+
+    // Save all new players at once
+    return this.playerRepository.save(newPlayers);
+}
+
 }

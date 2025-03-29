@@ -7,6 +7,7 @@ export function registerGameRoutes(app: Application): void {
 
     // Game routes
     router.post('/', gameController.createGame); // Create a new game (include score in body)
+    router.post('/batch', gameController.createMultipleGames); // Create multiple games in batch (new route)
     router.get('/', gameController.getGames); // Get all games
     router.get('/:id', gameController.getGameById); // Get game by ID
     router.put('/:id', gameController.updateGame); // Update a game (update score if needed)

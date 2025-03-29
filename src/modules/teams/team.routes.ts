@@ -7,6 +7,8 @@ export function registerTeamRoutes(app: Application): void {
 
     // Team routes
     router.post('/', teamController.createTeam);
+    // Batch creation for multiple teams
+    router.post('/batch', teamController.createMultipleTeams);  
     router.get('/', teamController.getTeams);
     router.get('/:id', teamController.getTeamById);
     router.put('/:id', teamController.updateTeam);

@@ -1,4 +1,4 @@
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { AppDataSource } from '../../db/data-source.js';
 import { Teams } from './team.entity.js';
 import { Players } from '../players/player.entity.js';
@@ -100,6 +100,69 @@ export class TeamService {
 
         return this.teamRepository.save(newTeam);
     }
+
+
+    async createMultipleTeams(teamsData: { name: string, seasonId: number, playerIds?: number[], gameIds?: number[] }[]): Promise<Teams[]> {
+        // Validation for each team
+        teamsData.forEach(teamData => {
+            if (!teamData.name) throw new MissingFieldError("Team name");
+            if (!teamData.seasonId) throw new MissingFieldError("Season ID");
+        });
+    
+        // Fetch all the seasons
+        const seasonIds = teamsData.map(team => team.seasonId);
+        const seasons = await this.seasonRepository.findBy({ id: In(seasonIds) });
+    
+        // Create the teams
+        const newTeams = await Promise.all(teamsData.map(async (data) => {
+            const season = seasons.find(season => season.id === data.seasonId);
+            if (!season) throw new NotFoundError(`Season with ID ${data.seasonId} not found`);
+    
+            // Check for existing team with the same name and seasonId
+            const existingTeam = await this.teamRepository.findOne({
+                where: { name: data.name, season: { id: data.seasonId } }
+            });
+            if (existingTeam) {
+                throw new DuplicateError(`A team with the name "${data.name}" already exists in season ID: ${data.seasonId}.`);
+            }
+    
+            const newTeam = new Teams();
+            newTeam.name = data.name;
+            newTeam.season = season;
+    
+            // Add players to the team
+            if (data.playerIds && data.playerIds.length > 0) {
+                const players = await this.playerRepository.findByIds(data.playerIds);
+                const foundPlayerIds = players.map(player => player.id);
+                const missingPlayerIds = data.playerIds.filter(playerId => !foundPlayerIds.includes(playerId));
+    
+                if (missingPlayerIds.length > 0) {
+                    throw new MultiplePlayersNotFoundError(missingPlayerIds);
+                }
+    
+                newTeam.players = players;
+            }
+    
+            // Add games to the team
+            if (data.gameIds && data.gameIds.length > 0) {
+                const games = await this.gameRepository.findByIds(data.gameIds);
+                const foundGameIds = games.map(game => game.id);
+                const missingGameIds = data.gameIds.filter(gameId => !foundGameIds.includes(gameId));
+    
+                if (missingGameIds.length > 0) {
+                    throw new MultipleGamesNotFoundError(missingGameIds);
+                }
+    
+                newTeam.games = games;
+            }
+    
+            return newTeam;
+        }));
+    
+        // Save all new teams at once
+        return this.teamRepository.save(newTeams);
+    }
+    
 
 
     /**

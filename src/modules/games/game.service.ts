@@ -1,4 +1,4 @@
-import { Not, Repository } from 'typeorm';
+import { Not, Repository, In } from 'typeorm';
 import { AppDataSource } from '../../db/data-source.js';
 import { Games } from './game.entity.js';
 import { Teams } from '../teams/team.entity.js';
@@ -6,6 +6,7 @@ import { Seasons } from '../seasons/season.entity.js';
 import { MissingFieldError } from '../../errors/MissingFieldError.js';
 import { NotFoundError } from '../../errors/NotFoundError.js';
 import { ConflictError } from '../../errors/ConflictError.js';
+import { DuplicateError } from '../../errors/DuplicateError.js';
 import { InvalidFormatError } from '../../errors/InvalidFormatError.js';
 
 export class GameService {
@@ -77,6 +78,72 @@ export class GameService {
         return this.gameRepository.save(newGame);
     }
 
+     /**
+     * Create multiple games with validation and transaction handling
+     */
+    async createMultipleGames(gamesData: { date: Date, seasonId: number, teamIds: number[] }[]): Promise<Games[]> {
+        // Validation for missing game data
+        gamesData.forEach(gameData => {
+            if (!gameData.date) throw new MissingFieldError("Game date");
+            if (!gameData.seasonId) throw new MissingFieldError("Season ID");
+            if (!gameData.teamIds || gameData.teamIds.length !== 2) throw new MissingFieldError("Exactly 2 teams are required for each game");
+        });
+
+        const queryRunner = AppDataSource.createQueryRunner();
+        await queryRunner.startTransaction();
+
+        try {
+            // Fetch all the seasons
+            const seasonIds = gamesData.map(game => game.seasonId);
+            const seasons = await this.seasonRepository.findBy({ id: In(seasonIds) });
+
+            // Fetch all the teams
+            const teamIds = gamesData.flatMap(game => game.teamIds);
+            const teams = await this.teamRepository.findBy({ id: In(teamIds) });
+
+            // Create the games
+            const newGames = await Promise.all(gamesData.map(async (data) => {
+                const season = seasons.find(season => season.id === data.seasonId);
+                if (!season) throw new NotFoundError(`Season with ID ${data.seasonId} not found`);
+
+                // Find the teams by their IDs
+                const teamsInGame = teams.filter(team => data.teamIds.includes(team.id));
+                if (teamsInGame.length !== 2) {
+                    throw new NotFoundError(`Both teams with IDs ${data.teamIds} must be valid`);
+                }
+
+                // Check if the game already exists with the same teams and season
+                const existingGame = await this.gameRepository.findOne({
+                    where: {
+                        season: { id: data.seasonId },
+                        teams: { id: In(data.teamIds) },
+                        date: data.date
+                    }
+                });
+                if (existingGame) {
+                    throw new DuplicateError(`A game between these teams already exists for the season on ${data.date}`);
+                }
+
+                const newGame = new Games();
+                newGame.date = data.date;
+                newGame.season = season;
+                newGame.teams = teamsInGame;
+
+                return newGame;
+            }));
+
+            // Save all new games at once
+            await queryRunner.manager.save(newGames);
+            await queryRunner.commitTransaction();
+
+            return newGames;
+        } catch (error) {
+            await queryRunner.rollbackTransaction();
+            throw error;
+        } finally {
+            await queryRunner.release();
+        }
+    }
 
     /**
      * Get all games

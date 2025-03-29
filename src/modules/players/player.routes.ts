@@ -7,6 +7,7 @@ export function registerPlayerRoutes(app: Application): void {
 
     // Player routes
     router.post('/', playerController.createPlayer);
+    router.post('/batch', playerController.createMultiplePlayers);  // Batch creation for multiple players
     router.get('/', playerController.getPlayers);
     router.get('/:id', playerController.getPlayerById);
     router.put('/:id', playerController.updatePlayer);
