@@ -10,6 +10,7 @@ export function registerStatRoutes(app: Application): void {
     router.get('/', statController.getStats);
     router.get('/:id', statController.getStatById);
     router.put('/:id', statController.updateStat);
+    router.patch('/:id', statController.updateStat);
     router.delete('/:id', statController.deleteStat);
     router.get('/player/:playerId', statController.getStatsByPlayerId);
     router.get('/game/:gameId', statController.getStatsByGameId);

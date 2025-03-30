@@ -101,6 +101,16 @@ export class TeamService {
         return this.teamRepository.save(newTeam);
     }
 
+    // TeamService
+    async getTeamPlayersByName(name: string): Promise<Teams | null> {
+        const team = await this.teamRepository.findOne({
+            where: { name },
+            relations: ["players"],  // Load players for the specific team
+        });
+
+        return team;  // Return the team (with players) if found, or null if not found
+    }
+
 
     async createMultipleTeams(teamsData: { name: string, seasonId: number, playerIds?: number[], gameIds?: number[] }[]): Promise<Teams[]> {
         // Validation for each team
@@ -163,7 +173,19 @@ export class TeamService {
         return this.teamRepository.save(newTeams);
     }
     
-
+    async getTeamPlayers(teamId: number): Promise<Players[]> {
+        const team = await this.teamRepository.findOne({
+            where: { id: teamId },
+            relations: ["players"],  // Only load players for the specific team
+        });
+    
+        if (!team) {
+            throw new Error("Team not found");
+        }
+    
+        return team.players; // Return the players associated with the team
+    }
+    
 
     /**
      * Get all teams

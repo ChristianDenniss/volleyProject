@@ -11,6 +11,7 @@ export function registerGameRoutes(app: Application): void {
     router.get('/', gameController.getGames); // Get all games
     router.get('/:id', gameController.getGameById); // Get game by ID
     router.put('/:id', gameController.updateGame); // Update a game (update score if needed)
+    router.patch('/:id', gameController.updateGame); // Only update given fields
     router.delete('/:id', gameController.deleteGame); // Delete a game
     router.get('/season/:seasonId', gameController.getGamesBySeasonId); // Get games by season ID
     router.get('/team/:teamId', gameController.getGamesByTeamId); // Get games by team ID

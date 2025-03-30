@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, ManyToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, ManyToMany, JoinTable } from 'typeorm';
 import type { Seasons } from '../seasons/season.entity.js';
 import type { Players } from '../players/player.entity.js';
 import type { Games } from '../games/game.entity.js';
@@ -26,5 +26,9 @@ export class Teams {
     players!: Players[];
 
     @ManyToMany('Games', 'teams')
+    @JoinTable({
+        name: 'teams_games', // Explicitly specify the name of the join table
+    })
     games!: Games[];
+
 }

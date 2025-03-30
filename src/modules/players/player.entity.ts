@@ -11,7 +11,7 @@ export class Players {
     @Column()
     name!: string;
 
-    @Column()
+    @Column({ default: "N/A" })
     position!: string;
 
     @CreateDateColumn({ type: 'timestamp' })

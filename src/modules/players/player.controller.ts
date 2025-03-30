@@ -34,6 +34,32 @@ export class PlayerController {
         }
     };
 
+    // Create a new player using team name
+    createPlayerByName = async (req: Request, res: Response): Promise<void> => {
+        try {
+            const { name, position, teamName } = req.body;
+
+            const savedPlayer = await this.playerService.createPlayerByName(
+                name,
+                position,
+                teamName
+            );
+
+            res.status(201).json(savedPlayer);
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : "Failed to create player";
+
+            if (errorMessage.includes("required") || 
+                errorMessage.includes("not found") || 
+                errorMessage.includes("already exists")) {
+                res.status(400).json({ error: errorMessage });
+            } else {
+                console.error("Error creating player:", error);
+                res.status(500).json({ error: "Failed to create player" });
+            }
+        }
+    };
+
 
      // Create multiple players at once
      createMultiplePlayers = async (req: Request, res: Response): Promise<void> => {
@@ -61,6 +87,36 @@ export class PlayerController {
         }
     };
 
+    // Create multiple players at once using team name
+    createMultiplePlayersByName = async (req: Request, res: Response): Promise<void> => {
+        try {
+            const playersData = req.body;
+    
+            // Ensure the request body is an array
+            if (!Array.isArray(playersData)) {
+                res.status(400).json({ error: "Request body must be an array of player objects" });
+                return;
+            }
+    
+            // Create multiple players by name
+            const createdPlayers = await this.playerService.createMultiplePlayersByName(playersData);
+            res.status(201).json(createdPlayers);
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : "Failed to create multiple players by name";
+    
+            if (errorMessage.includes("required") || errorMessage.includes("not found") || errorMessage.includes("already exists")) {
+                // Check if it's a duplicate error
+                if (errorMessage.includes("already exists")) {
+                    res.status(409).json({ error: errorMessage }); // 409 Conflict for duplicates
+                } else {
+                    res.status(400).json({ error: errorMessage }); // 400 for other validation errors
+                }
+            } else {
+                console.error("Error creating multiple players by name:", error);
+                res.status(500).json({ error: "Failed to create multiple players by name" });
+            }
+        }
+    };
 
     // Get all players
     getPlayers = async (req: Request, res: Response): Promise<void> => {

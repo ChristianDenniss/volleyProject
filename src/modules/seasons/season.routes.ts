@@ -10,6 +10,7 @@ export function registerSeasonRoutes(app: Application): void {
     router.get('/', seasonController.getSeasons);
     router.get('/:id', seasonController.getSeasonById);
     router.put('/:id', seasonController.updateSeason);
+    router.patch('/:id', seasonController.updateSeason);
     router.delete('/:id', seasonController.deleteSeason);
 
     // Register router with prefix

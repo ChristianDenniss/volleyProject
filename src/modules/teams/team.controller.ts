@@ -42,6 +42,48 @@ export class TeamController {
         }
     };
     
+    // TeamController
+    getTeamPlayersByName = async (req: Request, res: Response): Promise<void> => {
+        try {
+            const { name } = req.params;  // Get team name from params
+            const team = await this.teamService.getTeamPlayersByName(name); // Call service method to fetch players by name
+
+            if (!team) {
+                res.status(404).json({ error: "Team not found" });
+                return;
+            }
+
+            res.json(team.players);  // Return players associated with the team
+        } catch (error) {
+            console.error("Error fetching team players by name:", error);
+            res.status(500).json({ error: "Failed to fetch players for team" });
+        }
+    };
+
+
+    // Get players of a specific team
+    getTeamPlayers = async (req: Request, res: Response): Promise<void> => {
+        try {
+            const { teamId } = req.params; // Get team ID from request parameters
+            const players = await this.teamService.getTeamPlayers(parseInt(teamId)); // Call service method
+            
+            if (players.length === 0) {
+                res.status(404).json({ message: `No players found for team with ID ${teamId}` });
+                return;
+            }
+
+            res.json(players); // Return the players of the team
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : "Failed to fetch team players";
+            if (errorMessage.includes("not found")) {
+                res.status(404).json({ error: errorMessage });
+            } else {
+                console.error("Error fetching team players:", error);
+                res.status(500).json({ error: "Failed to fetch team players" });
+            }
+        }
+    };
+
 
     // Get all Teams
     getTeams = async (req: Request, res: Response): Promise<void> => {
