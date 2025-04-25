@@ -71,24 +71,26 @@ export class StatService {
         // Fetch player and game
         const player = await this.playerRepository.findOne({
             where: { id: playerId },
-            relations: ["team"]
+            relations: ["teams"] // Changed from "team" to "teams" to account for multiple teams
         });
-        
+
         if (!player) throw new NotFoundError(`Player with ID: ${playerId} not found`);
 
         const game = await this.gameRepository.findOne({
             where: { id: gameId },
             relations: ["teams"]
         });
-        
+
         if (!game) throw new NotFoundError(`Game with ID: ${gameId} not found`);
 
-        // Check if player's team is part of the game
-        const playerTeamId = player.team.id;
+        // Check if player's teams are part of the game
+        const playerTeamIds = player.teams.map(team => team.id);
         const gameTeamIds = game.teams.map(team => team.id);
-        
-        if (!gameTeamIds.includes(playerTeamId)) {
-            throw new ConflictError(`Player teams id; ${playerTeamId}, does not belong to the teams in the game; ${gameTeamIds}`);
+
+        // Check if any of the player's teams are part of the game
+        const teamConflict = playerTeamIds.some(teamId => gameTeamIds.includes(teamId));
+        if (!teamConflict) {
+            throw new ConflictError(`Player's teams ${playerTeamIds} do not belong to the teams in the game ${gameTeamIds}`);
         }
 
         // Check if stat already exists for this player and game
@@ -210,19 +212,18 @@ export class StatService {
         if (playerId) {
             const player = await this.playerRepository.findOne({
                 where: { id: playerId },
-                relations: ["team"]
+                relations: ["teams"]
             });
 
             if (!player) throw new NotFoundError(`Player with ID: ${playerId} not found`);
 
-            // If game is not changing, check if player's team is part of the existing game
+            // Check if the player's teams are in the game's teams
             if (!gameId) {
-                // Use find() to directly check if the player's team is in the game's teams
-                const isTeamInGame = stat.game.teams.some((team: Teams) => team.id === player.team.id);
+                const isTeamInGame = stat.game.teams.some((team: Teams) => player.teams.some(pTeam => pTeam.id === team.id));
                 
                 if (!isTeamInGame) {
-                    const gameTeamIds = stat.game.teams.map((team: Teams) => team.id); // Only used for error message
-                    throw new ConflictError(`Player teams id; ${player.team.id}, does not belong to the teams in the game; ${gameTeamIds}`);
+                    const gameTeamIds = stat.game.teams.map((team: Teams) => team.id);
+                    throw new ConflictError(`Player's teams ${player.teams.map(team => team.id)} do not belong to the teams in the game ${gameTeamIds}`);
                 }
             }
 
@@ -238,14 +239,14 @@ export class StatService {
 
             if (!game) throw new NotFoundError(`Game with ID: ${gameId} not found`);
 
-            // If player is not changing, check if existing player's team is part of the new game
-            if (!playerId) {
-                const playerTeamId = stat.player.team.id;
-                const gameTeamIds = game.teams.map(team => team.id);
-                if (!gameTeamIds.includes(playerTeamId)) 
-                {
-                    throw new ConflictError(`Player teams id; ${playerTeamId}, does not belong to the teams in the game; ${gameTeamIds}`);
-                }
+            // Check if the game contains the player's team
+            const gameTeamIds = game.teams.map(team => team.id);
+            const playerTeamIds = stat.player.teams.map(team => team.id);
+
+            const validTeam = playerTeamIds.some(id => gameTeamIds.includes(id));
+
+            if (!validTeam) {
+                throw new ConflictError(`Player's teams do not match the teams in the game.`);
             }
 
             stat.game = game;
@@ -254,31 +255,44 @@ export class StatService {
         return this.statRepository.save(stat);
     }
 
-    async getStatsByPlayerId(playerId: number): Promise<Stats[]> {
+    /**
+     * Get all stats for a given player and game
+     */
+    async getStatsByPlayerAndGame(playerId: number, gameId: number): Promise<Stats[]> {
         const player = await this.playerRepository.findOne({
             where: { id: playerId },
-            relations: ['team'],
+            relations: ["teams"]
         });
 
         if (!player) throw new NotFoundError(`Player with ID: ${playerId} not found`);
 
-        return this.statRepository.find({
-            where: { player: { id: playerId } },
-            relations: ['game'], // Assuming stats are related to the game as well
+        const game = await this.gameRepository.findOne({
+            where: { id: gameId },
+            relations: ["teams"]
         });
+
+        if (!game) throw new NotFoundError(`Game with ID: ${gameId} not found`);
+
+        const stats = await this.statRepository.find({
+            where: {
+                player: { id: playerId },
+                game: { id: gameId }
+            }
+        });
+
+        return stats;
     }
-
-
     /**
-     * Get stat by ID
+     * Get a stat by its ID
      */
     async getStatById(id: number): Promise<Stats> {
         const stat = await this.statRepository.findOne({
             where: { id },
-            relations: ['player', 'game'],
+            relations: ["player", "game"]
         });
 
-        if (!stat) throw new NotFoundError(`Stat with ID:${id} not found`);
+        if (!stat) throw new NotFoundError(`Stat with ID: ${id} not found`);
+
         return stat;
     }
 
@@ -286,39 +300,66 @@ export class StatService {
      * Get all stats
      */
     async getAllStats(): Promise<Stats[]> {
-        return this.statRepository.find({
-            relations: ['player', 'game'], // You can adjust relations based on your needs
+        const stats = await this.statRepository.find({
+            relations: ["player", "game"]
         });
+
+        return stats;
     }
 
     /**
-     * Delete a stat entry by ID
+     * Get stats for a given player
+     */
+    async getStatsByPlayerId(playerId: number): Promise<Stats[]> {
+        const stats = await this.statRepository.find({
+            where: { player: { id: playerId } },
+            relations: ["game"]
+        });
+
+        return stats;
+    }
+
+    /**
+     * Get stats for a given game
+     */
+    async getStatsByGameId(gameId: number): Promise<Stats[]> {
+        const stats = await this.statRepository.find({
+            where: { game: { id: gameId } },
+            relations: ["player"]
+        });
+
+        return stats;
+    }
+
+    /**
+     * Delete a stat
      */
     async deleteStat(id: number): Promise<void> {
         const stat = await this.statRepository.findOne({
             where: { id },
-            relations: ['player', 'game'],
+            relations: ["player", "game"]
         });
 
-        if (!stat) throw new NotFoundError(`Stat with ID:${id} not found`); 
+        if (!stat) throw new NotFoundError(`Stat with ID: ${id} not found`);
 
         await this.statRepository.remove(stat);
     }
-
+    
     /**
-     * Get stats by game ID
+     * Get stats for all players in a game
      */
-    async getStatsByGameId(gameId: number): Promise<Stats[]> {
+    async getStatsByGame(gameId: number): Promise<Stats[]> {
         const game = await this.gameRepository.findOne({
             where: { id: gameId },
-            relations: ['teams'], // Assuming stats are related to teams
+            relations: ["teams"]
         });
 
-        if (!game) throw new NotFoundError(`Game with ID:${gameId} not found`);
+        if (!game) throw new NotFoundError(`Game with ID: ${gameId} not found`);
 
         return this.statRepository.find({
-            where: { game: { id: gameId } },
-            relations: ['player'], // Assuming stats are related to the player as well
+            where: {
+                game: { id: gameId }
+            }
         });
     }
 }

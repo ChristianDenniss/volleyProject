@@ -1,4 +1,6 @@
 import { Request, Response } from 'express';
+import { MissingFieldError } from '../../errors/MissingFieldError.js';
+import { NotFoundError } from '../../errors/NotFoundError.js';
 import { PlayerService } from './player.service.js';
 
 export class PlayerController {
@@ -60,6 +62,43 @@ export class PlayerController {
         }
     };
 
+    /**
+     * Controller to handle the request to get teams by player name
+     */
+    getTeamsByPlayerName = async (req: Request, res: Response): Promise<void> =>
+    {
+        const { playerName } = req.params;
+        console.log("Received request for playerName:", playerName); // 👈 Log incoming value
+
+        try 
+        {
+            const teamNames = await this.playerService.getTeamsByPlayerName(playerName);
+            console.log("Found team names:", teamNames); // 👈 Log what service returns
+
+            res.status(200).json({
+                success: true,
+                playerName: playerName,
+                teams: teamNames
+            });
+        } 
+        catch (error) 
+        {
+            console.error("Error occurred:", error); // 👈 Log actual error
+
+            if (error instanceof MissingFieldError) 
+            {
+                res.status(400).json({ success: false, message: error.message });
+            } 
+            else if (error instanceof NotFoundError) 
+            {
+                res.status(404).json({ success: false, message: error.message });
+            } 
+            else 
+            {
+                res.status(500).json({ success: false, message: "Internal Server Error" });
+            }
+        }
+    }
 
      // Create multiple players at once
      createMultiplePlayers = async (req: Request, res: Response): Promise<void> => {
@@ -91,24 +130,48 @@ export class PlayerController {
     createMultiplePlayersByName = async (req: Request, res: Response): Promise<void> => {
         try {
             const playersData = req.body;
-    
+
+            // Log the incoming request data
+            console.log('Request Body:', playersData);
+            
             // Ensure the request body is an array
             if (!Array.isArray(playersData)) {
+                console.log('Error: Request body is not an array');
                 res.status(400).json({ error: "Request body must be an array of player objects" });
                 return;
             }
-    
+
+            // Validate player structure (check for 'name' and 'teamNames' array)
+            if (!playersData.every(player => player.name && Array.isArray(player.teamNames) && player.teamNames.length > 0)) {
+                console.log('Error: Validation failed - Some players are missing "name" or "teamNames"');
+                res.status(400).json({ error: "Each player must have a name and at least one team name in teamNames" });
+                return;
+            }
+
+            console.log('All players have a valid structure, proceeding to creation...');
+
             // Create multiple players by name
             const createdPlayers = await this.playerService.createMultiplePlayersByName(playersData);
-            res.status(201).json(createdPlayers);
+
+            console.log('Created players:', createdPlayers);
+
+            // Respond with success and number of players created
+            res.status(201).json({
+                message: `${createdPlayers.length} players created successfully`,
+                players: createdPlayers
+            });
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : "Failed to create multiple players by name";
-    
+
+            console.error('Error occurred:', errorMessage);
+
             if (errorMessage.includes("required") || errorMessage.includes("not found") || errorMessage.includes("already exists")) {
                 // Check if it's a duplicate error
                 if (errorMessage.includes("already exists")) {
+                    console.log('Conflict error: Duplicate player(s)');
                     res.status(409).json({ error: errorMessage }); // 409 Conflict for duplicates
                 } else {
+                    console.log('Bad request error: Validation error');
                     res.status(400).json({ error: errorMessage }); // 400 for other validation errors
                 }
             } else {
@@ -117,6 +180,8 @@ export class PlayerController {
             }
         }
     };
+
+
 
     // Get all players
     getPlayers = async (req: Request, res: Response): Promise<void> => {

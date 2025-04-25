@@ -16,6 +16,7 @@ export function registerTeamRoutes(app: Application): void {
     router.delete('/:id', teamController.deleteTeam);
     router.get('/season/:seasonId', teamController.getTeamsBySeasonId);
     
+    
     // get a teams players using the teams name
     router.get('/name/:name/players', teamController.getTeamPlayersByName);
 

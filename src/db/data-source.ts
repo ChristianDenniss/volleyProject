@@ -15,6 +15,8 @@ import { Games } from "../modules/games/game.entity.js";
 import { Seasons } from "../modules/seasons/season.entity.js";
 import { Stats } from "../modules/stats/stat.entity.js";
 import { User } from "../modules/user/user.entity.js";
+import { Article } from "../modules/articles/article.entity.js";
+
 
 dotenv.config();
 
@@ -25,7 +27,8 @@ const entities = [
     Games,
     Seasons,
     Stats,
-    User
+    User,
+    Article
 ];
 
 // Define migration paths

@@ -157,6 +157,8 @@ export class TeamController {
         }
     };
 
+    
+
     // Fetch teams by season ID
     getTeamsBySeasonId = async (req: Request, res: Response): Promise<void> => {
         try {

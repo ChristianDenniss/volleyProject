@@ -21,8 +21,10 @@ export class Teams {
     @ManyToOne('Seasons', 'teams')
     season!: Seasons;
 
-    // One-to-many relationship with players
-    @OneToMany('Players', 'team')
+    @ManyToMany('Players', 'teams')
+    @JoinTable({
+        name: 'teams_players', // Explicitly specify the name of the join table
+    })
     players!: Players[];
 
     @ManyToMany('Games', 'teams')
