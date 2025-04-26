@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
 import { TeamService } from './team.service.js';
+import { MissingFieldError } from '../../errors/MissingFieldError.js';
+import { NotFoundError } from '../../errors/NotFoundError.js';
 
 export class TeamController {
     private teamService: TeamService;
@@ -25,22 +27,38 @@ export class TeamController {
         }
     };
 
-    createMultipleTeams = async (req: Request, res: Response): Promise<void> => {
-        try {
-            const teamsData = req.body;
-            const savedTeams = await this.teamService.createMultipleTeams(teamsData);
-            res.status(201).json(savedTeams);
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to create teams";
-    
-            if (errorMessage.includes("required") || errorMessage.includes("not found")) {
-                res.status(400).json({ error: errorMessage });
-            } else {
-                console.error("Error creating teams:", error);
-                res.status(500).json({ error: "Failed to create teams" });
+    createMultipleTeams = async (req: Request, res: Response): Promise<void> => 
+        {
+            try
+            {
+                // Grab array of team creation data from request body
+                const teamsData = req.body;
+        
+                // Call the service method to create teams
+                const savedTeams = await this.teamService.createMultipleTeams(teamsData);
+        
+                // Respond with created team objects
+                res.status(201).json(savedTeams);
             }
-        }
-    };
+            catch (error)
+            {
+                // Extract message safely
+                const errorMessage = error instanceof Error ? error.message : "Failed to create teams";
+        
+                // Handle known validation errors
+                if (errorMessage.includes("required") || errorMessage.includes("not found") || errorMessage.includes("Duplicate"))
+                {
+                    res.status(400).json({ error: errorMessage });
+                }
+                else
+                {
+                    // Log and return generic server error
+                    console.error("Error creating teams:", error);
+                    res.status(500).json({ error: "Failed to create teams" });
+                }
+            }
+        };
+        
     
     // TeamController
     getTeamPlayersByName = async (req: Request, res: Response): Promise<void> => {
@@ -157,7 +175,31 @@ export class TeamController {
         }
     };
 
-    
+    async getTeamsByName(req: Request, res: Response): Promise<void> {
+        try {
+            const { name } = req.params;
+        
+            if (!name) {
+                throw new MissingFieldError("Team name is required");
+            }
+        
+            const teams = await this.teamService.getTeamsByName(name);
+            res.status(200).json(teams);
+        } catch (error: unknown) {
+            console.error('Error in getTeamsByName:', error);
+            
+            if (error instanceof Error) {
+                if (error instanceof NotFoundError || error instanceof MissingFieldError) {
+                    res.status(400).json({ message: error.message });
+                } else {
+                    res.status(500).json({ message: 'An unexpected error occurred', error: error.message });
+                }
+            } else {
+                res.status(500).json({ message: 'An unexpected error occurred', error: JSON.stringify(error) });
+            }
+        }
+    }    
+         
 
     // Fetch teams by season ID
     getTeamsBySeasonId = async (req: Request, res: Response): Promise<void> => {

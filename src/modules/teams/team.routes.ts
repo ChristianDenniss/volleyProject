@@ -22,6 +22,8 @@ export function registerTeamRoutes(app: Application): void {
 
     // Route for getting players of a specific team
     router.get('/:teamId/players', teamController.getTeamPlayers);
+    
+    router.get('/name/:name', teamController.getTeamsByName.bind(teamController));
 
     // Register router with prefix
     app.use('/api/teams', router);

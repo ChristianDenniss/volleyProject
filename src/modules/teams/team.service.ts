@@ -1,4 +1,4 @@
-import { Repository, In } from 'typeorm';
+import { Repository, In, Not } from 'typeorm';
 import { AppDataSource } from '../../db/data-source.js';
 import { Teams } from './team.entity.js';
 import { Players } from '../players/player.entity.js';
@@ -113,6 +113,29 @@ export class TeamService {
         return team;  // Return the team (with players) if found, or null if not found
     }
 
+    async getTeamsByName(name: string): Promise<Teams[]> {
+        if (!name) {
+            throw new MissingFieldError("Team name");
+        }
+    
+        try {
+            const teams = await this.teamRepository.find({
+                where: { name },
+                relations: ["season", "players", "games"],
+            });
+    
+            if (teams.length === 0) {
+                throw new NotFoundError(`No teams found with name: ${name}`);
+            }
+    
+            return teams;
+        } catch (error) {
+            console.error('Error in getTeamsByName service:', error);
+            throw new Error('Database error occurred');
+        }
+    }    
+
+
     /**
      * Create multiple teams
      */
@@ -132,16 +155,30 @@ export class TeamService {
             const season = seasons.find(season => season.id === data.seasonId);
             if (!season) throw new NotFoundError(`Season with ID ${data.seasonId} not found`);
 
-            // Check for existing team with the same name and seasonId
+            // Check for existing team with the same name and a different seasonId
+            let teamName = data.name;
             const existingTeam = await this.teamRepository.findOne({
-                where: { name: data.name, season: { id: data.seasonId } }
+                where: { name: teamName, season: { id: data.seasonId } }
             });
+
             if (existingTeam) {
-                throw new DuplicateError(`A team with the name "${data.name}" already exists in season ID: ${data.seasonId}.`);
+                // If the team already exists in the same season, throw an error
+                throw new DuplicateError(`A team with the name "${teamName}" already exists in season ID: ${data.seasonId}.`);
+            }
+
+            // Check if the team name exists in any other season
+            const existingTeamsInOtherSeasons = await this.teamRepository.find({
+                where: { name: teamName, season: { id: Not(data.seasonId) } }
+            });
+
+            // If a team with the same name exists in a different season, append the seasonId to the name
+            if (existingTeamsInOtherSeasons.length > 0) {
+                console.log("A team existed with the name " +  teamName + " in another season so we append seasonId");
+                teamName = `${data.name} (S${data.seasonId})`;
             }
 
             const newTeam = new Teams();
-            newTeam.name = data.name;
+            newTeam.name = teamName;
             newTeam.season = season;
 
             // Add players to the team
@@ -176,6 +213,7 @@ export class TeamService {
         // Save all new teams at once
         return this.teamRepository.save(newTeams);
     }
+
 
     /**
      * Get players for a team by team ID
