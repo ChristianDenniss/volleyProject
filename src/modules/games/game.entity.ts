@@ -17,6 +17,9 @@ export class Games {
     @Column()
     date!: Date;
 
+    @Column({ nullable: true })
+    name!: string;  // Store the concatenated team names, "Vs.", and season ID
+
     @CreateDateColumn({ type: 'timestamp' })
     createdAt!: Date;
 

@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
+    "typeorm": "typeorm",
+    "typeorm:run": "typeorm migration:run",
+    "typeorm:revert": "typeorm migration:revert",
+    "typeorm:generate": "typeorm migration:generate",
     "test": "jest",
     "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch",
     "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
@@ -25,7 +29,7 @@
     "pg": "^8.13.3",
     "reflect-metadata": "^0.2.2",
     "tsconfig-paths": "^4.2.0",
-    "typeorm": "^0.3.21"
+    "typeorm": "^0.3.22"
   },
   "devDependencies": {
     "@swc/core": "^1.11.8",
@@ -33,7 +37,7 @@
     "@types/express": "^5.0.0",
     "@types/jest": "^29.5.14",
     "@types/jsonwebtoken": "^9.0.6",
-    "@types/node": "^22.13.8",
+    "@types/node": "^22.15.2",
     "@types/pg": "^8.11.11",
     "@types/supertest": "^6.0.2",
     "jest": "^29.7.0",
@@ -41,7 +45,7 @@
     "supertest": "^7.0.0",
     "ts-jest": "^29.2.6",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.3"
   },
   "type": "module"
 }

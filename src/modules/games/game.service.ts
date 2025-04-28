@@ -27,55 +27,48 @@ export class GameService {
         date: Date, 
         seasonId: number, 
         teamIds: number[], 
-        team1Score: number, 
-        team2Score: number
+        team1Score: number,  // Added team1Score
+        team2Score: number   // Added team2Score
     ): Promise<Games> {
-        // Validation
-        if (!date) throw new MissingFieldError("Game date");
-        if (!seasonId) throw new MissingFieldError("Season ID");
-        if (!teamIds || !teamIds.length) throw new MissingFieldError("Team IDs");
-        if (team1Score === undefined || team2Score === undefined) throw new MissingFieldError("Scores");
+        try {
+            // Validation
+            if (!seasonId) throw new MissingFieldError("Season ID");
+            if (!teamIds || !teamIds.length) throw new MissingFieldError("Team IDs");
+            if (team1Score < 0 || team2Score < 0) throw new InvalidFormatError("Scores cannot be negative");
 
-        // Validate gameDate is not in the past
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const gameDate = new Date(date);
-        
-        // Validate date format
-        if (isNaN(gameDate.getTime())) {
-            throw new InvalidFormatError("Invalid date format");
+            // Fetch the season
+            const season = await this.seasonRepository.findOneBy({ id: seasonId });
+            if (!season) throw new NotFoundError(`Season with ID ${seasonId} not found`);
+
+            // Fetch teams
+            const teams = await this.teamRepository.findByIds(teamIds);
+            if (teams.length !== teamIds.length) {
+                const missingTeams = teamIds.filter(id => !teams.some(team => team.id === id));
+                throw new NotFoundError(`Teams with IDs ${missingTeams.join(', ')} not found`);
+            }
+            
+            // Ensure we have at least 2 teams for a game
+            if (teams.length < 2) {
+                throw new MissingFieldError("At least two teams are required for a game");
+            }
+
+            // Log the creation step
+            console.log("Creating new game with teams:", teams.map(team => team.name));
+
+            // Create new game
+            const newGame = new Games();
+            newGame.date = date; // No date validation
+            newGame.season = season;
+            newGame.teams = teams;
+            newGame.team1Score = team1Score;  // Set team1Score
+            newGame.team2Score = team2Score;  // Set team2Score
+
+            return this.gameRepository.save(newGame);
+        } catch (error) {
+            // Log error details for debugging
+            console.error("Error creating game:", error);
+            throw error; // Rethrow the error to be handled at the controller level
         }
-
-        // Ensure game date is not in the past
-        if (gameDate < today) {
-            throw new InvalidFormatError("Game date cannot be in the past");
-        }
-
-        // Fetch the season
-        const season = await this.seasonRepository.findOneBy({ id: seasonId });
-        if (!season) throw new NotFoundError(`Season with ID ${seasonId} not found`);
-
-        // Fetch teams
-        const teams = await this.teamRepository.findByIds(teamIds);
-        if (teams.length !== teamIds.length) {
-            const missingTeams = teamIds.filter(id => !teams.some(team => team.id === id));
-            throw new NotFoundError(`Teams with IDs ${missingTeams.join(', ')} not found`);
-        }
-        
-        // Ensure we have at least 2 teams for a game
-        if (teams.length < 2) {
-            throw new MissingFieldError("At least two teams are required for a game");
-        }
-
-        // Create new game
-        const newGame = new Games();
-        newGame.date = gameDate;
-        newGame.season = season;
-        newGame.teams = teams;
-        newGame.team1Score = team1Score;
-        newGame.team2Score = team2Score;
-
-        return this.gameRepository.save(newGame);
     }
 
      /**
@@ -155,6 +148,49 @@ export class GameService {
         });
     }
 
+    async createGameByNames(
+        date: Date, 
+        seasonId: number, 
+        teamNames: string[], 
+        team1Score: number,  // Added team1Score
+        team2Score: number   // Added team2Score
+    ): Promise<Games> {
+        console.log("Received createGameByNames parameters:", { date, seasonId, teamNames, team1Score, team2Score });
+    
+        try {
+            // Validate that scores are not negative
+            if (team1Score < 0 || team2Score < 0) {
+                throw new InvalidFormatError("Scores cannot be negative.");
+            }
+    
+            // Fetch teams by names
+            const teams = await this.teamRepository.findBy({ name: In(teamNames) });
+            console.log("Teams fetched from the database:", teams);
+    
+            // Ensure we have exactly two teams
+            if (teams.length !== 2) {
+                const missingTeams = teamNames.filter(name => !teams.some(team => team.name === name));
+                console.error("Missing teams:", missingTeams);
+                throw new NotFoundError(`Teams with names ${missingTeams.join(', ')} not found`);
+            }
+    
+            // Fetch the season by ID
+            const season = await this.seasonRepository.findOneBy({ id: seasonId });
+            if (!season) {
+                throw new NotFoundError(`Season with ID ${seasonId} not found`);
+            }
+    
+            // Call the original createGame method with team IDs and the provided scores
+            const teamIds = teams.map(team => team.id);
+            console.log("Creating game with team IDs:", teamIds);
+            return this.createGame(date, seasonId, teamIds, team1Score, team2Score); // Pass the scores to createGame
+        } catch (error) {
+            console.error("Error occurred in createGameByNames service:", error);
+            throw error; // Re-throw the error to be handled by the controller
+        }
+    }
+    
+    
     /**
      * Get game by ID with validation
      */

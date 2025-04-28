@@ -32,7 +32,7 @@ const entities = [
 ];
 
 // Define migration paths
-const migrations = [join(__dirname, "migrations", "*.js")]; // Use .js for compiled files
+const migrations = [join(__dirname, "migrations", "*.js")]; 
 
 // Configure AppDataSource
 export const AppDataSource = new DataSource({

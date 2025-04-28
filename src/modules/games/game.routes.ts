@@ -16,6 +16,8 @@ export function registerGameRoutes(app: Application): void {
     router.get('/season/:seasonId', gameController.getGamesBySeasonId); // Get games by season ID
     router.get('/team/:teamId', gameController.getGamesByTeamId); // Get games by team ID
 
+    router.post('/createByNames', gameController.createGameByNames); 
+
     // New endpoint to get the score of a specific game by game ID
     router.get('/:id/score', gameController.getGameScoreById); // Get the score by game ID
 
