@@ -5,11 +5,13 @@ import { registerGameRoutes } from './games/game.routes.js';
 import { registerSeasonRoutes } from './seasons/season.routes.js';
 import { registerStatRoutes } from './stats/stat.routes.js';
 import { registerUserRoutes } from './user/user.routes.js';
+import { registerArticleRoutes } from './articles/article.routes.js';
 
 /**
  * Register all module routes with the Express application
  */
-export function registerModules(app: Application): void {
+export function registerModules(app: Application): void 
+{
     // Register routes from each module
     registerTeamRoutes(app);
     registerPlayerRoutes(app);
@@ -17,7 +19,8 @@ export function registerModules(app: Application): void {
     registerSeasonRoutes(app);
     registerStatRoutes(app);
     registerUserRoutes(app);
-    
+    registerArticleRoutes(app);
+
     // Default route
     app.get('/', (req, res) => {
         res.json({ message: 'Volleyball API is running' });

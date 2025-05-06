@@ -29,7 +29,8 @@
     "pg": "^8.13.3",
     "reflect-metadata": "^0.2.2",
     "tsconfig-paths": "^4.2.0",
-    "typeorm": "^0.3.22"
+    "typeorm": "^0.3.22",
+    "zod": "^3.24.3"
   },
   "devDependencies": {
     "@swc/core": "^1.11.8",

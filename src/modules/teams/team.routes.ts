@@ -1,4 +1,6 @@
 import { Application, Router } from 'express';
+import { validate } from '../../middleware/validate.js';
+import { createTeamSchema, updateTeamSchema } from './teams.schema.js';
 import { TeamController } from './team.controller.js';
 
 export function registerTeamRoutes(app: Application): void {
@@ -6,13 +8,13 @@ export function registerTeamRoutes(app: Application): void {
     const teamController = new TeamController();
 
     // Team routes
-    router.post('/', teamController.createTeam);
+    router.post('/', validate(createTeamSchema), teamController.createTeam);
     // Batch creation for multiple teams
-    router.post('/batch', teamController.createMultipleTeams);  
+    router.post('/batch', validate(createTeamSchema), teamController.createMultipleTeams);  
     router.get('/', teamController.getTeams);
     router.get('/:id', teamController.getTeamById);
-    router.put('/:id', teamController.updateTeam);
-    router.patch('/:id', teamController.updateTeam);
+    router.put('/:id', validate(updateTeamSchema), teamController.updateTeam);
+    router.patch('/:id', validate(updateTeamSchema), teamController.updateTeam);
     router.delete('/:id', teamController.deleteTeam);
     router.get('/season/:seasonId', teamController.getTeamsBySeasonId);
     

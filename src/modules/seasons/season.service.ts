@@ -8,7 +8,6 @@ import { DateError } from '../../errors/DateErrors.js';
 import { OutOfBoundsError } from '../../errors/OutOfBoundsError.js';
 import { ConflictError } from '../../errors/ConflictError.js';
 
-
 export class SeasonService {
     private seasonRepository: Repository<Seasons>;
 
