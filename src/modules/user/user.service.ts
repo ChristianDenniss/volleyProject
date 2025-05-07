@@ -2,10 +2,11 @@ import { Repository } from 'typeorm';
 import { AppDataSource } from '../../db/data-source.js';
 import { User } from './user.entity.js';
 import jwt from 'jsonwebtoken';
-import crypto from 'crypto';
+import bcrypt from 'bcryptjs';
 import { MissingFieldError } from '../../errors/MissingFieldError.js';
 import { DuplicateError } from '../../errors/DuplicateError.js';
 import { NotFoundError } from '../../errors/NotFoundError.js';
+import { UnauthorizedError } from '../../errors/UnauthorizedError.js';
 
 export class UserService {
     private userRepository: Repository<User>;
@@ -13,18 +14,20 @@ export class UserService {
 
     constructor() {
         this.userRepository = AppDataSource.getRepository(User);
-        this.JWT_SECRET = process.env.JWT_SECRET || 'your-default-jwt-secret';
+        this.JWT_SECRET = process.env.JWT_SECRET || '';
+        if (!this.JWT_SECRET) {
+            throw new Error("JWT_SECRET must be defined in environment variables");
+        }
     }
-    
-    // Simple password hashing using crypto
-    private hashPassword(password: string): string {
-        return crypto.createHash('sha256').update(password).digest('hex');
+
+    // Hash password using bcrypt
+    private async hashPassword(password: string): Promise<string> {
+        return bcrypt.hash(password, 10);
     }
-    
-    // Simple password verification
-    private verifyPassword(plainPassword: string, hashedPassword: string): boolean {
-        const hashedInput = this.hashPassword(plainPassword);
-        return hashedInput === hashedPassword;
+
+    // Verify password using bcrypt
+    private async verifyPassword(plainPassword: string, hashedPassword: string): Promise<boolean> {
+        return bcrypt.compare(plainPassword, hashedPassword);
     }
 
     /**
@@ -59,8 +62,8 @@ export class UserService {
             }
         }
 
-        // Hash the password with crypto
-        const hashedPassword = this.hashPassword(password);
+        // Hash the password
+        const hashedPassword = await this.hashPassword(password);
 
         // Create new user
         const newUser = new User();
@@ -143,7 +146,7 @@ export class UserService {
 
         if (password) {
             if (password.length < 6) throw new Error("Password must be at least 6 characters long");
-            user.password = this.hashPassword(password);
+            user.password = await this.hashPassword(password);
         }
 
         if (role) {
@@ -176,10 +179,10 @@ export class UserService {
         if (!password) throw new MissingFieldError("Password");
 
         const user = await this.userRepository.findOneBy({ username });
-        if (!user) throw new Error("Invalid username or password");
+        if (!user) throw new UnauthorizedError("Invalid username or password");
 
-        const isPasswordValid = this.verifyPassword(password, user.password);
-        if (!isPasswordValid) throw new Error("Invalid username or password");
+        const isPasswordValid = await this.verifyPassword(password, user.password);
+        if (!isPasswordValid) throw new UnauthorizedError("Invalid username or password");
 
         // Generate JWT token
         const token = jwt.sign(

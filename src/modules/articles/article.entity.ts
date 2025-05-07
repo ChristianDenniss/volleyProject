@@ -25,6 +25,7 @@ export class Article
     @UpdateDateColumn({ type: "timestamp" })
     updatedAt!: Date;
 
+    //come back and fix this making it relational later on
     @Column({ default: 0 })
     likes!: number;
 
