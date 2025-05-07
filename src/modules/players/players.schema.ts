@@ -10,9 +10,15 @@ export const createPlayerSchema = z.object({
     
 });
 
-export const createPlayerSchemaWithTeamName = createPlayerSchema.extend({
-    teamName: z.string().min(1, { message: "Team Name is required" }),
-});
+// Variant that uses teamName instead of teamId
+export const createPlayerSchemaWithTeamName = createPlayerSchema
+    .omit({ teamId: true })
+    .extend({
+        // Accepts an array of team names instead of a single string
+        teamNames: z.array(
+            z.string().min(1, { message: "Team name must be a non-empty string" })
+        ).min(1, { message: "At least one team name is required" }),
+    });
 
 export type CreatePlayerDto = z.infer<typeof createPlayerSchema>;
 

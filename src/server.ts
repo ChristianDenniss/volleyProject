@@ -4,6 +4,7 @@ import { createTerminus } from '@godaddy/terminus';
 import dotenv from 'dotenv';
 import createApp from './app.js';
 import { AppDataSource } from './db/data-source.js';
+import { errorHandler } from './middleware/errorHandling.js'; // Import error handler
 
 dotenv.config();
 const PORT = process.env.PORT || 5000;
@@ -15,6 +16,10 @@ async function startServer(): Promise<void> {
     console.log('Database connection established');
 
     const app = createApp();
+
+    // Register global error handler LAST
+    app.use(errorHandler); // Add this line to register the error handler
+
     const server = createServer(app);
 
     // Handle server graceful shutdown
