@@ -17,11 +17,13 @@ export class ArticleService {
     /**
      * Create a new article with validation
      */
-    async createArticle(title: string, content: string, userId: number): Promise<Article> {
+    async createArticle(title: string, content: string, userId: number, summary: string, imageUrl: string): Promise<Article> {
         // Validation
         if (!title) throw new MissingFieldError("Article title");
         if (!content) throw new MissingFieldError("Article content");
         if (!userId) throw new MissingFieldError("User ID");
+        if (!summary) throw new MissingFieldError("Article summary");
+        if (!imageUrl) throw new MissingFieldError("Article image URL");
 
         // Fetch the user (author)
         const user = await this.userRepository.findOneBy({ id: userId });
@@ -31,7 +33,10 @@ export class ArticleService {
         const newArticle = new Article();
         newArticle.title = title;
         newArticle.content = content;
+        newArticle.summary = summary;
+        newArticle.imageUrl = imageUrl;
         newArticle.author = user;  // Linking author to article
+        newArticle.likes = 0;  // Initialize likes to 0
 
         return this.articleRepository.save(newArticle);
     }
@@ -64,7 +69,14 @@ export class ArticleService {
     /**
      * Update an article with validation
      */
-    async updateArticle(id: number, title?: string, content?: string, userId?: number): Promise<Article> {
+    async updateArticle(
+        id: number, 
+        title?: string, 
+        content?: string, 
+        userId?: number,
+        summary?: string,
+        imageUrl?: string
+    ): Promise<Article> {
         if (!id) throw new MissingFieldError("Article ID");
 
         const article = await this.articleRepository.findOne({
@@ -76,6 +88,8 @@ export class ArticleService {
 
         if (title) article.title = title;
         if (content) article.content = content;
+        if (summary) article.summary = summary;
+        if (imageUrl) article.imageUrl = imageUrl;
 
         if (userId) {
             const user = await this.userRepository.findOneBy({ id: userId });

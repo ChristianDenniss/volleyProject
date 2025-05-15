@@ -32,7 +32,7 @@ export class PlayerService
 
         // Create new player
         const newPlayer = new Players();
-        newPlayer.name = name;
+        newPlayer.name = name.toLowerCase();
         newPlayer.position = position;
         newPlayer.teams = [team]; // Associate player with team via the many-to-many relation
 
@@ -54,7 +54,7 @@ export class PlayerService
 
         // Check if a player with the same name already exists on the same team
         const existingPlayer = await this.playerRepository.findOne({
-            where: { name: name, teams: { id: team.id } },
+            where: { name: name.toLowerCase(), teams: { id: team.id } },
         });
 
         if (existingPlayer) {
@@ -63,7 +63,7 @@ export class PlayerService
 
         // Create new player
         const newPlayer = new Players();
-        newPlayer.name = name;
+        newPlayer.name = name.toLowerCase();
         newPlayer.position = position;
         newPlayer.teams = [team]; // Associate player with team via the many-to-many relation
 
@@ -79,11 +79,11 @@ export class PlayerService
 
         // Find the player by name with related teams
         const player = await this.playerRepository.findOne({
-            where: { name: playerName },
+            where: { name: playerName.toLowerCase() },
             relations: ["teams"], // Fetch related teams
         });
 
-        if (!player) throw new NotFoundError(`Player with name "${playerName}" not found`);
+        if (!player) throw new NotFoundError(`Player with name "${playerName.toLowerCase()}" not found`);
 
         // Extract and return the team names or IDs
         const teamNames = player.teams.map(team => team.name); // If you want names
@@ -99,7 +99,7 @@ export class PlayerService
     async getAllPlayers(): Promise<Players[]> 
     {
         return this.playerRepository.find({
-            relations: ["teams", "stats"], // Fetch related teams and stats
+            relations: ["teams", "teams.season", "stats"], // Include season relation for teams
         });
     }
 
@@ -316,10 +316,10 @@ export class PlayerService
             {
                 // Create new player with all teams
                 const newPlayer = new Players();
-                newPlayer.name = playerData.name;
+                newPlayer.name = playerData.name.toLowerCase();
                 newPlayer.position = playerData.position;
                 newPlayer.teams = playerTeams;
-                console.log('Creating new player:', playerData.name);
+                console.log('Creating new player:', playerData.name.toLowerCase());
                 createdOrUpdatedPlayers.push(await this.playerRepository.save(newPlayer));
             }
         }

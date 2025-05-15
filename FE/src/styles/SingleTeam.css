@@ -1,0 +1,292 @@
+/* General Team Details Styling */
+.team-details {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 40px auto; /* Centered horizontally, with top/bottom margin */
+    padding: 20px;
+    color: #333;
+    text-transform: capitalize;
+    max-width: 1600px; /* Allow container to be much wider */
+    width: 90%;       /* Use percentage width */
+    box-sizing: border-box; /* Better width calculation */
+}
+
+/* Centered and Stylized Team Name */
+.team-details h1 {
+    text-align: center;
+    font-size: 3rem;
+    font-weight: 800;
+    color: #1a1a1a;
+    margin-bottom: 30px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+/* Season and Games Info */
+.team-details p {
+    font-size: 1.4rem;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+/* Section Title Styling */
+.players-list h2 {
+    font-size: 2rem;
+    margin: 30px 0 15px;
+    color: #1e3d59;
+    border-bottom: 3px solid #d6ebff;
+    padding-bottom: 8px;
+    letter-spacing: 1px;
+}
+
+/* Collapse Button */
+.toggle-button {
+    background-color: #d6ebff;
+    border: none;
+    font-size: 1rem;
+    padding: 10px 15px;
+    margin-bottom: 20px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background-color 0.3s ease;
+}
+
+.toggle-button:hover {
+    background-color: #c1e0ff;
+}
+
+/* Player List */
+.players-list ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.players-list li {
+    background-color: #f7f7f7;
+    border-left: 6px solid #d6ebff;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Player Info */
+.player-info {
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+}
+
+/* Stats Block */
+.player-stats {
+    background-color: #d6ebff;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 10px;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    border-bottom: 1px dashed #a8c9e3;
+}
+
+.stat-item:last-child {
+    border-bottom: none;
+}
+
+.stat-item span {
+    font-size: 1.2rem; /* Increased the size for stat values */
+    color: #333;
+}
+
+/* Games Section */
+.games-section
+{
+    margin-top: 40px;
+}
+
+/* Games Section Title Matching Players Title */
+.games-section h2
+{
+    font-size: 2rem;
+    margin: 30px 0 15px;
+    color: #1e3d59;
+    border-bottom: 3px solid #d6ebff;
+    padding-bottom: 8px;
+    letter-spacing: 1px;
+}
+
+/* Game Cards */
+.games-scroll-container
+{
+    display: flex;
+    overflow-x: auto;
+    gap: 16px;
+    padding: 12px 0;
+}
+
+.game-card-single-team /* This applies to the <Link> which renders as <a> */
+{
+    min-width: 270px;
+    max-width: 270px;
+    min-height: 250px;
+    background-color: #d6ebff;
+    padding: 14px 12px;
+    border-radius: 16px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;   /* Stacks direct children (<p> tags) vertically */
+    transition: transform 0.2s ease-in-out;
+    text-align: left;
+    text-decoration: none;     /* Remove underline from link */
+    color: inherit;            /* Use surrounding text color, not default link color */
+    box-sizing: border-box;    /* Ensure padding is included in width/height */
+    justify-content: flex-start;
+}
+
+.game-card-single-team:hover
+{
+    transform: scale(1.04);
+}
+
+.game-card-single-team p /* Applies to paragraphs directly inside .game-card */
+{
+    margin: 6px 0;             /* Vertical spacing */
+    font-size: 18px;
+    color: #000;               /* Text color for paragraphs */
+    text-align: left;
+    white-space: normal;
+    word-wrap: break-word;
+    /* Ensure block display, though it's default for <p> */
+    display: block;
+    width: 100%;
+}
+
+.game-card-single-team p:first-child /* Style the first paragraph (game name) */
+{ 
+    justify-content: flex-start;
+    /* font-weight: bold; -> Already handled by <strong> */
+    font-size: 1.1em; /* Make name slightly larger than other text */
+    margin-bottom: 30px; /* More space below name */
+    color: #1e3d59;      /* Darker color for name */
+}
+
+/* REMOVED unnecessary/potentially problematic rules for span/strong/a/div */
+
+
+/* Team Title */
+.team-title
+{
+    text-align: center;
+    font-size: 2.2rem;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+/* Toggle Button (generic, used in multiple places) */
+.toggle-button
+{
+    margin: 10px 0;
+    padding: 6px 12px;
+    border: none;
+    background-color: #d6ebff;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    color: #000;
+}
+
+/* Team Totals Section */
+.team-totals {
+    margin-top: 40px;
+}
+
+/* Team Totals Title */
+.team-totals h2 {
+    font-size: 2rem;
+    margin: 30px 0 15px;
+    color: #1e3d59;
+    border-bottom: 3px solid #d6ebff;
+    padding-bottom: 8px;
+    letter-spacing: 1px;
+}
+
+/* Collapse Button for Team Totals */
+.team-totals .toggle-button {
+    margin: 10px 0 20px 0;
+    padding: 10px 15px;
+    font-size: 1rem;
+}
+
+.team-totals .toggle-button:hover {
+    background-color: #c1e0ff;
+}
+
+/* Wrapper to align left and right totals side by side */
+.team-totals .totals-columns /* Plural: The flex container */
+{
+    display: flex;
+    gap: 4rem; /* Gap between the columns */
+    margin-top: 1rem;
+    flex-wrap: wrap; /* Allow wrapping on smaller screens */
+    width: 100%;
+    justify-content: flex-start; /* Align columns to the start (left) */
+}
+
+/* Styling for the individual stat column boxes */
+.team-totals .totals-column /* Singular: The actual column divs */
+{
+    flex: 1; /* Allow boxes to grow and share space */
+    min-width: 45%; /* Use percentage to encourage filling space */
+    background-color: #f7f7f7;
+    padding: 25px; /* Padding inside boxes */
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    margin-bottom: 1rem; /* Add margin for spacing when wrapping */
+    box-sizing: border-box; /* Better width calculation */
+}
+
+
+/* Totals Item - Applies to items within each .totals-column */
+.team-totals .totals-column .totals-item {
+    display: flex;
+    justify-content: space-between; /* Pushes label and value apart */
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px dashed #a8c9e3;
+}
+
+.team-totals .totals-column .totals-item:last-child {
+    border-bottom: none;
+}
+
+.team-totals .totals-column .totals-item strong { /* Style the label part */
+    font-weight: bold; /* Keep label bold as per HTML */
+    font-size: 1.2rem; /* Adjust size as needed */
+    color: #333;
+    margin-right: 1rem; /* Space after label */
+    white-space: nowrap;
+}
+
+/* Add a span around the value in your HTML like: */
+/* <div class="totals-item"><strong>Spike Attempts:</strong> <span class="stat-value">0</span></div> */
+/* Then style the span: */
+.team-totals .totals-column .totals-item .stat-value { /* Style the value part */
+    font-weight: bold;
+    font-size: 1.5rem;
+    color: #1e3d59;
+    text-align: right;
+    margin-left: auto; /* Push value to the right */
+    padding-left: 10px; /* Ensure some space */
+}
+
+
+/* No Data Available Message */
+.team-totals .no-data {
+    font-size: 1.2rem;
+    color: #777;
+    text-align: center;
+    margin-top: 20px;
+    width: 100%; /* Ensure it takes full width if columns wrap */
+}

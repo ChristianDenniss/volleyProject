@@ -1,0 +1,170 @@
+/* General header styling */
+.site-header 
+{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 40px;
+    height: 45px;
+    background-color: white; /* White background */
+    font-family: 'Inter', sans-serif;
+    color: #333; /* Dark text for contrast */
+    width: 100%;
+    box-sizing: border-box;
+    border-bottom: 1px solid #ddd; /* Light border for separation */
+    margin: 0;
+}
+
+/* Left section: logo + site name */
+.left-section 
+{
+    display: flex;
+    align-items: center;
+    gap: 40px;
+}
+
+.logo 
+{
+    width: 50px;
+    height: 50px;
+}
+
+.site-name 
+{
+    font-size: 16px;
+    font-weight: 600;
+    color: #333; /* Dark text for contrast */
+    white-space: nowrap;
+}
+
+/* Right section: profile or login */
+.right-section 
+{
+    display: flex;
+    align-items: center;
+}
+
+/* Dropdown wrapper */
+.auth-dropdown 
+{
+    position: relative;
+}
+
+.auth-button-wrapper 
+{    
+    display: flex;
+    align-items: center;
+    gap: 20px; /* Increased gap between text and button */
+}
+
+/* Text for Guest or Username */
+.auth-text 
+{
+    font-size: 18px;
+    font-weight: 500;
+    color: #585858; /* Dark color for text */
+    white-space: nowrap;
+}
+
+/* Button that triggers dropdown */
+.dropdown-btn 
+{
+    background-color: #585858; /* Bright button color */
+    color: white;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+/* Hover effect on the button */
+.dropdown-btn:hover 
+{
+    background-color: #333333; 
+}
+
+/* Ensure dropdown remains open when hovered or clicked */
+.auth-dropdown .dropdown-menu 
+{
+    position: absolute;
+    top: 110%;
+    right: 0;
+    background-color: #505050;
+    border-radius: 6px;
+    padding: 10px;
+    display: none;
+    flex-direction: column;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    z-index: 999;
+    min-width: 140px;
+    height: 80px; /* Add a fixed height */
+    align-items: center;
+    justify-content: center; /* Now this will work */
+    border: 1px solid white;
+}
+
+/* When dropdown is open, display it */
+.auth-dropdown .dropdown-menu 
+{
+    display: flex;
+}
+
+/* Dropdown menu links */
+.dropdown-menu a 
+{
+    color: white; /* Blue links */
+    text-decoration: none;
+    margin-bottom: 8px;
+    font-size: 14px;
+    padding: 5px 0;
+}
+
+/* Hover effect for links */
+.dropdown-menu a:hover 
+{
+    text-decoration: underline;
+}
+
+/* Logged-in profile display */
+.profile-info 
+{
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    position: relative; /* Ensure proper positioning */
+}
+
+.avatar 
+{
+    width: 35px;
+    height: 35px;
+    background-color: #585858;
+    border-radius: 50%;
+    cursor: pointer; /* Ensures it shows a pointer on hover */
+    z-index: 1; /* Ensure it's on top */
+}
+
+/* Ensure the link takes up space */
+.profile-info a {
+    display: block;
+    width: 35px;  /* Match the avatar size */
+    height: 35px; /* Match the avatar size */
+}
+
+/* Username styling */
+.username 
+{
+    font-size: 18px;
+    font-weight: 500;
+    color: #333; /* Dark text for contrast */
+}
+
+/* Adjust the spacing between the username/guest and the login button */
+.auth-button-wrapper 
+{
+    display: flex;
+    align-items: center;
+    gap: 40px; /* Increased gap between text and button */
+}

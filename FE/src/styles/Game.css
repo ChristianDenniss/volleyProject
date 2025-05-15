@@ -1,0 +1,55 @@
+.games-wrapper
+{
+    padding: 10px 0;
+}
+
+.games-container
+{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-left: 40px;
+    padding-right: 20px;
+}
+
+/* Game card styles */
+.game-card
+{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: nowrap;
+    width: 1100px;
+    height: 60px;
+    background-color: #e6f2ff;
+    border: 2px solid #CFFFFF;
+    border-radius: 20px;
+    padding: 0 30px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    color: #000000;
+    overflow: hidden;
+    white-space: nowrap;
+    transition: background-color 0.3s ease;
+    cursor: pointer;
+}
+
+.game-card:hover
+{
+    background-color: #cce0ff;
+}
+
+/* Game details styling */
+.game-name,
+.game-id,
+.game-score,
+.game-teams,
+.game-season,
+.game-date
+{
+    font-size: 22px;
+    font-weight: bold;
+    margin: 0 20px;
+    flex-shrink: 0;
+    white-space: nowrap;
+}

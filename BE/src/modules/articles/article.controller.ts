@@ -14,10 +14,16 @@ export class ArticleController {
      * Create a new article
      */
     async createArticle(req: Request, res: Response): Promise<void> {
-        const { title, content, userId } = req.body;
+        const { title, content, userId, summary, imageUrl } = req.body;
 
         try {
-            const newArticle = await this.articleService.createArticle(title, content, userId);
+            const newArticle = await this.articleService.createArticle(
+                title, 
+                content, 
+                userId,
+                summary,
+                imageUrl
+            );
             res.status(201).json(newArticle);
         } catch (error) {
             if (error instanceof MissingFieldError || error instanceof NotFoundError) {
@@ -33,12 +39,26 @@ export class ArticleController {
      */
     async getAllArticles(req: Request, res: Response): Promise<void> {
         try {
+            // Log incoming request details
+            console.log(`[${new Date().toISOString()}] Incoming request to fetch all articles.`);
+            
+            // Call the service to fetch all articles
             const articles = await this.articleService.getAllArticles();
+            
+            // Log the response from the service
+            console.log(`[${new Date().toISOString()}] Articles fetched successfully:`, articles);
+
+            // Send the response
             res.status(200).json(articles);
         } catch (error) {
-            res.status(500).json({ message: "Internal server error" });
+            // Log error details
+            console.error(`[${new Date().toISOString()}] Error occurred while fetching articles:`, error);
+
+            // Respond with generic 500 error message
+            res.status(500).json({ message: "Internal server error", error: error instanceof Error ? error.message : "Unknown error" });
         }
     }
+
 
     /**
      * Get an article by ID
@@ -63,11 +83,16 @@ export class ArticleController {
      */
     async updateArticle(req: Request, res: Response): Promise<void> {
         const { id } = req.params;
-        const { title, content, userId } = req.body;
+        const { title, content, userId, summary, imageUrl } = req.body;
 
         try {
             const updatedArticle = await this.articleService.updateArticle(
-                Number(id), title, content, userId
+                Number(id),
+                title,
+                content,
+                userId,
+                summary,
+                imageUrl
             );
             res.status(200).json(updatedArticle);
         } catch (error) {

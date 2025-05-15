@@ -1,0 +1,74 @@
+/* Navbar container */
+.navbar {
+    display: flex;
+    justify-content: center; /* Center the navbar items */
+    align-items: center; /* Vertically center the nav content */
+    background-color: #585858;
+    padding: 0 20px; /* Adjust padding to ensure it doesn't cause overflow */
+    height: 60px;
+    width: 100%;
+    z-index: 1000;
+    margin: 0;
+    box-sizing: border-box; /* Ensure padding and borders are within the width */
+    font-family: 'Inter', sans-serif;
+    border-left: 0;  /* Remove optional border */
+    border-right: 0; /* Remove optional border */
+    overflow-x: hidden; /* Prevent horizontal scrolling */
+}
+
+/* Centered link list with proper item alignment */
+.navbar-links {
+    display: flex;
+    align-items: center; /* Ensure vertical alignment */
+    justify-content: center;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    gap: 30px; /* Adjust gap to ensure items aren't too far apart */
+}
+
+/* Ensure each list item doesn't stack text */
+.navbar-links li {
+    display: flex;
+    align-items: center;
+}
+
+/* Link styles */
+.navbar-links a {
+    color: white;
+    text-decoration: none;
+    font-size: 18px;
+    font-weight: 500;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    white-space: nowrap; /* Prevents text from wrapping */
+}
+
+.navbar-links a:hover {
+    background-color: white;
+    color: #333;
+    font-weight: 600;
+    text-decoration: none;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); /* deeper shadow */
+    transform: translateY(-2px); /* more lift */
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .navbar {
+        padding: 10px 20px;
+        height: auto; /* Let it expand if needed on smaller screens */
+    }
+
+    .navbar-links {
+        flex-wrap: wrap; /* Allow wrapping on mobile */
+        gap: 20px;
+        justify-content: center;
+    }
+
+    /* Ensure navbar doesn’t cause horizontal scrolling on mobile */
+    body {
+        overflow-x: hidden;
+    }
+}

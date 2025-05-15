@@ -1,0 +1,35 @@
+/* src/styles/Footer.css */
+
+/* Footer container */
+.footer {
+  width: 100%; /* Ensure footer spans full width */
+  background-color: #585858; /* Temporary debug color */
+  color: white;
+  padding: 10px 0; /* Reduced padding for a shorter footer */
+  text-align: center;
+  box-sizing: border-box;
+  margin: 0;
+  position: relative;
+  flex-shrink: 0; /* Prevent footer from shrinking when content is minimal */
+}
+
+/* Footer content */
+.footer-content {
+  margin: 0 auto; /* Centers the footer content */
+  padding: 5px 20px; /* Reduced padding for a more compact look */
+}
+
+/* Footer links styling */
+.footer-links {
+  margin-top: 5px; /* Reduced margin */
+}
+
+.footer-links a {
+  color: white;
+  margin: 0 8px; /* Reduced margin between links */
+  text-decoration: none;
+}
+
+.footer-links a:hover {
+  text-decoration: underline;
+}

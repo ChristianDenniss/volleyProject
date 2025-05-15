@@ -1,0 +1,66 @@
+/* PrivacyPolicy.css */
+
+.privacy-page-container {
+    padding: 3rem;
+    max-width: 1000px;
+    margin: 0 auto;
+    font-family: 'Roboto', sans-serif; /* Matches VNL style */
+    color: #333; /* Darker text for contrast */
+    background-color: #fff; /* White background */
+    line-height: 1.6;
+  }
+  
+  .privacy-title {
+    font-size: 2.75rem;
+    font-weight: bold;
+    color: #222; /* Dark text */
+    margin-bottom: 1.5rem;
+    text-align: center;
+    border-bottom: 3px solid #f9b233; /* Subtle accent color from VNL */
+    padding-bottom: 0.5rem;
+  }
+  
+  .privacy-intro {
+    font-size: 1.125rem;
+    margin-bottom: 2rem;
+    color: #555;
+    text-align: center;
+  }
+  
+  .privacy-section {
+    margin-bottom: 2rem;
+  }
+  
+  .section-title {
+    font-size: 1.75rem;
+    font-weight: bold;
+    color: #f9b233; /* Accent color from VNL */
+    margin-bottom: 1rem;
+  }
+  
+  .section-content {
+    font-size: 1.125rem;
+    color: #666;
+    line-height: 1.8;
+  }
+  
+  .policy-list {
+    list-style-type: none;
+    padding-left: 0;
+    margin: 0;
+  }
+  
+  .policy-list li {
+    margin-bottom: 1rem;
+    font-size: 1.125rem;
+    color: #555;
+    line-height: 1.7;
+  }
+  
+  .footer-note {
+    font-size: 0.875rem;
+    color: #777;
+    text-align: center;
+    margin-top: 2rem;
+  }
+  

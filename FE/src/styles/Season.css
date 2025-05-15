@@ -1,0 +1,19 @@
+/* src/styles/Seasons.css */
+.seasons-container {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  
+  .seasons-container h1 {
+    font-size: 2rem;
+    color: #333;
+  }
+  
+  .seasons-container p {
+    font-size: 1.2rem;
+    color: #666;
+    line-height: 1.6;
+  }
+  
