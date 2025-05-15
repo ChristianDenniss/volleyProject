@@ -1,0 +1,33 @@
+import { Application, Router } from 'express';
+import { PlayerController } from './player.controller.js';
+import { validate } from '../../middleware/validate.js';
+import { createPlayerSchema, updatePlayerSchema, createPlayerSchemaWithTeamName } from './players.schema.js';
+
+export function registerPlayerRoutes(app: Application): void 
+{
+    const router = Router();
+    const playerController = new PlayerController();
+
+    // Player routes
+    router.post('/', validate(createPlayerSchema), playerController.createPlayer);
+    router.post('/batch', validate(createPlayerSchema), playerController.createMultiplePlayers);  
+
+    //Not sure on these two routes, come back to them later
+    router.post('/by-team-name', validate(createPlayerSchemaWithTeamName), playerController.createPlayerByName);
+    router.post('/batch/by-team-name', validate(createPlayerSchemaWithTeamName), playerController.createMultiplePlayersByName);
+
+    router.get('/', playerController.getPlayers);
+
+    // Above the ID route
+    router.get('/teams/:playerName', playerController.getTeamsByPlayerName);
+
+    // 🔻 This must come AFTER /teams/:playerName
+    router.get('/:id', playerController.getPlayerById);
+
+    router.put('/:id', playerController.updatePlayer);
+    router.patch('/players/:id', validate(updatePlayerSchema), playerController.updatePlayer);         
+    router.delete('/:id', playerController.deletePlayer);
+    router.get('/team/:teamId', playerController.getPlayersByTeamId);
+
+    app.use('/api/players', router);
+}

@@ -1,0 +1,86 @@
+/* src/pages/Home.css */
+
+/* Page container */
+.home {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #f4f4f4;
+    min-height: 100vh;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+  }
+  
+  /* Main heading */
+  .home-header {
+    text-align: center;
+    color: #333;
+    font-size: 36px;
+    margin-top: 50px;
+    margin-bottom: 20px;
+  }
+  
+  /* Subheading */
+  .home-subheader {
+    text-align: center;
+    font-size: 18px;
+    color: #666;
+    margin-bottom: 40px;
+  }
+  
+  /* Featured content section */
+  .home-featured {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin-bottom: 50px;
+  }
+  
+  .home-featured-item {
+    background-color: white;
+    padding: 20px;
+    width: 250px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    transition: transform 0.3s ease;
+  }
+  
+  .home-featured-item:hover {
+    transform: translateY(-10px);
+  }
+  
+  /* Featured item image */
+  .home-featured-item img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 10px;
+  }
+  
+  /* Button styles */
+  .home-button {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .home-button:hover {
+    background-color: #0056b3;
+  }
+  
+  /* Footer spacing */
+  .home-footer {
+    margin-top: auto;
+    background-color: #333;
+    color: white;
+    padding: 10px;
+    text-align: center;
+    width: 100%;
+    position: relative;
+  }
+  

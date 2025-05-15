@@ -1,0 +1,62 @@
+.teams-wrapper
+{
+    padding: 10px 0;
+}
+
+.teams-container
+{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-left: 40px;
+    padding-right: 20px;
+}
+
+/* Team card styles */
+.team-card
+{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: nowrap;
+    width: 800px;
+    height: 60px;
+    background-color: #e6f2ff;
+    border: 2px solid #CFFFFF;
+    border-radius: 20px;
+    padding: 0 30px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    color: #000000;
+    overflow: hidden;
+    white-space: nowrap;
+    transition: background-color 0.3s ease;
+    cursor: pointer;
+}
+
+.team-players
+{
+    font-size: 22px;
+    font-weight: bold;
+    margin: 0 20px;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+
+.team-card:hover
+{
+    background-color: #cce0ff;
+}
+
+/* Team details styling */
+.team-name,
+.team-id,
+.team-season
+{
+    font-size: 22px;
+    font-weight: bold;
+    margin: 0 20px;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
