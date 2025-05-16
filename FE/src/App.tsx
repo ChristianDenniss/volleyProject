@@ -13,6 +13,7 @@ import Seasons from "./components/Seasons"; // Import Seasons component
 import Articles from "./components/Article"; // Import Articles component
 import PrivacyPolicy from "./components/PrivacyPolicy"; // Import PrivacyPolicy component
 import SingleGame from "./components/SingleGame";
+import Contact from "./components/ContactUs"
 
 const App: React.FC = () => {
   return (
@@ -31,6 +32,7 @@ const App: React.FC = () => {
           <Route path="/seasons" element={<Seasons />} />
           <Route path="/games" element={<Games />} />
           <Route path="/articles" element={<Articles />} />
+          <Route path = "/contact" element={<Contact />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         </Routes>
       </div>

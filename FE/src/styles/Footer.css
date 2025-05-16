@@ -1,35 +1,102 @@
-/* src/styles/Footer.css */
-
-/* Footer container */
-.footer {
-  width: 100%; /* Ensure footer spans full width */
-  background-color: #585858; /* Temporary debug color */
-  color: white;
-  padding: 10px 0; /* Reduced padding for a shorter footer */
-  text-align: center;
-  box-sizing: border-box;
-  margin: 0;
-  position: relative;
-  flex-shrink: 0; /* Prevent footer from shrinking when content is minimal */
+.footer
+{
+    width: 100%;
+    background-color: black;
+    color: white;
+    padding: 20px 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    
 }
 
-/* Footer content */
-.footer-content {
-  margin: 0 auto; /* Centers the footer content */
-  padding: 5px 20px; /* Reduced padding for a more compact look */
+.footer-top
+{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 2rem;
+    flex-wrap: wrap;
 }
 
-/* Footer links styling */
-.footer-links {
-  margin-top: 5px; /* Reduced margin */
+.footer-logo img
+{
+    height: 75px;
 }
 
-.footer-links a {
-  color: white;
-  margin: 0 8px; /* Reduced margin between links */
-  text-decoration: none;
+.footer-nav
+{
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    font-size: 1.1rem;
+    font-weight: 500;
 }
 
-.footer-links a:hover {
-  text-decoration: underline;
+.footer-nav a
+{
+    color: white;;
+    text-decoration: none;
+    transition: color 0.3s ease;
 }
+
+.footer-nav a:hover
+{
+    color: #d6ebff;
+}
+
+.footer-socials
+{
+    display: flex;
+    gap: 1.5rem;
+    font-size: 1.3rem;
+    color: white;
+}
+
+.footer-line
+{
+    margin: 1rem 2rem;
+    border: none;
+    border-top: 1px solid #d6ebff;
+}
+
+.footer-bottom
+{
+    text-align: center;
+    position: relative;
+    padding-bottom: 10px;
+}
+
+.back-to-top
+{
+    position: absolute;
+    right: 2rem;
+    top: -30px;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.4rem;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.back-to-top:hover
+{
+    transform: scale(1.2);
+    color: #d6ebff;
+}
+
+/* Each social media link */
+.footer-socials a
+{
+    color: white;
+    font-size: 1.3rem;
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+
+/* Hover effect for each icon */
+.footer-socials a:hover
+{
+    transform: scale(1.2);
+    color: #d6ebff;
+}
+

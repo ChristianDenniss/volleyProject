@@ -12,6 +12,9 @@ export const useFetch = <T>(endpoint: string) =>
     // Store loading state
     const [loading, setLoading] = useState<boolean>(true);
 
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+
+
     // Fetch data on mount
     useEffect(() =>
     {
@@ -19,8 +22,8 @@ export const useFetch = <T>(endpoint: string) =>
         {
             try
             {
-                console.log(`Fetching data from http://localhost:3000/api/${endpoint}`);
-                const response = await fetch(`http://localhost:3000/api/${endpoint}`);
+                console.log(`Fetching data from ${backendUrl}/api/${endpoint}`);
+                const response = await fetch(`${backendUrl}/api/${endpoint}`);
 
                 if (!response.ok)
                 {
