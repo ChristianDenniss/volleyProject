@@ -1,19 +1,160 @@
-/* src/styles/Seasons.css */
-.seasons-container {
-    padding: 20px;
-    max-width: 1200px;
+/* =========================================================
+   Seasons Page – Modern Sports Style (expanded)
+   ========================================================= */
+
+/* ===== Color tokens ===== */
+:root
+{
+    --navy:        #0b1e35;
+    --pale-blue:   #d6ebff;
+    --border-blue: #e6f2ff;
+    --hover-blue:  #ebf2fc;
+    --text-main:   #222;
+    --text-muted:  #5d6673;
+}
+
+/* ===== Page wrapper ===== */
+.seasons-page
+{
+    max-width: 1480px;
     margin: 0 auto;
+    padding: 3.5rem 2rem 4rem;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--text-main);
+}
+
+/* ===== Title ===== */
+.page-title
+{
+    font-size: 2.4rem;
+    font-weight: 800;
+    margin-bottom: 2.8rem;
     text-align: center;
-  }
-  
-  .seasons-container h1 {
-    font-size: 2rem;
-    color: #333;
-  }
-  
-  .seasons-container p {
-    font-size: 1.2rem;
-    color: #666;
-    line-height: 1.6;
-  }
-  
+}
+
+/* ===== Grid ===== */
+.seasons-grid
+{
+    /* fixed 3-column grid on desktop */
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2.4rem;          /* wider breathing room */
+}
+
+/* ===== Card ===== */
+.season-card
+{
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border: 1px solid var(--border-blue);
+    border-radius: 14px;
+    box-shadow: 0 2px 6px rgba(0,0,0,.05);
+
+    /* larger footprint */
+    padding: 2.4rem 2.6rem;  /* ↑ was 1.4rem 1.6rem */
+    min-height: 260px;       /* ↑ was 230px */
+
+    transition: transform .18s ease, box-shadow .18s ease;
+}
+
+.season-card:hover
+{
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0,0,0,.08);
+}
+
+/* Highlight current season by toggling .active */
+.season-card.active
+{
+    border-color: var(--navy);
+}
+
+/* ===== Header (season + dates) ===== */
+.season-header
+{
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 1.4rem;   /* ↑ more space */
+}
+
+.season-title
+{
+    font-size: 1.6rem;       /* ↑ was 1.2rem */
+    font-weight: 700;
+}
+
+.season-dates
+{
+    font-size: 1rem;         /* ↑ was .85rem */
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+/* ===== Quick-stats list ===== */
+.season-stats
+{
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.75rem 0;   /* ↑ extra bottom room */
+    font-size: 1.1rem;         /* ↑ was .88rem */
+    font-weight: 600;
+    line-height: 1.6;        /* ↑ was 1.5 */
+    color: #4a4a4a;
+}
+
+/* put this just after the .season-stats block */
+.season-stats li + li          /* every <li> that follows another <li> */
+{
+    margin-top: 1.5rem;       /* the vertical gap you wanted */
+}
+
+
+/* ===== Footer link ===== */
+.season-footer
+{
+    margin-top: auto;
+    text-align: right;
+}
+
+.season-footer a
+{
+    font-size: .95rem;
+    font-weight: 700;
+    color: #78b5fa;
+    text-decoration: none;
+}
+
+.season-footer a:hover
+{
+    text-decoration: underline;
+}
+
+/* ===== Responsive tweaks ===== */
+@media (max-width: 900px)
+{
+    /* fall back to two columns on tablets */
+    .seasons-grid
+    {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 600px)
+{
+    .page-title
+    {
+        font-size: 2rem;
+    }
+
+    .seasons-grid
+    {
+        grid-template-columns: 1fr; /* one column on phones */
+    }
+
+    .season-card
+    {
+        padding: 2rem 2.2rem;
+    }
+}

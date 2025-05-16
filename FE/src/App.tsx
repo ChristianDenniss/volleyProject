@@ -27,7 +27,7 @@ const App: React.FC = () => {
           <Route path="/about" element={<About />} />
           <Route path="/players" element={<Players />} />
           <Route path="/teams" element={<Teams />} />
-          <Route path="/games/:gameId" element={<SingleGame />} />
+          <Route path="/games/:id" element={<SingleGame />} />
           <Route path="/teams/:teamName" element={<SingleTeam />} />
           <Route path="/seasons" element={<Seasons />} />
           <Route path="/games" element={<Games />} />

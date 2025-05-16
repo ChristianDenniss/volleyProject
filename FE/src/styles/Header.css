@@ -5,7 +5,7 @@
     justify-content: space-between;
     align-items: center;
     padding: 0 40px;
-    height: 45px;
+    height: 50px;
     background-color: white; /* White background */
     font-family: 'Inter', sans-serif;
     color: #333; /* Dark text for contrast */
@@ -61,15 +61,15 @@
 .auth-text 
 {
     font-size: 18px;
-    font-weight: 500;
-    color: #585858; /* Dark color for text */
+    font-weight: 1000;
+    color: #262626; /* Dark color for text */
     white-space: nowrap;
 }
 
 /* Button that triggers dropdown */
 .dropdown-btn 
 {
-    background-color: #585858; /* Bright button color */
+    background-color: #262626; /* Bright button color */
     color: white;
     padding: 8px 12px;
     border: none;
@@ -82,7 +82,7 @@
 /* Hover effect on the button */
 .dropdown-btn:hover 
 {
-    background-color: #333333; 
+    background-color: #d6ebff; 
 }
 
 /* Ensure dropdown remains open when hovered or clicked */
@@ -91,7 +91,7 @@
     position: absolute;
     top: 110%;
     right: 0;
-    background-color: #505050;
+    background-color: #262626;
     border-radius: 6px;
     padding: 10px;
     display: none;
@@ -158,7 +158,7 @@
 {
     font-size: 18px;
     font-weight: 500;
-    color: #333; /* Dark text for contrast */
+    color: #262626; /* Dark text for contrast */
 }
 
 /* Adjust the spacing between the username/guest and the login button */

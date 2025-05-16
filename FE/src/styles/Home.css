@@ -97,7 +97,8 @@
 .side-articles article
 {
     display: flex;
-    align-items: center;
+    justify-content: space-between;     /* Pushes image to far right */
+    align-items: center;                /* Vertically aligns image and text */
     gap: 0.75rem;
     border-radius: 8px;
     box-shadow: 0 2px 6px rgb(0 0 0 / 0.1);
@@ -105,20 +106,25 @@
     background-color: white;
     cursor: pointer;
     transition: background-color 0.3s ease;
+    min-height: 80px;                   /* ✅ Ensures consistent height */
 }
 
+/* Hover effect */
 .side-articles article:hover
 {
     background-color: #f0f0f0;
 }
 
+/* Article thumbnail */
 .side-articles img
 {
-    width: 80px;
-    height: 60px;
+    width: 100px;
+    height: 80px;
     object-fit: cover;
     border-radius: 6px;
+    flex-shrink: 0;                     /* ✅ Prevent image from shrinking */
 }
+
 
 /* Full-Width Breakout for Video Section */
 

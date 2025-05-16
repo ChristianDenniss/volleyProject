@@ -3,9 +3,9 @@
     display: flex;
     justify-content: center; /* Center the navbar items */
     align-items: center; /* Vertically center the nav content */
-    background-color: #585858;
+    background-color: #262626;
     padding: 0 20px; /* Adjust padding to ensure it doesn't cause overflow */
-    height: 60px;
+    height: 70px;
     width: 100%;
     z-index: 1000;
     margin: 0;
