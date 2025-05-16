@@ -199,7 +199,7 @@ export class GameService {
 
         const game = await this.gameRepository.findOne({
             where: { id },
-            relations: ["season", "teams", "stats", "stats.player"],
+            relations: ["season", "teams", "teams.players[]", "stats", "stats.player"],
         });
 
         if (!game) throw new NotFoundError(`Game with ID ${id} not found`);

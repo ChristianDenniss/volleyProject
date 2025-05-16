@@ -13,9 +13,11 @@ export const useSeasons = () => useFetch<Season>("seasons");
 // Hook to fetch games
 export const useGames = () => useFetch<Game>("games");
 
+//export const useSingleGames = () => useFetch<Game>("games");
+
 // Hook to fetch articles
 export const useArticles = () => useFetch<Article>("articles");
 
 export const useSingleTeam = (teamName: string) => useFetchTeamByName<Team>(`${teamName}`);
 
-export const useSingleGame = (gameId: string) => useFetchGameById<Game>(`${gameId}`);
+export const useSingleGames = (gameId: string) => useFetchGameById<Game>(`${gameId}`);
