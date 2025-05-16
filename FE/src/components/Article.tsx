@@ -7,7 +7,7 @@ const Articles: React.FC = () => {
 
     return (
         <div>
-            <h1>show Articles</h1>
+            <h1>show Media</h1>
             {
                 error ? (
                     <div>Error: {error}</div>

@@ -1,86 +1,211 @@
-/* src/pages/Home.css */
+.home
+{
+    max-width: 1800px;
+    margin: 0 auto;
+    padding: 1rem;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    color: #222;
+    width: 100%;
+    box-sizing: border-box;
+}
 
-/* Page container */
-.home {
+.headline-section
+{
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+    margin-bottom: 4rem;
+
+    /* NEW: Center and constrain width */
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+}
+
+.featured-article
+{
+    flex: 2;
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgb(0 0 0 / 0.1);
+}
+
+.featured-image
+{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.featured-text
+{
+    position: absolute;
+    bottom: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.75), transparent);
+    color: white;
+    padding: 1rem 1.5rem;
+    width: 100%;
+}
+
+.tag
+{
+    background: #edbb00;
+    font-weight: 600;
+    font-size: 0.75rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    margin-bottom: 0.3rem;
+    display: inline-block;
+}
+
+.date-tag
+{
+    background: silver;
+    font-weight: 600;
+    font-size: 0.75rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    margin-bottom: 0.3rem;
+    display: inline-block;
+}
+
+.featured-text h2
+{
+    margin: 0 0 0.3rem 0;
+    font-size: 1.75rem;
+    font-weight: 700;
+}
+
+.featured-text p
+{
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.side-articles
+{
+    flex: 1;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    background-color: #f4f4f4;
-    min-height: 100vh;
-    padding: 20px;
-    font-family: Arial, sans-serif;
-  }
-  
-  /* Main heading */
-  .home-header {
-    text-align: center;
-    color: #333;
-    font-size: 36px;
-    margin-top: 50px;
-    margin-bottom: 20px;
-  }
-  
-  /* Subheading */
-  .home-subheader {
-    text-align: center;
-    font-size: 18px;
-    color: #666;
-    margin-bottom: 40px;
-  }
-  
-  /* Featured content section */
-  .home-featured {
+    gap: 1rem;
+}
+
+.side-articles article
+{
     display: flex;
-    justify-content: center;
-    gap: 30px;
-    margin-bottom: 50px;
-  }
-  
-  .home-featured-item {
+    align-items: center;
+    gap: 0.75rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgb(0 0 0 / 0.1);
+    padding: 0.5rem;
     background-color: white;
-    padding: 20px;
-    width: 250px;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    text-align: center;
-    transition: transform 0.3s ease;
-  }
-  
-  .home-featured-item:hover {
-    transform: translateY(-10px);
-  }
-  
-  /* Featured item image */
-  .home-featured-item img {
-    max-width: 100%;
-    height: auto;
-    border-radius: 10px;
-  }
-  
-  /* Button styles */
-  .home-button {
-    background-color: #007bff;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    font-size: 16px;
     cursor: pointer;
     transition: background-color 0.3s ease;
-  }
-  
-  .home-button:hover {
-    background-color: #0056b3;
-  }
-  
-  /* Footer spacing */
-  .home-footer {
-    margin-top: auto;
-    background-color: #333;
-    color: white;
-    padding: 10px;
-    text-align: center;
-    width: 100%;
+}
+
+.side-articles article:hover
+{
+    background-color: #f0f0f0;
+}
+
+.side-articles img
+{
+    width: 80px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 6px;
+}
+
+/* Full-Width Breakout for Video Section */
+
+.video-section
+{
     position: relative;
-  }
-  
+    width: 100vw;
+    margin-left: calc(-50vw + 50%);
+    padding-top: 56.25%; /* 16:9 aspect ratio */
+    margin-bottom: 0rem;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 3px 12px rgb(0 0 0 / 0.1);
+}
+
+/* Embedded YouTube Player */
+.yt-player
+{
+    position: absolute !important;
+    top: 0;
+    left: 0;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* Full-Width Call to Action */
+.call-to-action
+{
+    position: relative; /* Needed for absolute positioning children */
+    width: 100vw;
+    margin-left: calc(-50vw + 50%);
+    height: 500px; /* Matches image height */
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 3px 12px rgb(0 0 0 / 0.1);
+}
+
+/* Make the image a background layer */
+.promo-banner
+{
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 1;
+}
+
+/* Add the overlay button */
+.join-button-overlay
+{
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 2;
+    background-color: #edbb00;
+    color: black;
+    border: none;
+    padding: 0.6rem 1.5rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.join-button-overlay:hover
+{
+    background-color: #c49a00;
+}
+
+.join-button
+{
+    background-color: #edbb00;
+    color: black;
+    border: none;
+    padding: 0.6rem 1.5rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.join-button:hover
+{
+    background-color: #c49a00;
+}
+
