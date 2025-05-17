@@ -1,5 +1,7 @@
 // Define Types for Data
 
+import { Url } from "url";
+
 interface Game 
 {
   id: number;
@@ -58,6 +60,8 @@ interface Season
   teams?: Team[]; // Optional teams in this season
   startDate: Date; // Date when the season starts
   endDate?: Date; // Optional end date
+  image?: Url;
+  theme: string;
 }
 
 interface Article 

@@ -10,6 +10,12 @@ export class Seasons {
     @Column()
     seasonNumber!: number;
 
+    @Column({default: "None"})
+    theme!: string;
+
+    @Column( {nullable: true})
+    image?: string;
+
     @Column()
     startDate!: Date;
 
