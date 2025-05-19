@@ -196,16 +196,23 @@ export class GameService {
      */
     async getGameById(id: number): Promise<Games> {
         if (!id) throw new MissingFieldError("Game ID");
-
+    
         const game = await this.gameRepository.findOne({
             where: { id },
-            relations: ["season", "teams", "teams.players[]", "stats", "stats.player"],
+            relations: [
+                "season",
+                "teams",
+                "teams.players",  // ← remove the []
+                "stats",
+                "stats.player"
+            ],
         });
-
+    
         if (!game) throw new NotFoundError(`Game with ID ${id} not found`);
-
+    
         return game;
     }
+    
 
     /**
      * Get the score by game ID

@@ -46,6 +46,7 @@ interface Stats
 interface Team 
 {
   id: number;
+  placement: string;
   name: string;
   season: Season;
   games?: Game[]; // Optional games played by this team

@@ -13,8 +13,8 @@ export class TeamController {
     // Create a new Team
     createTeam = async (req: Request, res: Response): Promise<void> => {
         try {
-            const { name, seasonId, playerIds, gameIds } = req.body;
-            const savedTeam = await this.teamService.createTeam(name, seasonId, playerIds, gameIds);
+            const { name, seasonId, playerIds, gameIds, placement } = req.body;
+            const savedTeam = await this.teamService.createTeam(name, seasonId, placement, playerIds, gameIds);
             res.status(201).json(savedTeam);
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : "Failed to create team";
@@ -134,18 +134,21 @@ export class TeamController {
     // Update a Team by ID
     updateTeam = async (req: Request, res: Response): Promise<void> => {
         try {
-            const { id } = req.params;
-            const { name, seasonId, playerIds, gameIds } = req.body;
+            // Parse and validate route param
+            const id = parseInt(req.params.id, 10);
+
+            // Destructure placement alongside the other fields
+            const { name, seasonId, placement, playerIds, gameIds } = req.body;
+
+            // Call service with a single data object
             const updatedTeam = await this.teamService.updateTeam(
-                parseInt(id),
-                name,
-                seasonId,
-                playerIds,
-                gameIds
+                id,
+                { name, seasonId, placement, playerIds, gameIds }
             );
+
+            // Return the updated team
             res.json(updatedTeam);
-        } catch (error) 
-        {
+        } catch (error) {
             const errorMessage = error instanceof Error ? error.message : "Failed to update team";
             if (errorMessage.includes("not found")) {
                 res.status(404).json({ error: errorMessage });
@@ -157,6 +160,7 @@ export class TeamController {
             }
         }
     };
+
 
     // Delete a Team by ID
     deleteTeam = async (req: Request, res: Response): Promise<void> => {

@@ -17,6 +17,9 @@ export class Teams {
     @UpdateDateColumn({ type: 'timestamp' })
     updatedAt!: Date;
 
+    @Column({default: "Didnt make playoffs"})
+    placement!: string;
+
     // Many-to-one relationship with seasons
     @ManyToOne('Seasons', 'teams')
     season!: Seasons;

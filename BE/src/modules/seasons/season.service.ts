@@ -78,7 +78,7 @@ export class SeasonService
 
         const season = await this.seasonRepository.findOne({
             where: { id },
-            relations: ["teams", "games"]
+            relations: ["teams", "games", "teams.players"]
         });
 
         if (!season) throw new NotFoundError(`Season with ID ${id} not found`);
