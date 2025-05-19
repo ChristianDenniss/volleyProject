@@ -3,33 +3,65 @@ import { Link } from "react-router-dom"
 import { Season } from "../types/interfaces"
 import { useSeasons } from "../hooks/allFetch"
 import "../styles/Season.css"
+import defaultBanner from "../images/callToAction.png"
+import {
+    FaRegCalendarAlt,
+    FaStar,
+    FaVolleyballBall,
+    FaUsers
+} from "react-icons/fa"
 
 /* ===== Season card component ===== */
 const SeasonCard: React.FC<{ season: Season }> = ({ season }) =>
 {
-    // Helper to format ISO → “Apr 1, 25”
+    /* Helper to format ISO → "Apr 1, 25" */
     const fmt = (iso?: Date) =>
         iso
-            ? new Date(iso).toLocaleDateString(
-                undefined,
-                { month: "short", day: "numeric", year: "numeric" }
-              )
-            : "Present"
+        ? new Date(iso).toLocaleDateString(
+            undefined,
+            { month: "short", day: "numeric", year: "numeric" }
+          )
+        : "Present"
+
+    /* Fallback to default banner when no image is provided */
+    const imageSrc = season.image
+        ? season.image.toString()
+        : defaultBanner
 
     return (
         <div className="season-card">
-            {/* Header */}
+            {/* Banner image */}
+            <img
+                src={imageSrc}
+                alt={`Season ${season.seasonNumber} banner`}
+                className="season-image"
+            />
+
+            {/* Header (title + dates inline) */}
             <header className="season-header">
-                <span className="season-title">Season&nbsp;{season.seasonNumber}</span>
-                <span className="season-dates">
-                    •&nbsp;{fmt(season.startDate)}&nbsp;–&nbsp;{fmt(season.endDate)}
-                </span>
+                <h2 className="season-title">
+                    Season&nbsp;{season.seasonNumber}
+                </h2>
+                <div className="season-dates">
+                    <FaRegCalendarAlt className="icon" />
+                    &nbsp;{fmt(season.startDate)}&nbsp;–&nbsp;{fmt(season.endDate)}
+                </div>
             </header>
 
-            {/* Quick stats */}
+            {/* Quick stats including Theme */}
             <ul className="season-stats">
-                <li><strong>Teams:</strong>&nbsp;{season.teams?.length ?? 0}</li>
-                <li><strong>Games:</strong>&nbsp;{season.games?.length ?? 0}</li>
+                <li>
+                    <FaStar className="icon theme-icon" />
+                    &nbsp;<strong>Theme:</strong>&nbsp;{season.theme}
+                </li>
+                <li>
+                    <FaUsers className="icon team-icon" />
+                    &nbsp;<strong>Teams:</strong>&nbsp;{season.teams?.length ?? 0}
+                </li>
+                <li>
+                    <FaVolleyballBall className="icon volleyball-icon" />
+                    &nbsp;<strong>Games:</strong>&nbsp;{season.games?.length ?? 0}
+                </li>
             </ul>
 
             {/* View Details link */}
@@ -43,19 +75,15 @@ const SeasonCard: React.FC<{ season: Season }> = ({ season }) =>
 /* ===== Seasons page ===== */
 const Seasons: React.FC = () =>
 {
-    // Fetch season data
     const { data, error } = useSeasons()
-
     if (error) return <div>Error: {error}</div>
     if (!data) return <div>Loading…</div>
 
-    // Newest first
     const seasons = [...data].sort((a, b) => b.seasonNumber - a.seasonNumber)
 
     return (
         <div className="seasons-page">
             <h1 className="page-title">All Seasons</h1>
-
             <div className="seasons-grid">
                 {seasons.map(season =>
                     <SeasonCard key={season.id} season={season} />

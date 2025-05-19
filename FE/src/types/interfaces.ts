@@ -1,5 +1,7 @@
 // Define Types for Data
 
+import { Url } from "url";
+
 interface Game 
 {
   id: number;
@@ -44,6 +46,7 @@ interface Stats
 interface Team 
 {
   id: number;
+  placement: string;
   name: string;
   season: Season;
   games?: Game[]; // Optional games played by this team
@@ -58,6 +61,8 @@ interface Season
   teams?: Team[]; // Optional teams in this season
   startDate: Date; // Date when the season starts
   endDate?: Date; // Optional end date
+  image?: Url;
+  theme: string;
 }
 
 interface Article 

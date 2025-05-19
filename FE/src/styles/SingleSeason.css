@@ -1,0 +1,193 @@
+/* Container resets */
+.ss-container {
+    background: #ffffff;
+    color: #1a1a1a;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    box-sizing: border-box;
+}
+
+/* Single-season header with skewed highlight */
+.ss-header {
+    position: relative;
+    font-size: 4rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    text-align: center;
+    color: #1a1a1a;
+    margin: 2rem auto;
+    line-height: 1.1;
+    max-width: fit-content;
+}
+
+/* skewed block behind the title */
+.ss-header::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 120%;
+    height: 0.4em;
+    background: #a9d6f5;
+    transform: translate(-50%, -50%) skewX(-25deg);
+    z-index: -1;
+}
+
+/* subtle fade-in */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.ss-header {
+    animation: fadeIn 0.6s ease-out both;
+}
+
+/* Single-season meta as boxed items */
+.ss-meta {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+/* Each meta span styled as box */
+.ss-meta span {
+    background: #1a1a1a;
+    color: #fff;
+    padding: 0.5rem 1rem;
+    border: 1px solid #333;
+    border-radius: 4px;
+    font-size: 1rem;
+    min-width: 8rem;
+    text-align: center;
+}
+
+/* Grid of cards: exactly 4 columns, larger gaps */
+.ss-teams-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2rem;
+    padding: 1rem;
+    margin-bottom: 2rem;
+    box-sizing: border-box;
+}
+
+/* Individual TeamCard */
+.ss-team-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 425px;
+    background: #1a1a1a;
+    border: 2px solid #a9d6f5;
+    overflow: hidden;
+    box-sizing: border-box;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transform-origin: center top;
+}
+
+/* Hover effect: subtle grow and lift */
+.ss-team-card:hover {
+    transform: scale(1.03);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+}
+
+/* Position badge in corner */
+.ss-team-card-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #a9d6f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #000;
+}
+
+/* Header strip (team name + ID) */
+.ss-team-card-header {
+    width: 100%;
+    height: 48px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: inherit;
+    font-weight: bold;
+    font-size: 1.1rem;
+    color: #fff;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Change header background to match body and text to accent on hover */
+.ss-team-card:hover .ss-team-card-header {
+    background-color: #1a1a1a !important;
+}
+.ss-team-card:hover .ss-team-card-header .ss-team-name,
+.ss-team-card:hover .ss-team-card-header .ss-team-id {
+    color: #a9d6f5 !important;
+}
+
+/* Team name */
+.ss-team-name {
+    margin: 0;
+    line-height: 1;
+}
+
+/* Team ID */
+.ss-team-id {
+    font-size: 0.8rem;
+    opacity: 0.8;
+    line-height: 1;
+}
+
+/* Placement bar */
+.ss-team-placement {
+    background: #000;
+    color: #ccc;
+    text-align: center;
+    padding: 0.25rem 0;
+    font-size: 0.85rem;
+    border-top: 1px solid #222;
+}
+
+/* Players list */
+.ss-team-players {
+    flex: 1;
+    overflow-y: auto;
+    margin: 0;
+    padding: 0.5rem;
+    list-style: none;
+    text-align: left;
+    box-sizing: border-box;
+}
+.ss-team-players li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-bottom: 1px solid #333;
+    padding: 0.2rem 0;
+    color: #ddd;
+}
+
+/* Player index */
+.ss-player-index {
+    width: 1.2rem;
+    text-align: right;
+    opacity: 0.7;
+}
+
+/* Player name */
+.ss-player-name {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

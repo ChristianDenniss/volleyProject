@@ -61,4 +61,10 @@ export const useFetchGameById = <T>(gameId: string) =>
     return useFetch<T>(`games/${gameId}`);  // Always treats result as an array
 };
 
+export const useFetchSeasonById = <T>(seasonId: string) =>
+    {
+        console.log(`Use fetch called using seasons/${seasonId}`);
+        return useFetch<T>(`seasons/${seasonId}`);  // Always treats result as an array
+    };
+
 

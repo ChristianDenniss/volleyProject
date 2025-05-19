@@ -1,4 +1,4 @@
-import { useFetch, useFetchTeamByName, useFetchGameById } from "./useFetch";
+import { useFetch, useFetchTeamByName, useFetchGameById, useFetchSeasonById } from "./useFetch";
 import { Player, Team, Season, Game, Article } from "../types/interfaces";
 
 // Hook to fetch players
@@ -21,3 +21,5 @@ export const useArticles = () => useFetch<Article>("articles");
 export const useSingleTeam = (teamName: string) => useFetchTeamByName<Team>(`${teamName}`);
 
 export const useSingleGames = (gameId: string) => useFetchGameById<Game>(`${gameId}`);
+
+export const useSingleSeason = (seasonId: string) => useFetchSeasonById<Season>(`${seasonId}`);

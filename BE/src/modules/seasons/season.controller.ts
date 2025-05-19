@@ -1,107 +1,156 @@
-import { Request, Response } from 'express';
-import { SeasonService } from './season.service.js';
+import { Request, Response } from "express";
+import { SeasonService } from "./season.service.js";
 
-export class SeasonController {
+export class SeasonController
+{
     private seasonService: SeasonService;
 
-    constructor() {
+    constructor()
+    {
         this.seasonService = new SeasonService();
     }
 
-    // Create a new season
-    createSeason = async (req: Request, res: Response): Promise<void> => {
-        try {
-            const { seasonNumber, startDate, endDate } = req.body;
-            const savedSeason = await this.seasonService.createSeason(seasonNumber, startDate, endDate);
-            res.status(201).json(savedSeason);
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to create season";
-            
-            if (errorMessage.includes("required") || 
-                errorMessage.includes("already exists") ||
-                errorMessage.includes("must be between")) {
-                res.status(400).json({ error: errorMessage });
-            } else {
-                console.error("Error creating season:", error);
-                res.status(500).json({ error: "Failed to create season" });
-            }
-        }
-    };
+    /* ------------------------------------------------------------
+       Create a new season
+    ------------------------------------------------------------ */
+    createSeason = async (req: Request, res: Response): Promise<void> =>
+    {
+        try
+        {
+            const {
+                seasonNumber,
+                startDate,
+                endDate,
+                theme,        // NEW – required
+                image         // NEW – optional
+            } = req.body;
 
-    // Get all seasons
-    getSeasons = async (req: Request, res: Response): Promise<void> => {
-        try {
-            const seasons = await this.seasonService.getAllSeasons();
-            res.json(seasons);
-        } catch (error) {
-            console.error("Error fetching seasons:", error);
-            res.status(500).json({ error: "Failed to fetch seasons" });
-        }
-    };
-
-    // Get season by ID
-    getSeasonById = async (req: Request, res: Response): Promise<void> => {
-        try {
-            const { id } = req.params;
-            const season = await this.seasonService.getSeasonById(parseInt(id));
-            res.json(season);
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to fetch season";
-            
-            if (errorMessage.includes("not found")) {
-                res.status(404).json({ error: errorMessage });
-            } else {
-                console.error("Error fetching season by ID:", error);
-                res.status(500).json({ error: "Failed to fetch season" });
-            }
-        }
-    };
-
-    // Update a season
-    updateSeason = async (req: Request, res: Response): Promise<void> => {
-        try {
-            const { id } = req.params;
-            const { seasonNumber, startDate, endDate  } = req.body;
-            const updatedSeason = await this.seasonService.updateSeason(
-                parseInt(id),
-                seasonNumber, 
-                startDate, 
-                endDate 
+            const savedSeason = await this.seasonService.createSeason(
+                seasonNumber,
+                new Date(startDate),
+                new Date(endDate),
+                theme,
+                image
             );
-            res.json(updatedSeason);
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to update season";
-            
-            if (errorMessage.includes("not found")) {
-                res.status(404).json({ error: errorMessage });
-            } else if (errorMessage.includes("required") || 
-                       errorMessage.includes("already exists") ||
-                       errorMessage.includes("must be between")) {
-                res.status(400).json({ error: errorMessage });
-            } else {
-                console.error("Error updating season:", error);
-                res.status(500).json({ error: "Failed to update season" });
-            }
+
+            res.status(201).json(savedSeason);
+        }
+        catch (error: unknown)
+        {
+            this.handleError(error, res, "creating");
         }
     };
 
-    // Delete a season
-    deleteSeason = async (req: Request, res: Response): Promise<void> => {
-        try {
-            const { id } = req.params;
-            await this.seasonService.deleteSeason(parseInt(id));
-            res.status(204).send();
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to delete season";
-            
-            if (errorMessage.includes("not found")) {
-                res.status(404).json({ error: errorMessage });
-            } else if (errorMessage.includes("Cannot delete")) {
-                res.status(400).json({ error: errorMessage });
-            } else {
-                console.error("Error deleting season:", error);
-                res.status(500).json({ error: "Failed to delete season" });
-            }
+    /* ------------------------------------------------------------
+       Get all seasons
+    ------------------------------------------------------------ */
+    getAllSeasons = async (_req: Request, res: Response): Promise<void> =>
+    {
+        try
+        {
+            const seasons = await this.seasonService.getAllSeasons();
+            res.status(200).json(seasons);
+        }
+        catch (error: unknown)
+        {
+            this.handleError(error, res, "fetching seasons");
         }
     };
+
+    /* ------------------------------------------------------------
+       Get season by ID
+    ------------------------------------------------------------ */
+    getSeasonById = async (req: Request, res: Response): Promise<void> =>
+    {
+        try
+        {
+            const id      = Number(req.params.id);
+            const season  = await this.seasonService.getSeasonById(id);
+            res.status(200).json(season);
+        }
+        catch (error: unknown)
+        {
+            this.handleError(error, res, "fetching season");
+        }
+    };
+
+    /* ------------------------------------------------------------
+       Update a season
+    ------------------------------------------------------------ */
+    updateSeason = async (req: Request, res: Response): Promise<void> =>
+    {
+        try
+        {
+            const id = Number(req.params.id);
+            const {
+                seasonNumber,
+                startDate,
+                endDate,
+                theme,       // NEW – may be supplied
+                image        // NEW – may be supplied
+            } = req.body;
+
+            const updated = await this.seasonService.updateSeason(
+                id,
+                seasonNumber,
+                startDate ? new Date(startDate) : undefined,
+                endDate   ? new Date(endDate)   : undefined,
+                theme,
+                image
+            );
+
+            res.status(200).json(updated);
+        }
+        catch (error: unknown)
+        {
+            this.handleError(error, res, "updating season");
+        }
+    };
+
+    /* ------------------------------------------------------------
+       Delete a season
+    ------------------------------------------------------------ */
+    deleteSeason = async (req: Request, res: Response): Promise<void> =>
+    {
+        try
+        {
+            const id = Number(req.params.id);
+            await this.seasonService.deleteSeason(id);
+            res.status(204).send();
+        }
+        catch (error: unknown)
+        {
+            this.handleError(error, res, "deleting season");
+        }
+    };
+
+    /* ------------------------------------------------------------
+       Shared error-handling helper
+    ------------------------------------------------------------ */
+    private handleError(
+        error: unknown,
+        res: Response,
+        action: string
+    ): void
+    {
+        const message =
+            error instanceof Error ? error.message : `Failed while ${action}`;
+
+        if (
+            message.includes("required") ||
+            message.includes("already exists") ||
+            message.includes("out of bounds") ||
+            message.includes("Cannot delete") ||
+            message.includes("not found") ||
+            message.includes("must be between")
+        )
+        {
+            res.status(400).json({ error: message });
+        }
+        else
+        {
+            console.error(`Error ${action}:`, error);
+            res.status(500).json({ error: `Failed while ${action}` });
+        }
+    }
 }

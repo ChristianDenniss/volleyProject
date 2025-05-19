@@ -13,6 +13,7 @@ import Seasons from "./components/Seasons"; // Import Seasons component
 import Articles from "./components/Article"; // Import Articles component
 import PrivacyPolicy from "./components/PrivacyPolicy"; // Import PrivacyPolicy component
 import SingleGame from "./components/SingleGame";
+import SingleSeason from "./components/SingleSeason";
 import Contact from "./components/ContactUs"
 
 const App: React.FC = () => {
@@ -30,6 +31,7 @@ const App: React.FC = () => {
           <Route path="/games/:id" element={<SingleGame />} />
           <Route path="/teams/:teamName" element={<SingleTeam />} />
           <Route path="/seasons" element={<Seasons />} />
+          <Route path="/seasons/:id" element={<SingleSeason />} />
           <Route path="/games" element={<Games />} />
           <Route path="/articles" element={<Articles />} />
           <Route path = "/contact" element={<Contact />} />
