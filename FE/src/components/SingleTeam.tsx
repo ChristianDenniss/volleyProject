@@ -84,6 +84,7 @@ const SingleTeam: React.FC = () =>
             <h1 className="team-title">{team.name}</h1>
             <p>Season: {team.season?.seasonNumber ?? 'N/A'}</p>
             <p>Playoff Games Played: {team.games?.length ?? 0}</p>
+            <p>Placement: {team.placement}</p>
 
             {/* Players Section */}
             {team.players && team.players.length > 0 ? (

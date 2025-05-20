@@ -14,27 +14,27 @@
     font-size: 2.75rem;
     font-weight: bold;
     color: #222; /* Dark text */
-    margin-bottom: 1.5rem;
+    margin-bottom: 2.5rem;
     text-align: center;
-    border-bottom: 3px solid #f9b233; /* Subtle accent color from VNL */
+    border-bottom: 3px solid #b8ddff; /* Subtle accent color from VNL */
     padding-bottom: 0.5rem;
   }
   
   .privacy-intro {
     font-size: 1.125rem;
-    margin-bottom: 2rem;
+    margin-bottom: 3rem;
     color: #555;
     text-align: center;
   }
   
   .privacy-section {
-    margin-bottom: 2rem;
+    margin-bottom: 3rem;
   }
   
   .section-title {
     font-size: 1.75rem;
     font-weight: bold;
-    color: #f9b233; /* Accent color from VNL */
+    color: #000000; /* Accent color from VNL */
     margin-bottom: 1rem;
   }
   
@@ -51,7 +51,7 @@
   }
   
   .policy-list li {
-    margin-bottom: 1rem;
+    margin-bottom: 2rem;
     font-size: 1.125rem;
     color: #555;
     line-height: 1.7;

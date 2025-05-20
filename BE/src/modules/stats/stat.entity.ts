@@ -25,6 +25,10 @@ export class Stats {
     @Column()
     assists!: number;
 
+     /** New: count of setting errors, defaults to 0 */
+    @Column({ type: 'int', default: 0 })
+    settingErrors!: number;
+    
     @Column()
     blocks!: number;
 
@@ -36,6 +40,10 @@ export class Stats {
 
     @Column()
     aces!: number;
+
+    /** New: count of serving errors, defaults to 0 */
+    @Column({ type: 'int', default: 0 })
+    servingErrors!: number;
 
     @Column()
     miscErrors!: number;

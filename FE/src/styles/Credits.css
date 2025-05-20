@@ -1,0 +1,120 @@
+/* Container */
+.credits-container {
+    padding: 2rem;
+    background: #f9f9fb;
+    min-height: 100vh;
+    font-family: "Segoe UI", sans-serif;
+    color: #1a1a1a;
+}
+
+/* Header */
+.credits-header {
+    position: relative;
+    font-size: 3rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    text-align: center;
+    margin-bottom: 2rem;
+    /* shimmer effect */
+    background: linear-gradient(
+        to right,
+        #1a1a1a 20%,
+        #a9d6f5 40%,
+        #1a1a1a 60%
+    );
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer 2.5s linear infinite;
+}
+
+@keyframes shimmer {
+    to { background-position: -200% center; }
+}
+
+/* Subtitle below the header */
+.credits-subtitle {
+    text-align: center;
+    color: #555;
+    font-size: 1.1rem;
+    margin: 0 0 4rem;
+    opacity: 0.8;
+}
+
+/* Skewed highlight behind header */
+.credits-header::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 120%;
+    height: 0.3em;
+    background: #a9d6f5;
+    transform: translate(-50%, -50%) skewX(-20deg);
+    z-index: -1;
+}
+
+/* Grid of credit cards */
+.credits-grid {
+    display: grid;
+    /* force max 4 columns, wrap additional items */
+    grid-template-columns: repeat(4, minmax(200px, 1fr));
+    gap: 2rem;
+    width: 100%;
+}
+
+/* Entrance by sliding in */
+.credit-card {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: cardIn 0.6s ease-out forwards;
+}
+.credit-card:nth-child(1) { animation-delay: 0.1s; }
+.credit-card:nth-child(2) { animation-delay: 0.2s; }
+.credit-card:nth-child(3) { animation-delay: 0.3s; }
+.credit-card:nth-child(4) { animation-delay: 0.4s; }
+
+@keyframes cardIn {
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Individual card base style */
+.credit-card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    padding: 1.5rem;
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Hover: lift and grow */
+.credit-card:hover {
+    transform: translateY(-6px) scale(1.05);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+}
+
+/* Avatar */
+.credit-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 1rem;
+    border: 2px solid #a9d6f5;
+}
+
+/* Name */
+.credit-name {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+/* Role */
+.credit-role {
+    margin: 0.25rem 0 0;
+    color: #555;
+    font-size: 0.95rem;
+}
