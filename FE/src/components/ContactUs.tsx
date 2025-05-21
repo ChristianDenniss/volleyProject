@@ -13,7 +13,7 @@ const Contact: React.FC = () =>
                     <FaPhoneAlt className="contact-icon" />
                     <h2>Talk to a team member</h2>
                     <p>We’ll help you get the right support and answers when available.</p>
-                    <a href="mailto:your@email.com" className="contact-button">Email Us</a>
+                    <a href="mailto:aottgpvp@gmail.com" className="contact-button">Email Us</a>
                 </div>
 
                 <div className="contact-card">
@@ -21,7 +21,7 @@ const Contact: React.FC = () =>
                     <h2>Join our Discord</h2>
                     <p>Hop into our server to get help from the League and Game administration team through our automated ticketing system.</p>
                     <a
-                        href="https://discord.gg/your-server-link"
+                        href="https://discord.gg/volleyball"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="contact-button"

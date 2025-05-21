@@ -14,7 +14,9 @@ import Articles from "./components/Article"; // Import Articles component
 import PrivacyPolicy from "./components/PrivacyPolicy"; // Import PrivacyPolicy component
 import SingleGame from "./components/SingleGame";
 import SingleSeason from "./components/SingleSeason";
-import Contact from "./components/ContactUs"
+import Contact from "./components/ContactUs";
+import Credits from "./components/Credits";
+import SingleArticle from "./components/SingleArticle";
 
 const App: React.FC = () => {
   return (
@@ -36,6 +38,8 @@ const App: React.FC = () => {
           <Route path="/articles" element={<Articles />} />
           <Route path = "/contact" element={<Contact />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/credits" element={<Credits />} />
+          <Route path="/articles/:id" element={<SingleArticle />} />
         </Routes>
       </div>
       <Footer />

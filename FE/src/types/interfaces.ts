@@ -24,23 +24,40 @@ interface Player
   stats?: Stats[]; // Optional stats
 }
 
-interface Stats 
+interface Stats
 {
-  id: number;
-  gameId: Game; // ID of the game
-  playerBelongingTo: Player; // ID of the player
-  spikingErrors: number;
-  apeKills: number;
-  apeAttempts: number;
-  spikeKills: number;
-  spikeAttempts: number;
-  assists: number;
-  blocks: number;
-  digs: number;
-  blockFollows: number;
-  aces: number;
-  miscErrors: number;
-  serveErrors: number;
+    // unique stat ID
+    id: number;
+    // number of hitting errors
+    spikingErrors: number;
+    // (you can remove these if unused)
+    apeKills: number;
+    apeAttempts: number;
+    // number of successful spikes
+    spikeKills: number;
+    // number of spike attempts
+    spikeAttempts: number;
+    // assists count
+    assists: number;
+    // setting errors
+    settingErrors: number;
+    // total blocks
+    blocks: number;
+    // digs count
+    digs: number;
+    // block-follow count
+    blockFollows: number;
+    // aces served
+    aces: number;
+    // service errors
+    servingErrors: number;
+    // other misc errors
+    miscErrors: number;
+    // record timestamps
+    createdAt: string;
+    updatedAt: string;
+    // nested player object
+    player: Player;
 }
 
 interface Team 
@@ -71,7 +88,7 @@ interface Article
   title: string;
   content: string;
   author: User;
-  date: string; // Date the article was published
+  createdAt: string; // Date the article was published
   summary: string;
   imageUrl: string; // URL to the article image
   likes: number; // Number of likes

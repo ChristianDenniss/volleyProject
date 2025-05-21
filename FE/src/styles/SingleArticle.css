@@ -1,0 +1,246 @@
+/* import Playfair Display for masthead */
+@import url('https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&family=Libre+Baskerville:wght@700&family=Cinzel:wght@700&family=EB+Garamond:wght@700&family=Merriweather:wght@700&family=Cormorant+Garamond:wght@700&family=Bitter:wght@700&family=Lora:wght@700&display=swap');
+
+
+/* SingleArticle.css — Newspaper‐Style Layout with Interactive Heart */
+:root
+{
+    --np-bg: #fdfdf9;
+    --np-text: #1a1a1a;
+    --np-meta: #555;
+    --np-accent: #800000;
+    --np-light-accent: rgba(255, 0, 0, 0.3);
+    --np-border: #ccc;
+    --np-radius: 4px;
+    --np-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    --np-serif: 'Georgia', serif;
+    --np-sans: 'Helvetica Neue', Arial, sans-serif;
+    --np-gap: 3rem;
+}
+
+/* Article container */
+.sa-article
+{
+    max-width                : 90%;
+    margin                   : 1rem auto;
+    padding                  : 0 2rem 2rem;
+    background               : var(--np-bg);
+    color                    : var(--np-text);
+    font-family              : var(--np-serif);
+    box-shadow               : var(--np-shadow);
+    border-radius            : var(--np-radius);
+    overflow                 : hidden;
+    display                  : grid;
+    grid-template-columns    : 1fr;
+    grid-template-rows       : auto 1fr auto;
+    position                 : relative;
+}
+
+/* Hero image */
+.sa-image
+{
+    width                    : 100%;
+    height                   : auto;
+    margin-top               : 0;        /* eliminate gap above image */
+    margin-bottom            : 0.5rem;   /* tightened gap below image */
+    border-radius            : var(--np-radius);
+    object-fit               : cover;
+    display                  : block;
+}
+
+/* Title */
+.sa-title
+{
+    font-family              : var(--np-serif);
+    font-size                : clamp(2rem, 5vw, 3rem);
+    text-transform           : uppercase;
+    letter-spacing           : 2px;
+    border-bottom            : 2px solid var(--np-text);
+    padding-bottom           : 0.5rem;
+    margin-bottom            : 1rem;
+}
+
+/* Meta */
+.sa-meta
+{
+    display                  : flex;
+    flex-wrap                : wrap;
+    gap                      : 1rem;
+    font-family              : var(--np-sans);
+    font-size                : 0.9rem;
+    color                    : var(--np-meta);
+    margin-bottom            : 2rem;
+}
+.sa-meta span::before
+{
+    content                  : "•";
+    margin-right             : 0.5rem;
+}
+.sa-meta span:first-child::before
+{
+    content                  : "";
+    margin                   : 0;
+}
+
+/* Content columns */
+.sa-content
+{
+    font-size                : 1.1rem;
+    line-height              : 1.7;
+    column-count             : 2;
+    column-gap               : var(--np-gap);
+    text-align               : justify;
+    margin-bottom            : 2rem;
+}
+.sa-content p
+{
+    margin-bottom            : 1.5rem;
+}
+.sa-content p:first-of-type::first-letter
+{
+    font-size                : 4rem;
+    float                    : left;
+    line-height              : 1;
+    margin                   : 0.1rem 0.5rem 0 0;
+    font-weight              : bold;
+    color                    : var(--np-accent);
+}
+
+/* Subtitle / summary styling — newspaper pull‐quote style */
+.sa-summary
+{
+    display                  : block;
+    width                    : 100%;
+    margin                   : 0 2rem 2rem;
+    font-family              : var(--np-sans);
+    font-size                : 1.2rem;
+    font-variant             : small-caps;
+    text-align               : center;
+    color                    : var(--np-text);
+    border-top               : 1px solid var(--np-text);
+    border-bottom            : 1px solid var(--np-text);
+    padding                  : 0.5rem 2rem;
+    break-inside             : avoid;
+}
+
+/* Likes section */
+.sa-likes
+{
+    display                  : flex;
+    align-items              : center;
+    gap                      : 0.5rem;
+    margin-top               : 2rem;
+    font-family              : var(--np-sans);
+}
+
+/* Heart Icon Button */
+.sa-like-button
+{
+    background               : none;
+    border                   : none;
+    cursor                   : pointer;
+    font-size                : 2rem;
+    color                    : var(--np-light-accent);
+    padding                  : 0;
+    line-height              : 1;
+    transition               : color 0.3s ease;
+}
+.sa-like-button:hover
+{
+    color                    : var(--np-accent);
+}
+.sa-like-button.liked
+{
+    color                    : var(--np-accent);
+}
+
+/* Likes count */
+.sa-likes-count
+{
+    font-size                : 1rem;
+    color                    : var(--np-text);
+}
+
+/* Loading and error states */
+.sa-loading,
+.sa-error
+{
+    text-align               : center;
+    padding                  : 2rem;
+    font-family              : var(--np-sans);
+    color                    : var(--np-meta);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px)
+{
+    .sa-content
+    {
+        column-count        : 1;
+    }
+}
+
+/* Newspaper masthead */
+.np-header
+{
+    display                  : flex;
+    flex-direction           : row;      /* title and volume side by side */
+    align-items              : baseline;
+    justify-content          : center;
+    gap                      : 1.5rem;
+    padding                  : 0.5rem 3rem 0;
+    margin-bottom            : 0px;
+    margin-top: 3rem;
+    background               : var(--np-bg);
+    font-family              : var(--np-serif);
+    position                 : relative;
+}
+/* Decorative separator line */
+.np-header::after
+{
+    content                  : "";
+    position                 : absolute;
+    bottom                   : 0;
+    left                     : 50%;
+    transform                : translateX(-50%);
+    width                    : 80%;      /* shorter than full page */
+    height                   : 2px;
+    background               : var(--np-text);
+}
+
+/* Brand (title) */
+.np-header__brand
+{
+    font-family: 'EB Garamond', serif;
+    font-size                : 3rem;
+    letter-spacing           : 6px;
+    text-transform           : uppercase;
+    font-weight              : bold;
+    color                    : var(--np-text);
+}
+
+/* Edition (volume) */
+.np-header__edition
+{
+    font-size                : 1.5rem;
+    font-variant             : small-caps;
+    margin                   : 0;
+    align-self               : baseline;
+}
+
+/* Date under volume */
+.np-header__info
+{
+    display                  : flex;
+    flex-direction           : column;
+    align-items              : center;
+    color                    : var(--np-meta);
+    font-size                : 1rem;
+    line-height              : 1.2;
+}
+.np-header__date
+{
+    font-style               : italic;
+    font-size                : 0.9rem;
+    margin                   : 0;
+}

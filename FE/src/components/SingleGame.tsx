@@ -25,7 +25,7 @@ const SingleGame: React.FC = () =>
         return <div className="single-game-container">URL ID is undefined</div>
     }
 
-    // Fetch data (shape is unknown — could be obj / array / wrapper)
+    // Fetch data
     const { data, error } = useSingleGames(id)
 
     // Loading
@@ -40,21 +40,18 @@ const SingleGame: React.FC = () =>
         return <div className="single-game-container">Error: {error}</div>
     }
 
-    // Guard again
+    // Guard
     if (!data)
     {
         return <div className="single-game-container">No data found.</div>
     }
 
-    // ---------- NORMALISE INTO Game[] ----------
+    // Normalize into Game[]
     let games: Game[] = []
-
-    // If already an array
     if (Array.isArray(data))
     {
-        games = data as Game[]
+        games = data
     }
-    // If wrapped as { games: [...] }
     else if (
         typeof data === "object" &&
         data !== null &&
@@ -62,110 +59,144 @@ const SingleGame: React.FC = () =>
         Array.isArray((data as any).games)
     )
     {
-        games = (data as any).games as Game[]
+        games = (data as any).games
     }
-    // Otherwise assume single object
     else
     {
         games = [data as Game]
     }
 
-    // Still nothing usable
+    // No games?
     if (games.length === 0)
     {
         return <div className="single-game-container">Game not found.</div>
     }
 
-    // Pick the game matching the URL id
+    // Pick the matching game
     const numericId = Number(id)
     const game      = games.find(g => g.id === numericId) ?? games[0]
 
     // Compute total sets
     const totalSets = game.team1Score + game.team2Score
 
-    // ----------- DATA FORMATTERS -----------
-    // Friendly date string
+    // Format date
     const formattedDate = new Date(game.date).toLocaleDateString(
         undefined,
         { year: "numeric", month: "long", day: "numeric" }
     )
 
-    // Prefer custom title over name
-    const displayTitle = game.title ?? game.name
-
-    // Do we have stats rows?
+    // Stats exists?
     const hasStats = Array.isArray(game.stats) && game.stats.length > 0
 
-    // ----------- RENDER -----------
+    // Group stats by team
+    const team1 = game.teams?.[0] ?? { name: "Team 1", players: [] }
+    const team2 = game.teams?.[1] ?? { name: "Team 2", players: [] }
+    const team1Stats = (game.stats ?? []).filter(s =>
+        team1.players?.some(p => p.id === s.player.id)
+    )
+    const team2Stats = (game.stats ?? []).filter(s =>
+        team2.players?.some(p => p.id === s.player.id)
+    )
+
+    // Render
     return (
         <div className="single-game-container">
             {/* Game title */}
-            <h1 className="game-title">{displayTitle}</h1>
+            <h1 className="game-title">{game.name}</h1>
 
-            {/* Metadata block */}
+            {/* Metadata */}
             <div className="meta-block">
-                <p className="season-info">Season&nbsp;{game.season.seasonNumber}</p>
+                <p className="season-info">Season {game.season.seasonNumber}</p>
                 <p className="game-date">{formattedDate}</p>
-                <p className="sets-played">Total&nbsp;Sets&nbsp;Played&nbsp;{totalSets}</p>
+                <p className="sets-played">Total Sets Played {totalSets}</p>
             </div>
 
             {/* Divider */}
             <hr className="meta-divider" />
 
-            {/* Scoreboard grid */}
+            {/* Scoreboard */}
             <div className="scoreboard">
-                {/* Team 1 */}
                 <div className="team-column">
-                    <span className="team-name">{game.teams?.[0]?.name}</span>
+                    <span className="team-name">{team1.name}</span>
                     <span className="team-score">{game.team1Score}</span>
                 </div>
-
-                {/* vs */}
                 <div className="vs">vs</div>
-
-                {/* Team 2 */}
                 <div className="team-column">
-                    <span className="team-name">{game.teams?.[1]?.name}</span>
+                    <span className="team-name">{team2.name}</span>
                     <span className="team-score">{game.team2Score}</span>
                 </div>
             </div>
 
-            {/* ===== Player statistics ===== */}
+            {/* Player statistics */}
             {
                 hasStats
                     ? (
                         <section className="stats-section">
                             {/* Section title */}
                             <h2 className="stats-title">Player Statistics</h2>
-
-                            {/* Scroll container so wide tables don’t break mobile */}
                             <div className="stats-scroll">
                                 <table className="stats-table">
                                     <thead>
                                         <tr>
                                             <th>Player</th>
-                                            <th>Kills</th>
-                                            <th>Attempts</th>
-                                            <th>Errors</th>
-                                            <th>Aces</th>
-                                            <th>Blocks</th>
+                                            <th>Spike Kills</th>
+                                            <th>Spike Attempts</th>
+                                            <th>Ape Kills</th>
+                                            <th>Ape Attempts</th>
+                                            <th>Spiking Errors</th>
                                             <th>Digs</th>
+                                            <th>Block Follows</th>
+                                            <th>Blocks</th>
                                             <th>Assists</th>
-                                            <th>Serve&nbsp;Errors</th>
+                                            <th>Setting Errors</th>
+                                            <th>Aces</th>
+                                            <th>Serve Errors</th>
+                                            <th>Misc Errors</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {game.stats!.map((s, idx) =>
-                                            <tr key={idx}>
-                                                <td>{s.playerBelongingTo.name}</td>
+                                        {/* Team 1 rows */}
+                                        {team1Stats.map(s =>
+                                            <tr key={`t1-${s.id}`}>
+                                                <td>{s.player.name}</td>
                                                 <td>{s.spikeKills}</td>
                                                 <td>{s.spikeAttempts}</td>
+                                                <td>{s.apeKills}</td>
+                                                <td>{s.apeAttempts}</td>
                                                 <td>{s.spikingErrors}</td>
-                                                <td>{s.aces}</td>
-                                                <td>{s.blocks}</td>
                                                 <td>{s.digs}</td>
+                                                <td>{s.blockFollows}</td>
+                                                <td>{s.blocks}</td>
                                                 <td>{s.assists}</td>
-                                                <td>{s.serveErrors}</td>
+                                                <td>{s.settingErrors}</td>
+                                                <td>{s.aces}</td>
+                                                <td>{s.servingErrors}</td>
+                                                <td>{s.miscErrors}</td>
+                                            </tr>
+                                        )}
+
+                                        {/* Separator for Team 2 */}
+                                        <tr className="team-separator">
+                                            <td colSpan={14}></td>
+                                        </tr>
+
+                                        {/* Team 2 rows */}
+                                        {team2Stats.map(s =>
+                                            <tr key={`t2-${s.id}`} className="team2-row">
+                                                <td>{s.player.name}</td>
+                                                <td>{s.spikeKills}</td>
+                                                <td>{s.spikeAttempts}</td>
+                                                <td>{s.apeKills}</td>
+                                                <td>{s.apeAttempts}</td>
+                                                <td>{s.spikingErrors}</td>
+                                                <td>{s.digs}</td>
+                                                <td>{s.blockFollows}</td>
+                                                <td>{s.blocks}</td>
+                                                <td>{s.assists}</td>
+                                                <td>{s.settingErrors}</td>
+                                                <td>{s.aces}</td>
+                                                <td>{s.servingErrors}</td>
+                                                <td>{s.miscErrors}</td>
                                             </tr>
                                         )}
                                     </tbody>
@@ -180,4 +211,4 @@ const SingleGame: React.FC = () =>
 }
 
 // Export component
-export default SingleGame;
+export default SingleGame

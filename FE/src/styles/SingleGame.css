@@ -3,18 +3,17 @@
    ========================================================= */
 
 /* ===== CSS Variables for easy theming ===== */
-:root
-{
+:root {
     --primary-dark: #0b1e35;   /* deep navy */
     --primary-light: #d6ebff;  /* pale blue */
     --accent: #ffbf00;         /* gold accent */
     --text-main: #222;
     --text-muted: #5d6673;
+    --scroll-thumb: rgba(0, 0, 0, 0.2);
 }
 
 /* ===== Wrapper ===== */
-.single-game-container
-{
+.single-game-container {
     max-width: 1100px;
     margin: 0 auto;
     padding: 4rem 1.5rem 5rem;
@@ -23,8 +22,7 @@
 }
 
 /* ===== Title ===== */
-.game-title
-{
+.game-title {
     font-size: 3.5rem;
     font-weight: 800;
     line-height: 1.1;
@@ -35,27 +33,23 @@
 }
 
 /* ===== Metadata block (date • season • sets) ===== */
-.meta-block
-{
+.meta-block {
     display: flex;
     justify-content: center;
     gap: 1.25rem;
     flex-wrap: wrap;
     margin-bottom: 2.25rem;
 }
-
-.meta-block p
-{
+.meta-block p {
     margin: 0;
     font-size: 0.975rem;
     color: var(--text-muted);
-    font-weight: 600;          /* uniform boldness */
+    font-weight: 600;
 }
 
 /* Thin divider */
-.meta-divider
-{
-    width: 400;
+.meta-divider {
+    width: 400px;
     height: 3px;
     background: var(--primary-light);
     border: none;
@@ -63,8 +57,7 @@
 }
 
 /* ===== Scoreboard ===== */
-.scoreboard
-{
+.scoreboard {
     display: grid;
     grid-template-columns: 1fr auto 1fr;
     align-items: center;
@@ -72,29 +65,25 @@
     margin-bottom: 3.5rem;
 }
 
-.team-column
-{
+.team-column {
     text-align: center;
 }
 
-.team-name
-{
+.team-name {
     font-size: 1.5rem;
     font-weight: 700;
     margin-bottom: 0.4rem;
     text-transform: capitalize;
 }
 
-.team-score
-{
+.team-score {
     font-size: 4.2rem;
     font-weight: 800;
     color: var(--primary-dark);
     line-height: 1;
 }
 
-.vs
-{
+.vs {
     font-size: 1.2rem;
     font-weight: 700;
     color: var(--text-muted);
@@ -106,22 +95,19 @@
 
 /* ===== Season & Total Sets ===== */
 .season-info,
-.sets-played
-{
+.sets-played {
     font-size: 0.975rem;
     color: var(--text-muted);
     margin: 0;
-    font-weight: 600;          /* match date weight */
+    font-weight: 600;
 }
 
 /* ===== Stats Section ===== */
-.stats-section
-{
+.stats-section {
     margin-top: 4.5rem;
 }
 
-.stats-title
-{
+.stats-title {
     font-size: 2.25rem;
     font-weight: 700;
     text-align: center;
@@ -129,21 +115,50 @@
     margin-bottom: 1.5rem;
 }
 
-.stats-scroll
-{
+.stats-scroll {
     overflow-x: auto;
+    /* make scrollbar overlay content, no default track */
+    scrollbar-width: thin;
+    scrollbar-color: var(--scroll-thumb) transparent;
 }
 
-.stats-table
-{
+/* WebKit-based browsers */
+.stats-scroll::-webkit-scrollbar {
+    height: 6px;
+}
+.stats-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+.stats-scroll::-webkit-scrollbar-thumb {
+    background: var(--scroll-thumb);
+    border-radius: 3px;
+}
+
+/* ——— Hide scrollbar arrows ——— */
+.stats-scroll::-webkit-scrollbar-button:horizontal:decrement,
+.stats-scroll::-webkit-scrollbar-button:horizontal:increment,
+.stats-scroll::-webkit-scrollbar-button:vertical:decrement,
+.stats-scroll::-webkit-scrollbar-button:vertical:increment {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+/* ——— Remove the corner where horizontal & vertical bars meet ——— */
+.stats-scroll::-webkit-scrollbar-corner {
+    display: none !important;
+    background: transparent !important;
+}
+
+/* ===== Table styling ===== */
+.stats-table {
     width: 100%;
     min-width: 960px;
     border-collapse: collapse;
     font-size: 0.93rem;
 }
 
-.stats-table thead th
-{
+.stats-table thead th {
     position: sticky;
     top: 0;
     background: var(--primary-dark);
@@ -155,58 +170,60 @@
     z-index: 1;
 }
 
-.stats-table tbody tr
-{
+.stats-table tbody tr {
     transition: background 0.15s ease;
 }
 
-.stats-table tbody tr:hover
-{
+.stats-table tbody tr:hover {
     background: rgba(214, 235, 255, 0.45);
 }
 
-.stats-table td
-{
+.stats-table td {
     padding: 0.8rem 1.1rem;
     text-align: center;
     white-space: nowrap;
     border-bottom: 1px solid #eef3f8;
 }
 
-.stats-table tbody tr:nth-child(even)
-{
+.stats-table tbody tr:nth-child(even) {
     background: #f7fbff;
 }
 
-.no-stats
-{
-    text-align: center;
-    margin-top: 3.5rem;
-    color: var(--text-muted);
-    font-size: 1.05rem;
+/* ===== Team 2 custom striping ===== */
+.stats-table tbody tr.team2-row:nth-child(even) {
+    background: #ffecec;
+}
+.stats-table tbody tr.team2-row:nth-child(odd) {
+    background: #fff;
+}
+.stats-table tbody tr.team2-row:hover {
+    background: rgba(255, 0, 0, 0.1);
+}
+
+/* ===== Separator styling ===== */
+.stats-table tbody tr.team-separator {
+    background-color: #0b1e35eb !important;
+    height: 16px;
+}
+.stats-table tbody tr.team-separator td {
+    padding: 0;
+    height: 16px;
+    border: none;
 }
 
 /* ===== Responsive tweaks ===== */
-@media (max-width: 700px)
-{
-    .scoreboard
-    {
+@media (max-width: 700px) {
+    .scoreboard {
         grid-template-columns: 1fr;
         gap: 1.1rem;
     }
-
-    .vs
-    {
+    .vs {
         display: none;
     }
-
-    .team-score
-    {
+    .team-score {
         font-size: 3.3rem;
     }
-
-    .meta-block
-    {
+    .meta-block {
         flex-direction: column;
         gap: 0.3rem;
     }

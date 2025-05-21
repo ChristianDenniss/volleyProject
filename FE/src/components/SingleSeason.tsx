@@ -1,7 +1,7 @@
 // src/pages/SingleSeason.tsx
 
 import React from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";  // added Link import
 import { useSingleSeason } from "../hooks/allFetch";
 import "../styles/SingleSeason.css";
 import { Season, Team as ITeam, Player as IPlayer } from "../types/interfaces";
@@ -15,13 +15,17 @@ type TeamCardProps = {
 /*
     Renders a single team as a colored card with placement badge,
     team name/id header, and a numbered list of players.
+    Wraps in Link so clicking goes to /teams/:teamName
 */
 const TeamCard: React.FC<TeamCardProps> = ( props ) =>
 {
     const { team, headerColor, positionNumber } = props;
 
     return (
-        <div className="ss-team-card">
+        <Link
+            to={`/teams/${encodeURIComponent(team.name)}`}
+            className="ss-team-card"
+        >
             <div
                 className="ss-team-card-badge"
                 style={{ backgroundColor: headerColor }}
@@ -51,7 +55,7 @@ const TeamCard: React.FC<TeamCardProps> = ( props ) =>
                     </li>
                 ))}
             </ul>
-        </div>
+        </Link>
     );
 };
 
@@ -95,10 +99,7 @@ const SingleSeason: React.FC = () =>
     return (
         <div className="ss-container">
 
-            <header
-                className="ss-header"
-                
-            >
+            <header className="ss-header">
                 Season {season.seasonNumber}
             </header>
 
