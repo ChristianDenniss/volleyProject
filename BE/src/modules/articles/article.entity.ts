@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne } from "typeorm";
-import type { User } from "../user/user.entity.js";
+import { User } from "../user/user.entity.js";
 
 @Entity()
 export class Article
@@ -29,7 +29,6 @@ export class Article
     @Column({ default: 0 })
     likes!: number;
 
-    // Also use string reference here
-    @ManyToOne('User', 'articles', { nullable: false })
+    @ManyToOne(() => User, user => user.articles, { nullable: false })
     author!: User;
 }

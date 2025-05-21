@@ -51,32 +51,40 @@ const SingleTeam: React.FC = () =>
             {
                 totals.spikeAttempts += stat.spikeAttempts || 0;
                 totals.spikeKills += stat.spikeKills || 0;
+                totals.spikingErrors += stat.spikingErrors || 0;
+                totals.apeAttempts += stat.apeAttempts || 0;
+                totals.apeKills += stat.apeKills || 0;
                 totals.assists += stat.assists || 0;
+                totals.settingErrors += stat.settingErrors
                 totals.blocks += stat.blocks || 0;
                 totals.digs += stat.digs || 0;
-                totals.aces += stat.aces || 0;
-                totals.errors += stat.serveErrors || 0;
-                totals.miscErrors += stat.miscErrors || 0;
                 totals.blockFollows += stat.blockFollows || 0;
-                totals.apeKills += stat.apeKills || 0;
-                totals.apeAttempts += stat.apeAttempts || 0;
-                totals.spikingErrors += stat.spikingErrors || 0;
+                totals.aces += stat.aces || 0;
+                totals.servingErrors += stat.servingErrors || 0;
+                totals.miscErrors += stat.miscErrors || 0;
             });
         }
         return totals;
     }, {
         spikeAttempts: 0,
         spikeKills: 0,
-        assists: 0,
-        blocks: 0,
-        digs: 0,
-        aces: 0,
-        serveErrors: 0,
-        miscErrors: 0,
-        blockFollows: 0,
         apeKills: 0,
         apeAttempts: 0,
-        spikingErrors: 0
+        spikingErrors: 0,
+
+        assists: 0,
+        settingErrors: 0,
+
+        blocks: 0,
+
+        digs: 0,
+        blockFollows: 0,
+
+        aces: 0,
+        servingErrors: 0,
+        
+        miscErrors: 0,
+    
     });
 
     return (
@@ -117,7 +125,7 @@ const SingleTeam: React.FC = () =>
                                                         <div className="stat-item"><span>Block Follows:</span><span>{stat.blockFollows}</span></div>
                                                         <div className="stat-item"><span>Aces:</span><span>{stat.aces}</span></div>
                                                         <div className="stat-item"><span>Misc Errors:</span><span>{stat.miscErrors}</span></div>
-                                                        <div className="stat-item"><span>Errors:</span><span>{stat.serveErrors}</span></div>
+                                                        <div className="stat-item"><span>Errors:</span><span>{stat.servingErrors}</span></div>
                                                     </React.Fragment>
                                                 ))}
                                             </div>
