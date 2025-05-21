@@ -3,8 +3,9 @@ import "../styles/Credits.css";
 
 // Import your images as modules
 import LuvLateAvatar from "../images/LuvLate.png";
-import ArticKitsuuAvatar from "../images/ArticKitsuu.png";
+// import ArticKitsuuAvatar from "../images/ArticKitsuu.png";
 import IlloultAvatar from "../images/Illoult.png";
+import capitandeAvatar from "../images/capitande.png";
 //import CapitandeAvatar from "../images/capitande.png";
 
 const CreditsPage: React.FC = () => {
@@ -28,11 +29,11 @@ const CreditsPage: React.FC = () => {
 
         <div className="credit-card">
           <img
-            src={ArticKitsuuAvatar}
-            alt="ArticKitsuu"
+            src={capitandeAvatar}
+            alt="capitande"
             className="credit-avatar"
           />
-          <h3 className="credit-name">ArticKitsuu</h3>
+          <h3 className="credit-name">capitande</h3>
           <p className="credit-role">UI/UX Contributor</p>
         </div>
 

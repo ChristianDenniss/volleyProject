@@ -88,7 +88,7 @@ interface Article
   title: string;
   content: string;
   author: User;
-  date: string; // Date the article was published
+  createdAt: string; // Date the article was published
   summary: string;
   imageUrl: string; // URL to the article image
   likes: number; // Number of likes
