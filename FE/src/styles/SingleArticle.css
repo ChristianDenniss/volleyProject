@@ -39,11 +39,12 @@
 /* Hero image */
 .sa-image
 {
-    width                    : 100%;
+    width: 100%;
+    max-height: 90vh;
+    border-radius: var(--np-radius);
     height                   : auto;
     margin-top               : 0;        /* eliminate gap above image */
     margin-bottom            : 0.5rem;   /* tightened gap below image */
-    border-radius            : var(--np-radius);
     object-fit               : cover;
     display                  : block;
 }

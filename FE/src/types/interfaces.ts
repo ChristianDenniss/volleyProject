@@ -99,9 +99,19 @@ interface User
   id: number;
   username: string;
   email: string;
-  password: string;
   articles?: Article[]; // Optional articles written by this user
   role: string; // Role of the user (e.g., admin, writer)
 }
 
-export type { Game, Player, Stats, Team, Season, Article, User };
+/** what your AuthContext provides */
+ interface AuthContextType 
+ {
+  user: User | null;
+  token: string | null;
+  login: (token: string, user: User) => void;
+  logout: () => void;
+  isAuthenticated: boolean;
+  loading: boolean;
+}
+
+export type { Game, Player, Stats, Team, Season, Article, User, AuthContextType };
