@@ -33,7 +33,7 @@
 {
     font-size: 16px;
     font-weight: 600;
-    color: #333; /* Dark text for contrast */
+    color: #262626; /* Dark text for contrast */
     white-space: nowrap;
 }
 
@@ -82,7 +82,7 @@
 /* Hover effect on the button */
 .dropdown-btn:hover 
 {
-    background-color: #d6ebff; 
+    background-color: #dddddd; 
 }
 
 /* Ensure dropdown remains open when hovered or clicked */
@@ -140,7 +140,7 @@
 {
     width: 35px;
     height: 35px;
-    background-color: #585858;
+    background-color: #262626;
     border-radius: 50%;
     cursor: pointer; /* Ensures it shows a pointer on hover */
     z-index: 1; /* Ensure it's on top */
@@ -167,4 +167,25 @@
     display: flex;
     align-items: center;
     gap: 40px; /* Increased gap between text and button */
+}
+
+/* Logout button matches the dropdown-btn style */
+.logout-btn
+{
+    background-color: #262626;    /* same dark background */
+    color: white;                 /* white text */
+    padding: 8px 12px;            /* same padding */
+    border: none;                 /* no border */
+    border-radius: 6px;           /* same rounding */
+    font-size: 16px;              /* same font size */
+    cursor: pointer;              /* pointer on hover */
+    transition: background 0.3s ease;
+    margin-left: 25px;            /* align with profile gap */
+}
+
+/* Hover effect like dropdown-btn */
+.logout-btn:hover
+{
+    background-color: #dddddd;    /* same hover background */
+    color: #262626;               /* invert text for contrast */
 }

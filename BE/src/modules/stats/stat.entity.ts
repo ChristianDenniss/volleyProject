@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, RelationId } from 'typeorm';
 import type { Players } from '../players/player.entity.js';
 import type { Games } from '../games/game.entity.js';
 
@@ -61,4 +61,7 @@ export class Stats {
     // Many-to-one relationship with games, each stat is for one game
     @ManyToOne('Games', 'stats')
     game!: Games;
+
+    @RelationId((stat: Stats) => stat.player)
+    playerId!: number;
 }

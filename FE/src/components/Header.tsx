@@ -1,41 +1,46 @@
+// src/components/Header.tsx
 import React, { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/authContext";
 import "../styles/Header.css";
-import rvlLogo from "../images/rvlLogo.png";  // Import the main logo
-import pfp from "../images/pfpLogo.png";  // Import the profile picture
+import rvlLogo from "../images/rvlLogo.png";  
+// import blueTexture from "../images/blue_texture_strip.png";  
+import pfp from "../images/pfpLogo.png";  
 
-const Header: React.FC = () => {
+const Header: React.FC = () =>
+{
+    // grab auth state
+    const { user, isAuthenticated, logout } = useAuth();
+
+    // router helper for logout
+    const navigate = useNavigate();
+
+    // dropdown state
     const [dropdownOpen, setDropdownOpen] = useState(false);
-    const dropdownRef = useRef<HTMLDivElement>(null);  
+    const dropdownRef = useRef<HTMLDivElement>(null);
 
-    // Replace with actual auth logic
-    const isLoggedIn = false;
-    // Replace with actual api call
-    const username = "LuvLate";
-
-    // Toggle dropdown when button is clicked
+    // toggle dropdown when button is clicked
     const toggleDropdown = () => setDropdownOpen(!dropdownOpen);
 
-    // Close dropdown when clicking outside of it
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+    // close dropdown when clicking outside
+    useEffect(() =>
+    {
+        const handleClickOutside = (event: MouseEvent) =>
+        {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node))
+            {
                 setDropdownOpen(false);
             }
         };
 
         document.addEventListener("mousedown", handleClickOutside);
-
-        // Cleanup the event listener when component is unmounted
-        return () => {
-            document.removeEventListener("mousedown", handleClickOutside);
-        };
+        return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
     return (
         <header className="site-header">
             <div className="left-section">
-                {/* Wrap the logo with Link to make it clickable */}
+                {/* clickable logo */}
                 <Link to="/">
                     <img src={rvlLogo} alt="Logo" className="logo" />
                 </Link>
@@ -43,15 +48,26 @@ const Header: React.FC = () => {
             </div>
 
             <div className="right-section">
-                {isLoggedIn ? (
+                {isAuthenticated ? (
+                    // when logged in, show username and avatar
                     <div className="profile-info">
-                        <span className="username">{username}</span>
-                        {/* Use the imported profile picture here, wrapped in a Link */}
+                        <span className="username">{user?.username}</span>
                         <Link to="/profile">
                             <img src={pfp} alt="Profile Picture" className="avatar" />
                         </Link>
+                        <button
+                            className="logout-btn"
+                            onClick={() =>
+                            {
+                                logout();
+                                navigate("/");
+                            }}
+                        >
+                            Logout
+                        </button>
                     </div>
                 ) : (
+                    // guest dropdown when not logged in
                     <div className="auth-dropdown">
                         <div className="auth-button-wrapper">
                             <span className="auth-text">Guest</span>

@@ -5,6 +5,7 @@
     min-height: 100vh;
     font-family: "Segoe UI", sans-serif;
     color: #1a1a1a;
+    overflow-x: hidden;
 }
 
 /* Header */

@@ -1,0 +1,149 @@
+/* src/styles/UserProfile.css */
+
+/* === Container & Layout === */
+.profile-container {
+    display: grid;
+    grid-template-areas:
+      "header header"
+      "card   articles";
+    grid-template-columns: 1fr 1fr;  /* equal two-column layout */
+    column-gap: 2rem;
+    width: 90%;
+    margin: 2rem auto;
+    padding: 2rem;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+    font-family: 'Inter', sans-serif;
+    color: #333333;
+}
+
+/* === Header === */
+.profile-container > h2 {
+    grid-area: header;
+    font-size: 2.25rem;
+    font-weight: 700;
+    color: #4A90E2;
+    margin: 0 0 2rem;
+    text-align: center; /* center header */
+}
+
+/* === Details Heading (Left Panel) === */
+.profile-card::before {
+    content: "Details";
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #4A90E2;
+    margin-bottom: 3rem;
+    margin-left: 11rem;
+    text-align: left; /* center details heading */
+}
+
+/* === Profile Card (Left Panel) === */
+.profile-card {
+    grid-area: card;
+    padding: 0 1rem 1rem 0;
+    border-right: 1px solid #e0e0e0;
+}
+
+.profile-card p {
+    display: flex;
+    align-items: center;
+    margin: 0 2rem 1rem;
+    font-size: 1rem;
+    line-height: 1.6;
+    justify-content: left; /* center each detail row */
+}
+
+.profile-card p strong {
+    width: 200px;       /* widened label column */
+    flex-shrink: 0;
+    font-weight: 600;
+    color: #262626;
+    margin-right: 0.5rem; /* spacing after label */
+}
+
+/* === Articles Section (Right Panel) === */
+.profile-articles {
+    grid-area: articles;
+    padding-left: 1rem;
+}
+
+.profile-articles h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #4A90E2;
+    margin: 0 0 1rem;
+    text-align: center; /* center articles heading */
+}
+
+.profile-articles ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.profile-articles li {
+    background: #b5d3ff;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    display: flex;
+    justify-content: left; /* center article title */
+    text-align: left;
+}
+
+.profile-articles li:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+}
+
+.profile-articles a {
+    text-decoration: none;
+    color: #262626;
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+.profile-articles a:hover {
+    color: #4A90E2;
+}
+
+/* === Loading & Error States === */
+.profile-container.loading,
+.profile-container.error {
+    grid-column: 1 / -1;  /* span both columns */
+    text-align: center;
+    font-size: 1rem;
+    color: #E74C3C;
+    padding: 2rem 0;
+}
+
+/* === Responsive Adjustments === */
+@media (max-width: 800px) {
+    .profile-container {
+      grid-template-areas:
+        "header"
+        "card"
+        "articles";
+      grid-template-columns: 1fr;
+    }
+    .profile-card {
+      border-right: none;
+      border-bottom: 1px solid #e0e0e0;
+      padding-bottom: 1rem;
+    }
+    .profile-articles {
+      padding-left: 0;
+      margin-top: 2rem;
+    }
+}
+
+/* Center the “no articles” message */
+.profile-articles p {
+    text-align: center;
+    margin: 1rem 0; /* optional spacing */
+}

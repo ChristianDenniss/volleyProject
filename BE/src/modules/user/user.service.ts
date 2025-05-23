@@ -200,7 +200,10 @@ export class UserService {
     async getProfile(userId: number): Promise<User> {
         if (!userId) throw new MissingFieldError("User ID");
         
-        const user = await this.userRepository.findOneBy({ id: userId });
+        const user = await this.userRepository.findOne({
+            where: { id: userId },
+            relations: ['articles']
+        });
         if (!user) throw new NotFoundError(`User with ID: ${userId} not found`);
             
         return user;

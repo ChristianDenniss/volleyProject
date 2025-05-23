@@ -4,7 +4,8 @@ import type { Players } from '../players/player.entity.js';
 import type { Games } from '../games/game.entity.js';
 
 @Entity()
-export class Teams {
+export class Teams 
+{
     @PrimaryGeneratedColumn()
     id!: number;
 
