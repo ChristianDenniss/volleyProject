@@ -143,6 +143,7 @@ const Home: React.FC = () => {
                                     {article.imageUrl && (
                                         <img src={article.imageUrl} alt={article.title} />
                                     )}
+                                    {/* <p>      {article.author.username}    </p> */}
                                 </article>
                             </Link>
                         ))}
