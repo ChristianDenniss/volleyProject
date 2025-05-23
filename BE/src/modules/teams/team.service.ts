@@ -141,7 +141,7 @@ export class TeamService {
         try {
             const teams = await this.teamRepository.find({
                 where: { name },
-                relations: ["season", "players", "games"],
+                relations: ["season", "players", "games", "games.stats"],
             });
     
             if (teams.length === 0) {

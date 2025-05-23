@@ -58,6 +58,7 @@ interface Stats
     updatedAt: string;
     // nested player object
     player: Player;
+    playerId: number;
 }
 
 interface Team 

@@ -3,8 +3,9 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/authContext";
 import "../styles/Header.css";
-import rvlLogo from "../images/rvlLogo.png";  // Import the main logo
-import pfp from "../images/pfpLogo.png";  // Import the profile picture
+import rvlLogo from "../images/rvlLogo.png";  
+// import blueTexture from "../images/blue_texture_strip.png";  
+import pfp from "../images/pfpLogo.png";  
 
 const Header: React.FC = () =>
 {
