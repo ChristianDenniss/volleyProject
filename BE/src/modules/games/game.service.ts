@@ -63,7 +63,7 @@ export class GameService {
             newGame.teams = teams;
             newGame.team1Score = team1Score;  // Set team1Score
             newGame.team2Score = team2Score;  // Set team2Score
-            newGame.videoUrl = videoUrl ?? null;
+            newGame.videoUrl = videoUrl ?? '';
 
             return this.gameRepository.save(newGame);
         } catch (error) {
@@ -122,7 +122,7 @@ export class GameService {
                 newGame.date = data.date;
                 newGame.season = season;
                 newGame.teams = teamsInGame;
-                newGame.videoUrl = data.videoUrl ?? null;
+                newGame.videoUrl = data.videoUrl ?? '';
 
                 return newGame;
             }));
