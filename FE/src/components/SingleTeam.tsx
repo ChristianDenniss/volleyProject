@@ -238,35 +238,40 @@ const SingleTeam: React.FC = () =>
                 </button>
 
                 {showGames && (
-                    <div className="games-scroll-container">
-                        {team.games?.map((game: Game) => (
-                            <Link
-                                key={game.id}
-                                to={`/games/${game.id}`}
-                                className="game-card-single-team"
-                            >
-                                <p><strong>{game.name}</strong></p>
-                                <p><strong>Date:</strong> {new Date(game.date).toLocaleDateString()}</p>
-                                <p><strong>Score:</strong> {game.team1Score} - {game.team2Score}</p>
-                                <p><strong>Season:</strong> {game.season?.seasonNumber ?? "N/A"}</p>
-                            </Link>
-                        ))}
-                    </div>
+                    team.games && team.games.length > 0 ? (
+                        <div className="games-scroll-container">
+                            {team.games.map((game: Game) => (
+                                <Link
+                                    key={game.id}
+                                    to={`/games/${game.id}`}
+                                    className="game-card-single-team"
+                                >
+                                    <p><strong>{game.name}</strong></p>
+                                    <p><strong>Date:</strong> {new Date(game.date).toLocaleDateString()}</p>
+                                    <p><strong>Score:</strong> {game.team1Score} - {game.team2Score}</p>
+                                    <p><strong>Season:</strong> {game.season?.seasonNumber ?? "N/A"}</p>
+                                </Link>
+                            ))}
+                        </div>
+                    ) : (
+                        <p>No playoff games found.</p>
+                    )
                 )}
             </div>
 
-            {/* Team Totals Section */}
-            {allStats.length > 0 && (
-                <div className="team-totals">
-                    <h2>Team Totals</h2>
-                    <button
-                        className="toggle-button"
-                        onClick={() => setShowTeamTotals(prev => !prev)}
-                    >
-                        {showTeamTotals ? 'Hide Team Totals' : 'Show Team Totals'}
-                    </button>
 
-                    {showTeamTotals && (
+            {/* Team Totals Section */}
+            <div className="team-totals">
+                <h2>Team Totals</h2>
+                <button
+                    className="toggle-button"
+                    onClick={() => setShowTeamTotals(prev => !prev)}
+                >
+                    {showTeamTotals ? 'Hide Team Totals' : 'Show Team Totals'}
+                </button>
+
+                {showTeamTotals && (
+                    allStats.length > 0 ? (
                         <div className="totals-columns">
                             <div className="totals-column">
                                 <div className="totals-item">
@@ -312,9 +317,11 @@ const SingleTeam: React.FC = () =>
                                 </div>
                             </div>
                         </div>
-                    )}
-                </div>
-            )}
+                    ) : (
+                        <p>No stats recorded for this team yet.</p>
+                    )
+                )}
+            </div>
 
         </div>
     );

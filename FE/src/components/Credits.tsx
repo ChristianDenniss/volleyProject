@@ -24,7 +24,7 @@ const CreditsPage: React.FC = () => {
             className="credit-avatar"
           />
           <h3 className="credit-name">LuvLate</h3>
-          <p className="credit-role">Project Lead & Fullstack Engineer</p>
+          <p className="credit-role">Project Lead</p>
         </div>
 
         <div className="credit-card">
