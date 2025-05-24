@@ -13,6 +13,9 @@ interface Game
   stats?: Stats[]; // Optional stats
 }
 
+
+
+
 interface Player 
 {
   id: number;
