@@ -28,7 +28,8 @@ export class GameService {
         seasonId: number, 
         teamIds: number[], 
         team1Score: number,  // Added team1Score
-        team2Score: number   // Added team2Score
+        team2Score: number,   // Added team2Score
+        videoUrl?: string
     ): Promise<Games> {
         try {
             // Validation
@@ -62,6 +63,7 @@ export class GameService {
             newGame.teams = teams;
             newGame.team1Score = team1Score;  // Set team1Score
             newGame.team2Score = team2Score;  // Set team2Score
+            newGame.videoUrl = videoUrl ?? null;
 
             return this.gameRepository.save(newGame);
         } catch (error) {
@@ -74,7 +76,7 @@ export class GameService {
      /**
      * Create multiple games with validation and transaction handling
      */
-    async createMultipleGames(gamesData: { date: Date, seasonId: number, teamIds: number[] }[]): Promise<Games[]> {
+    async createMultipleGames(gamesData: { date: Date, seasonId: number, teamIds: number[], videoUrl?: string }[]): Promise<Games[]> {
         // Validation for missing game data
         gamesData.forEach(gameData => {
             if (!gameData.date) throw new MissingFieldError("Game date");
@@ -110,7 +112,6 @@ export class GameService {
                     where: {
                         season: { id: data.seasonId },
                         teams: { id: In(data.teamIds) },
-                        date: data.date
                     }
                 });
                 if (existingGame) {
@@ -121,6 +122,7 @@ export class GameService {
                 newGame.date = data.date;
                 newGame.season = season;
                 newGame.teams = teamsInGame;
+                newGame.videoUrl = data.videoUrl ?? null;
 
                 return newGame;
             }));
@@ -153,7 +155,8 @@ export class GameService {
         seasonId: number, 
         teamNames: string[], 
         team1Score: number,  // Added team1Score
-        team2Score: number   // Added team2Score
+        team2Score: number,   // Added team2Score
+        videoUrl?: string
     ): Promise<Games> {
         console.log("Received createGameByNames parameters:", { date, seasonId, teamNames, team1Score, team2Score });
     
@@ -183,7 +186,7 @@ export class GameService {
             // Call the original createGame method with team IDs and the provided scores
             const teamIds = teams.map(team => team.id);
             console.log("Creating game with team IDs:", teamIds);
-            return this.createGame(date, seasonId, teamIds, team1Score, team2Score); // Pass the scores to createGame
+            return this.createGame(date, seasonId, teamIds, team1Score, team2Score, videoUrl); // Pass the scores to createGame
         } catch (error) {
             console.error("Error occurred in createGameByNames service:", error);
             throw error; // Re-throw the error to be handled by the controller
@@ -240,7 +243,8 @@ export class GameService {
         seasonId?: number, 
         teamIds?: number[], 
         team1Score?: number, 
-        team2Score?: number
+        team2Score?: number,
+        videoUrl?: string
     ): Promise<Games> {
         if (!id) throw new MissingFieldError("Game ID");
 
@@ -286,6 +290,10 @@ export class GameService {
         if (team1Score !== undefined && team2Score !== undefined) {
             game.team1Score = team1Score;
             game.team2Score = team2Score;
+        }
+
+        if (videoUrl) {
+            game.videoUrl = videoUrl;   
         }
 
         return this.gameRepository.save(game);

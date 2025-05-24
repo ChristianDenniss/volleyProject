@@ -20,6 +20,9 @@ export class Games {
     @Column({ nullable: true })
     name!: string;  // Store the concatenated team names, "Vs.", and season ID
 
+    @Column({ nullable: true })
+    videoUrl!: string | null;
+
     @CreateDateColumn({ type: 'timestamp' })
     createdAt!: Date;
 

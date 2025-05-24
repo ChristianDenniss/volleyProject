@@ -107,10 +107,19 @@ const SingleGame: React.FC = () =>
             {/* Metadata */}
             <div className="meta-block">
                 <p className="season-info">Season {game.season.seasonNumber}</p>
-                <p className="game-date">{formattedDate}</p>
                 <p className="sets-played">Total Sets Played {totalSets}</p>
-            </div>
 
+                 {/* Video URL Display */}
+                    {
+                        game.videoUrl
+                            ? <p className="game-video">
+                                Video: <a href={game.videoUrl} target="_blank" rel="noopener noreferrer">{game.videoUrl}</a>
+                            </p>
+                            : <p className="game-video">No Video Found</p>
+                    }
+                <p className="game-date">{formattedDate}</p>
+            </div>
+            
             {/* Divider */}
             <hr className="meta-divider" />
 

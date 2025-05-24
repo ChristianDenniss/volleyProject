@@ -215,7 +215,7 @@ const SingleTeam: React.FC = () =>
                                             </div>
                                         ) : (
                                             <div className="player-stats">
-                                                <p>No stats available</p>
+                                                <p>No stats available for this player</p>
                                             </div>
                                         )}
 

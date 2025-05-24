@@ -8,6 +8,7 @@ export const createGameSchema = z.object({
     team1Score: z.number().int().positive(),
     team2Score: z.number().int().positive(),
     stats: z.array(z.number().int().positive().optional()),
+    videoUrl: z.string().url({ message: "Video URL is required and must be a valid URL" }).optional(),
 });
 
 export const updateGameSchema = createGameSchema.partial().extend({

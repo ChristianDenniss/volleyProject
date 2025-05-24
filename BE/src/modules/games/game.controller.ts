@@ -18,7 +18,7 @@ export class GameController {
     createGame = async (req: Request, res: Response): Promise<void> => {
         try {
             // Destructure the required fields from the request body
-            const { date, seasonId, teamIds, team1Score, team2Score } = req.body;
+            const { date, seasonId, teamIds, team1Score, team2Score, videoUrl } = req.body;
 
             // Validate the required fields
             if (!date || !seasonId || !teamIds || teamIds.length !== 2) {
@@ -39,10 +39,10 @@ export class GameController {
             }
 
             // Log the creation parameters
-            console.log("Creating game with parameters:", { date, seasonId, teamIds, team1Score, team2Score });
+            console.log("Creating game with parameters:", { date, seasonId, teamIds, team1Score, team2Score, videoUrl });
 
             // Call the service method to create the game
-            const savedGame = await this.gameService.createGame(date, seasonId, teamIds, team1Score, team2Score);
+            const savedGame = await this.gameService.createGame(date, seasonId, teamIds, team1Score, team2Score, videoUrl);
 
             // Log the successful response
             console.log("Game successfully created:", savedGame);
@@ -76,7 +76,7 @@ export class GameController {
     createGameByNames = async (req: Request, res: Response): Promise<void> => {
         try {
             // Extract the relevant fields from the request body
-            const { date, seasonId, teamNames, team1Score, team2Score } = req.body;
+            const { date, seasonId, teamNames, team1Score, team2Score, videoUrl } = req.body;
 
             // Validate the required fields
             if (!date || !seasonId || !teamNames || teamNames.length !== 2 || team1Score === undefined || team2Score === undefined) {
@@ -97,10 +97,10 @@ export class GameController {
             }
 
             // Log parameters before calling service
-            console.log("Creating game with parameters:", { date, seasonId, teamNames, team1Score, team2Score });
+            console.log("Creating game with parameters:", { date, seasonId, teamNames, team1Score, team2Score, videoUrl });
 
             // Call the service method to create the game
-            const savedGame = await this.gameService.createGameByNames(date, seasonId, teamNames, team1Score, team2Score);
+            const savedGame = await this.gameService.createGameByNames(date, seasonId, teamNames, team1Score, team2Score, videoUrl);
 
             // Log the successful response
             console.log("Game successfully created:", savedGame);
@@ -202,8 +202,8 @@ export class GameController {
     updateGame = async (req: Request, res: Response): Promise<void> => {
         try {
             const { id } = req.params;
-            const { date, seasonId, teamIds, homeScore, awayScore } = req.body;
-            const updatedGame = await this.gameService.updateGame(parseInt(id), date, seasonId, teamIds, homeScore, awayScore);
+            const { date, seasonId, teamIds, homeScore, awayScore, videoUrl } = req.body;
+            const updatedGame = await this.gameService.updateGame(parseInt(id), date, seasonId, teamIds, homeScore, awayScore, videoUrl);
             res.json(updatedGame);
         } catch (error: any) {
             if (error instanceof MissingFieldError || 

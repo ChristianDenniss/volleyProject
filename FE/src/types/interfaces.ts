@@ -8,6 +8,7 @@ interface Game
   season: Season;
   team1Score: number;
   team2Score: number;
+  videoUrl: string | null;
   date: Date;
   teams?: Team[]; // IDs of teams
   stats?: Stats[]; // Optional stats
