@@ -5,8 +5,8 @@ import "../styles/Credits.css";
 import LuvLateAvatar from "../images/LuvLate.png";
 // import ArticKitsuuAvatar from "../images/ArticKitsuu.png";
 import IlloultAvatar from "../images/Illoult.png";
-import capitandeAvatar from "../images/capitande.png";
-//import CapitandeAvatar from "../images/capitande.png";
+// import capitandeAvatar from "../images/capitande.png";
+import stenimatedAvatar from "../images/stenimated.png";
 
 const CreditsPage: React.FC = () => {
   return (
@@ -24,17 +24,17 @@ const CreditsPage: React.FC = () => {
             className="credit-avatar"
           />
           <h3 className="credit-name">LuvLate</h3>
-          <p className="credit-role">Project Lead</p>
+          <p className="credit-role">Project Lead & Fullstack Engineer</p>
         </div>
 
         <div className="credit-card">
           <img
-            src={capitandeAvatar}
-            alt="capitande"
+            src={stenimatedAvatar}
+            alt="stenimated"
             className="credit-avatar"
           />
-          <h3 className="credit-name">capitande</h3>
-          <p className="credit-role">UI/UX Contributor</p>
+          <h3 className="credit-name">Stenimated</h3>
+          <p className="credit-role">Systems & Deployment Engineer</p>
         </div>
 
         <div className="credit-card">

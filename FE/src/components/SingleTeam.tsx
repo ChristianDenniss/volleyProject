@@ -258,7 +258,7 @@ const SingleTeam: React.FC = () =>
             {/* Team Totals Section */}
             {allStats.length > 0 && (
                 <div className="team-totals">
-                    <h2>Team Season Totals</h2>
+                    <h2>Team Totals</h2>
                     <button
                         className="toggle-button"
                         onClick={() => setShowTeamTotals(prev => !prev)}

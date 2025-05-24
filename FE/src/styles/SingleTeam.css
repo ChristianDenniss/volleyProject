@@ -200,7 +200,8 @@
 }
 
 /* Summary header: fill the box, make clickable */
-.players-list li details > summary {
+.players-list li details > summary 
+{
     all: unset;            /* reset default */
     display: flex;
     align-items: center;
