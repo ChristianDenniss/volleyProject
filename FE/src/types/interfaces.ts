@@ -10,6 +10,7 @@ interface Game
   team2Score: number;
   videoUrl: string | null;
   date: Date;
+  stage: string;
   teams?: Team[]; // IDs of teams
   stats?: Stats[]; // Optional stats
 }

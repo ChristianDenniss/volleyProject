@@ -29,11 +29,14 @@ export class GameService {
         teamIds: number[], 
         team1Score: number,  // Added team1Score
         team2Score: number,   // Added team2Score
+        stage: string,
         videoUrl?: string
+
     ): Promise<Games> {
         try {
             // Validation
             if (!seasonId) throw new MissingFieldError("Season ID");
+            if (!stage) throw new MissingFieldError("Game Stage/Round");
             if (!teamIds || !teamIds.length) throw new MissingFieldError("Team IDs");
             if (team1Score < 0 || team2Score < 0) throw new InvalidFormatError("Scores cannot be negative");
 
@@ -64,6 +67,7 @@ export class GameService {
             newGame.team1Score = team1Score;  // Set team1Score
             newGame.team2Score = team2Score;  // Set team2Score
             newGame.videoUrl = videoUrl ?? '';
+            newGame.stage = stage;
 
             return this.gameRepository.save(newGame);
         } catch (error) {
@@ -76,10 +80,11 @@ export class GameService {
      /**
      * Create multiple games with validation and transaction handling
      */
-    async createMultipleGames(gamesData: { date: Date, seasonId: number, teamIds: number[], videoUrl?: string }[]): Promise<Games[]> {
+    async createMultipleGames(gamesData: { date: Date, seasonId: number, teamIds: number[], videoUrl?: string, stage: string }[]): Promise<Games[]> {
         // Validation for missing game data
         gamesData.forEach(gameData => {
             if (!gameData.date) throw new MissingFieldError("Game date");
+            if (!gameData.stage) throw new MissingFieldError("Game Stage/Round");
             if (!gameData.seasonId) throw new MissingFieldError("Season ID");
             if (!gameData.teamIds || gameData.teamIds.length !== 2) throw new MissingFieldError("Exactly 2 teams are required for each game");
         });
@@ -123,6 +128,7 @@ export class GameService {
                 newGame.season = season;
                 newGame.teams = teamsInGame;
                 newGame.videoUrl = data.videoUrl ?? '';
+                newGame.stage = data.stage;
 
                 return newGame;
             }));
@@ -156,9 +162,10 @@ export class GameService {
         teamNames: string[], 
         team1Score: number,  // Added team1Score
         team2Score: number,   // Added team2Score
+        stage: string,
         videoUrl?: string
     ): Promise<Games> {
-        console.log("Received createGameByNames parameters:", { date, seasonId, teamNames, team1Score, team2Score });
+        console.log("Received createGameByNames parameters:", { date, seasonId, teamNames, team1Score, team2Score, videoUrl, stage });
     
         try {
             // Validate that scores are not negative
@@ -186,7 +193,7 @@ export class GameService {
             // Call the original createGame method with team IDs and the provided scores
             const teamIds = teams.map(team => team.id);
             console.log("Creating game with team IDs:", teamIds);
-            return this.createGame(date, seasonId, teamIds, team1Score, team2Score, videoUrl); // Pass the scores to createGame
+            return this.createGame(date, seasonId, teamIds, team1Score, team2Score, stage, videoUrl); // Pass the scores to createGame
         } catch (error) {
             console.error("Error occurred in createGameByNames service:", error);
             throw error; // Re-throw the error to be handled by the controller
@@ -244,6 +251,7 @@ export class GameService {
         teamIds?: number[], 
         team1Score?: number, 
         team2Score?: number,
+        stage?: string,
         videoUrl?: string
     ): Promise<Games> {
         if (!id) throw new MissingFieldError("Game ID");
@@ -272,6 +280,8 @@ export class GameService {
             game.season = season;
         }
 
+        
+
         if (teamIds && teamIds.length > 0) {
             // Ensure we have at least 2 teams for a game
             if (teamIds.length < 2) {
@@ -294,6 +304,10 @@ export class GameService {
 
         if (videoUrl) {
             game.videoUrl = videoUrl;   
+        }
+
+        if (stage) {
+            game.stage = stage;   
         }
 
         return this.gameRepository.save(game);
@@ -337,6 +351,8 @@ export class GameService {
         });
     }
 
+    
+
     /**
      * Get games by team ID with validation
      */
@@ -348,22 +364,23 @@ export class GameService {
             where: { id: teamId },
             relations: ["games"],
         });
-        
+
         if (!team) throw new NotFoundError(`Team with ID ${teamId} not found`);
 
         // Extract game IDs from the team's games
         const gameIds = team.games.map(game => game.id);
-        
+
         // Return early if no games
         if (gameIds.length === 0) {
             return [];
         }
-        
-        // Fetch full game data with relations
+
+        // Fetch full game data with relations using TypeORM's In()
         return this.gameRepository.find({
-            where: { id: { $in: gameIds } } as any,
+            where: { id: In(gameIds) },
             relations: ["season", "teams", "stats"],
-            order: { date: "DESC" } // Most recent games first
+            order: { date: "DESC" }
         });
     }
+
 }

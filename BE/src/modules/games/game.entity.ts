@@ -23,6 +23,9 @@ export class Games {
     @Column({ default: null })
     videoUrl!: string;
 
+    @Column({ default: "Winners Bracket; Round of 16" })
+    stage!: string;
+
     @CreateDateColumn({ type: 'timestamp' })
     createdAt!: Date;
 

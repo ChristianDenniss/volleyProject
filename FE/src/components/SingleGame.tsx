@@ -104,21 +104,32 @@ const SingleGame: React.FC = () =>
             {/* Game title */}
             <h1 className="game-title">{game.name}</h1>
 
+            <div className="game-stage-block">
+                <h1 className="game-stage">{game.stage}</h1>
+            </div>
+
             {/* Metadata */}
             <div className="meta-block">
-                <p className="season-info">Season {game.season.seasonNumber}</p>
-                <p className="sets-played">Total Sets Played {totalSets}</p>
-
-                 {/* Video URL Display */}
-                    {
-                        game.videoUrl
-                            ? <p className="game-video">
-                                Video: <a href={game.videoUrl} target="_blank" rel="noopener noreferrer">{game.videoUrl}</a>
-                            </p>
-                            : <p className="game-video">No Video Found</p>
-                    }
-                <p className="game-date">{formattedDate}</p>
+                <p className="season-info">
+                    <i className="fas fa-layer-group"></i> Season {game.season.seasonNumber}
+                </p>
+                <p className="sets-played">
+                    <i className="fas fa-volleyball-ball"></i> Total Sets Played {totalSets}
+                </p>
+                {
+                    game.videoUrl
+                    ? <p className="game-video">
+                        <i className="fas fa-video"></i> Video: <a href={game.videoUrl} target="_blank" rel="noopener noreferrer">Watch Here</a>
+                    </p>
+                    : <p className="game-video">
+                        <i className="fas fa-video-slash"></i> No Video Found
+                    </p>
+                }
+                <p className="game-date">
+                    <i className="fas fa-calendar-alt"></i> {formattedDate}
+                </p>
             </div>
+
             
             {/* Divider */}
             <hr className="meta-divider" />
@@ -126,15 +137,16 @@ const SingleGame: React.FC = () =>
             {/* Scoreboard */}
             <div className="scoreboard">
                 <div className="team-column">
-                    <span className="team-name">{team1.name}</span>
-                    <span className="team-score">{game.team1Score}</span>
+                    <div className="team-score">{game.team1Score}</div>
+                    <div className="team-name">{team1.name}</div>
                 </div>
                 <div className="vs">vs</div>
                 <div className="team-column">
-                    <span className="team-name">{team2.name}</span>
-                    <span className="team-score">{game.team2Score}</span>
+                    <div className="team-score">{game.team2Score}</div>
+                    <div className="team-name">{team2.name}</div>
                 </div>
             </div>
+
 
             {/* Player statistics */}
             {
