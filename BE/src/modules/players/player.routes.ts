@@ -1,7 +1,7 @@
 import { Application, Router } from 'express';
 import { PlayerController } from './player.controller.js';
 import { validate } from '../../middleware/validate.js';
-import { createPlayerSchema, updatePlayerSchema, createPlayerSchemaWithTeamName } from './players.schema.js';
+import { createPlayerSchema, updatePlayerSchema, createMultiplePlayersByNameSchema } from './players.schema.js';
 
 export function registerPlayerRoutes(app: Application): void 
 {
@@ -13,8 +13,8 @@ export function registerPlayerRoutes(app: Application): void
     router.post('/batch', validate(createPlayerSchema), playerController.createMultiplePlayers);  
 
     //Not sure on these two routes, come back to them later
-    router.post('/by-team-name', validate(createPlayerSchemaWithTeamName), playerController.createPlayerByName);
-    router.post('/batch/by-team-name', validate(createPlayerSchemaWithTeamName), playerController.createMultiplePlayersByName);
+    router.post('/by-team-name', validate(createPlayerSchema), playerController.createPlayerByName);
+    router.post('/batch/by-team-name', validate(createMultiplePlayersByNameSchema), playerController.createMultiplePlayersByName);
 
     router.get('/', playerController.getPlayers);
 

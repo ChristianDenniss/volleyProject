@@ -237,49 +237,46 @@ export class PlayerService
      */
     async createMultiplePlayersByName(playersData: { name: string, position: string, teamNames: string[] }[]): Promise<Players[]> 
     {
-        // Log the incoming request data
         console.log('Received players data:', playersData);
 
         // Validate input
         playersData.forEach(playerData => {
-            console.log('Validating player:', playerData);  // Log each player being validated
-            
-            if (!playerData.name) {
-                console.log('Validation failed for player:', playerData.name, ' - Missing name');
-                throw new MissingFieldError("Player name");
-            } 
-
-            if (!playerData.position) {
-                console.log('Validation failed for player:', playerData.name, ' - Missing position');
-                throw new MissingFieldError("Position");
-            }
-
+            if (!playerData.name) throw new MissingFieldError("Player name");
+            if (!playerData.position) throw new MissingFieldError("Position");
             if (!playerData.teamNames || playerData.teamNames.length === 0) {
-                console.log('Validation failed for player:', playerData.name, ' - Missing team names');
                 throw new MissingFieldError("Team Names");
             }
         });
 
-        // Collect all unique team names
-        const allTeamNames = [...new Set(playersData.flatMap(p => p.teamNames))];
-        console.log('Unique team names to search:', allTeamNames);
+        // Normalize and collect all unique team names (lowercased and trimmed)
+        const allTeamNames = [
+            ...new Set(playersData.flatMap(p => p.teamNames.map(n => n.trim().toLowerCase())))
+        ];
+        console.log('Normalized team names to search:', allTeamNames);
 
-        // Fetch all teams by name
-        const allTeams = await this.teamRepository.findBy({ name: In(allTeamNames) });
-        console.log('Fetched teams:', allTeams);
+        // Fetch all matching teams from the database (case-insensitive)
+        const allTeams = await this.teamRepository
+            .createQueryBuilder("team")
+            .where("LOWER(team.name) IN (:...names)", { names: allTeamNames })
+            .getMany();
+
+        console.log('Fetched teams:', allTeams.map(t => t.name));
 
         const createdOrUpdatedPlayers: Players[] = [];
 
         for (const playerData of playersData) 
         {
             console.log('Processing player:', playerData.name);
-            
-            const playerTeams = allTeams.filter(team => playerData.teamNames.includes(team.name));
-            
-            // Log the teams that were matched for the player
-            console.log('Matched teams for player', playerData.name, ':', playerTeams);
 
-            if (playerTeams.length !== playerData.teamNames.length) 
+            // Normalize incoming names
+            const normalizedTeamNames = playerData.teamNames.map(n => n.trim().toLowerCase());
+
+            // Match fetched teams
+            const playerTeams = allTeams.filter(team =>
+                normalizedTeamNames.includes(team.name.trim().toLowerCase())
+            );
+
+            if (playerTeams.length !== normalizedTeamNames.length) 
             {
                 console.log('Error: Some teams not found for player:', playerData.name);
                 throw new NotFoundError(`One or more teams not found for player "${playerData.name}"`);
@@ -287,47 +284,41 @@ export class PlayerService
 
             // Check if player already exists
             let player = await this.playerRepository.findOne({
-                where: { name: playerData.name },
+                where: { name: playerData.name.toLowerCase() },
                 relations: ["teams"],
             });
-            console.log('Found player:', player ? player.name : 'No player found');
 
             if (player) 
             {
-                // Find which teams are new
-                const newTeams = playerTeams.filter(team => 
+                const newTeams = playerTeams.filter(team =>
                     !player.teams.some(existing => existing.id === team.id)
                 );
-                console.log('New teams to be added to player', playerData.name, ':', newTeams);
 
-                // Skip player if all teams are already assigned
                 if (newTeams.length === 0) 
                 {
                     console.log('No new teams to add for player:', playerData.name);
                     continue;
                 }
 
-                // Add only new teams
                 player.teams.push(...newTeams);
                 console.log('Updated player with new teams:', playerData.name);
                 createdOrUpdatedPlayers.push(await this.playerRepository.save(player));
             } 
             else 
             {
-                // Create new player with all teams
                 const newPlayer = new Players();
                 newPlayer.name = playerData.name.toLowerCase();
                 newPlayer.position = playerData.position;
                 newPlayer.teams = playerTeams;
-                console.log('Creating new player:', playerData.name.toLowerCase());
+
+                console.log('Creating new player:', newPlayer.name);
                 createdOrUpdatedPlayers.push(await this.playerRepository.save(newPlayer));
             }
         }
 
-        // Log the result of the creation or update process
         console.log('Created or updated players:', createdOrUpdatedPlayers);
-
         return createdOrUpdatedPlayers;
     }
+
 
 }

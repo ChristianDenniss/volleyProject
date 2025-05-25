@@ -1,33 +1,42 @@
 import { z } from "zod";
 
-export const createPlayerSchema = z.object({
-    //Players name must be a non-empty string
+// Base schema used for single player creation
+const basePlayerSchema = z.object({
     name: z.string().min(1, { message: "Player Name is required" }),
-    //Players position must be a valid position from the enum
-    position: z.enum(["N/A", "Setter", "Spiker", "Libero", "Defensive Specialist", "Pinch Server"] , { message: "Invalid position, please match the enum values" }),
-    //Players team id must be a positive integer or null
-    teamId: z.number().int().positive().nullable(),
-    
+    position: z.enum(
+        ["N/A", "Setter", "Spiker", "Libero", "Defensive Specialist", "Pinch Server"],
+        { message: "Invalid position, please match the enum values" }
+    ),
+    teamId: z.number().int().positive().nullable().optional(),
+    teamName: z.string().min(1).optional()
 });
 
-// Variant that uses teamName instead of teamId
-export const createPlayerSchemaWithTeamName = createPlayerSchema
-    .omit({ teamId: true })
-    .extend({
-        // Accepts an array of team names instead of a single string
+export const createPlayerSchema = basePlayerSchema.refine(data => data.teamId || data.teamName, {
+    message: "Either teamId or teamName is required",
+    path: ["teamId"]
+});
+
+// Batch variant using teamNames: string[]
+export const createMultiplePlayersByNameSchema = z.array(
+    z.object({
+        name: z.string().min(1, { message: "Player Name is required" }),
+        position: z.enum(
+            ["N/A", "Setter", "Spiker", "Libero", "Defensive Specialist", "Pinch Server"],
+            { message: "Invalid position, please match the enum values" }
+        ),
         teamNames: z.array(
             z.string().min(1, { message: "Team name must be a non-empty string" })
-        ).min(1, { message: "At least one team name is required" }),
-    });
+        ).min(1, { message: "At least one team name is required" })
+    })
+);
 
+// Inferred DTOs
 export type CreatePlayerDto = z.infer<typeof createPlayerSchema>;
+export type CreateMultiplePlayersByNameDto = z.infer<typeof createMultiplePlayersByNameSchema>;
 
-//we are using a partial extend to make all fields optional so we only update given fields
-//we are also making sure the given player id is valid before we hand it to routes to try and update
-//this is not adding any new fields, it is just updating given existing fields, I think it's kind of like a PATCH http method
-export const updatePlayerSchema = createPlayerSchema.partial().extend({
-    id: z.number().int().positive(),
+// Update schema (patch-like with required ID)
+export const updatePlayerSchema = basePlayerSchema.partial().extend({
+    id: z.number().int().positive()
 });
 
-// Inferred TypeScript type for updatePlayerSchema
 export type UpdatePlayerDto = z.infer<typeof updatePlayerSchema>;

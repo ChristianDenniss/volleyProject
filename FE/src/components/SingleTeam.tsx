@@ -91,7 +91,7 @@ const SingleTeam: React.FC = () =>
 
             {/* Team Header */}
             <h1 className="team-title">{team.name}</h1>
-            <p>Season: {team.season?.seasonNumber ?? 'N/A'}</p>
+            <p>Season: {team.season.seasonNumber ?? 'N/A'}</p>
             <p>Playoff Games Played: {team.games?.length ?? 0}</p>
             <p>Placement: {team.placement}</p>
 
@@ -249,7 +249,7 @@ const SingleTeam: React.FC = () =>
                                     <p><strong>{game.name}</strong></p>
                                     <p><strong>Date:</strong> {new Date(game.date).toLocaleDateString()}</p>
                                     <p><strong>Score:</strong> {game.team1Score} - {game.team2Score}</p>
-                                    <p><strong>Season:</strong> {game.season?.seasonNumber ?? "N/A"}</p>
+                                    <p><strong>Season:</strong> {team.season?.seasonNumber ?? "N/A"}</p>
                                 </Link>
                             ))}
                         </div>
