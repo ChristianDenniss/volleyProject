@@ -3,6 +3,8 @@ import { errorHandler } from './errorHandling.js';
 import { Application } from 'express';
 import express from 'express';
 import cors from 'cors';
+import { authenticateToken } from "./authentication.js";
+import { authorizeRoles } from "./authorizeRoles.js"
 
 
 /**
@@ -23,4 +25,10 @@ export function globalMiddleware(app: Application): void
 
     // Log requests
     app.use(loggerMiddleware);
+
+    app.use(
+        "/api/admin",
+        authenticateToken,
+        authorizeRoles("admin", "superadmin")
+    );
 }   

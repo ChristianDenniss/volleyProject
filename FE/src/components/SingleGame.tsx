@@ -138,12 +138,12 @@ const SingleGame: React.FC = () =>
             <div className="scoreboard">
                 <div className="team-column">
                     <div className="team-score">{game.team1Score}</div>
-                    <div className="team-name">{team1.name}</div>
+                    <div className="single-game-team-name">{team1.name}</div>
                 </div>
                 <div className="vs">vs</div>
                 <div className="team-column">
                     <div className="team-score">{game.team2Score}</div>
-                    <div className="team-name">{team2.name}</div>
+                    <div className="single-game-team-name">{team2.name}</div>
                 </div>
             </div>
 

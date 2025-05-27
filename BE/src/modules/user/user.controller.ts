@@ -9,29 +9,46 @@ export class UserController {
     }
 
     // Register a new user
-    register = async (req: Request, res: Response): Promise<void> => {
-        try {
-            const { username, email, password, role } = req.body;
-            const newUser = await this.userService.createUser(username, email, password, role);
-            
-            // Remove password from response
-            const { password: _, ...userWithoutPassword } = newUser;
-            
+    //  Register a new user – always creates a plain user (role = "user")
+    register = async (req: Request, res: Response): Promise<void> =>
+    {
+        try
+        {
+            const { username, email, password } = req.body;
+    
+            //  Ignore any role sent from client
+            const newUser = await this.userService.createUser(
+                username,
+                email,
+                password,
+                "user"           //  ← hard-coded role
+            );
+    
+            const { password: _p, ...userWithoutPassword } = newUser;
+    
             res.status(201).json(userWithoutPassword);
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to register user";
-            
-            if (errorMessage.includes("required") || 
-                errorMessage.includes("already in use") || 
-                errorMessage.includes("must be") ||
-                errorMessage.includes("Invalid")) {
-                res.status(400).json({ error: errorMessage });
-            } else {
+        }
+        catch (error)
+        {
+            const msg = error instanceof Error ? error.message : "Failed to register user";
+    
+            if (
+                msg.includes("required")      ||
+                msg.includes("already in use")||
+                msg.includes("must be")       ||
+                msg.includes("Invalid")
+            )
+            {
+                res.status(400).json({ error: msg });
+            }
+            else
+            {
                 console.error("Error registering user:", error);
                 res.status(500).json({ error: "Failed to register user" });
             }
         }
     };
+    
 
     // User login
     login = async (req: Request, res: Response): Promise<void> => {
@@ -153,31 +170,79 @@ export class UserController {
     };
 
     // Get current user profile (requires authentication)
-    getProfile = async (req: Request, res: Response): Promise<void> => {
-        try {
-            // The user ID should be added to the request by authentication middleware
-            const userId = (req as any).userId;
-            
-            if (!userId) {
-                res.status(401).json({ error: "Unauthorized" });
-                return;
+    getProfile = async (req: Request, res: Response): Promise<void> =>
+    {
+            try
+            {
+                //  ID supplied by authenticateToken middleware
+                const authUser = (req as any).user as { id?: number } | undefined;
+    
+                if (!authUser?.id)
+                {
+                    res.status(401).json({ error: "Unauthorized" });
+                    return;
+                }
+    
+                const user = await this.userService.getProfile(authUser.id);
+    
+                const { password, ...userWithoutPassword } = user;
+    
+                res.json(userWithoutPassword);
             }
-            
-            const user = await this.userService.getProfile(userId);
-            
-            // Remove password from response
-            const { password, ...userWithoutPassword } = user;
-            
+            catch (error)
+            {
+                const msg = error instanceof Error ? error.message : "Failed to fetch profile";
+    
+                if (msg.includes("not found"))
+                {
+                    res.status(404).json({ error: msg });
+                }
+                else
+                {
+                    console.error("Error fetching user profile:", error);
+                    res.status(500).json({ error: "Failed to fetch profile" });
+                }
+            }
+    };
+
+    //  Delegate all logic to the service layer
+    setRole = async (req: Request, res: Response): Promise<void> =>
+    {
+        try
+        {
+            //  Authenticated requester
+            const requester = (req as any).user as { id: number; role: "user" | "admin" | "superadmin" };
+    
+            //  Target and desired role
+            const targetId    = parseInt(req.params.id);
+            const desiredRole = req.body.role as "user" | "admin" | "superadmin";
+    
+            //  Call service – all rules enforced there
+            const updated = await this.userService.changeUserRole(requester, targetId, desiredRole);
+    
+            //  Strip password
+            const { password, ...userWithoutPassword } = updated;
+    
             res.json(userWithoutPassword);
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to fetch profile";
-            
-            if (errorMessage.includes("not found")) {
-                res.status(404).json({ error: errorMessage });
-            } else {
-                console.error("Error fetching user profile:", error);
-                res.status(500).json({ error: "Failed to fetch profile" });
+        }
+        catch (error)
+        {
+            const msg = error instanceof Error ? error.message : "Failed to set role";
+    
+            if (msg.includes("Invalid")          ||
+                msg.includes("not found")        ||
+                msg.includes("Unauthorized")     ||
+                msg.includes("privileges"))
+            {
+                res.status(403).json({ error: msg });
+            }
+            else
+            {
+                console.error("Error setting user role:", error);
+                res.status(500).json({ error: "Failed to set role" });
             }
         }
     };
+    
+    
 }

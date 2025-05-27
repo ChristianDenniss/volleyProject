@@ -4,7 +4,6 @@ interface Game
 {
   id: number;
   name: string;
-  title: string;
   season: Season;
   team1Score: number;
   team2Score: number;
@@ -104,7 +103,7 @@ interface User
   username: string;
   email: string;
   articles?: Article[]; // Optional articles written by this user
-  role: string; // Role of the user (e.g., admin, writer)
+  role: "user" | "admin" | "superadmin"; // Role of the user
 }
 
 /** what your AuthContext provides */

@@ -1,9 +1,12 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import "../styles/Navbar.css"; // Match the path to your CSS file
+import { useAuth } from "../context/authContext";
 
 const Navbar: React.FC = () => 
 {
+    const { isAuthenticated, user } = useAuth();
+
     return (
         <header>
             <nav className="navbar">
@@ -39,6 +42,15 @@ const Navbar: React.FC = () =>
                     <li>
                         <Link to="/articles">Articles</Link>
                     </li>
+
+                    {/* ↓↓↓ new: portal link only for admin / superadmin */}
+                    {isAuthenticated &&
+                      (user?.role === "admin" || user?.role === "superadmin") && (
+                        <li>
+                            <Link to="/portal">Admin</Link>
+                        </li>
+                    )}
+
                 </ul>
             </nav>
         </header>

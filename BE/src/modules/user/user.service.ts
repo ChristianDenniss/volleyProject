@@ -150,8 +150,8 @@ export class UserService {
         }
 
         if (role) {
-            if (!['admin', 'user', 'manager'].includes(role)) {
-                throw new Error("Invalid role. Role must be admin, user, or manager");
+            if (!['admin', 'user', 'superadmin'].includes(role)) {
+                throw new Error("Invalid role. Role must be admin, user, or superadmin");
             }
             user.role = role;
         }
@@ -186,7 +186,11 @@ export class UserService {
 
         // Generate JWT token
         const token = jwt.sign(
-            { id: user.id, username: user.username, role: user.role },
+            { id: user.id, 
+                username: user.username, 
+                role: user.role 
+            },
+
             this.JWT_SECRET,
             { expiresIn: '24h' }
         );
@@ -208,4 +212,71 @@ export class UserService {
             
         return user;
     }
+
+    //  Change a user’s role, applying all privilege rules internally
+    async changeUserRole(
+        requester: { id: number; role: "user" | "admin" | "superadmin" },
+        targetId:  number,
+        desired:   "user" | "admin" | "superadmin"
+    ): Promise<User>
+    {
+        //  Validate desired value
+        if (!["user", "admin", "superadmin"].includes(desired))
+        {
+            throw new Error("Invalid role value");
+        }
+
+        //  Fetch the target
+        const target = await this.getUserById(targetId); // re-use existing helper
+
+        //  Disallow self-changes
+        if (requester.id === target.id)
+        {
+            throw new UnauthorizedError("You cannot change your own role");
+        }
+
+        /* ────────  RULE MATRIX  ──────── */
+
+        switch (requester.role)
+        {
+            case "admin":
+            {
+                //  Admin may only promote a plain user → admin
+                const allowed = target.role === "user" && desired === "admin";
+                if (!allowed)
+                {
+                    throw new UnauthorizedError("Insufficient privileges");
+                }
+                break;
+            }
+
+            case "superadmin":
+            {
+                //  Superadmin cannot touch another superadmin (unless no-op)
+                if (target.role === "superadmin" && desired !== "superadmin")
+                {
+                    throw new UnauthorizedError("Cannot modify another superadmin");
+                }
+                //  All other changes are allowed:
+                //  • user   → admin / superadmin
+                //  • admin  → superadmin / user
+                break;
+            }
+
+            default:
+                throw new UnauthorizedError("Insufficient privileges");
+        }
+
+        /* ────────  APPLY CHANGE  ──────── */
+
+        //  No operation needed if role already the same
+        if (target.role === desired)
+        {
+            return target;
+        }
+
+        target.role = desired;
+        return this.userRepository.save(target);
+    }
+
 }

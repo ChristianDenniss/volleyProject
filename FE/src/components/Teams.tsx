@@ -1,47 +1,65 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { useTeams } from "../hooks/allFetch";
+/* Bring in the navigate helper from React Router */
+import { useNavigate }                          from "react-router-dom";
+import { useTeams }                             from "../hooks/allFetch";
 import "../styles/Teams.css";
-import SearchBar from "./Searchbar";
+import SearchBar                                from "./Searchbar";
 
-const Teams: React.FC = () => 
+const Teams: React.FC = () =>
 {
-    // Use custom hook to get team data
+    /* Get team data via custom hook */
     const { data, error } = useTeams();
 
-    // State to manage which team's card is active
-    const [activeTeam, setActiveTeam] = useState<string | null>(null);
-    const [previousActiveTeam, setPreviousActiveTeam] = useState<string | null>(null);
-    
-    // State to manage the search query
-    const [searchQuery, setSearchQuery] = useState<string>("");
+    /* Track the currently “opened” team card */
+    const [ activeTeam,         setActiveTeam ]         = useState<string | null>(null);
+    const [ previousActiveTeam, setPreviousActiveTeam ] = useState<string | null>(null);
 
-    // Log previous active team after the state updates
-    useEffect(() => 
+    /* Track the search-box value */
+    const [ searchQuery, setSearchQuery ] = useState<string>("");
+
+    /* Hook for programmatic navigation */
+    const navigate = useNavigate();
+
+    /* Log whichever card was active before the latest click */
+    useEffect(() =>
     {
-        if (previousActiveTeam !== null) 
+        if (previousActiveTeam !== null)
         {
             console.log("Previous active team:", previousActiveTeam);
         }
-    }, [previousActiveTeam]);
+    }, [ previousActiveTeam ]);
 
-    // Toggle the active team card
-    const toggleCard = (teamName: string) => 
+    /* Helper – turn “Team Name” → “team-name” */
+    const slugify = (name: string): string =>
     {
-        console.log("Team card clicked:", teamName);
-        setPreviousActiveTeam(activeTeam);
-        setActiveTeam(prev => (prev === teamName ? null : teamName));
+        return name.toLowerCase().replace(/\s+/g, "-");
     };
 
-    // Filter teams based on the search query
+    /* Handle a card click */
+    const handleCardClick = (teamName: string): void =>
+    {
+        console.log("Team card clicked:", teamName);
+
+        /* Save current active for comparison */
+        setPreviousActiveTeam(activeTeam);
+
+        /* Toggle highlight state (purely visual) */
+        setActiveTeam(prev => (prev === teamName ? null : teamName));
+
+        /* Navigate to /teams/<team-name> (relative path) */
+        navigate(slugify(teamName));
+    };
+
+    /* Filter list according to search box */
     const filteredTeams = useMemo(() =>
     {
-        return data?.filter((team) =>
+        return data?.filter(team =>
             team.name.toLowerCase().includes(searchQuery.toLowerCase())
         );
-    }, [data, searchQuery]);
+    }, [ data, searchQuery ]);
 
-    // Handle search query changes
-    const handleSearch = (query: string) => 
+    /* Update search box state */
+    const handleSearch = (query: string): void =>
     {
         setSearchQuery(query);
     };
@@ -50,7 +68,7 @@ const Teams: React.FC = () =>
         <div>
             <h1>Teams Info</h1>
 
-            {/* Render the SearchBar component */}
+            {/* Search box */}
             <SearchBar onSearch={handleSearch} />
 
             {error ? (
@@ -58,24 +76,28 @@ const Teams: React.FC = () =>
             ) : filteredTeams ? (
                 <div className="teams-wrapper">
                     <div className="teams-container">
-                        {filteredTeams.map((team) => (
+                        {filteredTeams.map(team => (
                             <div
                                 key={team.id}
-                                className={`team-card ${activeTeam === team.name ? 'active' : ''}`}
-                                onClick={() => toggleCard(team.name)}
+                                className={`team-card ${activeTeam === team.name ? "active" : ""}`}
+                                onClick={() => handleCardClick(team.name)}
                             >
                                 <div className="team-name">
                                     <strong>{team.name}</strong>
                                 </div>
+
                                 <div className="team-id">
                                     <strong>ID:</strong> {team.id}
                                 </div>
-                                
+
                                 <div className="team-season">
                                     <strong>Season:</strong> {team.season.seasonNumber}
                                 </div>
 
-                                {/* Check players length and display */}
+                                <div className="team-card-stage">
+                                    <strong>Placement:</strong> {team.placement}
+                                </div>
+
                                 <div className="team-players">
                                     <strong>Players:</strong> {team.players?.length || 0}
                                 </div>

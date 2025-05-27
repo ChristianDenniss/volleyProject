@@ -1,0 +1,84 @@
+/* src/styles/Portal.css */
+
+/*— layout —*/
+.portal-wrapper {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    min-height: 100vh;                    /* full viewport height */
+    padding-bottom: 0 !important;         /* remove bottom gap to footer */
+  }
+  
+  /* ensure the next element (e.g. footer) doesn’t add extra top margin */
+  .portal-wrapper + * {
+    margin-top: 0 !important;
+  }
+  
+  /*— sidebar —*/
+  .portal-sidebar {
+    background: #1f2937;           /* slate-800 */
+    color: #f9fafb;                /* slate-50  */
+    padding: 1.5rem 1rem;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .portal-sidebar h2 {
+    font-size: 1.25rem;
+    margin-bottom: 1.25rem;
+  }
+  
+  /*— nav links —*/
+  .portal-sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .portal-sidebar li + li {
+    margin-top: 2.5rem;
+  }
+  
+  .portal-sidebar a {
+    color: #cbd5e1;                /* slate-300 */
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.15s ease;
+  }
+  
+  .portal-sidebar a:hover {
+    color: #ffffff;
+  }
+  
+  .portal-sidebar a.active {       /* NavLink adds .active */
+    color: #38bdf8;                /* sky-400 */
+  }
+  
+  /*— main content —*/
+  .portal-main {
+    padding: 2rem 2.5rem;
+    background: #f8fafc;           /* slate-50 */
+    overflow-y: auto;
+  }
+  
+  /*— responsive tweak —*/
+  @media (max-width: 768px) {
+    .portal-wrapper {
+      grid-template-columns: 1fr;
+    }
+  
+    .portal-sidebar {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+    }
+  
+    .portal-sidebar ul {
+      display: flex;
+      gap: 1rem;
+    }
+  
+    .portal-main {
+      padding: 1.5rem;
+    }
+  }
+  

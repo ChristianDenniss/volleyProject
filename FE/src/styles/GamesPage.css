@@ -1,0 +1,84 @@
+/* src/styles/GamesPage.css */
+
+/* Container padding */
+.portal-main {
+    padding: 1rem;
+  }
+  
+  /* Full-width, auto layout table */
+  .users-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: auto;
+  }
+  
+  /* Header styling */
+  .users-table thead th {
+    background-color: #f9fafb;
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 2px solid #e5e7eb;
+    white-space: nowrap;
+  }
+  
+  /* Body cells */
+  .users-table tbody td {
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid #e5e7eb;
+    vertical-align: middle;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  /* ID column (narrow) */
+  .users-table th:nth-child(1),
+  .users-table td:nth-child(1) {
+    width: 60px;
+  }
+  
+  /* Title column (flexible, but don’t overflow) */
+  .users-table th:nth-child(2),
+  .users-table td:nth-child(2) {
+    min-width: 150px;
+    max-width: 300px;
+  }
+  
+  /* Season & Stage */
+  .users-table th:nth-child(3),
+  .users-table td:nth-child(3),
+  .users-table th:nth-child(4),
+  .users-table td:nth-child(4) {
+    min-width: 100px;
+  }
+  
+  /* Score columns (fixed) */
+  .users-table th:nth-child(5),
+  .users-table td:nth-child(5),
+  .users-table th:nth-child(6),
+  .users-table td:nth-child(6) {
+    width: 70px;
+    text-align: center;
+  }
+  
+  /* Date column */
+  .users-table th:nth-child(7),
+  .users-table td:nth-child(7) {
+    width: 120px;
+  }
+  
+  /* Video URL (allow truncation) */
+  .users-table th:nth-child(8),
+  .users-table td:nth-child(8) {
+    min-width: 160px;
+    max-width: 240px;
+  }
+  
+  /* “Actions” is just text-muted so we can leave it shrinking naturally */
+  .users-table th:nth-child(9),
+  .users-table td:nth-child(9) {
+    width: 100px;
+    text-align: center;
+  }
+  
