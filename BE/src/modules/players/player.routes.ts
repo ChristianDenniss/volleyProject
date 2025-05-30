@@ -16,6 +16,9 @@ export function registerPlayerRoutes(app: Application): void
     router.post('/by-team-name', validate(createPlayerSchema), playerController.createPlayerByName);
     router.post('/batch/by-team-name', validate(createMultiplePlayersByNameSchema), playerController.createMultiplePlayersByName);
 
+    // Merge two players into one
+    router.post('/merge', playerController.mergePlayers);
+
     router.get('/', playerController.getPlayers);
 
     // Above the ID route

@@ -1,7 +1,8 @@
-import { Not, Repository, In } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { AppDataSource } from '../../db/data-source.js';
 import { Players } from './player.entity.js';
 import { Teams } from '../teams/team.entity.js';
+import { Stats } from '../stats/stat.entity.js';
 import { MissingFieldError } from '../../errors/MissingFieldError.js';
 import { NotFoundError } from '../../errors/NotFoundError.js';
 
@@ -321,4 +322,73 @@ export class PlayerService
     }
 
 
+    /**
+     * Merge all relations of `mergedId` into `targetId`, delete duplicates, then delete `mergedId`
+     */
+    async mergePlayers(targetId: number, mergedId: number): Promise<void>
+    {
+        if (!targetId) throw new MissingFieldError("Target player ID");
+        if (!mergedId) throw new MissingFieldError("Merged player ID");
+
+        const target = await this.playerRepository.findOneBy({ id: targetId });
+        if (!target) throw new NotFoundError(`Target player with ID ${targetId} not found`);
+
+        const merged = await this.playerRepository.findOneBy({ id: mergedId });
+        if (!merged) throw new NotFoundError(`Player to merge with ID ${mergedId} not found`);
+
+        const qr = AppDataSource.createQueryRunner();
+        await qr.connect();
+        await qr.startTransaction();
+
+        try
+        {
+            // 1) Move all team links onto target
+            await qr.manager
+                    .createQueryBuilder()
+                    .update('players_teams_teams')
+                    .set({ playersId: targetId })
+                    .where('playersId = :mergedId', { mergedId })
+                    .execute();
+
+            // 2) Delete any duplicate (playersId, teamsId) rows
+            await qr.manager.query(
+    `DELETE FROM players_teams_teams
+    WHERE ctid IN (
+    SELECT ctid FROM (
+        SELECT ctid,
+                ROW_NUMBER() OVER (
+                PARTITION BY "playersId","teamsId"
+                ORDER BY ctid
+                ) AS rn
+        FROM players_teams_teams
+        WHERE "playersId" = $1
+    ) t
+    WHERE t.rn > 1
+    )`,
+                [targetId]
+            );
+
+            // 3) Bulk‐update stats FKs via raw SQL
+            await qr.manager.query(
+            `UPDATE "stats"
+                SET "playerId" = $1
+                WHERE "playerId" = $2`,
+            [targetId, mergedId]
+            );
+
+            // 4) Delete the merged player record
+            await qr.manager.delete(Players, { id: mergedId });
+
+            await qr.commitTransaction();
+        }
+        catch (err)
+        {
+            await qr.rollbackTransaction();
+            throw err;
+        }
+        finally
+        {
+            await qr.release();
+        }
+    }
 }

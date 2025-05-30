@@ -250,6 +250,7 @@ const SingleTeam: React.FC = () =>
                                     <p><strong>Date:</strong> {new Date(game.date).toLocaleDateString()}</p>
                                     <p><strong>Score:</strong> {game.team1Score} - {game.team2Score}</p>
                                     <p><strong>Season:</strong> {team.season?.seasonNumber ?? "N/A"}</p>
+                                    <p><strong>Stage: </strong> {game.stage}</p>
                                 </Link>
                             ))}
                         </div>
