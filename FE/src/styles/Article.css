@@ -1,19 +1,80 @@
 /* src/styles/Articles.css */
+
 .articles-container {
-    padding: 20px;
-    max-width: 1200px;
-    margin: 0 auto;
-    text-align: center;
+  padding: 16px;
+}
+
+.articles-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.articles-count {
+  font-weight: bold;
+}
+
+.articles-search {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  flex: 1;
+  min-width: 200px;
+}
+
+.articles-sort {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.articles-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.article-item {
+  text-decoration: none;
+  color: inherit;
+}
+
+.article-card {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background-color: #fff;
+  transition: box-shadow 0.2s ease-in-out;
+}
+
+.article-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.article-image {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+}
+
+.article-card h2 {
+  margin: 12px 16px 8px;
+  font-size: 1.25rem;
+}
+
+.article-card p {
+  margin: 0 16px 16px;
+  font-size: 1rem;
+  color: #555;
+}
+
+/* Two-column layout on wider screens */
+@media (min-width: 768px) {
+  .articles-list {
+      grid-template-columns: repeat(2, 1fr);
   }
-  
-  .articles-container h1 {
-    font-size: 2rem;
-    color: #333;
-  }
-  
-  .articles-container p {
-    font-size: 1.2rem;
-    color: #666;
-    line-height: 1.6;
-  }
-  
+}

@@ -1,5 +1,4 @@
 // Define Types for Data
-
 interface Game 
 {
   id: number;
@@ -10,22 +9,17 @@ interface Game
   videoUrl: string | null;
   date: Date;
   stage: string;
-  teams?: Team[]; // IDs of teams
-  stats?: Stats[]; // Optional stats
+  teams?: Team[]; 
+  stats?: Stats[]; 
 }
-
-
-
-
 interface Player 
 {
   id: number;
   name: string;
   position: string;
-  teams?: Team[]; // Optional list of team names
-  stats?: Stats[]; // Optional stats
+  teams?: Team[]; 
+  stats?: Stats[];
 }
-
 interface Stats
 {
     // unique stat ID
@@ -69,18 +63,18 @@ interface Team
   placement: string;
   name: string;
   season: Season;
-  games?: Game[]; // Optional games played by this team
-  players?: Player[]; // Optional players in this team
+  games?: Game[]; 
+  players?: Player[]; 
 }
 
 interface Season 
 {
   id: number;
   seasonNumber: number;
-  games?: Game[]; // Optional games in this season
-  teams?: Team[]; // Optional teams in this season
-  startDate: Date; // Date when the season starts
-  endDate?: Date; // Optional end date
+  games?: Game[]; 
+  teams?: Team[]; 
+  startDate: Date; 
+  endDate?: Date; 
   image?: string;
   theme: string;
 }
@@ -91,10 +85,10 @@ interface Article
   title: string;
   content: string;
   author: User;
-  createdAt: string; // Date the article was published
+  createdAt: string; 
   summary: string;
-  imageUrl: string; // URL to the article image
-  likes: number; // Number of likes
+  imageUrl: string; 
+  likes: number; 
 }
 
 interface User 
@@ -102,8 +96,8 @@ interface User
   id: number;
   username: string;
   email: string;
-  articles?: Article[]; // Optional articles written by this user
-  role: "user" | "admin" | "superadmin"; // Role of the user
+  articles?: Article[]; 
+  role: "user" | "admin" | "superadmin"; 
 }
 
 /** what your AuthContext provides */
@@ -118,3 +112,70 @@ interface User
 }
 
 export type { Game, Player, Stats, Team, Season, Article, User, AuthContextType };
+
+
+// When creating a Game, we send primitive fields + foreign IDs.
+// We omit nested “season” and “teams” arrays.
+export type CreateGameInput = {
+  name:       string;
+  seasonId:   number;
+  team1Score: number;
+  team2Score: number;
+  videoUrl?:  string | null;
+  date:       string; 
+  stage:      string;
+  teamIds?:   number[];
+};
+
+// When creating a Player, omit “id” and nested arrays.
+export type CreatePlayerInput = {
+  name:     string;
+  position: string;
+  teamIds?: number[];
+};
+
+// When creating a Stats record, omit “id” and read-only timestamps & nested player.
+export type CreateStatsInput = {
+  spikingErrors: number;
+  apeKills:      number;
+  apeAttempts:   number;
+  spikeKills:    number;
+  spikeAttempts: number;
+  assists:       number;
+  settingErrors: number;
+  blocks:        number;
+  digs:          number;
+  blockFollows:  number;
+  aces:          number;
+  servingErrors: number;
+  miscErrors:    number;
+  playerId:      number;
+};
+
+// When creating a Team, omit “id” and nested arrays; supply seasonId instead of Season object.
+export type CreateTeamInput = {
+  placement: string;
+  name:      string;
+  seasonId:  number;
+  playerIds?: number[];
+};
+
+// When creating a Season, omit “id” and nested arrays.
+export type CreateSeasonInput = {
+  seasonNumber: number;
+  startDate:    string; 
+  endDate?:     string; 
+  image?:       string;
+  theme:        string;
+};
+
+// When creating an Article, omit “id” and nested author object; supply authorId.
+export type CreateArticleInput = {
+  title:      string;
+  content:    string;
+  authorId:   number;
+  createdAt:  string;
+  summary:    string;
+  imageUrl:   string;
+  likes?:     number;
+};

@@ -1,25 +1,89 @@
-import { useCallback } from "react";
-import { authFetch } from "./authFetch";
-import type { Game } from "../types/interfaces";
+// src/hooks/allCreate.ts
 
-const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+import { useCreate } from "./useCreate";
+import { Game,Player,Stats,Team,Season,Article,CreateGameInput,CreatePlayerInput,
+  CreateStatsInput,CreateTeamInput,CreateSeasonInput,CreateArticleInput,} from "../types/interfaces";
 
-export function useCreateGame() {
-  const createGame = useCallback(async (data: Partial<Game>): Promise<Game> => {
-    const url = `${backendUrl}/api/games`;
-    
-    const res = await authFetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
+/**
+ * useCreatePlayers
+ * – Enforces CreatePlayerInput
+ * – Returns createPlayer(payload) → Promise<Player | null>
+ */
+export const useCreatePlayers = () => {
+  const { createItem, loading, error } = useCreate<Player, CreatePlayerInput>("players");
+  return {
+    createPlayer: createItem,
+    loading,
+    error,
+  };
+};
 
-    if (!res.ok) {
-      throw new Error(`Failed to create game: ${res.statusText}`);
-    }
+/**
+ * useCreateTeams
+ * – Enforces CreateTeamInput
+ * – Returns createTeam(payload) → Promise<Team | null>
+ */
+export const useCreateTeams = () => {
+  const { createItem, loading, error } = useCreate<Team, CreateTeamInput>("teams");
+  return {
+    createTeam: createItem,
+    loading,
+    error,
+  };
+};
 
-    return res.json();
-  }, []);
+/**
+ * useCreateSeasons
+ * – Enforces CreateSeasonInput
+ * – Returns createSeason(payload) → Promise<Season | null>
+ */
+export const useCreateSeasons = () => {
+  const { createItem, loading, error } = useCreate<Season, CreateSeasonInput>("seasons");
+  return {
+    createSeason: createItem,
+    loading,
+    error,
+  };
+};
 
-  return { createGame };
-}
+/**
+ * useCreateGames
+ * – Enforces CreateGameInput
+ * – Returns createGame(payload) → Promise<Game | null>
+ */
+export const useCreateGames = () => {
+  const { createItem, loading, error } = useCreate<Game, CreateGameInput>("games");
+  return {
+    createGame: createItem,
+    loading,
+    error,
+  };
+};
+
+/**
+ * useCreateArticles
+ * – Enforces CreateArticleInput
+ * – Returns createArticle(payload) → Promise<Article | null>
+ */
+export const useCreateArticles = () => {
+  const { createItem, loading, error } = useCreate<Article, CreateArticleInput>("articles");
+  return {
+    createArticle: createItem,
+    loading,
+    error,
+  };
+};
+
+/**
+ * useCreateStats
+ * – Enforces CreateStatsInput
+ * – Returns createStats(payload) → Promise<Stats | null>
+ */
+export const useCreateStats = () => {
+  const { createItem, loading, error } = useCreate<Stats, CreateStatsInput>("stats");
+  return {
+    createStats: createItem,
+    loading,
+    error,
+  };
+};

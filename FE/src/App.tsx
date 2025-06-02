@@ -30,6 +30,7 @@ import PlayersPage      from "./components/portal/PlayersPage";
 import TeamsPage      from "./components/portal/TeamsPage";
 import SeasonsPage      from "./components/portal/SeasonsPage";
 import GamesPage from "./components/portal/GamesPage";
+// import StatsPage from "./components/portal/StatsPage";
 
 import LoginPage      from "./components/Login";
 import PrivateRoute   from "./components/portal/PrivateRoute";      // ← NEW import
@@ -80,6 +81,7 @@ const App: React.FC = () => (
             <Route path="teams" element={<TeamsPage />} />
             <Route path="seasons" element={<SeasonsPage />} />
             <Route path="games" element={<GamesPage />} />
+            {/* <Route path="stats" element={<StatsPage />} /> */}
 
           </Route>
         </Routes>

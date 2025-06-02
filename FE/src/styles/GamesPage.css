@@ -82,3 +82,140 @@
     text-align: center;
   }
   
+  /* src/styles/GamesPage.css */
+
+/* Title styling */
+.games-title {
+  margin-bottom: 0.5rem;
+  font-size: 1.875rem;          /* 3xl */
+  color: #111827;               /* slate-900 */
+}
+
+/* Create button placed immediately below the title */
+.create-button {
+  display: inline-block;
+  margin-bottom: 1.5rem;        /* space between button and table */
+  background-color: #2d3c50;    /* dark slate */
+  color: white;
+  padding: 0.5rem 1rem;         /* py-2 px-4 */
+  border: none;
+  border-radius: 0.25rem;       /* rounded */
+  font-size: 1rem;              /* base */
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.create-button:hover {
+  background-color: #5b7dab;    /* lighter slate */
+}
+
+.create-button:active {
+  background-color: #2d3c50;    /* dark slate (same as default) */
+}
+
+.create-button:disabled {
+  background-color: #63686f;    /* gray */
+  cursor: not-allowed;
+}
+
+/* Full-width, clean table */
+.users-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #ffffff;          /* white */
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  border-radius: 0.375rem;      /* rounded-md */
+  overflow: hidden;
+}
+
+.users-table th,
+.users-table td {
+  padding: 0.75rem 1rem;        /* py-3 px-4 */
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;  /* slate-200 */
+}
+
+.users-table th {
+  font-weight: 600;
+  color: #374151;               /* slate-700 */
+  background: #f1f5f9;          /* slate-100 */
+}
+
+.users-table tr:last-child td {
+  border-bottom: none;
+}
+
+.users-table tr:hover td {
+  background: #f8fafc;          /* slate-50 */
+}
+
+/* Narrower Season ID column (3rd column) */
+.users-table th:nth-child(3),
+.users-table td:nth-child(3) {
+  width: 80px;
+  max-width: 80px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Wider Stage column (4th column) */
+.users-table th:nth-child(4),
+.users-table td:nth-child(4) {
+  width: 250px;
+  max-width: 250px;
+  white-space: normal;          /* allow wrapping for long stage names */
+}
+
+/* Ensure Team1 and Team2 score columns are centered */
+.users-table th:nth-child(5),
+.users-table td:nth-child(5),
+.users-table th:nth-child(6),
+.users-table td:nth-child(6) {
+  text-align: center;
+}
+
+/* Muted text for “None” or no-permission notices */
+.text-muted {
+  color: #6b7280;               /* slate-500 */
+  font-style: italic;
+}
+
+/* Link appearance for video URLs */
+.text-link {
+  color: #38bdf8;               /* sky-400 */
+  text-decoration: none;
+  overflow-wrap: anywhere;      /* allow long URLs to wrap */
+}
+
+.text-link:hover {
+  text-decoration: underline;
+}
+
+/* Ensure Actions column (last column) stays consistent width */
+.users-table th:last-child,
+.users-table td:last-child {
+  min-width: 8rem;              /* enough for “Delete” button */
+  padding-left: 1rem;
+  padding-right: 1rem;
+  vertical-align: middle;
+}
+
+/* Style for inline-edit input fields */
+.users-table input[type="text"],
+.users-table input[type="number"],
+.users-table input[type="date"] {
+  width: 100%;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #e2e8f0;    /* slate-200 */
+  border-radius: 0.375rem;      /* rounded-md */
+  font-size: 1rem;
+}
+
+/* Remove default outline on focused table inputs */
+.users-table input:focus {
+  outline: none;
+  border-color: #38bdf8;        /* sky-400 */
+  background: #f8fafc;          /* slate-50 */
+}
