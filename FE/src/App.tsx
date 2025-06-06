@@ -22,7 +22,7 @@ import SingleArticle  from "./components/SingleArticle";
 import Contact        from "./components/ContactUs";
 import PrivacyPolicy  from "./components/PrivacyPolicy";
 import Credits        from "./components/Credits";
-
+import SinglePlayer from "./components/SinglePlayer";
 import PortalLayout   from "./components/portal/PortalLayout";
 import Dashboard      from "./components/portal/Dashboard";
 import UsersPage      from "./components/portal/UsersPage";
@@ -30,7 +30,7 @@ import PlayersPage      from "./components/portal/PlayersPage";
 import TeamsPage      from "./components/portal/TeamsPage";
 import SeasonsPage      from "./components/portal/SeasonsPage";
 import GamesPage from "./components/portal/GamesPage";
-// import StatsPage from "./components/portal/StatsPage";
+import StatsPage from "./components/portal/StatsPage";
 
 import LoginPage      from "./components/Login";
 import PrivateRoute   from "./components/portal/PrivateRoute";      // ← NEW import
@@ -58,6 +58,7 @@ const App: React.FC = () => (
           <Route path="/contact" element={<Contact />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/credits" element={<Credits />} />
+          <Route path="/players/:id" element={< SinglePlayer />}/>
 
           {/* auth & profile */}
           <Route path="/profile" element={<UserProfile />} />
@@ -81,7 +82,7 @@ const App: React.FC = () => (
             <Route path="teams" element={<TeamsPage />} />
             <Route path="seasons" element={<SeasonsPage />} />
             <Route path="games" element={<GamesPage />} />
-            {/* <Route path="stats" element={<StatsPage />} /> */}
+            <Route path="stats" element={<StatsPage />} />
 
           </Route>
         </Routes>

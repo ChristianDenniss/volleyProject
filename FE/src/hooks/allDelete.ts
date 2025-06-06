@@ -50,3 +50,7 @@ export const useDeleteArticles = () => {
 export const useDeleteUsers = () => {
     return useDelete("users");
   };
+
+  export const useDeleteStats = () => {
+    return useDelete("stats");
+  };

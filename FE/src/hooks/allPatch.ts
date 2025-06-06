@@ -7,7 +7,8 @@ import type {
   Player,
   Team,
   Article,
-  Game
+  Game,
+  Stats
 } from "../types/interfaces";
 
 /**
@@ -59,4 +60,11 @@ export function useGameMutations() {
   return { patchGame };
 }
 
-// Add more entity‐specific mutation hooks here as needed...
+/**
+ * Hook returning a `patchStats` fn for updating stats.
+ */
+export function useStatsMutations() {
+  const { patch: patchStats } = usePatch<Stats>("stats");
+  return { patchStats };
+}
+

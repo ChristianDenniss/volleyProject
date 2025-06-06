@@ -17,7 +17,7 @@
     margin-bottom: 4rem;
 
     /* NEW: Center and constrain width */
-    max-width: 1400px;
+    max-width: 1500px;
     margin-left: auto;
     margin-right: auto;
     width: 100%;
@@ -128,9 +128,7 @@
     flex-shrink: 0;                     /* ✅ Prevent image from shrinking */
 }
 
-
 /* Full-Width Breakout for Video Section */
-
 .video-section
 {
     position: relative;
@@ -159,6 +157,9 @@
     position: relative; /* Needed for absolute positioning children */
     width: 100vw;
     margin-left: calc(-50vw + 50%);
+    /* cancel out the 1rem top/bottom padding from .home */
+    margin-top: -1rem;
+    margin-bottom: -1rem;
     height: 500px; /* Matches image height */
     border-radius: 10px;
     overflow: hidden;
@@ -221,60 +222,59 @@
 /* Remove default link styling in featured & side articles */
 .headline-section .featured-article a,
 .side-articles article a {
-  text-decoration: none;
-  color: inherit;
+    text-decoration: none;
+    color: inherit;
 }
 
 /* Also suppress any hover‐underline or color change */
 .headline-section .featured-article a:hover,
 .side-articles article a:hover {
-  text-decoration: none;
-  color: inherit;
+    text-decoration: none;
+    color: inherit;
 }
 
 /* Make the <Link> wrapping the featured card take up the same flex space */
 .headline-section > a {
     display: block;
     flex: 2;
-  }
-  
-  /* Ensure the inner .featured-article still fills its parent */
-  .headline-section > a .featured-article {
+}
+
+/* Ensure the inner .featured-article still fills its parent */
+.headline-section > a .featured-article {
     width: 100%;
-  }
-  
-  /* Also make each side‐article link a block so it sizes properly */
-  .side-articles > a {
+}
+
+/* Also make each side‐article link a block so it sizes properly */
+.side-articles > a {
     display: block;
-  }
-  
-  /* Remove default link styling around side-article links */
+}
+
+/* Remove default link styling around side-article links */
 .side-articles > a {
     display: block;       /* so the entire block is clickable */
     text-decoration: none;
     color: inherit;
-  }
-  
-  /* Also ensure the <h4> inside no longer turns blue on hover */
-  .side-articles > a h4 {
+}
+
+/* Also ensure the <h4> inside no longer turns blue on hover */
+.side-articles > a h4 {
     text-decoration: none;
     color: inherit;
-  }
-  
-  /* Smooth transition on both featured and side cards */
+}
+
+/* Smooth transition on both featured and side cards */
 .headline-section > a .featured-article,
 .side-articles > a article {
-  transition: transform 0.3s ease;
+    transition: transform 0.3s ease;
 }
 
 /* Slightly enlarge on hover */
 .headline-section > a:hover .featured-article,
 .side-articles > a:hover article {
-  transform: scale(1.02);
+    transform: scale(1.02);
 }
 
 /* Indent side-article titles */
 .side-articles > a article h4 {
     padding-left: 2rem;  /* bump this up or down to taste */
-  }
-  
+}

@@ -1,10 +1,13 @@
-/* Wrapper for all players */
-.players-wrapper {
+/* Players page specific styles */
+.players-page {
     padding: 10px 0;
 }
 
-/* Container that holds all player cards */
-.players-container {
+.players-page .players-wrapper {
+    padding: 10px 0;
+}
+
+.players-page .players-container {
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -13,7 +16,7 @@
 }
 
 /* Player card styles */
-.player-card {
+.players-page .players-card {
     background-color: #e6f2ff;
     border: 2px solid #CFFFFF;
     border-radius: 20px;
@@ -26,13 +29,13 @@
 }
 
 /* Hover effect */
-.player-card:hover {
+.players-page .players-card:hover {
     background-color: #cce0ff;
     transform: scale(1.02);
 }
 
 /* Header section of the card */
-.player-header {
+.players-page .players-card-header {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
@@ -43,9 +46,9 @@
 }
 
 /* Player name, ID, and teams styling */
-.player-name,
-.player-id,
-.player-teams {
+.players-page .players-name,
+.players-page .players-id,
+.players-page .players-teams {
     font-size: 22px;
     font-weight: bold;
     margin: 0 20px;
@@ -54,7 +57,7 @@
 }
 
 /* Accordion content */
-.player-details {
+.players-page .players-details {
     max-height: 0;
     overflow: hidden;
     transition: max-height 0.3s ease-out, padding 0.3s ease-out;
@@ -67,85 +70,82 @@
 }
 
 /* Expanded state */
-.player-card.expanded .player-details {
+.players-page .players-card.expanded .players-details {
     max-height: 800px;
     padding-top: 15px;
     padding-bottom: 15px;
 }
 
 /* Paragraph inside accordion */
-.player-details p {
+.players-page .players-details p {
     margin: 10px 0;
 }
 
 /* Make the "Teams" and "Position" labels consistent */
-.player-details strong {
+.players-page .players-details strong {
     display: inline-block;
     width: 100px;
     color: #005999;
 }
 
 /* Line breaks in team list */
-.player-details br {
+.players-page .players-details br {
     line-height: 1.8;
 }
 
-/* Container for each line of teams */
-.team-line {
-    margin-bottom: 8px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-
-/* Individual team tag */
-.team-tag {
+/* Team tags styling */
+.players-page .players-team-tag {
+    display: inline-block;
+    background: #e6f2ff;
+    color: #005999;
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin: 2px;
     text-decoration: none;
-    background-color: #d6ebff;
-    color: #003366;
-    border-radius: 12px;
-    padding: 6px 12px;
-    font-size: 16px;
-    font-weight: 500;
-    white-space: nowrap;
-    border: 1px solid #b3d7ff;
-    transition: background-color 0.3s ease, transform 0.3s ease;
+    border: 1px solid #CFFFFF;
 }
 
-/* Hover effect for team tags */
-.team-tag:hover {
-    background-color: #b3d7ff;
-    transform: scale(1.1);
+.players-page .players-team-tag:hover {
+    background: #cce0ff;
+    text-decoration: none;
 }
 
-/* Styling for the top controls container */
-.top-controls {
+/* Team line container */
+.players-page .players-team-line {
+    margin: 5px 0;
+}
+
+/* Top controls section */
+.players-page .players-controls {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    justify-content: flex-end;  /* Push items to the right */
     margin-bottom: 20px;
-    gap: 20px;
-    padding: 0 20px; /* Adds padding to the left and right of the container */
+    padding: 0 40px;
 }
 
-/* Filter bar section - OUTSIDE of top-controls for more freedom */
-.filter-bar {
+.players-page .players-filter-container {
+    flex: 1;
+    max-width: 300px;
+}
+
+/* Filter bar section */
+.players-page .players-filter-bar {
     display: flex;
     align-items: flex-start;
-    justify-content: flex-start !important;  /* Force left alignment */
+    justify-content: flex-start !important;
     gap: 15px;
     margin-bottom: 20px;
     padding: 0 20px;
 }
 
-
-/* Optional: Active state styling for the search bar */
-.search-bar:focus {
+/* Search bar styling */
+.players-page .players-search-bar:focus {
     border-color: #4caf50;
 }
 
-/* General pagination container */
-.pagination {
+/* Pagination container */
+.players-page .players-pagination {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -154,7 +154,7 @@
 }
 
 /* Pagination buttons */
-.pagination-btn {
+.players-page .players-pagination-btn {
     background-color: #d6ebff;
     color: #ffffff;
     border: none;
@@ -166,27 +166,45 @@
 }
 
 /* Pagination buttons hover effect */
-.pagination-btn:hover {
+.players-page .players-pagination-btn:hover {
     background-color: #4b5563;
     transform: scale(1.05);
 }
 
 /* Disabled buttons */
-.pagination-btn:disabled {
+.players-page .players-pagination-btn:disabled {
     background-color: #dde3e9;
     color: rgb(255, 255, 255);
     cursor: not-allowed;
 }
 
 /* Current page display */
-.pagination-current-page {
+.players-page .players-pagination-current {
     font-size: 16px;
     font-weight: bold;
     color: #1f2937;
 }
 
 /* Active button (current page) */
-.pagination-btn.active {
+.players-page .players-pagination-btn.active {
     background-color: #4caf50;
     color: white;
+}
+
+.players-see-more {
+  margin-top: 15px;
+  text-align: right;
+  padding-right: 30px;
+}
+
+.see-more-button {
+  color: #005999;
+  text-decoration: underline;
+  font-size: 18px;
+  transition: color 0.2s;
+}
+
+.see-more-button:hover {
+  color: #003d6b;
+  text-decoration: underline;
 }

@@ -22,9 +22,7 @@ export const useFetch = <T>(endpoint: string) =>
             const fetchData = async () =>
             {
                 try
-                {
-                    console.log(`Fetching data from ${backendUrl}/api/${endpoint}`);
-    
+                {    
                     // Use authFetch so the bearer token is injected automatically
                     const response = await authFetch(`${backendUrl}/api/${endpoint}`, {
                         method: "GET"
@@ -80,7 +78,60 @@ export const useFetchArticleById = <T>(articleId: string) =>
         return useFetch<T>(`articles/${articleId}`);  // Always treats result as an array
     };
 
-
+export const useFetchPlayerById = <T>(playerId: string) =>
+{
+    console.log(`Use fetch called using players/${playerId}`);
+    return useObjectFetch<T>(`players/${playerId}`);  // Always treats result as an array
+};
     
 
+export const useObjectFetch = <T>(endpoint: string) =>
+{
+    // Store fetched object
+    const [data, setData] = useState<T | null>(null);
+
+    // Store error
+    const [error, setError] = useState<string | null>(null);
+
+    // Store loading state
+    const [loading, setLoading] = useState<boolean>(true);
+
+    // Base URL
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+
+    // Fetch on mount / endpoint change
+    useEffect(() =>
+    {
+        const fetchData = async () =>
+        {
+            try
+            {
+                const response = await authFetch(`${backendUrl}/api/${endpoint}`, {
+                    method: "GET"
+                });
+
+                if (!response.ok)
+                {
+                    throw new Error("Network response was not ok");
+                }
+
+                const result: T = await response.json(); // ✅ Expecting a single object
+                setData(result);
+            }
+            catch (err: any)
+            {
+                console.error(`Fetch error [${endpoint}]:`, err);
+                setError(err.message);
+            }
+            finally
+            {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [endpoint]);
+
+    return { data, loading, error };
+};
 

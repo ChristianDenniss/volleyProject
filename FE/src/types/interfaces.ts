@@ -55,6 +55,7 @@ interface Stats
     // nested player object
     player: Player;
     playerId: number;
+    game: Game;
 }
 
 interface Team 
