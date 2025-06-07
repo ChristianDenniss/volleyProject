@@ -38,14 +38,14 @@
   margin-right: 1.5rem;
 }
 
-.stat-content h3 {
-  color: #666;
+.stat-card .stat-content h3 {
+  color: #1e3d59 !important;
   font-size: 1rem;
   margin: 0 0 0.5rem 0;
 }
 
-.stat-value {
-  color: #1e3d59;
+.stat-card .stat-value {
+  color: #1e3d59 !important;
   font-size: 2rem;
   font-weight: bold;
   margin: 0;
