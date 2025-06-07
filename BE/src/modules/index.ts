@@ -6,6 +6,8 @@ import { registerSeasonRoutes } from './seasons/season.routes.js';
 import { registerStatRoutes } from './stats/stat.routes.js';
 import { registerUserRoutes } from './user/user.routes.js';
 import { registerArticleRoutes } from './articles/article.routes.js';
+import { registerRobloxRoutes } from './roblox/roblox.routes.js'
+import { registerAwardRoutes } from './awards/award.routes.js';
 
 /**
  * Register all module routes with the Express application
@@ -13,6 +15,7 @@ import { registerArticleRoutes } from './articles/article.routes.js';
 export function registerModules(app: Application): void 
 {
     // Register routes from each module
+    registerRobloxRoutes(app);
     registerTeamRoutes(app);
     registerPlayerRoutes(app);
     registerGameRoutes(app);
@@ -20,6 +23,7 @@ export function registerModules(app: Application): void
     registerStatRoutes(app);
     registerUserRoutes(app);
     registerArticleRoutes(app);
+    registerAwardRoutes(app);
 
     // Default route
     app.get('/', (req, res) => {

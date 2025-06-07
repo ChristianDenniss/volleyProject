@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateCol
 // I think this may be a circular depend issue occuring
 import { Teams } from '../teams/team.entity.js';
 import { Stats } from '../stats/stat.entity.js';
+import { Awards } from '../awards/award.entity.js';
 
 @Entity()
 export class Players {
@@ -28,4 +29,8 @@ export class Players {
     // One-to-many relationship with stats, a player can have many stats entries
     @OneToMany(() => Stats, (stat) => stat.player)
     stats!: Stats[];
+
+    // Many-to-many relationship with Awards
+    @ManyToMany(() => Awards, (award) => award.players)
+    awards!: Awards[];  
 }

@@ -113,7 +113,7 @@ export class PlayerService
 
         const player = await this.playerRepository.findOne({
             where: { id },
-            relations: ["teams", "stats"], // Fetch related teams and stats
+            relations: ["teams", "stats", "stats.game", "stats.game.season", "teams.season", "teams.games", "teams.games.season"],
         });
 
         if (!player) throw new NotFoundError(`Player with ID ${id} not found`);

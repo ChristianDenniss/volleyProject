@@ -347,7 +347,7 @@ export class StatService
     {
         const stat = await this.statRepository.findOne({
             where: { id },
-            relations: ["player", "game"]
+            relations: ["player", "game", "game.season"]
         });
 
         if (!stat) throw new NotFoundError(`Stat with ID: ${id} not found`);
