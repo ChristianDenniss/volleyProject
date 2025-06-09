@@ -40,8 +40,8 @@ export const AppDataSource = new DataSource({
     username: process.env.DB_USER || "postgres",
     password: process.env.DB_PASS || "postgres",
     database: process.env.DB_NAME || "volleyball",
-    synchronize: process.env.NODE_ENV === 'development', // Only sync in development
-    logging: process.env.NODE_ENV === 'development',
+    synchronize: process.env.NODE_ENV !== 'production', // Default to true if NODE_ENV is not set
+    logging: process.env.NODE_ENV !== 'production', // Default to true if NODE_ENV is not set
     entities: entities,
     migrations: [join(__dirname, "migrations", "*.js")],
     subscribers: [],
