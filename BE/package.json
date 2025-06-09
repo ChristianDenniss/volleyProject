@@ -12,7 +12,7 @@
     "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
     "dev": "NODE_OPTIONS=\"--loader ts-node/esm --experimental-specifier-resolution=node\" nodemon src/index.ts",
     "build": "tsc",
-    "start:prod": "node --es-module-specifier-resolution=node dist/index.js",
+    "start:prod": "node --es-module-specifier-resolution=node dist/migrations/run-migrations.js && node --es-module-specifier-resolution=node dist/index.js",
     "start": "NODE_OPTIONS=\"--loader ts-node/esm --experimental-specifier-resolution=node\" ts-node src/index.ts"
   },
   "keywords": [],

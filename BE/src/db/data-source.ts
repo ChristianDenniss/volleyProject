@@ -18,7 +18,6 @@ import { User } from "../modules/user/user.entity.js";
 import { Article } from "../modules/articles/article.entity.js";
 import { Awards } from "../modules/awards/award.entity.js";
 
-
 dotenv.config();
 
 // Define entities
@@ -33,9 +32,6 @@ const entities = [
     Awards
 ];
 
-// Define migration paths
-const migrations = [join(__dirname, "migrations", "*.js")]; 
-
 // Configure AppDataSource
 export const AppDataSource = new DataSource({
     type: "postgres",
@@ -46,11 +42,7 @@ export const AppDataSource = new DataSource({
     database: process.env.DB_NAME || "volleyball",
     synchronize: process.env.NODE_ENV === 'development', // Only sync in development
     logging: process.env.NODE_ENV === 'development',
-    entities: process.env.NODE_ENV === 'production'
-        ? ["dist/modules/*/*.entity.js"] // Use compiled JS files in production
-        : entities, // Use entity objects for development
-    migrations: process.env.NODE_ENV === 'production'
-        ? ["dist/db/migrations/*.js"] // Use compiled JS files in production
-        : migrations, // Use TS migrations for development
+    entities: entities,
+    migrations: [join(__dirname, "migrations", "*.js")],
     subscribers: [],
 });
