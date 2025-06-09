@@ -31,7 +31,7 @@ export function registerAwardRoutes(app: Application): void {
     router.get('/player/:playerId', awardController.getAwardsByPlayerId);
 
     // Update award
-    router.put('/:id', validate(updateAwardSchema), awardController.updateAward);
+    router.patch('/:id', validate(updateAwardSchema), awardController.updateAward);
 
     // Delete award
     router.delete('/:id', awardController.deleteAward);

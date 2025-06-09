@@ -100,7 +100,7 @@ export class AwardService {
     async findAwardById(id: number): Promise<Awards | null> {
         return this.awardRepository.findOne({
             where: { id },
-            relations: ["players", "season", "players.teams"]
+            relations: ["players", "season", "players.teams", "players.teams.season"]
         });
     }
 
@@ -130,12 +130,13 @@ export class AwardService {
 
     /**
      * Update an award
+     * @param id - The award ID from URL params
      * @param awardData - The award data to update
      * @returns The updated award
      * @throws {NotFoundError} If the award is not found
      */
-    async updateAward(awardData: UpdateAwardDto): Promise<Awards | null> {
-        const { id, description, type, imageUrl, seasonId, playerIds } = awardData;
+    async updateAward(id: number, awardData: UpdateAwardDto): Promise<Awards | null> {
+        const { description, type, imageUrl, seasonId, playerIds } = awardData;
 
         const award = await this.awardRepository.findOne({
             where: { id },

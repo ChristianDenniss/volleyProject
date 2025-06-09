@@ -22,9 +22,7 @@ export const createMultipleAwardsSchema = z.array(baseAwardSchema);
 export type CreateAwardDto = z.infer<typeof createAwardSchema>;
 export type CreateMultipleAwardsDto = z.infer<typeof createMultipleAwardsSchema>;
 
-// Update schema (patch-like with required ID)
-export const updateAwardSchema = baseAwardSchema.partial().extend({
-    id: z.number().int().positive()
-});
+// Update schema (patch-like) - ID comes from URL params
+export const updateAwardSchema = baseAwardSchema.partial();
 
 export type UpdateAwardDto = z.infer<typeof updateAwardSchema>; 

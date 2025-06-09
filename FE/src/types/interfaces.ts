@@ -12,6 +12,19 @@ interface Game
   teams?: Team[]; 
   stats?: Stats[]; 
 }
+
+interface Award
+{
+  id: number;
+  type: string;
+  players: Player[];
+  description: string;
+  season: Season;
+  imageUrl?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 interface Player 
 {
   id: number;
@@ -112,11 +125,11 @@ interface User
   loading: boolean;
 }
 
-export type { Game, Player, Stats, Team, Season, Article, User, AuthContextType };
+export type { Game, Player, Stats, Team, Season, Article, User,Award, AuthContextType };
 
 
 // When creating a Game, we send primitive fields + foreign IDs.
-// We omit nested “season” and “teams” arrays.
+// We omit nested "season" and "teams" arrays.
 export type CreateGameInput = {
   name:       string;
   seasonId:   number;
@@ -128,14 +141,14 @@ export type CreateGameInput = {
   teamIds?:   number[];
 };
 
-// When creating a Player, omit “id” and nested arrays.
+// When creating a Player, omit "id" and nested arrays.
 export type CreatePlayerInput = {
   name:     string;
   position: string;
   teamIds?: number[];
 };
 
-// When creating a Stats record, omit “id” and read-only timestamps & nested player.
+// When creating a Stats record, omit "id" and read-only timestamps & nested player.
 export type CreateStatsInput = {
   spikingErrors: number;
   apeKills:      number;
@@ -153,7 +166,7 @@ export type CreateStatsInput = {
   playerId:      number;
 };
 
-// When creating a Team, omit “id” and nested arrays; supply seasonId instead of Season object.
+// When creating a Team, omit "id" and nested arrays; supply seasonId instead of Season object.
 export type CreateTeamInput = {
   placement: string;
   name:      string;
@@ -161,7 +174,7 @@ export type CreateTeamInput = {
   playerIds?: number[];
 };
 
-// When creating a Season, omit “id” and nested arrays.
+// When creating a Season, omit "id" and nested arrays.
 export type CreateSeasonInput = {
   seasonNumber: number;
   startDate:    string; 
@@ -170,7 +183,7 @@ export type CreateSeasonInput = {
   theme:        string;
 };
 
-// When creating an Article, omit “id” and nested author object; supply authorId.
+// When creating an Article, omit "id" and nested author object; supply authorId.
 export type CreateArticleInput = {
   title:      string;
   content:    string;
@@ -179,4 +192,11 @@ export type CreateArticleInput = {
   summary:    string;
   imageUrl:   string;
   likes?:     number;
+};
+
+export type CreateAwardsInput = {
+  type:      string;
+  playerName: string;
+  description: string;
+  seasonId:   number;
 };

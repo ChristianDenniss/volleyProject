@@ -38,8 +38,9 @@ export class RobloxController
                 return;
             }
 
-            // ✅ Return just the image URL
-            res.json({ avatarUrl: imageUrl });
+            // Ensure the URL is properly formatted
+            const finalUrl = imageUrl.startsWith('https://') ? imageUrl : `https://${imageUrl}`;
+            res.json({ avatarUrl: finalUrl });
         }
         catch (error)
         {

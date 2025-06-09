@@ -1,7 +1,7 @@
 // src/hooks/allCreate.ts
 
 import { useCreate } from "./useCreate";
-import { Game,Player,Stats,Team,Season,Article,CreateGameInput,CreatePlayerInput,
+import { Game,Player,Stats,Team,Season,Article,CreateGameInput,Award, CreateAwardsInput,CreatePlayerInput,
   CreateStatsInput,CreateTeamInput,CreateSeasonInput,CreateArticleInput,} from "../types/interfaces";
 
 /**
@@ -85,5 +85,15 @@ export const useCreateStats = () => {
     createStats: createItem,
     loading,
     error,
+  };
+};
+
+export const useCreateAwards = () => {
+  const { createItem: createWithNames, loading: loadingWithNames, error: createErrorWithNames } = useCreate<Award, CreateAwardsInput>("awards/with-names");
+
+  return {
+    createAwards: createWithNames,
+    loading: loadingWithNames,
+    error: createErrorWithNames
   };
 };

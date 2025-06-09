@@ -1,5 +1,5 @@
-import { useFetch, useFetchTeamByName, useFetchGameById, useFetchSeasonById, useFetchArticleById, useFetchPlayerById } from "./useFetch";
-import { Player, Team, Season, Game, Article, Stats, User } from "../types/interfaces";
+import { useFetch, useFetchTeamByName, useFetchGameById, useFetchSeasonById, useFetchArticleById, useFetchPlayerById, useObjectFetch } from "./useFetch";
+import { Player, Team, Season, Game, Article, Stats, User, Award } from "../types/interfaces";
 
 // Hook to fetch players
 export const usePlayers = () => useFetch<Player>("players");
@@ -22,6 +22,8 @@ export const useStats = () => useFetch<Stats>("stats");
 // Hook to fetch articles
 export const useArticles = () => useFetch<Article>("articles");
 
+export const useAwards = () => useFetch<Award>("awards");
+
 export const useSingleArticles = (articleId: string) => useFetchArticleById<Article>(`${articleId}`);
 
 export const useSingleTeam = (teamName: string) => useFetchTeamByName<Team>(`${teamName}`);
@@ -31,5 +33,9 @@ export const useSingleGames = (gameId: string) => useFetchGameById<Game>(`${game
 export const useSingleSeason = (seasonId: string) => useFetchSeasonById<Season>(`${seasonId}`);
 
 export const useSinglePlayer = (playedId: string) => useFetchPlayerById<Player>(`${playedId}`);
+
+export const useSingleAward = (awardId: string) => useObjectFetch<Award>(`awards/${awardId}`);
+
+export const useAwardsByPlayerID = (playerId: string) => useFetch<Award>(`awards/player/${playerId}`);
 
 

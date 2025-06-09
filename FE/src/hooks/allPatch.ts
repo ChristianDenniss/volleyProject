@@ -8,7 +8,8 @@ import type {
   Team,
   Article,
   Game,
-  Stats
+  Stats,
+  Award
 } from "../types/interfaces";
 
 /**
@@ -66,5 +67,10 @@ export function useGameMutations() {
 export function useStatsMutations() {
   const { patch: patchStats } = usePatch<Stats>("stats");
   return { patchStats };
+}
+
+export function useAwardsMutations() {
+  const { patch: patchAward } = usePatch<Award>("awards");
+  return { patchAward };
 }
 

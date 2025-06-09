@@ -12,17 +12,17 @@ import Home           from "./components/Home";
 import About          from "./components/About";
 import Players        from "./components/Players";
 import Teams          from "./components/Teams";
-import SingleTeam     from "./components/SingleTeam";
+import SingleTeam     from "./components/Single/SingleTeam";
 import Games          from "./components/Games";
-import SingleGame     from "./components/SingleGame";
+import SingleGame     from "./components/Single/SingleGame";
 import Seasons        from "./components/Seasons";
-import SingleSeason   from "./components/SingleSeason";
+import SingleSeason   from "./components/Single/SingleSeason";
 import Articles       from "./components/Article";
-import SingleArticle  from "./components/SingleArticle";
+import SingleArticle  from "./components/Single/SingleArticle";
 import Contact        from "./components/ContactUs";
 import PrivacyPolicy  from "./components/PrivacyPolicy";
 import Credits        from "./components/Credits";
-import SinglePlayer from "./components/SinglePlayer";
+import SinglePlayer from "./components/Single/SinglePlayer";
 import PortalLayout   from "./components/portal/PortalLayout";
 import Dashboard      from "./components/portal/Dashboard";
 import UsersPage      from "./components/portal/UsersPage";
@@ -31,9 +31,10 @@ import TeamsPage      from "./components/portal/TeamsPage";
 import SeasonsPage      from "./components/portal/SeasonsPage";
 import GamesPage from "./components/portal/GamesPage";
 import StatsPage from "./components/portal/StatsPage";
-
+import SingleAward from "./components/Single/SingleAward";
 import LoginPage      from "./components/Login";
 import PrivateRoute   from "./components/portal/PrivateRoute";      // ← NEW import
+import AwardsPage   from "./components/portal/AwardsPage";  
 
 const App: React.FC = () => (
   <AuthProvider>
@@ -59,6 +60,7 @@ const App: React.FC = () => (
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/credits" element={<Credits />} />
           <Route path="/players/:id" element={< SinglePlayer />}/>
+          <Route path="/awards/:id" element={< SingleAward />}/>
 
           {/* auth & profile */}
           <Route path="/profile" element={<UserProfile />} />
@@ -83,6 +85,7 @@ const App: React.FC = () => (
             <Route path="seasons" element={<SeasonsPage />} />
             <Route path="games" element={<GamesPage />} />
             <Route path="stats" element={<StatsPage />} />
+            <Route path="awards" element={<AwardsPage />} />
 
           </Route>
         </Routes>

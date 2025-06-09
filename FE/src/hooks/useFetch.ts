@@ -83,7 +83,12 @@ export const useFetchPlayerById = <T>(playerId: string) =>
     console.log(`Use fetch called using players/${playerId}`);
     return useObjectFetch<T>(`players/${playerId}`);  // Always treats result as an array
 };
-    
+
+export const useFetchAwardsById = <T>(playerId: string) =>
+{
+    console.log(`Use fetch called using awards/player/${playerId}`);
+    return useObjectFetch<T>(`awards/player/${playerId}`);  // Always treats result as an array
+};
 
 export const useObjectFetch = <T>(endpoint: string) =>
 {

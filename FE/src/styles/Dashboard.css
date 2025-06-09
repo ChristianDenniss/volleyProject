@@ -84,42 +84,103 @@
 
 /* Help Section */
 .help-section {
-  background: #f7f7f7;
-  padding: 2rem;
-  border-radius: 10px;
   margin-top: 2rem;
+  padding: 1.5rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
 }
 
 .help-section h2 {
-  color: #1e3d59;
-  margin-bottom: 1rem;
+  color: #2c3e50;
+  margin-bottom: 1.5rem;
+  font-size: 1.8rem;
+  text-align: center;
 }
 
-.help-section p {
+.help-categories-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.help-category {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.help-category:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.help-category h3 {
+  color: #2c3e50;
+  font-size: 1.3rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.help-category p {
   color: #666;
   margin-bottom: 1rem;
+  font-size: 0.95rem;
 }
 
-.help-section ul {
-  list-style-type: none;
+.help-category ul {
+  list-style: none;
   padding: 0;
+  margin: 0;
 }
 
-.help-section li {
-  color: #666;
-  margin-bottom: 0.5rem;
+.help-category ul li {
+  color: #555;
+  padding: 0.5rem 0;
   padding-left: 1.5rem;
   position: relative;
+  font-size: 0.9rem;
 }
 
-.help-section li:before {
+.help-category ul li:before {
   content: "•";
-  color: #1e3d59;
+  color: #3498db;
   position: absolute;
   left: 0;
+  font-weight: bold;
 }
 
-/* Responsive Design */
+.important-note {
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: #fff3cd;
+  border-left: 4px solid #ffc107;
+  border-radius: 4px;
+}
+
+.important-note strong {
+  color: #856404;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.important-note ul {
+  margin-top: 0.5rem;
+}
+
+.important-note ul li {
+  color: #856404;
+}
+
+.important-note ul li:before {
+  color: #856404;
+}
+
+/* Responsive adjustments */
 @media (max-width: 768px) {
   .dashboard-container {
     padding: 1rem;
@@ -143,5 +204,17 @@
 
   .stat-value {
     font-size: 1.5rem;
+  }
+
+  .help-categories-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .help-section {
+    padding: 1rem;
+  }
+  
+  .help-category {
+    padding: 1rem;
   }
 } 

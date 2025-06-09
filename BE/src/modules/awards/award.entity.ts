@@ -12,7 +12,7 @@ export class Awards {
 
     @Column({
         type: 'enum',
-        enum: ["MVP", "Best Spiker", "Best Server", "Best Blocker", "Best Libero", "Best Setter", "MIP", "Best Aper", "FMVP", "DPOS", "Best Receiver"],
+        enum: ["MVP", "Best Spiker", "Best Server", "Best Blocker", "Best Libero", "Best Setter", "MIP", "Best Aper", "FMVP", "DPOS", "Best Receiver", "LuvLate Award"],
         default: "MVP"
     })
     type!: string;

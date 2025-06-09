@@ -124,8 +124,8 @@ export class AwardController {
     updateAward = async (req: Request, res: Response): Promise<void> => {
         try {
             const { id } = req.params;
-            const awardData: UpdateAwardDto = { ...req.body, id };
-            const updatedAward = await this.awardService.updateAward(awardData);
+            const awardData: UpdateAwardDto = req.body;  // Don't add ID to payload
+            const updatedAward = await this.awardService.updateAward(parseInt(id), awardData);
             res.json(updatedAward);
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : "Failed to update award";

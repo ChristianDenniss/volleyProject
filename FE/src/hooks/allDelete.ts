@@ -54,3 +54,7 @@ export const useDeleteUsers = () => {
   export const useDeleteStats = () => {
     return useDelete("stats");
   };
+
+  export const useDeleteAwards = () => {
+    return useDelete("awards");
+  };

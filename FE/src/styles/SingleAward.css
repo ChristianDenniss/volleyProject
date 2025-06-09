@@ -1,0 +1,260 @@
+/*  CSS variables for SingleAward page only  */
+.single-award-page {
+    /*  Primary accent color used for highlights  */
+    --primary-color: #c9e4fd;
+
+    /*  Background surface colors  */
+    --bg-dark: #0e0e0e;
+    --bg-light: #161616;
+
+    /*  Text colors  */
+    --text-main: #f5f5f5;
+    --text-muted: #c1c1c1;
+
+    /*  Border radius applied to cards and header  */
+    --radius-lg: 12px;
+
+    /*  Box-shadow for depth  */
+    --shadow-lg: 0 8px 22px rgb(0 0 0 / 0.45);
+
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+}
+
+/*  Base wrapper styling  */
+.award-container
+{
+    /*  Center page and limit width  */
+    margin: 4rem auto;
+    max-width: 1050px;
+    padding: 0 1.5rem;
+
+    /*  Dark theme background  */
+    background-color: var(--bg-dark);
+
+    /*  Rounded edges  */
+    border-radius: var(--radius-lg);
+
+    /*  Subtle shadow for elevation  */
+    box-shadow: var(--shadow-lg);
+
+    /*  Internal spacing  */
+    overflow: hidden;
+    font-family: "Poppins", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--text-main);
+}
+
+/*  Header section with background image  */
+.award-header
+{
+    /*  Reserve fixed height  */
+    height: 320px;
+
+    /*  Cover entire area with image  */
+    background-size: cover;
+    background-position: center;
+
+    /*  Smoothly fade in when image loads  */
+    transition: background-image 0.3s ease-out;
+
+    /*  Rounded top corners  */
+    border-top-left-radius: var(--radius-lg);
+    border-top-right-radius: var(--radius-lg);
+
+    /*  Establish stacking context for overlay  */
+    position: relative;
+}
+
+/*  Dark gradient overlay to ensure readability  */
+.award-header::before
+{
+    /*  Overlay must cover entire header  */
+    content: "";
+    position: absolute;
+    inset: 0;
+
+    /*  Dark-to-transparent vertical gradient  */
+    background: linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 0.55) 0%,
+        rgba(0, 0, 0, 0.35) 40%,
+        rgba(0, 0, 0, 0.55) 100%
+    );
+}
+
+/*  Text block anchored to bottom-left of header  */
+.award-title-section
+{
+    /*  Position at center of header  */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    /*  Keep text above overlay  */
+    z-index: 1;
+    text-align: center;
+    width: 90%;
+    max-width: 900px;
+}
+
+/*  Main award heading  */
+.award-title-section h1
+{
+    /*  Large display size  */
+    font-size: 5.5rem;
+    font-weight: 700;
+    white-space: nowrap;
+
+    /*  Use accent color for emphasis  */
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+/*  Small season badge  */
+.award-season
+{
+    /*  Secondary text styling  */
+    display: inline-block;
+    font-size: 2.2rem;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+/*  Award description section  */
+.award-description p {
+    font-size: 1.5rem;
+    line-height: 1.6;
+    color: var(--text-main);
+}
+
+/*  One-liner description under header  */
+.award-type-description
+{
+    /*  Horizontal padding matches content  */
+    padding: 1.75rem 2rem;
+    background-color: var(--bg-light);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.award-type-description p
+{
+    /*  Comfortable reading line-length  */
+    margin: 0;
+    font-size: 1.25rem;
+    line-height: 1.55;
+}
+
+/*  Core content wrapper  */
+.award-content
+{
+    /*  Uniform spacing  */
+    padding: 2rem;
+    display: grid;
+    gap: 2rem;
+}
+
+/*  Sub-section header styling  */
+.award-content h2
+{
+    /*  Tighten spacing  */
+    margin: 0 0 0.75rem 0;
+    font-size: 1.8rem;
+    color: var(--primary-color);
+}
+
+/*  Recipient links container  */
+.recipient-info
+{
+    /*  Wrap to new line if too long  */
+    white-space: normal;
+    font-size: 1.5rem;
+}
+
+/*  Individual player links  */
+.player-link
+{
+    /*  Text inherits size; accent on hover  */
+    color: var(--text-main);
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 0.2s ease;
+    font-size: 1.5rem;
+}
+
+/*  Hover state for links  */
+.player-link:hover
+{
+    color: var(--primary-color);
+}
+
+/*  Meta data grid – switches to single column on mobile  */
+.award-meta
+{
+    /*  Two columns on medium+ screens  */
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.25rem;
+    background: var(--bg-light);
+    padding: 1.5rem;
+    border-radius: var(--radius-lg);
+}
+
+/*  Each metadata pair  */
+.meta-item
+{
+    /*  Interior layout  */
+    display: flex;
+    flex-direction: column;
+}
+
+/*  Metadata heading  */
+.meta-item h3
+{
+    /*  Remove default margin  */
+    margin: 0 0 0.4rem 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+}
+
+/*  Metadata value  */
+.meta-item p
+{
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+/*  Responsive tweaks  */
+@media (max-width: 600px)
+{
+    /*  Reduce header height on small screens  */
+    .award-header
+    {
+        height: 220px;
+    }
+
+    /*  Slightly smaller title  */
+    .award-title-section h1
+    {
+        font-size: 3.8rem;
+    }
+
+    /*  Compact padding  */
+    .award-content
+    {
+        padding: 1.5rem;
+    }
+
+    .award-season {
+        font-size: 1.8rem;
+    }
+
+    .award-container {
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+}
