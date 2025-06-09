@@ -1,4 +1,3 @@
-import React, { useState, useEffect } from "react";
 import { useStats, useTeams, useArticles, usePlayers, useSeasons, useGames, useUsers, useAwards } from "../../hooks/allFetch";
 import { FaUsers, FaVolleyballBall, FaNewspaper, FaCalendarAlt, FaGamepad, FaChartBar, FaUserAlt, FaTrophy } from "react-icons/fa";
 import "../../styles/Dashboard.css";
