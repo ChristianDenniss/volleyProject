@@ -10,7 +10,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000                   # Hardcode PORT for reliability
-      - DATABASE_URL=${URL}         # Use URL from Coolify
+      - DATABASE_URL=${COOLIFY_URL}  # Use COOLIFY_URL from Coolify
     depends_on:
       - db                          # Ensure DB service starts before backend
     logging:

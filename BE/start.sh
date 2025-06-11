@@ -16,10 +16,10 @@ if [ -n "$DATABASE_URL" ]; then
 else
     echo "DATABASE_URL is not set"
 fi
-if [ -n "$URL" ]; then
-    echo "URL is set (redacted)"
+if [ -n "$COOLIFY_URL" ]; then
+    echo "COOLIFY_URL is set (redacted)"
 else
-    echo "URL is not set"
+    echo "COOLIFY_URL is not set"
 fi
 echo "=========================================="
 
