@@ -17,9 +17,7 @@ else
     echo "DATABASE_URL is not set"
 fi
 if [ -n "$COOLIFY_URL" ]; then
-    echo "COOLIFY_URL is set (redacted)"
-else
-    echo "COOLIFY_URL is not set"
+    echo "COOLIFY_URL is set (redacted) - This is your API URL"
 fi
 echo "=========================================="
 

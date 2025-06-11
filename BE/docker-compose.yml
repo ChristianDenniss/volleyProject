@@ -1,8 +1,10 @@
+version: '3.8'
+
 services:
   backend:
     build:
       context: .               # Keep the context as the BE directory
-      dockerfile: ./Dockerfile     # Point to the Dockerfile outside the BE directory (root directory)
+      dockerfile: Dockerfile     # Point to the Dockerfile outside the BE directory (root directory)
     volumes:
       - ./dist:/app/dist       # Only mount the dist directory
     ports:
@@ -10,7 +12,8 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000                   # Hardcode PORT for reliability
-      - DATABASE_URL=${COOLIFY_URL}  # Use COOLIFY_URL from Coolify
+      - COOLIFY_URL=${COOLIFY_URL}
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/volleyball
     depends_on:
       - db                          # Ensure DB service starts before backend
     logging:
@@ -21,11 +24,11 @@ services:
         tag: "{{.Name}}"
 
   db:
-    image: postgres:latest
+    image: postgres:16-alpine
     environment:
-      - POSTGRES_USER=${DB_USER}     # Match variable names for PostgreSQL
-      - POSTGRES_PASSWORD=${DB_PASS}
-      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=volleyball
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:

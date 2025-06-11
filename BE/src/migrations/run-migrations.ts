@@ -44,7 +44,7 @@ const AppDataSource = new DataSource({
     ),
     ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
     entities: [join(__dirname, "..", "**", "*.entity.{js,ts}")],
-    migrations: [join(__dirname, "..", "..", "migrations", "*.{js,ts}")],
+    migrations: [join(__dirname, "*.{js,ts}")],
     synchronize: false,
     logging: true,
 });
