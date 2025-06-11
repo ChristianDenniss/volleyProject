@@ -3,7 +3,7 @@ import { createServer } from 'http';
 import { createTerminus } from '@godaddy/terminus';
 import dotenv from 'dotenv';
 import createApp from './app.js';
-import { AppDataSource } from './db/data-source.js';
+import { AppDataSource, initializeDataSource } from './db/data-source.js';
 import { errorHandler } from './middleware/errorHandling.js'; // Import error handler
 
 dotenv.config();
@@ -12,8 +12,7 @@ const PORT = process.env.PORT || 5000;
 async function startServer(): Promise<void> {
   try {
     // Initialize TypeORM DataSource
-    await AppDataSource.initialize();
-    console.log('Database connection established');
+    await initializeDataSource();
 
     const app = createApp();
 
@@ -28,8 +27,10 @@ async function startServer(): Promise<void> {
       onSignal: async () => {
         // Cleanup logic before shutdown
         console.log('Server is shutting down');
-        await AppDataSource.destroy();
-        console.log('Database connections closed');
+        if (AppDataSource.isInitialized) {
+          await AppDataSource.destroy();
+          console.log('Database connections closed');
+        }
       }
     });
 
@@ -42,6 +43,9 @@ async function startServer(): Promise<void> {
   }
 }
 
-startServer().catch((error) => console.error('Server startup failed:', error));
+startServer().catch((error) => {
+  console.error('Server startup failed:', error);
+  process.exit(1);
+});
 
 export {}; // Add empty export to ensure this is treated as an ESM module

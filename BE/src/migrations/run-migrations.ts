@@ -1,23 +1,36 @@
-import { DataSource } from 'typeorm';
-import { AppDataSource } from '../db/data-source.js';
+import { AppDataSource, initializeDataSource } from '../db/data-source.js';
 
 async function runMigrations() {
+    let dataSource = null;
+    
     try {
-        console.log('Initializing database connection...');
-        const dataSource = await AppDataSource.initialize();
-        console.log('Database connection established');
-        console.log('Running migrations...');
+        console.log("Initializing database connection...");
+        dataSource = await initializeDataSource();
+        console.log("Database connection established");
+
+        console.log("Running migrations...");
+        const migrations = await dataSource.runMigrations();
+        console.log("Migrations completed successfully");
         
-        // This will automatically skip migrations that have already been applied
-        await dataSource.runMigrations();
-        
-        console.log('Migrations completed successfully');
-        await dataSource.destroy();
-        console.log('Database connection closed');
+        if (migrations.length > 0) {
+            console.log("Applied migrations:");
+            migrations.forEach(migration => {
+                console.log(`- ${migration.name}`);
+            });
+        } else {
+            console.log("No new migrations to apply");
+        }
     } catch (error) {
-        console.error('Error running migrations:', error);
+        console.error("Error during migration:", error);
         process.exit(1);
+    } finally {
+        if (dataSource?.isInitialized) {
+            console.log("Closing database connection...");
+            await dataSource.destroy();
+            console.log("Database connection closed");
+        }
     }
 }
 
+// Run migrations
 runMigrations(); 

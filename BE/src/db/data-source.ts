@@ -20,6 +20,15 @@ import { Awards } from "../modules/awards/award.entity.js";
 
 dotenv.config();
 
+// Validate required environment variables
+const requiredEnvVars = ['DB_HOST', 'DB_USER', 'DB_PASS', 'DB_NAME', 'DB_PORT'];
+const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
+
+if (missingEnvVars.length > 0) {
+    console.error('Missing required environment variables:', missingEnvVars.join(', '));
+    process.exit(1);
+}
+
 // Define entities
 const entities = [
     Teams,
@@ -38,12 +47,26 @@ export const AppDataSource = new DataSource({
     host: process.env.DB_HOST || "localhost",
     port: Number(process.env.DB_PORT) || 5432,
     username: process.env.DB_USER || "postgres",
-    password: process.env.DB_PASS || "postgres",
+    password: process.env.DB_PASS || "password",
     database: process.env.DB_NAME || "volleyball",
     synchronize: false, // Disable synchronize to prevent automatic schema updates
     logging: process.env.NODE_ENV !== 'production',
     entities: entities,
-    migrations: [join(__dirname, "..", "..", "migrations", "*.{js,ts}")], // Allow both .js and .ts files
+    migrations: [join(__dirname, "..", "migrations", "*.{js,ts}")], // Point to src/migrations
     migrationsTableName: "migrations", // Explicitly set migrations table name
     subscribers: [],
 });
+
+// Initialize the DataSource
+export async function initializeDataSource(): Promise<DataSource> {
+    try {
+        if (!AppDataSource.isInitialized) {
+            await AppDataSource.initialize();
+            console.log("Database connection established");
+        }
+        return AppDataSource;
+    } catch (error) {
+        console.error("Error initializing database connection:", error);
+        throw error;
+    }
+}
