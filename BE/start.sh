@@ -9,6 +9,20 @@ echo "Directory contents:"
 ls -la
 echo "=========================================="
 
+# Log environment variable presence
+echo "Environment variables:"
+if [ -n "$DATABASE_URL" ]; then
+    echo "DATABASE_URL is set (redacted)"
+else
+    echo "DATABASE_URL is not set"
+fi
+if [ -n "$URL" ]; then
+    echo "URL is set (redacted)"
+else
+    echo "URL is not set"
+fi
+echo "=========================================="
+
 # Run migrations
 echo "Running database migrations..."
 if ! node --es-module-specifier-resolution=node dist/migrations/run-migrations.js; then
