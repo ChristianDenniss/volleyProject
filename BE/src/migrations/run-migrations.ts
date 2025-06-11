@@ -1,36 +1,56 @@
-import { AppDataSource, initializeDataSource } from '../db/data-source.js';
+import { DataSource } from "typeorm";
+import { config } from "dotenv";
+import { join } from "path";
 
-async function runMigrations() {
-    let dataSource = null;
-    
-    try {
-        console.log("Initializing database connection...");
-        dataSource = await initializeDataSource();
-        console.log("Database connection established");
+// Load environment variables
+config();
 
-        console.log("Running migrations...");
-        const migrations = await dataSource.runMigrations();
-        console.log("Migrations completed successfully");
-        
-        if (migrations.length > 0) {
-            console.log("Applied migrations:");
-            migrations.forEach(migration => {
-                console.log(`- ${migration.name}`);
-            });
-        } else {
-            console.log("No new migrations to apply");
-        }
-    } catch (error) {
-        console.error("Error during migration:", error);
-        process.exit(1);
-    } finally {
-        if (dataSource?.isInitialized) {
-            console.log("Closing database connection...");
-            await dataSource.destroy();
-            console.log("Database connection closed");
-        }
-    }
-}
+// Force production mode
+process.env.NODE_ENV = 'production';
+
+console.log("==========================================");
+console.log("MIGRATION PROCESS STARTING");
+console.log("==========================================");
+console.log("Environment:", process.env.NODE_ENV);
+console.log("Node Version:", process.version);
+console.log("Current Directory:", process.cwd());
+console.log("Database URL:", process.env.DATABASE_URL ? "***URL REDACTED***" : "NOT SET");
+console.log("==========================================");
+
+// Initialize the DataSource
+const AppDataSource = new DataSource({
+  type: "postgres",
+  url: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
+  entities: [join(__dirname, "..", "**", "*.entity.{js,ts}")],
+  migrations: [join(__dirname, "..", "..", "migrations", "*.{js,ts}")],
+  synchronize: false,
+  logging: true,
+});
+
+console.log("Initializing database connection...");
 
 // Run migrations
-runMigrations(); 
+AppDataSource.initialize()
+  .then(async () => {
+    console.log("Database connection established");
+    console.log("Running migrations...");
+    
+    try {
+      const migrations = await AppDataSource.runMigrations();
+      console.log("Migrations completed successfully");
+      console.log("Executed migrations:", migrations.map(m => m.name));
+    } catch (error) {
+      console.error("Error running migrations:", error);
+      process.exit(1);
+    } finally {
+      console.log("Closing database connection...");
+      await AppDataSource.destroy();
+      console.log("Database connection closed");
+      console.log("==========================================");
+    }
+  })
+  .catch((error) => {
+    console.error("Error during Data Source initialization:", error);
+    process.exit(1);
+  }); 

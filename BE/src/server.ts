@@ -9,6 +9,18 @@ import { errorHandler } from './middleware/errorHandling.js'; // Import error ha
 dotenv.config();
 const PORT = process.env.PORT || 5000;
 
+// Force production mode
+process.env.NODE_ENV = 'production';
+
+console.log("==========================================");
+console.log("SERVER STARTING");
+console.log("==========================================");
+console.log("Environment:", process.env.NODE_ENV);
+console.log("Node Version:", process.version);
+console.log("Current Directory:", process.cwd());
+console.log("Database URL:", process.env.DATABASE_URL ? "***URL REDACTED***" : "NOT SET");
+console.log("==========================================");
+
 async function startServer(): Promise<void> {
   try {
     // Initialize TypeORM DataSource
@@ -36,6 +48,7 @@ async function startServer(): Promise<void> {
 
     server.listen(PORT, () => {
       console.log(`Server running at http://localhost:${PORT}`);
+      console.log("==========================================");
     });
   } catch (error) {
     console.error('Error during startup:', error);
