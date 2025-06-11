@@ -7,20 +7,20 @@ WORKDIR /app
 # Copy package files for dependency installation
 COPY package.json package-lock.json ./
 
-# For production, use:
-# RUN npm ci --omit=dev && npm cache clean --force
-# For development (keeping dev dependencies for ts-node):
-RUN npm ci && npm cache clean --force
+# Install production dependencies only
+RUN npm ci --omit=dev && npm cache clean --force
 
 # Copy the source code
 COPY . .
 
+# Build the application
+RUN npm run build
+
 # Expose the application port 
 EXPOSE 3000
 
-# Development mode with ts-node
-CMD ["npm", "run", "dev"]
+# Set NODE_ENV to production
+ENV NODE_ENV=production
 
-# For production, uncomment below and comment the dev CMD above:
-# RUN npm run build
-# CMD ["npm", "run", "start:prod"]
+# Start the application in production mode
+CMD ["npm", "run", "start:prod"]
