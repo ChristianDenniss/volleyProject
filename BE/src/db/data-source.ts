@@ -40,9 +40,10 @@ export const AppDataSource = new DataSource({
     username: process.env.DB_USER || "postgres",
     password: process.env.DB_PASS || "postgres",
     database: process.env.DB_NAME || "volleyball",
-    synchronize: process.env.NODE_ENV !== 'production', // Default to true if NODE_ENV is not set
-    logging: process.env.NODE_ENV !== 'production', // Default to true if NODE_ENV is not set
+    synchronize: false, // Disable synchronize to prevent automatic schema updates
+    logging: process.env.NODE_ENV !== 'production',
     entities: entities,
-    migrations: [join(__dirname, "migrations", "*.js")],
+    migrations: [join(__dirname, "migrations", "*.{js,ts}")], // Allow both .js and .ts files
+    migrationsTableName: "migrations", // Explicitly set migrations table name
     subscribers: [],
 });
