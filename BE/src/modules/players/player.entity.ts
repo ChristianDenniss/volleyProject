@@ -32,5 +32,6 @@ export class Players {
 
     // Many-to-many relationship with Awards
     @ManyToMany(() => Awards, (award) => award.players)
+    @JoinTable({ name: 'awards_players_players' }) // Explicitly set the join table name
     awards!: Awards[];  
 }
