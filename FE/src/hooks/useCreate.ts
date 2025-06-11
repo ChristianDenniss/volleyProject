@@ -23,6 +23,7 @@ export const useCreate = <T, U>(endpoint: string) => {
 
         const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
         try {
+            console.log('useCreate: Sending payload to', `${backendUrl}/api/${endpoint}:`, payload);
             const response = await authFetch(
                 `${backendUrl}/api/${endpoint}`,
                 {
@@ -36,13 +37,15 @@ export const useCreate = <T, U>(endpoint: string) => {
                 const errorData = await response
                     .json()
                     .catch(() => ({ message: "Create failed" }));
+                console.error('useCreate: Error response:', errorData);
                 throw new Error(errorData.message || "Create failed");
             }
 
             const result: T = await response.json();
+            console.log('useCreate: Success response:', result);
             return result;
         } catch (err: any) {
-            console.error(`Create error [${endpoint}]:`, err);
+            console.error(`useCreate: Error [${endpoint}]:`, err);
             setError(err.message);
             return null;
         } finally {
