@@ -4,7 +4,7 @@ import { z } from "zod";
 const baseAwardSchema = z.object({
     description: z.string().min(1, { message: "Description is required" }),
     type: z.enum(
-        ["MVP", "Best Spiker", "Best Server", "Best Blocker", "Best Libero", "Best Setter", "MIP", "Best Aper", "FMVP", "DPOS", "Best Reciever"],
+        ["MVP", "Best Spiker", "Best Server", "Best Blocker", "Best Libero", "Best Setter", "MIP", "Best Aper", "FMVP", "DPOS", "Best Reciever", "LuvLate Award"],
         { message: "Invalid award type, please match the enum values" }
     ),
     seasonId: z.number().int().positive({ message: "Season ID must be a positive number" }),
@@ -23,6 +23,8 @@ export type CreateAwardDto = z.infer<typeof createAwardSchema>;
 export type CreateMultipleAwardsDto = z.infer<typeof createMultipleAwardsSchema>;
 
 // Update schema (patch-like) - ID comes from URL params
-export const updateAwardSchema = baseAwardSchema.partial();
+export const updateAwardSchema = baseAwardSchema.partial().extend({
+    id: z.number().int().positive({ message: "Award ID must be a positive number" })
+});
 
 export type UpdateAwardDto = z.infer<typeof updateAwardSchema>; 
