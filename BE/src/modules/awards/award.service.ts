@@ -222,7 +222,11 @@ export class AwardService {
         }
 
         // Find player by name
-        const player = await this.playerRepository.findOne({ where: { name: playerName } });
+        const player = await this.playerRepository.findOne({ 
+            where: { 
+                name: playerName.toLowerCase() 
+            } 
+        });
         if (!player) {
             throw new NotFoundError(`Player with name ${playerName} not found`);
         }

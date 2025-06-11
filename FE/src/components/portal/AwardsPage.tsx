@@ -148,8 +148,8 @@ const AwardsPage: React.FC = () => {
   // Create new award handler
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (newType.trim() === "" || newSeasonId <= 0 || newPlayerName.trim() === "") {
-      setFormError("Type, Season ID, and Player Name are required.");
+    if (newType.trim() === "" || newSeasonId <= 0 || newPlayerName.trim() === "" || newDescription.trim() === "") {
+      setFormError("Type, Description, Season ID, and Player Name are required.");
       return;
     }
 
@@ -212,6 +212,7 @@ const AwardsPage: React.FC = () => {
                 <textarea
                   value={newDescription}
                   onChange={(e) => setNewDescription(e.target.value)}
+                  required
                 />
               </div>
               <div className="form-group">

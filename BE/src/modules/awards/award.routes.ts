@@ -2,7 +2,7 @@ import { Application, Router } from 'express';
 import { AwardController } from './award.controller.js';
 import { AwardService } from './award.service.js';
 import { validate } from '../../middleware/validate.js';
-import { createAwardSchema, updateAwardSchema, createMultipleAwardsSchema } from './awards.schema.js';
+import { createAwardSchema, updateAwardSchema, createMultipleAwardsSchema, createAwardWithNamesSchema } from './awards.schema.js';
 
 export function registerAwardRoutes(app: Application): void {
     const router = Router();
@@ -13,7 +13,7 @@ export function registerAwardRoutes(app: Application): void {
     router.post('/', validate(createAwardSchema), awardController.createAward);
 
     // Create award with player name
-    router.post('/with-names', awardController.createAwardWithPlayerNames);
+    router.post('/with-names', validate(createAwardWithNamesSchema), awardController.createAwardWithPlayerNames);
 
     // Get all awards
     router.get('/', awardController.getAwards);

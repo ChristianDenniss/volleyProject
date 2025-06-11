@@ -15,6 +15,18 @@ const baseAwardSchema = z.object({
 
 export const createAwardSchema = baseAwardSchema;
 
+// Schema for creating award with player name
+export const createAwardWithNamesSchema = z.object({
+    description: z.string().min(1, { message: "Description is required" }),
+    type: z.enum(
+        ["MVP", "Best Spiker", "Best Server", "Best Blocker", "Best Libero", "Best Setter", "MIP", "Best Aper", "FMVP", "DPOS", "Best Receiver", "LuvLate Award"],
+        { message: "Invalid award type, please match the enum values" }
+    ),
+    seasonId: z.number().int().positive({ message: "Season ID must be a positive number" }),
+    playerName: z.string().min(1, { message: "Player name is required" }),
+    imageUrl: z.string().url().optional()
+});
+
 // Batch variant for creating multiple awards
 export const createMultipleAwardsSchema = z.array(baseAwardSchema);
 
