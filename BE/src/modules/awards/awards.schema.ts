@@ -23,7 +23,7 @@ export const createAwardWithNamesSchema = z.object({
         { message: "Invalid award type, please match the enum values" }
     ),
     seasonId: z.number().int().positive({ message: "Season ID must be a positive number" }),
-    playerName: z.string().min(1, { message: "Player name is required" }),
+    playerName: z.string().min(1, { message: "Player name is required" }).transform(val => val.toLowerCase()),
     imageUrl: z.string().url().optional()
 });
 

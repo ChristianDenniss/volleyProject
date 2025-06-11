@@ -210,7 +210,15 @@ export class AwardService {
         try {
             console.log('Service: Starting award creation with:', { description, type, seasonId, playerName, imageUrl });
 
+            // Validate award type
+            const validTypes = ["MVP", "Best Spiker", "Best Server", "Best Blocker", "Best Libero", "Best Setter", "MIP", "Best Aper", "FMVP", "DPOS", "Best Receiver", "LuvLate Award"];
+            console.log('Service: Validating award type:', type);
+            if (!validTypes.includes(type)) {
+                throw new Error(`Invalid award type: ${type}. Must be one of: ${validTypes.join(', ')}`);
+            }
+
             // Check if season exists
+            console.log('Service: Checking if season exists:', seasonId);
             const season = await this.seasonRepository.findOne({ where: { id: seasonId } });
             console.log('Service: Found season:', season);
             if (!season) {
@@ -218,10 +226,11 @@ export class AwardService {
             }
 
             // Check if award of same type exists in the season
+            console.log('Service: Checking for existing award of same type in season');
             const existingTypeAward = await this.awardRepository.findOne({
                 where: { type, season: { id: seasonId } }
             });
-            console.log('Service: Existing award check:', existingTypeAward);
+            console.log('Service: Existing award check result:', existingTypeAward);
             if (existingTypeAward) {
                 throw new DuplicateError(`Award of type ${type} already exists in this season`);
             }
@@ -239,6 +248,7 @@ export class AwardService {
             }
 
             // Create new award
+            console.log('Service: Creating new award object');
             const award = this.awardRepository.create({
                 description,
                 type,
@@ -248,10 +258,15 @@ export class AwardService {
             });
 
             console.log('Service: Created award object:', award);
-            return await this.awardRepository.save(award);
+            const savedAward = await this.awardRepository.save(award);
+            console.log('Service: Successfully saved award:', savedAward);
+            return savedAward;
         } catch (error) {
             console.error('Service: Error in createAwardWithPlayerNames:', error);
-            throw error; // Re-throw to be handled by controller
+            if (error instanceof Error) {
+                throw error;
+            }
+            throw new Error('An unexpected error occurred while creating the award');
         }
     }
 
