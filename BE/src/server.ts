@@ -6,11 +6,13 @@ import createApp from './app.js';
 import { AppDataSource, initializeDataSource } from './db/data-source.js';
 import { errorHandler } from './middleware/errorHandling.js'; // Import error handler
 
+// Load environment variables
 dotenv.config();
-const PORT = process.env.PORT || 5000;
 
 // Force production mode
 process.env.NODE_ENV = 'production';
+
+const PORT = process.env.PORT || 3000; // Default to 3000 to match docker-compose
 
 console.log("==========================================");
 console.log("SERVER STARTING");
@@ -19,12 +21,14 @@ console.log("Environment:", process.env.NODE_ENV);
 console.log("Node Version:", process.version);
 console.log("Current Directory:", process.cwd());
 console.log("Database URL:", process.env.DATABASE_URL ? "***URL REDACTED***" : "NOT SET");
+console.log("Port:", PORT);
 console.log("==========================================");
 
 async function startServer(): Promise<void> {
   try {
     // Initialize TypeORM DataSource
     await initializeDataSource();
+    console.log("Database connection established");
 
     const app = createApp();
 
