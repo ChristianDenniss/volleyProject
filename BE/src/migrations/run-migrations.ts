@@ -19,6 +19,15 @@ console.log("==========================================");
 console.log("Environment:", process.env.NODE_ENV);
 console.log("Node Version:", process.version);
 console.log("Current Directory:", process.cwd());
+
+// Enforce DATABASE_URL in production
+if (process.env.NODE_ENV === 'production') {
+    if (!process.env.DATABASE_URL) {
+        console.error("DATABASE_URL must be set in production!");
+        process.exit(1);
+    }
+}
+
 if (process.env.DATABASE_URL) {
     console.log("Using DATABASE_URL (redacted)");
 } else {
@@ -32,14 +41,14 @@ console.log("==========================================");
 // Initialize the DataSource
 const AppDataSource = new DataSource({
     type: "postgres",
-    ...(process.env.DATABASE_URL 
+    ...(process.env.DATABASE_URL
         ? { url: process.env.DATABASE_URL }
         : {
-            host: process.env.DB_HOST,
-            port: Number(process.env.DB_PORT),
-            username: process.env.DB_USER,
-            password: process.env.DB_PASS,
-            database: process.env.DB_NAME,
+            host: process.env.DB_HOST || (process.env.NODE_ENV !== 'production' ? "localhost" : undefined),
+            port: Number(process.env.DB_PORT) || (process.env.NODE_ENV !== 'production' ? 5432 : undefined),
+            username: process.env.DB_USER || (process.env.NODE_ENV !== 'production' ? "postgres" : undefined),
+            password: process.env.DB_PASS || (process.env.NODE_ENV !== 'production' ? "password" : undefined),
+            database: process.env.DB_NAME || (process.env.NODE_ENV !== 'production' ? "volleyball" : undefined),
         }
     ),
     ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
