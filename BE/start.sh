@@ -1,9 +1,12 @@
 #!/bin/sh
+set -e  # Exit on error
 
 echo "=========================================="
 echo "Starting application in production mode..."
 echo "Node version: $(node --version)"
 echo "Current directory: $(pwd)"
+echo "Directory contents:"
+ls -la
 echo "=========================================="
 
 # Run migrations

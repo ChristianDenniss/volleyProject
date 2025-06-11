@@ -13,8 +13,14 @@ RUN npm ci && npm cache clean --force
 # Copy the source code
 COPY . .
 
-# Make start script executable
-RUN chmod +x start.sh
+# Verify and prepare start script
+RUN echo "Verifying start script..." && \
+    ls -la start.sh && \
+    cat start.sh && \
+    sed -i 's/\r$//' start.sh && \
+    chmod +x start.sh && \
+    echo "Script permissions:" && \
+    ls -la start.sh
 
 # Build the application
 RUN npm run build
@@ -26,4 +32,4 @@ EXPOSE 3000
 ENV NODE_ENV=production
 
 # Start the application in production mode
-CMD ["./start.sh"]
+ENTRYPOINT ["./start.sh"]
