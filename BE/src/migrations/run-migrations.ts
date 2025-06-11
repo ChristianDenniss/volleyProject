@@ -51,8 +51,8 @@ const AppDataSource = new DataSource({
             database: process.env.DB_NAME || (process.env.NODE_ENV !== 'production' ? "volleyball" : undefined),
         }
     ),
-    ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
-    entities: [join(__dirname, "..", "**", "*.entity.{js,ts}")],
+    ssl: false, // Disable SSL by default, let the connection URL handle SSL settings
+    entities: [join(__dirname, "..", "modules", "**", "*.entity.{js,ts}")],
     migrations: [join(__dirname, "*.{js,ts}")],
     synchronize: false,
     logging: true,
