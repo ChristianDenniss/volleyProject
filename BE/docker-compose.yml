@@ -18,6 +18,11 @@ services:
     command: npm run start:prod
     depends_on:
       - db                          # Ensure DB service starts before backend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   db:
     image: postgres:latest
