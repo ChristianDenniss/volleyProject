@@ -43,7 +43,7 @@ export const AppDataSource = new DataSource({
     synchronize: false, // Disable synchronize to prevent automatic schema updates
     logging: process.env.NODE_ENV !== 'production',
     entities: entities,
-    migrations: [join(__dirname, "..", "migrations", "*.{js,ts}")], // Allow both .js and .ts files
+    migrations: [join(__dirname, "..", "..", "migrations", "*.{js,ts}")], // Allow both .js and .ts files
     migrationsTableName: "migrations", // Explicitly set migrations table name
     subscribers: [],
 });
