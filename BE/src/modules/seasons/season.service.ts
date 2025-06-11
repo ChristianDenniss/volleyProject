@@ -63,10 +63,25 @@ export class SeasonService
      */
     async getAllSeasons(): Promise<Seasons[]>
     {
-        return this.seasonRepository.find({
-            relations: ["teams", "games"],
-            order: { seasonNumber: "DESC" }          // Sort by most recent season
-        });
+        try {
+            console.log('Fetching all seasons...');
+            const seasons = await this.seasonRepository.find({
+                relations: ["teams", "games", "awards"],
+                order: { seasonNumber: "DESC" }
+            });
+            console.log(`Found ${seasons.length} seasons`);
+            return seasons;
+        } catch (error) {
+            console.error('Error in getAllSeasons:', {
+                error: error instanceof Error ? {
+                    message: error.message,
+                    stack: error.stack,
+                    name: error.name
+                } : error,
+                timestamp: new Date().toISOString()
+            });
+            throw error;
+        }
     }
 
     /**
