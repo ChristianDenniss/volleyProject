@@ -210,6 +210,12 @@ export class AwardService {
         try {
             console.log('Service: Starting award creation with:', { description, type, seasonId, playerName, imageUrl });
 
+            // Check database connection
+            if (!AppDataSource.isInitialized) {
+                console.error('Service: Database not initialized');
+                throw new Error('Database connection not initialized');
+            }
+
             // Validate award type
             const validTypes = ["MVP", "Best Spiker", "Best Server", "Best Blocker", "Best Libero", "Best Setter", "MIP", "Best Aper", "FMVP", "DPOS", "Best Receiver", "LuvLate Award"];
             console.log('Service: Validating award type:', type);
@@ -247,20 +253,27 @@ export class AwardService {
                 throw new NotFoundError(`Player with name ${playerName} not found`);
             }
 
-            // Create new award
+            // Create new award without players first
             console.log('Service: Creating new award object');
             const award = this.awardRepository.create({
                 description,
                 type,
                 imageUrl,
-                season,
-                players: [player]
+                season
             });
 
-            console.log('Service: Created award object:', award);
+            // Save the award first
+            console.log('Service: Saving award without players');
             const savedAward = await this.awardRepository.save(award);
             console.log('Service: Successfully saved award:', savedAward);
-            return savedAward;
+
+            // Now add the player relationship
+            console.log('Service: Adding player relationship');
+            savedAward.players = [player];
+            const finalAward = await this.awardRepository.save(savedAward);
+            console.log('Service: Successfully saved award with player:', finalAward);
+
+            return finalAward;
         } catch (error) {
             console.error('Service: Error in createAwardWithPlayerNames:', error);
             if (error instanceof Error) {

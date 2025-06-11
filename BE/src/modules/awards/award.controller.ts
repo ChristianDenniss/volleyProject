@@ -169,6 +169,12 @@ export class AwardController {
             const { description, type, seasonId, playerName, imageUrl } = req.body;
             console.log('Controller: Extracted data:', { description, type, seasonId, playerName, imageUrl });
             
+            if (!description || !type || !seasonId || !playerName) {
+                console.error('Controller: Missing required fields');
+                res.status(400).json({ error: 'Missing required fields' });
+                return;
+            }
+
             const savedAward = await this.awardService.createAwardWithPlayerNames(
                 description,
                 type,
@@ -177,6 +183,7 @@ export class AwardController {
                 imageUrl
             );
             
+            console.log('Controller: Successfully created award:', savedAward);
             res.status(201).json(savedAward);
         } catch (error) {
             console.error('Controller: Error in createAwardWithPlayerNames:', error);
@@ -186,9 +193,10 @@ export class AwardController {
                 errorMessage.includes("not found") || 
                 errorMessage.includes("already in use") ||
                 errorMessage.includes("must be")) {
+                console.error('Controller: Client error:', errorMessage);
                 res.status(400).json({ error: errorMessage });
             } else {
-                console.error("Controller: Error creating award with player names:", error);
+                console.error("Controller: Server error:", error);
                 res.status(500).json({ error: errorMessage });
             }
         }
