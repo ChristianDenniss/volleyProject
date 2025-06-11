@@ -15,6 +15,7 @@ services:
       - DB_PASS=${DB_PASS}
       - DB_NAME=${DB_NAME}
       - DB_PORT=${DB_PORT}
+      - DATABASE_URL=${URL}
     depends_on:
       - db                          # Ensure DB service starts before backend
     logging:

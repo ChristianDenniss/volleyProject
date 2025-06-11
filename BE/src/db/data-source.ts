@@ -21,12 +21,14 @@ import { Awards } from "../modules/awards/award.entity.js";
 dotenv.config();
 
 // Validate required environment variables
-const requiredEnvVars = ['DB_HOST', 'DB_USER', 'DB_PASS', 'DB_NAME', 'DB_PORT'];
-const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
+if (!process.env.DATABASE_URL) {
+    const requiredEnvVars = ['DB_HOST', 'DB_USER', 'DB_PASS', 'DB_NAME', 'DB_PORT'];
+    const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
 
-if (missingEnvVars.length > 0) {
-    console.error('Missing required environment variables:', missingEnvVars.join(', '));
-    process.exit(1);
+    if (missingEnvVars.length > 0) {
+        console.error('Missing required environment variables:', missingEnvVars.join(', '));
+        process.exit(1);
+    }
 }
 
 // Define entities
@@ -44,17 +46,23 @@ const entities = [
 // Configure AppDataSource
 export const AppDataSource = new DataSource({
     type: "postgres",
-    host: process.env.DB_HOST || "localhost",
-    port: Number(process.env.DB_PORT) || 5432,
-    username: process.env.DB_USER || "postgres",
-    password: process.env.DB_PASS || "password",
-    database: process.env.DB_NAME || "volleyball",
+    ...(process.env.DATABASE_URL 
+        ? { url: process.env.DATABASE_URL }
+        : {
+            host: process.env.DB_HOST || "localhost",
+            port: Number(process.env.DB_PORT) || 5432,
+            username: process.env.DB_USER || "postgres",
+            password: process.env.DB_PASS || "password",
+            database: process.env.DB_NAME || "volleyball",
+        }
+    ),
     synchronize: false, // Disable synchronize to prevent automatic schema updates
     logging: process.env.NODE_ENV !== 'production',
     entities: entities,
     migrations: [join(__dirname, "..", "migrations", "*.{js,ts}")], // Point to src/migrations
     migrationsTableName: "migrations", // Explicitly set migrations table name
     subscribers: [],
+    ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
 });
 
 // Initialize the DataSource
