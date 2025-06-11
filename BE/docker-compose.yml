@@ -15,7 +15,7 @@ services:
       - DB_PASS=${DB_PASS}
       - DB_NAME=${DB_NAME}
       - DB_PORT=${DB_PORT}
-    command: sh -c "npm run build && npm run typeorm migration:run -- -d dist/db/data-source.js && npm run start:prod"
+    command: npm run start:prod
     depends_on:
       - db                          # Ensure DB service starts before backend
 
