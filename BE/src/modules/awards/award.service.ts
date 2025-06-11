@@ -208,8 +208,11 @@ export class AwardService {
         imageUrl?: string
     ): Promise<Awards> {
         try {
+            console.log('Service: Starting award creation with:', { description, type, seasonId, playerName, imageUrl });
+
             // Check if season exists
             const season = await this.seasonRepository.findOne({ where: { id: seasonId } });
+            console.log('Service: Found season:', season);
             if (!season) {
                 throw new NotFoundError(`Season with ID ${seasonId} not found`);
             }
@@ -218,16 +221,19 @@ export class AwardService {
             const existingTypeAward = await this.awardRepository.findOne({
                 where: { type, season: { id: seasonId } }
             });
+            console.log('Service: Existing award check:', existingTypeAward);
             if (existingTypeAward) {
                 throw new DuplicateError(`Award of type ${type} already exists in this season`);
             }
 
             // Find player by name
+            console.log('Service: Looking for player with name:', playerName.toLowerCase());
             const player = await this.playerRepository.findOne({ 
                 where: { 
                     name: playerName.toLowerCase() 
                 } 
             });
+            console.log('Service: Found player:', player);
             if (!player) {
                 throw new NotFoundError(`Player with name ${playerName} not found`);
             }
@@ -241,9 +247,10 @@ export class AwardService {
                 players: [player]
             });
 
+            console.log('Service: Created award object:', award);
             return await this.awardRepository.save(award);
         } catch (error) {
-            console.error('Error in createAwardWithPlayerNames service:', error);
+            console.error('Service: Error in createAwardWithPlayerNames:', error);
             throw error; // Re-throw to be handled by controller
         }
     }
