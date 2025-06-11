@@ -101,7 +101,7 @@ const AwardsPage: React.FC = () => {
       case "type": payload.type = value; break;
       case "description": payload.description = value; break;
       case "seasonId": payload.seasonId = Number(value); break;
-      case "playerName": payload.playerName = value; break;
+      case "playerName": payload.playerName = value.toLowerCase(); break;
     }
 
     try {
@@ -157,7 +157,7 @@ const AwardsPage: React.FC = () => {
       type: newType,
       description: newDescription,
       seasonId: newSeasonId,
-      playerName: newPlayerName,
+      playerName: newPlayerName.toLowerCase(),
     };
 
     try {
@@ -228,7 +228,7 @@ const AwardsPage: React.FC = () => {
                 <input
                   type="text"
                   value={newPlayerName}
-                  onChange={(e) => setNewPlayerName(e.target.value)}
+                  onChange={(e) => setNewPlayerName(e.target.value.toLowerCase())}
                   required
                 />
               </div>
@@ -323,7 +323,38 @@ const AwardsPage: React.FC = () => {
                   )}
                 </td>
                 <td>{award.season.seasonNumber}</td>
-                <td>{award.players[0]?.name || "N/A"}</td>
+                <td>
+                  {editing?.id === award.id && editing.field === "playerName" ? (
+                    <input
+                      type="text"
+                      value={editing.value}
+                      onChange={(e) =>
+                        setEditing({ ...editing, value: e.target.value.toLowerCase() })
+                      }
+                      onBlur={commitEdit}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !isSubmitting) {
+                          e.preventDefault();
+                          commitEdit();
+                        }
+                      }}
+                      disabled={isSubmitting}
+                      autoFocus
+                    />
+                  ) : (
+                    <span
+                      onClick={() =>
+                        !isSubmitting && setEditing({
+                          id: award.id,
+                          field: "playerName",
+                          value: award.players[0]?.name?.toLowerCase() || "",
+                        })
+                      }
+                    >
+                      {award.players[0]?.name || "N/A"}
+                    </span>
+                  )}
+                </td>
                 <td>
                   {user?.role === "superadmin" && (
                     <button
