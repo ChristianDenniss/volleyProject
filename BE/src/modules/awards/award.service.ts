@@ -207,40 +207,45 @@ export class AwardService {
         playerName: string,
         imageUrl?: string
     ): Promise<Awards> {
-        // Check if season exists
-        const season = await this.seasonRepository.findOne({ where: { id: seasonId } });
-        if (!season) {
-            throw new NotFoundError(`Season with ID ${seasonId} not found`);
+        try {
+            // Check if season exists
+            const season = await this.seasonRepository.findOne({ where: { id: seasonId } });
+            if (!season) {
+                throw new NotFoundError(`Season with ID ${seasonId} not found`);
+            }
+
+            // Check if award of same type exists in the season
+            const existingTypeAward = await this.awardRepository.findOne({
+                where: { type, season: { id: seasonId } }
+            });
+            if (existingTypeAward) {
+                throw new DuplicateError(`Award of type ${type} already exists in this season`);
+            }
+
+            // Find player by name
+            const player = await this.playerRepository.findOne({ 
+                where: { 
+                    name: playerName.toLowerCase() 
+                } 
+            });
+            if (!player) {
+                throw new NotFoundError(`Player with name ${playerName} not found`);
+            }
+
+            // Create new award
+            const award = this.awardRepository.create({
+                description,
+                type,
+                imageUrl,
+                season,
+                players: [player]
+            });
+
+            return await this.awardRepository.save(award);
+        } catch (error) {
+            console.error('Error in createAwardWithPlayerNames service:', error);
+            throw error; // Re-throw to be handled by controller
         }
-
-        // Check if award of same type exists in the season
-        const existingTypeAward = await this.awardRepository.findOne({
-            where: { type, season: { id: seasonId } }
-        });
-        if (existingTypeAward) {
-            throw new DuplicateError(`Award of type ${type} already exists in this season`);
-        }
-
-        // Find player by name
-        const player = await this.playerRepository.findOne({ 
-            where: { 
-                name: playerName.toLowerCase() 
-            } 
-        });
-        if (!player) {
-            throw new NotFoundError(`Player with name ${playerName} not found`);
-        }
-
-        // Create new award
-        const award = this.awardRepository.create({
-            description,
-            type,
-            imageUrl,
-            season,
-            players: [player]
-        });
-
-        return this.awardRepository.save(award);
     }
 
     /**

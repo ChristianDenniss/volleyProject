@@ -165,6 +165,8 @@ export class AwardController {
     createAwardWithPlayerNames = async (req: Request, res: Response): Promise<void> => {
         try {
             const { description, type, seasonId, playerName, imageUrl } = req.body;
+            console.log('Creating award with data:', { description, type, seasonId, playerName, imageUrl });
+            
             const savedAward = await this.awardService.createAwardWithPlayerNames(
                 description,
                 type,
@@ -175,6 +177,7 @@ export class AwardController {
             
             res.status(201).json(savedAward);
         } catch (error) {
+            console.error('Detailed error in createAwardWithPlayerNames:', error);
             const errorMessage = error instanceof Error ? error.message : "Failed to create award";
             
             if (errorMessage.includes("required") || 
@@ -184,7 +187,7 @@ export class AwardController {
                 res.status(400).json({ error: errorMessage });
             } else {
                 console.error("Error creating award:", error);
-                res.status(500).json({ error: "Failed to create award" });
+                res.status(500).json({ error: errorMessage });
             }
         }
     };
