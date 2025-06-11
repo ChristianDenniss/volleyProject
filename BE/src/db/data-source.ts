@@ -48,7 +48,7 @@ export const AppDataSource = new DataSource({
     synchronize: false, // Disable synchronize to prevent automatic schema updates
     logging: process.env.NODE_ENV !== 'production',
     entities: entities,
-    migrations: [join(__dirname, "..", "migrations", "*.{js,ts}")], // Point to src/migrations
+    migrations: [join(__dirname, "..", "..", "migrations", "*.{js,ts}")], // Point to dist/migrations in production
     migrationsTableName: "migrations", // Explicitly set migrations table name
     subscribers: [],
     ssl: false, // Disable SSL by default, let the connection URL handle SSL settings
