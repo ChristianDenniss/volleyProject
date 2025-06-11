@@ -1,6 +1,7 @@
 import { DataSource } from "typeorm";
 import { config } from "dotenv";
-import { join } from "path";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
 
 // Load environment variables
 config();
@@ -8,19 +9,38 @@ config();
 // Force production mode
 process.env.NODE_ENV = 'production';
 
+// Get current directory for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Validate required environment variables
+const requiredEnvVars = ['DB_HOST', 'DB_USER', 'DB_PASS', 'DB_NAME', 'DB_PORT'];
+const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
+
+if (missingEnvVars.length > 0) {
+    console.error('Missing required environment variables:', missingEnvVars.join(', '));
+    process.exit(1);
+}
+
 console.log("==========================================");
 console.log("MIGRATION PROCESS STARTING");
 console.log("==========================================");
 console.log("Environment:", process.env.NODE_ENV);
 console.log("Node Version:", process.version);
 console.log("Current Directory:", process.cwd());
-console.log("Database URL:", process.env.DATABASE_URL ? "***URL REDACTED***" : "NOT SET");
+console.log("Database Host:", process.env.DB_HOST);
+console.log("Database Name:", process.env.DB_NAME);
+console.log("Database Port:", process.env.DB_PORT);
 console.log("==========================================");
 
 // Initialize the DataSource
 const AppDataSource = new DataSource({
   type: "postgres",
-  url: process.env.DATABASE_URL,
+  host: process.env.DB_HOST,
+  port: Number(process.env.DB_PORT),
+  username: process.env.DB_USER,
+  password: process.env.DB_PASS,
+  database: process.env.DB_NAME,
   ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
   entities: [join(__dirname, "..", "**", "*.entity.{js,ts}")],
   migrations: [join(__dirname, "..", "..", "migrations", "*.{js,ts}")],
