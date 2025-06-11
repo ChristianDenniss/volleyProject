@@ -13,17 +13,6 @@ process.env.NODE_ENV = 'production';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Validate required environment variables
-if (!process.env.DATABASE_URL) {
-    const requiredEnvVars = ['DB_HOST', 'DB_USER', 'DB_PASS', 'DB_NAME', 'DB_PORT'];
-    const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
-
-    if (missingEnvVars.length > 0) {
-        console.error('Missing required environment variables:', missingEnvVars.join(', '));
-        process.exit(1);
-    }
-}
-
 console.log("==========================================");
 console.log("MIGRATION PROCESS STARTING");
 console.log("==========================================");
