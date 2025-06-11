@@ -1,5 +1,5 @@
-# Use official Node.js v18 image with security updates
-FROM node:18-slim
+# Use official Node.js v20 image with security updates
+FROM node:20-slim
 
 # Set working directory
 WORKDIR /app
