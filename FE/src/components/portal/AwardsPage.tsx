@@ -160,6 +160,8 @@ const AwardsPage: React.FC = () => {
       playerName: newPlayerName.toLowerCase(),
     };
 
+    console.log('Creating award with payload:', payload);
+
     try {
       const created = await createAwards(payload);
       if (created) {
@@ -167,6 +169,7 @@ const AwardsPage: React.FC = () => {
         closeModal();
       }
     } catch (err: any) {
+      console.error('Error creating award:', err);
       setFormError(err.message || "Failed to create award");
     }
   };
