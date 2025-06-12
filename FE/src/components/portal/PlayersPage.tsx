@@ -8,7 +8,9 @@ import { useDeletePlayers }               from "../../hooks/allDelete";
 import { useAuth }                        from "../../context/authContext";
 import type { Player }                    from "../../types/interfaces";
 import "../../styles/UsersPage.css";       // table & button styling
-import "../../styles/PlayersPage.css";     // custom “submit players” modal styling
+import "../../styles/PlayersPage.css";     // custom "submit players" modal styling
+import SearchBar                          from "../Searchbar";
+import Pagination                         from "../Pagination";
 
 type EditField = "name" | "position";
 interface EditingState {
@@ -32,8 +34,11 @@ const PlayersPage: React.FC = () => {
 
   const [ localPlayers, setLocalPlayers ] = useState<Player[]>([]);
   const [ editing, setEditing ]           = useState<EditingState | null>(null);
+  const [ searchQuery, setSearchQuery ]   = useState<string>("");
+  const [ currentPage, setCurrentPage ]   = useState<number>(1);
+  const playersPerPage = 10;
 
-  // Modal state for “Submit Players”
+  // Modal state for "Submit Players"
   const [ isModalOpen, setIsModalOpen ]   = useState<boolean>(false);
   const [ batchRows, setBatchRows ]       = useState<BatchFormRow[]>([
     { name: "", position: "", teamNamesCSV: "" },
@@ -45,6 +50,24 @@ const PlayersPage: React.FC = () => {
       setLocalPlayers(players);
     }
   }, [players]);
+
+  // Filter players based on search query
+  const filteredPlayers = localPlayers.filter(player =>
+    player.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredPlayers.length / playersPerPage);
+  const paginatedPlayers = filteredPlayers.slice(
+    (currentPage - 1) * playersPerPage,
+    currentPage * playersPerPage
+  );
+
+  // Handle search
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    setCurrentPage(1); // Reset to first page when searching
+  };
 
   // Commit inline edits for name/position
   const commitEdit = async () => {
@@ -96,7 +119,7 @@ const PlayersPage: React.FC = () => {
     }
   };
 
-  // Add one more empty row to the “Submit Players” form
+  // Add one more empty row to the "Submit Players" form
   const addRow = () => {
     setBatchRows((rows) => [
       ...rows,
@@ -152,7 +175,17 @@ const PlayersPage: React.FC = () => {
     <div className="portal-main">
       <h1 className="users-title">Players</h1>
 
-      {/* “Submit Players” Button */}
+      {/* Search and Controls */}
+      <div className="players-controls" style={{ marginBottom: "1rem" }}>
+        <SearchBar onSearch={handleSearch} />
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
+      </div>
+
+      {/* "Submit Players" Button */}
       <button className="create-button" onClick={() => setIsModalOpen(true)}>
         Submit Players
       </button>
@@ -269,7 +302,7 @@ const PlayersPage: React.FC = () => {
           </tr>
         </thead>
         <tbody>
-          {localPlayers.map((p) => (
+          {paginatedPlayers.map((p) => (
             <tr key={p.id}>
               <td>{p.id}</td>
 
