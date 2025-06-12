@@ -117,106 +117,108 @@
 
 /* Controls section styling */
 .players-controls-wrapper {
+    background-color: #cce0ff;
+    padding: 15px 40px;
     margin-bottom: 20px;
-    padding: 0 40px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .players-controls-container {
     display: flex;
     align-items: center;
-    gap: 10px;
+    justify-content: flex-start;
+    gap: 15px;
     max-width: 1200px;
     margin: 0 auto;
 }
 
 /* Season filter styling */
 .players-season-filter {
-    flex: 0 0 250px;
+    min-width: 200px;
 }
 
 .players-season-filter select {
     width: 100%;
-    padding: 8px 12px;
-    border: 2px solid #CFFFFF;
+    padding: 10px;
+    border: 1px solid #CFFFFF;
     border-radius: 6px;
-    background-color: #cce0ff;
-    color: #000000;
-    font-size: 16px;
+    background-color: white;
+    color: #000;
+    font-size: 15px;
     cursor: pointer;
-    transition: all 0.2s ease;
 }
 
 .players-season-filter select:hover {
-    background-color: #CFFFFF;
+    border-color: #005999;
 }
 
 /* Search bar styling */
 .players-search-wrapper {
     flex: 1;
-    max-width: 500px;
+    max-width: 400px;
 }
 
 .players-search-wrapper input {
     width: 100%;
-    padding: 8px 12px;
-    border: 2px solid #CFFFFF;
+    padding: 10px;
+    border: 1px solid #CFFFFF;
     border-radius: 6px;
-    background-color: #cce0ff;
-    color: #000000;
-    font-size: 16px;
-    transition: all 0.2s ease;
+    background-color: white;
+    color: #000;
+    font-size: 15px;
 }
 
 .players-search-wrapper input:focus {
-    background-color: #CFFFFF;
+    border-color: #005999;
     outline: none;
 }
 
 .players-search-wrapper input::placeholder {
-    color: #000000;
-    opacity: 0.7;
+    color: #666;
 }
 
 /* Pagination styling */
 .players-pagination-wrapper {
-    flex: 0 0 auto;
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 8px;
 }
 
 .players-pagination-wrapper button {
-    background-color: #cce0ff;
-    color: #000000;
-    border: none;
-    padding: 8px 16px;
+    padding: 8px 12px;
+    border: 1px solid #CFFFFF;
     border-radius: 6px;
+    background-color: white;
+    color: #000;
+    font-size: 14px;
     cursor: pointer;
     transition: all 0.2s ease;
-    font-size: 14px;
-    font-weight: 600;
 }
 
 .players-pagination-wrapper button:hover {
-    background-color: #CFFFFF;
+    border-color: #005999;
+    background-color: #f8f9fa;
 }
 
 .players-pagination-wrapper button:disabled {
     background-color: #f0f0f0;
     color: #999;
+    border-color: #ddd;
     cursor: not-allowed;
 }
 
 .players-pagination-wrapper .pagination-current {
-    font-size: 16px;
-    font-weight: bold;
-    color: #000000;
-    padding: 0 10px;
+    font-size: 15px;
+    font-weight: 500;
+    color: #000;
+    padding: 0 8px;
 }
 
 .players-pagination-wrapper button.active {
-    background-color: #CFFFFF;
-    color: #000000;
+    background-color: #005999;
+    color: white;
+    border-color: #005999;
 }
 
 .players-see-more {
