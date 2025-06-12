@@ -28,7 +28,7 @@ export function registerPlayerRoutes(app: Application): void
     router.get('/:id', playerController.getPlayerById);
 
     router.put('/:id', playerController.updatePlayer);
-    router.patch('/players/:id', validate(updatePlayerSchema), playerController.updatePlayer);         
+    router.patch('/:id', validate(updatePlayerSchema), playerController.updatePlayer);         
     router.delete('/:id', playerController.deletePlayer);
     router.get('/team/:teamId', playerController.getPlayersByTeamId);
 
