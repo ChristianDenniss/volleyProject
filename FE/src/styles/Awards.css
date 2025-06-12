@@ -150,7 +150,8 @@
 {
     background-color: rgba(43, 43, 43, 0.8);
     color: #b3b3b3;
-    transition: background-color 0.2s ease, color 0.2s ease;
+    transition: all 0.2s ease;
+    transform-origin: left center;
 }
 
 .volley-award-season-link:hover .volley-award-season,
@@ -158,22 +159,25 @@
 {
     background-color: rgba(61, 61, 61, 0.9);
     color: #e0e0e0;
+    transform: scale(1.05);
 }
 
 /* Player pill – accent colour, clickable */
 .volley-award-winner
 {
-    background-color: rgba(143, 84, 255, 0.25);
-    color: #8f54ff;
+    background-color: rgba(201, 228, 253, 0.25);  /* light blue with opacity */
+    color: #c9e4fd;  /* light blue */
     font-weight: 500;
-    transition: background-color 0.2s ease, color 0.2s ease;
+    transition: all 0.2s ease;
+    transform-origin: left center;
 }
 
 .volley-award-player-link:hover .volley-award-winner,
 .volley-award-player-link:focus .volley-award-winner
 {
-    background-color: rgba(143, 84, 255, 0.35);
-    color: #a06aff;
+    background-color: rgba(169, 214, 245, 0.35);  /* darker blue with opacity */
+    color: #a9d6f5;  /* darker blue */
+    transform: scale(1.05);
 }
 
 /* -----------------------------------------------------------

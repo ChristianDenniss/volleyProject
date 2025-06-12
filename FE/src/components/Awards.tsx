@@ -1,6 +1,6 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useAwards } from "../hooks/allFetch";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import "../styles/Awards.css";
 import SeasonFilter from "./SeasonFilterBar";
 
@@ -9,6 +9,14 @@ const Awards: React.FC = () => {
   const awards = data || [];
   const [selectedSeason, setSelectedSeason] = useState<number | null>(null);
   const [selectedType, setSelectedType] = useState<string>("");
+  const location = useLocation();
+
+  // Handle pre-selected season from URL state
+  useEffect(() => {
+    if (location.state?.selectedSeason) {
+      setSelectedSeason(location.state.selectedSeason);
+    }
+  }, [location.state]);
 
   // Extract unique award types from the data
   const uniqueTypes = useMemo(() => {
@@ -48,7 +56,7 @@ const Awards: React.FC = () => {
       <div className="volley-awards-grid">
         {filteredAwards.map((award: any) => (
           <Link to={`/awards/${award.id}`} key={award.id} className="volley-award-item-link">
-            <div className="volley-award-item">
+            <div className="volley-award-item" style={{ backgroundImage: `url(${award.imageUrl})` }}>
               <div className="volley-award-category">{award.type}</div>
               <Link to={`/seasons/${award.season?.id}`} className="volley-award-season-link">
                 <div className="volley-award-season">Season {award.season?.seasonNumber}</div>

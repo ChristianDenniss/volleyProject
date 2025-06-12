@@ -101,6 +101,13 @@ const SingleSeason: React.FC = () =>
 
             <header className="ss-header">
                 Season {season.seasonNumber}
+                <Link 
+                    to="/awards" 
+                    state={{ selectedSeason: season.seasonNumber }}
+                    className="ss-awards-button"
+                >
+                    View Awards
+                </Link>
             </header>
 
             <div className="ss-meta">
