@@ -9,6 +9,7 @@ import { useAuth }                        from "../../context/authContext";
 import type { Player }                    from "../../types/interfaces";
 import "../../styles/UsersPage.css";       // table & button styling
 import "../../styles/PlayersPage.css";     // custom "submit players" modal styling
+import "../../styles/PortalPlayersPage.css"; // portal-specific styles
 import SearchBar                          from "../Searchbar";
 import Pagination                         from "../Pagination";
 
