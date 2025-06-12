@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { useAwards } from "../hooks/allFetch";
+import { Link } from "react-router-dom";
 import "../styles/Awards.css";
 import SeasonFilter from "./SeasonFilterBar";
 
@@ -46,14 +47,17 @@ const Awards: React.FC = () => {
       {!loading && !error && filteredAwards.length === 0 && <p>No awards found.</p>}
       <div className="awards-grid">
         {filteredAwards.map((award: any) => (
-          <div key={award.id} className="award-card">
-            <div className="award-type">{award.type}</div>
-            <div className="award-player">{award.players?.[0]?.name || "N/A"}</div>
-            <div className="award-season">Season {award.season?.seasonNumber}</div>
-            <div className="award-details-box">
-              <div className="award-description">{award.description}</div>
+          <Link to={`/awards/${award.id}`} key={award.id} className="award-card-link">
+            <div className="award-card">
+              <div className="award-type">{award.type}</div>
+              <Link to={`/seasons/${award.season?.id}`} className="award-season-link">
+                <div className="award-season">Season {award.season?.seasonNumber}</div>
+              </Link>
+              <Link to={`/players/${award.players?.[0]?.id}`} className="award-player-link">
+                <div className="award-player">{award.players?.[0]?.name || "N/A"}</div>
+              </Link>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
     </div>
