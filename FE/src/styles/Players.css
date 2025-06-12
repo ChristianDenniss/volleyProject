@@ -127,7 +127,7 @@
 .players-controls-container {
     display: flex;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: space-between;
     gap: 15px;
     max-width: 1200px;
     margin: 0 auto;
@@ -153,10 +153,19 @@
     border-color: #005999;
 }
 
+/* Search and pagination container */
+.players-search-pagination {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex: 1;
+    justify-content: flex-end;
+}
+
 /* Search bar styling */
 .players-search-wrapper {
     flex: 1;
-    max-width: 400px;
+    max-width: 600px;
 }
 
 .players-search-wrapper input {
