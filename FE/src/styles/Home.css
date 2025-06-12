@@ -135,7 +135,7 @@
     width: 100vw;
     margin-left: calc(-50vw + 50%);
     padding-top: 56.25%; /* 16:9 aspect ratio */
-    margin-bottom: 2rem; /* Add space between video and CTA */
+    margin-bottom: -1px; /* Negative margin to remove gap */
     border-radius: 10px;
     overflow: hidden;
     box-shadow: 0 3px 12px rgb(0 0 0 / 0.1);
@@ -157,7 +157,7 @@
     position: relative; /* Needed for absolute positioning children */
     width: 100vw;
     margin-left: calc(-50vw + 50%);
-    margin-top: 0; /* Remove negative margin */
+    margin-top: 0; /* Remove any top margin */
     margin-bottom: -1rem;
     height: 500px; /* Matches image height */
     border-radius: 10px;
