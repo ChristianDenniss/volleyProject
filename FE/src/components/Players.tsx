@@ -54,19 +54,17 @@ const Players: React.FC = () => {
 
   return (
     <div className="players-page">
-      <h1>Player Info</h1>
+      <h1>All Players</h1>
 
       <div className="players-controls-wrapper">
         <div className="players-controls-container">
           <div className="players-season-filter">
             <SeasonFilter selectedSeason={selectedSeason} onSeasonChange={handleSeasonChange} />
           </div>
-
-          <div className="players-search-pagination">
+          <div className="players-controls-right">
             <div className="players-search-wrapper">
               <SearchBar onSearch={handleSearch} />
             </div>
-
             <div className="players-pagination-wrapper">
               <Pagination
                 currentPage={currentPage}
