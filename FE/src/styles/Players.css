@@ -198,13 +198,24 @@
 }
 
 .see-more-button {
-  color: #005999;
-  text-decoration: underline;
-  font-size: 18px;
-  transition: color 0.2s;
+  display: inline-block;
+  background-color: #005999;
+  color: white;
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 8px 20px;
+  border-radius: 6px;
+  border: 2px solid #005999;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .see-more-button:hover {
-  color: #003d6b;
-  text-decoration: underline;
+  background-color: #003d6b;
+  border-color: #003d6b;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  text-decoration: none;
+  color: white;
 }
