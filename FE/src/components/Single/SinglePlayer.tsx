@@ -432,9 +432,6 @@ const PlayerProfiles: React.FC = () =>
                                         />
                                         <span className="player-profile-award-type">{award.type}</span>
                                         <span className="player-profile-award-season">Season {award.season.seasonNumber}</span>
-                                        {award.imageUrl && (
-                                            <img src={award.imageUrl} alt={award.type} className="player-profile-award-image" />
-                                        )}
                                     </div>
                                 </a>
                             </li>
