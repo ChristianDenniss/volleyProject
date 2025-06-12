@@ -101,6 +101,15 @@ const SingleSeason: React.FC = () =>
 
             <header className="ss-header">
                 Season {season.seasonNumber}
+            </header>
+
+            <div className="ss-meta">
+                <span>Theme: {season.theme}</span>
+                <span>Start Date: {new Date(season.startDate).toLocaleDateString()}</span>
+                <span>End Date: {season.endDate ? new Date(season.endDate).toLocaleDateString() : 'TBD'}</span>
+            </div>
+            
+            <div className="ss-awards-button-container">
                 <Link 
                     to="/awards" 
                     state={{ selectedSeason: season.seasonNumber }}
@@ -108,12 +117,6 @@ const SingleSeason: React.FC = () =>
                 >
                     View Awards
                 </Link>
-            </header>
-
-            <div className="ss-meta">
-                <span>Theme: {season.theme}</span>
-                <span>Start Date: {new Date(season.startDate).toLocaleDateString()}</span>
-                <span>End Date: {season.endDate ? new Date(season.endDate).toLocaleDateString() : 'TBD'}</span>
             </div>
 
             <div className="ss-teams-grid">

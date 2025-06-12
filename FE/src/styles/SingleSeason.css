@@ -20,10 +20,6 @@
     margin: 2rem auto;
     line-height: 1.1;
     max-width: fit-content;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1rem;
 }
 
 /* skewed block behind the title */
@@ -226,6 +222,13 @@
   .ss-team-players::-webkit-scrollbar-thumb:hover {
     background-color: #171717;
   }
+
+/* Awards button container */
+.ss-awards-button-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2rem;
+}
 
 /* Awards button */
 .ss-awards-button {
