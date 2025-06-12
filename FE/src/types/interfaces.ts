@@ -102,7 +102,8 @@ interface Article
   createdAt: string; 
   summary: string;
   imageUrl: string; 
-  likes: number; 
+  likes: number;
+  approved: boolean | null;
 }
 
 interface User 
@@ -192,6 +193,7 @@ export type CreateArticleInput = {
   summary:    string;
   imageUrl:   string;
   likes?:     number;
+  approved?:  boolean | null;
 };
 
 export type CreateAwardsInput = {

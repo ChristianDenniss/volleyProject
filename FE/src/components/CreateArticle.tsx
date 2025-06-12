@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useCreateArticles } from '../hooks/allCreate';
+import { useAuth } from '../context/authContext';
 import '../styles/CreateArticle.css';
 
 const CreateArticle: React.FC = () => {
     const navigate = useNavigate();
+    const { createArticle, loading, error } = useCreateArticles();
+    const { user } = useAuth();
     const [formData, setFormData] = useState({
         title: '',
         summary: '',
@@ -21,10 +25,18 @@ const CreateArticle: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // TODO: Implement article creation logic
+        if (!user) {
+            console.error('User not authenticated');
+            return;
+        }
+
         try {
-            // Add your API call here to create the article
-            // After successful creation, navigate back to articles list
+            await createArticle({
+                ...formData,
+                authorId: user.id,
+                createdAt: new Date().toISOString(),
+                approved: null // Articles start as pending approval
+            });
             navigate('/articles');
         } catch (error) {
             console.error('Error creating article:', error);
@@ -34,7 +46,12 @@ const CreateArticle: React.FC = () => {
     return (
         <div className="create-article-container">
             <h1>Create New Article</h1>
+            <div className="approval-notice">
+                Note: Your article will be reviewed by an administrator before being published.
+            </div>
             <form onSubmit={handleSubmit} className="create-article-form">
+                {error && <div className="error-message">{error}</div>}
+                
                 <div className="form-group">
                     <label htmlFor="title">Title</label>
                     <input
@@ -87,8 +104,8 @@ const CreateArticle: React.FC = () => {
                     <button type="button" onClick={() => navigate('/articles')} className="cancel-btn">
                         Cancel
                     </button>
-                    <button type="submit" className="submit-btn">
-                        Create Article
+                    <button type="submit" className="submit-btn" disabled={loading}>
+                        {loading ? 'Creating...' : 'Create Article'}
                     </button>
                 </div>
             </form>

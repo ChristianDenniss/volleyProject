@@ -1,18 +1,36 @@
 .create-article-container {
     padding: 24px;
-    max-width: 800px;
+    max-width: 1400px;
     margin: 0 auto;
+}
+
+.approval-notice {
+    background-color: #fff3cd;
+    color: #856404;
+    padding: 12px 16px;
+    border-radius: 4px;
+    margin-bottom: 24px;
+    border: 1px solid #ffeeba;
+}
+
+.error-message {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 12px 16px;
+    border-radius: 4px;
+    margin-bottom: 24px;
+    border: 1px solid #f5c6cb;
 }
 
 .create-article-form {
     background-color: white;
-    padding: 24px;
+    padding: 32px;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .form-group {
-    margin-bottom: 20px;
+    margin-bottom: 24px;
 }
 
 .form-group label {
@@ -25,7 +43,7 @@
 .form-group input,
 .form-group textarea {
     width: 100%;
-    padding: 10px;
+    padding: 12px;
     border: 1px solid #ddd;
     border-radius: 4px;
     font-size: 1rem;
@@ -33,19 +51,19 @@
 
 .form-group textarea {
     resize: vertical;
-    min-height: 150px;
+    min-height: 200px;
 }
 
 .form-actions {
     display: flex;
     gap: 12px;
     justify-content: flex-end;
-    margin-top: 24px;
+    margin-top: 32px;
 }
 
 .cancel-btn,
 .submit-btn {
-    padding: 10px 20px;
+    padding: 12px 24px;
     border-radius: 4px;
     font-size: 1rem;
     cursor: pointer;
@@ -63,11 +81,11 @@
 }
 
 .submit-btn {
-    background-color: #007bff;
+    background-color: #a1d2ff;
     border: none;
-    color: white;
+    color: #000000;
 }
 
 .submit-btn:hover {
-    background-color: #0056b3;
+    background-color: #85c4ff;
 } 
