@@ -140,12 +140,27 @@
 }
 
 /* Search bar styling */
-.players-page .players-search-bar:focus {
-    border-color: #4caf50;
+.players-page .search-bar-container {
+    flex: 1;
+    max-width: 300px;
+}
+
+.players-page .search-bar-container input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 2px solid #CFFFFF;
+    border-radius: 6px;
+    font-size: 16px;
+    transition: border-color 0.3s ease;
+}
+
+.players-page .search-bar-container input:focus {
+    border-color: #cce0ff;
+    outline: none;
 }
 
 /* Pagination container */
-.players-page .players-pagination {
+.players-page .pagination-container {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -154,41 +169,47 @@
 }
 
 /* Pagination buttons */
-.players-page .players-pagination-btn {
-    background-color: #d6ebff;
-    color: #ffffff;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
+.players-page .pagination-button {
+    background-color: #cce0ff;
+    color: #005999;
+    border: 2px solid #CFFFFF;
+    padding: 8px 16px;
+    border-radius: 6px;
     cursor: pointer;
-    transition: background-color 0.3s, transform 0.2s ease-in-out;
+    transition: all 0.2s ease;
     font-size: 14px;
+    font-weight: 600;
 }
 
 /* Pagination buttons hover effect */
-.players-page .players-pagination-btn:hover {
-    background-color: #4b5563;
-    transform: scale(1.05);
+.players-page .pagination-button:hover {
+    background-color: #CFFFFF;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Disabled buttons */
-.players-page .players-pagination-btn:disabled {
-    background-color: #dde3e9;
-    color: rgb(255, 255, 255);
+.players-page .pagination-button:disabled {
+    background-color: #f0f0f0;
+    color: #999;
+    border-color: #ddd;
     cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
 }
 
 /* Current page display */
-.players-page .players-pagination-current {
+.players-page .pagination-current {
     font-size: 16px;
     font-weight: bold;
-    color: #1f2937;
+    color: #005999;
 }
 
 /* Active button (current page) */
-.players-page .players-pagination-btn.active {
-    background-color: #4caf50;
-    color: white;
+.players-page .pagination-button.active {
+    background-color: #cce0ff;
+    color: #005999;
+    border-color: #CFFFFF;
 }
 
 .players-see-more {
@@ -199,23 +220,22 @@
 
 .see-more-button {
   display: inline-block;
-  background-color: #005999;
-  color: white;
+  background-color: #cce0ff;
+  color: #005999;
   text-decoration: none;
   font-size: 16px;
   font-weight: 600;
   padding: 8px 20px;
   border-radius: 6px;
-  border: 2px solid #005999;
+  border: 2px solid #CFFFFF;
   transition: all 0.2s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .see-more-button:hover {
-  background-color: #003d6b;
-  border-color: #003d6b;
+  background-color: #CFFFFF;
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
   text-decoration: none;
-  color: white;
+  color: #005999;
 }

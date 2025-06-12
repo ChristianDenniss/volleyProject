@@ -61,13 +61,17 @@ const Players: React.FC = () => {
           <SeasonFilter selectedSeason={selectedSeason} onSeasonChange={handleSeasonChange} />
         </div>
 
-        <SearchBar onSearch={handleSearch} />
+        <div className="search-bar-container">
+          <SearchBar onSearch={handleSearch} />
+        </div>
 
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-        />
+        <div className="pagination-container">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        </div>
       </div>
 
       {error ? (
