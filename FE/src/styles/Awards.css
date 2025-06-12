@@ -84,8 +84,6 @@
     position: relative;
     background-size: cover;          /* fill card with image */
     background-position: center;
-    background-repeat: no-repeat;    /* prevent repeating */
-    height: 180px;                   /* fixed height */
     border: 1px solid #262626;
     border-radius: 16px;
     padding: 1.2rem;
