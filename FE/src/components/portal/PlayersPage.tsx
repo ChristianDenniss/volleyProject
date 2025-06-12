@@ -54,7 +54,7 @@ const PlayersPage: React.FC = () => {
 
   // Filter players based on search query
   const filteredPlayers = localPlayers.filter(player =>
-    player.name.toLowerCase().includes(searchQuery.toLowerCase())
+    player?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false
   );
 
   // Calculate pagination
