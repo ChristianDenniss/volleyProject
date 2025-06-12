@@ -11,6 +11,7 @@ import SignUp         from "./components/SignUp";
 import Home           from "./components/Home";
 import About          from "./components/About";
 import Players        from "./components/Players";
+import Awards         from "./components/Awards";
 import Teams          from "./components/Teams";
 import SingleTeam     from "./components/Single/SingleTeam";
 import Games          from "./components/Games";
@@ -61,6 +62,7 @@ const App: React.FC = () => (
           <Route path="/credits" element={<Credits />} />
           <Route path="/players/:id" element={< SinglePlayer />}/>
           <Route path="/awards/:id" element={< SingleAward />}/>
+          <Route path="/awards" element={<Awards />} />
 
           {/* auth & profile */}
           <Route path="/profile" element={<UserProfile />} />
