@@ -216,12 +216,10 @@ export class PlayerController {
     updatePlayer = async (req: Request, res: Response): Promise<void> => {
         try {
             const { id } = req.params;
-            const { name, position, teamId } = req.body;
+            const updateData = req.body;
             const updatedPlayer = await this.playerService.updatePlayer(
                 parseInt(id),
-                name,
-                position,
-                teamId
+                updateData
             );
             res.json(updatedPlayer);
         } catch (error) {

@@ -126,10 +126,7 @@ export class PlayerService
      */
     async updatePlayer(
         id: number, 
-        name?: string, 
-        jerseyNumber?: number, 
-        position?: string, 
-        teamIds?: number[] // Updated to accept multiple team IDs
+        updateData: { name?: string, position?: string, teamIds?: number[] }
     ): Promise<Players> {
         if (!id) throw new MissingFieldError("Player ID");
 
@@ -140,18 +137,18 @@ export class PlayerService
 
         if (!player) throw new NotFoundError(`Player with ID ${id} not found`);
 
-        if (name) player.name = name;
-        
-        if (position) player.position = position;
+        if (updateData.name) player.name = updateData.name.toLowerCase();
+        if (updateData.position) player.position = updateData.position;
 
-        if (teamIds && teamIds.length > 0) 
-        {
+        if (updateData.teamIds && updateData.teamIds.length > 0) {
             // Fetch teams by their IDs
-            const teams = await this.teamRepository.findBy({ id: In(teamIds) });
-            if (teams.length !== teamIds.length) 
-                throw new NotFoundError(`One or more teams not found for the provided IDs`);
-
-            player.teams = teams; // Update the many-to-many relationship with teams
+            const teams = await this.teamRepository.findBy({ id: In(updateData.teamIds) });
+            if (teams.length !== updateData.teamIds.length) {
+                const foundIds = teams.map(t => t.id);
+                const missingIds = updateData.teamIds.filter(id => !foundIds.includes(id));
+                throw new NotFoundError(`Teams with IDs ${missingIds.join(', ')} not found`);
+            }
+            player.teams = teams;
         }
 
         return this.playerRepository.save(player);

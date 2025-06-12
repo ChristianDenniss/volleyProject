@@ -136,7 +136,7 @@ export class AwardService {
      * @throws {NotFoundError} If the award is not found
      */
     async updateAward(id: number, awardData: UpdateAwardDto): Promise<Awards | null> {
-        const { description, type, imageUrl, seasonId, playerIds } = awardData;
+        const { description, type, imageUrl, seasonId, playerIds, playerName } = awardData;
 
         const award = await this.awardRepository.findOne({
             where: { id },
@@ -169,6 +169,17 @@ export class AwardService {
                 throw new MultiplePlayersNotFoundError(missingIds);
             }
             award.players = players;
+        } else if (playerName) {
+            // Find player by name
+            const player = await this.playerRepository.findOne({ 
+                where: { 
+                    name: playerName.toLowerCase() 
+                } 
+            });
+            if (!player) {
+                throw new NotFoundError(`Player with name ${playerName} not found`);
+            }
+            award.players = [player];
         }
 
         return this.awardRepository.save(award);

@@ -35,8 +35,13 @@ export type CreatePlayerDto = z.infer<typeof createPlayerSchema>;
 export type CreateMultiplePlayersByNameDto = z.infer<typeof createMultiplePlayersByNameSchema>;
 
 // Update schema (patch-like with required ID)
-export const updatePlayerSchema = basePlayerSchema.partial().extend({
-    id: z.number().int().positive()
+export const updatePlayerSchema = z.object({
+    name: z.string().min(1, { message: "Player Name is required" }).optional(),
+    position: z.enum(
+        ["N/A", "Setter", "Spiker", "Libero", "Defensive Specialist", "Pinch Server"],
+        { message: "Invalid position, please match the enum values" }
+    ).optional(),
+    teamIds: z.array(z.number().int().positive()).optional()
 });
 
 export type UpdatePlayerDto = z.infer<typeof updatePlayerSchema>;
