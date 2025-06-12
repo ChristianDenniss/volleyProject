@@ -83,7 +83,7 @@
 {
     position: relative;
     background-size: cover;          /* fill card with image */
-    background-position: center;
+    background-position: right center;
     border: 1px solid #262626;
     border-radius: 16px;
     padding: 1.2rem;
@@ -145,11 +145,12 @@
     font-weight: 600;
 }
 
-/* Season pill – subtle, clickable */
+/* Season pill – same style as player pill */
 .volley-award-season
 {
-    background-color: rgba(43, 43, 43, 0.8);
-    color: #b3b3b3;
+    background-color: rgba(201, 228, 253, 0.25);
+    color: #c9e4fd;
+    font-weight: 500;
     transition: all 0.2s ease;
     transform-origin: left center;
 }
@@ -157,8 +158,8 @@
 .volley-award-season-link:hover .volley-award-season,
 .volley-award-season-link:focus .volley-award-season
 {
-    background-color: rgba(61, 61, 61, 0.9);
-    color: #e0e0e0;
+    background-color: rgba(169, 214, 245, 0.35);
+    color: #a9d6f5;
     transform: scale(1.05);
 }
 
