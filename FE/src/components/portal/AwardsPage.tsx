@@ -326,7 +326,38 @@ const AwardsPage: React.FC = () => {
                     </span>
                   )}
                 </td>
-                <td>{award.season.seasonNumber}</td>
+                <td>
+                  {editing?.id === award.id && editing.field === "seasonId" ? (
+                    <input
+                      type="number"
+                      value={editing.value}
+                      onChange={(e) =>
+                        setEditing({ ...editing, value: e.target.value })
+                      }
+                      onBlur={commitEdit}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !isSubmitting) {
+                          e.preventDefault();
+                          commitEdit();
+                        }
+                      }}
+                      disabled={isSubmitting}
+                      autoFocus
+                    />
+                  ) : (
+                    <span
+                      onClick={() =>
+                        !isSubmitting && setEditing({
+                          id: award.id,
+                          field: "seasonId",
+                          value: award.season.id.toString(),
+                        })
+                      }
+                    >
+                      {award.season.seasonNumber}
+                    </span>
+                  )}
+                </td>
                 <td>
                   {editing?.id === award.id && editing.field === "playerName" ? (
                     <input
