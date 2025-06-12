@@ -38,7 +38,7 @@ export type CreateMultiplePlayersByNameDto = z.infer<typeof createMultiplePlayer
 export const updatePlayerSchema = z.object({
     name: z.string().min(1, { message: "Player Name is required" }).optional(),
     position: z.enum(
-        ["N/A", "Setter", "Spiker", "Libero", "Defensive Specialist", "Pinch Server"],
+        ["N/A", "Setter", "Spiker", "Libero", "Defensive Specialist", "Pinch Server", "Developer"],
         { message: "Invalid position, please match the enum values" }
     ).optional(),
     teamIds: z.array(z.number().int().positive()).optional()
