@@ -439,9 +439,11 @@ const AwardsPage: React.FC = () => {
                           src={award.imageUrl} 
                           alt={`${award.type} award`} 
                           style={{ 
-                            width: "50px", 
-                            height: "50px", 
-                            objectFit: "cover",
+                            maxWidth: "80px",
+                            maxHeight: "45px",
+                            width: "auto",
+                            height: "auto",
+                            objectFit: "contain",
                             borderRadius: "4px"
                           }} 
                         />
