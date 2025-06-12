@@ -10,8 +10,8 @@
   padding: 0 1rem;
 }
 
-/* Left side controls (search + submit) */
-.players-controls-left {
+/* Right side controls (search + pagination) */
+.players-controls-right {
   display: flex;
   align-items: center;
   gap: 1rem;

@@ -161,11 +161,20 @@ const PlayersPage: React.FC = () => {
       };
     });
 
-    const created = await createBatch(payload);
-    if (created) {
-      setLocalPlayers((prev) => [...created, ...prev]);
-      setIsModalOpen(false);
-      setBatchRows([{ name: "", position: "", teamNamesCSV: "" }]);
+    try {
+      const created = await createBatch(payload);
+      if (created) {
+        // Ensure created is an array before spreading
+        const newPlayers = Array.isArray(created) ? created : [created];
+        setLocalPlayers((prev) => [...newPlayers, ...prev]);
+        setIsModalOpen(false);
+        setBatchRows([{ name: "", position: "", teamNamesCSV: "" }]);
+      } else {
+        setFormError("Failed to create players. No response received.");
+      }
+    } catch (err) {
+      console.error("Error creating players:", err);
+      setFormError("Failed to create players. Please try again.");
     }
   };
 
@@ -178,17 +187,17 @@ const PlayersPage: React.FC = () => {
 
       {/* Search and Controls */}
       <div className="players-controls">
-        <div className="players-controls-left">
+        <button className="create-button" onClick={() => setIsModalOpen(true)}>
+          Submit Players
+        </button>
+        <div className="players-controls-right">
           <SearchBar onSearch={handleSearch} />
-          <button className="create-button" onClick={() => setIsModalOpen(true)}>
-            Submit Players
-          </button>
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
         </div>
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-        />
       </div>
 
       {/* Modal Overlay for Submitting Players */}
