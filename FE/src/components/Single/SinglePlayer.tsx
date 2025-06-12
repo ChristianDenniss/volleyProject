@@ -110,17 +110,71 @@ const calculateHOFScore = (player: any, awards: any[], careerTotals: any): numbe
                     case '1st Place':
                         score += 20;
                         break;
+                    case '1st Place (D1)':
+                        score += 20;
+                        break;
+                    case '1st Place (D2)':
+                        score += 18;
+                        break;
+                    case '1st Place (D3)':
+                        score += 15;
+                        break;
+                    case '2nd Place (D1)':
+                        score += 15;
+                        break;
+                    case '2nd Place (D2)':
+                        score += 13;
+                        break;
+                    case '2nd Place (D3)':
+                        score += 10;
+                        break;
                     case '2nd Place':
                         score += 15;
+                        break;
+                    case '3rd Place (D1)':
+                        score += 10;
+                        break;
+                    case '3rd Place (D2)':
+                        score += 8;
+                        break;
+                    case '3rd Place (D3)':
+                        score += 5;
                         break;
                     case '3rd Place':
                         score += 10;
                         break;
+                    case '4th Place (D1)':
+                        score += 5;
+                        break;
+                    case '4th Place (D2)':
+                        score += 4;
+                        break;
+                    case '4th Place (D3)':
+                        score += 3;
+                        break;
                     case '4th Place':
                         score += 5;
                         break;
+                    case 'Top 6 (D1)':
+                        score += 3;
+                        break;
+                    case 'Top 6 (D2)':
+                        score += 2;
+                        break;
+                    case 'Top 6 (D3)':
+                        score += 1;
+                        break;
                     case 'Top 6':
                         score += 3;
+                        break;
+                    case 'Top 8 (D1)':
+                        score += 1;
+                        break;
+                    case 'Top 8 (D2)':
+                        score += 0.5;
+                        break;
+                    case 'Top 8 (D3)':
+                        score += 0.25;
                         break;
                     case 'Top 8':
                         score += 1;
@@ -378,15 +432,19 @@ const PlayerProfiles: React.FC = () =>
 
             <div className="player-teams-section">
                 <h3>Teams</h3>
-                <ul className="team-list">
-                    {player.teams?.map(team => (
-                        <li key={team.id}>
-                            <a href={`/teams/${encodeURIComponent(team.name.toLowerCase().replace(/\s+/g, "-"))}`}>
-                                {team.name}
-                            </a>
-                        </li>
-                    ))}
-                </ul>
+                {!player.teams || player.teams.length === 0 ? (
+                    <p>No teams found.</p>
+                ) : (
+                    <ul className="team-list">
+                        {player.teams.map(team => (
+                            <li key={team.id}>
+                                <a href={`/teams/${encodeURIComponent(team.name.toLowerCase().replace(/\s+/g, "-"))}`}>
+                                    {team.name}
+                                </a>
+                            </li>
+                        ))}
+                    </ul>
+                )}
             </div>
 
             <div className="player-games-section">
