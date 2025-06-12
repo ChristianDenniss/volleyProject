@@ -145,6 +145,16 @@
     font-weight: 600;
 }
 
+.volley-award-season-link,
+.volley-award-player-link
+{
+    text-decoration: none;
+    color: inherit;
+    display: inline-block;
+    width: 100%;
+    height: 100%;
+}
+
 /* Season pill – same style as player pill */
 .volley-award-season
 {
@@ -155,11 +165,16 @@
     transform-origin: left center;
 }
 
-.volley-award-season-link:hover .volley-award-season,
-.volley-award-season-link:focus .volley-award-season
+.volley-award-season-link:hover,
+.volley-award-season-link:focus
 {
     background-color: rgba(169, 214, 245, 0.35);
     color: #a9d6f5;
+}
+
+.volley-award-season:hover,
+.volley-award-season:focus-within
+{
     transform: scale(1.05);
 }
 
@@ -173,11 +188,16 @@
     transform-origin: left center;
 }
 
-.volley-award-player-link:hover .volley-award-winner,
-.volley-award-player-link:focus .volley-award-winner
+.volley-award-player-link:hover,
+.volley-award-player-link:focus
 {
     background-color: rgba(169, 214, 245, 0.35);  /* darker blue with opacity */
     color: #a9d6f5;  /* darker blue */
+}
+
+.volley-award-winner:hover,
+.volley-award-winner:focus-within
+{
     transform: scale(1.05);
 }
 

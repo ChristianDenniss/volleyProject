@@ -23,7 +23,7 @@ const AWARD_TYPES = [
   "LuvLate Award"
 ] as const;
 
-type EditField = "type" | "description" | "seasonId" | "playerName";
+type EditField = "type" | "description" | "seasonId" | "playerName" | "imageUrl";
 
 interface EditingState {
   id: number;
@@ -48,6 +48,7 @@ const AwardsPage: React.FC = () => {
   const [newDescription, setNewDescription] = useState<string>("");
   const [newSeasonId, setNewSeasonId] = useState<number>(0);
   const [newPlayerName, setNewPlayerName] = useState<string>("");
+  const [newImageUrl, setNewImageUrl] = useState<string>("");
   const [formError, setFormError] = useState<string>("");
 
   useEffect(() => {
@@ -73,6 +74,7 @@ const AwardsPage: React.FC = () => {
       case "description": origValue = orig.description; break;
       case "seasonId": origValue = orig.season.id.toString(); break;
       case "playerName": origValue = orig.players[0]?.name || ""; break;
+      case "imageUrl": origValue = orig.imageUrl || ""; break;
       default: origValue = "";
     }
 
@@ -87,6 +89,7 @@ const AwardsPage: React.FC = () => {
       description: "Description",
       seasonId: "Season ID",
       playerName: "Player Name",
+      imageUrl: "Image URL",
     };
 
     if (!window.confirm(`Change ${labelMap[field]} from "${origValue}" to "${value}"?`)) {
@@ -102,6 +105,7 @@ const AwardsPage: React.FC = () => {
       case "description": payload.description = value; break;
       case "seasonId": payload.seasonId = Number(value); break;
       case "playerName": payload.playerName = value.toLowerCase(); break;
+      case "imageUrl": payload.imageUrl = value; break;
     }
 
     try {
@@ -137,6 +141,7 @@ const AwardsPage: React.FC = () => {
     setNewDescription("");
     setNewSeasonId(0);
     setNewPlayerName("");
+    setNewImageUrl("");
   };
 
   // Close modal
@@ -158,6 +163,7 @@ const AwardsPage: React.FC = () => {
       description: newDescription,
       seasonId: newSeasonId,
       playerName: newPlayerName.toLowerCase(),
+      imageUrl: newImageUrl,
     };
 
     console.log('Creating award with payload:', payload);
@@ -236,6 +242,15 @@ const AwardsPage: React.FC = () => {
                   required
                 />
               </div>
+              <div className="form-group">
+                <label>Image URL:</label>
+                <input
+                  type="url"
+                  value={newImageUrl}
+                  onChange={(e) => setNewImageUrl(e.target.value)}
+                  placeholder="https://example.com/image.jpg"
+                />
+              </div>
               {formError && <p className="error-message">{formError}</p>}
               <div className="modal-buttons">
                 <button type="submit" disabled={creating}>
@@ -260,6 +275,7 @@ const AwardsPage: React.FC = () => {
               <th>Description</th>
               <th>Season</th>
               <th>Player</th>
+              <th>Image</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -388,6 +404,51 @@ const AwardsPage: React.FC = () => {
                     >
                       {award.players[0]?.name || "N/A"}
                     </span>
+                  )}
+                </td>
+                <td>
+                  {editing?.id === award.id && editing.field === "imageUrl" ? (
+                    <input
+                      type="url"
+                      value={editing.value}
+                      onChange={(e) =>
+                        setEditing({ ...editing, value: e.target.value })
+                      }
+                      onBlur={commitEdit}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !isSubmitting) {
+                          e.preventDefault();
+                          commitEdit();
+                        }
+                      }}
+                      autoFocus
+                    />
+                  ) : (
+                    <div
+                      onClick={() =>
+                        !isSubmitting && setEditing({
+                          id: award.id,
+                          field: "imageUrl",
+                          value: award.imageUrl || "",
+                        })
+                      }
+                      style={{ cursor: "pointer" }}
+                    >
+                      {award.imageUrl ? (
+                        <img 
+                          src={award.imageUrl} 
+                          alt={`${award.type} award`} 
+                          style={{ 
+                            width: "50px", 
+                            height: "50px", 
+                            objectFit: "cover",
+                            borderRadius: "4px"
+                          }} 
+                        />
+                      ) : (
+                        "No image"
+                      )}
+                    </div>
                   )}
                 </td>
                 <td>

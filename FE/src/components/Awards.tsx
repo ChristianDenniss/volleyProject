@@ -58,12 +58,16 @@ const Awards: React.FC = () => {
           <Link to={`/awards/${award.id}`} key={award.id} className="volley-award-item-link">
             <div className="volley-award-item" style={{ backgroundImage: `url(${award.imageUrl})` }}>
               <div className="volley-award-category">{award.type}</div>
-              <Link to={`/seasons/${award.season?.id}`} className="volley-award-season-link">
-                <div className="volley-award-season">Season {award.season?.seasonNumber}</div>
-              </Link>
-              <Link to={`/players/${award.players?.[0]?.id}`} className="volley-award-player-link">
-                <div className="volley-award-winner">{award.players?.[0]?.name || "N/A"}</div>
-              </Link>
+              <div className="volley-award-season">
+                <Link to={`/seasons/${award.season?.id}`} className="volley-award-season-link">
+                  Season {award.season?.seasonNumber}
+                </Link>
+              </div>
+              <div className="volley-award-winner">
+                <Link to={`/players/${award.players?.[0]?.id}`} className="volley-award-player-link">
+                  {award.players?.[0]?.name || "N/A"}
+                </Link>
+              </div>
             </div>
           </Link>
         ))}
