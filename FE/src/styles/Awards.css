@@ -1,9 +1,9 @@
 /* Awards.css - Modern, minimal, and sleek styling for awards page */
 
 .awards-page {
-  max-width: 1200px;
+  padding: 24px 32px;
+  max-width: 1600px;
   margin: 0 auto;
-  padding: 32px 16px;
   background: #f8fafc;
 }
 
@@ -65,48 +65,62 @@
 
 .awards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 28px;
-  margin-top: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 24px;
+  width: 100%;
 }
 
 .award-card {
-  background: #fff;
-  border-radius: 18px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-  padding: 28px 24px 20px 24px;
+  background: white;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
   gap: 12px;
-  transition: box-shadow 0.2s, transform 0.2s;
-  border: 1.5px solid #e3eaf2;
 }
 
-.award-card:hover {
-  box-shadow: 0 6px 24px rgba(0,89,153,0.10);
-  transform: translateY(-2px) scale(1.015);
-  border-color: #badeff;
+.award-type,
+.award-season,
+.award-player {
+  padding: 12px;
+  border-radius: 6px;
+  text-align: center;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .award-type {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #005999;
-  margin-bottom: 2px;
-  letter-spacing: 0.01em;
+  background-color: #f0f0f0;
+  color: #333;
 }
 
-.award-player {
-  font-size: 1rem;
-  color: #222;
-  font-weight: 500;
+.award-season-link,
+.award-player-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  width: 100%;
 }
 
 .award-season {
-  font-size: 0.98rem;
-  color: #edbb00;
-  font-weight: 600;
-  margin-bottom: 4px;
+  background-color: #e8f4ff;
+  color: #0066cc;
+}
+
+.award-player {
+  background-color: #fff0e8;
+  color: #cc4400;
+}
+
+.award-type:hover,
+.award-season:hover,
+.award-player:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .award-description {
