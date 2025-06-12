@@ -115,64 +115,80 @@
     margin: 5px 0;
 }
 
-/* Top controls section */
-.players-page .players-controls {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+/* Controls section styling */
+.players-controls-wrapper {
     margin-bottom: 20px;
     padding: 0 40px;
 }
 
-.players-page .players-filter-container {
-    flex: 1;
-    max-width: 300px;
-}
-
-/* Filter bar section */
-.players-page .players-filter-bar {
+.players-controls-container {
     display: flex;
-    align-items: flex-start;
-    justify-content: flex-start !important;
-    gap: 15px;
-    margin-bottom: 20px;
-    padding: 0 20px;
+    align-items: center;
+    gap: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
-/* Search bar styling */
-.players-page .search-bar-container {
-    flex: 1;
-    max-width: 300px;
+/* Season filter styling */
+.players-season-filter {
+    flex: 0 0 200px;
 }
 
-.players-page .search-bar-container input {
+.players-season-filter select {
     width: 100%;
     padding: 8px 12px;
     border: 2px solid #CFFFFF;
     border-radius: 6px;
+    background-color: #cce0ff;
+    color: #005999;
     font-size: 16px;
-    transition: border-color 0.3s ease;
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 
-.players-page .search-bar-container input:focus {
-    border-color: #cce0ff;
+.players-season-filter select:hover {
+    background-color: #CFFFFF;
+}
+
+/* Search bar styling */
+.players-search-wrapper {
+    flex: 1;
+    max-width: 400px;
+}
+
+.players-search-wrapper input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 2px solid #CFFFFF;
+    border-radius: 6px;
+    background-color: #cce0ff;
+    color: #005999;
+    font-size: 16px;
+    transition: all 0.2s ease;
+}
+
+.players-search-wrapper input:focus {
+    background-color: #CFFFFF;
     outline: none;
 }
 
-/* Pagination container */
-.players-page .pagination-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    margin: 20px 0;
+.players-search-wrapper input::placeholder {
+    color: #005999;
+    opacity: 0.7;
 }
 
-/* Pagination buttons */
-.players-page .pagination-button {
+/* Pagination styling */
+.players-pagination-wrapper {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.players-pagination-wrapper button {
     background-color: #cce0ff;
     color: #005999;
-    border: 2px solid #CFFFFF;
+    border: none;
     padding: 8px 16px;
     border-radius: 6px;
     cursor: pointer;
@@ -181,35 +197,26 @@
     font-weight: 600;
 }
 
-/* Pagination buttons hover effect */
-.players-page .pagination-button:hover {
+.players-pagination-wrapper button:hover {
     background-color: #CFFFFF;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Disabled buttons */
-.players-page .pagination-button:disabled {
+.players-pagination-wrapper button:disabled {
     background-color: #f0f0f0;
     color: #999;
-    border-color: #ddd;
     cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
 }
 
-/* Current page display */
-.players-page .pagination-current {
+.players-pagination-wrapper .pagination-current {
     font-size: 16px;
     font-weight: bold;
     color: #005999;
+    padding: 0 10px;
 }
 
-/* Active button (current page) */
-.players-page .pagination-button.active {
-    background-color: #cce0ff;
+.players-pagination-wrapper button.active {
+    background-color: #CFFFFF;
     color: #005999;
-    border-color: #CFFFFF;
 }
 
 .players-see-more {
@@ -227,15 +234,11 @@
   font-weight: 600;
   padding: 8px 20px;
   border-radius: 6px;
-  border: 2px solid #CFFFFF;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .see-more-button:hover {
   background-color: #CFFFFF;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
   text-decoration: none;
   color: #005999;
 }
