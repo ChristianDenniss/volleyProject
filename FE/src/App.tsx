@@ -36,6 +36,7 @@ import SingleAward from "./components/Single/SingleAward";
 import LoginPage      from "./components/Login";
 import PrivateRoute   from "./components/portal/PrivateRoute";      // ← NEW import
 import AwardsPage   from "./components/portal/AwardsPage";  
+import CreateArticle from "./components/CreateArticle";
 
 const App: React.FC = () => (
   <AuthProvider>
@@ -63,6 +64,7 @@ const App: React.FC = () => (
           <Route path="/players/:id" element={< SinglePlayer />}/>
           <Route path="/awards/:id" element={< SingleAward />}/>
           <Route path="/awards" element={<Awards />} />
+          <Route path="/articles/create" element={<CreateArticle />} />
 
           {/* auth & profile */}
           <Route path="/profile" element={<UserProfile />} />

@@ -1,21 +1,47 @@
 // src/components/Articles.tsx
 
 import React, { useState, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useArticles } from "../hooks/allFetch";
+import { useAuth } from "../context/authContext";
 import type { Article } from "../types/interfaces";
 import "../styles/Article.css";
 
 const Articles: React.FC = () =>
 {
+    const navigate = useNavigate();
+    const { isAuthenticated, user } = useAuth();
+    
     // State for search term
     const [ searchTerm, setSearchTerm ] = useState<string>("");
 
     // State for sort order: "new" or "old"
     const [ sortOrder, setSortOrder ] = useState<"new" | "old">("new");
 
+    // State for auth message
+    const [showAuthMessage, setShowAuthMessage] = useState<boolean>(false);
+
     // Use custom hook to get articles data
     const { data, error } = useArticles();
+
+    const handleCreateClick = (e: React.MouseEvent) => {
+        if (!isAuthenticated) {
+            e.preventDefault();
+            setShowAuthMessage(true);
+            // Hide message after 3 seconds
+            setTimeout(() => setShowAuthMessage(false), 3000);
+            return;
+        }
+
+        // Check if user has appropriate role
+        if (user && (user.role === 'user' || user.role === 'admin' || user.role === 'superadmin')) {
+            navigate('/articles/create');
+        } else {
+            e.preventDefault();
+            setShowAuthMessage(true);
+            setTimeout(() => setShowAuthMessage(false), 3000);
+        }
+    };
 
     // Compute filtered and sorted articles
     const filteredAndSorted = useMemo(() =>
@@ -56,9 +82,25 @@ const Articles: React.FC = () =>
         <div className="articles-container">
             <h1>Articles</h1>
 
-            {/*
-                Controls: display total count, search input, sort select
-            */}
+            {showAuthMessage && (
+                <div className="auth-message">
+                    {!isAuthenticated 
+                        ? "Please log in to create articles!"
+                        : "You need to be a registered user, admin, or superadmin to create articles!"}
+                </div>
+            )}
+
+            {/* Create Article button */}
+            <div className="create-article-section">
+                <Link 
+                    to="/articles/create" 
+                    className="create-article-btn"
+                    onClick={handleCreateClick}
+                >
+                    Create Article
+                </Link>
+            </div>
+
             <div className="articles-controls">
                 {/* Total count */}
                 <div className="articles-count">
