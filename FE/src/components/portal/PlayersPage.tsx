@@ -177,19 +177,19 @@ const PlayersPage: React.FC = () => {
       <h1 className="users-title">Players</h1>
 
       {/* Search and Controls */}
-      <div className="players-controls" style={{ marginBottom: "1rem" }}>
-        <SearchBar onSearch={handleSearch} />
+      <div className="players-controls">
+        <div className="players-controls-left">
+          <SearchBar onSearch={handleSearch} />
+          <button className="create-button" onClick={() => setIsModalOpen(true)}>
+            Submit Players
+          </button>
+        </div>
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
           onPageChange={setCurrentPage}
         />
       </div>
-
-      {/* "Submit Players" Button */}
-      <button className="create-button" onClick={() => setIsModalOpen(true)}>
-        Submit Players
-      </button>
 
       {/* Modal Overlay for Submitting Players */}
       {isModalOpen && (

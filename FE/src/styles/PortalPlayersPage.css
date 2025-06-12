@@ -4,15 +4,22 @@
 .players-controls {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 1rem;
   margin-bottom: 1.5rem;
   padding: 0 1rem;
 }
 
+/* Left side controls (search + submit) */
+.players-controls-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
 /* Search bar styling */
 .search-bar {
-  flex: 1;
-  max-width: 400px;
+  width: 200px; /* Reduced width */
 }
 
 .search-bar input {
