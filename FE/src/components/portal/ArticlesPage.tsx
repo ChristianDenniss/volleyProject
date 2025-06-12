@@ -26,8 +26,9 @@ const ArticlesPage: React.FC = () => {
         }
     };
 
+    // Only show pending articles by default, or all articles if filter is 'all'
     const filteredArticles = articles?.filter(article => 
-        filter === 'all' || article.approved === null
+        filter === 'all' ? true : article.approved === null
     ) || [];
 
     if (loading) return <div>Loading...</div>;
