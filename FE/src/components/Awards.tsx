@@ -26,9 +26,9 @@ const Awards: React.FC = () => {
   }, [awards, selectedSeason, selectedType]);
 
   return (
-    <div className="awards-page">
-      <h1 className="awards-title">All Awards</h1>
-      <div className="awards-filter-bar">
+    <div className="volley-awards-container">
+      <h1 className="volley-awards-header">All Awards</h1>
+      <div className="volley-awards-controls">
         <SeasonFilter selectedSeason={selectedSeason} onSeasonChange={setSelectedSeason} />
         <label htmlFor="award-type-select" style={{ marginRight: 8 }}>Award Type:</label>
         <select
@@ -45,16 +45,16 @@ const Awards: React.FC = () => {
       {loading && <p>Loading awards…</p>}
       {error && <p>Error: {error}</p>}
       {!loading && !error && filteredAwards.length === 0 && <p>No awards found.</p>}
-      <div className="awards-grid">
+      <div className="volley-awards-grid">
         {filteredAwards.map((award: any) => (
-          <Link to={`/awards/${award.id}`} key={award.id} className="award-card-link">
-            <div className="award-card">
-              <div className="award-type">{award.type}</div>
-              <Link to={`/seasons/${award.season?.id}`} className="award-season-link">
-                <div className="award-season">Season {award.season?.seasonNumber}</div>
+          <Link to={`/awards/${award.id}`} key={award.id} className="volley-award-item-link">
+            <div className="volley-award-item">
+              <div className="volley-award-category">{award.type}</div>
+              <Link to={`/seasons/${award.season?.id}`} className="volley-award-season-link">
+                <div className="volley-award-season">Season {award.season?.seasonNumber}</div>
               </Link>
-              <Link to={`/players/${award.players?.[0]?.id}`} className="award-player-link">
-                <div className="award-player">{award.players?.[0]?.name || "N/A"}</div>
+              <Link to={`/players/${award.players?.[0]?.id}`} className="volley-award-player-link">
+                <div className="volley-award-winner">{award.players?.[0]?.name || "N/A"}</div>
               </Link>
             </div>
           </Link>

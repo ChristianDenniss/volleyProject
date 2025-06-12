@@ -1,24 +1,22 @@
 /* -----------------------------------------------------------
-   Page wrapper – centers content and adds breathing room
+   Page wrapper – side padding only, colours inherit from site
 ----------------------------------------------------------- */
-.awards-page
+.volley-awards-container
 {
-    /* Expand to full width with safe spacing at the edges */
     width: 100%;
     padding: 2rem 4vw;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    gap: 2rem;
-    background-color: #0e0e0e;     /* Dark site backdrop */
-    color: #f5f5f5;                /* High-contrast text */
+    gap: 2rem;                      /* vertical spacing */
+    /* No colour overrides here – inherit site text & bg */
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
 /* -----------------------------------------------------------
-   Page title – bold but elegant
+   Page title – inherits text colour from parent
 ----------------------------------------------------------- */
-.awards-title
+.volley-awards-header
 {
     font-size: clamp(1.8rem, 4vw, 2.4rem);
     font-weight: 600;
@@ -27,9 +25,9 @@
 }
 
 /* -----------------------------------------------------------
-   Filter bar – aligns season dropdown & type selector
+   Filter bar – season + type selectors
 ----------------------------------------------------------- */
-.awards-filter-bar
+.volley-awards-controls
 {
     display: flex;
     flex-wrap: wrap;
@@ -38,50 +36,53 @@
     justify-content: center;
 }
 
-/* Style native <select> elements to match the theme */
-.awards-filter-bar select
+/* Light-theme select styling for visibility on light pages */
+.volley-awards-controls select
 {
-    background-color: #1a1a1a;
-    color: #f5f5f5;
-    border: 1px solid #333;
+    background-color: #ffffff;
+    color: #222222;
+    border: 1px solid #cccccc;
     border-radius: 8px;
     padding: 0.4rem 0.8rem;
     font-size: 0.95rem;
     transition: border-color 0.2s ease;
 }
 
-.awards-filter-bar select:focus
+.volley-awards-controls select:focus
 {
     outline: none;
-    border-color: #8f54ff;      /* Site accent on focus */
+    border-color: #8f54ff;           /* accent on focus */
 }
 
 /* -----------------------------------------------------------
-   Responsive grid – auto-fills columns, grows/shrinks cleanly
+   Responsive grid – auto-filling columns
 ----------------------------------------------------------- */
-.awards-grid
+.volley-awards-grid
 {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 1.5rem;
+    gap: clamp(1rem, 2vw, 1.4rem);   /* tight, responsive gap */
     width: 100%;
 }
 
 /* -----------------------------------------------------------
-   Card link wrapper – removes default anchor styles
+   Neutralise anchor styling inside cards
 ----------------------------------------------------------- */
-.award-card-link
+.volley-award-item-link,
+.volley-award-season-link,
+.volley-award-player-link
 {
-    text-decoration: none;
+    text-decoration: none;           /* remove underlines */
     color: inherit;
+    display: block;
 }
 
 /* -----------------------------------------------------------
-   Award card – sleek, hovering tile
+   Award card – sleek interactive tile
 ----------------------------------------------------------- */
-.award-card
+.volley-award-item
 {
-    background-color: #1a1a1a;
+    background-color: #1a1a1a;       /* dark tile for contrast */
     border: 1px solid #262626;
     border-radius: 16px;
     padding: 1.4rem 1.2rem;
@@ -89,67 +90,65 @@
     flex-direction: column;
     gap: 0.6rem;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
-    height: 100%;                       /* Full-height for equal tiles */
+    transition: transform 0.25s ease,
+                box-shadow 0.25s ease,
+                border-color 0.25s ease;
+    height: 100%;                    /* equal tile heights */
     will-change: transform;
     cursor: pointer;
 }
 
-.award-card:hover
+.volley-award-item:hover
 {
     transform: translateY(-4px) scale(1.02);
     box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
-    border-color: #8f54ff;              /* Accent on hover */
+    border-color: #8f54ff;
 }
 
 /* -----------------------------------------------------------
-   Text blocks within the card
+   Text styles inside cards – unified size
 ----------------------------------------------------------- */
-
-/* Award type – prominent heading */
-.award-type
+.volley-award-category
 {
-    font-size: 1.15rem;
+    font-size: 1.05rem;
     font-weight: 600;
     margin-bottom: 0.4rem;
     color: #ffffff;
 }
 
-/* Season link – subtle secondary info */
-.award-season
+.volley-award-season
 {
-    font-size: 0.95rem;
+    font-size: 1.05rem;
     color: #b3b3b3;
     transition: color 0.2s ease;
 }
 
-.award-season-link:hover .award-season
+.volley-award-season-link:hover .volley-award-season,
+.volley-award-season-link:focus .volley-award-season
 {
-    color: #e0e0e0;
-    text-decoration: underline;
+    color: #dddddd;
 }
 
-/* Player link – distinct accent & underline on hover */
-.award-player
+.volley-award-winner
 {
-    font-size: 1rem;
+    font-size: 1.05rem;
     color: #8f54ff;
     font-weight: 500;
-    transition: text-decoration 0.2s ease, color 0.2s ease;
+    transition: color 0.2s ease;
 }
 
-.award-player-link:hover .award-player
+.volley-award-player-link:hover .volley-award-winner,
+.volley-award-player-link:focus .volley-award-winner
 {
-    text-decoration: underline;
     color: #a06aff;
 }
 
 /* -----------------------------------------------------------
-   Small-screen tweaks – single column, centered tiles
+   Mobile – single column layout
 ----------------------------------------------------------- */
 @media (max-width: 480px)
 {
-    .awards-grid
+    .volley-awards-grid
     {
         grid-template-columns: 1fr;
     }
