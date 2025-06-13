@@ -1,14 +1,20 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany, PrimaryColumn } from 'typeorm';
 import type { Article } from "../articles/article.entity.ts";
 
 @Entity()
 export class User
 {
-    @PrimaryGeneratedColumn()
+    @PrimaryColumn({type: "bigint", nullable: false})
     userId!: number
 
     @Column()
     username!: string;
+
+    @Column({ default: "unspecified"})
+    displayName!: string;
+
+    @Column({ default: "", type: "varchar", length: 255 })
+    img!: string;
 
     @Column({ default: 'user' })
     role!: string;

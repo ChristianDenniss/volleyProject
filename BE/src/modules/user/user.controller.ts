@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { UserService } from './user.service.ts';
 import { OAuth } from '../../oauth.ts';
+import { log } from 'console';
+import { User } from './user.entity.ts';
 
 export class UserController {
     private userService: UserService;
@@ -13,13 +15,13 @@ export class UserController {
         const url = new URL(options.AUTHORIZE_URL)
         url.searchParams.set("redirect_uri", options.CALLBACK)
         url.searchParams.set("client_id", options.ID)
-        url.searchParams.set("client_secret", options.SECRET)
-        url.searchParams.set("scope", options.SCOPES.join(","))
+        url.searchParams.set("scope", options.SCOPES.join(" "))
         url.searchParams.set("response_type", "code")        
 
         const built = url.toString()
 
         return async (_req: Request, res: Response): Promise<void> => {
+            log(url.toString())
             return res.redirect(built)
         }   
     }
@@ -37,16 +39,33 @@ export class UserController {
                 return
             }
 
-            const url = new URL(options.AUTHORIZE_URL)
-            url.searchParams.set("redirect_uri", options.CALLBACK)
-            url.searchParams.set("client_id", options.ID)
-            url.searchParams.set("client_secret", options.SECRET)
-            url.searchParams.set("code", code)
-            url.searchParams.set("grant_type", "authorization_code")
+            // const url = new URL(options.TOKEN_URL)
+            // url.searchParams.set("client_id", options.ID)
+            // url.searchParams.set("client_secret", options.SECRET)
+            // url.searchParams.set("code", code)
+            // url.searchParams.set("scope", options.SCOPES.join(" "))
+            // url.searchParams.set("grant_type", "authorization_code")
 
-            const built = url.toString()
+            // const built = url.toString()
 
-            const result = await fetch(built, { headers: {["content-type"]: "application/x-www-form-urlencoded"} })
+            
+            const formData = new URLSearchParams()
+            formData.set("client_id", options.ID)
+            formData.set("client_secret", options.SECRET)
+            formData.set("code", code)
+            formData.set("scope", options.SCOPES.join(" "))
+            formData.set("grant_type", "authorization_code")
+
+            const result = await fetch(options.TOKEN_URL, { 
+                method: "POST", 
+                body: formData.toString(),
+                headers: {["Content-Type"]: "application/x-www-form-urlencoded"} 
+            })
+
+            if (result.status !== 200) {
+                res.status(500).send("got unexpected response")
+                return 
+            }
             const json = await result.json() as {
                 access_token: string,
                 refresh_token: string,
@@ -63,9 +82,9 @@ export class UserController {
             const userInfo = await fetch(options.GET_USER_INFO, {headers: {["Authorization"]: `${json.token_type} ${json.access_token}`}})
             const userInfoJson = await userInfo.json() as {
                 "sub": string, // userid in stirng
-                "name": string, // username
+                "name": string, // displayname LMFAOO
                 "nickname": string, // displayname
-                "preferred_username": string, // ignore i would say
+                "preferred_username": string, // actual username
                 "created_at": null,
                 "profile": string, // ignore, you can construct this yourself
                 "picture": string, // url for their pfp
@@ -73,14 +92,29 @@ export class UserController {
 
             // lets get or get a user
             const userId = Number(userInfoJson.sub)
-            const user = await this.userService.getProfile(userId).catch((err) => {
-                return this.userService.createUser(userInfoJson.name, userId)
+            let user: User | "new" = await this.userService.getProfile(userId).catch((err) => {
+                console.log(err)
+                return "new"
             })
 
-
+            if (user === "new") {
+                user = await this.userService.createUser({
+                    displayName: userInfoJson.nickname,
+                    userId: userId,
+                    username: userInfoJson.preferred_username,
+                    img: userInfoJson.picture
+                })
+            } else {
+                user = await this.userService.updateUser({
+                    displayName: userInfoJson.nickname,
+                    userId: userId,
+                    username: userInfoJson.preferred_username,
+                    img: userInfoJson.picture
+                })
+            }
 
             res.json({
-
+                user    
             })
         }   
     }
@@ -121,37 +155,6 @@ export class UserController {
             } else {
                 console.error("Error fetching user by ID:", error);
                 res.status(500).json({ error: "Failed to fetch user" });
-            }
-        }
-    };
-
-    // Update a user
-    updateUser = async (req: Request, res: Response): Promise<void> => {
-        try {
-            const { id } = req.params;
-            const { username } = req.body;
-
-            const updatedUser = await this.userService.updateUser(
-                parseInt(id),
-                username,
-            );
-
-            // Remove password from response
-            const { ...userWithoutPassword } = updatedUser;
-            
-            res.json(userWithoutPassword);
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to update user";
-            
-            if (errorMessage.includes("not found")) {
-                res.status(404).json({ error: errorMessage });
-            } else if (errorMessage.includes("required") || 
-                       errorMessage.includes("already in use") ||
-                       errorMessage.includes("Invalid")) {
-                res.status(400).json({ error: errorMessage });
-            } else {
-                console.error("Error updating user:", error);
-                res.status(500).json({ error: "Failed to update user" });
             }
         }
     };

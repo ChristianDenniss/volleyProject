@@ -22,7 +22,13 @@ export class UserService {
     /**
      * Create a new user with validation
      */
-    async createUser(username: string, userId: number, role: string = 'user'): Promise<User> {
+    async createUser({role = 'user', userId, username, displayName, img}: {
+        username: string, 
+        displayName: string,
+        userId: number, 
+        img: string,
+        role?: string,
+    }): Promise<User> {
         // Validation
         if (!username) throw new MissingFieldError("Username");
         
@@ -44,6 +50,8 @@ export class UserService {
         newUser.username = username;
         newUser.userId = userId
         newUser.role = role;
+        newUser.img = img
+        newUser.displayName = displayName
 
         return this.userRepository.save(newUser);
     }
@@ -83,23 +91,17 @@ export class UserService {
      * Update a user with validation
      */
     async updateUser(
-        id: number,
-        username?: string,
-        role?: string
+        {role = 'user', userId, username, displayName, img}: {userId: number} & Partial<{
+            username: string, 
+            displayName: string, 
+            img: string,
+            role: string,
+        }>
     ): Promise<User> {
-        if (!id) throw new MissingFieldError("User ID");
+        if (!userId) throw new MissingFieldError("User ID");
 
-        const user = await this.userRepository.findOneBy({ userId: id });
-        if (!user) throw new NotFoundError(`User with ID:${id} not found`);
-
-        // Check if username or email is already in use by another user
-        if (username) {
-            const existingUser = await this.userRepository.findOneBy({ username });
-            if (existingUser && existingUser.userId !== id) {
-                throw new DuplicateError(`Username ${username} is already in use`);
-            }
-            user.username = username;
-        }
+        const user = await this.userRepository.findOneBy({ userId: userId });
+        if (!user) throw new NotFoundError(`User with ID:${userId} not found`);
 
         if (role) {
             if (!['admin', 'user', 'superadmin'].includes(role)) {
@@ -107,6 +109,9 @@ export class UserService {
             }
             user.role = role;
         }
+        user.username = username ??   user.username
+        user.displayName = displayName ?? user.displayName
+        user.img = img ?? user.img
 
         return this.userRepository.save(user);
     }

@@ -18,7 +18,7 @@ export const ROBLOX_OAUTH: OAuth = {
     SECRET: getEnvOrFail("OAUTH_ROBLOX_SECRET"),
     CALLBACK: getEnvOrFail("OAUTH_ROBLOX_CALLBACK"),
     AUTHORIZE_URL: "https://apis.roblox.com/oauth/v1/authorize",
-    TOKEN_URL: "https://apis.roblox.com/oauth/v1/authorize",
+    TOKEN_URL: "https://apis.roblox.com/oauth/v1/token",
     GET_USER_INFO: "https://apis.roblox.com/oauth/v1/userinfo", 
     SCOPES: ["profile", "openid"]
 }

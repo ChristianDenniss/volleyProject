@@ -34,6 +34,7 @@ const entities = [
 // Define migration paths
 const migrations = [join(__dirname, "migrations", "*.ts")]; 
 
+console.log("process.env.NODE_ENV === 'production'", process.env.NODE_ENV === 'production', migrations)
 // Configure AppDataSource
 export const AppDataSource = new DataSource({
     type: "postgres",
