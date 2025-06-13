@@ -8,6 +8,7 @@ import { useDeleteGames } from "../../hooks/allDelete";
 import { useAuth } from "../../context/authContext";
 import type { Game, Season } from "../../types/interfaces";
 import "../../styles/UsersPage.css";   // contains .users-table, .text-muted, plus our new classes
+import "../../styles/PortalPlayersPage.css"; // portal-specific styles
 import SearchBar from "../Searchbar";
 import Pagination from "../Pagination";
 
@@ -202,16 +203,20 @@ const GamesPage: React.FC = () => {
 
       {/* Search and Controls */}
       <div className="players-controls">
-        <button className="create-button" onClick={() => setIsModalOpen(true)}>
+        <button className="create-button" onClick={openModal}>
           Create Game
         </button>
         <div className="players-controls-right">
-          <SearchBar onSearch={handleSearch} />
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-          />
+          <div className="players-search-wrapper">
+            <SearchBar onSearch={handleSearch} />
+          </div>
+          <div className="players-pagination-wrapper">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          </div>
         </div>
       </div>
 
@@ -522,6 +527,7 @@ const GamesPage: React.FC = () => {
                     <button
                       onClick={() => handleDelete(g.id)}
                       disabled={deleting}
+                      className="delete-button"
                       style={{
                         padding: "0.25rem 0.5rem",
                         borderRadius: "0.25rem",
@@ -529,6 +535,7 @@ const GamesPage: React.FC = () => {
                         color: "#fff",
                         border: "none",
                         cursor: "pointer",
+                        fontSize: "0.875rem",
                       }}
                     >
                       Delete
