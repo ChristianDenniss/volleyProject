@@ -9,6 +9,7 @@ import { useAuth }                   from "../../context/authContext";
 import type { Stats }                from "../../types/interfaces";
 import "../../styles/UsersPage.css"; // reuse table & text-muted styles
 import "../../styles/GamesPage.css"; // reuse table & text-muted styles
+import "../../styles/StatsPage.css"; // import new styles
 
 // Define the fields eligible for inline editing
 type EditField =
@@ -528,12 +529,12 @@ const StatsPage: React.FC = () =>
             )}
 
             {/* Stats Table */}
-            <table className="users-table" style={{ marginTop: "1.5rem" }}>
+            <table className="stats-table">
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th className="small-column">Player ID</th>
                         <th className="small-column">Game ID</th>
+                        <th className="small-column">Player ID</th>
                         <th className="small-column">Spiking Errors</th>
                         <th className="small-column">Ape Kills</th>
                         <th className="small-column">Ape Attempts</th>
@@ -564,45 +565,6 @@ const StatsPage: React.FC = () =>
                         return (
                             <tr key={s.id}>
                                 <td>{s.id}</td>
-
-                                {/* Player ID (editable) */}
-                                <td
-                                    className="small-column"
-                                    style={{ cursor: "pointer" }}
-                                    onClick={() =>
-                                        setEditing({
-                                            id:    s.id,
-                                            field: "playerId",
-                                            value: s.player.id.toString(),
-                                        })
-                                    }
-                                >
-                                    {editing?.id === s.id && editing.field === "playerId" ? (
-                                        <input
-                                            type="number"
-                                            min="1"
-                                            value={editing.value}
-                                            onChange={(e) =>
-                                                setEditing({ ...editing, value: e.target.value })
-                                            }
-                                            onBlur={commitEdit}
-                                            onKeyDown={(e) =>
-                                            {
-                                                if (e.key === "Enter")
-                                                {
-                                                    e.currentTarget.blur();
-                                                }
-                                                if (e.key === "Escape")
-                                                {
-                                                    setEditing(null);
-                                                }
-                                            }}
-                                            autoFocus
-                                        />
-                                    ) : (
-                                        s.player.id
-                                    )}
-                                </td>
 
                                 {/* Game ID (editable) */}
                                 <td
@@ -640,6 +602,45 @@ const StatsPage: React.FC = () =>
                                         />
                                     ) : (
                                         s.game.id
+                                    )}
+                                </td>
+
+                                {/* Player ID (editable) */}
+                                <td
+                                    className="small-column"
+                                    style={{ cursor: "pointer" }}
+                                    onClick={() =>
+                                        setEditing({
+                                            id:    s.id,
+                                            field: "playerId",
+                                            value: s.player.id.toString(),
+                                        })
+                                    }
+                                >
+                                    {editing?.id === s.id && editing.field === "playerId" ? (
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            value={editing.value}
+                                            onChange={(e) =>
+                                                setEditing({ ...editing, value: e.target.value })
+                                            }
+                                            onBlur={commitEdit}
+                                            onKeyDown={(e) =>
+                                            {
+                                                if (e.key === "Enter")
+                                                {
+                                                    e.currentTarget.blur();
+                                                }
+                                                if (e.key === "Escape")
+                                                {
+                                                    setEditing(null);
+                                                }
+                                            }}
+                                            autoFocus
+                                        />
+                                    ) : (
+                                        s.player.id
                                     )}
                                 </td>
 
@@ -1143,14 +1144,7 @@ const StatsPage: React.FC = () =>
                                         <button
                                             onClick={() => handleDelete(s.id)}
                                             disabled={deleting}
-                                            style={{
-                                                padding:      "0.25rem 0.5rem",
-                                                borderRadius: "0.25rem",
-                                                background:   "#dc3545",
-                                                color:        "#fff",
-                                                border:       "none",
-                                                cursor:       "pointer",
-                                            }}
+                                            className="delete-button"
                                         >
                                             Delete
                                         </button>
@@ -1158,7 +1152,7 @@ const StatsPage: React.FC = () =>
                                         <span className="text-muted">No permission</span>
                                     )}
                                     {deleteError && (
-                                        <p className="error" style={{ color: "red", marginTop: "0.25rem" }}>
+                                        <p className="modal-error">
                                             {deleteError}
                                         </p>
                                     )}
