@@ -12,9 +12,13 @@ const Home: React.FC = () => {
     // Fetch real articles
     const { data: articles = [], loading, error } = useArticles();
 
-    // Sort by ID descending
+    // Sort by ID descending and filter for approved articles
     const sortedById = useMemo(() => {
-        return Array.isArray(articles) ? [...articles].sort((a, b) => b.id - a.id) : [];
+        return Array.isArray(articles) 
+            ? [...articles]
+                .filter(article => article.approved === true)
+                .sort((a, b) => b.id - a.id) 
+            : [];
     }, [articles]);
 
     // Highest ID = featured
@@ -100,8 +104,8 @@ const Home: React.FC = () => {
         <div style={{ overflowX: "hidden" }}>
             <main className="home">
                 <section className="headline-section">
-                    {featuredArticle && (
-                        <Link to={`/articles/${featuredArticle.id}`}>  {/* wrap featured */}
+                    {featuredArticle ? (
+                        <Link to={`/articles/${featuredArticle.id}`}>
                             <div className="featured-article">
                                 {loading && <p>Loading featured…</p>}
                                 {error && <p>Error: {error}</p>}
@@ -128,27 +132,37 @@ const Home: React.FC = () => {
                                 )}
                             </div>
                         </Link>
+                    ) : (
+                        <div className="featured-article">
+                            <div className="featured-text">
+                                <h2>No Featured Articles Yet</h2>
+                                <p>Check back soon for the latest news and updates!</p>
+                            </div>
+                        </div>
                     )}
 
                     <aside className="side-articles">
                         {loading && <p>Loading articles…</p>}
                         {error && <p>Error loading articles: {error}</p>}
-                        {!loading && !error && sideArticles.map(article => (
-                            <Link
-                                key={article.id}
-                                to={`/articles/${article.id}`}  /* wrap each side article */
-                            >
-                                <article>
-                                    <h4>{article.title}</h4>
-                                    {article.imageUrl && (
-                                        <img src={article.imageUrl} alt={article.title} />
-                                    )}
-                                    {/* <p>      {article.author.username}    </p> */}
-                                </article>
-                            </Link>
-                        ))}
-                        {!loading && !error && sideArticles.length === 0 && (
-                            <p>No recent articles.</p>
+                        {!loading && !error && sideArticles.length > 0 ? (
+                            sideArticles.map(article => (
+                                <Link
+                                    key={article.id}
+                                    to={`/articles/${article.id}`}
+                                >
+                                    <article>
+                                        <h4>{article.title}</h4>
+                                        {article.imageUrl && (
+                                            <img src={article.imageUrl} alt={article.title} />
+                                        )}
+                                    </article>
+                                </Link>
+                            ))
+                        ) : (
+                            <div className="no-articles">
+                                <p>No recent articles available.</p>
+                                <p>More content coming soon!</p>
+                            </div>
                         )}
                     </aside>
                 </section>

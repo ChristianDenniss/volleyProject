@@ -216,12 +216,10 @@ export class PlayerController {
     updatePlayer = async (req: Request, res: Response): Promise<void> => {
         try {
             const { id } = req.params;
-            const { name, position, teamId } = req.body;
+            const updateData = req.body;
             const updatedPlayer = await this.playerService.updatePlayer(
                 parseInt(id),
-                name,
-                position,
-                teamId
+                updateData
             );
             res.json(updatedPlayer);
         } catch (error) {
@@ -281,4 +279,34 @@ export class PlayerController {
             }
         }
     };
+
+    // Merge one player into another
+    mergePlayers = async (req: Request, res: Response): Promise<void> =>
+    {
+        try
+        {
+            const { targetId, mergedId } = req.body;
+            await this.playerService.mergePlayers(targetId, mergedId);
+            res.sendStatus(204);
+         }
+        catch (error)
+        {
+            const msg = error instanceof Error ? error.message : 'Failed to merge players';
+    
+            if (error instanceof MissingFieldError) 
+            {
+                res.status(400).json({ error: msg });
+            }
+            else if (error instanceof NotFoundError) 
+            {
+                    res.status(404).json({ error: msg });
+            }
+            else 
+            {
+                    console.error('Error merging players:', error);
+                    res.status(500).json({ error: 'Internal Server Error' });
+            }
+        }
+    };
+    
 }

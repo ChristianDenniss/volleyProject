@@ -16,7 +16,7 @@ import { Seasons } from "../modules/seasons/season.entity.ts";
 import { Stats } from "../modules/stats/stat.entity.ts";
 import { User } from "../modules/user/user.entity.ts";
 import { Article } from "../modules/articles/article.entity.ts";
-
+import { Awards } from "../modules/awards/award.entity.ts";
 
 dotenv.config();
 
@@ -28,29 +28,43 @@ const entities = [
     Seasons,
     Stats,
     User,
-    Article
+    Article,
+    Awards
 ];
 
-// Define migration paths
-const migrations = [join(__dirname, "migrations", "*.ts")]; 
 
-console.log("process.env.NODE_ENV === 'production'", process.env.NODE_ENV === 'production', migrations)
 // Configure AppDataSource
 export const AppDataSource = new DataSource({
     type: "postgres",
-    host: process.env.DB_HOST || "localhost",
-    port: Number(process.env.DB_PORT) || 5432,
-    username: process.env.DB_USER || "postgres",
-    password: process.env.DB_PASS || "postgres",
-    database: process.env.DB_NAME || "volleyball",
-    url: process.env.URL,
-    synchronize: process.env.NODE_ENV === 'development', // Only sync in development
-    logging: process.env.NODE_ENV === 'development',
-    entities: process.env.NODE_ENV === 'production'
-        ? ["dist/modules/*/*.entity.ts"] // Use compiled JS files in production
-        : entities, // Use entity objects for development
-    migrations: process.env.NODE_ENV === 'production'
-        ? ["dist/db/migrations/*.ts"] // Use compiled JS files in production
-        : migrations, // Use TS migrations for development
+    ...(process.env.DATABASE_URL 
+        ? { url: process.env.DATABASE_URL }
+        : {
+            host: process.env.DB_HOST || "localhost",
+            port: Number(process.env.DB_PORT) || 5432,
+            username: process.env.DB_USER || "postgres",
+            password: process.env.DB_PASS || "password",
+            database: process.env.DB_NAME || "volleyball",
+        }
+    ),
+    synchronize: false, // Disable synchronize to prevent automatic schema updates
+    logging: process.env.NODE_ENV !== 'production',
+    entities: entities,
+    migrations: [join(__dirname, "..", "..", "migrations", "*.{js,ts}")], // Point to dist/migrations in production
+    migrationsTableName: "migrations", // Explicitly set migrations table name
     subscribers: [],
+    ssl: false, // Disable SSL by default, let the connection URL handle SSL settings
 });
+
+// Initialize the DataSource
+export async function initializeDataSource(): Promise<DataSource> {
+    try {
+        if (!AppDataSource.isInitialized) {
+            await AppDataSource.initialize();
+            console.log("Database connection established");
+        }
+        return AppDataSource;
+    } catch (error) {
+        console.error("Error initializing database connection:", error);
+        throw error;
+    }
+}

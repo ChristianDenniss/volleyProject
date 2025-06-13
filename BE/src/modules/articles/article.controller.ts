@@ -77,7 +77,7 @@ export class ArticleController {
      */
     public updateArticle = async (req: Request, res: Response): Promise<void> => {
         const { id } = req.params;
-        const { title, content, userId, summary, imageUrl } = req.body;
+        const { title, content, userId, summary, imageUrl, approved } = req.body;
 
         try {
             const updatedArticle = await this.articleService.updateArticle(
@@ -86,7 +86,8 @@ export class ArticleController {
                 content,
                 userId,
                 summary,
-                imageUrl
+                imageUrl,
+                approved
             );
             res.status(200).json(updatedArticle);
         } catch (error) {

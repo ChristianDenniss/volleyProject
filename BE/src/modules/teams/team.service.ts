@@ -1,4 +1,4 @@
-import { Repository, In, Not } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { AppDataSource } from '../../db/data-source.ts';
 import { Teams } from './team.entity.ts';
 import { Players } from '../players/player.entity.ts';
@@ -9,6 +9,7 @@ import { MultipleGamesNotFoundError } from '../../errors/MultipleGamesNotFoundEr
 import { MultiplePlayersNotFoundError } from '../../errors/MultiplePlayersNotFoundError.ts';
 import { DuplicateError } from '../../errors/DuplicateError.ts';
 import { NotFoundError } from '../../errors/NotFoundError.ts';
+import { CreateTeamDto, UpdateTeamDto, CreateMultipleTeamsDto } from './teams.schema.ts';
 
 export class TeamService {
     private teamRepository: Repository<Teams>;
@@ -26,31 +27,25 @@ export class TeamService {
     /**
      * Create a new team with validation
      */
-    async createTeam
-    (
-        name: string,
-        seasonId: number,
-        placement?: string,
-        playerIds?: number[],
-        gameIds?: number[]
-    ): Promise<Teams>
-    {
+    async createTeam(teamData: CreateTeamDto): Promise<Teams> {
+        const { name, seasonId, placement, playerIds, gameIds } = teamData;
+
         // Validation for missing name
-        if (!name)
-        {
+        if (!name) {
             throw new MissingFieldError("Team name");
         }
 
         // Validation for missing seasonId
-        if (!seasonId)
-        {
+        if (!seasonId) {
             throw new MissingFieldError("season ID");
         }
 
         // Fetch the season to associate with the team
-        const season = await this.seasonRepository.findOneBy({ id: seasonId });
-        if (!season)
-        {
+        const season = await this.seasonRepository.findOne({
+            where: { id: seasonId },
+            relations: ["teams"]
+        });
+        if (!season) {
             throw new NotFoundError(`Season with ID:${seasonId} not found`);
         }
 
@@ -59,39 +54,32 @@ export class TeamService {
             where: { name, season: { id: seasonId } }
         });
 
-        if (existingTeam)
-        {
+        if (existingTeam) {
             throw new DuplicateError(`A team with the name "${name}" already exists in season ID: ${seasonId}.`);
         }
 
         // Create a new team
         const newTeam = new Teams();
-
-        // Set the team name
         newTeam.name = name;
-
-        // Associate it with the fetched season
         newTeam.season = season;
 
         // Only override placement if one was provided
-        if (placement !== undefined)
-        {
-            // Trim whitespace at ends but preserve internal spaces
+        if (placement !== undefined) {
             newTeam.placement = placement.trim();
         }
 
         // Add players relationships
-        if (playerIds && playerIds.length > 0)
-        {
-            const players = await this.playerRepository.findByIds(playerIds);
+        if (playerIds && playerIds.length > 0) {
+            const players = await this.playerRepository.find({
+                where: { id: In(playerIds) },
+                relations: ["teams", "teams.season"]
+            });
 
             // Identify missing players
-            const foundPlayerIds   = players.map(player => player.id);
+            const foundPlayerIds = players.map(player => player.id);
             const missingPlayerIds = playerIds.filter(id => !foundPlayerIds.includes(id));
 
-            // Throw a single error listing all missing players
-            if (missingPlayerIds.length > 0)
-            {
+            if (missingPlayerIds.length > 0) {
                 throw new MultiplePlayersNotFoundError(missingPlayerIds);
             }
 
@@ -99,27 +87,25 @@ export class TeamService {
         }
 
         // Add games relationships
-        if (gameIds && gameIds.length > 0)
-        {
-            const games = await this.gameRepository.findByIds(gameIds);
+        if (gameIds && gameIds.length > 0) {
+            const games = await this.gameRepository.find({
+                where: { id: In(gameIds) },
+                relations: ["teams", "season"]
+            });
 
             // Identify missing games
-            const foundGameIds   = games.map(game => game.id);
+            const foundGameIds = games.map(game => game.id);
             const missingGameIds = gameIds.filter(id => !foundGameIds.includes(id));
 
-            // Throw a single error listing all missing games
-            if (missingGameIds.length > 0)
-            {
+            if (missingGameIds.length > 0) {
                 throw new MultipleGamesNotFoundError(missingGameIds);
             }
 
             newTeam.games = games;
         }
 
-        // Persist and return
         return this.teamRepository.save(newTeam);
     }
-
 
     /**
      * Get players for a team by name
@@ -137,35 +123,35 @@ export class TeamService {
         if (!name) {
             throw new MissingFieldError("Team name");
         }
-    
-        try {
-            const teams = await this.teamRepository.find({
-                where: { name },
-                relations: ["season", "players", "games", "games.stats"],
-            });
-    
-            if (teams.length === 0) {
-                throw new NotFoundError(`No teams found with name: ${name}`);
-            }
-    
-            return teams;
-        } catch (error) {
-            console.error('Error in getTeamsByName service:', error);
-            throw new Error('Database error occurred');
-        }
-    }    
 
+        const teams = await this.teamRepository.find({
+            where: { name },
+            relations: [
+                "season",
+                "players",
+                "players.stats",
+                "players.stats.game",
+                "games",
+                "games.stats",
+                "games.season"
+            ]
+        });
+
+        if (teams.length === 0) {
+            throw new NotFoundError(`No teams found with name: ${name}`);
+        }
+
+        return teams;
+    }
 
     /**
      * Create multiple teams
      */
-    async createMultipleTeams(teamsData: { name: string; seasonId: number; placement?: string; playerIds?: number[]; gameIds?: number[]; }[]): Promise<Teams[]>
-    {
+    async createMultipleTeams(teamsData: CreateMultipleTeamsDto): Promise<Teams[]> {
         const createdTeams: Teams[] = [];
 
-        for (const data of teamsData)
-        {
-            const team = await this.createTeam(data.name, data.seasonId, data.placement, data.playerIds, data.gameIds);
+        for (const data of teamsData) {
+            const team = await this.createTeam(data);
             createdTeams.push(team);
         }
 
@@ -193,7 +179,15 @@ export class TeamService {
      */
     async getAllTeams(): Promise<Teams[]> {
         return this.teamRepository.find({
-            relations: ["season", "players", "games"],
+            relations: [
+                "season",
+                "players",
+                "players.stats",
+                "players.stats.game",
+                "games",
+                "games.stats",
+                "games.season"
+            ]
         });
     }
 
@@ -201,17 +195,21 @@ export class TeamService {
      * Get team by ID with validation
      */
     async getTeamById(id: number): Promise<Teams> {
-        if (!id) {
-            throw new MissingFieldError("Team ID");
-        }
-
         const team = await this.teamRepository.findOne({
             where: { id },
-            relations: ["season", "players", "games"],
+            relations: [
+                "season",
+                "players",
+                "players.stats",
+                "players.stats.game",
+                "games",
+                "games.stats",
+                "games.season"
+            ]
         });
 
         if (!team) {
-            throw new NotFoundError(`Team with ID:${id} not found`);
+            throw new NotFoundError(`Team with ID ${id} not found`);
         }
 
         return team;
@@ -221,123 +219,104 @@ export class TeamService {
      * Get all teams by season ID
      */
     async getTeamsBySeasonId(seasonId: number): Promise<Teams[]> {
-        // Validate seasonId
         if (!seasonId) {
             throw new MissingFieldError("Season ID");
         }
-        
-        
-        
-        // Find teams by seasonId
-        const teams = await this.teamRepository.find({
-            where: { season: { id: seasonId } },
-            relations: ["season", "players", "games"],  // Load related entities
+
+        const season = await this.seasonRepository.findOne({
+            where: { id: seasonId },
+            relations: ["teams"]
         });
 
-        // If no teams are found, throw a NotFoundError
-        if (!teams || teams.length === 0) {
-            throw new NotFoundError(`No teams found for season ID: ${seasonId}`);
+        if (!season) {
+            throw new NotFoundError(`Season with ID ${seasonId} not found`);
         }
 
-        return teams;
+        return this.teamRepository.find({
+            where: { season: { id: seasonId } },
+            relations: [
+                "season",
+                "players",
+                "players.stats",
+                "players.stats.game",
+                "games",
+                "games.stats",
+                "games.season"
+            ]
+        });
     }
-
 
     /**
      * Update an existing team
      */
-    async updateTeam(id: number, data: { name?: string; seasonId?: number; placement?: string; playerIds?: number[]; gameIds?: number[]; }): Promise<Teams>
-    {
-        // Fetch the existing team
-        const existingTeam = await this.teamRepository.findOneBy({ id });
-        if (!existingTeam)
-        {
-            throw new NotFoundError(`Team with ID:${id} not found`);
+    async updateTeam(id: number, teamData: UpdateTeamDto): Promise<Teams> {
+        const team = await this.teamRepository.findOne({
+            where: { id },
+            relations: ["season", "players", "games"]
+        });
+
+        if (!team) {
+            throw new NotFoundError(`Team with ID ${id} not found`);
         }
 
-        // Update name if provided
-        if (data.name !== undefined)
-        {
-            existingTeam.name = data.name;
-        }
+        const { name, seasonId, placement, playerIds, gameIds } = teamData;
 
-        // Update season if provided
-        if (data.seasonId !== undefined)
-        {
-            const season = await this.seasonRepository.findOneBy({ id: data.seasonId });
-            if (!season)
-            {
-                throw new NotFoundError(`Season with ID:${data.seasonId} not found`);
+        if (name) team.name = name;
+        if (placement !== undefined) team.placement = placement.trim();
+
+        if (seasonId) {
+            const season = await this.seasonRepository.findOne({
+                where: { id: seasonId },
+                relations: ["teams"]
+            });
+            if (!season) {
+                throw new NotFoundError(`Season with ID ${seasonId} not found`);
             }
-            existingTeam.season = season;
+            team.season = season;
         }
 
-        // Update placement if provided
-        if (data.placement !== undefined)
-        {
-            existingTeam.placement = data.placement.trim();
-        }
-
-        // Update players relationships if provided
-        if (data.playerIds)
-        {
-            const players = await this.playerRepository.findByIds(data.playerIds);
-
-            // Identify missing players
-            const foundPlayerIds   = players.map(player => player.id);
-            const missingPlayerIds = data.playerIds.filter(id => !foundPlayerIds.includes(id));
-
-            // Throw a single error listing all missing players
-            if (missingPlayerIds.length > 0)
-            {
-                throw new MultiplePlayersNotFoundError(missingPlayerIds);
+        if (playerIds) {
+            const players = await this.playerRepository.find({
+                where: { id: In(playerIds) },
+                relations: ["teams", "teams.season"]
+            });
+            if (players.length !== playerIds.length) {
+                const foundIds = players.map(p => p.id);
+                const missingIds = playerIds.filter(id => !foundIds.includes(id));
+                throw new MultiplePlayersNotFoundError(missingIds);
             }
-
-            existingTeam.players = players;
+            team.players = players;
         }
 
-        // Update games relationships if provided
-        if (data.gameIds)
-        {
-            const games = await this.gameRepository.findByIds(data.gameIds);
-
-            // Identify missing games
-            const foundGameIds   = games.map(game => game.id);
-            const missingGameIds = data.gameIds.filter(id => !foundGameIds.includes(id));
-
-            // Throw a single error listing all missing games
-            if (missingGameIds.length > 0)
-            {
-                throw new MultipleGamesNotFoundError(missingGameIds);
+        if (gameIds) {
+            const games = await this.gameRepository.find({
+                where: { id: In(gameIds) },
+                relations: ["teams", "season"]
+            });
+            if (games.length !== gameIds.length) {
+                const foundIds = games.map(g => g.id);
+                const missingIds = gameIds.filter(id => !foundIds.includes(id));
+                throw new MultipleGamesNotFoundError(missingIds);
             }
-
-            existingTeam.games = games;
+            team.games = games;
         }
 
-        return this.teamRepository.save(existingTeam);
+        return this.teamRepository.save(team);
     }
 
     /**
      * Delete a team
      */
-    async deleteTeam(id: number): Promise<void> 
-    {
-        if (!id) 
-        {
-            throw new MissingFieldError("Team ID");
-        }
-
+    async deleteTeam(id: number): Promise<void> {
         const team = await this.teamRepository.findOne({
             where: { id },
-            relations: ["players", "games"],
+            relations: ["players", "games"]
         });
 
-        if (!team) 
-        {
-            throw new NotFoundError(`Team with ID:${id} not found`);
+        if (!team) {
+            throw new NotFoundError(`Team with ID ${id} not found`);
         }
 
         await this.teamRepository.remove(team);
     }
-    
 }

@@ -49,7 +49,7 @@
     display: flex;
     justify-content: center;
     gap: 1.5rem;
-    margin-bottom: 3rem;
+    margin-bottom: 1rem;
 }
 
 /* Each meta span styled as box */
@@ -211,7 +211,7 @@
     height: 0;
   }
   
-  /* the draggable “thumb” */
+  /* the draggable "thumb" */
   .ss-team-players::-webkit-scrollbar-thumb {
     background-color: #1a1a1a;   /* dark base */
     border-radius: 4px;
@@ -222,3 +222,29 @@
   .ss-team-players::-webkit-scrollbar-thumb:hover {
     background-color: #171717;
   }
+
+/* Awards button container */
+.ss-awards-button-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2rem;
+}
+
+/* Awards button */
+.ss-awards-button {
+    font-size: 1rem;
+    padding: 0.5rem 1rem;
+    background: #1a1a1a;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    text-transform: none;
+    font-weight: normal;
+}
+
+.ss-awards-button:hover {
+    background: #333;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}

@@ -1,7 +1,8 @@
-import { Not, Repository, In } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { AppDataSource } from '../../db/data-source.ts';
 import { Players } from './player.entity.ts';
 import { Teams } from '../teams/team.entity.ts';
+import { Stats } from '../stats/stat.entity.ts';
 import { MissingFieldError } from '../../errors/MissingFieldError.ts';
 import { NotFoundError } from '../../errors/NotFoundError.ts';
 
@@ -112,7 +113,7 @@ export class PlayerService
 
         const player = await this.playerRepository.findOne({
             where: { id },
-            relations: ["teams", "stats"], // Fetch related teams and stats
+            relations: ["teams", "stats", "stats.game", "stats.game.season", "teams.season", "teams.games", "teams.games.season"],
         });
 
         if (!player) throw new NotFoundError(`Player with ID ${id} not found`);
@@ -125,10 +126,7 @@ export class PlayerService
      */
     async updatePlayer(
         id: number, 
-        name?: string, 
-        jerseyNumber?: number, 
-        position?: string, 
-        teamIds?: number[] // Updated to accept multiple team IDs
+        updateData: { name?: string, position?: string, teamIds?: number[] }
     ): Promise<Players> {
         if (!id) throw new MissingFieldError("Player ID");
 
@@ -139,18 +137,18 @@ export class PlayerService
 
         if (!player) throw new NotFoundError(`Player with ID ${id} not found`);
 
-        if (name) player.name = name;
-        
-        if (position) player.position = position;
+        if (updateData.name) player.name = updateData.name.toLowerCase();
+        if (updateData.position) player.position = updateData.position;
 
-        if (teamIds && teamIds.length > 0) 
-        {
+        if (updateData.teamIds && updateData.teamIds.length > 0) {
             // Fetch teams by their IDs
-            const teams = await this.teamRepository.findBy({ id: In(teamIds) });
-            if (teams.length !== teamIds.length) 
-                throw new NotFoundError(`One or more teams not found for the provided IDs`);
-
-            player.teams = teams; // Update the many-to-many relationship with teams
+            const teams = await this.teamRepository.findBy({ id: In(updateData.teamIds) });
+            if (teams.length !== updateData.teamIds.length) {
+                const foundIds = teams.map(t => t.id);
+                const missingIds = updateData.teamIds.filter(id => !foundIds.includes(id));
+                throw new NotFoundError(`Teams with IDs ${missingIds.join(', ')} not found`);
+            }
+            player.teams = teams;
         }
 
         return this.playerRepository.save(player);
@@ -321,4 +319,73 @@ export class PlayerService
     }
 
 
+    /**
+     * Merge all relations of `mergedId` into `targetId`, delete duplicates, then delete `mergedId`
+     */
+    async mergePlayers(targetId: number, mergedId: number): Promise<void>
+    {
+        if (!targetId) throw new MissingFieldError("Target player ID");
+        if (!mergedId) throw new MissingFieldError("Merged player ID");
+
+        const target = await this.playerRepository.findOneBy({ id: targetId });
+        if (!target) throw new NotFoundError(`Target player with ID ${targetId} not found`);
+
+        const merged = await this.playerRepository.findOneBy({ id: mergedId });
+        if (!merged) throw new NotFoundError(`Player to merge with ID ${mergedId} not found`);
+
+        const qr = AppDataSource.createQueryRunner();
+        await qr.connect();
+        await qr.startTransaction();
+
+        try
+        {
+            // 1) Move all team links onto target
+            await qr.manager
+                    .createQueryBuilder()
+                    .update('players_teams_teams')
+                    .set({ playersId: targetId })
+                    .where('playersId = :mergedId', { mergedId })
+                    .execute();
+
+            // 2) Delete any duplicate (playersId, teamsId) rows
+            await qr.manager.query(
+    `DELETE FROM players_teams_teams
+    WHERE ctid IN (
+    SELECT ctid FROM (
+        SELECT ctid,
+                ROW_NUMBER() OVER (
+                PARTITION BY "playersId","teamsId"
+                ORDER BY ctid
+                ) AS rn
+        FROM players_teams_teams
+        WHERE "playersId" = $1
+    ) t
+    WHERE t.rn > 1
+    )`,
+                [targetId]
+            );
+
+            // 3) Bulk‐update stats FKs via raw SQL
+            await qr.manager.query(
+            `UPDATE "stats"
+                SET "playerId" = $1
+                WHERE "playerId" = $2`,
+            [targetId, mergedId]
+            );
+
+            // 4) Delete the merged player record
+            await qr.manager.delete(Players, { id: mergedId });
+
+            await qr.commitTransaction();
+        }
+        catch (err)
+        {
+            await qr.rollbackTransaction();
+            throw err;
+        }
+        finally
+        {
+            await qr.release();
+        }
+    }
 }

@@ -17,7 +17,13 @@ export class ArticleService {
     /**
      * Create a new article with validation
      */
-    async createArticle(title: string, content: string, userId: number, summary: string, imageUrl: string): Promise<Article> {
+    async createArticle(
+        title: string, 
+        content: string, 
+        userId: number, 
+        summary: string, 
+        imageUrl: string
+    ): Promise<Article> {
         // Validation
         if (!title) throw new MissingFieldError("Article title");
         if (!content) throw new MissingFieldError("Article content");
@@ -37,6 +43,7 @@ export class ArticleService {
         newArticle.imageUrl = imageUrl;
         newArticle.author = user;  // Linking author to article
         newArticle.likes = 0;  // Initialize likes to 0
+        newArticle.approved = null;  // Initialize approved as null
 
         return this.articleRepository.save(newArticle);
     }
@@ -75,7 +82,8 @@ export class ArticleService {
         content?: string, 
         userId?: number,
         summary?: string,
-        imageUrl?: string
+        imageUrl?: string,
+        approved?: boolean
     ): Promise<Article> {
         if (!id) throw new MissingFieldError("Article ID");
 
@@ -90,6 +98,7 @@ export class ArticleService {
         if (content) article.content = content;
         if (summary) article.summary = summary;
         if (imageUrl) article.imageUrl = imageUrl;
+        if (approved !== undefined) article.approved = approved; // Allow setting to true or false
 
         if (userId) {
             const user = await this.userRepository.findOneBy({ userId });

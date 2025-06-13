@@ -116,5 +116,8 @@
     "**/__tests__/**",
     "**/__mocks__/**",
     "node_modules"
+  ],
+  "include": [
+    "src/**/*"
   ]
 }
