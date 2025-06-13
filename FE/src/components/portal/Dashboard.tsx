@@ -136,10 +136,10 @@ const Dashboard: React.FC = () => {
           <h3>📊 Stats Management</h3>
           <p>Track and manage player statistics:</p>
           <ul>
-            <li>View detailed player performance metrics</li>
-            <li>Add new statistical entries for games</li>
-            <li>Edit or update existing statistics</li>
-            <li>Generate performance reports</li>
+            <li>Stats admin board is WIP</li>
+            <li>Add new statistical entries for games (WIP)</li>
+            <li>Edit or update existing statistics (WIP)</li>
+            <li>Delete statistics (WIP)</li>
           </ul>
           <div className="important-note">
             <strong>Important Notes:</strong>
@@ -155,17 +155,18 @@ const Dashboard: React.FC = () => {
           <h3>📰 Articles & Content</h3>
           <p>Manage league news and content:</p>
           <ul>
-            <li>Create and publish new articles</li>
-            <li>Edit existing articles</li>
-            <li>Manage article visibility and scheduling</li>
-            <li>Add images and media to articles</li>
+            <li>Review pending articles for approval or rejection</li>
+            <li>Click the article box to drop down its contents and confirm appropriate</li>
+            <li>Hide previous approved articles</li>
+            <li>Show previouslt rejected articles</li>
+            <li>Change article visibility</li>
           </ul>
           <div className="important-note">
             <strong>Important Notes:</strong>
             <ul>
-              <li>All player and team names must be entered in lowercase</li>
-              <li>Articles can be edited after publishing</li>
-              <li>Images should be optimized before upload</li>
+              <li>You must click the article box to drop down its contents</li>
+              <li>Articles can only be created in the articles page</li>
+              <li>make sure image is approved before publishing</li>
             </ul>
           </div>
         </div>
@@ -174,10 +175,11 @@ const Dashboard: React.FC = () => {
           <h3>👥 Player Management</h3>
           <p>Handle player information and team assignments:</p>
           <ul>
-            <li>Create new player profiles</li>
+            <li>Create new players</li>
             <li>Assign players to teams</li>
-            <li>Update player information</li>
-            <li>View player history and statistics</li>
+            <li>Update player information like posistion</li>
+            <li>Delete players</li>
+            <li>Delete players from teams (WIP)</li>
           </ul>
           <div className="important-note">
             <strong>Important Notes:</strong>
@@ -185,7 +187,8 @@ const Dashboard: React.FC = () => {
               <li>All usernames must be entered in lowercase</li>
               <li>Existing players will be added to teams without creating duplicates</li>
               <li>Verify username spelling before submission</li>
-              <li>Check for existing accounts before creating new players</li>
+              <li>Check for existing player on the website before creating new player</li>
+              <li>Team names must be entered in lowercase</li>
             </ul>
           </div>
         </div>
@@ -197,26 +200,28 @@ const Dashboard: React.FC = () => {
             <li>Create and assign awards</li>
             <li>Track player achievements</li>
             <li>Manage seasonal awards</li>
+            <li>Delete awards</li>
+            <li>Edit award information like description</li>
             <li>View award history</li>
           </ul>
           <div className="important-note">
             <strong>Important Notes:</strong>
             <ul>
-              <li>All player and team names must be entered in lowercase</li>
-              <li>Awards cannot be deleted once assigned</li>
+              <li>All players must be entered in lowercase</li>
+              <li>One award type PER season</li>
               <li>Verify recipient names before submission</li>
             </ul>
           </div>
         </div>
 
         <div className="help-category">
-          <h3>🏐 Team Management</h3>
+          <h3>🏐 Team Management (WIP)</h3>
           <p>Handle team operations:</p>
           <ul>
-            <li>Create and manage team rosters</li>
-            <li>Update team information</li>
-            <li>Track team statistics</li>
-            <li>Manage team assignments</li>
+            <li>Create and manage team player rosters (WIP)</li>
+            <li>Update team information (WIP)</li>
+            <li>Track team statistics (WIP)</li>
+            <li>Manage team games (WIP)</li>
           </ul>
           <div className="important-note">
             <strong>Important Notes:</strong>
@@ -224,19 +229,21 @@ const Dashboard: React.FC = () => {
               <li>All team names must be entered in lowercase</li>
               <li>Verify team name spelling before submission</li>
               <li>Check for existing teams before creating new ones</li>
-              <li>Team names cannot be changed after creation</li>
+              <li>Team names must be unique</li>
+              <li>Avoid changing team names to be safe</li>
             </ul>
           </div>
         </div>
 
         <div className="help-category">
-          <h3>�� Game Management</h3>
+          <h3>🏐 Game Management (WIP)</h3>
           <p>Handle match operations:</p>
           <ul>
-            <li>Schedule new games</li>
+            <li>Schedule new games (WIP)</li>
             <li>Record match results</li>
-            <li>Update game statistics</li>
-            <li>View game history</li>
+            <li>Delete games</li>
+            <li>Edit game information like date, name, time and scores</li>
+            <li>Assign teams to games (WIP)</li>
           </ul>
           <div className="important-note">
             <strong>Important Notes:</strong>
@@ -253,16 +260,13 @@ const Dashboard: React.FC = () => {
           <p>Organize league seasons:</p>
           <ul>
             <li>Create new seasons</li>
-            <li>Set season schedules</li>
-            <li>Manage tournament brackets</li>
-            <li>Track season standings</li>
+            <li>Set season theme</li>
+            <li>Set season number</li>
           </ul>
           <div className="important-note">
             <strong>Important Notes:</strong>
             <ul>
-              <li>All team names must be entered in lowercase</li>
-              <li>Season schedules cannot be modified after games begin</li>
-              <li>Verify team assignments before season start</li>
+              <li>Please make sure season number is correct, unique, and non-negative </li>
             </ul>
           </div>
         </div>
