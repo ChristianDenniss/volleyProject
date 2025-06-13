@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { TeamService } from './team.service.ts';
 import { MissingFieldError } from '../../errors/MissingFieldError.ts';
 import { NotFoundError } from '../../errors/NotFoundError.ts';
+import { CreateTeamDto, UpdateTeamDto } from './teams.schema.ts';
 
 export class TeamController {
     private teamService: TeamService;
@@ -13,8 +14,8 @@ export class TeamController {
     // Create a new Team
     createTeam = async (req: Request, res: Response): Promise<void> => {
         try {
-            const { name, seasonId, playerIds, gameIds, placement } = req.body;
-            const savedTeam = await this.teamService.createTeam(name, seasonId, placement, playerIds, gameIds);
+            const teamData: CreateTeamDto = req.body;
+            const savedTeam = await this.teamService.createTeam(teamData);
             res.status(201).json(savedTeam);
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : "Failed to create team";

@@ -3,12 +3,12 @@
 /*— layout —*/
 .portal-wrapper {
     display: grid;
-    grid-template-columns: 220px 1fr;
+    grid-template-columns: 180px 1fr; /* allow sidebar to shrink a bit */
     min-height: 100vh;                    /* full viewport height */
     padding-bottom: 0 !important;         /* remove bottom gap to footer */
   }
   
-  /* ensure the next element (e.g. footer) doesn’t add extra top margin */
+  /* ensure the next element (e.g. footer) doesn't add extra top margin */
   .portal-wrapper + * {
     margin-top: 0 !important;
   }
@@ -20,6 +20,10 @@
     padding: 1.5rem 1rem;
     display: flex;
     flex-direction: column;
+    min-width: 120px;
+    max-width: 220px;
+    width: 100%;
+    box-sizing: border-box;
   }
   
   .portal-sidebar h2 {

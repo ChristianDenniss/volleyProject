@@ -46,7 +46,7 @@ const Footer: React.FC = () =>
                         <FaFacebookF />
                     </a>
                     <a
-                        href="https://youtube.com"
+                        href="https://www.youtube.com/@RobloxVolleyballLeague"
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label="YouTube"

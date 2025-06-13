@@ -105,3 +105,29 @@
   padding-right: 1rem;
   vertical-align: middle;
 }
+
+.create-button {
+  background-color: #2d3c50;
+  color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 0.25rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.create-button:hover {
+  background-color: #5b7dab;
+}
+
+.create-button:active {
+  background-color: #2d3c50;
+}
+
+.create-button:disabled {
+  background-color: #63686f;
+  cursor: not-allowed;
+}
+
+

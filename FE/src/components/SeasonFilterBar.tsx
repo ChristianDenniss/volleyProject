@@ -10,7 +10,7 @@ const SeasonFilter: React.FC<SeasonFilterProps> = ({ selectedSeason, onSeasonCha
   const seasons = Array.from({ length: 13 }, (_, i) => i + 1); // Generates seasons 1 to 13
 
   return (
-    <div className="filter-bar">  {/* Apply the same class as the filter bar */}
+    <div className="season-filter-bar">  {/* Use a unique class for scoping */}
       <label htmlFor="season">Filter by Season:</label>
       <select
         id="season"

@@ -30,6 +30,24 @@ export const updateTeamSchema = createTeamSchema.partial().extend(
     id: z.number().int().positive(),
 });
 
+export interface CreateTeamDto {
+    name: string;
+    seasonId: number;
+    placement?: string;
+    playerIds?: number[];
+    gameIds?: number[];
+}
+
+export interface UpdateTeamDto {
+    name?: string;
+    seasonId?: number;
+    placement?: string;
+    playerIds?: number[];
+    gameIds?: number[];
+}
+
+export type CreateMultipleTeamsDto = CreateTeamDto[];
+
     
 
 

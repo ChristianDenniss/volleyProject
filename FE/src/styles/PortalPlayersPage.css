@@ -1,0 +1,73 @@
+/* Portal Players Page Styles */
+
+/* Controls section */
+.players-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 0 1rem;
+}
+
+/* Right side controls (search + pagination) */
+.players-controls-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Search bar styling */
+.search-bar {
+  width: 200px; /* Reduced width */
+}
+
+.search-bar input {
+  width: 100%;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  background-color: #fff;
+  transition: border-color 0.2s ease;
+}
+
+.search-bar input:focus {
+  outline: none;
+  border-color: #2d3c50;
+  box-shadow: 0 0 0 2px rgba(45, 60, 80, 0.1);
+}
+
+/* Pagination styling */
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pagination-btn {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+  background-color: #2d3c50;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background-color: #5b7dab;
+}
+
+.pagination-btn:disabled {
+  background-color: #e5e7eb;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.pagination-current-page {
+  font-size: 0.875rem;
+  color: #4b5563;
+  font-weight: 500;
+} 

@@ -13,6 +13,7 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh; /* Full height of the viewport */
+  background-color: white; /* Add white background */
 }
 
 /* Content area that will push the footer to the bottom */

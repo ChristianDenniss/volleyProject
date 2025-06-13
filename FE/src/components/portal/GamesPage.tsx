@@ -1,14 +1,18 @@
 // src/pages/GamesPage.tsx
+
 import React, { useState, useEffect } from "react";
-import { useGames }                  from "../../hooks/allFetch";
-import { useGameMutations }          from "../../hooks/allPatch";
-import { useCreateGame }             from "../../hooks/allCreate";
-import type { Game }                 from "../../types/interfaces";
-import "../../styles/GamesPage.css";
+import { useGames }                   from "../../hooks/allFetch";
+import { useGameMutations }           from "../../hooks/allPatch";
+import { useCreateGames }             from "../../hooks/allCreate";
+import { useDeleteGames }             from "../../hooks/allDelete";
+import { useAuth }                    from "../../context/authContext";
+import type { Game }                  from "../../types/interfaces";
+import "../../styles/UsersPage.css";  // reuse table & text-muted styles
+import "../../styles/GamesPage.css";  // reuse table & text-muted styles
 
 type EditField =
   | "name"
-  | "season"
+  | "seasonId"
   | "stage"
   | "team1Score"
   | "team2Score"
@@ -24,40 +28,33 @@ interface EditingState {
 const GamesPage: React.FC = () => {
   const { data: games, loading, error } = useGames();
   const { patchGame }                   = useGameMutations();
-  const { createGame }                  = useCreateGame();
-  const [ localGames, setLocalGames ]   = useState<Game[]>([]);
-  const [ editing, setEditing ]         = useState<EditingState | null>(null);
+  const { createGame, loading: creating, error: createError } = useCreateGames();
+  const { deleteItem: deleteGame, loading: deleting, error: deleteError } = useDeleteGames();
+  const { user }                        = useAuth();
+
+  const [ localGames, setLocalGames ] = useState<Game[]>([]);
+  const [ editing, setEditing ]       = useState<EditingState | null>(null);
+
+  // Modal state for creating new game
+  const [ isModalOpen, setIsModalOpen ]     = useState<boolean>(false);
+  const [ newName, setNewName ]             = useState<string>("");
+  const [ newSeasonId, setNewSeasonId ]     = useState<number>(0);
+  const [ newStage, setNewStage ]           = useState<string>("");
+  const [ newTeam1Score, setNewTeam1Score ] = useState<number>(0);
+  const [ newTeam2Score, setNewTeam2Score ] = useState<number>(0);
+  const [ newDate, setNewDate ]             = useState<string>("");
+  const [ newVideoUrl, setNewVideoUrl ]     = useState<string>("");
+  const [ formError, setFormError ]         = useState<string>("");
 
   useEffect(() => {
     if (games) setLocalGames(games);
   }, [games]);
 
-  // Create handler
-  const handleCreate = async () => {
-    // Replace defaults as needed or prompt user for input
-    const payload = {
-      name:       "New Game",
-      seasonId:   localGames[0]?.season.id || 1,
-      stage:      "",
-      team1Score: 0,
-      team2Score: 0,
-      date:       new Date(),
-      videoUrl:   null,
-    };
-    try {
-      const newGame = await createGame(payload);
-      setLocalGames(prev => [newGame, ...prev]);
-    } catch (err: any) {
-      console.error(err);
-      alert("Failed to create game:\n" + err.message);
-    }
-  };
-
   // Commit inline edits
   const commitEdit = async () => {
     if (!editing) return;
     const { id, field, value } = editing;
-    const orig = localGames.find(g => g.id === id);
+    const orig = localGames.find((g) => g.id === id);
     if (!orig) {
       setEditing(null);
       return;
@@ -66,11 +63,11 @@ const GamesPage: React.FC = () => {
     let origValue: string;
     switch (field) {
       case "name":       origValue = orig.name; break;
-      case "season":     origValue = orig.season.seasonNumber.toString(); break;
+      case "seasonId":   origValue = orig.season.id.toString(); break;
       case "stage":      origValue = orig.stage; break;
       case "team1Score": origValue = orig.team1Score.toString(); break;
       case "team2Score": origValue = orig.team2Score.toString(); break;
-      case "date":       origValue = new Date(orig.date).toISOString().slice(0,10); break;
+      case "date":       origValue = new Date(orig.date).toISOString().slice(0, 10); break;
       default:           origValue = orig.videoUrl ?? "";
     }
     if (value === origValue) {
@@ -79,8 +76,8 @@ const GamesPage: React.FC = () => {
     }
 
     const labelMap: Record<EditField,string> = {
-      name: "Title",
-      season: "Season",
+      name: "Name",
+      seasonId: "Season ID",
       stage: "Stage",
       team1Score: "Team 1 Score",
       team2Score: "Team 2 Score",
@@ -92,24 +89,21 @@ const GamesPage: React.FC = () => {
       return;
     }
 
-    const payload: Partial<Game> & Record<string,any> = {};
+    const payload: Partial<Game> & Record<string, any> = {};
     switch (field) {
-      case "name":       payload.name       = value; break;
-      case "season":     payload.seasonId   = Number(value); break;
-      case "stage":      payload.stage      = value; break;
-      case "team1Score": payload.team1Score = Number(value); break;
-      case "team2Score": payload.team2Score = Number(value); break;
-      case "date":       payload.date       = new Date(value); break;
-      case "videoUrl":   payload.videoUrl   = value || null; break;
+      case "name":       payload.name        = value; break;
+      case "seasonId":   payload.seasonId    = Number(value); break;
+      case "stage":      payload.stage       = value; break;
+      case "team1Score": payload.team1Score  = Number(value); break;
+      case "team2Score": payload.team2Score  = Number(value); break;
+      case "date":       payload.date        = new Date(value); break;
+      case "videoUrl":   payload.videoUrl    = value || null; break;
     }
-    (payload as any).id = id;
 
     try {
       const updated = await patchGame(id, payload);
-      setLocalGames(prev =>
-        prev.map(g =>
-          g.id === id ? { ...g, ...updated } : g
-        )
+      setLocalGames((prev) =>
+        prev.map((g) => (g.id === id ? { ...g, ...updated } : g))
       );
     } catch (err: any) {
       console.error(err);
@@ -119,24 +113,240 @@ const GamesPage: React.FC = () => {
     }
   };
 
+  // Delete handler (superadmin only)
+  const handleDelete = async (id: number) => {
+    if (user?.role !== "superadmin") return;
+    if (!window.confirm("Are you sure you want to delete this game?")) return;
+
+    const wasDeleted = await deleteGame(id.toString());
+    if (wasDeleted) {
+      setLocalGames((prev) => prev.filter((g) => g.id !== id));
+    }
+  };
+
+  // Open create modal
+  const openModal = () => {
+    setIsModalOpen(true);
+    setFormError("");
+    setNewName("");
+    setNewSeasonId(0);
+    setNewStage("");
+    setNewTeam1Score(0);
+    setNewTeam2Score(0);
+    setNewDate("");
+    setNewVideoUrl("");
+  };
+
+  // Close create modal
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setFormError("");
+  };
+
+  // Create new game handler
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newName.trim() === "" || newSeasonId <= 0 || newDate.trim() === "") {
+      setFormError("Name, season ID, and date are required.");
+      return;
+    }
+
+    const payload = {
+      name:       newName,
+      seasonId:   newSeasonId,
+      stage:      newStage,
+      team1Score: newTeam1Score,
+      team2Score: newTeam2Score,
+      date:       new Date(newDate).toISOString(),
+      videoUrl:   newVideoUrl !== "" ? newVideoUrl : null,
+    };
+
+    try {
+      const created = await createGame(payload);
+      if (created) {
+        setLocalGames((prev) => [created, ...prev]);
+        closeModal();
+      }
+    } catch {
+      // Error shown by hook
+    }
+  };
+
   if (loading) return <p>Loading games…</p>;
   if (error)   return <p>Error: {error}</p>;
 
   return (
     <div className="portal-main">
-      <h1 className="users-title">
-        Games
-        <button className="create-btn" onClick={handleCreate}>
-          + Create Game
-        </button>
-      </h1>
+      <h1 className="users-title">Games</h1>
+      <button className="create-button" onClick={openModal}>
+        Create Game
+      </button>
 
-      <table className="users-table">
+
+      {/* Create Modal */}
+      {isModalOpen && (
+        <div
+          className="modal-overlay"
+          style={{
+            position:       "fixed",
+            top:            0,
+            left:           0,
+            width:          "100%",
+            height:         "100%",
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            display:        "flex",
+            alignItems:     "center",
+            justifyContent: "center",
+            zIndex:         1000,
+          }}
+        >
+          <div
+            className="modal"
+            style={{
+              background:      "#fff",
+              padding:         "1.5rem",
+              borderRadius:    "0.5rem",
+              width:           "90%",
+              maxWidth:        "400px",
+              boxShadow:       "0 2px 10px rgba(0,0,0,0.3)",
+            }}
+          >
+            <button
+              onClick={closeModal}
+              style={{
+                background:      "transparent",
+                border:          "none",
+                fontSize:        "1.25rem",
+                float:           "right",
+                cursor:          "pointer",
+              }}
+            >
+              ×
+            </button>
+
+            <h2 style={{ marginTop: 0 }}>New Game</h2>
+
+            {formError && (
+              <p className="error" style={{ color: "red", marginBottom: "0.5rem" }}>
+                {formError}
+              </p>
+            )}
+
+            <form onSubmit={handleCreate}>
+              {/* Name */}
+              <label>
+                Name*
+                <input
+                  type="text"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  required
+                  style={{ width: "100%", marginBottom: "0.75rem" }}
+                />
+              </label>
+
+              {/* Season ID */}
+              <label>
+                Season ID*
+                <input
+                  type="number"
+                  value={newSeasonId}
+                  onChange={(e) => setNewSeasonId(Number(e.target.value))}
+                  required
+                  style={{ width: "100%", marginBottom: "0.75rem" }}
+                />
+              </label>
+
+              {/* Stage */}
+              <label>
+                Stage
+                <input
+                  type="text"
+                  value={newStage}
+                  onChange={(e) => setNewStage(e.target.value)}
+                  style={{ width: "100%", marginBottom: "0.75rem" }}
+                />
+              </label>
+
+              {/* Team 1 Score */}
+              <label>
+                Team 1 Score
+                <input
+                  type="number"
+                  value={newTeam1Score}
+                  onChange={(e) => setNewTeam1Score(Number(e.target.value))}
+                  min="0"
+                  style={{ width: "100%", marginBottom: "0.75rem" }}
+                />
+              </label>
+
+              {/* Team 2 Score */}
+              <label>
+                Team 2 Score
+                <input
+                  type="number"
+                  value={newTeam2Score}
+                  onChange={(e) => setNewTeam2Score(Number(e.target.value))}
+                  min="0"
+                  style={{ width: "100%", marginBottom: "0.75rem" }}
+                />
+              </label>
+
+              {/* Date */}
+              <label>
+                Date*
+                <input
+                  type="date"
+                  value={newDate}
+                  onChange={(e) => setNewDate(e.target.value)}
+                  required
+                  style={{ width: "100%", marginBottom: "0.75rem" }}
+                />
+              </label>
+
+              {/* Video URL */}
+              <label>
+                Video URL
+                <input
+                  type="text"
+                  value={newVideoUrl}
+                  onChange={(e) => setNewVideoUrl(e.target.value)}
+                  style={{ width: "100%", marginBottom: "1rem" }}
+                />
+              </label>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={creating}
+                style={{
+                  width:        "100%",
+                  padding:      "0.5rem",
+                  borderRadius: "0.25rem",
+                  background:   "#007bff",
+                  color:        "#fff",
+                  border:       "none",
+                  cursor:       "pointer",
+                }}
+              >
+                {creating ? "Creating…" : "Submit"}
+              </button>
+              {createError && (
+                <p className="error" style={{ color: "red", marginTop: "0.5rem" }}>
+                  {createError}
+                </p>
+              )}
+            </form>
+          </div>
+        </div>
+      )}
+
+      <table className="users-table" style={{ marginTop: "1.5rem" }}>
         <thead>
           <tr>
             <th>ID</th>
-            <th>Title</th>
-            <th>Season</th>
+            <th>Name</th>
+            <th>Season ID</th>
             <th>Stage</th>
             <th>Team1 Score</th>
             <th>Team2 Score</th>
@@ -146,13 +356,13 @@ const GamesPage: React.FC = () => {
           </tr>
         </thead>
         <tbody>
-          {localGames.map(g => {
+          {localGames.map((g) => {
             const dateStr = new Date(g.date).toISOString().slice(0, 10);
             return (
               <tr key={g.id}>
                 <td>{g.id}</td>
 
-                {/* Title */}
+                {/* Name */}
                 <td
                   style={{ cursor: "pointer" }}
                   onClick={() => setEditing({ id: g.id, field: "name", value: g.name })}
@@ -161,40 +371,42 @@ const GamesPage: React.FC = () => {
                     <input
                       type="text"
                       value={editing.value}
-                      onChange={e => setEditing({ ...editing, value: e.target.value })}
+                      onChange={(e) => setEditing({ ...editing, value: e.target.value })}
                       onBlur={commitEdit}
-                      onKeyDown={e => {
+                      onKeyDown={(e) => {
                         if (e.key === "Enter") e.currentTarget.blur();
                         if (e.key === "Escape") setEditing(null);
                       }}
                       autoFocus
                     />
-                  ) : g.name}
+                  ) : (
+                    g.name
+                  )}
                 </td>
 
-                {/* Season */}
+                {/* Season ID */}
                 <td
                   style={{ cursor: "pointer" }}
-                  onClick={() => setEditing({
-                    id: g.id,
-                    field: "season",
-                    value: g.season.seasonNumber.toString()
-                  })}
+                  onClick={() =>
+                    setEditing({ id: g.id, field: "seasonId", value: g.season.id.toString() })
+                  }
                 >
-                  {editing?.id === g.id && editing.field === "season" ? (
+                  {editing?.id === g.id && editing.field === "seasonId" ? (
                     <input
                       type="number"
                       min="1"
                       value={editing.value}
-                      onChange={e => setEditing({ ...editing, value: e.target.value })}
+                      onChange={(e) => setEditing({ ...editing, value: e.target.value })}
                       onBlur={commitEdit}
-                      onKeyDown={e => {
+                      onKeyDown={(e) => {
                         if (e.key === "Enter") e.currentTarget.blur();
                         if (e.key === "Escape") setEditing(null);
                       }}
                       autoFocus
                     />
-                  ) : g.season.seasonNumber}
+                  ) : (
+                    g.season.id
+                  )}
                 </td>
 
                 {/* Stage */}
@@ -206,109 +418,151 @@ const GamesPage: React.FC = () => {
                     <input
                       type="text"
                       value={editing.value}
-                      onChange={e => setEditing({ ...editing, value: e.target.value })}
+                      onChange={(e) => setEditing({ ...editing, value: e.target.value })}
                       onBlur={commitEdit}
-                      onKeyDown={e => {
+                      onKeyDown={(e) => {
                         if (e.key === "Enter") e.currentTarget.blur();
                         if (e.key === "Escape") setEditing(null);
                       }}
                       autoFocus
                     />
-                  ) : g.stage}
+                  ) : (
+                    g.stage
+                  )}
                 </td>
 
                 {/* Team1 Score */}
                 <td
                   style={{ cursor: "pointer", textAlign: "center" }}
-                  onClick={() => setEditing({
-                    id: g.id,
-                    field: "team1Score",
-                    value: g.team1Score.toString()
-                  })}
+                  onClick={() =>
+                    setEditing({
+                      id:    g.id,
+                      field: "team1Score",
+                      value: g.team1Score.toString(),
+                    })
+                  }
                 >
                   {editing?.id === g.id && editing.field === "team1Score" ? (
                     <input
                       type="number"
                       min="0"
                       value={editing.value}
-                      onChange={e => setEditing({ ...editing, value: e.target.value })}
+                      onChange={(e) => setEditing({ ...editing, value: e.target.value })}
                       onBlur={commitEdit}
-                      onKeyDown={e => {
+                      onKeyDown={(e) => {
                         if (e.key === "Enter") e.currentTarget.blur();
                         if (e.key === "Escape") setEditing(null);
                       }}
                       autoFocus
                     />
-                  ) : g.team1Score}
+                  ) : (
+                    g.team1Score
+                  )}
                 </td>
 
                 {/* Team2 Score */}
                 <td
                   style={{ cursor: "pointer", textAlign: "center" }}
-                  onClick={() => setEditing({
-                    id: g.id,
-                    field: "team2Score",
-                    value: g.team2Score.toString()
-                  })}
+                  onClick={() =>
+                    setEditing({
+                      id:    g.id,
+                      field: "team2Score",
+                      value: g.team2Score.toString(),
+                    })
+                  }
                 >
                   {editing?.id === g.id && editing.field === "team2Score" ? (
                     <input
                       type="number"
                       min="0"
                       value={editing.value}
-                      onChange={e => setEditing({ ...editing, value: e.target.value })}
+                      onChange={(e) => setEditing({ ...editing, value: e.target.value })}
                       onBlur={commitEdit}
-                      onKeyDown={e => {
+                      onKeyDown={(e) => {
                         if (e.key === "Enter") e.currentTarget.blur();
                         if (e.key === "Escape") setEditing(null);
                       }}
                       autoFocus
                     />
-                  ) : g.team2Score}
+                  ) : (
+                    g.team2Score
+                  )}
                 </td>
 
                 {/* Date */}
                 <td
                   style={{ cursor: "pointer" }}
-                  onClick={() => setEditing({ id: g.id, field: "date", value: dateStr })}
+                  onClick={() =>
+                    setEditing({ id: g.id, field: "date", value: dateStr })
+                  }
                 >
                   {editing?.id === g.id && editing.field === "date" ? (
                     <input
                       type="date"
                       value={editing.value}
-                      onChange={e => setEditing({ ...editing, value: e.target.value })}
+                      onChange={(e) => setEditing({ ...editing, value: e.target.value })}
                       onBlur={commitEdit}
-                      onKeyDown={e => {
+                      onKeyDown={(e) => {
                         if (e.key === "Enter") e.currentTarget.blur();
                         if (e.key === "Escape") setEditing(null);
                       }}
                       autoFocus
                     />
-                  ) : new Date(g.date).toLocaleDateString()}
+                  ) : (
+                    new Date(g.date).toLocaleDateString()
+                  )}
                 </td>
 
                 {/* Video URL */}
                 <td
                   style={{ cursor: "pointer" }}
-                  onClick={() => setEditing({ id: g.id, field: "videoUrl", value: g.videoUrl ?? "" })}
+                  onClick={() =>
+                    setEditing({ id: g.id, field: "videoUrl", value: g.videoUrl ?? "" })
+                  }
                 >
                   {editing?.id === g.id && editing.field === "videoUrl" ? (
                     <input
                       type="text"
                       value={editing.value}
-                      onChange={e => setEditing({ ...editing, value: e.target.value })}
+                      onChange={(e) => setEditing({ ...editing, value: e.target.value })}
                       onBlur={commitEdit}
-                      onKeyDown={e => {
+                      onKeyDown={(e) => {
                         if (e.key === "Enter") e.currentTarget.blur();
                         if (e.key === "Escape") setEditing(null);
                       }}
                       autoFocus
                     />
-                  ) : g.videoUrl ?? <span className="text-muted">None</span>}
+                  ) : (
+                    g.videoUrl ?? <span className="text-muted">None</span>
+                  )}
                 </td>
 
-                {/* Actions */}
-                <td><span className="text-muted">—</span></td>
+                {/* Actions (delete if superadmin) */}
+                <td>
+                  {user?.role === "superadmin" ? (
+                    <button
+                      onClick={() => handleDelete(g.id)}
+                      disabled={deleting}
+                      style={{
+                        padding:      "0.25rem 0.5rem",
+                        borderRadius: "0.25rem",
+                        background:   "#dc3545",
+                        color:        "#fff",
+                        border:       "none",
+                        cursor:       "pointer",
+                      }}
+                    >
+                      Delete
+                    </button>
+                  ) : (
+                    <span className="text-muted">No permission</span>
+                  )}
+                  {deleteError && (
+                    <p className="error" style={{ color: "red", marginTop: "0.25rem" }}>
+                      {deleteError}
+                    </p>
+                  )}
+                </td>
               </tr>
             );
           })}

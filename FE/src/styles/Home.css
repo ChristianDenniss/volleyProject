@@ -17,7 +17,7 @@
     margin-bottom: 4rem;
 
     /* NEW: Center and constrain width */
-    max-width: 1400px;
+    max-width: 1500px;
     margin-left: auto;
     margin-right: auto;
     width: 100%;
@@ -128,16 +128,14 @@
     flex-shrink: 0;                     /* ✅ Prevent image from shrinking */
 }
 
-
 /* Full-Width Breakout for Video Section */
-
 .video-section
 {
     position: relative;
     width: 100vw;
     margin-left: calc(-50vw + 50%);
     padding-top: 56.25%; /* 16:9 aspect ratio */
-    margin-bottom: 0rem;
+    margin-bottom: -1px; /* Negative margin to remove gap */
     border-radius: 10px;
     overflow: hidden;
     box-shadow: 0 3px 12px rgb(0 0 0 / 0.1);
@@ -159,6 +157,8 @@
     position: relative; /* Needed for absolute positioning children */
     width: 100vw;
     margin-left: calc(-50vw + 50%);
+    margin-top: 0; /* Remove any top margin */
+    margin-bottom: -1rem;
     height: 500px; /* Matches image height */
     border-radius: 10px;
     overflow: hidden;
@@ -221,60 +221,192 @@
 /* Remove default link styling in featured & side articles */
 .headline-section .featured-article a,
 .side-articles article a {
-  text-decoration: none;
-  color: inherit;
+    text-decoration: none;
+    color: inherit;
 }
 
 /* Also suppress any hover‐underline or color change */
 .headline-section .featured-article a:hover,
 .side-articles article a:hover {
-  text-decoration: none;
-  color: inherit;
+    text-decoration: none;
+    color: inherit;
 }
 
 /* Make the <Link> wrapping the featured card take up the same flex space */
 .headline-section > a {
     display: block;
     flex: 2;
-  }
-  
-  /* Ensure the inner .featured-article still fills its parent */
-  .headline-section > a .featured-article {
+}
+
+/* Ensure the inner .featured-article still fills its parent */
+.headline-section > a .featured-article {
     width: 100%;
-  }
-  
-  /* Also make each side‐article link a block so it sizes properly */
-  .side-articles > a {
+}
+
+/* Also make each side‐article link a block so it sizes properly */
+.side-articles > a {
     display: block;
-  }
-  
-  /* Remove default link styling around side-article links */
+}
+
+/* Remove default link styling around side-article links */
 .side-articles > a {
     display: block;       /* so the entire block is clickable */
     text-decoration: none;
     color: inherit;
-  }
-  
-  /* Also ensure the <h4> inside no longer turns blue on hover */
-  .side-articles > a h4 {
+}
+
+/* Also ensure the <h4> inside no longer turns blue on hover */
+.side-articles > a h4 {
     text-decoration: none;
     color: inherit;
-  }
-  
-  /* Smooth transition on both featured and side cards */
+}
+
+/* Smooth transition on both featured and side cards */
 .headline-section > a .featured-article,
 .side-articles > a article {
-  transition: transform 0.3s ease;
+    transition: transform 0.3s ease;
 }
 
 /* Slightly enlarge on hover */
 .headline-section > a:hover .featured-article,
 .side-articles > a:hover article {
-  transform: scale(1.02);
+    transform: scale(1.02);
 }
 
 /* Indent side-article titles */
 .side-articles > a article h4 {
     padding-left: 2rem;  /* bump this up or down to taste */
-  }
-  
+}
+/* Mobile Responsive Styles */
+@media screen and (max-width: 1024px) {
+    .headline-section {
+        flex-direction: column;
+        gap: 2rem;
+    }
+
+    .featured-article {
+        aspect-ratio: 16/9;
+    }
+
+    .featured-text h2 {
+        font-size: 2rem;
+    }
+
+    .side-articles {
+        margin-top: 0;
+    }
+
+    .side-articles article {
+        min-height: 100px;
+    }
+
+    .side-articles img {
+        width: 120px;
+        height: 100px;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .home {
+        padding: 0.5rem;
+    }
+
+    .headline-section {
+        margin-top: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .featured-text {
+        padding: 0.75rem 1rem;
+    }
+
+    .featured-text h2 {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .featured-text p {
+        font-size: 0.9rem;
+    }
+
+    .side-articles article {
+        padding: 0.75rem;
+    }
+
+    .side-articles article h4 {
+        font-size: 1rem;
+    }
+
+    .call-to-action {
+        height: 300px;
+    }
+
+    .join-button {
+        font-size: 1rem;
+        padding: 0.5rem 1.2rem;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .featured-text h2 {
+        font-size: 1.25rem;
+    }
+
+    .tag, .date-tag {
+        font-size: 0.7rem;
+        padding: 0.1rem 0.4rem;
+    }
+
+    .side-articles article {
+        flex-direction: column;
+        align-items: flex-start;
+        min-height: auto;
+    }
+
+    .side-articles img {
+        width: 100%;
+        height: 150px;
+        margin-top: 0.5rem;
+    }
+
+    .side-articles article h4 {
+        margin: 0;
+        font-size: 0.9rem;
+    }
+
+    .call-to-action {
+        height: 250px;
+    }
+
+    .join-button {
+        font-size: 0.9rem;
+        padding: 0.4rem 1rem;
+    }
+}
+
+/* Fix for video section on mobile */
+@media screen and (max-width: 768px) {
+    .video-section {
+        margin-left: -0.5rem;
+        margin-right: -0.5rem;
+        width: calc(100% + 1rem);
+        border-radius: 0;
+    }
+}
+
+/* Improve touch targets on mobile */
+@media (hover: none) and (pointer: coarse) {
+    .side-articles article,
+    .join-button {
+        cursor: default;
+    }
+
+    .side-articles article:active {
+        background-color: #f0f0f0;
+    }
+
+    .join-button:active {
+        background-color: #c49a00;
+    }
+}
+

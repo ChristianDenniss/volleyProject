@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
 import type { Teams } from '../teams/team.entity.ts';
 import type { Games } from '../games/game.entity.ts';
+import { Awards } from '../awards/award.entity.ts';
 
 @Entity()
 export class Seasons {
@@ -35,4 +36,8 @@ export class Seasons {
     // One-to-many relationship with games, a season can have many games
     @OneToMany('Games', 'season')
     games!: Games[];
+
+    // One-to-many relationship with Awards
+    @OneToMany(() => Awards, (award) => award.season)
+    awards!: Awards[];  // A season can have many awards
 }
