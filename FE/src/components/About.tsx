@@ -5,48 +5,80 @@ const About: React.FC = () =>
 {
     return (
         <div className="about-page-container">
-            {/* Page Heading */}
-            <h1 className="about-title">About the Volleyball Game Platform</h1>
+            <h1 className="about-title">About Volleyball 4.2</h1>
 
-            {/* Intro Section */}
             <p className="about-intro">
-                This is your all-in-one destination for everything volleyball — built for players, coaches, and fans who want more from their game.
+                Welcome to the official platform for Volleyball 4.2, the premier competitive volleyball experience in Roblox. Our platform serves as the central hub for the Roblox Volleyball League (RVL), providing comprehensive tools for players, teams, and fans.
             </p>
 
-            {/* Mission Section */}
             <section className="about-section">
-                <h2 className="section-title">Our Mission</h2>
+                <h2 className="section-title">League Management</h2>
                 <p>
-                    We’re redefining how competitive volleyball is experienced and organized. Whether you’re tracking your team’s rise or checking stats for your next match, our platform is built to serve your journey.
+                    Our platform provides a complete ecosystem for competitive volleyball:
                 </p>
-            </section>
-
-            {/* Platform Features */}
-            <section className="about-section">
-                <h2 className="section-title">What You Can Do</h2>
                 <ul className="feature-list">
-                    <li>🏐 Track live games and results</li>
-                    <li>📊 View detailed player & team stats</li>
-                    <li>📰 Read news, updates, and highlights</li>
-                    <li>📅 Stay updated with match schedules</li>
-                    <li>📈 Watch how rankings shift in real time</li>
+                    <li>Comprehensive team management and roster tracking</li>
+                    <li>Detailed season organization and scheduling</li>
+                    <li>Real-time game statistics and performance metrics</li>
+                    <li>Player profiles with career statistics and achievements</li>
+                    <li>Automated award tracking and recognition system</li>
                 </ul>
             </section>
 
-            {/* Community Section */}
             <section className="about-section">
-                <h2 className="section-title">Community Driven</h2>
+                <h2 className="section-title">Statistical Analysis</h2>
                 <p>
-                    Built by and for volleyball fans. Players can grow their visibility, teams can connect, and fans can stay closer to the action than ever before.
+                    We provide in-depth statistical tracking for every aspect of the game:
                 </p>
+                <ul className="feature-list">
+                    <li>Advanced player performance metrics</li>
+                    <li>Team statistics and historical data</li>
+                    <li>Season-by-season comparisons</li>
+                    <li>Career progression tracking</li>
+                    <li>Real-time game statistics</li>
+                </ul>
             </section>
 
-            {/* Developer Section */}
             <section className="about-section">
-                <h2 className="section-title">Who Made This</h2>
+                <h2 className="section-title">Community Features</h2>
                 <p>
-                    Created by <strong>Christian Dennis</strong>, a developer at <strong>UNBSJ</strong> who’s passionate about bridging tech and sports. This project is a hands-on effort to modernize amateur volleyball through innovative design and functionality.
+                    Stay connected with the volleyball community through our integrated features:
                 </p>
+                <ul className="feature-list">
+                    <li>News articles and game highlights</li>
+                    <li>Team and player profiles</li>
+                    <li>Match schedules and results</li>
+                    <li>Community announcements and updates</li>
+                    <li>Direct integration with our Discord community</li>
+                </ul>
+            </section>
+
+            <section className="about-section">
+                <h2 className="section-title">Administrative Tools</h2>
+                <p>
+                    Our platform includes powerful tools for league administration:
+                </p>
+                <ul className="feature-list">
+                    <li>User role management and permissions</li>
+                    <li>Content moderation and approval system</li>
+                    <li>Team and player registration management</li>
+                    <li>Game result verification and validation</li>
+                    <li>Comprehensive data management system</li>
+                </ul>
+            </section>
+
+            <section className="about-section">
+                <h2 className="section-title">Getting Started</h2>
+                <p>
+                    Join our community today by:
+                </p>
+                <ul className="feature-list">
+                    <li>Creating an account to access all features</li>
+                    <li>Joining our Discord server for community updates</li>
+                    <li>Exploring the Roblox game to start playing</li>
+                    <li>Checking out our teams and seasons pages</li>
+                    <li>Reading our latest articles and news</li>
+                </ul>
             </section>
         </div>
     );
