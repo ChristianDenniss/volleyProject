@@ -111,4 +111,69 @@ th {
 
 .reject-btn:hover {
     background: #c82333;
+}
+
+/* New styles for accordion */
+.article-row {
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.article-row:hover {
+    background-color: #f8f9fa;
+}
+
+.article-row.expanded {
+    background-color: #f0f7ff;
+}
+
+.article-details {
+    background-color: #f8f9fa;
+}
+
+.article-content {
+    padding: 1.5rem;
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+}
+
+.article-image {
+    flex: 0 0 300px;
+}
+
+.article-image img {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.article-text {
+    flex: 1;
+}
+
+.article-text h3 {
+    margin: 0 0 0.5rem 0;
+    color: #333;
+    font-size: 1.1rem;
+}
+
+.article-text p {
+    margin: 0 0 1.5rem 0;
+    color: #666;
+    line-height: 1.6;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .article-content {
+        flex-direction: column;
+    }
+
+    .article-image {
+        flex: 0 0 auto;
+        width: 100%;
+        margin-bottom: 1rem;
+    }
 } 

@@ -9,6 +9,7 @@ const ArticlesPage: React.FC = () => {
     const { patchArticle } = useArticleMutations();
     const { deleteItem } = useDeleteArticles();
     const [filter, setFilter] = useState<'all' | 'pending'>('pending');
+    const [expandedArticleId, setExpandedArticleId] = useState<number | null>(null);
 
     const handleApprove = async (articleId: number) => {
         try {
@@ -24,6 +25,10 @@ const ArticlesPage: React.FC = () => {
         } catch (error) {
             console.error('Error rejecting article:', error);
         }
+    };
+
+    const toggleExpand = (articleId: number) => {
+        setExpandedArticleId(expandedArticleId === articleId ? null : articleId);
     };
 
     // Only show pending articles by default, or all articles if filter is 'all'
@@ -67,32 +72,60 @@ const ArticlesPage: React.FC = () => {
                     </thead>
                     <tbody>
                         {filteredArticles.map(article => (
-                            <tr key={article.id}>
-                                <td>{article.title}</td>
-                                <td>{article.author.username}</td>
-                                <td>{new Date(article.createdAt).toLocaleDateString()}</td>
-                                <td>
-                                    {article.approved === null ? 'Pending' : 'Approved'}
-                                </td>
-                                <td>
-                                    {article.approved === null && (
-                                        <>
-                                            <button 
-                                                onClick={() => handleApprove(article.id)}
-                                                className="approve-btn"
-                                            >
-                                                Approve
-                                            </button>
-                                            <button 
-                                                onClick={() => handleReject(article.id)}
-                                                className="reject-btn"
-                                            >
-                                                Reject
-                                            </button>
-                                        </>
-                                    )}
-                                </td>
-                            </tr>
+                            <React.Fragment key={article.id}>
+                                <tr 
+                                    className={`article-row ${expandedArticleId === article.id ? 'expanded' : ''}`}
+                                    onClick={() => toggleExpand(article.id)}
+                                >
+                                    <td>{article.title}</td>
+                                    <td>{article.author.username}</td>
+                                    <td>{new Date(article.createdAt).toLocaleDateString()}</td>
+                                    <td>
+                                        {article.approved === null ? 'Pending' : 'Approved'}
+                                    </td>
+                                    <td>
+                                        {article.approved === null && (
+                                            <>
+                                                <button 
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleApprove(article.id);
+                                                    }}
+                                                    className="approve-btn"
+                                                >
+                                                    Approve
+                                                </button>
+                                                <button 
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleReject(article.id);
+                                                    }}
+                                                    className="reject-btn"
+                                                >
+                                                    Reject
+                                                </button>
+                                            </>
+                                        )}
+                                    </td>
+                                </tr>
+                                {expandedArticleId === article.id && (
+                                    <tr className="article-details">
+                                        <td colSpan={5}>
+                                            <div className="article-content">
+                                                <div className="article-image">
+                                                    <img src={article.imageUrl} alt={article.title} />
+                                                </div>
+                                                <div className="article-text">
+                                                    <h3>Summary</h3>
+                                                    <p>{article.summary}</p>
+                                                    <h3>Content</h3>
+                                                    <p>{article.content}</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                )}
+                            </React.Fragment>
                         ))}
                     </tbody>
                 </table>
