@@ -6,6 +6,7 @@ import { useStatsMutations }          from "../../hooks/allPatch";
 import { useCreateStats }            from "../../hooks/allCreate";
 import { useDeleteStats }            from "../../hooks/allDelete";
 import { useAuth }                   from "../../context/authContext";
+import { usePlayers }                from "../../hooks/allFetch";
 import type { Stats }                from "../../types/interfaces";
 import "../../styles/UsersPage.css"; // reuse table & text-muted styles
 import "../../styles/GamesPage.css"; // reuse table & text-muted styles
@@ -40,6 +41,9 @@ const StatsPage: React.FC = () =>
     // Retrieve stats list from API
     const { data: stats, loading, error } = useStats();
 
+    // Retrieve players list for the dropdown
+    const { data: players } = usePlayers();
+
     // Destructure mutation functions for patching stats
     const { patchStats }                 = useStatsMutations();
 
@@ -73,7 +77,7 @@ const StatsPage: React.FC = () =>
     const [ newAces, setNewAces ]                   = useState<number>(0);
     const [ newServingErrors, setNewServingErrors ] = useState<number>(0);
     const [ newMiscErrors, setNewMiscErrors ]       = useState<number>(0);
-    const [ newPlayerId, setNewPlayerId ]           = useState<number>(0);
+    const [ newPlayerName, setNewPlayerName ]       = useState<string>("");
     const [ newGameId, setNewGameId ]               = useState<number>(0);
     const [ formError, setFormError ]               = useState<string>("");
 
@@ -242,7 +246,7 @@ const StatsPage: React.FC = () =>
         setNewAces(0);
         setNewServingErrors(0);
         setNewMiscErrors(0);
-        setNewPlayerId(0);
+        setNewPlayerName("");
         setNewGameId(0);
     };
 
@@ -258,10 +262,9 @@ const StatsPage: React.FC = () =>
     {
         e.preventDefault();
 
-        // Validate required field: playerId must be > 0
-        if (newPlayerId <= 0 || newGameId <= 0)
-        {
-            setFormError("Player ID and Game ID are required.");
+        // Validate required fields
+        if (!newPlayerName || newGameId <= 0) {
+            setFormError("Player name and Game ID are required.");
             return;
         }
 
@@ -280,7 +283,7 @@ const StatsPage: React.FC = () =>
             aces:          newAces,
             servingErrors: newServingErrors,
             miscErrors:    newMiscErrors,
-            playerId:      newPlayerId,
+            playerName:    newPlayerName,
             gameId:        newGameId,
         };
 
@@ -486,16 +489,21 @@ const StatsPage: React.FC = () =>
                                 />
                             </label>
 
-                            {/* Player ID */}
+                            {/* Player Name (dropdown) */}
                             <label>
-                                Player ID*
-                                <input
-                                    type="number"
-                                    value={newPlayerId}
-                                    onChange={(e) => setNewPlayerId(Number(e.target.value))}
-                                    min="1"
+                                Player Name*
+                                <select
+                                    value={newPlayerName}
+                                    onChange={(e) => setNewPlayerName(e.target.value)}
                                     required
-                                />
+                                >
+                                    <option value="">Select a player</option>
+                                    {players?.map((player) => (
+                                        <option key={player.id} value={player.name}>
+                                            {player.name}
+                                        </option>
+                                    ))}
+                                </select>
                             </label>
 
                             {/* Game ID */}

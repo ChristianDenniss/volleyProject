@@ -75,8 +75,10 @@
 }
 
 .stats-table th {
-    background-color: #f8f9fa;
+    background-color: #1a237e; /* Deep blue color matching portal */
+    color: white;
     font-weight: 600;
+    padding: 1rem 0.75rem;
 }
 
 .stats-table tr:hover {
@@ -86,7 +88,7 @@
 /* Create Button */
 .create-button {
     padding: 0.5rem 1rem;
-    background-color: #007bff;
+    background-color: #1a237e; /* Matching portal blue */
     color: white;
     border: none;
     border-radius: 4px;
@@ -95,7 +97,7 @@
 }
 
 .create-button:hover {
-    background-color: #0056b3;
+    background-color: #283593; /* Slightly lighter blue on hover */
 }
 
 .create-button:disabled {

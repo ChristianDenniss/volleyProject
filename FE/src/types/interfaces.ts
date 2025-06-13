@@ -164,7 +164,9 @@ export type CreateStatsInput = {
   aces:          number;
   servingErrors: number;
   miscErrors:    number;
-  playerId:      number;
+  playerId?:     number;  // Optional for backward compatibility
+  playerName?:   string;  // New field for creating by name
+  gameId:        number;  // Added gameId which was missing
 };
 
 // When creating a Team, omit "id" and nested arrays; supply seasonId instead of Season object.

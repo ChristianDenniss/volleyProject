@@ -80,11 +80,21 @@ export const useCreateArticles = () => {
  * – Returns createStats(payload) → Promise<Stats | null>
  */
 export const useCreateStats = () => {
-  const { createItem, loading, error } = useCreate<Stats, CreateStatsInput>("stats");
+  const { createItem: createById, loading: loadingById, error: errorById } = useCreate<Stats, CreateStatsInput>("stats");
+  const { createItem: createByName, loading: loadingByName, error: errorByName } = useCreate<Stats, CreateStatsInput>("stats/by-name");
+
+  const createStats = async (payload: CreateStatsInput): Promise<Stats | null> => {
+    if (payload.playerName) {
+      return createByName(payload);
+    } else {
+      return createById(payload);
+    }
+  };
+
   return {
-    createStats: createItem,
-    loading,
-    error,
+    createStats,
+    loading: loadingById || loadingByName,
+    error: errorById || errorByName
   };
 };
 
