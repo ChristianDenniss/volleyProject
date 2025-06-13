@@ -25,7 +25,8 @@ type EditField =
     | "aces"
     | "servingErrors"
     | "miscErrors"
-    | "playerId";
+    | "playerId"
+    | "gameId";
 
 interface EditingState {
     id:    number;
@@ -72,6 +73,7 @@ const StatsPage: React.FC = () =>
     const [ newServingErrors, setNewServingErrors ] = useState<number>(0);
     const [ newMiscErrors, setNewMiscErrors ]       = useState<number>(0);
     const [ newPlayerId, setNewPlayerId ]           = useState<number>(0);
+    const [ newGameId, setNewGameId ]               = useState<number>(0);
     const [ formError, setFormError ]               = useState<string>("");
 
     // Initialize localStats when data is fetched
@@ -101,8 +103,25 @@ const StatsPage: React.FC = () =>
             return;
         }
 
-        // Retrieve original value as string for comparison
-        const origValue = orig[field].toString();
+        let origValue: string;
+        switch (field) {
+            case "spikingErrors": origValue = orig.spikingErrors.toString(); break;
+            case "apeKills": origValue = orig.apeKills.toString(); break;
+            case "apeAttempts": origValue = orig.apeAttempts.toString(); break;
+            case "spikeKills": origValue = orig.spikeKills.toString(); break;
+            case "spikeAttempts": origValue = orig.spikeAttempts.toString(); break;
+            case "assists": origValue = orig.assists.toString(); break;
+            case "settingErrors": origValue = orig.settingErrors.toString(); break;
+            case "blocks": origValue = orig.blocks.toString(); break;
+            case "digs": origValue = orig.digs.toString(); break;
+            case "blockFollows": origValue = orig.blockFollows.toString(); break;
+            case "aces": origValue = orig.aces.toString(); break;
+            case "servingErrors": origValue = orig.servingErrors.toString(); break;
+            case "miscErrors": origValue = orig.miscErrors.toString(); break;
+            case "playerId": origValue = orig.player.id.toString(); break;
+            case "gameId": origValue = orig.game.id.toString(); break;
+            default: origValue = "";
+        }
 
         // If the value did not change, cancel editing
         if (value === origValue)
@@ -127,6 +146,7 @@ const StatsPage: React.FC = () =>
             servingErrors: "Serving Errors",
             miscErrors:    "Misc Errors",
             playerId:      "Player ID",
+            gameId:        "Game ID",
         };
 
         // Confirm with the user before saving changes
@@ -140,7 +160,23 @@ const StatsPage: React.FC = () =>
         const payload: Partial<Stats> & Record<string, any> = {};
 
         // Assign the new value to the correct field in payload
-        payload[field] = Number(value);
+        switch (field) {
+            case "spikingErrors": payload.spikingErrors = Number(value); break;
+            case "apeKills": payload.apeKills = Number(value); break;
+            case "apeAttempts": payload.apeAttempts = Number(value); break;
+            case "spikeKills": payload.spikeKills = Number(value); break;
+            case "spikeAttempts": payload.spikeAttempts = Number(value); break;
+            case "assists": payload.assists = Number(value); break;
+            case "settingErrors": payload.settingErrors = Number(value); break;
+            case "blocks": payload.blocks = Number(value); break;
+            case "digs": payload.digs = Number(value); break;
+            case "blockFollows": payload.blockFollows = Number(value); break;
+            case "aces": payload.aces = Number(value); break;
+            case "servingErrors": payload.servingErrors = Number(value); break;
+            case "miscErrors": payload.miscErrors = Number(value); break;
+            case "playerId": payload.playerId = Number(value); break;
+            case "gameId": payload.gameId = Number(value); break;
+        }
 
         try
         {
@@ -206,6 +242,7 @@ const StatsPage: React.FC = () =>
         setNewServingErrors(0);
         setNewMiscErrors(0);
         setNewPlayerId(0);
+        setNewGameId(0);
     };
 
     // Close create modal and reset form error
@@ -221,9 +258,9 @@ const StatsPage: React.FC = () =>
         e.preventDefault();
 
         // Validate required field: playerId must be > 0
-        if (newPlayerId <= 0)
+        if (newPlayerId <= 0 || newGameId <= 0)
         {
-            setFormError("Player ID is required and must be greater than 0.");
+            setFormError("Player ID and Game ID are required.");
             return;
         }
 
@@ -243,6 +280,7 @@ const StatsPage: React.FC = () =>
             servingErrors: newServingErrors,
             miscErrors:    newMiscErrors,
             playerId:      newPlayerId,
+            gameId:        newGameId,
         };
 
         try
@@ -284,51 +322,21 @@ const StatsPage: React.FC = () =>
 
             {/* Create Modal */}
             {isModalOpen && (
-                <div
-                    className="modal-overlay"
-                    style={{
-                        position:       "fixed",
-                        top:            0,
-                        left:           0,
-                        width:          "100%",
-                        height:         "100%",
-                        backgroundColor: "rgba(0, 0, 0, 0.5)",
-                        display:        "flex",
-                        alignItems:     "center",
-                        justifyContent: "center",
-                        zIndex:         1000,
-                    }}
-                >
-                    <div
-                        className="modal"
-                        style={{
-                            background:      "#fff",
-                            padding:         "1.5rem",
-                            borderRadius:    "0.5rem",
-                            width:           "90%",
-                            maxWidth:        "400px",
-                            boxShadow:       "0 2px 10px rgba(0,0,0,0.3)",
-                        }}
-                    >
+                <div className="modal-overlay">
+                    <div className="modal">
                         {/* Close button */}
                         <button
                             onClick={closeModal}
-                            style={{
-                                background:      "transparent",
-                                border:          "none",
-                                fontSize:        "1.25rem",
-                                float:           "right",
-                                cursor:          "pointer",
-                            }}
+                            className="modal-close"
                         >
                             ×
                         </button>
 
-                        <h2 style={{ marginTop: 0 }}>New Stat</h2>
+                        <h2 className="modal-title">New Stat</h2>
 
                         {/* Display form validation error */}
                         {formError && (
-                            <p className="error" style={{ color: "red", marginBottom: "0.5rem" }}>
+                            <p className="modal-error">
                                 {formError}
                             </p>
                         )}
@@ -342,7 +350,6 @@ const StatsPage: React.FC = () =>
                                     value={newSpikingErrors}
                                     onChange={(e) => setNewSpikingErrors(Number(e.target.value))}
                                     min="0"
-                                    style={{ width: "100%", marginBottom: "0.75rem" }}
                                 />
                             </label>
 
@@ -354,7 +361,6 @@ const StatsPage: React.FC = () =>
                                     value={newApeKills}
                                     onChange={(e) => setNewApeKills(Number(e.target.value))}
                                     min="0"
-                                    style={{ width: "100%", marginBottom: "0.75rem" }}
                                 />
                             </label>
 
@@ -366,7 +372,6 @@ const StatsPage: React.FC = () =>
                                     value={newApeAttempts}
                                     onChange={(e) => setNewApeAttempts(Number(e.target.value))}
                                     min="0"
-                                    style={{ width: "100%", marginBottom: "0.75rem" }}
                                 />
                             </label>
 
@@ -378,7 +383,6 @@ const StatsPage: React.FC = () =>
                                     value={newSpikeKills}
                                     onChange={(e) => setNewSpikeKills(Number(e.target.value))}
                                     min="0"
-                                    style={{ width: "100%", marginBottom: "0.75rem" }}
                                 />
                             </label>
 
@@ -390,7 +394,6 @@ const StatsPage: React.FC = () =>
                                     value={newSpikeAttempts}
                                     onChange={(e) => setNewSpikeAttempts(Number(e.target.value))}
                                     min="0"
-                                    style={{ width: "100%", marginBottom: "0.75rem" }}
                                 />
                             </label>
 
@@ -402,7 +405,6 @@ const StatsPage: React.FC = () =>
                                     value={newAssists}
                                     onChange={(e) => setNewAssists(Number(e.target.value))}
                                     min="0"
-                                    style={{ width: "100%", marginBottom: "0.75rem" }}
                                 />
                             </label>
 
@@ -414,7 +416,6 @@ const StatsPage: React.FC = () =>
                                     value={newSettingErrors}
                                     onChange={(e) => setNewSettingErrors(Number(e.target.value))}
                                     min="0"
-                                    style={{ width: "100%", marginBottom: "0.75rem" }}
                                 />
                             </label>
 
@@ -426,7 +427,6 @@ const StatsPage: React.FC = () =>
                                     value={newBlocks}
                                     onChange={(e) => setNewBlocks(Number(e.target.value))}
                                     min="0"
-                                    style={{ width: "100%", marginBottom: "0.75rem" }}
                                 />
                             </label>
 
@@ -438,7 +438,6 @@ const StatsPage: React.FC = () =>
                                     value={newDigs}
                                     onChange={(e) => setNewDigs(Number(e.target.value))}
                                     min="0"
-                                    style={{ width: "100%", marginBottom: "0.75rem" }}
                                 />
                             </label>
 
@@ -450,7 +449,6 @@ const StatsPage: React.FC = () =>
                                     value={newBlockFollows}
                                     onChange={(e) => setNewBlockFollows(Number(e.target.value))}
                                     min="0"
-                                    style={{ width: "100%", marginBottom: "0.75rem" }}
                                 />
                             </label>
 
@@ -462,7 +460,6 @@ const StatsPage: React.FC = () =>
                                     value={newAces}
                                     onChange={(e) => setNewAces(Number(e.target.value))}
                                     min="0"
-                                    style={{ width: "100%", marginBottom: "0.75rem" }}
                                 />
                             </label>
 
@@ -474,7 +471,6 @@ const StatsPage: React.FC = () =>
                                     value={newServingErrors}
                                     onChange={(e) => setNewServingErrors(Number(e.target.value))}
                                     min="0"
-                                    style={{ width: "100%", marginBottom: "0.75rem" }}
                                 />
                             </label>
 
@@ -486,7 +482,6 @@ const StatsPage: React.FC = () =>
                                     value={newMiscErrors}
                                     onChange={(e) => setNewMiscErrors(Number(e.target.value))}
                                     min="0"
-                                    style={{ width: "100%", marginBottom: "0.75rem" }}
                                 />
                             </label>
 
@@ -499,7 +494,18 @@ const StatsPage: React.FC = () =>
                                     onChange={(e) => setNewPlayerId(Number(e.target.value))}
                                     min="1"
                                     required
-                                    style={{ width: "100%", marginBottom: "1rem" }}
+                                />
+                            </label>
+
+                            {/* Game ID */}
+                            <label>
+                                Game ID*
+                                <input
+                                    type="number"
+                                    value={newGameId}
+                                    onChange={(e) => setNewGameId(Number(e.target.value))}
+                                    min="1"
+                                    required
                                 />
                             </label>
 
@@ -507,22 +513,12 @@ const StatsPage: React.FC = () =>
                             <button
                                 type="submit"
                                 disabled={creating}
-                                style={{
-                                    width:        "100%",
-                                    padding:      "0.5rem",
-                                    borderRadius: "0.25rem",
-                                    background:   "#007bff",
-                                    color:        "#fff",
-                                    border:       "none",
-                                    cursor:       "pointer",
-                                }}
+                                className="create-button"
                             >
                                 {creating ? "Creating…" : "Submit"}
                             </button>
-
-                            {/* Show create error from hook */}
                             {createError && (
-                                <p className="error" style={{ color: "red", marginTop: "0.5rem" }}>
+                                <p className="modal-error">
                                     {createError}
                                 </p>
                             )}
@@ -536,20 +532,21 @@ const StatsPage: React.FC = () =>
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Player ID</th>
-                        <th>Spiking Errors</th>
-                        <th>Ape Kills</th>
-                        <th>Ape Attempts</th>
-                        <th>Spike Kills</th>
-                        <th>Spike Attempts</th>
-                        <th>Assists</th>
-                        <th>Setting Errors</th>
-                        <th>Blocks</th>
-                        <th>Digs</th>
-                        <th>Block Follows</th>
-                        <th>Aces</th>
-                        <th>Serving Errors</th>
-                        <th>Misc Errors</th>
+                        <th className="small-column">Player ID</th>
+                        <th className="small-column">Game ID</th>
+                        <th className="small-column">Spiking Errors</th>
+                        <th className="small-column">Ape Kills</th>
+                        <th className="small-column">Ape Attempts</th>
+                        <th className="small-column">Spike Kills</th>
+                        <th className="small-column">Spike Attempts</th>
+                        <th className="small-column">Assists</th>
+                        <th className="small-column">Setting Errors</th>
+                        <th className="small-column">Blocks</th>
+                        <th className="small-column">Digs</th>
+                        <th className="small-column">Block Follows</th>
+                        <th className="small-column">Aces</th>
+                        <th className="small-column">Serving Errors</th>
+                        <th className="small-column">Misc Errors</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -557,19 +554,26 @@ const StatsPage: React.FC = () =>
                     {localStats.map((s) =>
                     {
                         // Helper to convert values to strings
-                        const toStr = (field: EditField) => s[field].toString();
+                        const toStr = (field: EditField) => {
+                            switch (field) {
+                                case "playerId": return s.player.id.toString();
+                                case "gameId": return s.game.id.toString();
+                                default: return s[field].toString();
+                            }
+                        };
                         return (
                             <tr key={s.id}>
                                 <td>{s.id}</td>
 
-                                {/* Player ID */}
+                                {/* Player ID (editable) */}
                                 <td
-                                    style={{ cursor: "pointer", textAlign: "center" }}
+                                    className="small-column"
+                                    style={{ cursor: "pointer" }}
                                     onClick={() =>
                                         setEditing({
                                             id:    s.id,
                                             field: "playerId",
-                                            value: s.playerId.toString(),
+                                            value: s.player.id.toString(),
                                         })
                                     }
                                 >
@@ -596,7 +600,46 @@ const StatsPage: React.FC = () =>
                                             autoFocus
                                         />
                                     ) : (
-                                        s.playerId
+                                        s.player.id
+                                    )}
+                                </td>
+
+                                {/* Game ID (editable) */}
+                                <td
+                                    className="small-column"
+                                    style={{ cursor: "pointer" }}
+                                    onClick={() =>
+                                        setEditing({
+                                            id:    s.id,
+                                            field: "gameId",
+                                            value: s.game.id.toString(),
+                                        })
+                                    }
+                                >
+                                    {editing?.id === s.id && editing.field === "gameId" ? (
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            value={editing.value}
+                                            onChange={(e) =>
+                                                setEditing({ ...editing, value: e.target.value })
+                                            }
+                                            onBlur={commitEdit}
+                                            onKeyDown={(e) =>
+                                            {
+                                                if (e.key === "Enter")
+                                                {
+                                                    e.currentTarget.blur();
+                                                }
+                                                if (e.key === "Escape")
+                                                {
+                                                    setEditing(null);
+                                                }
+                                            }}
+                                            autoFocus
+                                        />
+                                    ) : (
+                                        s.game.id
                                     )}
                                 </td>
 
