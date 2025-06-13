@@ -27,6 +27,9 @@
     gap: 2rem;
     flex-wrap: nowrap;
     width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
 }
 
 .avatar-stack {
@@ -196,16 +199,15 @@
 }
 
 .avatar-left {
-    flex-shrink: 0;
-    width: 580px;
+    flex: 0 0 580px;
     display: flex;
     justify-content: center;
 }
 
 .avatar-right {
-    flex: 1;
+    flex: 0 1 auto;
     min-width: 250px;
-    max-width: calc(100% - 600px);
+    max-width: 500px;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -233,44 +235,49 @@
 
 @media (max-width: 1200px) {
     .avatar-left {
-        width: 400px;
-    }
-    
-    .avatar-right {
-        max-width: calc(100% - 420px);
+        flex: 0 0 400px;
     }
 }
 
 @media (max-width: 900px) {
     .avatar-header-info {
-        flex-direction: column;
-        align-items: center;
+        gap: 1rem;
     }
     
     .avatar-left {
-        width: 100%;
-        max-width: 400px;
+        flex: 0 0 300px;
     }
     
-    .avatar-right {
-        max-width: 100%;
-        text-align: center;
-        align-items: center;
+    .player-avatar {
+        width: 300px;
+        height: 300px;
+    }
+    
+    .player-name-large {
+        font-size: 2.5rem;
     }
 }
 
 @media (max-width: 600px) {
+    .avatar-header-info {
+        gap: 0.5rem;
+    }
+    
+    .avatar-left {
+        flex: 0 0 200px;
+    }
+    
     .player-avatar {
-        width: 250px;
-        height: 250px;
+        width: 200px;
+        height: 200px;
     }
     
     .player-name-large {
         font-size: 1.8rem;
     }
     
-    .avatar-header-info {
-        margin-left: 1rem;
+    .player-meta {
+        font-size: 1rem;
     }
 }
 
