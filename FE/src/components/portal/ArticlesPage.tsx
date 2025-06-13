@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
 import { useArticles } from '../../hooks/allFetch';
 import { useArticleMutations } from '../../hooks/allPatch';
-import { useDeleteArticles } from '../../hooks/allDelete';
 import '../../styles/ArticlesPage.css';
 
 const ArticlesPage: React.FC = () => {
     const { data: articles, loading, error } = useArticles();
     const { patchArticle } = useArticleMutations();
-    const { deleteItem } = useDeleteArticles();
     const [filter, setFilter] = useState<'all' | 'pending'>('pending');
     const [expandedArticleId, setExpandedArticleId] = useState<number | null>(null);
 
@@ -21,7 +19,7 @@ const ArticlesPage: React.FC = () => {
 
     const handleReject = async (articleId: number) => {
         try {
-            await deleteItem(articleId.toString());
+            await patchArticle(articleId, { approved: false });
         } catch (error) {
             console.error('Error rejecting article:', error);
         }
@@ -81,31 +79,34 @@ const ArticlesPage: React.FC = () => {
                                     <td>{article.author.username}</td>
                                     <td>{new Date(article.createdAt).toLocaleDateString()}</td>
                                     <td>
-                                        {article.approved === null ? 'Pending' : 'Approved'}
+                                        {article.approved === null ? 'Pending' : 
+                                         article.approved ? 'Approved' : 'Rejected'}
                                     </td>
                                     <td>
-                                        {article.approved === null && (
-                                            <>
+                                        <div className="action-buttons">
+                                            {article.approved !== true && (
                                                 <button 
+                                                    className="approve-btn"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         handleApprove(article.id);
                                                     }}
-                                                    className="approve-btn"
                                                 >
                                                     Approve
                                                 </button>
+                                            )}
+                                            {article.approved !== false && (
                                                 <button 
+                                                    className="reject-btn"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         handleReject(article.id);
                                                     }}
-                                                    className="reject-btn"
                                                 >
                                                     Reject
                                                 </button>
-                                            </>
-                                        )}
+                                            )}
+                                        </div>
                                     </td>
                                 </tr>
                                 {expandedArticleId === article.id && (

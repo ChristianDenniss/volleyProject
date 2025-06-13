@@ -35,9 +35,9 @@
 }
 
 .filter-btn.active {
-    background: #007bff;
+    background: #93c7ff;
     color: white;
-    border-color: #007bff;
+    border-color: #93c7ff;
 }
 
 .articles-table {
