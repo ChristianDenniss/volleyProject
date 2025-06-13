@@ -124,9 +124,12 @@
 }
 
 .character-count {
-    font-size: 0.9em;
+    font-size: 0.875rem;
     color: #666;
-    margin-top: 4px;
+    margin-top: 0.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .url-hint {
@@ -139,4 +142,17 @@
 .error-message ul {
     margin: 5px 0;
     padding-left: 20px;
+}
+
+.form-group input.invalid,
+.form-group textarea.invalid {
+    border-color: #dc3545;
+    background-color: #fff8f8;
+}
+
+.validation-message {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    display: block;
 } 

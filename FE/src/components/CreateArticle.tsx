@@ -25,22 +25,69 @@ const CreateArticle: React.FC = () => {
         imageUrl: ''
     });
 
+    // Validation state for each field
+    const [fieldValidation, setFieldValidation] = useState({
+        title: { isValid: false, message: 'Title must be at least 1 character' },
+        summary: { isValid: false, message: 'Summary must be at least 50 characters' },
+        content: { isValid: false, message: 'Content must be at least 240 characters' },
+        imageUrl: { isValid: false, message: 'Please enter a valid URL' }
+    });
+
+    const validateField = (name: string, value: string) => {
+        switch (name) {
+            case 'title':
+                return value.length >= 1;
+            case 'summary':
+                return value.length >= 50;
+            case 'content':
+                return value.length >= 240;
+            case 'imageUrl':
+                try {
+                    new URL(value);
+                    return true;
+                } catch {
+                    return false;
+                }
+            default:
+                return false;
+        }
+    };
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({
             ...prev,
             [name]: value
         }));
+
+        // Update validation state for the changed field
+        const isValid = validateField(name, value);
+        setFieldValidation(prev => ({
+            ...prev,
+            [name]: {
+                ...prev[name as keyof typeof prev],
+                isValid
+            }
+        }));
+
         // Clear validation errors when user starts typing
         setValidationErrors([]);
     };
 
+    const isFormValid = () => {
+        return Object.values(fieldValidation).every(field => field.isValid);
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        
         if (!user) {
-            console.error('User not authenticated');
-            setSubmitStatus('error');
             setValidationErrors(['You must be logged in to create an article']);
+            return;
+        }
+
+        if (!isFormValid()) {
+            setValidationErrors(['Please fix all validation errors before submitting']);
             return;
         }
 
@@ -116,9 +163,13 @@ const CreateArticle: React.FC = () => {
                         value={formData.title}
                         onChange={handleChange}
                         required
+                        className={!fieldValidation.title.isValid && formData.title ? 'invalid' : ''}
                     />
                     <div className="character-count">
                         Characters: {formData.title.length}/1 (minimum)
+                        {!fieldValidation.title.isValid && formData.title && (
+                            <span className="validation-message">{fieldValidation.title.message}</span>
+                        )}
                     </div>
                 </div>
 
@@ -131,9 +182,13 @@ const CreateArticle: React.FC = () => {
                         value={formData.summary}
                         onChange={handleChange}
                         required
+                        className={!fieldValidation.summary.isValid && formData.summary ? 'invalid' : ''}
                     />
                     <div className="character-count">
                         Characters: {formData.summary.length}/50 (minimum)
+                        {!fieldValidation.summary.isValid && formData.summary && (
+                            <span className="validation-message">{fieldValidation.summary.message}</span>
+                        )}
                     </div>
                 </div>
 
@@ -146,9 +201,13 @@ const CreateArticle: React.FC = () => {
                         value={formData.imageUrl}
                         onChange={handleChange}
                         required
+                        className={!fieldValidation.imageUrl.isValid && formData.imageUrl ? 'invalid' : ''}
                     />
                     <div className="url-hint">
                         Must be a valid URL (e.g., https://example.com/image.jpg)
+                        {!fieldValidation.imageUrl.isValid && formData.imageUrl && (
+                            <span className="validation-message">{fieldValidation.imageUrl.message}</span>
+                        )}
                     </div>
                 </div>
 
@@ -161,9 +220,13 @@ const CreateArticle: React.FC = () => {
                         onChange={handleChange}
                         required
                         rows={10}
+                        className={!fieldValidation.content.isValid && formData.content ? 'invalid' : ''}
                     />
                     <div className="character-count">
                         Characters: {formData.content.length}/240 (minimum)
+                        {!fieldValidation.content.isValid && formData.content && (
+                            <span className="validation-message">{fieldValidation.content.message}</span>
+                        )}
                     </div>
                 </div>
 
@@ -171,7 +234,11 @@ const CreateArticle: React.FC = () => {
                     <button type="button" onClick={() => navigate('/articles')} className="cancel-btn">
                         Cancel
                     </button>
-                    <button type="submit" className="submit-btn" disabled={loading}>
+                    <button 
+                        type="submit" 
+                        className="submit-btn" 
+                        disabled={loading || !isFormValid()}
+                    >
                         {loading ? 'Creating...' : 'Create Article'}
                     </button>
                 </div>
