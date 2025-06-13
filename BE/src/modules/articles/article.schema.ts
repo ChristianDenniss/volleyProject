@@ -11,6 +11,5 @@ export const createArticleSchema = z.object({
 });
 
 export const updateArticleSchema = createArticleSchema.partial().extend({
-    id: z.number().int().positive(),
     approved: z.boolean().optional(), // Allow true or false in updates
 });
