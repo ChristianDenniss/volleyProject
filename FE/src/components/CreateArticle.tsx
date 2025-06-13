@@ -47,7 +47,7 @@ const CreateArticle: React.FC = () => {
         try {
             const result = await createArticle({
                 ...formData,
-                authorId: user.id,
+                userId: user.id,
                 createdAt: new Date().toISOString(),
                 approved: null // Articles start as pending approval
             });

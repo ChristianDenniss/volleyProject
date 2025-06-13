@@ -184,11 +184,11 @@ export type CreateSeasonInput = {
   theme:        string;
 };
 
-// When creating an Article, omit "id" and nested author object; supply authorId.
+// When creating an Article, omit "id" and nested author object; supply userId.
 export type CreateArticleInput = {
   title:      string;
   content:    string;
-  authorId:   number;
+  userId:     number;
   createdAt:  string;
   summary:    string;
   imageUrl:   string;
