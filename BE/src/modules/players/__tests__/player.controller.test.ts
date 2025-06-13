@@ -1,6 +1,6 @@
-import { PlayerController } from '../player.controller.js';
-import { PlayerService } from '../player.service.js';
-import { mockRepository, mockPlayer, savedPlayer, mockPlayers, mockTeam, mockUser } from '../../../__mocks__/fixtures.js';
+import { PlayerController } from '../player.controller.ts';
+import { PlayerService } from '../player.service.ts';
+import { mockRepository, mockPlayer, savedPlayer, mockPlayers, mockTeam, mockUser } from '../../../__mocks__/fixtures.ts';
 import { Request, Response } from 'express';
 
 // Mock PlayerService

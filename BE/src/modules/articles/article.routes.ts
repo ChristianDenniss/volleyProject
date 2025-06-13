@@ -1,7 +1,7 @@
 import { Application, Router } from 'express';
-import { ArticleController } from './article.controller.js';
-import { validate } from '../../middleware/validate.js';
-import { createArticleSchema, updateArticleSchema } from './article.schema.js';
+import { ArticleController } from './article.controller.ts';
+import { validate } from '../../middleware/validate.ts';
+import { createArticleSchema, updateArticleSchema } from './article.schema.ts';
 
 export function registerArticleRoutes(app: Application): void
 {

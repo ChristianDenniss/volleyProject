@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, RelationId } from 'typeorm';
-import type { Players } from '../players/player.entity.js';
-import type { Games } from '../games/game.entity.js';
+import type { Players } from '../players/player.entity.ts';
+import type { Games } from '../games/game.entity.ts';
 
 @Entity()
 export class Stats {

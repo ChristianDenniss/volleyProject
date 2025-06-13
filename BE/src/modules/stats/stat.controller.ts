@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { StatService } from './stat.service.js';
+import { StatService } from './stat.service.ts';
 
 export class StatController
 {

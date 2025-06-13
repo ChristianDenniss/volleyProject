@@ -9,13 +9,13 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Entities from modules
-import { Teams } from "../modules/teams/team.entity.js";
-import { Players } from "../modules/players/player.entity.js";
-import { Games } from "../modules/games/game.entity.js";
-import { Seasons } from "../modules/seasons/season.entity.js";
-import { Stats } from "../modules/stats/stat.entity.js";
-import { User } from "../modules/user/user.entity.js";
-import { Article } from "../modules/articles/article.entity.js";
+import { Teams } from "../modules/teams/team.entity.ts";
+import { Players } from "../modules/players/player.entity.ts";
+import { Games } from "../modules/games/game.entity.ts";
+import { Seasons } from "../modules/seasons/season.entity.ts";
+import { Stats } from "../modules/stats/stat.entity.ts";
+import { User } from "../modules/user/user.entity.ts";
+import { Article } from "../modules/articles/article.entity.ts";
 
 
 dotenv.config();
@@ -32,7 +32,7 @@ const entities = [
 ];
 
 // Define migration paths
-const migrations = [join(__dirname, "migrations", "*.js")]; 
+const migrations = [join(__dirname, "migrations", "*.ts")]; 
 
 // Configure AppDataSource
 export const AppDataSource = new DataSource({
@@ -46,10 +46,10 @@ export const AppDataSource = new DataSource({
     synchronize: process.env.NODE_ENV === 'development', // Only sync in development
     logging: process.env.NODE_ENV === 'development',
     entities: process.env.NODE_ENV === 'production'
-        ? ["dist/modules/*/*.entity.js"] // Use compiled JS files in production
+        ? ["dist/modules/*/*.entity.ts"] // Use compiled JS files in production
         : entities, // Use entity objects for development
     migrations: process.env.NODE_ENV === 'production'
-        ? ["dist/db/migrations/*.js"] // Use compiled JS files in production
+        ? ["dist/db/migrations/*.ts"] // Use compiled JS files in production
         : migrations, // Use TS migrations for development
     subscribers: [],
 });

@@ -1,7 +1,7 @@
 import { Application, Router } from 'express';
-import { GameController } from './game.controller.js';
-import { validate } from '../../middleware/validate.js';
-import { createGameSchema, updateGameSchema } from './games.schema.js';
+import { GameController } from './game.controller.ts';
+import { validate } from '../../middleware/validate.ts';
+import { createGameSchema, updateGameSchema } from './games.schema.ts';
 
 export function registerGameRoutes(app: Application): void {
     const router = Router();

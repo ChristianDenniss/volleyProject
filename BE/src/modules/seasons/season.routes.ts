@@ -1,7 +1,7 @@
 import { Application, Router } from 'express';
-import { SeasonController } from './season.controller.js';
-import { validate } from '../../middleware/validate.js';
-import { createSeasonSchema, updateSeasonSchema } from './season.schema.js';
+import { SeasonController } from './season.controller.ts';
+import { validate } from '../../middleware/validate.ts';
+import { createSeasonSchema, updateSeasonSchema } from './season.schema.ts';
 
 export function registerSeasonRoutes(app: Application): void {
     const router = Router();

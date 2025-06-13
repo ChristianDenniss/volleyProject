@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
-import { ArticleService } from './article.service.js';
-import { MissingFieldError } from '../../errors/MissingFieldError.js';
-import { NotFoundError } from '../../errors/NotFoundError.js';
+import { ArticleService } from './article.service.ts';
+import { MissingFieldError } from '../../errors/MissingFieldError.ts';
+import { NotFoundError } from '../../errors/NotFoundError.ts';
 
 export class ArticleController {
     private articleService: ArticleService;

@@ -1,4 +1,4 @@
-import { CustomError } from "./CustomError.js";
+import { CustomError } from "./CustomError.ts";
 
 export class MultipleGamesNotFoundError extends CustomError 
 {

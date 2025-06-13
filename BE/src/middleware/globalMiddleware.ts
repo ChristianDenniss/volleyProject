@@ -1,10 +1,10 @@
-import { loggerMiddleware } from './logger.js';
-import { errorHandler } from './errorHandling.js';
+import { loggerMiddleware } from './logger.ts';
+import { errorHandler } from './errorHandling.ts';
 import { Application } from 'express';
 import express from 'express';
 import cors from 'cors';
-import { authenticateToken } from "./authentication.js";
-import { authorizeRoles } from "./authorizeRoles.js"
+import { authenticateToken } from "./authentication.ts";
+import { authorizeRoles } from "./authorizeRoles.ts"
 
 
 /**

@@ -1,9 +1,9 @@
 import { Repository } from 'typeorm';
-import { AppDataSource } from '../../db/data-source.js';
-import { Article } from './article.entity.js';
-import { User } from '../user/user.entity.js';
-import { MissingFieldError } from '../../errors/MissingFieldError.js';
-import { NotFoundError } from '../../errors/NotFoundError.js';
+import { AppDataSource } from '../../db/data-source.ts';
+import { Article } from './article.entity.ts';
+import { User } from '../user/user.entity.ts';
+import { MissingFieldError } from '../../errors/MissingFieldError.ts';
+import { NotFoundError } from '../../errors/NotFoundError.ts';
 
 export class ArticleService {
     private articleRepository: Repository<Article>;
@@ -26,7 +26,7 @@ export class ArticleService {
         if (!imageUrl) throw new MissingFieldError("Article image URL");
 
         // Fetch the user (author)
-        const user = await this.userRepository.findOneBy({ id: userId });
+        const user = await this.userRepository.findOneBy({ userId });
         if (!user) throw new NotFoundError(`User with ID ${userId} not found`);
 
         // Create new article
@@ -92,7 +92,7 @@ export class ArticleService {
         if (imageUrl) article.imageUrl = imageUrl;
 
         if (userId) {
-            const user = await this.userRepository.findOneBy({ id: userId });
+            const user = await this.userRepository.findOneBy({ userId });
             if (!user) throw new NotFoundError(`User with ID ${userId} not found`);
             article.author = user;  // Re-assign author if provided
         }
@@ -123,11 +123,11 @@ export class ArticleService {
         if (!userId) throw new MissingFieldError("User ID");
 
         // Check if user exists
-        const user = await this.userRepository.findOneBy({ id: userId });
+        const user = await this.userRepository.findOneBy({ userId });
         if (!user) throw new NotFoundError(`User with ID ${userId} not found`);
 
         return this.articleRepository.find({
-            where: { author: { id: userId } },
+            where: { author: { userId } },
             relations: ["author"],  // Including author in response
         });
     }

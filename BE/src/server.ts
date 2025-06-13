@@ -1,14 +1,13 @@
+console.log("aaa")
 import 'reflect-metadata';
 import { createServer } from 'http';
 import { createTerminus } from '@godaddy/terminus';
 import dotenv from 'dotenv';
-import createApp from './app.js';
-import { AppDataSource } from './db/data-source.js';
-import { errorHandler } from './middleware/errorHandling.js'; // Import error handler
-
+import createApp from './app.ts';
+import { AppDataSource } from './db/data-source.ts';
+import { errorHandler } from './middleware/errorHandling.ts'; // Import error handler
 dotenv.config();
 const PORT = process.env.PORT || 5000;
-
 async function startServer(): Promise<void> {
   try {
     // Initialize TypeORM DataSource

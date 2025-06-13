@@ -1,6 +1,6 @@
 import '../../../__mocks__/data-source';
-import { UserService } from '../user.service.js';
-import { mockRepository, mockUser, mockUsers, mockToken } from '../../../__mocks__/fixtures.js';
+import { UserService } from '../user.service.ts';
+import { mockRepository, mockUser, mockUsers, mockToken } from '../../../__mocks__/fixtures.ts';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 

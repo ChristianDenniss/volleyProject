@@ -1,7 +1,7 @@
 import { Application, Router } from 'express';
-import { PlayerController } from './player.controller.js';
-import { validate } from '../../middleware/validate.js';
-import { createPlayerSchema, updatePlayerSchema, createMultiplePlayersByNameSchema } from './players.schema.js';
+import { PlayerController } from './player.controller.ts';
+import { validate } from '../../middleware/validate.ts';
+import { createPlayerSchema, updatePlayerSchema, createMultiplePlayersByNameSchema } from './players.schema.ts';
 
 export function registerPlayerRoutes(app: Application): void 
 {

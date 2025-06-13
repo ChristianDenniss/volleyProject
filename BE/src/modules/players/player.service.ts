@@ -1,9 +1,9 @@
 import { Not, Repository, In } from 'typeorm';
-import { AppDataSource } from '../../db/data-source.js';
-import { Players } from './player.entity.js';
-import { Teams } from '../teams/team.entity.js';
-import { MissingFieldError } from '../../errors/MissingFieldError.js';
-import { NotFoundError } from '../../errors/NotFoundError.js';
+import { AppDataSource } from '../../db/data-source.ts';
+import { Players } from './player.entity.ts';
+import { Teams } from '../teams/team.entity.ts';
+import { MissingFieldError } from '../../errors/MissingFieldError.ts';
+import { NotFoundError } from '../../errors/NotFoundError.ts';
 
 export class PlayerService 
 {

@@ -1,4 +1,4 @@
-import { CustomError } from "./CustomError.js";
+import { CustomError } from "./CustomError.ts";
 
 export class UnauthorizedError extends CustomError
 {

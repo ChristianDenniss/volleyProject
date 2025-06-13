@@ -1,7 +1,7 @@
 import { Application, Router } from 'express';
-import { StatController } from './stat.controller.js';
-import { validate } from '../../middleware/validate.js';
-import { createStatSchema, updateStatSchema, createStatByNameSchema } from './stat.schema.js';
+import { StatController } from './stat.controller.ts';
+import { validate } from '../../middleware/validate.ts';
+import { createStatSchema, updateStatSchema, createStatByNameSchema } from './stat.schema.ts';
 
 export function registerStatRoutes(app: Application): void {
     const router = Router();

@@ -5,7 +5,7 @@
 
 import { Request, Response, NextFunction } from "express";
 import jwt                                from "jsonwebtoken";
-import { UnauthorizedError }              from "../errors/UnauthorizedError.js";
+import { UnauthorizedError }              from "../errors/UnauthorizedError.ts";
 
 //  You can create a narrow interface if you like, without touching global types
 export interface JwtPayload

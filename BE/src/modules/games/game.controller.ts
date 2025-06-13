@@ -1,11 +1,11 @@
 import { Request, Response } from 'express';
-import { GameService } from './game.service.js';
-import { MissingFieldError } from '../../errors/MissingFieldError.js';
-import { NotFoundError } from '../../errors/NotFoundError.js';
-import { ConflictError } from '../../errors/ConflictError.js';
-import { DuplicateError } from '../../errors/DuplicateError.js';
-import { DateError } from '../../errors/DateErrors.js';
-import { InvalidFormatError } from '../../errors/InvalidFormatError.js';
+import { GameService } from './game.service.ts';
+import { MissingFieldError } from '../../errors/MissingFieldError.ts';
+import { NotFoundError } from '../../errors/NotFoundError.ts';
+import { ConflictError } from '../../errors/ConflictError.ts';
+import { DuplicateError } from '../../errors/DuplicateError.ts';
+import { DateError } from '../../errors/DateErrors.ts';
+import { InvalidFormatError } from '../../errors/InvalidFormatError.ts';
 
 export class GameController {
     private gameService: GameService;

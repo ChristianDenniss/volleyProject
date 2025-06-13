@@ -1,12 +1,10 @@
 import { Repository } from 'typeorm';
-import { AppDataSource } from '../../db/data-source.js';
-import { User } from './user.entity.js';
-import jwt from 'jsonwebtoken';
-import bcrypt from 'bcryptjs';
-import { MissingFieldError } from '../../errors/MissingFieldError.js';
-import { DuplicateError } from '../../errors/DuplicateError.js';
-import { NotFoundError } from '../../errors/NotFoundError.js';
-import { UnauthorizedError } from '../../errors/UnauthorizedError.js';
+import { AppDataSource } from '../../db/data-source.ts';
+import { User } from './user.entity.ts';
+import { MissingFieldError } from '../../errors/MissingFieldError.ts';
+import { DuplicateError } from '../../errors/DuplicateError.ts';
+import { NotFoundError } from '../../errors/NotFoundError.ts';
+import { UnauthorizedError } from '../../errors/UnauthorizedError.ts';
 
 export class UserService {
     private userRepository: Repository<User>;
@@ -20,56 +18,31 @@ export class UserService {
         }
     }
 
-    // Hash password using bcrypt
-    private async hashPassword(password: string): Promise<string> {
-        return bcrypt.hash(password, 10);
-    }
-
-    // Verify password using bcrypt
-    private async verifyPassword(plainPassword: string, hashedPassword: string): Promise<boolean> {
-        return bcrypt.compare(plainPassword, hashedPassword);
-    }
 
     /**
      * Create a new user with validation
      */
-    async createUser(username: string, email: string, password: string, role: string = 'user'): Promise<User> {
+    async createUser(username: string, userId: number, role: string = 'user'): Promise<User> {
         // Validation
         if (!username) throw new MissingFieldError("Username");
-        if (!email) throw new MissingFieldError("Email");
-        if (!password) throw new MissingFieldError("Password");
-        if (password.length < 6) throw new Error("Password must be at least 6 characters long");
         
-        // Email validation
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            throw new Error("Invalid email format");
-        }
 
         // Check if user already exists
         const existingUser = await this.userRepository.findOne({
-            where: [{ username }, { email }],
+            where: [{ userId }, { userId }],
         });
 
         if (existingUser) {
-            if (existingUser.username === username) 
+            if (existingUser.userId === userId) 
             {
                 throw new DuplicateError(`Username ${username} already in use`);
             } 
-            else 
-            {
-                throw new DuplicateError(`Email ${email} already in use`);
-            }
         }
-
-        // Hash the password
-        const hashedPassword = await this.hashPassword(password);
 
         // Create new user
         const newUser = new User();
         newUser.username = username;
-        newUser.email = email;
-        newUser.password = hashedPassword;
+        newUser.userId = userId
         newUser.role = role;
 
         return this.userRepository.save(newUser);
@@ -88,7 +61,7 @@ export class UserService {
     async getUserById(id: number): Promise<User> {
         if (!id) throw new MissingFieldError("User ID");
 
-        const user = await this.userRepository.findOneBy({ id });
+        const user = await this.userRepository.findOneBy({ userId: id });
         if (!user) throw new NotFoundError(`User with ID:${id} not found`);
 
         return user;
@@ -112,41 +85,20 @@ export class UserService {
     async updateUser(
         id: number,
         username?: string,
-        email?: string,
-        password?: string,
         role?: string
     ): Promise<User> {
         if (!id) throw new MissingFieldError("User ID");
 
-        const user = await this.userRepository.findOneBy({ id });
+        const user = await this.userRepository.findOneBy({ userId: id });
         if (!user) throw new NotFoundError(`User with ID:${id} not found`);
 
         // Check if username or email is already in use by another user
         if (username) {
             const existingUser = await this.userRepository.findOneBy({ username });
-            if (existingUser && existingUser.id !== id) {
+            if (existingUser && existingUser.userId !== id) {
                 throw new DuplicateError(`Username ${username} is already in use`);
             }
             user.username = username;
-        }
-
-        if (email) {
-            // Email validation
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(email)) {
-                throw new Error("Invalid email format");
-            }
-            
-            const existingUser = await this.userRepository.findOneBy({ email });
-            if (existingUser && existingUser.id !== id) {
-                throw new DuplicateError(`Email ${email} is already in use`);
-            }
-            user.email = email;
-        }
-
-        if (password) {
-            if (password.length < 6) throw new Error("Password must be at least 6 characters long");
-            user.password = await this.hashPassword(password);
         }
 
         if (role) {
@@ -165,37 +117,10 @@ export class UserService {
     async deleteUser(id: number): Promise<void> {
         if (!id) throw new MissingFieldError("User ID");
 
-        const user = await this.userRepository.findOneBy({ id });
+        const user = await this.userRepository.findOneBy({ userId: id });
         if (!user) throw new NotFoundError(`User with ID:${id} not found`);
 
         await this.userRepository.remove(user);
-    }
-
-    /**
-     * Authenticate user with validation
-     */
-    async authenticateUser(username: string, password: string): Promise<{ user: User, token: string }> {
-        if (!username) throw new MissingFieldError("Username");
-        if (!password) throw new MissingFieldError("Password");
-
-        const user = await this.userRepository.findOneBy({ username });
-        if (!user) throw new UnauthorizedError("Invalid username or password");
-
-        const isPasswordValid = await this.verifyPassword(password, user.password);
-        if (!isPasswordValid) throw new UnauthorizedError("Invalid username or password");
-
-        // Generate JWT token
-        const token = jwt.sign(
-            { id: user.id, 
-                username: user.username, 
-                role: user.role 
-            },
-
-            this.JWT_SECRET,
-            { expiresIn: '24h' }
-        );
-
-        return { user, token };
     }
 
     /**
@@ -205,7 +130,7 @@ export class UserService {
         if (!userId) throw new MissingFieldError("User ID");
         
         const user = await this.userRepository.findOne({
-            where: { id: userId },
+            where: { userId: userId },
             relations: ['articles']
         });
         if (!user) throw new NotFoundError(`User with ID: ${userId} not found`);
@@ -230,7 +155,7 @@ export class UserService {
         const target = await this.getUserById(targetId); // re-use existing helper
 
         //  Disallow self-changes
-        if (requester.id === target.id)
+        if (requester.id === target.userId)
         {
             throw new UnauthorizedError("You cannot change your own role");
         }

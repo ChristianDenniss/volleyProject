@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { SeasonService } from "./season.service.js";
+import { SeasonService } from "./season.service.ts";
 
 export class SeasonController
 {

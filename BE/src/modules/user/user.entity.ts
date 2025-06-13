@@ -1,20 +1,14 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
-import type { Article } from "../articles/article.entity.js";
+import type { Article } from "../articles/article.entity.ts";
 
 @Entity()
 export class User
 {
     @PrimaryGeneratedColumn()
-    id!: number;
+    userId!: number
 
     @Column()
     username!: string;
-
-    @Column()
-    email!: string;
-
-    @Column()
-    password!: string;
 
     @Column({ default: 'user' })
     role!: string;

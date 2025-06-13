@@ -1,3 +1,5 @@
+
 // Entry point for the application
 // This file just re-exports from server.ts
-export * from './server.js';
+console.log("dadawdadadawdawdawd")
+export * from './server.ts';

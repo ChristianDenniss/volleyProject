@@ -1,5 +1,5 @@
-import { AppDataSource } from "./data-source.js";
-import { User } from "../modules/user/user.entity.js";
+import { AppDataSource } from "./data-source.ts";
+import { User } from "../modules/user/user.entity.ts";
 
 /**
  * Repository examples - use module services instead of direct queries in the application
@@ -13,5 +13,5 @@ export const getUsers = async () => {
 };
 
 export const getUserById = async (id: number) => {
-    return await userRepository.findOneBy({ id });
+    return await userRepository.findOneBy({ userId: id });
 };

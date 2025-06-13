@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
-import { UserService } from './user.service.js';
+import { UserService } from './user.service.ts';
+import { OAuth } from '../../oauth.ts';
 
 export class UserController {
     private userService: UserService;
@@ -8,74 +9,81 @@ export class UserController {
         this.userService = new UserService();
     }
 
-    // Register a new user
-    //  Register a new user – always creates a plain user (role = "user")
-    register = async (req: Request, res: Response): Promise<void> =>
-    {
-        try
-        {
-            const { username, email, password } = req.body;
-    
-            //  Ignore any role sent from client
-            const newUser = await this.userService.createUser(
-                username,
-                email,
-                password,
-                "user"           //  ← hard-coded role
-            );
-    
-            const { password: _p, ...userWithoutPassword } = newUser;
-    
-            res.status(201).json(userWithoutPassword);
-        }
-        catch (error)
-        {
-            const msg = error instanceof Error ? error.message : "Failed to register user";
-    
-            if (
-                msg.includes("required")      ||
-                msg.includes("already in use")||
-                msg.includes("must be")       ||
-                msg.includes("Invalid")
-            )
-            {
-                res.status(400).json({ error: msg });
-            }
-            else
-            {
-                console.error("Error registering user:", error);
-                res.status(500).json({ error: "Failed to register user" });
-            }
-        }
-    };
-    
+    getUrl = (options: OAuth) => {
+        const url = new URL(options.AUTHORIZE_URL)
+        url.searchParams.set("redirect_uri", options.CALLBACK)
+        url.searchParams.set("client_id", options.ID)
+        url.searchParams.set("client_secret", options.SECRET)
+        url.searchParams.set("scope", options.SCOPES.join(","))
+        url.searchParams.set("response_type", "code")        
 
-    // User login
-    login = async (req: Request, res: Response): Promise<void> => {
-        try {
-            const { username, password } = req.body;
-            const { user, token } = await this.userService.authenticateUser(username, password);
+        const built = url.toString()
 
-            // Remove password from response
-            const { password: _, ...userWithoutPassword } = user;
+        return async (_req: Request, res: Response): Promise<void> => {
+            return res.redirect(built)
+        }   
+    }
+
+    getCallback = (options: OAuth) => {
+        return async (req: Request, res: Response): Promise<void> => {
+            const code = req.query["code"]
+            const isError = req.query["error"]
+            if (!!isError) {
+                res.status(500).send(`${isError}: description: ${req.query["description"]}`)
+                return 
+            }
+            if (typeof code !== "string") {
+                res.status(400).send(`unpexected code value`)
+                return
+            }
+
+            const url = new URL(options.AUTHORIZE_URL)
+            url.searchParams.set("redirect_uri", options.CALLBACK)
+            url.searchParams.set("client_id", options.ID)
+            url.searchParams.set("client_secret", options.SECRET)
+            url.searchParams.set("code", code)
+            url.searchParams.set("grant_type", "authorization_code")
+
+            const built = url.toString()
+
+            const result = await fetch(built, { headers: {["content-type"]: "application/x-www-form-urlencoded"} })
+            const json = await result.json() as {
+                access_token: string,
+                refresh_token: string,
+                token_type: string,
+                expires_in: number,
+                scope: string
+            }
+            // most likely token_type is bearer????
+            if (json.token_type !== "Bearer") {
+                res.status(500).send(`expected token_type 'Bearer' got ${json.token_type}`)
+                return 
+            }
+
+            const userInfo = await fetch(options.GET_USER_INFO, {headers: {["Authorization"]: `${json.token_type} ${json.access_token}`}})
+            const userInfoJson = await userInfo.json() as {
+                "sub": string, // userid in stirng
+                "name": string, // username
+                "nickname": string, // displayname
+                "preferred_username": string, // ignore i would say
+                "created_at": null,
+                "profile": string, // ignore, you can construct this yourself
+                "picture": string, // url for their pfp
+            }
+
+            // lets get or get a user
+            const userId = Number(userInfoJson.sub)
+            const user = await this.userService.getProfile(userId).catch((err) => {
+                return this.userService.createUser(userInfoJson.name, userId)
+            })
+
+
 
             res.json({
-                user: userWithoutPassword,
-                token
-            });
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to login";
-            
-            if (errorMessage.includes("required")) {
-                res.status(400).json({ error: errorMessage });
-            } else if (errorMessage.includes("Invalid username or password")) {
-                res.status(401).json({ error: "Invalid username or password" });
-            } else {
-                console.error("Error logging in:", error);
-                res.status(500).json({ error: "Failed to login" });
-            }
-        }
-    };
+
+            })
+        }   
+    }
 
     // Get all users (admin only)
     getUsers = async (req: Request, res: Response): Promise<void> => {
@@ -84,7 +92,7 @@ export class UserController {
             
             // Remove passwords from response
             const usersWithoutPasswords = users.map(user => {
-                const { password, ...userWithoutPassword } = user;
+                const { ...userWithoutPassword } = user;
                 return userWithoutPassword;
             });
             
@@ -102,7 +110,7 @@ export class UserController {
             const user = await this.userService.getUserById(parseInt(id));
 
             // Remove password from response
-            const { password, ...userWithoutPassword } = user;
+            const { ...userWithoutPassword } = user;
             
             res.json(userWithoutPassword);
         } catch (error) {
@@ -121,18 +129,15 @@ export class UserController {
     updateUser = async (req: Request, res: Response): Promise<void> => {
         try {
             const { id } = req.params;
-            const { username, email, password, role } = req.body;
+            const { username } = req.body;
 
             const updatedUser = await this.userService.updateUser(
                 parseInt(id),
                 username,
-                email,
-                password,
-                role
             );
 
             // Remove password from response
-            const { password: _, ...userWithoutPassword } = updatedUser;
+            const { ...userWithoutPassword } = updatedUser;
             
             res.json(userWithoutPassword);
         } catch (error) {
@@ -185,7 +190,7 @@ export class UserController {
     
                 const user = await this.userService.getProfile(authUser.id);
     
-                const { password, ...userWithoutPassword } = user;
+                const { ...userWithoutPassword } = user;
     
                 res.json(userWithoutPassword);
             }
@@ -221,10 +226,10 @@ export class UserController {
             const updated = await this.userService.changeUserRole(requester, targetId, desiredRole);
     
             //  Strip password
-            const { password, ...userWithoutPassword } = updated;
+            const { ...userWithoutPassword } = updated;
     
             res.json(userWithoutPassword);
-        }
+        }   
         catch (error)
         {
             const msg = error instanceof Error ? error.message : "Failed to set role";

@@ -1,16 +1,16 @@
 import { Request, Response, NextFunction } from 'express';
-import { NotFoundError } from '../errors/NotFoundError.js';
-import { DuplicateError } from '../errors/DuplicateError.js';
-import { MissingFieldError } from '../errors/MissingFieldError.js';
-import { UnauthorizedError } from '../errors/UnauthorizedError.js';
-import { OutOfBoundsError } from '../errors/OutOfBoundsError.js';
-import { NegativeStatError } from '../errors/NegativeStatError.js';
-import { MultiplePlayersNotFoundError } from '../errors/MultiplePlayersNotFoundError.js';
-import { MultipleGamesNotFoundError } from '../errors/MultipleGamesNotFoundError.js';
-import { InvalidFormatError } from '../errors/InvalidFormatError.js';
-import { DateError } from '../errors/DateErrors.js';
-import { ConflictError } from '../errors/ConflictError.js';
-import { BadRequestError } from '../errors/BadRequestError.js';
+import { NotFoundError } from '../errors/NotFoundError.ts';
+import { DuplicateError } from '../errors/DuplicateError.ts';
+import { MissingFieldError } from '../errors/MissingFieldError.ts';
+import { UnauthorizedError } from '../errors/UnauthorizedError.ts';
+import { OutOfBoundsError } from '../errors/OutOfBoundsError.ts';
+import { NegativeStatError } from '../errors/NegativeStatError.ts';
+import { MultiplePlayersNotFoundError } from '../errors/MultiplePlayersNotFoundError.ts';
+import { MultipleGamesNotFoundError } from '../errors/MultipleGamesNotFoundError.ts';
+import { InvalidFormatError } from '../errors/InvalidFormatError.ts';
+import { DateError } from '../errors/DateErrors.ts';
+import { ConflictError } from '../errors/ConflictError.ts';
+import { BadRequestError } from '../errors/BadRequestError.ts';
 
 // Map error types to HTTP status codes
 const errorCodeMapping: Record<string, number> = {
