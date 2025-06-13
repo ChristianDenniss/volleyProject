@@ -132,14 +132,14 @@ export type { Game, Player, Stats, Team, Season, Article, User,Award, AuthContex
 // When creating a Game, we send primitive fields + foreign IDs.
 // We omit nested "season" and "teams" arrays.
 export type CreateGameInput = {
-  name:       string;
-  seasonId:   number;
+  name: string;
+  seasonId: number;
   team1Score: number;
   team2Score: number;
-  videoUrl?:  string | null;
-  date:       string; 
-  stage:      string;
-  teamIds?:   number[];
+  videoUrl?: string | null;
+  date: string;
+  stage: string;
+  teamNames: string[];
 };
 
 // When creating a Player, omit "id" and nested arrays.
