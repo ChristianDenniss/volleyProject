@@ -8,6 +8,8 @@ import { useDeleteGames } from "../../hooks/allDelete";
 import { useAuth } from "../../context/authContext";
 import type { Game, Season } from "../../types/interfaces";
 import "../../styles/UsersPage.css";   // contains .users-table, .text-muted, plus our new classes
+import SearchBar from "../Searchbar";
+import Pagination from "../Pagination";
 
 type EditField = "name" | "seasonId" | "stage" | "team1Score" | "team2Score" | "date" | "videoUrl";
 
@@ -32,11 +34,14 @@ const GamesPage: React.FC = () => {
   const { data: games, loading, error } = useGames();
   const { patchGame } = useGameMutations();
   const { createGame, loading: creating, error: createError } = useCreateGames();
-  const { deleteItem: deleteGame } = useDeleteGames();
+  const { deleteItem: deleteGame, loading: deleting } = useDeleteGames();
   const { user } = useAuth();
 
   const [localGames, setLocalGames] = useState<Game[]>([]);
   const [editing, setEditing] = useState<EditingState | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const gamesPerPage = 10;
 
   // Modal state for creating a new game
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -170,6 +175,24 @@ const GamesPage: React.FC = () => {
     setEditing({ id, field, value: origValue });
   };
 
+  // Filter games based on search query
+  const filteredGames = localGames.filter(game =>
+    game?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false
+  );
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredGames.length / gamesPerPage);
+  const paginatedGames = filteredGames.slice(
+    (currentPage - 1) * gamesPerPage,
+    currentPage * gamesPerPage
+  );
+
+  // Handle search
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    setCurrentPage(1); // Reset to first page when searching
+  };
+
   if (loading) return <p>Loading games…</p>;
   if (error) return <p>Error: {error}</p>;
 
@@ -177,10 +200,20 @@ const GamesPage: React.FC = () => {
     <div className="portal-main">
       <h1 className="users-title">Games</h1>
 
-      {/* "Create Game" Button Below the Heading */}
-      <button className="create-button" onClick={openModal}>
-        Create Game
-      </button>
+      {/* Search and Controls */}
+      <div className="players-controls">
+        <button className="create-button" onClick={() => setIsModalOpen(true)}>
+          Create Game
+        </button>
+        <div className="players-controls-right">
+          <SearchBar onSearch={handleSearch} />
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        </div>
+      </div>
 
       {/* Modal Overlay for Creating a New Game */}
       {isModalOpen && (
@@ -382,7 +415,7 @@ const GamesPage: React.FC = () => {
           </tr>
         </thead>
         <tbody>
-          {localGames.map((g) => {
+          {paginatedGames.map((g) => {
             return (
               <tr key={g.id}>
                 <td>
@@ -486,7 +519,20 @@ const GamesPage: React.FC = () => {
                 </td>
                 <td>
                   {user?.role === "superadmin" && (
-                    <button onClick={() => handleDelete(g.id)}>Delete</button>
+                    <button
+                      onClick={() => handleDelete(g.id)}
+                      disabled={deleting}
+                      style={{
+                        padding: "0.25rem 0.5rem",
+                        borderRadius: "0.25rem",
+                        background: "#dc3545",
+                        color: "#fff",
+                        border: "none",
+                        cursor: "pointer",
+                      }}
+                    >
+                      Delete
+                    </button>
                   )}
                 </td>
               </tr>
