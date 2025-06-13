@@ -23,21 +23,22 @@
 
 .filter-btn {
     padding: 0.5rem 1rem;
-    border: 1px solid #ddd;
+    border: 1px solid #2d3c50;
     border-radius: 4px;
     background: white;
+    color: #2d3c50;
     cursor: pointer;
     transition: all 0.2s;
 }
 
 .filter-btn:hover {
-    background: #f5f5f5;
+    background: #f8fafc;
 }
 
 .filter-btn.active {
-    background: #93c7ff;
+    background: #2d3c50;
     color: white;
-    border-color: #93c7ff;
+    border-color: #2d3c50;
 }
 
 .articles-table {

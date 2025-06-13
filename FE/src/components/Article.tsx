@@ -51,9 +51,10 @@ const Articles: React.FC = () =>
             return [];
         }
 
-        // Filter by title (case-insensitive)
+        // Filter by title (case-insensitive) and approved status
         const filtered = data.filter((article: Article) =>
-            article.title.toLowerCase().includes(searchTerm.toLowerCase())
+            article.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
+            article.approved === true
         );
 
         // Sort by createdAt
