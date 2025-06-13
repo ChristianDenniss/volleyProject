@@ -524,16 +524,7 @@ const GamesPage: React.FC = () => {
                     <button
                       onClick={() => handleDelete(g.id)}
                       disabled={deleting}
-                      className="delete-button"
-                      style={{
-                        padding: "0.25rem 0.5rem",
-                        borderRadius: "0.25rem",
-                        background: "#dc3545",
-                        color: "#fff",
-                        border: "none",
-                        cursor: "pointer",
-                        fontSize: "0.875rem",
-                      }}
+                      className="game-btn-remove"
                     >
                       Delete
                     </button>

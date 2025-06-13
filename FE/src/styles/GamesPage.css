@@ -11,7 +11,18 @@
     border-collapse: collapse;
     table-layout: auto;
   }
-  
+
+  .game-btn-remove {
+    background-color: #dc2626; /* red-600 */
+    color: #ffffff;
+    border: none;
+    border-radius: 0.25rem;
+    padding: 0.4rem; /* slightly smaller */
+    font-size: 0.875rem;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
   /* Header styling */
   .users-table thead th {
     background-color: #f9fafb;
