@@ -8,6 +8,10 @@ import { useDeleteTeams } from "../../hooks/allDelete";
 import { useAuth } from "../../context/authContext";
 import type { Team } from "../../types/interfaces";
 import "../../styles/UsersPage.css";
+import "../../styles/PlayersPage.css";
+import "../../styles/PortalPlayersPage.css";
+import SearchBar from "../Searchbar";
+import Pagination from "../Pagination";
 
 type EditField =
   | "name"
@@ -29,6 +33,9 @@ const TeamsPage: React.FC = () => {
 
   const [localTeams, setLocalTeams] = useState<Team[]>([]);
   const [editing, setEditing] = useState<EditingState | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const teamsPerPage = 10;
 
   // Modal state for creating a new team
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -40,6 +47,24 @@ const TeamsPage: React.FC = () => {
   useEffect(() => {
     if (teams) setLocalTeams(teams);
   }, [teams]);
+
+  // Filter teams based on search query
+  const filteredTeams = localTeams.filter(team =>
+    team?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false
+  );
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredTeams.length / teamsPerPage);
+  const paginatedTeams = filteredTeams.slice(
+    (currentPage - 1) * teamsPerPage,
+    currentPage * teamsPerPage
+  );
+
+  // Handle search
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    setCurrentPage(1); // Reset to first page when searching
+  };
 
   // Commit inline edits
   const commitEdit = async () => {
@@ -156,10 +181,20 @@ const TeamsPage: React.FC = () => {
     <div className="portal-main">
       <h1 className="users-title">Teams</h1>
 
-      {/* "Create Team" Button Below the Heading */}
-      <button className="create-button" onClick={openModal}>
-        Create Team
-      </button>
+      {/* Search and Controls */}
+      <div className="players-controls">
+        <button className="create-button" onClick={openModal}>
+          Create Team
+        </button>
+        <div className="players-controls-right">
+          <SearchBar onSearch={handleSearch} />
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        </div>
+      </div>
 
       {/* Modal Overlay for Creating a New Team */}
       {isModalOpen && (
@@ -286,7 +321,7 @@ const TeamsPage: React.FC = () => {
           </tr>
         </thead>
         <tbody>
-          {localTeams.map((t) => (
+          {paginatedTeams.map((t) => (
             <tr key={t.id}>
               <td>{t.id}</td>
 

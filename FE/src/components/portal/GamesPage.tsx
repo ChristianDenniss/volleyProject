@@ -7,7 +7,8 @@ import { useCreateGames } from "../../hooks/allCreate";
 import { useDeleteGames } from "../../hooks/allDelete";
 import { useAuth } from "../../context/authContext";
 import type { Game, Season } from "../../types/interfaces";
-import "../../styles/UsersPage.css";   // contains .users-table, .text-muted, plus our new classes
+import "../../styles/UsersPage.css";       // table & button styling
+import "../../styles/PlayersPage.css";     // custom modal styling
 import "../../styles/PortalPlayersPage.css"; // portal-specific styles
 import SearchBar from "../Searchbar";
 import Pagination from "../Pagination";
@@ -207,16 +208,12 @@ const GamesPage: React.FC = () => {
           Create Game
         </button>
         <div className="players-controls-right">
-          <div className="players-search-wrapper">
-            <SearchBar onSearch={handleSearch} />
-          </div>
-          <div className="players-pagination-wrapper">
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-            />
-          </div>
+          <SearchBar onSearch={handleSearch} />
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
         </div>
       </div>
 
