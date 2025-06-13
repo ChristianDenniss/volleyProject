@@ -37,6 +37,7 @@ import LoginPage      from "./components/Login";
 import PrivateRoute   from "./components/portal/PrivateRoute";      // ← NEW import
 import AwardsPage   from "./components/portal/AwardsPage";  
 import CreateArticle from "./components/CreateArticle";
+import ArticlesPage from "./components/portal/ArticlesPage";
 
 const App: React.FC = () => (
   <AuthProvider>
@@ -90,6 +91,7 @@ const App: React.FC = () => (
             <Route path="games" element={<GamesPage />} />
             <Route path="stats" element={<StatsPage />} />
             <Route path="awards" element={<AwardsPage />} />
+            <Route path="articles" element={<ArticlesPage />} />
 
           </Route>
         </Routes>
