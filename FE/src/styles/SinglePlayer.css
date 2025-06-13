@@ -22,12 +22,11 @@
 
 .avatar-header-info {
     display: flex;
-    align-items: flex-start;
-    justify-content: flex-start;
+    align-items: center;
+    justify-content: center;
     gap: 2rem;
     flex-wrap: nowrap;
     width: 100%;
-    margin-left: 15rem;
 }
 
 .avatar-stack {
@@ -199,12 +198,17 @@
 .avatar-left {
     flex-shrink: 0;
     width: 580px;
+    display: flex;
+    justify-content: center;
 }
 
 .avatar-right {
     flex: 1;
     min-width: 250px;
     max-width: calc(100% - 600px);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
 }
 
 .player-name-large {
@@ -239,7 +243,6 @@
 
 @media (max-width: 900px) {
     .avatar-header-info {
-        margin-left: 0;
         flex-direction: column;
         align-items: center;
     }
@@ -252,6 +255,7 @@
     .avatar-right {
         max-width: 100%;
         text-align: center;
+        align-items: center;
     }
 }
 
