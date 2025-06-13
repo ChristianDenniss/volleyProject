@@ -1,17 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useArticles } from '../../hooks/allFetch';
 import { useArticleMutations } from '../../hooks/allPatch';
 import '../../styles/ArticlesPage.css';
 
 const ArticlesPage: React.FC = () => {
-    const { data: articles, loading, error } = useArticles();
+    const { data: fetchedArticles, loading, error } = useArticles();
     const { patchArticle } = useArticleMutations();
     const [filter, setFilter] = useState<'all' | 'pending'>('pending');
     const [expandedArticleId, setExpandedArticleId] = useState<number | null>(null);
+    const [articles, setArticles] = useState(fetchedArticles || []);
+
+    // Update local state when fetched articles change
+    useEffect(() => {
+        if (fetchedArticles) {
+            setArticles(fetchedArticles);
+        }
+    }, [fetchedArticles]);
 
     const handleApprove = async (articleId: number) => {
         try {
-            await patchArticle(articleId, { approved: true });
+            const updatedArticle = await patchArticle(articleId, { approved: true });
+            if (updatedArticle) {
+                setArticles(prevArticles => 
+                    prevArticles.map(article => 
+                        article.id === articleId ? { ...article, approved: true } : article
+                    )
+                );
+            }
         } catch (error) {
             console.error('Error approving article:', error);
         }
@@ -19,7 +34,14 @@ const ArticlesPage: React.FC = () => {
 
     const handleReject = async (articleId: number) => {
         try {
-            await patchArticle(articleId, { approved: false });
+            const updatedArticle = await patchArticle(articleId, { approved: false });
+            if (updatedArticle) {
+                setArticles(prevArticles => 
+                    prevArticles.map(article => 
+                        article.id === articleId ? { ...article, approved: false } : article
+                    )
+                );
+            }
         } catch (error) {
             console.error('Error rejecting article:', error);
         }
