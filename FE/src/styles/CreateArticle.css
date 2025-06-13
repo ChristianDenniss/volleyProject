@@ -88,4 +88,55 @@
 
 .submit-btn:hover {
     background-color: #85c4ff;
+}
+
+.success-message {
+    background-color: #d4edda;
+    color: #155724;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    border: 1px solid #c3e6cb;
+}
+
+.requirements-notice {
+    background-color: #e7f5ff;
+    color: #0c5460;
+    padding: 15px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    border: 1px solid #bee5eb;
+}
+
+.requirements-notice h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #0c5460;
+}
+
+.requirements-notice ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.requirements-notice li {
+    margin-bottom: 5px;
+}
+
+.character-count {
+    font-size: 0.9em;
+    color: #666;
+    margin-top: 4px;
+}
+
+.url-hint {
+    font-size: 0.9em;
+    color: #666;
+    margin-top: 4px;
+    font-style: italic;
+}
+
+.error-message ul {
+    margin: 5px 0;
+    padding-left: 20px;
 } 
