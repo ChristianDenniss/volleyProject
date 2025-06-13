@@ -18,6 +18,7 @@ const CreateArticle: React.FC = () => {
     const { user } = useAuth();
     const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
     const [validationErrors, setValidationErrors] = useState<string[]>([]);
+    const [showValidationModal, setShowValidationModal] = useState(false);
     const [formData, setFormData] = useState({
         title: '',
         summary: '',
@@ -78,6 +79,15 @@ const CreateArticle: React.FC = () => {
         return Object.values(fieldValidation).every(field => field.isValid);
     };
 
+    const getInvalidFields = () => {
+        return Object.entries(fieldValidation)
+            .filter(([_, field]) => !field.isValid)
+            .map(([name, field]) => ({
+                name: name.charAt(0).toUpperCase() + name.slice(1),
+                message: field.message
+            }));
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         
@@ -87,7 +97,7 @@ const CreateArticle: React.FC = () => {
         }
 
         if (!isFormValid()) {
-            setValidationErrors(['Please fix all validation errors before submitting']);
+            setShowValidationModal(true);
             return;
         }
 
@@ -128,15 +138,28 @@ const CreateArticle: React.FC = () => {
             <div className="approval-notice">
                 Note: Your article will be reviewed by an administrator before being published.
             </div>
-            <div className="requirements-notice">
-                <h3>Article Requirements:</h3>
-                <ul>
-                    <li>Title: At least 1 character</li>
-                    <li>Summary: At least 50 characters</li>
-                    <li>Content: At least 240 characters</li>
-                    <li>Image URL: Must be a valid URL</li>
-                </ul>
-            </div>
+
+            {showValidationModal && (
+                <div className="validation-modal">
+                    <div className="validation-modal-content">
+                        <h3>Please fix the following issues:</h3>
+                        <ul>
+                            {getInvalidFields().map((field, index) => (
+                                <li key={index}>
+                                    <strong>{field.name}:</strong> {field.message}
+                                </li>
+                            ))}
+                        </ul>
+                        <button 
+                            className="close-modal-btn"
+                            onClick={() => setShowValidationModal(false)}
+                        >
+                            Close
+                        </button>
+                    </div>
+                </div>
+            )}
+
             <form onSubmit={handleSubmit} className="create-article-form">
                 {error && <div className="error-message">{error}</div>}
                 {validationErrors.length > 0 && (
@@ -167,9 +190,6 @@ const CreateArticle: React.FC = () => {
                     />
                     <div className="character-count">
                         Characters: {formData.title.length}/1 (minimum)
-                        {!fieldValidation.title.isValid && formData.title && (
-                            <span className="validation-message">{fieldValidation.title.message}</span>
-                        )}
                     </div>
                 </div>
 
@@ -186,9 +206,6 @@ const CreateArticle: React.FC = () => {
                     />
                     <div className="character-count">
                         Characters: {formData.summary.length}/50 (minimum)
-                        {!fieldValidation.summary.isValid && formData.summary && (
-                            <span className="validation-message">{fieldValidation.summary.message}</span>
-                        )}
                     </div>
                 </div>
 
@@ -205,9 +222,6 @@ const CreateArticle: React.FC = () => {
                     />
                     <div className="url-hint">
                         Must be a valid URL (e.g., https://example.com/image.jpg)
-                        {!fieldValidation.imageUrl.isValid && formData.imageUrl && (
-                            <span className="validation-message">{fieldValidation.imageUrl.message}</span>
-                        )}
                     </div>
                 </div>
 
@@ -224,9 +238,6 @@ const CreateArticle: React.FC = () => {
                     />
                     <div className="character-count">
                         Characters: {formData.content.length}/240 (minimum)
-                        {!fieldValidation.content.isValid && formData.content && (
-                            <span className="validation-message">{fieldValidation.content.message}</span>
-                        )}
                     </div>
                 </div>
 
@@ -237,7 +248,7 @@ const CreateArticle: React.FC = () => {
                     <button 
                         type="submit" 
                         className="submit-btn" 
-                        disabled={loading || !isFormValid()}
+                        disabled={loading}
                     >
                         {loading ? 'Creating...' : 'Create Article'}
                     </button>
