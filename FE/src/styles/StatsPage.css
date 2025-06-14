@@ -75,8 +75,8 @@
 }
 
 .stats-table th {
-    background-color: rgba(0,123,255,0.25);
-    color: #000; /* Changed to black for better contrast with the lighter background */
+    background-color: #1a1a1a;
+    color: #fff;
     font-weight: 600;
     padding: 1rem 0.75rem;
 }
