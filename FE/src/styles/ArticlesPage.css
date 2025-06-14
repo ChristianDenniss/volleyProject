@@ -162,6 +162,7 @@ th {
     flex: 1;
     min-width: 0;
     overflow-wrap: break-word;
+    word-break: break-all;
 }
 
 .article-text h3 {

@@ -7,9 +7,9 @@ import { useAuth }                      from "../context/authContext";
 import "../styles/UserProfile.css";
 
 interface Article {
-    id:    number;
-    title: string;
-    status: string;
+    id:      number;
+    title:   string;
+    approved: boolean;
 }
 
 interface UserProfile {
@@ -75,6 +75,8 @@ const ProfilePage: React.FC = () =>
                     throw new Error(data.error || "Failed to load profile");
                 }
 
+                console.log('Profile data received:', data);
+                console.log('Articles data:', data.articles);
                 setProfile(data);
             }
             catch (err: any)
@@ -131,10 +133,10 @@ const ProfilePage: React.FC = () =>
 
             <div className="profile-articles">
                 <h3>Your Published Articles</h3>
-                {articles.filter(article => article.status === 'approved').length > 0 ? (
+                {articles.filter(article => article.approved).length > 0 ? (
                     <ul>
                         {articles
-                            .filter(article => article.status === 'approved')
+                            .filter(article => article.approved)
                             .map(article => (
                             <li key={article.id}>
                                 <Link to={`/articles/${article.id}`}>
