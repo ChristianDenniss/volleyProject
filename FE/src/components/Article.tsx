@@ -80,11 +80,11 @@ const Articles: React.FC = () =>
     const totalCount = data ? data.length : 0;
 
     return (
-        <div className="articles-container">
+        <div className="article-list-container">
             <h1>Articles</h1>
 
             {showAuthMessage && (
-                <div className="auth-message">
+                <div className="article-list-auth-message">
                     {!isAuthenticated 
                         ? "Please log in to create articles!"
                         : "You need to be a registered user, admin, or superadmin to create articles!"}
@@ -92,26 +92,26 @@ const Articles: React.FC = () =>
             )}
 
             {/* Create Article button */}
-            <div className="create-article-section">
+            <div className="article-list-create-section">
                 <Link 
                     to="/articles/create" 
-                    className="create-article-btn"
+                    className="article-list-create-btn"
                     onClick={handleCreateClick}
                 >
                     Create Article
                 </Link>
             </div>
 
-            <div className="articles-controls">
+            <div className="article-list-controls">
                 {/* Total count */}
-                <div className="articles-count">
+                <div className="article-list-count">
                     Total: { totalCount } articles
                 </div>
 
                 {/* Search bar */}
                 <input
                     type="text"
-                    className="articles-search"
+                    className="article-list-search"
                     placeholder="Search by title..."
                     value={ searchTerm }
                     onChange={ (e) => setSearchTerm(e.target.value) }
@@ -119,7 +119,7 @@ const Articles: React.FC = () =>
 
                 {/* Sort select */}
                 <select
-                    className="articles-sort"
+                    className="article-list-sort"
                     value={ sortOrder }
                     onChange={ (e) =>
                     {
@@ -131,40 +131,34 @@ const Articles: React.FC = () =>
                 </select>
             </div>
 
-            {
-                error
-                ? (
-                    <div>Error: { error }</div>
-                )
-                : data
-                ? (
-                    <div className="articles-list">
-                        { filteredAndSorted.map((article: Article) =>
-                        {
-                            return (
-                                <Link
-                                    to={`/articles/${ article.id }`}
-                                    key={ article.id }
-                                    className="article-item"
-                                >
-                                    <div className="article-card">
-                                        <img
-                                            src={ article.imageUrl }
-                                            alt={ article.title }
-                                            className="article-image"
-                                        />
-                                        <h2>{ article.title }</h2>
-                                        <p>{ article.summary }</p>
-                                    </div>
-                                </Link>
-                            );
-                        }) }
-                    </div>
-                )
-                : (
-                    <div>Loading...</div>
-                )
-            }
+            {error ? (
+                <div>Error: { error }</div>
+            ) : data ? (
+                <div className="article-list-grid">
+                    { filteredAndSorted.map((article: Article) =>
+                    {
+                        return (
+                            <Link
+                                to={`/articles/${ article.id }`}
+                                key={ article.id }
+                                className="article-list-item"
+                            >
+                                <div className="article-list-card">
+                                    <img
+                                        src={ article.imageUrl }
+                                        alt={ article.title }
+                                        className="article-list-image"
+                                    />
+                                    <h2>{ article.title }</h2>
+                                    <p>{ article.summary }</p>
+                                </div>
+                            </Link>
+                        );
+                    }) }
+                </div>
+            ) : (
+                <div>Loading...</div>
+            )}
         </div>
     );
 };
