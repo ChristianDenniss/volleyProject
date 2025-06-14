@@ -132,12 +132,10 @@ const ProfilePage: React.FC = () =>
             </div>
 
             <div className="profile-articles">
-                <h3>Your Published Articles</h3>
-                {articles.filter(article => article.approved).length > 0 ? (
+                <h3>Your Articles</h3>
+                {articles.length > 0 ? (
                     <ul>
-                        {articles
-                            .filter(article => article.approved)
-                            .map(article => (
+                        {articles.map(article => (
                             <li key={article.id}>
                                 <Link to={`/articles/${article.id}`}>
                                     {article.title}
@@ -146,7 +144,7 @@ const ProfilePage: React.FC = () =>
                         ))}
                     </ul>
                 ) : (
-                    <p>You have not published any approved articles yet.</p>
+                    <p>You have not created any articles yet.</p>
                 )}
             </div>
         </div>
