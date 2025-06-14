@@ -176,6 +176,8 @@ th {
     line-height: 1.6;
     white-space: pre-wrap;
     word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-all;
 }
 
 /* Responsive styles */
