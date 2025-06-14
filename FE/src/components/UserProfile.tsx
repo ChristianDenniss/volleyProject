@@ -9,6 +9,7 @@ import "../styles/UserProfile.css";
 interface Article {
     id:    number;
     title: string;
+    status: string;
 }
 
 interface UserProfile {
@@ -130,9 +131,11 @@ const ProfilePage: React.FC = () =>
 
             <div className="profile-articles">
                 <h3>Your Published Articles</h3>
-                {articles.length > 0 ? (
+                {articles.filter(article => article.status === 'approved').length > 0 ? (
                     <ul>
-                        {articles.map(article => (
+                        {articles
+                            .filter(article => article.status === 'approved')
+                            .map(article => (
                             <li key={article.id}>
                                 <Link to={`/articles/${article.id}`}>
                                     {article.title}
@@ -141,7 +144,7 @@ const ProfilePage: React.FC = () =>
                         ))}
                     </ul>
                 ) : (
-                    <p>You have not created any articles yet.</p>
+                    <p>You have not published any approved articles yet.</p>
                 )}
             </div>
         </div>
