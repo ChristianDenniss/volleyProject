@@ -51,9 +51,9 @@ const ArticlesPage: React.FC = () => {
         setExpandedArticleId(expandedArticleId === articleId ? null : articleId);
     };
 
-    // Only show pending articles by default, or approved articles if filter is 'all'
+    // Only show pending articles by default, or all articles if filter is 'all'
     const filteredArticles = articles?.filter(article => 
-        filter === 'all' ? article.approved === true : article.approved === null
+        filter === 'all' ? true : article.approved === null
     ) || [];
 
     if (loading) return <div>Loading...</div>;
