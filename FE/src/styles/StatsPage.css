@@ -85,6 +85,11 @@
     background-color: #f5f5f5;
 }
 
+.stats-table thead th {
+    background-color: #22304a !important;
+    color: #fff !important;
+}
+
 /* Create Button */
 .create-button {
     padding: 0.5rem 1rem;
