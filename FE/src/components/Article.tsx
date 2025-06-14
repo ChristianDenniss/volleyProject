@@ -76,8 +76,8 @@ const Articles: React.FC = () =>
         return sorted;
     }, [ data, searchTerm, sortOrder ]);
 
-    // Total number of articles
-    const totalCount = data ? data.length : 0;
+    // Total number of approved articles
+    const totalCount = data ? data.filter(article => article.approved === true).length : 0;
 
     return (
         <div className="article-list-container">
