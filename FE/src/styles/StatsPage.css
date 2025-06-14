@@ -75,8 +75,8 @@
 }
 
 .stats-table th {
-    background-color: #1a237e; /* Deep blue color matching portal */
-    color: white;
+    background-color: rgba(0,123,255,0.25);
+    color: #000; /* Changed to black for better contrast with the lighter background */
     font-weight: 600;
     padding: 1rem 0.75rem;
 }
@@ -88,7 +88,7 @@
 /* Create Button */
 .create-button {
     padding: 0.5rem 1rem;
-    background-color: #1a237e; /* Matching portal blue */
+    background-color: #007bff; /* Updated to match the rgba color's base */
     color: white;
     border: none;
     border-radius: 4px;
@@ -97,7 +97,7 @@
 }
 
 .create-button:hover {
-    background-color: #283593; /* Slightly lighter blue on hover */
+    background-color: #0056b3; /* Darker shade for hover */
 }
 
 .create-button:disabled {

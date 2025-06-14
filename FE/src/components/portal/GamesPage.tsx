@@ -178,9 +178,10 @@ const GamesPage: React.FC = () => {
   };
 
   // Filter games based on search query
-  const filteredGames = localGames.filter(game =>
-    game?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false
-  );
+  const filteredGames = localGames.filter(game => {
+    const gameName = game?.name || 'No Given Name';
+    return gameName.includes(searchQuery);
+  });
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredGames.length / gamesPerPage);
@@ -431,7 +432,7 @@ const GamesPage: React.FC = () => {
                       autoFocus
                     />
                   ) : (
-                    <span onClick={() => startEdit(g.id, "name")}>{g.name}</span>
+                    <span onClick={() => startEdit(g.id, "name")}>{g.name || 'No Given Name'}</span>
                   )}
                 </td>
                 <td>
