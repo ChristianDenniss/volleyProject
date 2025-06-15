@@ -6,7 +6,20 @@ import SearchBar from "./Searchbar";
 import Pagination from "./Pagination";
 import SeasonFilter from "./SeasonFilterBar";
 
-type StatCategory = 'spikeKills' | 'assists' | 'blocks' | 'digs' | 'aces' | 'spikingErrors';
+type StatCategory = 
+  | 'spikeKills' 
+  | 'spikeAttempts'
+  | 'apeKills'
+  | 'apeAttempts'
+  | 'spikingErrors'
+  | 'digs'
+  | 'blocks'
+  | 'assists'
+  | 'aces'
+  | 'settingErrors'
+  | 'blockFollows'
+  | 'servingErrors'
+  | 'miscErrors';
 
 const StatsLeaderboard: React.FC = () => {
   const { data: players, error } = usePlayers();
@@ -19,11 +32,18 @@ const StatsLeaderboard: React.FC = () => {
   const [showFilterMenu, setShowFilterMenu] = useState(false);
   const [visibleStats, setVisibleStats] = useState<Record<StatCategory, boolean>>({
     spikeKills: true,
-    assists: true,
-    blocks: true,
+    spikeAttempts: true,
+    apeKills: true,
+    apeAttempts: true,
+    spikingErrors: true,
     digs: true,
+    blocks: true,
+    assists: true,
     aces: true,
-    spikingErrors: true
+    settingErrors: true,
+    blockFollows: true,
+    servingErrors: true,
+    miscErrors: true
   });
   const playersPerPage = 25;
 
@@ -77,11 +97,18 @@ const StatsLeaderboard: React.FC = () => {
     if (!player.stats || player.stats.length === 0) return false;
     return player.stats.some(stat => 
       stat.spikeKills > 0 || 
-      stat.assists > 0 || 
-      stat.blocks > 0 || 
+      stat.spikeAttempts > 0 ||
+      stat.apeKills > 0 ||
+      stat.apeAttempts > 0 ||
+      stat.spikingErrors > 0 ||
       stat.digs > 0 || 
-      stat.aces > 0 || 
-      stat.spikingErrors > 0
+      stat.blocks > 0 || 
+      stat.assists > 0 || 
+      stat.aces > 0 ||
+      stat.settingErrors > 0 ||
+      stat.blockFollows > 0 ||
+      stat.servingErrors > 0 ||
+      stat.miscErrors > 0
     );
   };
 
@@ -106,7 +133,21 @@ const StatsLeaderboard: React.FC = () => {
     currentPage * playersPerPage
   );
 
-  const statCategories: StatCategory[] = ['spikeKills', 'assists', 'blocks', 'digs', 'aces', 'spikingErrors'];
+  const statCategories: StatCategory[] = [
+    'spikeKills',
+    'spikeAttempts',
+    'apeKills',
+    'apeAttempts',
+    'spikingErrors',
+    'digs',
+    'blocks',
+    'assists',
+    'aces',
+    'settingErrors',
+    'blockFollows',
+    'servingErrors',
+    'miscErrors'
+  ];
   const visibleStatCategories = statCategories.filter(stat => visibleStats[stat]);
 
   return (
@@ -125,15 +166,6 @@ const StatsLeaderboard: React.FC = () => {
             >
               Show All
             </button>
-            {statCategories.map((stat) => (
-              <button
-                key={stat}
-                className={`stat-button ${selectedStat === stat ? 'active' : ''}`}
-                onClick={() => handleStatChange(stat)}
-              >
-                {stat.replace(/([A-Z])/g, ' $1').trim()}
-              </button>
-            ))}
             <div className="stats-filter-menu">
               <button 
                 className="filter-menu-button"
