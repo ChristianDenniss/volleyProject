@@ -149,6 +149,14 @@ const StatsLeaderboard: React.FC = () => {
   ];
   const visibleStatCategories = statCategories.filter(stat => visibleStats[stat]);
 
+  const formatStatName = (stat: string): string => {
+    return stat
+      .replace(/([A-Z])/g, ' $1') // Add space before capital letters
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+  };
+
   return (
     <div className="stats-leaderboard-page">
       <h1>Statistics Leaderboard</h1>
@@ -230,7 +238,7 @@ const StatsLeaderboard: React.FC = () => {
                     onClick={() => handleSort(stat)}
                     className="sortable"
                   >
-                    {stat.replace(/([A-Z])/g, ' $1').trim()}
+                    {formatStatName(stat)}
                     {sortColumn === stat && (
                       <span className={`sort-arrow ${sortDirection}`}>
                         {sortDirection === 'desc' ? '↓' : '↑'}
