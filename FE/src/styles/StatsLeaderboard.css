@@ -118,7 +118,7 @@
 .stats-table th,
 .stats-table td {
   padding: 12px;
-  text-align: left;
+  text-align: center;
   border-bottom: 1px solid #e2e8f0;
 }
 
@@ -138,11 +138,11 @@
 }
 
 /* Center align all cells except the first two columns */
-.stats-table td:nth-child(n+3) {
+.stats-table td:nth-child(n+1) {
   text-align: center;
 }
 
-.stats-table th:nth-child(n+3) {
+.stats-table th:nth-child(n+1) {
   text-align: center;
 }
 
