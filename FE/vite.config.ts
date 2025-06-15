@@ -5,9 +5,9 @@ import react from '@vitejs/plugin-react-swc'
 export default defineConfig({
   plugins: [react()],
   server: {
-    headers: {
-      'Cache-Control': 'public, max-age=604800', // 1 week in seconds
-    },
+    // headers: {
+    //   'Cache-Control': 'public, max-age=604800', // 1 week in seconds
+    // },
   },
   build: {
     // Enable source maps for better debugging
