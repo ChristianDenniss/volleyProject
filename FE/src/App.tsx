@@ -38,6 +38,7 @@ import PrivateRoute   from "./components/portal/PrivateRoute";      // ← NEW i
 import AwardsPage   from "./components/portal/AwardsPage";  
 import CreateArticle from "./components/CreateArticle";
 import ArticlesPage from "./components/portal/ArticlesPage";
+import StatsLeaderboard from "./components/StatsLeaderboard";
 
 const App: React.FC = () => (
   <AuthProvider>
@@ -92,7 +93,7 @@ const App: React.FC = () => (
             <Route path="stats" element={<StatsPage />} />
             <Route path="awards" element={<AwardsPage />} />
             <Route path="articles" element={<ArticlesPage />} />
-
+            <Route path="stats-leaderboard" element={<StatsLeaderboard />} />
           </Route>
         </Routes>
       </div>

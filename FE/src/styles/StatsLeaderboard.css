@@ -1,0 +1,119 @@
+.stats-leaderboard-page {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.stats-controls-wrapper {
+  margin: 20px 0;
+}
+
+.stats-controls-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.stats-season-filter {
+  margin-bottom: 10px;
+}
+
+.stats-stat-filter {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 15px;
+}
+
+.stat-button {
+  padding: 8px 16px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.stat-button:hover {
+  background-color: #f0f0f0;
+}
+
+.stat-button.active {
+  background-color: #007bff;
+  color: white;
+  border-color: #0056b3;
+}
+
+.stats-controls-right {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.stats-search-wrapper {
+  flex: 1;
+  max-width: 300px;
+}
+
+.stats-table-wrapper {
+  overflow-x: auto;
+  margin-top: 20px;
+}
+
+.stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.stats-table th,
+.stats-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.stats-table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+}
+
+.stats-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.stats-table th.sortable:hover {
+  background-color: #e9ecef;
+}
+
+.sort-arrow {
+  margin-left: 5px;
+  font-size: 0.8em;
+}
+
+.stats-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+@media (max-width: 768px) {
+  .stats-controls-container {
+    flex-direction: column;
+  }
+
+  .stats-controls-right {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .stats-search-wrapper {
+    max-width: none;
+  }
+
+  .stats-table th,
+  .stats-table td {
+    padding: 8px;
+  }
+} 

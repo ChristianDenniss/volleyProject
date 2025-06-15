@@ -31,6 +31,9 @@ const Navbar: React.FC = () =>
                         <Link to="/about">About</Link>
                     </li>
                     <li>
+                        <Link to="/stats-leaderboard">Stats</Link>
+                    </li>
+                    <li>
                         <Link to="/teams">Teams</Link>
                     </li>
                     <li>

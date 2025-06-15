@@ -1,30 +1,69 @@
 /* Navbar container */
 .navbar {
-    display: flex;
-    justify-content: center; /* Center the navbar items */
-    align-items: center; /* Vertically center the nav content */
     background-color: #262626;
-    padding: 0 20px; /* Adjust padding to ensure it doesn't cause overflow */
-    height: 70px;
     width: 100%;
     z-index: 1000;
-    margin: 0;
-    box-sizing: border-box; /* Ensure padding and borders are within the width */
     font-family: 'Inter', sans-serif;
-    border-left: 0;  /* Remove optional border */
-    border-right: 0; /* Remove optional border */
-    overflow-x: hidden; /* Prevent horizontal scrolling */
+    position: fixed;
+    top: 0;
+    left: 0;
+}
+
+.navbar-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 20px;
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Menu toggle button */
+.menu-toggle {
+    display: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 10px;
+    z-index: 1001;
+}
+
+.menu-icon {
+    display: block;
+    width: 25px;
+    height: 2px;
+    background-color: white;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.menu-icon::before,
+.menu-icon::after {
+    content: '';
+    position: absolute;
+    width: 25px;
+    height: 2px;
+    background-color: white;
+    transition: all 0.3s ease;
+}
+
+.menu-icon::before {
+    top: -8px;
+}
+
+.menu-icon::after {
+    bottom: -8px;
 }
 
 /* Centered link list with proper item alignment */
 .navbar-links {
     display: flex;
-    align-items: center; /* Ensure vertical alignment */
-    justify-content: center;
+    align-items: center;
     list-style: none;
     padding: 0;
     margin: 0;
-    gap: 30px; /* Adjust gap to ensure items aren't too far apart */
+    gap: 20px;
 }
 
 /* Ensure each list item doesn't stack text */
@@ -37,12 +76,12 @@
 .navbar-links a {
     color: white;
     text-decoration: none;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 500;
     padding: 8px 12px;
     border-radius: 6px;
     transition: all 0.2s ease;
-    white-space: nowrap; /* Prevents text from wrapping */
+    white-space: nowrap;
 }
 
 .navbar-links a:hover {
@@ -50,25 +89,75 @@
     color: #333;
     font-weight: 600;
     text-decoration: none;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); /* deeper shadow */
-    transform: translateY(-2px); /* more lift */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    transform: translateY(-2px);
 }
 
 /* Mobile adjustments */
-@media (max-width: 768px) {
-    .navbar {
-        padding: 10px 20px;
-        height: auto; /* Let it expand if needed on smaller screens */
+@media (max-width: 1024px) {
+    .navbar-container {
+        padding: 0 15px;
     }
 
     .navbar-links {
-        flex-wrap: wrap; /* Allow wrapping on mobile */
-        gap: 20px;
-        justify-content: center;
+        gap: 15px;
     }
 
-    /* Ensure navbar doesn’t cause horizontal scrolling on mobile */
-    body {
-        overflow-x: hidden;
+    .navbar-links a {
+        font-size: 15px;
+        padding: 6px 10px;
     }
+}
+
+@media (max-width: 768px) {
+    .menu-toggle {
+        display: block;
+    }
+
+    .navbar-container {
+        justify-content: flex-end;
+    }
+
+    .navbar-links {
+        position: fixed;
+        top: 0;
+        right: -100%;
+        width: 100%;
+        height: 100vh;
+        background-color: #262626;
+        flex-direction: column;
+        justify-content: center;
+        gap: 30px;
+        transition: right 0.3s ease;
+        padding: 20px;
+    }
+
+    .navbar-links.active {
+        right: 0;
+    }
+
+    .navbar-links a {
+        font-size: 18px;
+        padding: 12px 20px;
+    }
+
+    /* Menu icon animation */
+    .menu-toggle.active .menu-icon {
+        background-color: transparent;
+    }
+
+    .menu-toggle.active .menu-icon::before {
+        transform: rotate(45deg);
+        top: 0;
+    }
+
+    .menu-toggle.active .menu-icon::after {
+        transform: rotate(-45deg);
+        bottom: 0;
+    }
+}
+
+/* Ensure navbar doesn't cause horizontal scrolling */
+body {
+    overflow-x: hidden;
 }
