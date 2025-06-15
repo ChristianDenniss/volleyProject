@@ -153,51 +153,47 @@ const StatsLeaderboard: React.FC = () => {
           <div className="stats-season-filter">
             <SeasonFilter selectedSeason={selectedSeason} onSeasonChange={handleSeasonChange} />
           </div>
-          <div className="stats-stat-filter">
-            <div className="stats-filter-menu">
-              <button 
-                className="filter-menu-button"
-                onClick={() => setShowFilterMenu(!showFilterMenu)}
-              >
-                Filter Stats {showFilterMenu ? '▼' : '▲'}
-              </button>
-              {showFilterMenu && (
-                <div className="filter-menu-dropdown">
-                  <div className="filter-menu-header">
-                    <label>
-                      <input
-                        type="checkbox"
-                        checked={Object.values(visibleStats).every(v => v)}
-                        onChange={toggleAllStats}
-                      />
-                      All Stats
-                    </label>
-                  </div>
-                  {statCategories.map((stat) => (
-                    <label key={stat} className="filter-menu-item">
-                      <input
-                        type="checkbox"
-                        checked={visibleStats[stat]}
-                        onChange={() => toggleStatVisibility(stat)}
-                      />
-                      {stat.replace(/([A-Z])/g, ' $1').trim()}
-                    </label>
-                  ))}
+          <div className="stats-filter-menu">
+            <button 
+              className="filter-menu-button"
+              onClick={() => setShowFilterMenu(!showFilterMenu)}
+            >
+              Filter Stats {showFilterMenu ? '▼' : '▲'}
+            </button>
+            {showFilterMenu && (
+              <div className="filter-menu-dropdown">
+                <div className="filter-menu-header">
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={Object.values(visibleStats).every(v => v)}
+                      onChange={toggleAllStats}
+                    />
+                    All Stats
+                  </label>
                 </div>
-              )}
-            </div>
+                {statCategories.map((stat) => (
+                  <label key={stat} className="filter-menu-item">
+                    <input
+                      type="checkbox"
+                      checked={visibleStats[stat]}
+                      onChange={() => toggleStatVisibility(stat)}
+                    />
+                    {stat.replace(/([A-Z])/g, ' $1').trim()}
+                  </label>
+                ))}
+              </div>
+            )}
           </div>
-          <div className="stats-controls-right">
-            <div className="stats-search-wrapper">
-              <SearchBar onSearch={handleSearch} />
-            </div>
-            <div className="stats-pagination-wrapper">
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-              />
-            </div>
+          <div className="stats-search-wrapper">
+            <SearchBar onSearch={handleSearch} />
+          </div>
+          <div className="stats-pagination-wrapper">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
           </div>
         </div>
       </div>
