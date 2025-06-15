@@ -23,6 +23,7 @@
   gap: 10px;
   flex-wrap: wrap;
   margin-bottom: 15px;
+  align-items: center;
 }
 
 .stat-button {
@@ -42,6 +43,61 @@
   background-color: #007bff;
   color: white;
   border-color: #0056b3;
+}
+
+.stats-filter-menu {
+  position: relative;
+  display: inline-block;
+}
+
+.filter-menu-button {
+  padding: 8px 16px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.filter-menu-button:hover {
+  background-color: #f0f0f0;
+}
+
+.filter-menu-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  z-index: 1000;
+  min-width: 200px;
+  margin-top: 5px;
+}
+
+.filter-menu-header {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+  font-weight: 600;
+}
+
+.filter-menu-item {
+  display: block;
+  padding: 8px 10px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.filter-menu-item:hover {
+  background-color: #f0f0f0;
+}
+
+.filter-menu-item input[type="checkbox"] {
+  margin-right: 8px;
 }
 
 .stats-controls-right {
@@ -115,5 +171,17 @@
   .stats-table th,
   .stats-table td {
     padding: 8px;
+  }
+
+  .filter-menu-dropdown {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    border-radius: 4px 4px 0 0;
+    max-height: 80vh;
+    overflow-y: auto;
   }
 } 
