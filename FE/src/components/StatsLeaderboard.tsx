@@ -84,31 +84,7 @@ const StatsLeaderboard: React.FC = () => {
 
   const getPlayerStat = (player: Player, stat: StatCategory): number => {
     if (!player.stats || player.stats.length === 0) return 0;
-    
-    return player.stats.reduce((total, statRecord) => {
-      // If no season is selected, include all stats
-      if (selectedSeason === null) {
-        return total + (statRecord[stat] || 0);
-      }
-      
-      // Check if the stat record's game belongs to the selected season
-      const gameBelongsToSelectedSeason = player.teams?.some(team => {
-        // First check if this team belongs to the selected season
-        if (team?.season?.seasonNumber !== selectedSeason) {
-          return false;
-        }
-        
-        // Then check if this team has the game that this stat belongs to
-        return team.games?.some(game => game.id === statRecord.game?.id);
-      });
-      
-      // Only add the stat if it belongs to the selected season
-      if (gameBelongsToSelectedSeason) {
-        return total + (statRecord[stat] || 0);
-      }
-      
-      return total;
-    }, 0);
+    return player.stats.reduce((total, statRecord) => total + (statRecord[stat] || 0), 0);
   };
 
   const hasAnyStats = (player: Player): boolean => {
