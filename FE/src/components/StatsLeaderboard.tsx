@@ -26,7 +26,6 @@ const StatsLeaderboard: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedSeason, setSelectedSeason] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [selectedStat, setSelectedStat] = useState<StatCategory | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [sortColumn, setSortColumn] = useState<StatCategory | null>(null);
   const [showFilterMenu, setShowFilterMenu] = useState(false);
@@ -54,11 +53,6 @@ const StatsLeaderboard: React.FC = () => {
 
   const handleSeasonChange = (season: number | null) => {
     setSelectedSeason(season);
-    setCurrentPage(1);
-  };
-
-  const handleStatChange = (stat: StatCategory) => {
-    setSelectedStat(stat);
     setCurrentPage(1);
   };
 
@@ -122,8 +116,8 @@ const StatsLeaderboard: React.FC = () => {
   }) || [];
 
   const sortedPlayers = [...filteredPlayers].sort((a, b) => {
-    const statA = getPlayerStat(a, sortColumn || selectedStat || 'spikeKills');
-    const statB = getPlayerStat(b, sortColumn || selectedStat || 'spikeKills');
+    const statA = getPlayerStat(a, sortColumn || 'spikeKills');
+    const statB = getPlayerStat(b, sortColumn || 'spikeKills');
     return sortDirection === 'desc' ? statB - statA : statA - statB;
   });
 
@@ -160,12 +154,6 @@ const StatsLeaderboard: React.FC = () => {
             <SeasonFilter selectedSeason={selectedSeason} onSeasonChange={handleSeasonChange} />
           </div>
           <div className="stats-stat-filter">
-            <button
-              className={`stat-button ${selectedStat === null ? 'active' : ''}`}
-              onClick={() => setSelectedStat(null)}
-            >
-              Show All
-            </button>
             <div className="stats-filter-menu">
               <button 
                 className="filter-menu-button"
