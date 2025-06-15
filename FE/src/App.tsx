@@ -67,6 +67,7 @@ const App: React.FC = () => (
           <Route path="/awards/:id" element={< SingleAward />}/>
           <Route path="/awards" element={<Awards />} />
           <Route path="/articles/create" element={<CreateArticle />} />
+          <Route path="/stats" element={<StatsLeaderboard />} />
 
           {/* auth & profile */}
           <Route path="/profile" element={<UserProfile />} />
@@ -93,7 +94,6 @@ const App: React.FC = () => (
             <Route path="stats" element={<StatsPage />} />
             <Route path="awards" element={<AwardsPage />} />
             <Route path="articles" element={<ArticlesPage />} />
-            <Route path="stats-leaderboard" element={<StatsLeaderboard />} />
           </Route>
         </Routes>
       </div>
