@@ -21,6 +21,35 @@
   white-space: nowrap;
 }
 
+.stats-season-filter select {
+  padding: 8px 16px;
+  border: 1px solid #1a365d;
+  border-radius: 4px;
+  background-color: #1a365d;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 20px;
+  padding-right: 32px;
+}
+
+.stats-season-filter select:hover {
+  background-color: #2a4a7d;
+  border-color: #2a4a7d;
+}
+
+.stats-season-filter select:focus {
+  outline: none;
+  border-color: #2a4a7d;
+  box-shadow: 0 0 0 2px rgba(26, 54, 93, 0.2);
+}
+
 .stats-filter-menu {
   position: relative;
   display: inline-block;
