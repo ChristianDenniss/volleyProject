@@ -92,12 +92,22 @@ const StatsLeaderboard: React.FC = () => {
       }
       
       // Check if the stat record's game belongs to the selected season
-      const gameBelongsToSelectedSeason = player.teams?.some(team => 
-        team?.season?.seasonNumber === selectedSeason && 
-        team?.games?.some(game => game.id === statRecord.game?.id)
-      );
+      const gameBelongsToSelectedSeason = player.teams?.some(team => {
+        // First check if this team belongs to the selected season
+        if (team?.season?.seasonNumber !== selectedSeason) {
+          return false;
+        }
+        
+        // Then check if this team has the game that this stat belongs to
+        return team.games?.some(game => game.id === statRecord.game?.id);
+      });
       
-      return total + (gameBelongsToSelectedSeason ? (statRecord[stat] || 0) : 0);
+      // Only add the stat if it belongs to the selected season
+      if (gameBelongsToSelectedSeason) {
+        return total + (statRecord[stat] || 0);
+      }
+      
+      return total;
     }, 0);
   };
 
