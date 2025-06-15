@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { usePlayers } from "../hooks/allFetch";
-import { Player, Stats } from "../types/interfaces";
+import { Player } from "../types/interfaces";
 import "../styles/StatsLeaderboard.css";
 import SearchBar from "./Searchbar";
 import Pagination from "./Pagination";
