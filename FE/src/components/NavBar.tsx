@@ -25,13 +25,13 @@ const Navbar: React.FC = () =>
                         </a>
                     </li>
                     <li>
-                        <Link to="/games">Games</Link>
-                    </li>
-                    <li>
                         <Link to="/about">About</Link>
                     </li>
                     <li>
                         <Link to="/stats">Stats</Link>
+                    </li>
+                    <li>
+                        <Link to="/games">Games</Link>
                     </li>
                     <li>
                         <Link to="/teams">Teams</Link>
