@@ -27,7 +27,7 @@ const StatsLeaderboard: React.FC = () => {
   const [selectedSeason, setSelectedSeason] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
-  const [sortColumn, setSortColumn] = useState<StatCategory | null>(null);
+  const [sortColumn, setSortColumn] = useState<StatCategory | 'name' | null>(null);
   const [showFilterMenu, setShowFilterMenu] = useState(false);
   const [visibleStats, setVisibleStats] = useState<Record<StatCategory, boolean>>({
     spikeKills: true,
@@ -56,7 +56,7 @@ const StatsLeaderboard: React.FC = () => {
     setCurrentPage(1);
   };
 
-  const handleSort = (stat: StatCategory) => {
+  const handleSort = (stat: StatCategory | 'name') => {
     if (sortColumn === stat) {
       setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
     } else {
@@ -116,8 +116,13 @@ const StatsLeaderboard: React.FC = () => {
   }) || [];
 
   const sortedPlayers = [...filteredPlayers].sort((a, b) => {
-    const statA = getPlayerStat(a, sortColumn || 'spikeKills');
-    const statB = getPlayerStat(b, sortColumn || 'spikeKills');
+    if (sortColumn === 'name') {
+      return sortDirection === 'desc' 
+        ? b.name.localeCompare(a.name)
+        : a.name.localeCompare(b.name);
+    }
+    const statA = getPlayerStat(a, sortColumn as StatCategory || 'spikeKills');
+    const statB = getPlayerStat(b, sortColumn as StatCategory || 'spikeKills');
     return sortDirection === 'desc' ? statB - statA : statA - statB;
   });
 
@@ -208,7 +213,17 @@ const StatsLeaderboard: React.FC = () => {
             <thead>
               <tr>
                 <th>Rank</th>
-                <th>Player Name</th>
+                <th 
+                  onClick={() => handleSort('name')}
+                  className="sortable"
+                >
+                  Player Name
+                  {sortColumn === 'name' && (
+                    <span className={`sort-arrow ${sortDirection}`}>
+                      {sortDirection === 'desc' ? '↓' : '↑'}
+                    </span>
+                  )}
+                </th>
                 {visibleStatCategories.map((stat) => (
                   <th 
                     key={stat}
