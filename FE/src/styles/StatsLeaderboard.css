@@ -29,9 +29,10 @@
 
 .filter-menu-button {
   padding: 8px 16px;
-  border: 1px solid #ddd;
+  border: 1px solid #1a365d;
   border-radius: 4px;
-  background-color: white;
+  background-color: #1a365d;
+  color: white;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
@@ -41,7 +42,8 @@
 }
 
 .filter-menu-button:hover {
-  background-color: #f0f0f0;
+  background-color: #2a4a7d;
+  border-color: #2a4a7d;
 }
 
 .filter-menu-dropdown {
@@ -49,33 +51,46 @@
   top: 100%;
   left: 0;
   background-color: white;
-  border: 1px solid #ddd;
+  border: 1px solid #1a365d;
   border-radius: 4px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(26, 54, 93, 0.2);
   z-index: 1000;
-  min-width: 200px;
+  min-width: 400px;
   margin-top: 5px;
+  padding: 10px;
 }
 
 .filter-menu-header {
   padding: 10px;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid #e2e8f0;
   font-weight: 600;
+  margin-bottom: 10px;
+  color: #1a365d;
+}
+
+.filter-menu-items {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
 }
 
 .filter-menu-item {
-  display: block;
-  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  padding: 6px 8px;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
+  border-radius: 4px;
+  color: #2d3748;
 }
 
 .filter-menu-item:hover {
-  background-color: #f0f0f0;
+  background-color: #f7fafc;
 }
 
 .filter-menu-item input[type="checkbox"] {
   margin-right: 8px;
+  accent-color: #1a365d;
 }
 
 .stats-search-wrapper {
@@ -90,24 +105,26 @@
 .stats-table-wrapper {
   overflow-x: auto;
   margin-top: 20px;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(26, 54, 93, 0.1);
 }
 
 .stats-table {
   width: 100%;
   border-collapse: collapse;
   background-color: white;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .stats-table th,
 .stats-table td {
   padding: 12px;
   text-align: left;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .stats-table th {
-  background-color: #f8f9fa;
+  background-color: #1a365d;
+  color: white;
   font-weight: 600;
 }
 
@@ -117,7 +134,7 @@
 }
 
 .stats-table th.sortable:hover {
-  background-color: #e9ecef;
+  background-color: #2a4a7d;
 }
 
 /* Center align all cells except the first two columns */
@@ -135,7 +152,7 @@
 }
 
 .stats-table tbody tr:hover {
-  background-color: #f8f9fa;
+  background-color: #f7fafc;
 }
 
 @media (max-width: 768px) {

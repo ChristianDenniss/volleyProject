@@ -172,16 +172,18 @@ const StatsLeaderboard: React.FC = () => {
                     All Stats
                   </label>
                 </div>
-                {statCategories.map((stat) => (
-                  <label key={stat} className="filter-menu-item">
-                    <input
-                      type="checkbox"
-                      checked={visibleStats[stat]}
-                      onChange={() => toggleStatVisibility(stat)}
-                    />
-                    {stat.replace(/([A-Z])/g, ' $1').trim()}
-                  </label>
-                ))}
+                <div className="filter-menu-items">
+                  {statCategories.map((stat) => (
+                    <label key={stat} className="filter-menu-item">
+                      <input
+                        type="checkbox"
+                        checked={visibleStats[stat]}
+                        onChange={() => toggleStatVisibility(stat)}
+                      />
+                      {stat.replace(/([A-Z])/g, ' $1').trim()}
+                    </label>
+                  ))}
+                </div>
               </div>
             )}
           </div>
