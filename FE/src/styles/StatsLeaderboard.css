@@ -10,20 +10,23 @@
 
 .stats-controls-container {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 15px;
+  align-items: center;
+  flex-wrap: nowrap;
 }
 
 .stats-season-filter {
-  margin-bottom: 10px;
+  margin: 0;
+  white-space: nowrap;
 }
 
 .stats-stat-filter {
   display: flex;
   gap: 10px;
-  flex-wrap: wrap;
-  margin-bottom: 15px;
+  margin: 0;
   align-items: center;
+  white-space: nowrap;
 }
 
 .stat-button {
@@ -60,6 +63,7 @@
   display: flex;
   align-items: center;
   gap: 5px;
+  white-space: nowrap;
 }
 
 .filter-menu-button:hover {
@@ -102,14 +106,14 @@
 
 .stats-controls-right {
   display: flex;
-  justify-content: space-between;
   align-items: center;
   gap: 20px;
+  margin-left: auto;
+  white-space: nowrap;
 }
 
 .stats-search-wrapper {
-  flex: 1;
-  max-width: 300px;
+  width: 300px;
 }
 
 .stats-table-wrapper {
@@ -145,6 +149,15 @@
   background-color: #e9ecef;
 }
 
+/* Center align all cells except the first two columns */
+.stats-table td:nth-child(n+3) {
+  text-align: center;
+}
+
+.stats-table th:nth-child(n+3) {
+  text-align: center;
+}
+
 .sort-arrow {
   margin-left: 5px;
   font-size: 0.8em;
@@ -157,15 +170,17 @@
 @media (max-width: 768px) {
   .stats-controls-container {
     flex-direction: column;
+    align-items: stretch;
   }
 
   .stats-controls-right {
     flex-direction: column;
     align-items: stretch;
+    margin-left: 0;
   }
 
   .stats-search-wrapper {
-    max-width: none;
+    width: 100%;
   }
 
   .stats-table th,
