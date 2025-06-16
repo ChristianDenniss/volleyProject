@@ -144,15 +144,38 @@
     color                    : var(--np-light-accent);
     padding                  : 0;
     line-height              : 1;
-    transition               : color 0.3s ease;
+    transition               : all 0.3s ease;
+    position                 : relative;
 }
-.sa-like-button:hover
+.sa-like-button:hover:not(:disabled)
 {
     color                    : var(--np-accent);
+    transform                : scale(1.1);
+}
+.sa-like-button:disabled
+{
+    cursor                   : not-allowed;
+    opacity                  : 0.6;
 }
 .sa-like-button.liked
 {
     color                    : var(--np-accent);
+    animation                : likeAnimation 0.3s ease;
+}
+@keyframes likeAnimation
+{
+    0%
+    {
+        transform            : scale(1);
+    }
+    50%
+    {
+        transform            : scale(1.2);
+    }
+    100%
+    {
+        transform            : scale(1);
+    }
 }
 
 /* Likes count */
@@ -160,6 +183,11 @@
 {
     font-size                : 1rem;
     color                    : var(--np-text);
+    transition               : color 0.3s ease;
+}
+.sa-like-button.liked + .sa-likes-count
+{
+    color                    : var(--np-accent);
 }
 
 /* Loading and error states */
