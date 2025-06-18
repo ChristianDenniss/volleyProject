@@ -55,7 +55,7 @@ const Games: React.FC = () =>
             <h1>Games Info</h1>
 
             {/* Search */}
-            <SearchBar onSearch={setSearchQuery} />
+            <SearchBar onSearch={setSearchQuery} placeholder="Search games..." />
 
             {/* Error / List */}
             {error

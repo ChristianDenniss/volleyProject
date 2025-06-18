@@ -191,7 +191,7 @@ const PlayersPage: React.FC = () => {
           Create Players
         </button>
         <div className="players-controls-right">
-          <SearchBar onSearch={handleSearch} />
+          <SearchBar onSearch={handleSearch} placeholder="Search players..." />
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}

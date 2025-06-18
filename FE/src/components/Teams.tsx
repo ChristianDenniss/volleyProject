@@ -69,7 +69,7 @@ const Teams: React.FC = () =>
             <h1>Teams Info</h1>
 
             {/* Search box */}
-            <SearchBar onSearch={handleSearch} />
+            <SearchBar onSearch={handleSearch} placeholder="Search teams..." />
 
             {error ? (
                 <div>Error: {error}</div>

@@ -63,7 +63,7 @@ const Players: React.FC = () => {
           </div>
           <div className="players-controls-right">
             <div className="players-search-wrapper">
-              <SearchBar onSearch={handleSearch} />
+              <SearchBar onSearch={handleSearch} placeholder="Search players..." />
             </div>
             <div className="players-pagination-wrapper">
               <Pagination

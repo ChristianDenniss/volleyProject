@@ -187,7 +187,7 @@ const TeamsPage: React.FC = () => {
           Create Team
         </button>
         <div className="players-controls-right">
-          <SearchBar onSearch={handleSearch} />
+          <SearchBar onSearch={handleSearch} placeholder="Search teams..." />
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}

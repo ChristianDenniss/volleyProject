@@ -209,7 +209,7 @@ const GamesPage: React.FC = () => {
           Create Game
         </button>
         <div className="players-controls-right">
-          <SearchBar onSearch={handleSearch} />
+          <SearchBar onSearch={handleSearch} placeholder="Search games..." />
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
