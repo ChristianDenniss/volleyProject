@@ -7,7 +7,7 @@ interface Game
   team1Score: number;
   team2Score: number;
   videoUrl: string | null;
-  date: Date;
+  date: string;
   stage: string;
   teams?: Team[]; 
   stats?: Stats[]; 

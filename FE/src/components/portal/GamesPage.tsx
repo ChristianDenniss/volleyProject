@@ -74,7 +74,7 @@ const GamesPage: React.FC = () => {
   const commitEdit = async () => {
     if (!editing) return;
 
-    const payload: any = {};
+    const payload: Partial<Game> = {};
     const value = editing.value;
 
     switch (editing.field) {
@@ -180,18 +180,13 @@ const GamesPage: React.FC = () => {
       case "team1Score": origValue = String(orig.team1Score); break;
       case "team2Score": origValue = String(orig.team2Score); break;
       case "date": 
-        // Handle date as string, Date object, null, or undefined
+        // Handle date as string, null, or undefined
         let dateObj: Date;
         if (!orig.date) {
           // If date is null/undefined, use current date
           dateObj = new Date();
-        } else if (typeof orig.date === 'string') {
-          dateObj = new Date(orig.date);
-        } else if (orig.date instanceof Date) {
-          dateObj = orig.date;
         } else {
-          // Fallback to current date if unknown format
-          dateObj = new Date();
+          dateObj = new Date(orig.date);
         }
         
         // Check if the date is valid
@@ -609,14 +604,7 @@ const GamesPage: React.FC = () => {
                     >
                       {(() => {
                         if (!g.date) return 'No Date';
-                        let dateObj: Date;
-                        if (typeof g.date === 'string') {
-                          dateObj = new Date(g.date);
-                        } else if (g.date instanceof Date) {
-                          dateObj = g.date;
-                        } else {
-                          return 'Invalid Date';
-                        }
+                        const dateObj = new Date(g.date);
                         return isNaN(dateObj.getTime()) ? 'Invalid Date' : dateObj.toLocaleDateString();
                       })()}
                     </span>
