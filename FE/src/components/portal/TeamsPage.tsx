@@ -256,7 +256,7 @@ const TeamsPage: React.FC = () => {
             style={{
               padding: "0.5rem 1rem",
               borderRadius: "0.25rem",
-              background: "#6c757d",
+              background: "#007bff",
               color: "#fff",
               border: "none",
               cursor: "pointer",
