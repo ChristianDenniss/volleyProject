@@ -130,6 +130,57 @@
   cursor: not-allowed;
 }
 
+/* Filter container styles */
+.filters-container {
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 0.5rem;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.filter-label {
+  font-weight: bold;
+  min-width: 80px;
+}
+
+.filter-select {
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  border: 1px solid #ccc;
+  min-width: 120px;
+}
+
+.clear-filters-button {
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  background-color: #2d3c50;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background-color 0.2s ease;
+}
+
+.clear-filters-button:hover {
+  background-color: #5b7dab;
+}
+
+.results-counter {
+  margin-left: auto;
+  font-size: 0.875rem;
+  color: #6c757d;
+}
+
 /* Modal styles */
 .modal-overlay {
     position: fixed;

@@ -250,27 +250,13 @@ const GamesPage: React.FC = () => {
       </div>
 
       {/* Filters */}
-      <div className="filters-container" style={{ 
-        marginTop: "1rem", 
-        padding: "1rem", 
-        backgroundColor: "#f8f9fa", 
-        borderRadius: "0.5rem",
-        display: "flex",
-        gap: "1rem",
-        alignItems: "center",
-        flexWrap: "wrap"
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <label style={{ fontWeight: "bold", minWidth: "80px" }}>Season:</label>
+      <div className="filters-container">
+        <div className="filter-group">
+          <label className="filter-label">Season:</label>
           <select
+            className="filter-select"
             value={seasonFilter}
             onChange={(e) => handleSeasonFilterChange(e.target.value)}
-            style={{
-              padding: "0.5rem",
-              borderRadius: "0.25rem",
-              border: "1px solid #ccc",
-              minWidth: "120px"
-            }}
           >
             <option value="">All Seasons</option>
             {uniqueSeasons.map(season => (
@@ -281,17 +267,12 @@ const GamesPage: React.FC = () => {
           </select>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <label style={{ fontWeight: "bold", minWidth: "60px" }}>Stage:</label>
+        <div className="filter-group">
+          <label className="filter-label">Stage:</label>
           <select
+            className="filter-select"
             value={stageFilter}
             onChange={(e) => handleStageFilterChange(e.target.value)}
-            style={{
-              padding: "0.5rem",
-              borderRadius: "0.25rem",
-              border: "1px solid #ccc",
-              minWidth: "120px"
-            }}
           >
             <option value="">All Stages</option>
             {uniqueStages.map(stage => (
@@ -304,22 +285,14 @@ const GamesPage: React.FC = () => {
 
         {(searchQuery || seasonFilter || stageFilter) && (
           <button
+            className="clear-filters-button"
             onClick={clearFilters}
-            style={{
-              padding: "0.5rem 1rem",
-              borderRadius: "0.25rem",
-              background: "#6c757d",
-              color: "#fff",
-              border: "none",
-              cursor: "pointer",
-              fontSize: "0.875rem"
-            }}
           >
             Clear Filters
           </button>
         )}
 
-        <div style={{ marginLeft: "auto", fontSize: "0.875rem", color: "#6c757d" }}>
+        <div className="results-counter">
           Showing {((currentPage - 1) * gamesPerPage) + 1}-{Math.min(currentPage * gamesPerPage, filteredGames.length)} of {filteredGames.length} games
         </div>
       </div>

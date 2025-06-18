@@ -232,14 +232,9 @@ const TeamsPage: React.FC = () => {
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
           <label style={{ fontWeight: "bold", minWidth: "80px" }}>Season:</label>
           <select
+            className="filter-select"
             value={seasonFilter}
             onChange={(e) => handleSeasonFilterChange(e.target.value)}
-            style={{
-              padding: "0.5rem",
-              borderRadius: "0.25rem",
-              border: "1px solid #ccc",
-              minWidth: "120px"
-            }}
           >
             <option value="">All Seasons</option>
             {uniqueSeasons.map(season => (
@@ -252,22 +247,14 @@ const TeamsPage: React.FC = () => {
 
         {(searchQuery || seasonFilter) && (
           <button
+            className="clear-filters-button"
             onClick={clearFilters}
-            style={{
-              padding: "0.5rem 1rem",
-              borderRadius: "0.25rem",
-              background: "#007bff",
-              color: "#fff",
-              border: "none",
-              cursor: "pointer",
-              fontSize: "0.875rem"
-            }}
           >
             Clear Filters
           </button>
         )}
 
-        <div style={{ marginLeft: "auto", fontSize: "0.875rem", color: "#6c757d" }}>
+        <div className="results-counter">
           Showing {((currentPage - 1) * teamsPerPage) + 1}-{Math.min(currentPage * teamsPerPage, filteredTeams.length)} of {filteredTeams.length} teams
         </div>
       </div>

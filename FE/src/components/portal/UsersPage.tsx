@@ -96,27 +96,13 @@ const UsersPage: React.FC = () => {
       </div>
 
       {/* Filters */}
-      <div className="filters-container" style={{ 
-        marginTop: "1rem", 
-        padding: "1rem", 
-        backgroundColor: "#f8f9fa", 
-        borderRadius: "0.5rem",
-        display: "flex",
-        gap: "1rem",
-        alignItems: "center",
-        flexWrap: "wrap"
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <label style={{ fontWeight: "bold", minWidth: "60px" }}>Role:</label>
+      <div className="filters-container">
+        <div className="filter-group">
+          <label className="filter-label">Role:</label>
           <select
+            className="filter-select"
             value={roleFilter}
             onChange={(e) => handleRoleFilterChange(e.target.value)}
-            style={{
-              padding: "0.5rem",
-              borderRadius: "0.25rem",
-              border: "1px solid #ccc",
-              minWidth: "120px"
-            }}
           >
             <option value="">All Roles</option>
             {uniqueRoles.map(role => (
@@ -129,22 +115,14 @@ const UsersPage: React.FC = () => {
 
         {(searchQuery || roleFilter) && (
           <button
+            className="clear-filters-button"
             onClick={clearFilters}
-            style={{
-              padding: "0.5rem 1rem",
-              borderRadius: "0.25rem",
-              background: "#6c757d",
-              color: "#fff",
-              border: "none",
-              cursor: "pointer",
-              fontSize: "0.875rem"
-            }}
           >
             Clear Filters
           </button>
         )}
 
-        <div style={{ marginLeft: "auto", fontSize: "0.875rem", color: "#6c757d" }}>
+        <div className="results-counter">
           Showing {((currentPage - 1) * usersPerPage) + 1}-{Math.min(currentPage * usersPerPage, filteredUsers.length)} of {filteredUsers.length} users
         </div>
       </div>
