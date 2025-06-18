@@ -74,7 +74,7 @@ const GamesPage: React.FC = () => {
   const commitEdit = async () => {
     if (!editing) return;
 
-    const payload: Partial<Game> = {};
+    const payload: any = {};
     const value = editing.value;
 
     switch (editing.field) {
@@ -83,7 +83,7 @@ const GamesPage: React.FC = () => {
       case "stage": payload.stage = value; break;
       case "team1Score": payload.team1Score = Number(value); break;
       case "team2Score": payload.team2Score = Number(value); break;
-      case "date": payload.date = new Date(value); break;
+      case "date": payload.date = new Date(value).toISOString(); break;
       case "videoUrl": payload.videoUrl = value === "" ? null : value; break;
     }
 
