@@ -21,17 +21,6 @@ interface EditingState {
   value: string;
 }
 
-interface CreateGameInput {
-  name: string;
-  seasonId: number;
-  teamNames: string[];
-  team1Score: number;
-  team2Score: number;
-  videoUrl: string | null;
-  date: string;
-  stage: string;
-}
-
 const GamesPage: React.FC = () => {
   const { data: games, loading, error } = useGames();
   const { patchGame } = useGameMutations();
@@ -625,7 +614,7 @@ const GamesPage: React.FC = () => {
                   )}
                 </td>
                 <td>
-                  {user?.role === "superadmin" && (
+                  {user?.role === "superadmin" ? (
                     <button
                       onClick={() => handleDelete(g.id)}
                       disabled={deleting}
@@ -633,6 +622,8 @@ const GamesPage: React.FC = () => {
                     >
                       Delete
                     </button>
+                  ) : (
+                    <span style={{ color: "#666", fontStyle: "italic" }}>No permissions</span>
                   )}
                 </td>
               </tr>

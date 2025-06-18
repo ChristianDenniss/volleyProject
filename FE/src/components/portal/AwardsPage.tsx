@@ -454,7 +454,7 @@ const AwardsPage: React.FC = () => {
                   )}
                 </td>
                 <td>
-                  {user?.role === "superadmin" && (
+                  {user?.role === "superadmin" ? (
                     <button
                       onClick={() => handleDelete(award.id)}
                       disabled={deleting}
@@ -462,6 +462,8 @@ const AwardsPage: React.FC = () => {
                     >
                       Delete
                     </button>
+                  ) : (
+                    <span style={{ color: "#666", fontStyle: "italic" }}>No permissions</span>
                   )}
                 </td>
               </tr>
