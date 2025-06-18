@@ -1,13 +1,44 @@
 // src/pages/UsersPage.tsx
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../../context/authContext";
 import type { User } from "../../types/interfaces";
 import { useUsers } from "../../hooks/useUsers";
+import SearchBar from "../Searchbar";
+import Pagination from "../Pagination";
 import "../../styles/UsersPage.css";
 
 const UsersPage: React.FC = () => {
   const { user: me } = useAuth();
   const { users, loading, error, changeRole } = useUsers();
+
+  // Local state for search and pagination
+  const [localUsers, setLocalUsers] = useState<User[]>([]);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const usersPerPage = 10;
+
+  // Update local state when users data changes
+  useEffect(() => {
+    if (users) setLocalUsers(users);
+  }, [users]);
+
+  // Filter users based on search query (username)
+  const filteredUsers = localUsers.filter(user =>
+    user?.username?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false
+  );
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+  const paginatedUsers = filteredUsers.slice(
+    (currentPage - 1) * usersPerPage,
+    currentPage * usersPerPage
+  );
+
+  // Handle search
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    setCurrentPage(1); // Reset to first page when searching
+  };
 
   const canPromote = (target: User, to: User["role"]) => {
     if (me?.role === "admin") {
@@ -29,6 +60,19 @@ const UsersPage: React.FC = () => {
   return (
     <div className="portal-main">
       <h1 className="users-title">Users</h1>
+
+      {/* Search and Controls */}
+      <div className="players-controls">
+        <div className="players-controls-right">
+          <SearchBar onSearch={handleSearch} placeholder="Search users..." />
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        </div>
+      </div>
+
       <table className="users-table">
         <thead>
           <tr>
@@ -39,7 +83,7 @@ const UsersPage: React.FC = () => {
           </tr>
         </thead>
         <tbody>
-          {users!.map((u) => {
+          {paginatedUsers.map((u) => {
             // 1) If this is the current user:
             if (u.id === me?.id) {
               return (

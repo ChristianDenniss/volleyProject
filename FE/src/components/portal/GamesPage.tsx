@@ -45,6 +45,10 @@ const GamesPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const gamesPerPage = 10;
 
+  // Filter states
+  const [seasonFilter, setSeasonFilter] = useState<string>("");
+  const [stageFilter, setStageFilter] = useState<string>("");
+
   // Modal state for creating a new game
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [newName, setNewName] = useState<string>("");
@@ -61,6 +65,10 @@ const GamesPage: React.FC = () => {
   useEffect(() => {
     if (games) setLocalGames(games);
   }, [games]);
+
+  // Get unique seasons and stages for filter options
+  const uniqueSeasons = Array.from(new Set(localGames.map(game => game.season.seasonNumber))).sort((a, b) => a - b);
+  const uniqueStages = Array.from(new Set(localGames.map(game => game.stage).filter(stage => stage))).sort();
 
   // Commit inline edits
   const commitEdit = async () => {
@@ -177,10 +185,14 @@ const GamesPage: React.FC = () => {
     setEditing({ id, field, value: origValue });
   };
 
-  // Filter games based on search query
+  // Filter games based on search query, season, and stage
   const filteredGames = localGames.filter(game => {
     const gameName = game?.name || 'No Given Name';
-    return gameName.includes(searchQuery);
+    const matchesSearch = gameName.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSeason = !seasonFilter || game.season.seasonNumber.toString() === seasonFilter;
+    const matchesStage = !stageFilter || game.stage === stageFilter;
+    
+    return matchesSearch && matchesSeason && matchesStage;
   });
 
   // Calculate pagination
@@ -194,6 +206,25 @@ const GamesPage: React.FC = () => {
   const handleSearch = (query: string) => {
     setSearchQuery(query);
     setCurrentPage(1); // Reset to first page when searching
+  };
+
+  // Handle filter changes
+  const handleSeasonFilterChange = (value: string) => {
+    setSeasonFilter(value);
+    setCurrentPage(1); // Reset to first page when filtering
+  };
+
+  const handleStageFilterChange = (value: string) => {
+    setStageFilter(value);
+    setCurrentPage(1); // Reset to first page when filtering
+  };
+
+  // Clear all filters
+  const clearFilters = () => {
+    setSearchQuery("");
+    setSeasonFilter("");
+    setStageFilter("");
+    setCurrentPage(1);
   };
 
   if (loading) return <p>Loading games…</p>;
@@ -215,6 +246,81 @@ const GamesPage: React.FC = () => {
             totalPages={totalPages}
             onPageChange={setCurrentPage}
           />
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="filters-container" style={{ 
+        marginTop: "1rem", 
+        padding: "1rem", 
+        backgroundColor: "#f8f9fa", 
+        borderRadius: "0.5rem",
+        display: "flex",
+        gap: "1rem",
+        alignItems: "center",
+        flexWrap: "wrap"
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <label style={{ fontWeight: "bold", minWidth: "80px" }}>Season:</label>
+          <select
+            value={seasonFilter}
+            onChange={(e) => handleSeasonFilterChange(e.target.value)}
+            style={{
+              padding: "0.5rem",
+              borderRadius: "0.25rem",
+              border: "1px solid #ccc",
+              minWidth: "120px"
+            }}
+          >
+            <option value="">All Seasons</option>
+            {uniqueSeasons.map(season => (
+              <option key={season} value={season.toString()}>
+                Season {season}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <label style={{ fontWeight: "bold", minWidth: "60px" }}>Stage:</label>
+          <select
+            value={stageFilter}
+            onChange={(e) => handleStageFilterChange(e.target.value)}
+            style={{
+              padding: "0.5rem",
+              borderRadius: "0.25rem",
+              border: "1px solid #ccc",
+              minWidth: "120px"
+            }}
+          >
+            <option value="">All Stages</option>
+            {uniqueStages.map(stage => (
+              <option key={stage} value={stage}>
+                {stage}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {(searchQuery || seasonFilter || stageFilter) && (
+          <button
+            onClick={clearFilters}
+            style={{
+              padding: "0.5rem 1rem",
+              borderRadius: "0.25rem",
+              background: "#6c757d",
+              color: "#fff",
+              border: "none",
+              cursor: "pointer",
+              fontSize: "0.875rem"
+            }}
+          >
+            Clear Filters
+          </button>
+        )}
+
+        <div style={{ marginLeft: "auto", fontSize: "0.875rem", color: "#6c757d" }}>
+          Showing {filteredGames.length} of {localGames.length} games
         </div>
       </div>
 
