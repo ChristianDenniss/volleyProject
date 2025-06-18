@@ -179,7 +179,11 @@ const GamesPage: React.FC = () => {
       case "stage": origValue = orig.stage; break;
       case "team1Score": origValue = String(orig.team1Score); break;
       case "team2Score": origValue = String(orig.team2Score); break;
-      case "date": origValue = orig.date.toISOString().split('T')[0]; break;
+      case "date": 
+        // Handle date as string or Date object
+        const dateObj = typeof orig.date === 'string' ? new Date(orig.date) : orig.date;
+        origValue = dateObj.toISOString().split('T')[0]; 
+        break;
       case "videoUrl": origValue = orig.videoUrl || ''; break;
     }
     setEditing({ id, field, value: origValue });
@@ -582,7 +586,12 @@ const GamesPage: React.FC = () => {
                       autoFocus
                     />
                   ) : (
-                    <span onClick={() => startEdit(g.id, "date")}>{new Date(g.date).toLocaleDateString()}</span>
+                    <span 
+                      onClick={() => startEdit(g.id, "date")}
+                      style={{ cursor: "pointer" }}
+                    >
+                      {typeof g.date === 'string' ? new Date(g.date).toLocaleDateString() : g.date.toLocaleDateString()}
+                    </span>
                   )}
                 </td>
                 <td>
