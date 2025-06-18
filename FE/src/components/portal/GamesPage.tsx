@@ -83,7 +83,7 @@ const GamesPage: React.FC = () => {
       case "stage": payload.stage = value; break;
       case "team1Score": payload.team1Score = Number(value); break;
       case "team2Score": payload.team2Score = Number(value); break;
-      case "date": payload.date = new Date(value).toISOString(); break;
+      case "date": payload.date = new Date(value); break;
       case "videoUrl": payload.videoUrl = value === "" ? null : value; break;
     }
 
@@ -147,9 +147,9 @@ const GamesPage: React.FC = () => {
         team1Score: Number(newTeam1Score),
         team2Score: Number(newTeam2Score),
         videoUrl: newVideoUrl === "" ? null : newVideoUrl,
-        date: new Date(newDate).toISOString(),
+        date: new Date(newDate),
         stage: newStage
-      } as CreateGameInput);
+      });
       setIsModalOpen(false);
       setNewName("");
       setNewSeasonNumber("");

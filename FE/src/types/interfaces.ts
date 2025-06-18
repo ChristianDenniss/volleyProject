@@ -7,7 +7,7 @@ interface Game
   team1Score: number;
   team2Score: number;
   videoUrl: string | null;
-  date: string;
+  date: Date;
   stage: string;
   teams?: Team[]; 
   stats?: Stats[]; 
@@ -137,7 +137,7 @@ export type CreateGameInput = {
   team1Score: number;
   team2Score: number;
   videoUrl?: string | null;
-  date: string;
+  date: Date;
   stage: string;
   teamNames: string[];
 };
