@@ -17,15 +17,24 @@ const UsersPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const usersPerPage = 10;
 
+  // Filter state
+  const [roleFilter, setRoleFilter] = useState<string>("");
+
   // Update local state when users data changes
   useEffect(() => {
     if (users) setLocalUsers(users);
   }, [users]);
 
-  // Filter users based on search query (username)
-  const filteredUsers = localUsers.filter(user =>
-    user?.username?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false
-  );
+  // Get unique roles for filter options
+  const uniqueRoles = Array.from(new Set(localUsers.map(user => user.role))).sort();
+
+  // Filter users based on search query (username) and role
+  const filteredUsers = localUsers.filter(user => {
+    const matchesSearch = user?.username?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false;
+    const matchesRole = !roleFilter || user.role === roleFilter;
+    
+    return matchesSearch && matchesRole;
+  });
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
@@ -38,6 +47,19 @@ const UsersPage: React.FC = () => {
   const handleSearch = (query: string) => {
     setSearchQuery(query);
     setCurrentPage(1); // Reset to first page when searching
+  };
+
+  // Handle role filter change
+  const handleRoleFilterChange = (value: string) => {
+    setRoleFilter(value);
+    setCurrentPage(1); // Reset to first page when filtering
+  };
+
+  // Clear all filters
+  const clearFilters = () => {
+    setSearchQuery("");
+    setRoleFilter("");
+    setCurrentPage(1);
   };
 
   const canPromote = (target: User, to: User["role"]) => {
@@ -70,6 +92,60 @@ const UsersPage: React.FC = () => {
             totalPages={totalPages}
             onPageChange={setCurrentPage}
           />
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="filters-container" style={{ 
+        marginTop: "1rem", 
+        padding: "1rem", 
+        backgroundColor: "#f8f9fa", 
+        borderRadius: "0.5rem",
+        display: "flex",
+        gap: "1rem",
+        alignItems: "center",
+        flexWrap: "wrap"
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <label style={{ fontWeight: "bold", minWidth: "60px" }}>Role:</label>
+          <select
+            value={roleFilter}
+            onChange={(e) => handleRoleFilterChange(e.target.value)}
+            style={{
+              padding: "0.5rem",
+              borderRadius: "0.25rem",
+              border: "1px solid #ccc",
+              minWidth: "120px"
+            }}
+          >
+            <option value="">All Roles</option>
+            {uniqueRoles.map(role => (
+              <option key={role} value={role}>
+                {role.charAt(0).toUpperCase() + role.slice(1)}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {(searchQuery || roleFilter) && (
+          <button
+            onClick={clearFilters}
+            style={{
+              padding: "0.5rem 1rem",
+              borderRadius: "0.25rem",
+              background: "#6c757d",
+              color: "#fff",
+              border: "none",
+              cursor: "pointer",
+              fontSize: "0.875rem"
+            }}
+          >
+            Clear Filters
+          </button>
+        )}
+
+        <div style={{ marginLeft: "auto", fontSize: "0.875rem", color: "#6c757d" }}>
+          Showing {((currentPage - 1) * usersPerPage) + 1}-{Math.min(currentPage * usersPerPage, filteredUsers.length)} of {filteredUsers.length} users
         </div>
       </div>
 

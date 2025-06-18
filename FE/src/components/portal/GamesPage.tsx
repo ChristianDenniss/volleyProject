@@ -320,7 +320,7 @@ const GamesPage: React.FC = () => {
         )}
 
         <div style={{ marginLeft: "auto", fontSize: "0.875rem", color: "#6c757d" }}>
-          Showing {filteredGames.length} of {localGames.length} games
+          Showing {((currentPage - 1) * gamesPerPage) + 1}-{Math.min(currentPage * gamesPerPage, filteredGames.length)} of {filteredGames.length} games
         </div>
       </div>
 

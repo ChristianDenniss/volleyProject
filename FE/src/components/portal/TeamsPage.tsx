@@ -37,6 +37,9 @@ const TeamsPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const teamsPerPage = 10;
 
+  // Filter state
+  const [seasonFilter, setSeasonFilter] = useState<string>("");
+
   // Modal state for creating a new team
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [newName, setNewName] = useState<string>("");
@@ -48,10 +51,16 @@ const TeamsPage: React.FC = () => {
     if (teams) setLocalTeams(teams);
   }, [teams]);
 
-  // Filter teams based on search query
-  const filteredTeams = localTeams.filter(team =>
-    team?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false
-  );
+  // Get unique seasons for filter options
+  const uniqueSeasons = Array.from(new Set(localTeams.map(team => team.season.id))).sort((a, b) => a - b);
+
+  // Filter teams based on search query and season
+  const filteredTeams = localTeams.filter(team => {
+    const matchesSearch = team?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false;
+    const matchesSeason = !seasonFilter || team.season.id.toString() === seasonFilter;
+    
+    return matchesSearch && matchesSeason;
+  });
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredTeams.length / teamsPerPage);
@@ -64,6 +73,19 @@ const TeamsPage: React.FC = () => {
   const handleSearch = (query: string) => {
     setSearchQuery(query);
     setCurrentPage(1); // Reset to first page when searching
+  };
+
+  // Handle season filter change
+  const handleSeasonFilterChange = (value: string) => {
+    setSeasonFilter(value);
+    setCurrentPage(1); // Reset to first page when filtering
+  };
+
+  // Clear all filters
+  const clearFilters = () => {
+    setSearchQuery("");
+    setSeasonFilter("");
+    setCurrentPage(1);
   };
 
   // Commit inline edits
@@ -193,6 +215,60 @@ const TeamsPage: React.FC = () => {
             totalPages={totalPages}
             onPageChange={setCurrentPage}
           />
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="filters-container" style={{ 
+        marginTop: "1rem", 
+        padding: "1rem", 
+        backgroundColor: "#f8f9fa", 
+        borderRadius: "0.5rem",
+        display: "flex",
+        gap: "1rem",
+        alignItems: "center",
+        flexWrap: "wrap"
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <label style={{ fontWeight: "bold", minWidth: "80px" }}>Season:</label>
+          <select
+            value={seasonFilter}
+            onChange={(e) => handleSeasonFilterChange(e.target.value)}
+            style={{
+              padding: "0.5rem",
+              borderRadius: "0.25rem",
+              border: "1px solid #ccc",
+              minWidth: "120px"
+            }}
+          >
+            <option value="">All Seasons</option>
+            {uniqueSeasons.map(season => (
+              <option key={season} value={season.toString()}>
+                Season {season}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {(searchQuery || seasonFilter) && (
+          <button
+            onClick={clearFilters}
+            style={{
+              padding: "0.5rem 1rem",
+              borderRadius: "0.25rem",
+              background: "#6c757d",
+              color: "#fff",
+              border: "none",
+              cursor: "pointer",
+              fontSize: "0.875rem"
+            }}
+          >
+            Clear Filters
+          </button>
+        )}
+
+        <div style={{ marginLeft: "auto", fontSize: "0.875rem", color: "#6c757d" }}>
+          Showing {((currentPage - 1) * teamsPerPage) + 1}-{Math.min(currentPage * teamsPerPage, filteredTeams.length)} of {filteredTeams.length} teams
         </div>
       </div>
 
