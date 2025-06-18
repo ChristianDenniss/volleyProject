@@ -12,8 +12,6 @@ export const createGameSchema = z.object({
     stage: z.string().min(2, { message: "stage is required, min 2 characters" }),
 });
 
-export const updateGameSchema = createGameSchema.partial().extend({
-    id: z.number().int().positive(),
-});         
+export const updateGameSchema = createGameSchema.partial();         
 
 
