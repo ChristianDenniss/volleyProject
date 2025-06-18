@@ -180,8 +180,25 @@ const GamesPage: React.FC = () => {
       case "team1Score": origValue = String(orig.team1Score); break;
       case "team2Score": origValue = String(orig.team2Score); break;
       case "date": 
-        // Handle date as string or Date object
-        const dateObj = typeof orig.date === 'string' ? new Date(orig.date) : orig.date;
+        // Handle date as string, Date object, null, or undefined
+        let dateObj: Date;
+        if (!orig.date) {
+          // If date is null/undefined, use current date
+          dateObj = new Date();
+        } else if (typeof orig.date === 'string') {
+          dateObj = new Date(orig.date);
+        } else if (orig.date instanceof Date) {
+          dateObj = orig.date;
+        } else {
+          // Fallback to current date if unknown format
+          dateObj = new Date();
+        }
+        
+        // Check if the date is valid
+        if (isNaN(dateObj.getTime())) {
+          dateObj = new Date(); // Use current date if invalid
+        }
+        
         origValue = dateObj.toISOString().split('T')[0]; 
         break;
       case "videoUrl": origValue = orig.videoUrl || ''; break;
@@ -590,7 +607,18 @@ const GamesPage: React.FC = () => {
                       onClick={() => startEdit(g.id, "date")}
                       style={{ cursor: "pointer" }}
                     >
-                      {typeof g.date === 'string' ? new Date(g.date).toLocaleDateString() : g.date.toLocaleDateString()}
+                      {(() => {
+                        if (!g.date) return 'No Date';
+                        let dateObj: Date;
+                        if (typeof g.date === 'string') {
+                          dateObj = new Date(g.date);
+                        } else if (g.date instanceof Date) {
+                          dateObj = g.date;
+                        } else {
+                          return 'Invalid Date';
+                        }
+                        return isNaN(dateObj.getTime()) ? 'Invalid Date' : dateObj.toLocaleDateString();
+                      })()}
                     </span>
                   )}
                 </td>
