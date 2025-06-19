@@ -406,7 +406,6 @@ const GamesPage: React.FC = () => {
                 Team 1 Score
                 <input
                   type="number"
-                  min="0"
                   value={newTeam1Score}
                   onChange={(e) => setNewTeam1Score(e.target.value)}
                   style={{ width: "100%", marginBottom: "0.75rem" }}
@@ -430,7 +429,6 @@ const GamesPage: React.FC = () => {
                 Team 2 Score
                 <input
                   type="number"
-                  min="0"
                   value={newTeam2Score}
                   onChange={(e) => setNewTeam2Score(e.target.value)}
                   style={{ width: "100%", marginBottom: "0.75rem" }}
