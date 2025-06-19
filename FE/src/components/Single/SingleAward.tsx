@@ -83,7 +83,7 @@ const SingleAward: React.FC = () => {
                         <div className="recipient-info">
                             {award.players.map((player, index) => (
                                 <React.Fragment key={player.id}>
-                                    <a href={`/players/${player.name}`} className="player-link">
+                                    <a href={`/players/${player.id}`} className="player-link">
                                         {player.name}
                                     </a>
                                     {index < award.players.length - 1 && ", "}
