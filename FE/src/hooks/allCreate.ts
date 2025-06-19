@@ -52,7 +52,7 @@ export const useCreateSeasons = () => {
  * – Returns createGame(payload) → Promise<Game | null>
  */
 export const useCreateGames = () => {
-  const { createItem, loading, error } = useCreate<Game, CreateGameInput>("games");
+  const { createItem, loading, error } = useCreate<Game, CreateGameInput>("games/createByNames");
   return {
     createGame: createItem,
     loading,

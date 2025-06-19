@@ -21,6 +21,17 @@ interface EditingState {
   value: string;
 }
 
+interface CreateGameInput {
+  name: string;
+  seasonId: number;
+  teamNames: string[];
+  team1Score: number;
+  team2Score: number;
+  videoUrl: string | null;
+  date: Date;
+  stage: string;
+}
+
 const GamesPage: React.FC = () => {
   const { data: games, loading, error } = useGames();
   const { patchGame } = useGameMutations();
@@ -138,7 +149,7 @@ const GamesPage: React.FC = () => {
         videoUrl: newVideoUrl === "" ? null : newVideoUrl,
         date: new Date(newDate),
         stage: newStage
-      });
+      } as CreateGameInput);
       setIsModalOpen(false);
       setNewName("");
       setNewSeasonNumber("");
