@@ -1,0 +1,527 @@
+.applications-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.applications-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.applications-header h1 {
+    font-size: 2.5rem;
+    color: #2d3c50;
+    margin-bottom: 1rem;
+    font-weight: 700;
+}
+
+.applications-header p {
+    font-size: 1.1rem;
+    color: #6b7280;
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+
+.applications-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+}
+
+.application-category {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e5e7eb;
+}
+
+.category-title {
+    font-size: 1.5rem;
+    color: #2d3c50;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #a1d2ff;
+    font-weight: 600;
+}
+
+.category-apps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 1.5rem;
+}
+
+.application-card {
+    display: flex;
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 1.5rem;
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.application-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    border-color: #a1d2ff;
+}
+
+.application-card.closed {
+    opacity: 0.7;
+    background: #f1f5f9;
+}
+
+.application-card.closed:hover {
+    transform: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    border-color: #e2e8f0;
+}
+
+.app-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    background: #a1d2ff;
+    border-radius: 12px;
+    margin-right: 1rem;
+    flex-shrink: 0;
+    font-size: 1.5rem;
+    color: #2d3c50;
+    transition: all 0.3s ease;
+}
+
+.application-card:hover .app-icon {
+    background: #2d3c50;
+    color: #ffffff;
+    transform: scale(1.05);
+}
+
+.application-card.closed .app-icon {
+    background: #94a3b8;
+    color: #64748b;
+}
+
+.application-card.closed:hover .app-icon {
+    background: #94a3b8;
+    color: #64748b;
+    transform: none;
+}
+
+.app-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.5rem;
+}
+
+.app-name {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #2d3c50;
+    margin: 0;
+    flex: 1;
+}
+
+.status-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+}
+
+.status-badge.open {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-badge.closed {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.app-type {
+    font-size: 0.875rem;
+    color: #6b7280;
+    font-weight: 500;
+    margin: 0 0 0.75rem 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.app-description {
+    font-size: 0.95rem;
+    color: #4b5563;
+    line-height: 1.5;
+    margin: 0 0 1rem 0;
+    flex: 1;
+}
+
+.app-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #a1d2ff;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    padding: 0.5rem 0;
+}
+
+.app-link:hover {
+    color: #2d3c50;
+    transform: translateX(4px);
+}
+
+.app-link.disabled {
+    color: #9ca3af;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.app-link.disabled:hover {
+    color: #9ca3af;
+    transform: none;
+}
+
+.external-link-icon {
+    font-size: 0.8rem;
+    transition: transform 0.3s ease;
+}
+
+.app-link:hover .external-link-icon {
+    transform: translateX(2px);
+}
+
+.applications-footer {
+    margin-top: 3rem;
+    text-align: center;
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 2rem;
+    border: 1px solid #e2e8f0;
+}
+
+.applications-footer h3 {
+    font-size: 1.25rem;
+    color: #2d3c50;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.applications-footer p {
+    color: #6b7280;
+    line-height: 1.6;
+    max-width: 600px;
+    margin: 0 auto 1.5rem auto;
+}
+
+.status-legend {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: #6b7280;
+}
+
+.legend-icon {
+    font-size: 1rem;
+}
+
+.legend-icon.open {
+    color: #166534;
+}
+
+.legend-icon.closed {
+    color: #dc2626;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .applications-page {
+        padding: 1rem;
+    }
+
+    .applications-header h1 {
+        font-size: 2rem;
+    }
+
+    .applications-header p {
+        font-size: 1rem;
+        padding: 0 1rem;
+    }
+
+    .application-category {
+        padding: 1.5rem;
+    }
+
+    .category-apps {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .application-card {
+        flex-direction: column;
+        text-align: center;
+        padding: 1.25rem;
+    }
+
+    .app-icon {
+        margin: 0 0 1rem 0;
+        align-self: center;
+        width: 50px;
+        height: 50px;
+        font-size: 1.25rem;
+    }
+
+    .app-header {
+        flex-direction: column;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .app-name {
+        font-size: 1.1rem;
+        text-align: center;
+    }
+
+    .status-badge {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.6rem;
+    }
+
+    .app-type {
+        font-size: 0.8rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .app-description {
+        font-size: 0.9rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .app-link {
+        justify-content: center;
+        font-size: 0.85rem;
+        padding: 0.4rem 0;
+    }
+
+    .status-legend {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .legend-item {
+        font-size: 0.85rem;
+    }
+
+    .applications-footer {
+        padding: 1.5rem;
+        margin-top: 2rem;
+    }
+
+    .applications-footer h3 {
+        font-size: 1.1rem;
+    }
+
+    .applications-footer p {
+        font-size: 0.9rem;
+        padding: 0 0.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .applications-page {
+        padding: 0.75rem;
+    }
+
+    .applications-header h1 {
+        font-size: 1.75rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .applications-header p {
+        font-size: 0.95rem;
+        padding: 0 0.5rem;
+    }
+
+    .application-category {
+        padding: 1rem;
+        border-radius: 8px;
+    }
+
+    .category-title {
+        font-size: 1.25rem;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+    }
+
+    .application-card {
+        padding: 1rem;
+        border-radius: 6px;
+    }
+
+    .app-icon {
+        width: 45px;
+        height: 45px;
+        font-size: 1.1rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .app-name {
+        font-size: 1rem;
+    }
+
+    .status-badge {
+        font-size: 0.65rem;
+        padding: 0.15rem 0.5rem;
+    }
+
+    .app-type {
+        font-size: 0.75rem;
+        margin-bottom: 0.4rem;
+    }
+
+    .app-description {
+        font-size: 0.85rem;
+        margin-bottom: 0.6rem;
+    }
+
+    .app-link {
+        font-size: 0.8rem;
+        padding: 0.3rem 0;
+    }
+
+    .applications-footer {
+        padding: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    .applications-footer h3 {
+        font-size: 1rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .applications-footer p {
+        font-size: 0.85rem;
+        margin-bottom: 1rem;
+    }
+
+    .legend-item {
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 360px) {
+    .applications-page {
+        padding: 0.5rem;
+    }
+
+    .applications-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .application-category {
+        padding: 0.75rem;
+    }
+
+    .application-card {
+        padding: 0.75rem;
+    }
+
+    .app-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+
+    .app-name {
+        font-size: 0.95rem;
+    }
+
+    .app-description {
+        font-size: 0.8rem;
+    }
+}
+
+/* Category-specific styling */
+.application-category:nth-child(1) .category-title {
+    border-bottom-color: #3b82f6; /* Blue for staff */
+}
+
+.application-category:nth-child(2) .category-title {
+    border-bottom-color: #10b981; /* Green for media */
+}
+
+.application-category:nth-child(3) .category-title {
+    border-bottom-color: #f59e0b; /* Orange for game officials */
+}
+
+.application-category:nth-child(4) .category-title {
+    border-bottom-color: #ef4444; /* Red for management */
+}
+
+/* Hover effects for different categories */
+.application-category:nth-child(1) .app-icon {
+    background: #3b82f6;
+    color: white;
+}
+
+.application-category:nth-child(2) .app-icon {
+    background: #10b981;
+    color: white;
+}
+
+.application-category:nth-child(3) .app-icon {
+    background: #f59e0b;
+    color: white;
+}
+
+.application-category:nth-child(4) .app-icon {
+    background: #ef4444;
+    color: white;
+}
+
+.application-category:nth-child(1) .app-link {
+    color: #3b82f6;
+}
+
+.application-category:nth-child(2) .app-link {
+    color: #10b981;
+}
+
+.application-category:nth-child(3) .app-link {
+    color: #f59e0b;
+}
+
+.application-category:nth-child(4) .app-link {
+    color: #ef4444;
+} 

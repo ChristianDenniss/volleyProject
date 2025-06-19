@@ -2,7 +2,7 @@
 import React from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./context/authContext";
-
+import Applications from "./components/Applications";
 import Header         from "./components/Header";
 import Navbar         from "./components/NavBar";
 import Footer         from "./components/Footer";
@@ -68,6 +68,7 @@ const App: React.FC = () => (
           <Route path="/awards" element={<Awards />} />
           <Route path="/articles/create" element={<CreateArticle />} />
           <Route path="/stats" element={<StatsLeaderboard />} />
+          <Route path="/applications" element={<Applications />} />
 
           {/* auth & profile */}
           <Route path="/profile" element={<UserProfile />} />
