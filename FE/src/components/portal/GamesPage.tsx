@@ -495,7 +495,8 @@ const GamesPage: React.FC = () => {
             <th>Stage</th>
             <th>Team 1</th>
             <th>Team 2</th>
-            <th>Score</th>
+            <th>Team 1 Score</th>
+            <th>Team 2 Score</th>
             <th>Date</th>
             <th>Video</th>
             <th>Actions</th>
@@ -562,7 +563,8 @@ const GamesPage: React.FC = () => {
                   ) : (
                     <span onClick={() => startEdit(g.id, "team1Score")}>{g.team1Score}</span>
                   )}
-                  {" - "}
+                </td>
+                <td>
                   {editing?.id === g.id && editing?.field === "team2Score" ? (
                     <input
                       type="number"
