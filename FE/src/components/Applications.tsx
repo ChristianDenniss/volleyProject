@@ -49,7 +49,7 @@ const Applications: React.FC = () => {
             id: 'referee',
             name: 'Referee Application',
             type: 'Game Officiating',
-            description: 'Apply to become a referee and help officiate volleyball matches. Ensure fair play and maintain game rules.',
+            description: 'Apply to become a RVL referee and help officiate volleyball matches. Ensure fair play and maintain game rules.',
             status: 'closed',
             icon: <FaFlag />,
             category: 'game-officials'
@@ -58,7 +58,7 @@ const Applications: React.FC = () => {
             id: 'moderator',
             name: 'Moderator Application',
             type: 'Community Management',
-            description: 'Help moderate our community spaces, enforce rules, and maintain a positive environment for all members.',
+            description: 'Help moderate our Discords community spaces, enforce rules, and maintain a positive environment for all members.',
             status: 'closed',
             icon: <FaShieldAlt />,
             category: 'management'
@@ -67,7 +67,7 @@ const Applications: React.FC = () => {
             id: 'stats',
             name: 'Stats Team Application',
             type: 'Data Management',
-            description: 'Join our stats team to help track player statistics, game data, and maintain accurate records for the league.',
+            description: 'Join our stats team to help track player statistics, game data, and maintain accurate records for RVLs playoffs.',
             status: 'closed',
             icon: <FaChartBar />,
             category: 'management'
@@ -101,8 +101,8 @@ const Applications: React.FC = () => {
     return (
         <div className="applications-page">
             <div className="applications-header">
-                <h1>Staff Applications</h1>
-                <p>Apply to join the Roblox Volleyball League team in various positions</p>
+                <h1>RVL Applications</h1>
+                <p>Apply to help out the Roblox Volleyball League team in our various roles</p>
             </div>
 
             <div className="applications-grid">

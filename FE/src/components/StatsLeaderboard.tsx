@@ -201,7 +201,7 @@ const StatsLeaderboard: React.FC = () => {
             )}
           </div>
           <div className="stats-search-wrapper">
-            <SearchBar onSearch={handleSearch} placeholder="Search players..." />
+            <SearchBar onSearch={handleSearch} placeholder="Search Players..." />
           </div>
           <div className="stats-pagination-wrapper">
             <Pagination
