@@ -42,6 +42,10 @@ const AwardsPage: React.FC = () => {
   const [editing, setEditing] = useState<EditingState | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Filter states
+  const [seasonFilter, setSeasonFilter] = useState<string>("");
+  const [awardTypeFilter, setAwardTypeFilter] = useState<string>("");
+
   // Modal state for creating a new award
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [newType, setNewType] = useState<string>("");
@@ -54,6 +58,32 @@ const AwardsPage: React.FC = () => {
   useEffect(() => {
     if (awards) setLocalAwards(awards);
   }, [awards]);
+
+  // Get unique seasons for filter options
+  const uniqueSeasons = Array.from(new Set(localAwards.map(award => award.season.seasonNumber))).sort((a, b) => a - b);
+
+  // Filter awards based on season and award type
+  const filteredAwards = localAwards.filter(award => {
+    const matchesSeason = !seasonFilter || award.season.seasonNumber.toString() === seasonFilter;
+    const matchesAwardType = !awardTypeFilter || award.type === awardTypeFilter;
+    
+    return matchesSeason && matchesAwardType;
+  });
+
+  // Handle filter changes
+  const handleSeasonFilterChange = (value: string) => {
+    setSeasonFilter(value);
+  };
+
+  const handleAwardTypeFilterChange = (value: string) => {
+    setAwardTypeFilter(value);
+  };
+
+  // Clear all filters
+  const clearFilters = () => {
+    setSeasonFilter("");
+    setAwardTypeFilter("");
+  };
 
   // Commit inline edits
   const commitEdit = async () => {
@@ -195,6 +225,54 @@ const AwardsPage: React.FC = () => {
         Create Award
       </button>
 
+      {/* Filters */}
+      <div className="filters-container">
+        <div className="filter-group">
+          <label className="filter-label">Season:</label>
+          <select
+            className="filter-select"
+            value={seasonFilter}
+            onChange={(e) => handleSeasonFilterChange(e.target.value)}
+          >
+            <option value="">All Seasons</option>
+            {uniqueSeasons.map(season => (
+              <option key={season} value={season.toString()}>
+                Season {season}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="filter-group">
+          <label className="filter-label">Award Type:</label>
+          <select
+            className="filter-select"
+            value={awardTypeFilter}
+            onChange={(e) => handleAwardTypeFilterChange(e.target.value)}
+          >
+            <option value="">All Award Types</option>
+            {AWARD_TYPES.map(type => (
+              <option key={type} value={type}>
+                {type}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {(seasonFilter || awardTypeFilter) && (
+          <button
+            className="clear-filters-button"
+            onClick={clearFilters}
+          >
+            Clear Filters
+          </button>
+        )}
+
+        <div className="results-counter">
+          Showing {filteredAwards.length} of {localAwards.length} awards
+        </div>
+      </div>
+
       {/* Modal Overlay for Creating a New Award */}
       {isModalOpen && (
         <div className="modal-overlay">
@@ -280,7 +358,7 @@ const AwardsPage: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {localAwards.map((award) => (
+            {filteredAwards.map((award) => (
               <tr key={award.id}>
                 <td>{award.id}</td>
                 <td>
