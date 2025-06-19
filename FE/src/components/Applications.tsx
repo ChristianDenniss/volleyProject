@@ -70,7 +70,7 @@ const Applications: React.FC = () => {
             description: 'Help moderate Volleyball 4.2s ranked games, police rule violations, and fair play enforcement for the playerbase.',
             status: 'closed',
             icon: <FaShieldAlt />,
-            category: 'management'
+            category: 'game-officials'
         },
         {
             id: 'stats',
