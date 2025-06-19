@@ -473,15 +473,7 @@ const GamesPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={creating}
-                style={{
-                  width: "100%",
-                  padding: "0.5rem",
-                  borderRadius: "0.25rem",
-                  background: "#007bff",
-                  color: "#fff",
-                  border: "none",
-                  cursor: "pointer",
-                }}
+                className="modal-submit-button"
               >
                 {creating ? "Creating…" : "Submit"}
               </button>
