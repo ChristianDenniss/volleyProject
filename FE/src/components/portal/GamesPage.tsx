@@ -493,8 +493,8 @@ const GamesPage: React.FC = () => {
             <th>Stage</th>
             <th>Team 1</th>
             <th>Team 2</th>
-            <th>Team 1 Score</th>
-            <th>Team 2 Score</th>
+            <th>T1 Score</th>
+            <th>T2 Score</th>
             <th>Date</th>
             <th>Video</th>
             <th>Actions</th>
