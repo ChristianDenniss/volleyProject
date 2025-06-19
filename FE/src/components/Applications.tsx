@@ -38,7 +38,7 @@ const Applications: React.FC = () => {
         {
             id: 'media',
             name: 'Media Team Application',
-            type: 'Content Creation & Media',
+            type: 'Content Creation & Streaming ',
             description: 'Join our media team to create content, manage social media, and help promote the league through various platforms.',
             url: 'https://forms.gle/L6QFsuztCaJMRQyp8',
             status: 'open',
@@ -56,9 +56,18 @@ const Applications: React.FC = () => {
         },
         {
             id: 'moderator',
-            name: 'Moderator Application',
+            name: 'Server Moderator Application',
             type: 'Community Management',
             description: 'Help moderate our Discords community spaces, enforce rules, and maintain a positive environment for all members.',
+            status: 'closed',
+            icon: <FaShieldAlt />,
+            category: 'management'
+        },
+        {   
+            id: 'game-moderator',
+            name: 'Game Moderator Application',
+            type: 'Game Officiating',
+            description: 'Help moderate Volleyball 4.2s ranked games, police rule violations, and fair play enforcement for the playerbase.',
             status: 'closed',
             icon: <FaShieldAlt />,
             category: 'management'
