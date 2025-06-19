@@ -337,7 +337,7 @@ const GamesPage: React.FC = () => {
               padding: "1.5rem",
               borderRadius: "0.5rem",
               width: "90%",
-              maxWidth: "400px",
+              maxWidth: "600px",
               boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
             }}
           >

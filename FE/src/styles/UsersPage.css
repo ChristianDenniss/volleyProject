@@ -200,7 +200,7 @@
     padding: 1.5rem;
     border-radius: 0.5rem;
     width: 90%;
-    max-width: 400px;
+    max-width: 600px;
     max-height: 90vh;
     overflow-y: auto;
     box-shadow: 0 2px 10px rgba(0,0,0,0.3);
@@ -251,9 +251,9 @@
     margin-top: 1rem;
 }
 
-.modal-submit-button {
-    background-color: #2d3c50;
-    color: white;
+.modal .modal-submit-button {
+    background-color: #2d3c50 !important;
+    color: white !important;
     padding: 0.5rem 1rem;
     border: none;
     border-radius: 0.25rem;
@@ -263,12 +263,12 @@
     width: 100%;
 }
 
-.modal-submit-button:hover {
-    background-color: #5b7dab;
+.modal .modal-submit-button:hover {
+    background-color: #5b7dab !important;
 }
 
-.modal-submit-button:disabled {
-    background-color: #63686f;
+.modal .modal-submit-button:disabled {
+    background-color: #63686f !important;
     cursor: not-allowed;
 }
 
