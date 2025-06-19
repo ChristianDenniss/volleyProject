@@ -1,28 +1,8 @@
 .applications-page {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 2rem;
+    padding: 1rem 2rem;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-.applications-header {
-    text-align: center;
-    margin-bottom: 3rem;
-}
-
-.applications-header h1 {
-    font-size: 2.5rem;
-    color: #2d3c50;
-    margin-bottom: 1rem;
-    font-weight: 700;
-}
-
-.applications-header p {
-    font-size: 1.1rem;
-    color: #6b7280;
-    max-width: 600px;
-    margin: 0 auto;
-    line-height: 1.6;
 }
 
 .applications-grid {
@@ -268,15 +248,6 @@
         padding: 1rem;
     }
 
-    .applications-header h1 {
-        font-size: 2rem;
-    }
-
-    .applications-header p {
-        font-size: 1rem;
-        padding: 0 1rem;
-    }
-
     .application-category {
         padding: 1.5rem;
     }
@@ -363,16 +334,6 @@
         padding: 0.75rem;
     }
 
-    .applications-header h1 {
-        font-size: 1.75rem;
-        margin-bottom: 0.75rem;
-    }
-
-    .applications-header p {
-        font-size: 0.95rem;
-        padding: 0 0.5rem;
-    }
-
     .application-category {
         padding: 1rem;
         border-radius: 8px;
@@ -443,10 +404,6 @@
 @media (max-width: 360px) {
     .applications-page {
         padding: 0.5rem;
-    }
-
-    .applications-header h1 {
-        font-size: 1.5rem;
     }
 
     .application-category {

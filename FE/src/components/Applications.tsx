@@ -109,11 +109,6 @@ const Applications: React.FC = () => {
 
     return (
         <div className="applications-page">
-            <div className="applications-header">
-                <h1>RVL Applications</h1>
-                <p>Apply to help out the Roblox Volleyball League team in our various roles</p>
-            </div>
-
             <div className="applications-grid">
                 {Object.entries(groupedApplications).map(([category, apps]) => (
                     <div key={category} className="application-category">
