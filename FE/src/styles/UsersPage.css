@@ -106,6 +106,13 @@
   vertical-align: middle;
 }
 
+/* Video URL column truncation */
+.users-table th:nth-child(9),
+.users-table td:nth-child(9) {
+  max-width: 150px;
+  overflow: hidden;
+}
+
 .create-button {
   background-color: #2d3c50;
   color: white;
