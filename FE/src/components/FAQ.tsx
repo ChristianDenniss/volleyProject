@@ -70,7 +70,7 @@ const FAQ: React.FC = () => {
         {
             id: 'when-seasons',
             question: 'When do seasons start and end?',
-            answer: 'Seasons typically run for several months with specific start and end dates. Check our seasons page for current and upcoming season information.',
+            answer: 'Seasons typically run for several months with specific start and end dates. Each season usually lasts a minimum of 10 weeks with a month gap between seasons. Check our seasons page for current and upcoming season information.',
             category: 'general'
         },
         {

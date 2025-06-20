@@ -115,6 +115,28 @@ export class TeamController {
         }
     };
 
+    // Get all Teams without relations / minimal data
+    getSkinnyTeams = async (req: Request, res: Response): Promise<void> => {
+        try {
+            const teams = await this.teamService.getSkinnyAllTeams();
+            res.json(teams);
+        } catch (error) {
+            console.error("Error fetching teams with skinny relations:", error);
+            res.status(500).json({ error: "Failed to fetch skinny teams" });
+        }
+    };
+
+    // Get all Teams without relations / minimal data (players, season)
+    getMediumTeams = async (req: Request, res: Response): Promise<void> => {
+        try {
+            const teams = await this.teamService.getMediumAllTeams();
+            res.json(teams);
+        } catch (error) {
+            console.error("Error fetching teams with medium relations:", error);
+            res.status(500).json({ error: "Failed to fetch medium teams" });
+        }
+    };
+
     // Get Team by ID
     getTeamById = async (req: Request, res: Response): Promise<void> => {
         try {

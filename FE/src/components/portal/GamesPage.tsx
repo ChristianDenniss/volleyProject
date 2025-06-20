@@ -1,7 +1,7 @@
 // src/pages/GamesPage.tsx
 
 import React, { useState, useEffect } from "react";
-import { useGames } from "../../hooks/allFetch";
+import { useSkinnyGames } from "../../hooks/allFetch";
 import { useGameMutations } from "../../hooks/allPatch";
 import { useCreateGames } from "../../hooks/allCreate";
 import { useDeleteGames } from "../../hooks/allDelete";
@@ -33,7 +33,7 @@ interface CreateGameInput {
 }
 
 const GamesPage: React.FC = () => {
-  const { data: games, loading, error } = useGames();
+  const { data: games, loading, error } = useSkinnyGames();
   const { patchGame } = useGameMutations();
   const { createGame, loading: creating, error: createError } = useCreateGames();
   const { deleteItem: deleteGame, loading: deleting } = useDeleteGames();

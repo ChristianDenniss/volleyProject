@@ -67,6 +67,56 @@ export class SeasonController
         }
     };
 
+
+    getSkinnyAllSeasons = async (_req: Request, res: Response): Promise<void> =>
+        {
+            try
+            {
+                console.log('Attempting to fetch all seasons...');
+                const seasons = await this.seasonService.getSkinnyAllSeasons();
+                console.log(`Successfully fetched ${seasons.length} seasons`);
+                res.status(200).json(seasons);
+            }
+            catch (error: unknown)
+            {
+                console.error('Error in getSkinnyAllSeasons:', {
+                    error: error instanceof Error ? {
+                        message: error.message,
+                        stack: error.stack,
+                        name: error.name
+                    } : error,
+                    timestamp: new Date().toISOString()
+                });
+                this.handleError(error, res, "fetching seasons");
+            }
+        };
+    
+
+    getMediumAllSeasons = async (_req: Request, res: Response): Promise<void> =>
+    {
+        try
+        {
+            console.log('Attempting to fetch all seasons...');
+            const seasons = await this.seasonService.getMediumAllSeasons();
+            console.log(`Successfully fetched ${seasons.length} seasons`);
+            res.status(200).json(seasons);
+        }
+        catch (error: unknown)
+        {
+            console.error('Error in getMediumAllSeasons:', 
+            {
+                error: error instanceof Error ? 
+                {
+                    message: error.message,
+                    stack: error.stack,
+                    name: error.name
+                } : error,
+                    timestamp: new Date().toISOString()
+            });
+                this.handleError(error, res, "fetching seasons");
+            }
+    };
+
     /* ------------------------------------------------------------
        Get season by ID
     ------------------------------------------------------------ */

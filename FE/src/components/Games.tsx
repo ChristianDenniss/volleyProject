@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo } from "react"
 
 // Import data hook
-import { useGames } from "../hooks/allFetch"
+import { useSkinnyGames } from "../hooks/allFetch"
 
 // Import router Link
 import { Link } from "react-router-dom"
@@ -15,7 +15,7 @@ import SearchBar from "./Searchbar"
 const Games: React.FC = () =>
 {
     // Fetch game list
-    const { data, error } = useGames()
+    const { data, error } = useSkinnyGames()
 
     // Track active / previous cards (purely for highlight)
     const [activeGame, setActiveGame] = useState<string | null>(null)

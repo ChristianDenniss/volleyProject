@@ -105,6 +105,16 @@ export class PlayerService
     }
 
     /**
+     * Get all players with medium relations / minimal data
+     */
+    async getMediumAllPlayers(): Promise<Players[]> 
+    {
+        return this.playerRepository.find({
+            relations: ["teams", "teams.season"],
+        });
+    }
+
+    /**
      * Get player by ID with validation
      */
     async getPlayerById(id: number): Promise<Players> 

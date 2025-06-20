@@ -12,6 +12,8 @@ export function registerTeamRoutes(app: Application): void {
     // Batch creation for multiple teams
     router.post('/batch', validate(createTeamSchema), teamController.createMultipleTeams);  
     router.get('/', teamController.getTeams);
+    router.get('/skinny', teamController.getSkinnyTeams);
+    router.get('/medium', teamController.getMediumTeams);
     router.get('/:id', teamController.getTeamById);
     router.put('/:id', validate(updateTeamSchema), teamController.updateTeam);
     router.patch('/:id', validate(updateTeamSchema), teamController.updateTeam);

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { usePlayers } from "../hooks/allFetch";
+import { useMediumPlayers } from "../hooks/allFetch";
 import { Link } from "react-router-dom";
 import "../styles/Players.css";
 import SearchBar from "./Searchbar";
@@ -7,7 +7,7 @@ import Pagination from "./Pagination";
 import SeasonFilter from "./SeasonFilterBar";
 
 const Players: React.FC = () => {
-  const { data, error } = usePlayers();
+  const { data, error } = useMediumPlayers();
 
   const [activePlayer, setActivePlayer] = useState<string | null>(null);
   const [previousActivePlayer, setPreviousActivePlayer] = useState<string | null>(null);

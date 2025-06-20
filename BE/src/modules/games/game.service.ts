@@ -156,6 +156,17 @@ export class GameService {
         });
     }
 
+    /**
+     * Get all games without relations / minimal data
+     */
+    async getSkinnyAllGames(): Promise<Games[]> {
+        return this.gameRepository.find({
+            relations: ["season"],
+            order: { date: "DESC" } // Most recent games first
+        });
+    }
+
+
     async createGameByNames(
         date: Date, 
         seasonId: number, 

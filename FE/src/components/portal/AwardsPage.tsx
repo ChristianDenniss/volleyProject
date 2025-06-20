@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useAwards } from "../../hooks/allFetch";
+import { useSkinnyAwards } from "../../hooks/allFetch";
 import { useAwardsMutations } from "../../hooks/allPatch";
 import { useCreateAwards } from "../../hooks/allCreate";
 import { useDeleteAwards } from "../../hooks/allDelete";
@@ -32,7 +32,7 @@ interface EditingState {
 }
 
 const AwardsPage: React.FC = () => {
-  const { data: awards, loading, error } = useAwards();
+  const { data: awards, loading, error } = useSkinnyAwards();
   const { patchAward } = useAwardsMutations();
   const { createAwards, loading: creating } = useCreateAwards();
   const { deleteItem: deleteAward, loading: deleting } = useDeleteAwards();

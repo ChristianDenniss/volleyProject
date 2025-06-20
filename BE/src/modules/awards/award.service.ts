@@ -93,6 +93,15 @@ export class AwardService {
     }
 
     /**
+     * Find all awards without relations / minimal data
+     */
+    async findSkinnyAllAwards(): Promise<Awards[]> {
+        return this.awardRepository.find({
+            relations: ["players", "season"]
+        });
+    }
+
+    /**
      * Find an award by ID
      * @param id - The award ID
      * @returns The found award or null

@@ -1,7 +1,7 @@
 // src/components/portal/TeamsPage.tsx
 
 import React, { useState, useEffect } from "react";
-import { useTeams } from "../../hooks/allFetch";
+import { useSkinnyTeams } from "../../hooks/allFetch";
 import { useTeamMutations } from "../../hooks/allPatch";
 import { useCreateTeams } from "../../hooks/allCreate";
 import { useDeleteTeams } from "../../hooks/allDelete";
@@ -25,7 +25,7 @@ interface EditingState {
 }
 
 const TeamsPage: React.FC = () => {
-  const { data: teams, loading, error } = useTeams();
+  const { data: teams, loading, error } = useSkinnyTeams();
   const { patchTeam } = useTeamMutations();
   const { createTeam, loading: creating, error: createError } = useCreateTeams();
   const { deleteItem: deleteTeam, loading: deleting, error: deleteError } = useDeleteTeams();

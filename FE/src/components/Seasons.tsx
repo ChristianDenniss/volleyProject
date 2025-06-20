@@ -1,7 +1,7 @@
 import React from "react"
 import { Link } from "react-router-dom"
 import { Season } from "../types/interfaces"
-import { useSeasons } from "../hooks/allFetch"
+import { useMediumSeasons } from "../hooks/allFetch"
 import "../styles/Season.css"
 import defaultBanner from "../images/callToAction.png"
 import {
@@ -75,7 +75,7 @@ const SeasonCard: React.FC<{ season: Season }> = ({ season }) =>
 /* ===== Seasons page ===== */
 const Seasons: React.FC = () =>
 {
-    const { data, error } = useSeasons()
+    const { data, error } = useMediumSeasons()
     if (error) return <div>Error: {error}</div>
     if (!data) return <div>Loading…</div>
 

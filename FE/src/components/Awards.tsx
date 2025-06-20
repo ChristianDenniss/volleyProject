@@ -1,11 +1,11 @@
 import React, { useMemo, useState, useEffect } from "react";
-import { useAwards } from "../hooks/allFetch";
+import { useSkinnyAwards } from "../hooks/allFetch";
 import { Link, useLocation } from "react-router-dom";
 import "../styles/Awards.css";
 import SeasonFilter from "./SeasonFilterBar";
 
 const Awards: React.FC = () => {
-  const { data, loading, error } = useAwards();
+  const { data, loading, error } = useSkinnyAwards();
   const awards = data || [];
   const [selectedSeason, setSelectedSeason] = useState<number | null>(null);
   const [selectedType, setSelectedType] = useState<string>("");

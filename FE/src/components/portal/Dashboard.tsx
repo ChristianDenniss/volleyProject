@@ -1,16 +1,16 @@
-import { useStats, useTeams, useArticles, usePlayers, useSeasons, useGames, useUsers, useAwards } from "../../hooks/allFetch";
+import { useStats, useSkinnyTeams, useArticles, usePlayers, useSkinnySeasons, useSkinnyGames, useUsers, useSkinnyAwards } from "../../hooks/allFetch";
 import { FaUsers, FaVolleyballBall, FaNewspaper, FaCalendarAlt, FaGamepad, FaChartBar, FaUserAlt, FaTrophy } from "react-icons/fa";
 import "../../styles/Dashboard.css";
 
 const Dashboard: React.FC = () => {
   const { data: stats, loading: statsLoading } = useStats();
-  const { data: teams, loading: teamsLoading } = useTeams();
+  const { data: teams, loading: teamsLoading } = useSkinnyTeams();
   const { data: articles, loading: articlesLoading } = useArticles();
   const { data: players, loading: playersLoading } = usePlayers();
-  const { data: seasons, loading: seasonsLoading } = useSeasons();
-  const { data: games, loading: gamesLoading } = useGames();
+  const { data: seasons, loading: seasonsLoading } = useSkinnySeasons();
+  const { data: games, loading: gamesLoading } = useSkinnyGames();
   const { data: users, loading: usersLoading } = useUsers();
-  const { data: awards, loading: awardsLoading } = useAwards();
+  const { data: awards, loading: awardsLoading } = useSkinnyAwards();
   
   const totalStats = stats?.length ?? 0;
   const totalTeams = teams?.length ?? 0;

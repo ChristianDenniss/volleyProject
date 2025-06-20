@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useMemo } from "react";
 /* Bring in the navigate helper from React Router */
 import { useNavigate }                          from "react-router-dom";
-import { useTeams }                             from "../hooks/allFetch";
+import { useMediumTeams }                             from "../hooks/allFetch";
 import "../styles/Teams.css";
 import SearchBar                                from "./Searchbar";
 
 const Teams: React.FC = () =>
 {
     /* Get team data via custom hook */
-    const { data, error } = useTeams();
+    const { data, error } = useMediumTeams();
 
     /* Track the currently “opened” team card */
     const [ activeTeam,         setActiveTeam ]         = useState<string | null>(null);
