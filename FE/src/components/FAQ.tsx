@@ -8,14 +8,16 @@ import {
     FaFileAlt, 
     FaShieldAlt, 
     FaQuestionCircle,
-    FaExternalLinkAlt
+    FaExternalLinkAlt,
+    FaDiscord,
+    FaGamepad
 } from "react-icons/fa";
 
 interface FAQItem {
     id: string;
     question: string;
     answer: string | React.ReactNode;
-    category: 'general' | 'applications' | 'rules' | 'technical' | 'navigation';
+    category: 'general' | 'applications' | 'rules' | 'technical';
 }
 
 interface FAQLink {
@@ -44,13 +46,25 @@ const FAQ: React.FC = () => {
         {
             id: 'what-is-rvl',
             question: 'What is RVL?',
-            answer: 'RVL (Roblox Volleyball League) is a competitive volleyball league within Roblox. We host regular seasons, tournaments, and events for players to compete and improve their skills.',
+            answer: 'RVL (Roblox Volleyball League) is a competitive volleyball league within Roblox based in the game Volleyball 4.2. We host regular seasons, tournaments, and events for players to compete, improve, and prove their skills.',
             category: 'general'
         },
         {
             id: 'how-to-join',
             question: 'How do I join RVL?',
-            answer: 'To join RVL, you can apply for various staff positions through our applications page, or simply join our Discord server to participate in the community and stay updated on events.',
+            answer: 'To join RVL, simply press the join button on our Discord server quick link above to participate in the community and stay updated on current events.',
+            category: 'general'
+        },
+        {
+            id: 'team-signup',
+            question: 'How do I sign my team up for RVL?',
+            answer: 'Team signups are typically announced through our Discord server when new seasons are starting. We will also be posting signup forms on our website, so keep an eye out for those. Check our announcements channel for registration periods and requirements.',
+            category: 'general'
+        },
+        {
+            id: 'how-to-contribute',
+            question: 'How do I contribute to RVL?',
+            answer: 'There are many ways to contribute to RVL! You can apply for staff positions, help moderate our Discord, create content, stream matches, or simply be an active and positive community member.',
             category: 'general'
         },
         {
@@ -62,13 +76,13 @@ const FAQ: React.FC = () => {
         {
             id: 'application-process',
             question: 'How does the application process work?',
-            answer: 'Applications are reviewed by our administration team. We look for dedicated, responsible individuals who can contribute positively to the league. You\'ll be contacted if your application is accepted.',
+            answer: 'Applications are reviewed by our administration team, mainly by the staff member who is in charge of the division you are applying for. We look for dedicated, responsible individuals who can contribute positively to the league. You\'ll be contacted via discord if your application is accepted.',
             category: 'applications'
         },
         {
             id: 'application-status',
             question: 'How do I know if my application was accepted?',
-            answer: 'If your application is accepted, you will be contacted by our administration team through Discord or email. Please ensure your contact information is accurate in your application.',
+            answer: 'If your application is accepted, you will be contacted by our administration team through the RVL discord server so please be within it at all times. Please ensure your contact information is accurate in your application.',
             category: 'applications'
         },
         {
@@ -80,78 +94,89 @@ const FAQ: React.FC = () => {
         {
             id: 'game-rules',
             question: 'What are the game rules?',
-            answer: 'Our game follows standard volleyball rules with some adaptations for the Roblox platform. Fair play and sportsmanship are expected from all players.',
+            answer: 'Our game follows standard volleyball rules with some specific adaptations/restrictions for the Roblox platform. Fair play and sportsmanship are expected from all players any violations of these rules will result in punishment. For detailed game rules and guidelines, please check our Discord server.',
             category: 'rules'
         },
         {
             id: 'discord-rules',
             question: 'What are the Discord server rules?',
-            answer: 'Our Discord server has community guidelines that promote respect, inclusivity, and positive interaction. Violations may result in warnings or removal from the server.',
+            answer: 'Our Discord server has community guidelines that promote respect, inclusivity, and positive interaction. For detailed Discord rules and guidelines, please check our Discord server rules channel. Violations may result in warnings or removal from the server.',
             category: 'rules'
         },
         {
             id: 'stats-tracking',
             question: 'How are player statistics tracked?',
-            answer: 'Player statistics are tracked during official matches and maintained in our database. Stats include kills, assists, blocks, and other volleyball metrics.',
+            answer: 'Player statistics are tracked manually during or after official matches using our provided stat tracking guidelines then  maintained in our database. Stats include kills, assists, blocks, and many other volleyball metrics.',
             category: 'technical'
         },
         {
             id: 'report-issues',
             question: 'How do I report issues or bugs?',
-            answer: 'You can report issues through our Discord server, contact us page, or by reaching out to our technical team directly.',
+            answer: 'You can report issues through our Discord server support channel, our websites contact-us page, or by reaching out to our technical team directly.',
             category: 'technical'
         },
         {
-            id: 'find-awards',
-            question: 'Where can I find awards and achievements?',
-            answer: 'You can view all awards and achievements on our Awards page. This includes MVP awards, Best Spiker, Best Server, and other seasonal accolades.',
-            category: 'navigation'
+            id: 'discord-channels',
+            question: 'Why can\'t I see/type in channels but I\'m verified?',
+            answer: 'This usually happens when only one verification bot is being used. Make sure you\'ve completed verification with all required bots in our Discord server. Check the verification channel for instructions.',
+            category: 'technical'
         },
         {
-            id: 'find-stats',
-            question: 'Where can I view player statistics?',
-            answer: 'Player statistics can be found on the Stats page, which shows leaderboards and individual player performance data from matches.',
-            category: 'navigation'
+            id: 'what-is-bloxlink',
+            question: 'What is Bloxlink?',
+            answer: 'Bloxlink is a Discord bot that links your Discord account to your Roblox account for verification purposes. It helps us ensure that Discord users are legitimate Roblox players.',
+            category: 'technical'
         },
         {
-            id: 'find-games',
-            question: 'Where can I see game results and schedules?',
-            answer: 'Game results, schedules, and match information can be found on the Games page. This includes scores, dates, and video links when available.',
-            category: 'navigation'
+            id: 'what-is-dc-verified',
+            question: 'What is DC Verified?',
+            answer: 'DC Verified is a verification system that confirms your Discord account is legitimate and not a bot or fake account. It\'s one of the verification steps required to access our Discord channels to minimize occurences of alts in our league.',
+            category: 'technical'
         },
         {
-            id: 'find-teams',
-            question: 'Where can I view team information?',
-            answer: 'Team rosters, standings, and information can be found on the Teams page. You can also click on individual teams to see detailed team pages.',
-            category: 'navigation'
+            id: 'how-to-verify',
+            question: 'How do I verify?',
+            answer: 'Type /verify in the verification channel and wait for the commands to load. Then press the bot you\'d like to verify with (DC Verified or Bloxlink) and follow the prompted instructions. The process is the same for both verification methods.',
+            category: 'technical'
         },
         {
-            id: 'find-players',
-            question: 'Where can I find player profiles?',
-            answer: 'Player profiles and information can be found on the Players page. Click on any player to view their detailed profile, statistics, and team history.',
-            category: 'navigation'
-        },
-        {
-            id: 'find-seasons',
-            question: 'Where can I see season information?',
-            answer: 'Season details, themes, and information can be found on the Seasons page. This includes start/end dates and season-specific content.',
-            category: 'navigation'
-        },
-        {
-            id: 'find-articles',
-            question: 'Where can I read articles and news?',
-            answer: 'Articles, news, and community content can be found on the Articles page. This includes league updates, player spotlights, and other RVL content.',
-            category: 'navigation'
+            id: 'why-cant-verify',
+            question: 'Why can\'t I verify?',
+            answer: 'If you\'re having trouble verifying, make sure your Discord account is legitimate, your Roblox account is active, and you\'re following all verification instructions. Contact a moderator if you continue to have issues.',
+            category: 'technical'
         }
     ];
 
     const faqLinks: FAQLink[] = [
+        {
+            id: 'discord',
+            title: 'Join Discord',
+            description: 'Join our Discord server to connect with the community, get help, and stay updated on events.',
+            url: 'https://discord.gg/volleyball',
+            icon: <FaDiscord />,
+            isExternal: true
+        },
+        {
+            id: 'game',
+            title: 'Play Volleyball 4.2',
+            description: 'Play the official Roblox Volleyball League game and experience competitive volleyball matches.',
+            url: 'https://www.roblox.com/games/3840352284/Volleyball-4-2',
+            icon: <FaGamepad />,
+            isExternal: true
+        },
         {
             id: 'applications',
             title: 'Staff Applications',
             description: 'Apply for various positions within RVL including staff, media, referees, and more.',
             url: '/applications',
             icon: <FaUsers />
+        },
+        {
+            id: 'awards',
+            title: 'Awards & Achievements',
+            description: 'View all awards and achievements including MVP awards, Best Spiker, Best Server, and other accolades.',
+            url: '/awards',
+            icon: <FaShieldAlt />
         },
         {
             id: 'about',
@@ -180,8 +205,7 @@ const FAQ: React.FC = () => {
         general: 'General Questions',
         applications: 'Applications & Staff',
         rules: 'Rules & Guidelines',
-        technical: 'Technical & Support',
-        navigation: 'Website Navigation'
+        technical: 'Technical & Support'
     };
 
     const groupedFAQ = faqItems.reduce((acc, item) => {
@@ -204,16 +228,29 @@ const FAQ: React.FC = () => {
                     <h2>Quick Links</h2>
                     <div className="faq-links-grid">
                         {faqLinks.map((link) => (
-                            <Link key={link.id} to={link.url} className="faq-link-card">
-                                <div className="link-icon">
-                                    {link.icon}
-                                </div>
-                                <div className="link-content">
-                                    <h3>{link.title}</h3>
-                                    <p>{link.description}</p>
-                                </div>
-                                <FaExternalLinkAlt className="external-link-icon" />
-                            </Link>
+                            link.isExternal ? (
+                                <a key={link.id} href={link.url} className="faq-link-card" target="_blank" rel="noopener noreferrer">
+                                    <div className="link-icon">
+                                        {link.icon}
+                                    </div>
+                                    <div className="link-content">
+                                        <h3>{link.title}</h3>
+                                        <p>{link.description}</p>
+                                    </div>
+                                    <FaExternalLinkAlt className="external-link-icon" />
+                                </a>
+                            ) : (
+                                <Link key={link.id} to={link.url} className="faq-link-card">
+                                    <div className="link-icon">
+                                        {link.icon}
+                                    </div>
+                                    <div className="link-content">
+                                        <h3>{link.title}</h3>
+                                        <p>{link.description}</p>
+                                    </div>
+                                    <FaExternalLinkAlt className="external-link-icon" />
+                                </Link>
+                            )
                         ))}
                     </div>
                 </div>
