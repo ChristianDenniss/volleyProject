@@ -1,0 +1,26 @@
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://volleyball4-2.com/sitemap.xml
+
+# Disallow admin portal
+Disallow: /portal/
+
+# Disallow private routes
+Disallow: /profile
+Disallow: /login
+Disallow: /signup
+
+# Allow all public content
+Allow: /players/
+Allow: /teams/
+Allow: /games/
+Allow: /seasons/
+Allow: /articles/
+Allow: /awards/
+Allow: /stats/
+Allow: /applications/
+
+# Crawl delay (optional - be respectful to server)
+Crawl-delay: 1 
