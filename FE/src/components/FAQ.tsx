@@ -172,13 +172,6 @@ const FAQ: React.FC = () => {
             icon: <FaUsers />
         },
         {
-            id: 'awards',
-            title: 'Awards & Achievements',
-            description: 'View all awards and achievements including MVP awards, Best Spiker, Best Server, and other accolades.',
-            url: '/awards',
-            icon: <FaShieldAlt />
-        },
-        {
             id: 'about',
             title: 'About RVL',
             description: 'Learn more about the Roblox Volleyball League, our history, and mission.',
