@@ -39,6 +39,7 @@ import AwardsPage   from "./components/portal/AwardsPage";
 import CreateArticle from "./components/CreateArticle";
 import ArticlesPage from "./components/portal/ArticlesPage";
 import StatsLeaderboard from "./components/StatsLeaderboard";
+import FAQ from "./components/FAQ";
 
 const App: React.FC = () => (
   <AuthProvider>
@@ -69,6 +70,7 @@ const App: React.FC = () => (
           <Route path="/articles/create" element={<CreateArticle />} />
           <Route path="/stats" element={<StatsLeaderboard />} />
           <Route path="/applications" element={<Applications />} />
+          <Route path="/faq" element={<FAQ />} />
 
           {/* auth & profile */}
           <Route path="/profile" element={<UserProfile />} />

@@ -25,7 +25,7 @@ const Navbar: React.FC = () =>
                         </a>
                     </li>
                     <li>
-                        <Link to="/about">About</Link>
+                        <Link to="/faq">FAQ</Link>
                     </li>
                     <li>
                         <Link to="/stats">Stats</Link>
