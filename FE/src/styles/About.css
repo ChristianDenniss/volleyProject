@@ -14,7 +14,7 @@
 
 .about-page-container {
     padding: 2rem;
-    max-width: 1200px;
+    width: 80%;
     margin: 0 auto;
     font-family: 'Inter', sans-serif;
     color: var(--text-dark);
