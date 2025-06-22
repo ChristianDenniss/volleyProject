@@ -22,19 +22,37 @@
 .stats-controls-container
 {
     display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.stats-filters-row
+{
+    display: flex;
     flex-direction: row;
     gap: 15px;
     align-items: center;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
+}
+
+.stats-search-row
+{
+    display: flex;
+    flex-direction: row;
+    gap: 15px;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
 }
 
 .stats-season-filter { margin: 0; white-space: nowrap; }
+.stats-type-filter { margin: 0; white-space: nowrap; }
+.stats-view-filter { margin: 0; white-space: nowrap; }
 
-/* -----------------------------------------------------------
-   Season dropdown
------------------------------------------------------------ */
 .stats-season-filter select,
-.stats-season-filter .season-filter-bar select
+.stats-season-filter .season-filter-bar select,
+.stats-type-filter select,
+.stats-view-filter select
 {
     font-size: 15px !important;
     padding: 8px 16px 8px 16px !important;
@@ -59,8 +77,12 @@
 
 .stats-season-filter select:hover,
 .stats-season-filter .season-filter-bar select:hover,
+.stats-type-filter select:hover,
+.stats-view-filter select:hover,
 .stats-season-filter select:focus,
-.stats-season-filter .season-filter-bar select:focus
+.stats-season-filter .season-filter-bar select:focus,
+.stats-type-filter select:focus,
+.stats-view-filter select:focus
 {
     background-color: var(--primary-blue-hover) !important;
     border-color: var(--primary-blue-hover) !important;
@@ -217,11 +239,30 @@
 ----------------------------------------------------------- */
 @media (max-width: 768px)
 {
-    .stats-controls-container   { flex-direction: column; align-items: stretch; }
-    .stats-search-wrapper       { width: 100%; margin-left: 0; }
+    .stats-filters-row,
+    .stats-search-row
+    {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .stats-pagination-wrapper,
+    .search-bar
+    {
+        width: 100%;
+        margin: 0;
+    }
+
+    .search-bar input {
+        width: 100%;
+    }
 
     .stats-table th,
-    .stats-table td            { padding: 8px; }
+    .stats-table td
+    {
+        padding: 8px;
+    }
 
     .filter-menu-dropdown
     {
@@ -233,4 +274,26 @@
         overflow-y: auto;
     }
 }
+
+.stats-type-filter label {
+    margin-right: 8px;
+    color: #2d3748;
+    font-weight: 500;
+}
+
+.stats-view-filter label {
+    margin-right: 8px;
+    color: #2d3748;
+    font-weight: 500;
+}
+
+.stats-search-row .search-bar {
+    flex-grow: 1;
+}
+
+.stats-search-row .search-bar input {
+    width: 100%;
+}
+
+.stats-pagination-wrapper { white-space: nowrap; }
 
