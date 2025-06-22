@@ -3,7 +3,7 @@
 ----------------------------------------------------------- */
 :root
 {
-    --primary-blue: #1a365d;        /* brand blue – default */
+    --primary-blue: #2D3C50;        /* brand blue – default */
     --primary-blue-hover: #2a4a7d;  /* darker hover/focus  */
 }
 
@@ -15,6 +15,14 @@
     padding: 20px;
     max-width: 1200px;
     margin: 0 auto;
+}
+
+.stats-leaderboard-page h1 {
+    margin: 0 0 20px 0;
+    padding: 0;
+    border: none;
+    font-size: 2rem;
+    font-weight: 700;
 }
 
 .stats-controls-wrapper { margin: 20px 0; }
