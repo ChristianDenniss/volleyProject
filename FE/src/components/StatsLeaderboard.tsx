@@ -84,12 +84,24 @@ const StatsLeaderboard: React.FC = () => {
 
   const getPlayerStat = (player: Player, stat: StatCategory): number => {
     if (!player.stats || player.stats.length === 0) return 0;
-    return player.stats.reduce((total, statRecord) => total + (statRecord[stat] || 0), 0);
+    
+    // Filter stats by selected season if one is selected
+    const relevantStats = selectedSeason === null 
+      ? player.stats 
+      : player.stats.filter(statRecord => statRecord.game?.season?.seasonNumber === selectedSeason);
+    
+    return relevantStats.reduce((total, statRecord) => total + (statRecord[stat] || 0), 0);
   };
 
   const hasAnyStats = (player: Player): boolean => {
     if (!player.stats || player.stats.length === 0) return false;
-    return player.stats.some(stat => 
+    
+    // Filter stats by selected season if one is selected
+    const relevantStats = selectedSeason === null 
+      ? player.stats 
+      : player.stats.filter(statRecord => statRecord.game?.season?.seasonNumber === selectedSeason);
+    
+    return relevantStats.some(stat => 
       stat.spikeKills > 0 || 
       stat.spikeAttempts > 0 ||
       stat.apeKills > 0 ||
@@ -232,6 +244,9 @@ const StatsLeaderboard: React.FC = () => {
                     </span>
                   )}
                 </th>
+                {selectedSeason !== null && (
+                  <th>Team</th>
+                )}
                 {visibleStatCategories.map((stat) => (
                   <th 
                     key={stat}
@@ -246,12 +261,6 @@ const StatsLeaderboard: React.FC = () => {
                     )}
                   </th>
                 ))}
-                {selectedSeason !== null && (
-                  <>
-                    <th>Team</th>
-                    <th>Season</th>
-                  </>
-                )}
               </tr>
             </thead>
             <tbody>
@@ -259,23 +268,16 @@ const StatsLeaderboard: React.FC = () => {
                 <tr key={player.id}>
                   <td>{(currentPage - 1) * playersPerPage + index + 1}</td>
                   <td>{player.name}</td>
+                  {selectedSeason !== null && (
+                    <td>
+                      {player.teams?.find(team => 
+                        team?.season?.seasonNumber === selectedSeason
+                      )?.name || 'N/A'}
+                    </td>
+                  )}
                   {visibleStatCategories.map((stat) => (
                     <td key={stat}>{getPlayerStat(player, stat)}</td>
                   ))}
-                  {selectedSeason !== null && (
-                    <>
-                      <td>
-                        {player.teams?.find(team => 
-                          team?.season?.seasonNumber === selectedSeason
-                        )?.name || 'N/A'}
-                      </td>
-                      <td>
-                        {player.teams?.find(team => 
-                          team?.season?.seasonNumber === selectedSeason
-                        )?.season?.seasonNumber || 'N/A'}
-                      </td>
-                    </>
-                  )}
                 </tr>
               ))}
             </tbody>
