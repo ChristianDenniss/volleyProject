@@ -24,7 +24,7 @@ const Teams: React.FC = () =>
 
     /* Pagination state */
     const [ currentPage, setCurrentPage ] = useState<number>(1);
-    const teamsPerPage = 10;
+    const teamsPerPage = 12;
 
     /* Hook for programmatic navigation */
     const navigate = useNavigate();
