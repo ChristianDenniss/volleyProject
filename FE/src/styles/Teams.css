@@ -115,11 +115,6 @@
     white-space: nowrap; 
 }
 
-/* Teams wrapper and container */
-.teams-wrapper {
-    padding: 10px 0;
-}
-
 /*  Arrange cards in an auto-fill grid with consistent gaps               */
 .teams-container
 {
@@ -133,7 +128,7 @@
     gap: 1.5rem;
 
     /* side padding */
-    padding: 0 20px;
+    padding: 10px 20px;
 }
 
 /* ----- Base card ------------------------------------------------------ */

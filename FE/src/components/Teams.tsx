@@ -66,20 +66,30 @@ const Teams: React.FC = () =>
     }, [data])
 
     const uniquePlacements = useMemo(() => {
-        return Array.from(new Set(data?.map(team => team.placement).filter(placement => placement) ?? []))
-            .sort()
+        const normalizedPlacements = new Set<string>();
+        data?.forEach(team => {
+            if (team.placement) {
+                // Remove (D#) from placements like "Top 8 (D2)"
+                const normalized = team.placement.replace(/\s*\([Dd]\d\)$/, '').trim();
+                normalizedPlacements.add(normalized);
+            }
+        });
+        return Array.from(normalizedPlacements).sort();
     }, [data])
 
     /* Filter list according to search box and filters */
     const filteredTeams = useMemo(() =>
     {
         return data?.filter(team => {
-            const matchesSearch = team.name.toLowerCase().includes(searchQuery.toLowerCase())
-            const matchesSeason = !seasonFilter || team.season.seasonNumber.toString() === seasonFilter
-            const matchesPlacement = !placementFilter || team.placement === placementFilter
+            const matchesSearch = team.name.toLowerCase().includes(searchQuery.toLowerCase());
+            const matchesSeason = !seasonFilter || team.season.seasonNumber.toString() === seasonFilter;
             
-            return matchesSearch && matchesSeason && matchesPlacement
-        }) ?? []
+            // Normalize the team's placement before comparing
+            const normalizedTeamPlacement = team.placement.replace(/\s*\([Dd]\d\)$/, '').trim();
+            const matchesPlacement = !placementFilter || normalizedTeamPlacement === placementFilter;
+            
+            return matchesSearch && matchesSeason && matchesPlacement;
+        }) ?? [];
     }, [ data, searchQuery, seasonFilter, placementFilter ]);
 
     /* Calculate pagination */
@@ -182,36 +192,34 @@ const Teams: React.FC = () =>
             {error ? (
                 <div>Error: {error}</div>
             ) : filteredTeams ? (
-                <div className="teams-wrapper">
-                    <div className="teams-container">
-                        {paginatedTeams.map(team => (
-                            <div
-                                key={team.id}
-                                className={`team-card ${activeTeam === team.name ? "active" : ""}`}
-                                onClick={() => handleCardClick(team.name)}
-                            >
-                                <div className="team-name">
-                                    <strong>{team.name}</strong>
-                                </div>
-
-                                <div className="team-id">
-                                    <strong>ID:</strong> {team.id}
-                                </div>
-
-                                <div className="team-season">
-                                    <strong>Season:</strong> {team.season.seasonNumber}
-                                </div>
-
-                                <div className="team-card-stage">
-                                    <strong>Placement:</strong> {team.placement}
-                                </div>
-
-                                <div className="team-players">
-                                    <strong>Players:</strong> {team.players?.length || 0}
-                                </div>
+                <div className="teams-container">
+                    {paginatedTeams.map(team => (
+                        <div
+                            key={team.id}
+                            className={`team-card ${activeTeam === team.name ? "active" : ""}`}
+                            onClick={() => handleCardClick(team.name)}
+                        >
+                            <div className="team-name">
+                                <strong>{team.name}</strong>
                             </div>
-                        ))}
-                    </div>
+
+                            <div className="team-id">
+                                <strong>ID:</strong> {team.id}
+                            </div>
+
+                            <div className="team-season">
+                                <strong>Season:</strong> {team.season.seasonNumber}
+                            </div>
+
+                            <div className="team-card-stage">
+                                <strong>Placement:</strong> {team.placement}
+                            </div>
+
+                            <div className="team-players">
+                                <strong>Players:</strong> {team.players?.length || 0}
+                            </div>
+                        </div>
+                    ))}
                 </div>
             ) : (
                 <div>Loading...</div>
