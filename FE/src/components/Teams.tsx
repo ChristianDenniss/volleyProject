@@ -74,7 +74,41 @@ const Teams: React.FC = () =>
                 normalizedPlacements.add(normalized);
             }
         });
-        return Array.from(normalizedPlacements).sort();
+
+        const placementOrder = [
+            '1st Place',
+            '2nd Place',
+            '3rd Place',
+            'Top 4',
+            'Top 6',
+            'Top 8',
+            'Top 12',
+            'Top 16',
+            'TBD',
+            'Didnt make playoffs',
+            'G.O.A.T.'
+        ];
+        
+        const placementsArray = Array.from(normalizedPlacements);
+
+        placementsArray.sort((a, b) => {
+            const indexA = placementOrder.indexOf(a);
+            const indexB = placementOrder.indexOf(b);
+
+            // If an item isn't in our custom order, give it a high index
+            const effectiveIndexA = indexA === -1 ? Infinity : indexA;
+            const effectiveIndexB = indexB === -1 ? Infinity : indexB;
+
+            if (effectiveIndexA !== effectiveIndexB) {
+                // Sort by custom order
+                return effectiveIndexA - effectiveIndexB;
+            }
+            
+            // If both have the same custom order index (or are both not in the list), sort alphabetically
+            return a.localeCompare(b);
+        });
+
+        return placementsArray;
     }, [data])
 
     /* Filter list according to search box and filters */
