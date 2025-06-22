@@ -1,12 +1,18 @@
-/* Page wrapper */
-.games-page {
+/* -----------------------------------------------------------
+   Page wrapper
+----------------------------------------------------------- */
+.games-page
+{
     padding: 20px;
     max-width: 1200px;
     margin: 0 auto;
 }
 
-/* Page title styling */
-h1 {
+/* -----------------------------------------------------------
+   Page title styling
+----------------------------------------------------------- */
+h1
+{
     margin: 0 0 20px 0;
     padding: 0;
     border: none;
@@ -14,6 +20,9 @@ h1 {
     font-weight: 700;
 }
 
+/* -----------------------------------------------------------
+   Wrapper sections
+----------------------------------------------------------- */
 .games-wrapper
 {
     padding: 10px 0;
@@ -27,18 +36,23 @@ h1 {
     padding: 10px 0;
 }
 
-/* Controls layout - following StatsLeaderboard pattern */
-.games-controls-wrapper { 
-    margin: 20px 0; 
+/* -----------------------------------------------------------
+   Controls layout – following StatsLeaderboard pattern
+----------------------------------------------------------- */
+.games-controls-wrapper
+{
+    margin: 20px 0;
 }
 
-.games-controls-container {
+.games-controls-container
+{
     display: flex;
     flex-direction: column;
     gap: 15px;
 }
 
-.games-filters-row {
+.games-filters-row
+{
     display: flex;
     flex-direction: row;
     gap: 15px;
@@ -46,7 +60,8 @@ h1 {
     flex-wrap: wrap;
 }
 
-.games-search-row {
+.games-search-row
+{
     display: flex;
     flex-direction: row;
     gap: 15px;
@@ -55,22 +70,27 @@ h1 {
     flex-wrap: wrap;
 }
 
-/* Filter styling */
-.games-season-filter, 
-.games-stage-filter { 
-    margin: 0; 
-    white-space: nowrap; 
+/* -----------------------------------------------------------
+   Filter styling
+----------------------------------------------------------- */
+.games-season-filter,
+.games-stage-filter
+{
+    margin: 0;
+    white-space: nowrap;
 }
 
 .games-season-filter label,
-.games-stage-filter label {
+.games-stage-filter label
+{
     margin-right: 8px;
     color: #2d3748;
     font-weight: 500;
 }
 
 .games-season-filter select,
-.games-stage-filter select {
+.games-stage-filter select
+{
     font-size: 15px;
     padding: 8px 16px;
     padding-right: 32px;
@@ -87,9 +107,10 @@ h1 {
 }
 
 .games-season-filter select:hover,
-.games-stage-filter select:hover,
 .games-season-filter select:focus,
-.games-stage-filter select:focus {
+.games-stage-filter select:hover,
+.games-stage-filter select:focus
+{
     background-color: #2a4a7d;
     border-color: #2a4a7d;
     background: #2a4a7d url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e") no-repeat right 8px center / 20px;
@@ -97,8 +118,11 @@ h1 {
     box-shadow: 0 0 0 2px rgba(26, 54, 93, 0.2);
 }
 
-/* Clear filters button */
-.clear-filters-button {
+/* -----------------------------------------------------------
+   Clear-filters button
+----------------------------------------------------------- */
+.clear-filters-button
+{
     padding: 8px 16px;
     font-size: 14px;
     border-radius: 6px;
@@ -110,58 +134,71 @@ h1 {
     white-space: nowrap;
 }
 
-.clear-filters-button:hover {
+.clear-filters-button:hover
+{
     background-color: #ff5252;
     border-color: #ff5252;
 }
 
-/* Search and pagination */
-.games-search-row .search-bar {
+/* -----------------------------------------------------------
+   Search and pagination
+----------------------------------------------------------- */
+.games-search-row .search-bar
+{
     flex-grow: 1;
 }
 
-.games-search-row .search-bar input {
+.games-search-row .search-bar input
+{
     width: 100%;
 }
 
-.games-pagination-wrapper { 
-    white-space: nowrap; 
+.games-pagination-wrapper
+{
+    white-space: nowrap;
 }
 
-/* Game card styles - Redone */
-.game-card {
+/* -----------------------------------------------------------
+   Game card styles
+----------------------------------------------------------- */
+.game-card
+{
     display: grid;
-    /* Columns: name, id, score, season, stage, date */
-    grid-template-columns: 3fr 1fr 1.5fr 1fr 2fr 1.5fr; 
+    /* Columns: name, id, score, season, stage, date                                */
+    grid-template-columns: 3fr 1fr 1.5fr 1fr 2.5fr 1.5fr;   /* NEW – gave Stage more room */
     align-items: center;
     gap: 20px;
     width: 100%;
     padding: 10px 20px;
-    background-color: #f0f5ff; /* Lighter, cleaner blue */
+    background-color: #f0f5ff;                             /* Light blue */
     border: 1px solid #d1e7ff;
     border-radius: 8px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    color: #2d3748; /* Dark grey text for better readability */
-    text-decoration: none; /* remove underline from link */
+    color: #2d3748;                                        /* Dark grey text */
+    text-decoration: none;
     transition: background-color 0.2s, box-shadow 0.2s, transform 0.2s;
     cursor: pointer;
     min-height: 60px;
     line-height: 1.4;
 }
 
-.game-card:hover {
+.game-card:hover
+{
     background-color: #e6f2ff;
     box-shadow: 0 4px 10px rgba(0,0,0,0.08);
     transform: translateY(-2px);
 }
 
-/* Game details styling */
+/* -----------------------------------------------------------
+   Game details styling
+----------------------------------------------------------- */
 .game-name,
 .game-id,
 .game-score,
 .game-season,
 .game-stage,
-.game-date {
+.game-date
+{
     font-size: 15px;
     font-weight: 500;
     white-space: nowrap;
@@ -170,42 +207,81 @@ h1 {
     text-align: left;
 }
 
-/* Make name stand out */
-.game-name {
+/* Name should pop a little more */
+.game-name
+{
     font-weight: 700;
     font-size: 16px;
     color: #1a202c;
 }
 
-/* Style the labels (e.g., "ID:", "Score:") */
-.game-card div strong {
+/* Label styling (e.g., “ID:”, “Score:”) */
+.game-card div strong
+{
     font-weight: 600;
-    color: #4a5568; /* Muted label color */
+    color: #4a5568;
     margin-right: 6px;
 }
 
-/* The name is the content, so it shouldn't get the muted label style */
-.game-name strong {
-    color: inherit; 
+/* Preserve inherited colour on .game-name */
+.game-name strong
+{
+    color: inherit;
     margin-right: 0;
 }
 
-/* Responsive design */
-@media (max-width: 768px) {
+/* -----------------------------------------------------------
+   Stage column – fix clipping & style
+----------------------------------------------------------- */
+.game-stage                      /* NEW – entire Stage rule below                */
+{
+    /* Let long stage names wrap instead of clipping                               */
+    white-space: normal;         /* NEW */
+    overflow: visible;           /* NEW */
+    text-overflow: clip;         /* NEW */
+
+    /* Force same font and colour even if markup accidentally uses <h3>, etc.      */
+    font-size: 15px;             /* NEW – match siblings                          */
+    font-weight: 500;            /* NEW */
+    color: #2d3748;              /* NEW */
+}
+
+/* Prevent rogue heading tags inside .game-stage from overriding size             */
+.game-stage h1,
+.game-stage h2,
+.game-stage h3,
+.game-stage h4,
+.game-stage h5,
+.game-stage h6            /* NEW */
+{
+    margin: 0;                   /* NEW */
+    font-size: inherit;          /* NEW */
+    font-weight: inherit;        /* NEW */
+    color: inherit;              /* NEW */
+}
+
+/* -----------------------------------------------------------
+   Responsive tweaks
+----------------------------------------------------------- */
+@media (max-width: 768px)
+{
     .games-filters-row,
-    .games-search-row {
+    .games-search-row
+    {
         flex-direction: column;
         align-items: stretch;
         gap: 10px;
     }
 
     .games-pagination-wrapper,
-    .search-bar {
+    .search-bar
+    {
         width: 100%;
         margin: 0;
     }
 
-    .search-bar input {
+    .search-bar input
+    {
         width: 100%;
     }
 }
