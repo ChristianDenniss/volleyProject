@@ -196,7 +196,7 @@ h1
 .game-id,
 .game-score,
 .game-season,
-.game-stage,
+.all-games-stage,
 .game-date
 {
     font-size: 15px;
@@ -215,7 +215,7 @@ h1
     color: #1a202c;
 }
 
-/* Label styling (e.g., “ID:”, “Score:”) */
+/* Label styling (e.g., "ID:", "Score:") */
 .game-card div strong
 {
     font-weight: 600;
@@ -228,36 +228,6 @@ h1
 {
     color: inherit;
     margin-right: 0;
-}
-
-/* -----------------------------------------------------------
-   Stage column – fix clipping & style
------------------------------------------------------------ */
-.game-stage                      /* NEW – entire Stage rule below                */
-{
-    /* Let long stage names wrap instead of clipping                               */
-    white-space: normal;         /* NEW */
-    overflow: visible;           /* NEW */
-    text-overflow: clip;         /* NEW */
-
-    /* Force same font and colour even if markup accidentally uses <h3>, etc.      */
-    font-size: 15px;             /* NEW – match siblings                          */
-    font-weight: 500;            /* NEW */
-    color: #2d3748;              /* NEW */
-}
-
-/* Prevent rogue heading tags inside .game-stage from overriding size             */
-.game-stage h1,
-.game-stage h2,
-.game-stage h3,
-.game-stage h4,
-.game-stage h5,
-.game-stage h6            /* NEW */
-{
-    margin: 0;                   /* NEW */
-    font-size: inherit;          /* NEW */
-    font-weight: inherit;        /* NEW */
-    color: inherit;              /* NEW */
 }
 
 /* -----------------------------------------------------------

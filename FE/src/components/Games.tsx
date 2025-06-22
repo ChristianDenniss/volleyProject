@@ -192,7 +192,7 @@ const Games: React.FC = () =>
                                             <div className="game-season">
                                                 <strong>Season:</strong> {game.season.seasonNumber}
                                             </div>
-                                            <div className="game-stage">
+                                            <div className="all-games-stage">
                                                 <strong>Stage:</strong> {game.stage}
                                             </div>
                                             <div className="game-date">
