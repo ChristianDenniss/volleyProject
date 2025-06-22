@@ -21,8 +21,10 @@ const Games: React.FC = () =>
     const [activeGame, setActiveGame] = useState<string | null>(null)
     const [previousActiveGame, setPreviousActiveGame] = useState<string | null>(null)
 
-    // Search state
+    // Search and filter states
     const [searchQuery, setSearchQuery] = useState<string>("")
+    const [seasonFilter, setSeasonFilter] = useState<string>("")
+    const [stageFilter, setStageFilter] = useState<string>("")
 
     // Debug previous active
     useEffect(() =>
@@ -41,21 +43,90 @@ const Games: React.FC = () =>
         setActiveGame(gameName)
     }
 
-    // Filter by search
+    // Get unique seasons and stages for filter options
+    const uniqueSeasons = useMemo(() => {
+        return Array.from(new Set(data?.map(game => game.season.seasonNumber) ?? []))
+            .sort((a, b) => a - b)
+    }, [data])
+
+    const uniqueStages = useMemo(() => {
+        return Array.from(new Set(data?.map(game => game.stage).filter(stage => stage) ?? []))
+            .sort()
+    }, [data])
+
+    // Filter by search, season, and stage
     const filteredGames = useMemo(() =>
     {
-        return data?.filter(g =>
-            g.name.toLowerCase().includes(searchQuery.toLowerCase())
-        ) ?? []
-    }, [data, searchQuery])
+        return data?.filter(g => {
+            const matchesSearch = g.name.toLowerCase().includes(searchQuery.toLowerCase())
+            const matchesSeason = !seasonFilter || g.season.seasonNumber.toString() === seasonFilter
+            const matchesStage = !stageFilter || g.stage === stageFilter
+            
+            return matchesSearch && matchesSeason && matchesStage
+        }) ?? []
+    }, [data, searchQuery, seasonFilter, stageFilter])
+
+    // Clear all filters
+    const clearFilters = () => {
+        setSearchQuery("")
+        setSeasonFilter("")
+        setStageFilter("")
+    }
 
     return (
         <div>
             {/* Title */}
             <h1>Games Info</h1>
 
-            {/* Search */}
-            <SearchBar onSearch={setSearchQuery} placeholder="Search games..." />
+            {/* Search and Filters */}
+            <div className="filters-container">
+                <SearchBar 
+                    onSearch={setSearchQuery} 
+                    placeholder="Search games..." 
+                    className="games-search-bar"
+                />
+                
+                <div className="filter-group">
+                    <label className="filter-label">Season:</label>
+                    <select
+                        className="filter-select"
+                        value={seasonFilter}
+                        onChange={(e) => setSeasonFilter(e.target.value)}
+                    >
+                        <option value="">All Seasons</option>
+                        {uniqueSeasons.map(season => (
+                            <option key={season} value={season.toString()}>
+                                Season {season}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                <div className="filter-group">
+                    <label className="filter-label">Stage:</label>
+                    <select
+                        className="filter-select"
+                        value={stageFilter}
+                        onChange={(e) => setStageFilter(e.target.value)}
+                    >
+                        <option value="">All Stages</option>
+                        {uniqueStages.map(stage => (
+                            <option key={stage} value={stage}>
+                                {stage}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                {(searchQuery || seasonFilter || stageFilter) && (
+                    <button
+                        className="clear-filters-button"
+                        onClick={clearFilters}
+                    >
+                        Clear Filters
+                    </button>
+                )}
+            </div>
 
             {/* Error / List */}
             {error
@@ -80,6 +151,9 @@ const Games: React.FC = () =>
                                             </div>
                                             <div className="game-season">
                                                 <strong>Season:</strong> {game.season.seasonNumber}
+                                            </div>
+                                            <div className="game-stage">
+                                                <strong>Stage:</strong> {game.stage}
                                             </div>
                                             <div className="game-date">
                                                 <strong>Date:</strong> {new Date(game.date).toLocaleDateString()}
