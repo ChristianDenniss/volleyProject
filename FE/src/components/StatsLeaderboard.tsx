@@ -375,7 +375,7 @@ const StatsLeaderboard: React.FC = () => {
                 className="filter-menu-button"
                 onClick={() => setShowFilterMenu(!showFilterMenu)}
               >
-                Filter Stats <span className="sort-arrow">{showFilterMenu ? '▼' : '▲'}</span>
+                Filter Stats
               </button>
               {showFilterMenu && (
                 <div className="filter-menu-dropdown">

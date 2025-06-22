@@ -10,6 +10,7 @@ import { Link } from "react-router-dom"
 // Import styles + search
 import "../styles/Game.css"
 import SearchBar from "./Searchbar"
+import Pagination from "./Pagination"
 
 // Declare component
 const Games: React.FC = () =>
@@ -25,6 +26,10 @@ const Games: React.FC = () =>
     const [searchQuery, setSearchQuery] = useState<string>("")
     const [seasonFilter, setSeasonFilter] = useState<string>("")
     const [stageFilter, setStageFilter] = useState<string>("")
+
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState<number>(1)
+    const gamesPerPage = 10
 
     // Debug previous active
     useEffect(() =>
@@ -66,66 +71,101 @@ const Games: React.FC = () =>
         }) ?? []
     }, [data, searchQuery, seasonFilter, stageFilter])
 
+    // Calculate pagination
+    const totalPages = Math.ceil(filteredGames.length / gamesPerPage)
+    const paginatedGames = filteredGames.slice(
+        (currentPage - 1) * gamesPerPage,
+        currentPage * gamesPerPage
+    )
+
     // Clear all filters
     const clearFilters = () => {
         setSearchQuery("")
         setSeasonFilter("")
         setStageFilter("")
+        setCurrentPage(1) // Reset to first page when clearing filters
+    }
+
+    // Handle search
+    const handleSearch = (query: string) => {
+        setSearchQuery(query)
+        setCurrentPage(1) // Reset to first page when searching
     }
 
     return (
-        <div>
+        <div className="games-page">
             {/* Title */}
             <h1>Games Info</h1>
 
-            {/* Search and Filters */}
-            <div className="filters-container">
-                <SearchBar 
-                    onSearch={setSearchQuery} 
-                    placeholder="Search games..." 
-                    className="games-search-bar"
-                />
-                
-                <div className="filter-group">
-                    <label className="filter-label">Season:</label>
-                    <select
-                        className="filter-select"
-                        value={seasonFilter}
-                        onChange={(e) => setSeasonFilter(e.target.value)}
-                    >
-                        <option value="">All Seasons</option>
-                        {uniqueSeasons.map(season => (
-                            <option key={season} value={season.toString()}>
-                                Season {season}
-                            </option>
-                        ))}
-                    </select>
-                </div>
+            {/* Controls */}
+            <div className="games-controls-wrapper">
+                <div className="games-controls-container">
+                    {/* Filters Row */}
+                    <div className="games-filters-row">
+                        <div className="games-season-filter">
+                            <label htmlFor="season-filter">Season:</label>
+                            <select
+                                id="season-filter"
+                                value={seasonFilter}
+                                onChange={(e) => {
+                                    setSeasonFilter(e.target.value)
+                                    setCurrentPage(1)
+                                }}
+                            >
+                                <option value="">All Seasons</option>
+                                {uniqueSeasons.map(season => (
+                                    <option key={season} value={season.toString()}>
+                                        Season {season}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
 
-                <div className="filter-group">
-                    <label className="filter-label">Stage:</label>
-                    <select
-                        className="filter-select"
-                        value={stageFilter}
-                        onChange={(e) => setStageFilter(e.target.value)}
-                    >
-                        <option value="">All Stages</option>
-                        {uniqueStages.map(stage => (
-                            <option key={stage} value={stage}>
-                                {stage}
-                            </option>
-                        ))}
-                    </select>
-                </div>
+                        <div className="games-stage-filter">
+                            <label htmlFor="stage-filter">Stage:</label>
+                            <select
+                                id="stage-filter"
+                                value={stageFilter}
+                                onChange={(e) => {
+                                    setStageFilter(e.target.value)
+                                    setCurrentPage(1)
+                                }}
+                            >
+                                <option value="">All Stages</option>
+                                {uniqueStages.map(stage => (
+                                    <option key={stage} value={stage}>
+                                        {stage}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
 
-                {(searchQuery || seasonFilter || stageFilter) && (
-                    <button
-                        className="clear-filters-button"
-                        onClick={clearFilters}
-                    >
-                        Clear Filters
-                    </button>
-                )}
+                        {(searchQuery || seasonFilter || stageFilter) && (
+                            <button
+                                className="clear-filters-button"
+                                onClick={clearFilters}
+                            >
+                                Clear Filters
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Search and Pagination Row */}
+                    <div className="games-search-row">
+                        <SearchBar 
+                            onSearch={handleSearch} 
+                            placeholder="Search games..." 
+                            className="games-search-bar"
+                        />
+                        <div className="games-pagination-wrapper">
+                            <Pagination
+                                currentPage={currentPage}
+                                totalPages={totalPages}
+                                onPageChange={setCurrentPage}
+                            />
+                        </div>
+                    </div>
+                </div>
             </div>
 
             {/* Error / List */}
@@ -137,7 +177,7 @@ const Games: React.FC = () =>
                         : (
                             <div className="games-wrapper">
                                 <div className="games-container">
-                                    {filteredGames.map(game => (
+                                    {paginatedGames.map(game => (
                                         <Link
                                             key={game.id}
                                             to={`/games/${game.id}`}

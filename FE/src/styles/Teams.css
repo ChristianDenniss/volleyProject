@@ -1,3 +1,120 @@
+/* Page wrapper */
+.teams-page {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Page title styling */
+.teams-page h1 {
+    margin: 0 0 20px 0;
+    padding: 0;
+    border: none;
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+/* Controls layout - following Games pattern */
+.teams-controls-wrapper { 
+    margin: 20px 0; 
+}
+
+.teams-controls-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.teams-filters-row {
+    display: flex;
+    flex-direction: row;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.teams-search-row {
+    display: flex;
+    flex-direction: row;
+    gap: 15px;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+}
+
+/* Filter styling */
+.teams-season-filter, 
+.teams-placement-filter { 
+    margin: 0; 
+    white-space: nowrap; 
+}
+
+.teams-season-filter label,
+.teams-placement-filter label {
+    margin-right: 8px;
+    color: #2d3748;
+    font-weight: 500;
+}
+
+.teams-season-filter select,
+.teams-placement-filter select {
+    font-size: 15px;
+    padding: 8px 16px;
+    padding-right: 32px;
+    border: 1px solid #2D3C50;
+    border-radius: 4px;
+    background: #2D3C50 url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e") no-repeat right 8px center / 20px;
+    color: #ffffff;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    box-shadow: none;
+}
+
+.teams-season-filter select:hover,
+.teams-placement-filter select:hover,
+.teams-season-filter select:focus,
+.teams-placement-filter select:focus {
+    background-color: #5b7dab;
+    border-color: #5b7dab;
+    background: #5b7dab url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e") no-repeat right 8px center / 20px;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(45, 60, 80, 0.2);
+}
+
+/* Clear filters button */
+.clear-filters-button {
+    padding: 8px 16px;
+    font-size: 14px;
+    border-radius: 6px;
+    border: 1px solid #ff6b6b;
+    background: #ff6b6b;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.clear-filters-button:hover {
+    background-color: #ff5252;
+    border-color: #ff5252;
+}
+
+/* Search and pagination */
+.teams-search-row .search-bar {
+    flex-grow: 1;
+}
+
+.teams-search-row .search-bar input {
+    width: 100%;
+}
+
+.teams-pagination-wrapper { 
+    white-space: nowrap; 
+}
+
 /*  Arrange cards in an auto-fill grid with consistent gaps               */
 .teams-container
 {
@@ -75,25 +192,35 @@
 .team-card-stage,      /* ← NEW placement row                              */
 .team-players
 {
-    /* small caps feel */
-    font-size: 0.85rem;
+    /* smaller font */
+    font-size: 0.875rem;
 
-    /* subtle grey */
-    color: #b0b0b0;
+    /* lighter weight */
+    font-weight: 500;
 
-    /* line height */
-    line-height: 1.4;
+    /* muted color */
+    color: #a0a0a0;
+
+    /* consistent spacing */
+    margin-bottom: 0.25rem;
 }
 
-/*  Label emphasis                                                       */
-.team-id strong,
-.team-season strong,
-.team-card-stage strong,   /* ← NEW                                         */
-.team-players strong
-{
-    /* label brighter */
-    color: #ffffff;
+/* Responsive design */
+@media (max-width: 768px) {
+    .teams-filters-row,
+    .teams-search-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
 
-    /* some separation */
-    margin-right: 0.25rem;
+    .teams-pagination-wrapper,
+    .search-bar {
+        width: 100%;
+        margin: 0;
+    }
+
+    .search-bar input {
+        width: 100%;
+    }
 }

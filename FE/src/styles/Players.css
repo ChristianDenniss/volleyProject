@@ -1,13 +1,126 @@
 /* Players page specific styles */
 .players-page {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Page title styling */
+.players-page h1 {
+    margin: 0 0 20px 0;
+    padding: 0;
+    border: none;
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+/* Controls layout - following Games/Teams pattern */
+.players-controls-wrapper { 
+    margin: 20px 0; 
+}
+
+.players-controls-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.players-filters-row {
+    display: flex;
+    flex-direction: row;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.players-search-row {
+    display: flex;
+    flex-direction: row;
+    gap: 15px;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+}
+
+/* Filter styling */
+.players-season-filter, 
+.players-position-filter { 
+    margin: 0; 
+    white-space: nowrap; 
+}
+
+.players-season-filter label,
+.players-position-filter label {
+    margin-right: 8px;
+    color: #2d3748;
+    font-weight: 500;
+}
+
+.players-season-filter select,
+.players-position-filter select {
+    font-size: 15px;
+    padding: 8px 16px;
+    padding-right: 32px;
+    border: 1px solid #2D3C50;
+    border-radius: 4px;
+    background: #2D3C50 url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e") no-repeat right 8px center / 20px;
+    color: #ffffff;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    box-shadow: none;
+}
+
+.players-season-filter select:hover,
+.players-position-filter select:hover,
+.players-season-filter select:focus,
+.players-position-filter select:focus {
+    background-color: #5b7dab;
+    border-color: #5b7dab;
+    background: #5b7dab url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e") no-repeat right 8px center / 20px;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(45, 60, 80, 0.2);
+}
+
+/* Clear filters button */
+.clear-filters-button {
+    padding: 8px 16px;
+    font-size: 14px;
+    border-radius: 6px;
+    border: 1px solid #ff6b6b;
+    background: #ff6b6b;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.clear-filters-button:hover {
+    background-color: #ff5252;
+    border-color: #ff5252;
+}
+
+/* Search and pagination */
+.players-search-row .search-bar {
+    flex-grow: 1;
+}
+
+.players-search-row .search-bar input {
+    width: 100%;
+}
+
+.players-pagination-wrapper { 
+    white-space: nowrap; 
+}
+
+/* Players wrapper and container */
+.players-wrapper {
     padding: 10px 0;
 }
 
-.players-page .players-wrapper {
-    padding: 10px 0;
-}
-
-.players-page .players-container {
+.players-container {
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -16,7 +129,7 @@
 }
 
 /* Player card styles */
-.players-page .players-card {
+.players-card {
     background-color: #e6f2ff;
     border: 2px solid #CFFFFF;
     border-radius: 20px;
@@ -29,13 +142,13 @@
 }
 
 /* Hover effect */
-.players-page .players-card:hover {
+.players-card:hover {
     background-color: #cce0ff;
     transform: scale(1.02);
 }
 
 /* Header section of the card */
-.players-page .players-card-header {
+.players-card-header {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
@@ -46,9 +159,9 @@
 }
 
 /* Player name, ID, and teams styling */
-.players-page .players-name,
-.players-page .players-id,
-.players-page .players-teams {
+.players-name,
+.players-id,
+.players-teams {
     font-size: 22px;
     font-weight: bold;
     margin: 0 20px;
@@ -57,7 +170,7 @@
 }
 
 /* Accordion content */
-.players-page .players-details {
+.players-details {
     max-height: 0;
     overflow: hidden;
     transition: max-height 0.3s ease-out, padding 0.3s ease-out;
@@ -70,31 +183,31 @@
 }
 
 /* Expanded state */
-.players-page .players-card.expanded .players-details {
+.players-card.expanded .players-details {
     max-height: 800px;
     padding-top: 15px;
     padding-bottom: 15px;
 }
 
 /* Paragraph inside accordion */
-.players-page .players-details p {
+.players-details p {
     margin: 10px 0;
 }
 
 /* Make the "Teams" and "Position" labels consistent */
-.players-page .players-details strong {
+.players-details strong {
     display: inline-block;
     width: 100px;
     color: #005999;
 }
 
 /* Line breaks in team list */
-.players-page .players-details br {
+.players-details br {
     line-height: 1.8;
 }
 
 /* Team tags styling */
-.players-page .players-team-tag {
+.players-team-tag {
     display: inline-block;
     background: #e6f2ff;
     color: #005999;
@@ -105,156 +218,85 @@
     border: 1px solid #CFFFFF;
 }
 
-.players-page .players-team-tag:hover {
+.players-team-tag:hover {
     background: #cce0ff;
     text-decoration: none;
 }
 
 /* Team line container */
-.players-page .players-team-line {
+.players-team-line {
     margin: 5px 0;
 }
 
-/* Controls section styling */
-.players-controls-wrapper {
-    margin-bottom: 32px;
-    display: flex;
-    justify-content: flex-start;
-    padding-left: 32px;
-    padding-right: 32px;
-}
-
-.players-controls-container {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    gap: 18px;
-}
-
-.players-season-filter {
-    flex: 0 0 auto;
-}
-
-.players-controls-right {
-    display: flex;
-    align-items: center;
-    margin-left: auto;
-    gap: 8px;
-}
-
-.players-season-filter select {
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    background: #fff;
-    border: 1.5px solid #d1d5db;
-    border-radius: 7px;
-    padding: 0 36px 0 14px;
-    height: 38px;
-    font-size: 15px;
-    color: #222;
-    font-family: inherit;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
-    transition: border-color 0.18s, box-shadow 0.18s;
-    cursor: pointer;
-    position: relative;
-}
-
-.players-season-filter select:focus,
-.players-season-filter select:hover {
-    border-color: #005999;
-    box-shadow: 0 2px 8px rgba(0,89,153,0.07);
-    outline: none;
-}
-
-.players-season-filter::after {
-    content: '';
-    position: absolute;
-    right: 14px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 12px;
-    height: 12px;
-    pointer-events: none;
-    background: url('data:image/svg+xml;utf8,<svg fill="%23005999" height="12" viewBox="0 0 20 20" width="12" xmlns="http://www.w3.org/2000/svg"><path d="M7.293 8.293a1 1 0 011.414 0L10 9.586l1.293-1.293a1 1 0 111.414 1.414l-2 2a1 1 0 01-1.414 0l-2-2a1 1 0 010-1.414z"/></svg>') no-repeat center/contain;
-}
-
-.players-season-filter select {
-    padding-right: 36px;
-}
-
-.players-search-wrapper {
-    display: flex;
-    align-items: center;
-}
-
-.players-search-wrapper input {
-    width: 1000px;
-    min-width: 0;
-    max-width: 100%;
-}
-
-.players-pagination-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 0;
-}
-
+/* See more button */
 .players-see-more {
-  margin-top: 15px;
-  text-align: right;
-  padding-right: 30px;
+    margin-top: 15px;
+    text-align: right;
+    padding-right: 30px;
 }
 
 .see-more-button {
-  display: inline-block;
-  background-color: #cce0ff;
-  color: #005999;
-  text-decoration: none;
-  font-size: 16px;
-  font-weight: 600;
-  padding: 8px 20px;
-  border-radius: 6px;
-  transition: all 0.2s ease;
+    display: inline-block;
+    background-color: #cce0ff;
+    color: #005999;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 600;
+    padding: 8px 20px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
 }
 
 .see-more-button:hover {
-  background-color: #CFFFFF;
-  text-decoration: none;
-  color: #005999;
+    background-color: #CFFFFF;
+    text-decoration: none;
+    color: #005999;
 }
 
-.players-page h1 {
-  font-size: 2.3rem;
-  font-weight: 800;
-  color: #222;
-  letter-spacing: 0.01em;
-  margin-bottom: 32px;
-  margin-top: 48px;
-  line-height: 1.1;
-  text-align: center;
-}
-
-.players-page h1::after {
-  display: none;
-}
-
+/* Pagination button styling */
 .players-pagination-wrapper button {
-  height: 30px;
-  padding: 0 8px;
-  border: 1px solid #cce0ff;
-  border-radius: 6px;
-  background: #cce0ff;
-  color: #222;
-  font-size: 14px;
-  font-family: inherit;
-  cursor: pointer;
-  transition: background 0.18s, border 0.18s;
+    height: 30px;
+    padding: 0 8px;
+    border: 1px solid #2D3C50;
+    border-radius: 6px;
+    background: #2D3C50;
+    color: #ffffff;
+    font-size: 14px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.18s, border 0.18s;
 }
 
 .players-pagination-wrapper button:hover:not(:disabled),
 .players-pagination-wrapper button.active {
-  background: #b3dbff;
-  border-color: #005999;
-  color: #005999;
+    background: #5b7dab;
+    border-color: #5b7dab;
+    color: #ffffff;
+}
+
+.players-pagination-wrapper button:disabled {
+    background: #e5e7eb;
+    border-color: #e5e7eb;
+    color: #9ca3af;
+    cursor: not-allowed;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .players-filters-row,
+    .players-search-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .players-pagination-wrapper,
+    .search-bar {
+        width: 100%;
+        margin: 0;
+    }
+
+    .search-bar input {
+        width: 100%;
+    }
 }

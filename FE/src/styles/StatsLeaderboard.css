@@ -112,7 +112,8 @@
 .filter-menu-button
 {
     font-size: 15px;
-    padding: 8px 16px;
+    padding: 8px 16px 8px 16px;
+    padding-right: 32px;                    /* space for arrow */
     border: 1px solid var(--primary-blue);
     border-radius: 4px;
     background-color: var(--primary-blue);
@@ -123,11 +124,16 @@
     gap: 5px;
     transition: background-color 0.2s ease;
 
+    /* flat colour + arrow, no UA gradient */
+    background:
+        var(--primary-blue)
+        url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e")
+        no-repeat right 8px center / 20px;
+
     /* wipe default UA look completely */
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
-    background-image: none;
     box-shadow: none;
 }
 
@@ -135,7 +141,11 @@
 .filter-menu-button:focus
 {
     background-color: var(--primary-blue-hover);
-    border-color:     var(--primary-blue-hover);
+    border-color: var(--primary-blue-hover);
+    background:
+        var(--primary-blue-hover)
+        url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e")
+        no-repeat right 8px center / 20px;
 }
 
 /* dropdown */
