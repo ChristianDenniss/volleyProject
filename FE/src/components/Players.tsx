@@ -82,7 +82,7 @@ const Players: React.FC = () => {
   );
 
   return (
-    <div className="players-page">
+    <div className={`players-page ${!data ? 'loading' : ''}`}>
       <h1>All Players</h1>
 
       {/* Controls */}
@@ -158,6 +158,15 @@ const Players: React.FC = () => {
 
       {error ? (
         <div>Error: {error}</div>
+      ) : !data ? (
+        <div className="players-wrapper">
+          <div className="players-container">
+            {/* Skeleton loaders */}
+            {Array.from({ length: 10 }).map((_, index) => (
+              <div key={index} className="players-skeleton"></div>
+            ))}
+          </div>
+        </div>
       ) : (
         <div className="players-wrapper">
           <div className="players-container">

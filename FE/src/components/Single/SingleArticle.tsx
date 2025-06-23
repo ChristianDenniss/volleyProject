@@ -23,60 +23,68 @@ const SingleArticle: React.FC = () => {
     return data as Article;
   }, [data]);
 
-  if (loading) {
-    return <p className="sa-loading">Loading article...</p>;
-  }
-  if (error) {
-    return <p className="sa-error">Error: {error}</p>;
-  }
-  if (!article) {
-    return <p className="sa-error">No article found.</p>;
-  }
-
   return (
-    <>
+    <div className={`single-article-page ${loading ? 'loading' : ''}`}>
       {/* Newspaper masthead */}
       <header className="np-header">
         <div className="np-header__brand">The RVL Examiner</div>
         <div className="np-header__info">
-          <span className="np-header__edition">'Vol. 1, No. {article.id}</span>
+          <span className="np-header__edition">
+            {loading ? 'Loading...' : `'Vol. 1, No. ${article?.id || '...'}`}
+          </span>
         </div>
       </header>
 
-      <article className="sa-article">
-        {article.imageUrl && (
-          <img
-            src={article.imageUrl}
-            alt={article.title}
-            className="sa-image"
-          />
-        )}
-        <h1 className="sa-title">{article.title}</h1>
-        <div className="sa-meta">
-          <span className="sa-meta-author">By {article.author.username}</span>
-          <span className="sa-meta-date">
-            {new Date(article.createdAt).toLocaleDateString()}
-          </span>
-        </div>
+      {loading ? (
+        <article className="sa-article">
+          <div className="sa-skeleton-image"></div>
+          <div className="sa-skeleton-title"></div>
+          <div className="sa-skeleton-meta"></div>
+          <div className="sa-skeleton-summary"></div>
+          <div className="sa-skeleton-content"></div>
+          <div className="sa-skeleton-content"></div>
+          <div className="sa-skeleton-content"></div>
+        </article>
+      ) : error ? (
+        <p className="sa-error">Error: {error}</p>
+      ) : !article ? (
+        <p className="sa-error">No article found.</p>
+      ) : (
+        <article className="sa-article">
+          {article.imageUrl && (
+            <img
+              src={article.imageUrl}
+              alt={article.title}
+              className="sa-image"
+            />
+          )}
+          <h1 className="sa-title">{article.title}</h1>
+          <div className="sa-meta">
+            <span className="sa-meta-author">By {article.author.username}</span>
+            <span className="sa-meta-date">
+              {new Date(article.createdAt).toLocaleDateString()}
+            </span>
+          </div>
 
-        <div className="sa-summary">{article.summary}</div>
+          <div className="sa-summary">{article.summary}</div>
 
-        <div className="sa-content">{article.content}</div>
-        <div className="sa-likes">
-          <button
-            className="sa-like-button"
-            onClick={() => {
-              /* handle like */
-            }}
-          >
-            <FaHeart />
-          </button>
-          <span className="sa-likes-count">
-            {article.likes} {article.likes === 1 ? "like" : "likes"}
-          </span>
-        </div>
-      </article>
-    </>
+          <div className="sa-content">{article.content}</div>
+          <div className="sa-likes">
+            <button
+              className="sa-like-button"
+              onClick={() => {
+                /* handle like */
+              }}
+            >
+              <FaHeart />
+            </button>
+            <span className="sa-likes-count">
+              {article.likes} {article.likes === 1 ? "like" : "likes"}
+            </span>
+          </div>
+        </article>
+      )}
+    </div>
   );
 };
 

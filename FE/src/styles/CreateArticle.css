@@ -81,13 +81,13 @@
 }
 
 .submit-btn {
-    background-color: #a1d2ff;
+    background-color: #2D3C50;
     border: none;
-    color: #000000;
+    color: #ffffff;
 }
 
 .submit-btn:hover {
-    background-color: #85c4ff;
+    background-color: #5b7dab;
 }
 
 .success-message {

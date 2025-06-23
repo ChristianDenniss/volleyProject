@@ -3,6 +3,9 @@
     padding: 20px;
     max-width: 1200px;
     margin: 0 auto;
+    min-height: 100vh; /* Prevent layout shift by setting minimum height */
+    box-sizing: border-box;
+    contain: layout style paint; /* Improve performance */
 }
 
 /* Page title styling */
@@ -17,12 +20,14 @@
 /* Controls layout - following Games/Teams pattern */
 .players-controls-wrapper { 
     margin: 20px 0; 
+    min-height: 120px; /* Reserve space for controls to prevent shift */
 }
 
 .players-controls-container {
     display: flex;
     flex-direction: column;
     gap: 15px;
+    min-height: 100px; /* Reserve space for container */
 }
 
 .players-filters-row {
@@ -31,6 +36,7 @@
     gap: 15px;
     align-items: center;
     flex-wrap: wrap;
+    min-height: 40px; /* Reserve space for filters */
 }
 
 .players-search-row {
@@ -40,6 +46,7 @@
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
+    min-height: 50px; /* Reserve space for search and pagination */
 }
 
 /* Filter styling */
@@ -118,6 +125,9 @@
 /* Players wrapper and container */
 .players-wrapper {
     padding: 10px 0;
+    min-height: 600px; /* Reserve minimum space for content */
+    content-visibility: auto; /* Optimize rendering performance */
+    contain-intrinsic-size: 600px; /* Help browser calculate size */
 }
 
 .players-container {
@@ -125,6 +135,7 @@
     flex-direction: column;
     gap: 10px;
     padding: 10px 0;
+    min-height: 500px; /* Reserve minimum space for cards */
 }
 
 /* Player card styles */
@@ -138,6 +149,11 @@
     transition: background-color 0.3s ease, transform 0.2s ease;
     cursor: pointer;
     will-change: transform;
+    min-height: 80px; /* Reserve minimum height for collapsed cards */
+    box-sizing: border-box;
+    contain: layout style; /* Optimize card rendering */
+    transform: translateZ(0); /* Force hardware acceleration */
+    backface-visibility: hidden; /* Prevent flickering */
 }
 
 /* Hover effect */
@@ -155,6 +171,7 @@
     height: 60px;
     padding: 0 30px;
     white-space: nowrap;
+    min-height: 60px; /* Ensure consistent header height */
 }
 
 /* Player name, ID, and teams styling */
@@ -179,6 +196,10 @@
     line-height: 1.6;
     color: #333;
     will-change: max-height, padding;
+    box-sizing: border-box;
+    transform: translateZ(0); /* Force hardware acceleration */
+    backface-visibility: hidden; /* Prevent flickering */
+    contain: layout style; /* Optimize rendering */
 }
 
 /* Expanded state */
@@ -186,6 +207,11 @@
     max-height: 800px;
     padding-top: 15px;
     padding-bottom: 15px;
+}
+
+/* Ensure consistent spacing even when collapsed */
+.players-card:not(.expanded) .players-details {
+    padding: 0 30px;
 }
 
 /* Paragraph inside accordion */
@@ -298,4 +324,55 @@
     .search-bar input {
         width: 100%;
     }
+    
+    /* Adjust minimum heights for mobile */
+    .players-controls-wrapper {
+        min-height: 150px;
+    }
+    
+    .players-wrapper {
+        min-height: 500px;
+    }
+    
+    .players-container {
+        min-height: 400px;
+    }
+}
+
+/* Loading state to prevent layout shift */
+.players-page.loading {
+    opacity: 0.8;
+    pointer-events: none;
+}
+
+/* Prevent layout shift during data loading */
+.players-container:empty::before {
+    content: "";
+    display: block;
+    height: 500px;
+    width: 100%;
+}
+
+/* Skeleton loader for better UX */
+.players-skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: 8px;
+    height: 80px;
+    margin-bottom: 10px;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* Optimize for Core Web Vitals */
+.players-card {
+    contain: layout style; /* Optimize card rendering */
 }

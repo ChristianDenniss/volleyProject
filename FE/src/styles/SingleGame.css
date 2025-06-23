@@ -19,6 +19,9 @@
     padding: .5rem 1.5rem 5rem;
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
     color: var(--text-main);
+    min-height: 100vh; /* Prevent layout shift by setting minimum height */
+    box-sizing: border-box;
+    contain: layout style paint; /* Improve performance */
 }
 
 /* ===== Title ===== */
@@ -30,6 +33,7 @@
     text-transform: capitalize;
     letter-spacing: 0.5px;
     margin-bottom: 1.5rem;
+    min-height: 80px; /* Reserve minimum height for title */
 }
 
 /* ===== Metadata block (date • season • sets, video) ===== */
@@ -39,8 +43,7 @@
     gap: 1.25rem;
     flex-wrap: wrap;
     margin-bottom: 2.25rem;
-    
-
+    min-height: 60px; /* Reserve minimum height for meta */
 }
 
 .meta-block a {
@@ -53,6 +56,7 @@
     justify-content: center;
     margin-top: -1.25rem;
     margin-bottom: 1.5rem;
+    min-height: 40px; /* Reserve minimum height for stage */
 }
 
 /* Game stage text - styled to match meta but slightly larger */
@@ -91,13 +95,14 @@
     gap: 4rem;
     margin-bottom: 3rem;
     flex-wrap: wrap;
+    min-height: 150px; /* Reserve minimum height for scoreboard */
 }
 
 
 .team-column {
     text-align: center;
     flex: 1 1 0;
-    max-width: 220px; /* ensures they don’t grow too wide */
+    max-width: 220px; /* ensures they don't grow too wide */
     min-width: 120px;
 }
 
@@ -138,6 +143,9 @@
 /* ===== Stats Section ===== */
 .stats-section {
     margin-top: 4.5rem;
+    min-height: 400px; /* Reserve minimum space for content */
+    content-visibility: auto; /* Optimize rendering performance */
+    contain-intrinsic-size: 400px; /* Help browser calculate size */
 }
 
 .stats-title {
@@ -268,4 +276,87 @@
         flex-direction: column;
         gap: 0.3rem;
     }
+}
+
+/* Loading state to prevent layout shift */
+.single-game-container.loading {
+    opacity: 0.8;
+    pointer-events: none;
+}
+
+/* Skeleton loader for better UX */
+.sg-skeleton-title {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    height: 80px;
+    width: 80%;
+    margin: 0 auto 1.5rem;
+    border-radius: 8px;
+}
+
+.sg-skeleton-stage {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    height: 40px;
+    width: 200px;
+    margin: 0 auto 1.5rem;
+    border-radius: 4px;
+}
+
+.sg-skeleton-meta {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    height: 20px;
+    width: 120px;
+    border-radius: 4px;
+}
+
+.sg-skeleton-scoreboard {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    height: 150px;
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto 3rem;
+    border-radius: 8px;
+}
+
+.sg-skeleton-stats-title {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    height: 50px;
+    width: 300px;
+    margin: 0 auto 1.5rem;
+    border-radius: 8px;
+}
+
+.sg-skeleton-stats-table {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    height: 300px;
+    width: 100%;
+    border-radius: 8px;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* Prevent layout shift during data loading */
+.single-game-container:empty::before {
+    content: "";
+    display: block;
+    height: 800px;
+    width: 100%;
 }

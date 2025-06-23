@@ -73,62 +73,73 @@ const headerColors = [
 const SingleSeason: React.FC = () =>
 {
     const { id } = useParams<{ id: string }>();
-    const { data: seasons, error } = useSingleSeason(id!);
+    const { data: seasons, error, loading } = useSingleSeason(id!);
 
     if (!id)
     {
         return <div className="ss-container">URL ID is undefined</div>;
     }
 
-    if (!seasons && !error)
-    {
-        return <div className="ss-container">Loading…</div>;
-    }
-
-    if (error)
-    {
-        return <div className="ss-container">Error: {error}</div>;
-    }
-
-    const season: Season | null = Array.isArray(seasons) ? seasons[0] : seasons;
-    if (!season)
-    {
-        return <div className="ss-container">Season not found</div>;
-    }
-
     return (
-        <div className="ss-container">
+        <div className={`ss-container ${loading ? 'loading' : ''}`}>
+            {loading ? (
+                <>
+                    <header className="ss-header">
+                        <div className="ss-skeleton-title"></div>
+                    </header>
 
-            <header className="ss-header">
-                Season {season.seasonNumber}
-            </header>
+                    <div className="ss-meta">
+                        <div className="ss-skeleton-meta"></div>
+                    </div>
+                    
+                    <div className="ss-awards-button-container">
+                        <div className="ss-skeleton-button"></div>
+                    </div>
 
-            <div className="ss-meta">
-                <span>Theme: {season.theme}</span>
-                <span>Start Date: {new Date(season.startDate).toLocaleDateString()}</span>
-                <span>End Date: {season.endDate ? new Date(season.endDate).toLocaleDateString() : 'TBD'}</span>
-            </div>
-            
-            <div className="ss-awards-button-container">
-                <Link 
-                    to="/awards" 
-                    state={{ selectedSeason: season.seasonNumber }}
-                    className="ss-awards-button"
-                >
-                    View Awards
-                </Link>
-            </div>
+                    <div className="ss-teams-grid">
+                        {Array.from({ length: 8 }).map((_, index) => (
+                            <div key={index} className="ss-skeleton-team-card"></div>
+                        ))}
+                    </div>
+                </>
+            ) : error ? (
+                <div className="ss-container">Error: {error}</div>
+            ) : !seasons ? (
+                <div className="ss-container">Season not found</div>
+            ) : (
+                <>
+                    <header className="ss-header">
+                        Season {(Array.isArray(seasons) ? seasons[0] : seasons).seasonNumber}
+                    </header>
 
-            <div className="ss-teams-grid">
-                {season.teams?.map(( team, idx ) => (
-                    <TeamCard
-                        key={team.id}
-                        team={team}
-                        headerColor={headerColors[idx % headerColors.length]}
-                        positionNumber={idx + 1}
-                    />
-                ))}
-            </div>
+                    <div className="ss-meta">
+                        <span>Theme: {(Array.isArray(seasons) ? seasons[0] : seasons).theme}</span>
+                        <span>Start Date: {new Date((Array.isArray(seasons) ? seasons[0] : seasons).startDate).toLocaleDateString()}</span>
+                        <span>End Date: {(Array.isArray(seasons) ? seasons[0] : seasons).endDate ? new Date((Array.isArray(seasons) ? seasons[0] : seasons).endDate!).toLocaleDateString() : 'TBD'}</span>
+                    </div>
+                    
+                    <div className="ss-awards-button-container">
+                        <Link 
+                            to="/awards" 
+                            state={{ selectedSeason: (Array.isArray(seasons) ? seasons[0] : seasons).seasonNumber }}
+                            className="ss-awards-button"
+                        >
+                            View Awards
+                        </Link>
+                    </div>
+
+                    <div className="ss-teams-grid">
+                        {(Array.isArray(seasons) ? seasons[0] : seasons).teams?.map(( team, idx ) => (
+                            <TeamCard
+                                key={team.id}
+                                team={team}
+                                headerColor={headerColors[idx % headerColors.length]}
+                                positionNumber={idx + 1}
+                            />
+                        ))}
+                    </div>
+                </>
+            )}
         </div>
     );
 };

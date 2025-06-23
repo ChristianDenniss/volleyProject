@@ -93,7 +93,7 @@ const Games: React.FC = () =>
     }
 
     return (
-        <div className="games-page">
+        <div className={`games-page ${!data ? 'loading' : ''}`}>
             {/* Title */}
             <h1>Games Info</h1>
 
@@ -169,42 +169,46 @@ const Games: React.FC = () =>
             </div>
 
             {/* Error / List */}
-            {error
-                ? <div>Error: {error}</div>
-                : (
-                    filteredGames.length === 0
-                        ? <div>Loading...</div>
-                        : (
-                            <div className="games-wrapper">
-                                <div className="games-container">
-                                    {paginatedGames.map(game => (
-                                        <Link
-                                            key={game.id}
-                                            to={`/games/${game.id}`}
-                                            className={`game-card ${activeGame === game.name ? "active" : ""}`}
-                                            onClick={() => handleCardClick(game.name)}
-                                        >
-                                            <div className="game-name"><strong>{game.name}</strong></div>
-                                            <div className="game-id"><strong>ID:</strong> {game.id}</div>
-                                            <div className="game-score">
-                                                <strong>Score:</strong> {game.team1Score} – {game.team2Score}
-                                            </div>
-                                            <div className="game-season">
-                                                <strong>Season:</strong> {game.season.seasonNumber}
-                                            </div>
-                                            <div className="all-games-stage">
-                                                <strong>Stage:</strong> {game.stage}
-                                            </div>
-                                            <div className="game-date">
-                                                <strong>Date:</strong> {new Date(game.date).toLocaleDateString()}
-                                            </div>
-                                        </Link>
-                                    ))}
+            {error ? (
+                <div>Error: {error}</div>
+            ) : !data ? (
+                <div className="games-wrapper">
+                    <div className="games-container">
+                        {/* Skeleton loaders */}
+                        {Array.from({ length: 10 }).map((_, index) => (
+                            <div key={index} className="games-skeleton"></div>
+                        ))}
+                    </div>
+                </div>
+            ) : (
+                <div className="games-wrapper">
+                    <div className="games-container">
+                        {paginatedGames.map(game => (
+                            <Link
+                                key={game.id}
+                                to={`/games/${game.id}`}
+                                className={`game-card ${activeGame === game.name ? "active" : ""}`}
+                                onClick={() => handleCardClick(game.name)}
+                            >
+                                <div className="game-name"><strong>{game.name}</strong></div>
+                                <div className="game-id"><strong>ID:</strong> {game.id}</div>
+                                <div className="game-score">
+                                    <strong>Score:</strong> {game.team1Score} – {game.team2Score}
                                 </div>
-                            </div>
-                        )
-                  )
-            }
+                                <div className="game-season">
+                                    <strong>Season:</strong> {game.season.seasonNumber}
+                                </div>
+                                <div className="all-games-stage">
+                                    <strong>Stage:</strong> {game.stage}
+                                </div>
+                                <div className="game-date">
+                                    <strong>Date:</strong> {new Date(game.date).toLocaleDateString()}
+                                </div>
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

@@ -76,17 +76,22 @@ const SeasonCard: React.FC<{ season: Season }> = ({ season }) =>
 const Seasons: React.FC = () =>
 {
     const { data, error } = useMediumSeasons()
+    
     if (error) return <div>Error: {error}</div>
-    if (!data) return <div>Loading…</div>
-
-    const seasons = [...data].sort((a, b) => b.seasonNumber - a.seasonNumber)
-
+    
     return (
-        <div className="seasons-page">
+        <div className={`seasons-page ${!data ? 'loading' : ''}`}>
             <h1 className="page-title">All Seasons</h1>
             <div className="seasons-grid">
-                {seasons.map(season =>
-                    <SeasonCard key={season.id} season={season} />
+                {!data ? (
+                    // Skeleton loaders
+                    Array.from({ length: 6 }).map((_, index) => (
+                        <div key={index} className="seasons-skeleton"></div>
+                    ))
+                ) : (
+                    [...data].sort((a, b) => b.seasonNumber - a.seasonNumber).map(season =>
+                        <SeasonCard key={season.id} season={season} />
+                    )
                 )}
             </div>
         </div>

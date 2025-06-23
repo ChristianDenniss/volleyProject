@@ -19,10 +19,45 @@ const SingleTeam: React.FC = () =>
     const [ showGames,      setShowGames ]      = useState(false);
     const [ showTeamTotals, setShowTeamTotals ] = useState(false);
 
-    // Loading / error / not found
+    // Loading state with skeleton
     if ( loading )
     {
-        return <p>Loading team…</p>;
+        return (
+            <div className="team-details loading">
+                <div className="team-skeleton">
+                    <div className="skeleton-title"></div>
+                    <div className="skeleton-info"></div>
+                    <div className="skeleton-info"></div>
+                    <div className="skeleton-info"></div>
+                </div>
+                
+                <div className="players-list">
+                    <div className="skeleton-section-title"></div>
+                    <div className="skeleton-button"></div>
+                    <div className="skeleton-players">
+                        {[1, 2, 3].map(i => (
+                            <div key={i} className="skeleton-player-item"></div>
+                        ))}
+                    </div>
+                </div>
+                
+                <div className="games-section">
+                    <div className="skeleton-section-title"></div>
+                    <div className="skeleton-button"></div>
+                    <div className="skeleton-games">
+                        {[1, 2, 3].map(i => (
+                            <div key={i} className="skeleton-game-card"></div>
+                        ))}
+                    </div>
+                </div>
+                
+                <div className="team-totals">
+                    <div className="skeleton-section-title"></div>
+                    <div className="skeleton-button"></div>
+                    <div className="skeleton-totals"></div>
+                </div>
+            </div>
+        );
     }
 
     if ( error )
@@ -109,7 +144,7 @@ const SingleTeam: React.FC = () =>
                     <ul>
                         {team.players?.map((player: Player) =>
                         {
-                            // Gather this player’s stats
+                            // Gather this player's stats
                             const statsForPlayer = statsByPlayer[player.id] || [];
                             const combined = statsForPlayer.reduce((tot, stat) =>
                             {

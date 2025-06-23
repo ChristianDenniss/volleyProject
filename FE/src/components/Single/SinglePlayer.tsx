@@ -203,7 +203,7 @@ const PlayerProfiles: React.FC = () =>
 {
     const { id } = useParams<{ id: string }>()
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
-    const { data, error } = useSinglePlayer(id || "")
+    const { data, error, loading } = useSinglePlayer(id || "")
     const [selectedSeason, setSelectedSeason] = useState<number>(0)
     const [showAllGames, setShowAllGames] = useState<boolean>(false)
     const { data: awards, loading: awardsLoading, error: awardsError } = useAwardsByPlayerID(id || "")
@@ -219,7 +219,87 @@ const PlayerProfiles: React.FC = () =>
     }, [data?.name])
 
     if (!id) return <div className="player-profile-container">URL ID is undefined</div>
-    if (!data && !error) return <div className="player-profile-container">Loading…</div>
+    
+    // Loading state with skeleton
+    if (loading) {
+        return (
+            <div className="player-profile-container loading">
+                <div className="player-main-header">
+                    <div className="avatar-header-info">
+                        <div className="avatar-left">
+                            <div className="skeleton-avatar"></div>
+                        </div>
+                        <div className="avatar-right">
+                            <div className="skeleton-player-name"></div>
+                            <div className="skeleton-player-meta">
+                                {[1, 2, 3, 4, 5, 6, 7].map(i => (
+                                    <div key={i} className="skeleton-meta-item"></div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div className="skeleton-season-select"></div>
+                
+                <div className="player-profiles-grid">
+                    <div className="player-card">
+                        <div className="player-stats">
+                            <div className="stat-category">
+                                <div className="skeleton-category-title"></div>
+                                <div className="skeleton-stat-grid">
+                                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].map(i => (
+                                        <div key={i} className="skeleton-stat-item"></div>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="stat-category">
+                                <div className="skeleton-category-title"></div>
+                                <div className="skeleton-stat-grid">
+                                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].map(i => (
+                                        <div key={i} className="skeleton-stat-item"></div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div className="player-teams-section">
+                    <div className="skeleton-section-title"></div>
+                    <div className="skeleton-teams-list">
+                        {[1, 2, 3, 4, 5].map(i => (
+                            <div key={i} className="skeleton-team-item"></div>
+                        ))}
+                    </div>
+                </div>
+                
+                <div className="player-games-section">
+                    <div className="skeleton-section-title"></div>
+                    <div className="skeleton-games-list">
+                        {[1, 2, 3, 4, 5].map(i => (
+                            <div key={i} className="skeleton-game-item"></div>
+                        ))}
+                    </div>
+                </div>
+                
+                <div className="player-awards-section">
+                    <div className="skeleton-section-title"></div>
+                    <div className="skeleton-awards-list">
+                        {[1, 2, 3].map(i => (
+                            <div key={i} className="skeleton-award-item"></div>
+                        ))}
+                    </div>
+                </div>
+                
+                <div className="player-hof-section">
+                    <div className="skeleton-section-title"></div>
+                    <div className="skeleton-hof-progress"></div>
+                </div>
+            </div>
+        );
+    }
+    
     if (error) return <div className="player-profile-container">Error: {error}</div>
     if (!data) return <div className="player-profile-container">No player found.</div>
 

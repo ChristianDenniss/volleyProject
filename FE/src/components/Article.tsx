@@ -22,7 +22,7 @@ const Articles: React.FC = () =>
     const [showAuthMessage, setShowAuthMessage] = useState<boolean>(false);
 
     // Use custom hook to get articles data
-    const { data, error } = useArticles();
+    const { data, error, loading } = useArticles();
 
     const handleCreateClick = (e: React.MouseEvent) => {
         if (!isAuthenticated) {
@@ -79,6 +79,35 @@ const Articles: React.FC = () =>
     // Total number of approved articles
     const totalCount = data ? data.filter(article => article.approved === true).length : 0;
 
+    // Loading state with skeleton
+    if (loading) {
+        return (
+            <div className="article-list-container loading">
+                <div className="skeleton-title"></div>
+                
+                <div className="article-list-create-section">
+                    <div className="skeleton-create-btn"></div>
+                </div>
+                
+                <div className="article-list-controls">
+                    <div className="skeleton-count"></div>
+                    <div className="skeleton-search"></div>
+                    <div className="skeleton-sort"></div>
+                </div>
+                
+                <div className="article-list-grid">
+                    {[1, 2, 3, 4, 5, 6].map(i => (
+                        <div key={i} className="skeleton-article-card">
+                            <div className="skeleton-article-image"></div>
+                            <div className="skeleton-article-title"></div>
+                            <div className="skeleton-article-summary"></div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="article-list-container">
             <h1>Articles</h1>
@@ -95,7 +124,7 @@ const Articles: React.FC = () =>
             <div className="article-list-create-section">
                 <Link 
                     to="/articles/create" 
-                    className="article-list-create-btn"
+                    className="article-create-btn"
                     onClick={handleCreateClick}
                 >
                     Create Article
@@ -157,7 +186,7 @@ const Articles: React.FC = () =>
                     }) }
                 </div>
             ) : (
-                <div>Loading...</div>
+                <div>No articles found.</div>
             )}
         </div>
     );

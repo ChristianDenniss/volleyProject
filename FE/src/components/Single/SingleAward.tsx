@@ -52,82 +52,101 @@ const SingleAward: React.FC = () => {
     }, [])
 
     if (!id) return <div className="award-container">URL ID is undefined</div>
-    if (loading) return <div className="award-container">Loading...</div>
-    if (error) return <div className="award-container">Error: {error}</div>
-    if (!award) return <div className="award-container">No award found.</div>
 
     return (
-        <div className="award-container">
-            <div className="award-header" style={{ backgroundImage: `url(${award.imageUrl || defaultImage})` }}>
-                <div className="award-title-section">
-                    <h1>{award.type}</h1>
-                    <span className="award-season">Season {award.season.seasonNumber}</span>
-                </div>
-            </div>
-
-            <div className="award-type-description">
-                <p>{awardTypeDescriptions[award.type] || "A special recognition for outstanding achievement"}</p>
-            </div>
-
-            <div className="award-content">
-                {award.description && (
-                    <div className="award-description">
-                        <h2>Description</h2>
-                        <p>{award.description}</p>
-                    </div>
-                )}
-
-                <div className="award-recipients">
-                    <h2>Recipient</h2>
-                    {award.players && award.players.length > 0 ? (
-                        <div className="recipient-info">
-                            {award.players.map((player, index) => (
-                                <React.Fragment key={player.id}>
-                                    <a href={`/players/${player.id}`} className="player-link">
-                                        {player.name}
-                                    </a>
-                                    {index < award.players.length - 1 && ", "}
-                                </React.Fragment>
-                            ))}
+        <div className={`award-container ${loading ? 'loading' : ''}`}>
+            {loading ? (
+                <>
+                    <div className="award-skeleton-header"></div>
+                    <div className="award-skeleton-description"></div>
+                    <div className="award-content">
+                        <div className="award-skeleton-section"></div>
+                        <div className="award-skeleton-section"></div>
+                        <div className="award-skeleton-meta">
+                            <div className="award-skeleton-meta-item"></div>
+                            <div className="award-skeleton-meta-item"></div>
+                            <div className="award-skeleton-meta-item"></div>
                         </div>
-                    ) : (
-                        <p>No recipients recorded for this award.</p>
-                    )}
-                </div>
+                    </div>
+                </>
+            ) : error ? (
+                <div className="award-container">Error: {error}</div>
+            ) : !award ? (
+                <div className="award-container">No award found.</div>
+            ) : (
+                <>
+                    <div className="award-header" style={{ backgroundImage: `url(${award.imageUrl || defaultImage})` }}>
+                        <div className="award-title-section">
+                            <h1>{award.type}</h1>
+                            <span className="award-season">Season {award.season.seasonNumber}</span>
+                        </div>
+                    </div>
 
-                <div className="award-meta">
-                    <div className="meta-item">
-                        <h3>Award Type</h3>
-                        <p>{award.type}</p>
+                    <div className="award-type-description">
+                        <p>{awardTypeDescriptions[award.type] || "A special recognition for outstanding achievement"}</p>
                     </div>
-                    <div className="meta-item">
-                        <h3>Season</h3>
-                        <p>Season {award.season.seasonNumber}</p>
-                    </div>
-                    <div className="meta-item">
-                        <h3>Awarded On</h3>
-                        <p>{new Date(award.createdAt).toLocaleDateString()}</p>
-                    </div>
-                    {award.players && award.players.length > 0 && (
-                        <div className="meta-item">
-                            <h3>Team</h3>
-                            <p>
-                                {award.players.map((player, index) => {
-                                    const seasonTeam = player.teams?.find(team => 
-                                        team.season?.seasonNumber === award.season.seasonNumber
-                                    );
-                                    return (
+
+                    <div className="award-content">
+                        {award.description && (
+                            <div className="award-description">
+                                <h2>Description</h2>
+                                <p>{award.description}</p>
+                            </div>
+                        )}
+
+                        <div className="award-recipients">
+                            <h2>Recipient</h2>
+                            {award.players && award.players.length > 0 ? (
+                                <div className="recipient-info">
+                                    {award.players.map((player, index) => (
                                         <React.Fragment key={player.id}>
-                                            {seasonTeam ? seasonTeam.name : "No team data"}
+                                            <a href={`/players/${player.id}`} className="player-link">
+                                                {player.name}
+                                            </a>
                                             {index < award.players.length - 1 && ", "}
                                         </React.Fragment>
-                                    );
-                                })}
-                            </p>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p>No recipients recorded for this award.</p>
+                            )}
                         </div>
-                    )}
-                </div>
-            </div>
+
+                        <div className="award-meta">
+                            <div className="meta-item">
+                                <h3>Award Type</h3>
+                                <p>{award.type}</p>
+                            </div>
+                            <div className="meta-item">
+                                <h3>Season</h3>
+                                <p>Season {award.season.seasonNumber}</p>
+                            </div>
+                            <div className="meta-item">
+                                <h3>Awarded On</h3>
+                                <p>{new Date(award.createdAt).toLocaleDateString()}</p>
+                            </div>
+                            {award.players && award.players.length > 0 && (
+                                <div className="meta-item">
+                                    <h3>Team</h3>
+                                    <p>
+                                        {award.players.map((player, index) => {
+                                            const seasonTeam = player.teams?.find(team => 
+                                                team.season?.seasonNumber === award.season.seasonNumber
+                                            );
+                                            return (
+                                                <React.Fragment key={player.id}>
+                                                    {seasonTeam ? seasonTeam.name : "No team data"}
+                                                    {index < award.players.length - 1 && ", "}
+                                                </React.Fragment>
+                                            );
+                                        })}
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </>
+            )}
         </div>
     )
 }

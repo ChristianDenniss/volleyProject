@@ -34,7 +34,7 @@ const Awards: React.FC = () => {
   }, [awards, selectedSeason, selectedType]);
 
   return (
-    <div className="volley-awards-container">
+    <div className={`volley-awards-container ${loading ? 'loading' : ''}`}>
       <h1 className="volley-awards-header">All Awards</h1>
       <div className="volley-awards-controls">
         <SeasonFilter selectedSeason={selectedSeason} onSeasonChange={setSelectedSeason} />
@@ -50,24 +50,35 @@ const Awards: React.FC = () => {
           ))}
         </select>
       </div>
-      {loading && <p>Loading awards…</p>}
-      {error && <p>Error: {error}</p>}
-      {!loading && !error && filteredAwards.length === 0 && <p>No awards found.</p>}
-      <div className="volley-awards-grid">
-        {filteredAwards.map((award: any) => (
-          <Link to={`/awards/${award.id}`} key={award.id} className="volley-award-item-link">
-            <div className="volley-award-item" style={{ backgroundImage: `url(${award.imageUrl})` }}>
-              <div className="volley-award-category">{award.type}</div>
-              <Link to={`/seasons/${award.season?.id}`} className="volley-award-season">
-                Season {award.season?.seasonNumber}
-              </Link>
-              <Link to={`/players/${award.players?.[0]?.id}`} className="volley-award-winner">
-                {award.players?.[0]?.name || "N/A"}
-              </Link>
-            </div>
-          </Link>
-        ))}
-      </div>
+      
+      {loading ? (
+        <div className="volley-awards-grid">
+          {/* Skeleton loaders */}
+          {Array.from({ length: 8 }).map((_, index) => (
+            <div key={index} className="awards-skeleton"></div>
+          ))}
+        </div>
+      ) : error ? (
+        <p>Error: {error}</p>
+      ) : filteredAwards.length === 0 ? (
+        <p>No awards found.</p>
+      ) : (
+        <div className="volley-awards-grid">
+          {filteredAwards.map((award: any) => (
+            <Link to={`/awards/${award.id}`} key={award.id} className="volley-award-item-link">
+              <div className="volley-award-item" style={{ backgroundImage: `url(${award.imageUrl})` }}>
+                <div className="volley-award-category">{award.type}</div>
+                <Link to={`/seasons/${award.season?.id}`} className="volley-award-season">
+                  Season {award.season?.seasonNumber}
+                </Link>
+                <Link to={`/players/${award.players?.[0]?.id}`} className="volley-award-winner">
+                  {award.players?.[0]?.name || "N/A"}
+                </Link>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

@@ -338,7 +338,7 @@ const StatsLeaderboard: React.FC = () => {
   };
 
   return (
-    <div className="stats-leaderboard-page">
+    <div className={`stats-leaderboard-page ${!players ? 'loading' : ''}`}>
       <h1>Statistics Leaderboard</h1>
 
       <div className="stats-controls-wrapper">
@@ -420,6 +420,19 @@ const StatsLeaderboard: React.FC = () => {
 
       {error ? (
         <div>Error: {error}</div>
+      ) : !players ? (
+        <div className="stats-table-wrapper">
+          <div className="stats-skeleton-table">
+            {/* Skeleton loaders for table */}
+            {Array.from({ length: 10 }).map((_, index) => (
+              <div key={index} className="stats-skeleton-row">
+                {Array.from({ length: 8 }).map((_, cellIndex) => (
+                  <div key={cellIndex} className="stats-skeleton-cell"></div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
       ) : (
         <div className="stats-table-wrapper">
           <table className="stats-table">

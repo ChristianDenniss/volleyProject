@@ -9,6 +9,9 @@
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
+    min-height: 100vh;
+    contain: layout style paint;
+    content-visibility: auto;
 }
 
 .player-main-header {
@@ -18,6 +21,7 @@
     flex-wrap: wrap;
     margin-bottom: 2rem;
     gap: 2rem;
+    min-height: 400px;
 }
 
 .avatar-header-info {
@@ -30,6 +34,7 @@
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 1rem;
+    min-height: 350px;
 }
 
 .avatar-stack {
@@ -45,6 +50,7 @@
     text-transform: uppercase;
     color: #fff;
     margin-bottom: 1rem;
+    min-height: 3.5rem;
 }
 
 .player-avatar {
@@ -52,6 +58,8 @@
     height: 580px;
     border-radius: 12px;
     object-fit: cover;
+    min-height: 580px;
+    contain: layout style;
 }
 
 .player-meta {
@@ -61,6 +69,7 @@
     font-size: 1rem;
     color: #ccc;
     font-weight: 500;
+    min-height: 200px;
 }
 
 .player-profiles-grid {
@@ -71,6 +80,7 @@
     width: 100%;
     min-width: 100%;
     box-sizing: border-box;
+    min-height: 600px;
 }
 
 .player-card {
@@ -84,12 +94,15 @@
     width: 100%;
     min-width: 100%;
     box-sizing: border-box;
+    min-height: 500px;
+    contain: layout style;
 }
 
 .player-stats {
     display: flex;
     flex-direction: column;
     gap: 2rem;
+    min-height: 400px;
 }
 
 .stat-category h3 {
@@ -97,6 +110,7 @@
     font-weight: bold;
     color: #eee;
     margin-bottom: 1rem;
+    min-height: 2rem;
 }
 
 .stat-grid {
@@ -107,6 +121,8 @@
     border-radius: 8px;
     overflow: hidden;
     width: 100%;
+    min-height: 150px;
+    contain: layout style;
 }
 
 @media (min-width: 900px) {
@@ -127,6 +143,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    min-height: 3rem;
 }
 
 .stat-grid > .stat-item:nth-child(7n) {
@@ -146,6 +163,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    min-height: 1.2rem;
 }
 
 .stat-value {
@@ -155,6 +173,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    min-height: 1.5rem;
 }
 
 .player-teams-section,
@@ -163,6 +182,7 @@
     margin-top: 3rem;
     width: 100%;
     min-width: 100%;
+    min-height: 200px;
 }
 
 .team-list,
@@ -174,6 +194,7 @@
     gap: 1rem;
     width: 100%;
     min-width: 100%;
+    min-height: 100px;
 }
 
 .team-list li,
@@ -184,6 +205,11 @@
     color: #fff;
     font-weight: 500;
     transition: all 0.2s ease;
+    min-height: 2.5rem;
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    contain: layout style;
 }
 
 .team-list li:hover,
@@ -199,115 +225,115 @@
 }
 
 .avatar-left {
-    flex: 0 0 580px;
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    min-height: 580px;
 }
 
 .avatar-right {
-    flex: 0 1 auto;
-    min-width: 250px;
-    max-width: 500px;
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    justify-content: flex-start;
+    min-height: 350px;
 }
 
 .player-name-large {
-    font-size: 3.5rem;
-    font-weight: 900;
-    color: #ffffff;
-    margin-bottom: 2.5rem;
-    white-space: nowrap;
+    font-size: 2.8rem;
+    font-weight: bold;
     text-transform: uppercase;
-    animation: float 3s ease-in-out infinite;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    color: #fff;
+    margin-bottom: 1rem;
+    min-height: 3.5rem;
 }
 
 .player-meta {
     display: flex;
     flex-direction: column;
-    gap: 0.6rem;
-    font-size: 1.2rem;
-    color: #e0e0e0;
+    gap: 0.5rem;
+    font-size: 1rem;
+    color: #ccc;
     font-weight: 500;
+    min-height: 200px;
 }
 
 @media (max-width: 1200px) {
     .avatar-left {
-        flex: 0 0 400px;
+        min-height: 450px;
     }
 }
 
 @media (max-width: 900px) {
     .avatar-header-info {
-        gap: 1rem;
+        flex-direction: column;
+        min-height: 600px;
     }
     
     .avatar-left {
-        flex: 0 0 300px;
+        min-height: 350px;
     }
     
     .player-avatar {
-        width: 300px;
-        height: 300px;
+        width: 350px;
+        height: 350px;
+        min-height: 350px;
     }
     
     .player-name-large {
-        font-size: 2.5rem;
+        font-size: 2rem;
+        min-height: 2.5rem;
     }
 }
 
 @media (max-width: 600px) {
     .avatar-header-info {
-        gap: 0.5rem;
+        flex-direction: column;
+        min-height: 500px;
     }
     
     .avatar-left {
-        flex: 0 0 200px;
+        min-height: 250px;
     }
     
     .player-avatar {
-        width: 200px;
-        height: 200px;
+        width: 250px;
+        height: 250px;
+        min-height: 250px;
     }
     
     .player-name-large {
-        font-size: 1.8rem;
+        font-size: 1.5rem;
+        min-height: 2rem;
     }
     
     .player-meta {
-        font-size: 1rem;
+        min-height: 150px;
     }
 }
 
 .stat-filter-box {
     background: #1a1a1a;
-    border-radius: 12px 12px 0 0;
-    padding: 1rem 2rem;
-    margin-bottom: -1rem; /* tucks into the top of stat card */
-    box-shadow: 0 0 8px rgba(0, 0, 0, 0.25);
-    width: fit-content;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid #333;
+    min-height: 4rem;
 }
 
 .stat-filter-box label {
-    color: #ccc;
     display: block;
     margin-bottom: 0.5rem;
-    font-weight: 600;
-    font-size: 1rem;
-    text-transform: uppercase;
+    color: #ccc;
+    font-weight: 500;
+    min-height: 1.5rem;
 }
 
 @keyframes float {
-    0% {
+    0%, 100% {
         transform: translateY(0px);
     }
     50% {
-        transform: translateY(-5px);
-    }
-    100% {
-        transform: translateY(0px);
+        transform: translateY(-10px);
     }
 }
 
@@ -316,29 +342,30 @@
 }
 
 .game-list.expanded li:nth-child(n+5) {
-    display: flex;
+    display: block;
 }
 
 .show-more-games {
-    background: rgba(255, 255, 255, 0.05);
-    color: #999;
-    border: none;
+    background: #1a1a1a;
+    color: #ccc;
+    border: 1px solid #333;
     padding: 0.4rem 0.8rem;
-    border-radius: 20px;
-    font-weight: 400;
+    border-radius: 4px;
+    font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
     margin-top: 0.8rem;
     font-size: 0.8rem;
-    text-transform: none;
+    text-transform: uppercase;
     letter-spacing: 0.5px;
-    backdrop-filter: blur(4px);
+    min-height: 2rem;
+    min-width: 120px;
 }
 
 .show-more-games:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: #ccc;
-    border: none;
+    background: #333;
+    border-color: #555;
+    transform: scale(1.05);
 }
 
 .show-more-games.hidden {
@@ -347,11 +374,13 @@
 
 .player-games-section {
     margin-top: 2rem;
+    min-height: 150px;
 }
 
 .player-games-section h3 {
     font-size: 1.5rem;
     margin-bottom: 1rem;
+    min-height: 2rem;
 }
 
 .game-list {
@@ -360,6 +389,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
+    min-height: 100px;
 }
 
 .game-list li {
@@ -370,6 +400,7 @@
     font-weight: 500;
     transition: all 0.2s ease;
     font-size: 0.9rem;
+    min-height: 2rem;
 }
 
 .game-list li:hover {
@@ -395,6 +426,8 @@
     font-size: 0.8rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    min-height: 2rem;
+    min-width: 120px;
 }
 
 .player-profile-awards-list {
@@ -405,6 +438,7 @@
     gap: 1rem;
     width: 100%;
     min-width: 100%;
+    min-height: 150px;
 }
 
 .player-profile-award-link {
@@ -424,6 +458,11 @@
     transition: all 0.2s ease;
     min-width: 200px;
     cursor: pointer;
+    min-height: 120px;
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    contain: layout style;
 }
 
 .player-profile-award-item:hover {
@@ -437,6 +476,7 @@
     margin-bottom: 0.75rem;
     filter: drop-shadow(0 2px 4px rgba(201, 228, 253, 0.3));
     transition: transform 0.2s ease, filter 0.2s ease;
+    min-height: 2.5rem;
 }
 
 .player-profile-award-item:hover .player-profile-award-icon {
@@ -450,17 +490,20 @@
     gap: 0.5rem;
     align-items: center;
     text-align: center;
+    min-height: 80px;
 }
 
 .player-profile-award-type {
     font-size: 1.2rem;
     font-weight: 600;
     color: #c9e4fd;
+    min-height: 1.5rem;
 }
 
 .player-profile-award-season {
     font-size: 0.9rem;
     color: #ffffff9e;
+    min-height: 1.2rem;
 }
 
 .player-profile-award-image {
@@ -468,6 +511,7 @@
     max-height: 100px;
     object-fit: contain;
     margin-top: 0.5rem;
+    min-height: 100px;
 }
 
 .player-hof-section {
@@ -476,6 +520,7 @@
     padding: 1.5rem;
     margin: 1.5rem 0;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    min-height: 150px;
 }
 
 .hof-progress-container {
@@ -483,6 +528,7 @@
     flex-direction: column;
     gap: 1rem;
     align-items: center;
+    min-height: 100px;
 }
 
 .hof-score {
@@ -491,20 +537,24 @@
     gap: 0.5rem;
     font-size: 1.5rem;
     color: #ffd700;
+    min-height: 2rem;
 }
 
 .hof-icon {
     color: #ffd700;
     font-size: 1.8rem;
+    min-height: 1.8rem;
 }
 
 .hof-score-value {
     font-weight: bold;
     color: #ffd700;
+    min-height: 1.5rem;
 }
 
 .hof-score-max {
     color: #666;
+    min-height: 1.5rem;
 }
 
 .hof-progress-bar {
@@ -514,6 +564,7 @@
     border-radius: 10px;
     overflow: hidden;
     position: relative;
+    min-height: 20px;
 }
 
 .hof-progress-fill {
@@ -526,6 +577,7 @@
 .hof-status {
     font-size: 1.1rem;
     color: #ccc;
+    min-height: 1.5rem;
 }
 
 .hof-inducted {
@@ -537,5 +589,179 @@
 
 .hof-progress {
     color: #4a90e2;
+}
+
+.player-profile-container.loading {
+    opacity: 0.8;
+    pointer-events: none;
+}
+
+.skeleton-avatar {
+    background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: 12px;
+    height: 580px;
+    width: 580px;
+}
+
+.skeleton-player-name {
+    background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: 8px;
+    height: 3.5rem;
+    width: 300px;
+    margin-bottom: 1rem;
+}
+
+.skeleton-player-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.skeleton-meta-item {
+    background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: 4px;
+    height: 1.5rem;
+    width: 250px;
+}
+
+.skeleton-season-select {
+    background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: 8px;
+    height: 4rem;
+    width: 300px;
+    margin-bottom: 1.5rem;
+}
+
+.skeleton-category-title {
+    background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: 8px;
+    height: 2rem;
+    width: 200px;
+    margin-bottom: 1rem;
+}
+
+.skeleton-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0;
+    background: #262626;
+    border-radius: 8px;
+    overflow: hidden;
+    width: 100%;
+    min-height: 150px;
+}
+
+.skeleton-stat-item {
+    background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    padding: 1rem;
+    text-align: center;
+    border-right: 1px solid #262626;
+    border-bottom: 1px solid #262626;
+    min-height: 3rem;
+}
+
+.skeleton-section-title {
+    background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: 8px;
+    height: 2rem;
+    width: 150px;
+    margin-bottom: 1rem;
+}
+
+.skeleton-teams-list,
+.skeleton-games-list,
+.skeleton-awards-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    min-height: 100px;
+}
+
+.skeleton-team-item,
+.skeleton-game-item,
+.skeleton-award-item {
+    background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: 6px;
+    height: 2.5rem;
+    width: 150px;
+}
+
+.skeleton-award-item {
+    height: 120px;
+    width: 200px;
+}
+
+.skeleton-hof-progress {
+    background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: 8px;
+    height: 100px;
+    width: 100%;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+.player-profile-container {
+    contain: layout style;
+}
+
+@media (max-width: 900px) {
+    .skeleton-avatar {
+        height: 350px;
+        width: 350px;
+    }
+    
+    .skeleton-player-name {
+        width: 250px;
+        height: 2.5rem;
+    }
+    
+    .skeleton-meta-item {
+        width: 200px;
+    }
+}
+
+@media (max-width: 600px) {
+    .skeleton-avatar {
+        height: 250px;
+        width: 250px;
+    }
+    
+    .skeleton-player-name {
+        width: 200px;
+        height: 2rem;
+    }
+    
+    .skeleton-meta-item {
+        width: 180px;
+    }
+    
+    .skeleton-season-select {
+        width: 250px;
+    }
 }
 

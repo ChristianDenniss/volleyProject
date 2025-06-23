@@ -102,14 +102,17 @@ const Home: React.FC = () => {
 
     return (
         <div style={{ overflowX: "hidden" }}>
-            <main className="home">
+            <main className={`home ${loading ? 'loading' : ''}`}>
                 <section className="headline-section">
-                    {featuredArticle ? (
+                    {loading ? (
+                        <div className="featured-article">
+                            <div className="home-skeleton-featured"></div>
+                        </div>
+                    ) : featuredArticle ? (
                         <Link to={`/articles/${featuredArticle.id}`}>
                             <div className="featured-article">
-                                {loading && <p>Loading featured…</p>}
                                 {error && <p>Error: {error}</p>}
-                                {!loading && !error && (
+                                {!error && (
                                     <>
                                         <img
                                             src={featuredArticle.imageUrl}
@@ -142,9 +145,14 @@ const Home: React.FC = () => {
                     )}
 
                     <aside className="side-articles">
-                        {loading && <p>Loading articles…</p>}
-                        {error && <p>Error loading articles: {error}</p>}
-                        {!loading && !error && sideArticles.length > 0 ? (
+                        {loading ? (
+                            // Skeleton loaders for side articles
+                            Array.from({ length: 4 }).map((_, index) => (
+                                <div key={index} className="home-skeleton-side"></div>
+                            ))
+                        ) : error ? (
+                            <p>Error loading articles: {error}</p>
+                        ) : sideArticles.length > 0 ? (
                             sideArticles.map(article => (
                                 <Link
                                     key={article.id}

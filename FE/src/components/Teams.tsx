@@ -149,7 +149,7 @@ const Teams: React.FC = () =>
     }
 
     return (
-        <div className="teams-page">
+        <div className={`teams-page ${!data ? 'loading' : ''}`}>
             <h1>Teams Info</h1>
 
             {/* Controls */}
@@ -225,38 +225,47 @@ const Teams: React.FC = () =>
 
             {error ? (
                 <div>Error: {error}</div>
-            ) : filteredTeams ? (
-                <div className="teams-container">
-                    {paginatedTeams.map(team => (
-                        <div
-                            key={team.id}
-                            className={`team-card ${activeTeam === team.name ? "active" : ""}`}
-                            onClick={() => handleCardClick(team.name)}
-                        >
-                            <div className="team-name">
-                                <strong>{team.name}</strong>
-                            </div>
-
-                            <div className="team-id">
-                                <strong>ID:</strong> {team.id}
-                            </div>
-
-                            <div className="team-season">
-                                <strong>Season:</strong> {team.season.seasonNumber}
-                            </div>
-
-                            <div className="team-card-stage">
-                                <strong>Placement:</strong> {team.placement}
-                            </div>
-
-                            <div className="team-players">
-                                <strong>Players:</strong> {team.players?.length || 0}
-                            </div>
-                        </div>
-                    ))}
+            ) : !data ? (
+                <div className="teams-wrapper">
+                    <div className="teams-container">
+                        {/* Skeleton loaders */}
+                        {Array.from({ length: 12 }).map((_, index) => (
+                            <div key={index} className="teams-skeleton"></div>
+                        ))}
+                    </div>
                 </div>
             ) : (
-                <div>Loading...</div>
+                <div className="teams-wrapper">
+                    <div className="teams-container">
+                        {paginatedTeams.map(team => (
+                            <div
+                                key={team.id}
+                                className={`team-card ${activeTeam === team.name ? "active" : ""}`}
+                                onClick={() => handleCardClick(team.name)}
+                            >
+                                <div className="team-name">
+                                    <strong>{team.name}</strong>
+                                </div>
+
+                                <div className="team-id">
+                                    <strong>ID:</strong> {team.id}
+                                </div>
+
+                                <div className="team-season">
+                                    <strong>Season:</strong> {team.season.seasonNumber}
+                                </div>
+
+                                <div className="team-card-stage">
+                                    <strong>Placement:</strong> {team.placement}
+                                </div>
+
+                                <div className="team-players">
+                                    <strong>Players:</strong> {team.players?.length || 0}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
             )}
         </div>
     );

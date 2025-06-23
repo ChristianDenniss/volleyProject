@@ -7,6 +7,7 @@
     padding: 0;
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
     box-sizing: border-box;
+    contain: layout style paint; /* Improve performance */
 }
 
 /* Single-season header with skewed highlight */
@@ -20,6 +21,7 @@
     margin: 2rem auto;
     line-height: 1.1;
     max-width: fit-content;
+    min-height: 80px; /* Reserve minimum height for header */
 }
 
 /* skewed block behind the title */
@@ -50,6 +52,7 @@
     justify-content: center;
     gap: 1.5rem;
     margin-bottom: 1rem;
+    min-height: 60px; /* Reserve minimum height for meta */
 }
 
 /* Each meta span styled as box */
@@ -72,6 +75,9 @@
     padding: 1rem;
     margin-bottom: 2rem;
     box-sizing: border-box;
+    min-height: 600px; /* Reserve minimum space for content */
+    content-visibility: auto; /* Optimize rendering performance */
+    contain-intrinsic-size: 600px; /* Help browser calculate size */
 }
 
 /* Individual TeamCard */
@@ -88,6 +94,9 @@
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     transform-origin: center top;
     text-decoration: none;
+    contain: layout style; /* Optimize card rendering */
+    transform: translateZ(0); /* Force hardware acceleration */
+    backface-visibility: hidden; /* Prevent flickering */
 }
 
 /* Hover effect: subtle grow and lift */
@@ -247,4 +256,68 @@
     background: #333;
     transform: translateY(-2px);
     box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+/* Loading state to prevent layout shift */
+.ss-container.loading {
+    opacity: 0.8;
+    pointer-events: none;
+}
+
+/* Skeleton loader for better UX */
+.ss-skeleton-title {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    height: 80px;
+    width: 300px;
+    margin: 0 auto;
+    border-radius: 8px;
+}
+
+.ss-skeleton-meta {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    height: 40px;
+    width: 200px;
+    margin: 0 auto;
+    border-radius: 4px;
+}
+
+.ss-skeleton-button {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    height: 50px;
+    width: 150px;
+    margin: 0 auto;
+    border-radius: 8px;
+}
+
+.ss-skeleton-team-card {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    height: 425px;
+    width: 100%;
+    border-radius: 8px;
+    border: 2px solid #e0e0e0;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* Prevent layout shift during data loading */
+.ss-teams-grid:empty::before {
+    content: "";
+    display: block;
+    height: 600px;
+    width: 100%;
 }

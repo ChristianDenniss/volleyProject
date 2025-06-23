@@ -15,6 +15,9 @@
     padding: 20px;
     max-width: 1200px;
     margin: 0 auto;
+    min-height: 100vh; /* Prevent layout shift by setting minimum height */
+    box-sizing: border-box;
+    contain: layout style paint; /* Improve performance */
 }
 
 .stats-leaderboard-page h1 {
@@ -25,13 +28,17 @@
     font-weight: 700;
 }
 
-.stats-controls-wrapper { margin: 20px 0; }
+.stats-controls-wrapper { 
+    margin: 20px 0; 
+    min-height: 120px; /* Reserve space for controls to prevent shift */
+}
 
 .stats-controls-container
 {
     display: flex;
     flex-direction: column;
     gap: 15px;
+    min-height: 100px; /* Reserve space for container */
 }
 
 .stats-filters-row
@@ -41,6 +48,7 @@
     gap: 15px;
     align-items: center;
     flex-wrap: wrap;
+    min-height: 40px; /* Reserve space for filters */
 }
 
 .stats-search-row
@@ -51,6 +59,7 @@
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
+    min-height: 50px; /* Reserve space for search and pagination */
 }
 
 .stats-season-filter { margin: 0; white-space: nowrap; }
@@ -216,6 +225,9 @@
 .stats-table-wrapper
 {
     overflow-x: auto;
+    min-height: 600px; /* Reserve minimum space for content */
+    content-visibility: auto; /* Optimize rendering performance */
+    contain-intrinsic-size: 600px; /* Help browser calculate size */
     margin-top: 20px;
     border-radius: 4px;
     box-shadow: 0 2px 8px rgba(26, 54, 93, 0.1);
@@ -225,6 +237,7 @@
 {
     width: 100%;
     border-collapse: collapse;
+    min-height: 500px; /* Reserve minimum space for table */
     background-color: #ffffff;
 }
 
@@ -279,17 +292,26 @@
     .stats-table th,
     .stats-table td
     {
-        padding: 8px;
+        padding: 8px 4px;
+        font-size: 12px;
     }
 
     .filter-menu-dropdown
     {
-        position: fixed;
-        top: auto; bottom: 0; left: 0; right: 0;
-        width: 100%;
-        border-radius: 4px 4px 0 0;
-        max-height: 80vh;
-        overflow-y: auto;
+        min-width: 300px;
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .stats-controls-wrapper {
+        min-height: 150px;
+    }
+    
+    .stats-table-wrapper {
+        min-height: 500px;
+    }
+    
+    .stats-table {
+        min-height: 400px;
     }
 }
 
@@ -314,4 +336,49 @@
 }
 
 .stats-pagination-wrapper { white-space: nowrap; }
+
+/* Loading state to prevent layout shift */
+.stats-leaderboard-page.loading {
+    opacity: 0.8;
+    pointer-events: none;
+}
+
+/* Prevent layout shift during data loading */
+.stats-table-wrapper:empty::before {
+    content: "";
+    display: block;
+    height: 600px;
+    width: 100%;
+}
+
+/* Skeleton loader for better UX */
+.stats-skeleton-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.stats-skeleton-row {
+    display: flex;
+    gap: 1px;
+    margin-bottom: 1px;
+    height: 40px;
+}
+
+.stats-skeleton-cell {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: 4px;
+    flex: 1;
+    height: 100%;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
 
