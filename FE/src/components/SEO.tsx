@@ -60,7 +60,7 @@ const SEO: React.FC<SEOProps> = ({
       <meta name="keywords" content={keywords} />
       <meta name="author" content={author || "Roblox Volleyball League"} />
       
-      {/* Open Graph Meta Tags */}
+      {/* Open Graph Meta Tags (Works with Instagram, Discord, Facebook, LinkedIn, etc.) */}
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={description} />
       <meta property="og:image" content={image} />
@@ -69,12 +69,21 @@ const SEO: React.FC<SEOProps> = ({
       <meta property="og:site_name" content="Volleyball 4-2" />
       <meta property="og:locale" content="en_US" />
       
+      {/* Instagram & Discord optimizations */}
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
+      <meta property="og:image:alt" content={fullTitle} />
+      
+      {/* Instagram-specific: Ensure image is accessible and properly sized */}
+      <meta property="og:image:secure_url" content={image.replace('http://', 'https://')} />
+      
       {/* Twitter Card Meta Tags */}
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={image} />
       <meta name="twitter:site" content="@volleyball4_2" />
+      <meta name="twitter:image:alt" content={fullTitle} />
       
       {/* Additional Meta Tags */}
       <meta name="robots" content="index, follow" />

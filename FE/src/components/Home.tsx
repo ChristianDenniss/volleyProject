@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import "../styles/Home.css";
 import promoImg from "../images/callToAction.png";
 import { useArticles } from "../hooks/allFetch";
+import SEO from "./SEO";
 
 const Home: React.FC = () => {
     const playerRef = useRef<any>(null);
@@ -102,6 +103,36 @@ const Home: React.FC = () => {
 
     return (
         <div style={{ overflowX: "hidden" }}>
+            {/* SEO Meta Tags for Social Media Embedding */}
+            <SEO
+                title="Volleyball 4-2 - Official Roblox Volleyball League"
+                description="Join the official Roblox Volleyball League (RVL). Watch matches, track player stats, view team rankings, and stay updated with the latest volleyball news and events."
+                image="https://volleyball4-2.com/rvlLogo.png"
+                url="https://volleyball4-2.com"
+                type="website"
+                structuredData={{
+                    "@context": "https://schema.org",
+                    "@type": "WebSite",
+                    "name": "Volleyball 4-2",
+                    "alternateName": "RVL",
+                    "url": "https://volleyball4-2.com",
+                    "description": "Official Roblox Volleyball League - Competitive volleyball gaming community",
+                    "publisher": {
+                        "@type": "Organization",
+                        "name": "Roblox Volleyball League",
+                        "logo": {
+                            "@type": "ImageObject",
+                            "url": "https://volleyball4-2.com/rvlLogo.png"
+                        }
+                    },
+                    "potentialAction": {
+                        "@type": "SearchAction",
+                        "target": "https://volleyball4-2.com/search?q={search_term_string}",
+                        "query-input": "required name=search_term_string"
+                    }
+                }}
+            />
+
             <main className={`home ${loading ? 'loading' : ''}`}>
                 <section className="headline-section">
                     {loading ? (

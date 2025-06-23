@@ -20,6 +20,7 @@ import {
     faStar,
 } from '@fortawesome/free-solid-svg-icons'
 import "../../styles/SinglePlayer.css"
+import SEO from "../SEO"
 
 const awardIcons: { [key: string]: any } = {
     "MVP": faTrophy,
@@ -415,6 +416,37 @@ const PlayerProfiles: React.FC = () =>
 
     return (
         <div className="player-profile-container">
+            {/* SEO Meta Tags for Social Media Embedding */}
+            {player && (
+                <SEO
+                    title={`${player.name} - Player Profile`}
+                    description={`${player.name} is a ${player.position} in the Roblox Volleyball League. View stats, teams, awards, and career highlights.`}
+                    image={avatarUrl || "https://volleyball4-2.com/rvlLogo.png"}
+                    url={`https://volleyball4-2.com/players/${player.id}`}
+                    type="profile"
+                    structuredData={{
+                        "@context": "https://schema.org",
+                        "@type": "Person",
+                        "name": player.name,
+                        "jobTitle": player.position,
+                        "description": `${player.name} is a ${player.position} in the Roblox Volleyball League`,
+                        "image": avatarUrl || "https://volleyball4-2.com/rvlLogo.png",
+                        "url": `https://volleyball4-2.com/players/${player.id}`,
+                        "worksFor": {
+                            "@type": "Organization",
+                            "name": "Roblox Volleyball League",
+                            "url": "https://volleyball4-2.com"
+                        },
+                        "knowsAbout": ["Volleyball", "Gaming", "Sports"],
+                        "alumniOf": player.teams?.map(team => ({
+                            "@type": "SportsTeam",
+                            "name": team.name,
+                            "url": `https://volleyball4-2.com/teams/${encodeURIComponent(team.name.toLowerCase().replace(/\s+/g, "-"))}`
+                        })) || []
+                    }}
+                />
+            )}
+
             <div className="player-main-header">
                 <div className="avatar-header-info">
                     {avatarUrl && (

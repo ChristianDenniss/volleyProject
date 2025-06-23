@@ -4,6 +4,7 @@ import { useParams, Link }                           from 'react-router-dom';
 import { Player, Stats, Game, Team }                 from '../../types/interfaces';
 import { useSingleTeam }                             from '../../hooks/allFetch';
 import "../../styles/SingleTeam.css";
+import SEO from "../SEO";
 
 const SingleTeam: React.FC = () =>
 {
@@ -123,6 +124,44 @@ const SingleTeam: React.FC = () =>
 
     return (
         <div className="team-details">
+            {/* SEO Meta Tags for Social Media Embedding */}
+            {team && (
+                <SEO
+                    title={`${team.name} - Team Profile`}
+                    description={`${team.name} finished ${team.placement} in Season ${team.season.seasonNumber} of the Roblox Volleyball League. View team stats, players, and game results.`}
+                    image="https://volleyball4-2.com/rvlLogo.png"
+                    url={`https://volleyball4-2.com/teams/${encodeURIComponent(team.name.toLowerCase().replace(/\s+/g, "-"))}`}
+                    type="sports_event"
+                    structuredData={{
+                        "@context": "https://schema.org",
+                        "@type": "SportsTeam",
+                        "name": team.name,
+                        "description": `${team.name} finished ${team.placement} in Season ${team.season.seasonNumber}`,
+                        "url": `https://volleyball4-2.com/teams/${encodeURIComponent(team.name.toLowerCase().replace(/\s+/g, "-"))}`,
+                        "sport": "Volleyball",
+                        "league": {
+                            "@type": "SportsOrganization",
+                            "name": "Roblox Volleyball League",
+                            "url": "https://volleyball4-2.com"
+                        },
+                        "season": {
+                            "@type": "SportsSeason",
+                            "name": `Season ${team.season.seasonNumber}`,
+                            "seasonNumber": team.season.seasonNumber
+                        },
+                        "athlete": team.players?.map(player => ({
+                            "@type": "Person",
+                            "name": player.name,
+                            "jobTitle": player.position,
+                            "url": `https://volleyball4-2.com/players/${player.id}`
+                        })) || [],
+                        "location": {
+                            "@type": "Place",
+                            "name": "Roblox Volleyball League"
+                        }
+                    }}
+                />
+            )}
 
             {/* Team Header */}
             <h1 className="team-title">{team.name}</h1>

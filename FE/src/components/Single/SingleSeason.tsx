@@ -5,6 +5,7 @@ import { useParams, Link } from "react-router-dom";  // added Link import
 import { useSingleSeason } from "../../hooks/allFetch";
 import "../../styles/SingleSeason.css";
 import { Team as ITeam, Player as IPlayer } from "../../types/interfaces";
+import SEO from "../SEO";
 
 type TeamCardProps = {
     team: ITeam;
@@ -108,6 +109,47 @@ const SingleSeason: React.FC = () =>
                 <div className="ss-container">Season not found</div>
             ) : (
                 <>
+                    {/* SEO Meta Tags for Social Media Embedding */}
+                    {(() => {
+                        const season = Array.isArray(seasons) ? seasons[0] : seasons;
+                        return (
+                            <SEO
+                                title={`Season ${season.seasonNumber} - Roblox Volleyball League`}
+                                description={`Season ${season.seasonNumber} of the Roblox Volleyball League with theme "${season.theme}". View team standings, players, and results.`}
+                                image={season.image || "https://volleyball4-2.com/rvlLogo.png"}
+                                url={`https://volleyball4-2.com/seasons/${season.id}`}
+                                type="sports_event"
+                                publishedTime={new Date(season.startDate).toISOString()}
+                                structuredData={{
+                                    "@context": "https://schema.org",
+                                    "@type": "SportsSeason",
+                                    "name": `Season ${season.seasonNumber}`,
+                                    "description": `Season ${season.seasonNumber} of the Roblox Volleyball League`,
+                                    "url": `https://volleyball4-2.com/seasons/${season.id}`,
+                                    "seasonNumber": season.seasonNumber,
+                                    "startDate": new Date(season.startDate).toISOString(),
+                                    "endDate": season.endDate ? new Date(season.endDate).toISOString() : undefined,
+                                    "sport": "Volleyball",
+                                    "league": {
+                                        "@type": "SportsOrganization",
+                                        "name": "Roblox Volleyball League",
+                                        "url": "https://volleyball4-2.com"
+                                    },
+                                    "team": season.teams?.map(team => ({
+                                        "@type": "SportsTeam",
+                                        "name": team.name,
+                                        "url": `https://volleyball4-2.com/teams/${encodeURIComponent(team.name.toLowerCase().replace(/\s+/g, "-"))}`,
+                                        "athlete": team.players?.map(player => ({
+                                            "@type": "Person",
+                                            "name": player.name,
+                                            "url": `https://volleyball4-2.com/players/${player.id}`
+                                        })) || []
+                                    })) || []
+                                }}
+                            />
+                        );
+                    })()}
+
                     <header className="ss-header">
                         Season {(Array.isArray(seasons) ? seasons[0] : seasons).seasonNumber}
                     </header>

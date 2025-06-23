@@ -4,6 +4,7 @@ import { useSingleArticles } from "../../hooks/allFetch";
 import "../../styles/SingleArticle.css";
 import { Article } from "../../types/interfaces";
 import { FaHeart } from "react-icons/fa";
+import SEO from "../SEO";
 
 const SingleArticle: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -25,6 +26,46 @@ const SingleArticle: React.FC = () => {
 
   return (
     <div className={`single-article-page ${loading ? 'loading' : ''}`}>
+      {/* SEO Meta Tags for Social Media Embedding */}
+      {article && (
+        <SEO
+          title={article.title}
+          description={article.summary}
+          image={article.imageUrl}
+          url={`https://volleyball4-2.com/articles/${article.id}`}
+          type="article"
+          publishedTime={article.createdAt}
+          author={article.author.username}
+          section="News"
+          tags={["volleyball", "roblox", "RVL", "gaming", "sports"]}
+          structuredData={{
+            "@context": "https://schema.org",
+            "@type": "Article",
+            "headline": article.title,
+            "description": article.summary,
+            "image": article.imageUrl,
+            "author": {
+              "@type": "Person",
+              "name": article.author.username
+            },
+            "publisher": {
+              "@type": "Organization",
+              "name": "Roblox Volleyball League",
+              "logo": {
+                "@type": "ImageObject",
+                "url": "https://volleyball4-2.com/rvlLogo.png"
+              }
+            },
+            "datePublished": article.createdAt,
+            "dateModified": article.createdAt,
+            "mainEntityOfPage": {
+              "@type": "WebPage",
+              "@id": `https://volleyball4-2.com/articles/${article.id}`
+            }
+          }}
+        />
+      )}
+
       {/* Newspaper masthead */}
       <header className="np-header">
         <div className="np-header__brand">The RVL Examiner</div>

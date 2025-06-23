@@ -13,6 +13,9 @@ import { useParams } from "react-router-dom"
 // Import styles
 import "../../styles/SingleGame.css"
 
+// Import SEO component
+import SEO from "../SEO"
+
 // Declare component
 const SingleGame: React.FC = () =>
 {
@@ -118,6 +121,52 @@ const SingleGame: React.FC = () =>
 
                         return (
                             <>
+                                {/* SEO Meta Tags for Social Media Embedding */}
+                                <SEO
+                                    title={`${game.name} - Game Results`}
+                                    description={`${team1.name} vs ${team2.name} - Final Score: ${game.team1Score}-${game.team2Score}. ${game.stage} match from Season ${game.season.seasonNumber} of the Roblox Volleyball League.`}
+                                    image="https://volleyball4-2.com/rvlLogo.png"
+                                    url={`https://volleyball4-2.com/games/${game.id}`}
+                                    type="sports_event"
+                                    publishedTime={new Date(game.date).toISOString()}
+                                    structuredData={{
+                                        "@context": "https://schema.org",
+                                        "@type": "SportsEvent",
+                                        "name": game.name,
+                                        "description": `${team1.name} vs ${team2.name} - ${game.stage} match`,
+                                        "url": `https://volleyball4-2.com/games/${game.id}`,
+                                        "startDate": new Date(game.date).toISOString(),
+                                        "endDate": new Date(game.date).toISOString(),
+                                        "location": {
+                                            "@type": "Place",
+                                            "name": "Roblox Volleyball League"
+                                        },
+                                        "organizer": {
+                                            "@type": "SportsOrganization",
+                                            "name": "Roblox Volleyball League",
+                                            "url": "https://volleyball4-2.com"
+                                        },
+                                        "competitor": [
+                                            {
+                                                "@type": "SportsTeam",
+                                                "name": team1.name,
+                                                "score": game.team1Score
+                                            },
+                                            {
+                                                "@type": "SportsTeam",
+                                                "name": team2.name,
+                                                "score": game.team2Score
+                                            }
+                                        ],
+                                        "sport": "Volleyball",
+                                        "season": {
+                                            "@type": "SportsSeason",
+                                            "name": `Season ${game.season.seasonNumber}`,
+                                            "seasonNumber": game.season.seasonNumber
+                                        }
+                                    }}
+                                />
+
                                 {/* Game title */}
                                 <h1 className="game-title">{game.name}</h1>
 

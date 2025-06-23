@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom"
 import { useSingleAward } from "../../hooks/allFetch"
 import "../../styles/SingleAward.css"
 import defaultImage from "../../images/rvlLogo.png"
+import SEO from "../SEO"
 
 /*  Award type → full display string (NBA-style) with updated honoree blurbs  */
 const awardTypeDescriptions: { [key: string]: string } =
@@ -75,6 +76,41 @@ const SingleAward: React.FC = () => {
                 <div className="award-container">No award found.</div>
             ) : (
                 <>
+                    {/* SEO Meta Tags for Social Media Embedding */}
+                    <SEO
+                        title={`${award.type} - Season ${award.season.seasonNumber}`}
+                        description={`${award.type} award winner${award.players && award.players.length > 1 ? 's' : ''}: ${award.players?.map(p => p.name).join(', ')}. Season ${award.season.seasonNumber} of the Roblox Volleyball League.`}
+                        image={award.imageUrl || "https://volleyball4-2.com/rvlLogo.png"}
+                        url={`https://volleyball4-2.com/awards/${award.id}`}
+                        type="article"
+                        publishedTime={new Date(award.createdAt).toISOString()}
+                        author={award.players?.map(p => p.name).join(', ')}
+                        section="Awards"
+                        tags={["volleyball", "roblox", "RVL", "awards", "gaming", "sports"]}
+                        structuredData={{
+                            "@context": "https://schema.org",
+                            "@type": "Award",
+                            "name": award.type,
+                            "description": award.description || `${award.type} award for Season ${award.season.seasonNumber}`,
+                            "image": award.imageUrl || "https://volleyball4-2.com/rvlLogo.png",
+                            "url": `https://volleyball4-2.com/awards/${award.id}`,
+                            "awardedFor": "Volleyball Excellence",
+                            "awardedBy": {
+                                "@type": "Organization",
+                                "name": "Roblox Volleyball League",
+                                "url": "https://volleyball4-2.com"
+                            },
+                            "recipient": award.players?.map(player => ({
+                                "@type": "Person",
+                                "name": player.name,
+                                "url": `https://volleyball4-2.com/players/${player.id}`
+                            })) || [],
+                            "dateCreated": new Date(award.createdAt).toISOString(),
+                            "category": "Sports Award",
+                            "sport": "Volleyball"
+                        }}
+                    />
+
                     <div className="award-header" style={{ backgroundImage: `url(${award.imageUrl || defaultImage})` }}>
                         <div className="award-title-section">
                             <h1>{award.type}</h1>
