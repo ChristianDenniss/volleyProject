@@ -4,7 +4,7 @@ import React from "react";
 import { useParams, Link } from "react-router-dom";  // added Link import
 import { useSingleSeason } from "../../hooks/allFetch";
 import "../../styles/SingleSeason.css";
-import { Season, Team as ITeam, Player as IPlayer } from "../../types/interfaces";
+import { Team as ITeam, Player as IPlayer } from "../../types/interfaces";
 
 type TeamCardProps = {
     team: ITeam;
