@@ -148,6 +148,8 @@
     /* side padding */
     padding: 10px 0;
     min-height: 500px; /* Reserve minimum space for cards */
+
+    align-content: start; /* Prevent grid rows from stretching */
 }
 
 /* ----- Base card ------------------------------------------------------ */
