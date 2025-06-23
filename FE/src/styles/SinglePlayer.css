@@ -191,10 +191,10 @@
     padding: 0;
     display: flex;
     flex-wrap: wrap;
+    align-items: flex-start;
     gap: 1rem;
     width: 100%;
     min-width: 100%;
-    min-height: 100px;
 }
 
 .team-list li,
@@ -388,8 +388,8 @@
     padding: 0;
     display: flex;
     flex-wrap: wrap;
+    align-items: flex-start;
     gap: 0.5rem;
-    min-height: 100px;
 }
 
 .game-list li {
