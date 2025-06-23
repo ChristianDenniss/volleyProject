@@ -172,8 +172,8 @@ h1
 /* -----------------------------------------------------------
    Game card styles
 ----------------------------------------------------------- */
-.game-card
-{
+.game-card,
+.game-card.skeleton {
     display: grid;
     /* Columns: name, id, score, season, stage, date                                */
     grid-template-columns: 3fr 1fr 1.5fr 1fr 2.5fr 1.5fr;   /* NEW – gave Stage more room */
@@ -195,6 +195,7 @@ h1
     contain: layout style; /* Optimize card rendering */
     transform: translateZ(0); /* Force hardware acceleration */
     backface-visibility: hidden; /* Prevent flickering */
+    min-width: 700px;
 }
 
 .game-card:hover
@@ -299,14 +300,36 @@ h1
 }
 
 /* Skeleton loader for better UX */
-.games-skeleton {
+.game-card.skeleton {
+    display: grid;
+    grid-template-columns: 3fr 1fr 1.5fr 1fr 2.5fr 1.5fr;
+    align-items: center;
+    gap: 20px;
+    width: 100%;
+    padding: 10px 20px;
+    background-color: #f0f5ff;
+    border: 1px solid #d1e7ff;
+    border-radius: 8px;
+    min-height: 60px;
+    box-sizing: border-box;
+    margin-bottom: 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.game-card.skeleton .skeleton-block {
+    height: 18px;
+    border-radius: 4px;
     background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
     background-size: 200% 100%;
     animation: loading 1.5s infinite;
-    border-radius: 8px;
-    height: 60px;
-    margin-bottom: 10px;
 }
+
+.game-card.skeleton .skeleton-block.name { width: 90%; min-width: 120px; height: 20px; }
+.game-card.skeleton .skeleton-block.id { width: 60%; min-width: 60px; }
+.game-card.skeleton .skeleton-block.score { width: 70%; min-width: 80px; }
+.game-card.skeleton .skeleton-block.season { width: 60%; min-width: 60px; }
+.game-card.skeleton .skeleton-block.stage { width: 80%; min-width: 120px; }
+.game-card.skeleton .skeleton-block.date { width: 70%; min-width: 90px; }
 
 @keyframes loading {
     0% {

@@ -176,7 +176,14 @@ const Games: React.FC = () =>
                     <div className="games-container">
                         {/* Skeleton loaders */}
                         {Array.from({ length: 10 }).map((_, index) => (
-                            <div key={index} className="games-skeleton"></div>
+                            <div key={index} className="game-card skeleton">
+                                <div className="skeleton-block name"></div>
+                                <div className="skeleton-block id"></div>
+                                <div className="skeleton-block score"></div>
+                                <div className="skeleton-block season"></div>
+                                <div className="skeleton-block stage"></div>
+                                <div className="skeleton-block date"></div>
+                            </div>
                         ))}
                     </div>
                 </div>
