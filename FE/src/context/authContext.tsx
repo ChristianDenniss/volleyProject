@@ -28,7 +28,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
     // on mount, read from localStorage
     useEffect(() =>
     {
-        const storedToken = localStorage.getItem("authToken")
+        const storedToken = localStorage.getItem("authToken_v2")
         const storedUser  = localStorage.getItem("currentUser")
 
         if (storedToken && storedUser)
@@ -52,7 +52,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
     // login method: save token & user to state and storage
     const login = (newToken: string, newUser: User) =>
     {
-        localStorage.setItem("authToken", newToken)
+        localStorage.setItem("authToken_v2", newToken)
         localStorage.setItem("currentUser", JSON.stringify(newUser))
         setToken(newToken)
         setUser(newUser)
@@ -61,7 +61,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
     // logout method: clear storage & state
     const logout = () =>
     {
-        localStorage.removeItem("authToken")
+        localStorage.removeItem("authToken_v2")
         localStorage.removeItem("currentUser")
         setToken(null)
         setUser(null)

@@ -19,7 +19,7 @@ export function useLikeArticle(): UseLikeArticleReturn {
 
     try {
       // Get the auth token from localStorage
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem('authToken_v2');
       
       if (!token) {
         setError('You must be logged in to like articles');
@@ -69,7 +69,7 @@ export function useLikeArticle(): UseLikeArticleReturn {
 
     try {
       // Get the auth token from localStorage
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem('authToken_v2');
       
       if (!token) {
         setError('You must be logged in to unlike articles');
