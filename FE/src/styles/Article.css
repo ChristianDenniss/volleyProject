@@ -178,14 +178,14 @@
 }
 
 .article-list-sort-indicator {
-  background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+  background: #2D3C50;
   color: white;
   padding: 4px 12px;
   border-radius: 20px;
   font-size: 0.75rem;
   font-weight: 600;
   animation: pulse 2s infinite;
-  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+  box-shadow: 0 2px 8px rgba(45, 60, 80, 0.3);
 }
 
 @keyframes pulse {

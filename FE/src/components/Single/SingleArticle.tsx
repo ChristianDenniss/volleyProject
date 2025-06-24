@@ -5,7 +5,7 @@ import { useLikeArticle } from "../../hooks/useLikeArticle";
 import { useLikeStatus } from "../../hooks/useLikeStatus";
 import "../../styles/SingleArticle.css";
 import { Article } from "../../types/interfaces";
-import { FaHeart, FaRegHeart } from "react-icons/fa";
+import { FaHeart } from "react-icons/fa";
 import SEO from "../SEO";
 
 const SingleArticle: React.FC = () => {
@@ -34,20 +34,23 @@ const SingleArticle: React.FC = () => {
 
   const handleToggleLike = async () => {
     if (article) {
-      await toggleLike(article.id, hasLiked);
-      // Update local like count immediately for better UX
-      if (hasLiked) {
-        setLocalLikeCount(Math.max(displayLikeCount - 1, 0));
-      } else {
-        setLocalLikeCount(displayLikeCount + 1);
+      const success = await toggleLike(article.id, hasLiked);
+      
+      // Only update local like count if the API call was successful
+      if (success) {
+        if (hasLiked) {
+          setLocalLikeCount(Math.max(displayLikeCount - 1, 0));
+        } else {
+          setLocalLikeCount(displayLikeCount + 1);
+        }
+        // Refetch like status to update the heart icon
+        refetchLikeStatus();
       }
-      // Refetch like status to update the heart icon
-      refetchLikeStatus();
     }
   };
 
   // Determine which heart icon to show
-  const HeartIcon = hasLiked ? FaHeart : FaRegHeart;
+  const HeartIcon = FaHeart;
   const heartClass = hasLiked ? 'liked' : '';
 
   return (

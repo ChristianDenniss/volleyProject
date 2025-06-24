@@ -152,7 +152,7 @@
     border                   : none;
     cursor                   : pointer;
     font-size                : 2rem;
-    color                    : var(--np-light-accent);
+    color                    : #e0e0e0; /* Light gray for unliked filled heart */
     padding                  : 0;
     line-height              : 1;
     transition               : all 0.3s ease;

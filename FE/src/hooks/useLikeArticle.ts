@@ -2,9 +2,9 @@ import { useState } from 'react';
 import axios from 'axios';
 
 interface UseLikeArticleReturn {
-  likeArticle: (articleId: number) => Promise<void>;
-  unlikeArticle: (articleId: number) => Promise<void>;
-  toggleLike: (articleId: number, isCurrentlyLiked: boolean) => Promise<void>;
+  likeArticle: (articleId: number) => Promise<boolean>;
+  unlikeArticle: (articleId: number) => Promise<boolean>;
+  toggleLike: (articleId: number, isCurrentlyLiked: boolean) => Promise<boolean>;
   isLiking: boolean;
   error: string | null;
 }
@@ -13,17 +13,17 @@ export function useLikeArticle(): UseLikeArticleReturn {
   const [isLiking, setIsLiking] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const likeArticle = async (articleId: number): Promise<void> => {
+  const likeArticle = async (articleId: number): Promise<boolean> => {
     setIsLiking(true);
     setError(null);
 
     try {
       // Get the auth token from localStorage
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('authToken');
       
       if (!token) {
         setError('You must be logged in to like articles');
-        return;
+        return false;
       }
 
       const response = await axios.post(
@@ -39,6 +39,7 @@ export function useLikeArticle(): UseLikeArticleReturn {
       
       console.log('Article liked successfully:', response.data);
       
+      return true;
     } catch (err: any) {
       let errorMessage = 'Failed to like article';
       
@@ -56,22 +57,23 @@ export function useLikeArticle(): UseLikeArticleReturn {
       
       setError(errorMessage);
       console.error('Error liking article:', err);
+      return false;
     } finally {
       setIsLiking(false);
     }
   };
 
-  const unlikeArticle = async (articleId: number): Promise<void> => {
+  const unlikeArticle = async (articleId: number): Promise<boolean> => {
     setIsLiking(true);
     setError(null);
 
     try {
       // Get the auth token from localStorage
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('authToken');
       
       if (!token) {
         setError('You must be logged in to unlike articles');
-        return;
+        return false;
       }
 
       const response = await axios.delete(
@@ -86,6 +88,7 @@ export function useLikeArticle(): UseLikeArticleReturn {
       
       console.log('Article unliked successfully:', response.data);
       
+      return true;
     } catch (err: any) {
       let errorMessage = 'Failed to unlike article';
       
@@ -103,16 +106,17 @@ export function useLikeArticle(): UseLikeArticleReturn {
       
       setError(errorMessage);
       console.error('Error unliking article:', err);
+      return false;
     } finally {
       setIsLiking(false);
     }
   };
 
-  const toggleLike = async (articleId: number, isCurrentlyLiked: boolean): Promise<void> => {
+  const toggleLike = async (articleId: number, isCurrentlyLiked: boolean): Promise<boolean> => {
     if (isCurrentlyLiked) {
-      await unlikeArticle(articleId);
+      return await unlikeArticle(articleId);
     } else {
-      await likeArticle(articleId);
+      return await likeArticle(articleId);
     }
   };
 
