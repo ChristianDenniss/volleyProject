@@ -225,7 +225,6 @@
 .stats-table-wrapper
 {
     overflow-x: auto;
-    min-height: 600px; /* Reserve minimum space for content */
     content-visibility: auto; /* Optimize rendering performance */
     contain-intrinsic-size: 600px; /* Help browser calculate size */
     margin-top: 20px;
@@ -233,11 +232,14 @@
     box-shadow: 0 2px 8px rgba(26, 54, 93, 0.1);
 }
 
+.stats-table-wrapper.loading {
+    min-height: 600px;
+}
+
 .stats-table
 {
     width: 100%;
     border-collapse: collapse;
-    min-height: 500px; /* Reserve minimum space for table */
     background-color: #ffffff;
 }
 
