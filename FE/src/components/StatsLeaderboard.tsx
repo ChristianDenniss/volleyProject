@@ -5,6 +5,7 @@ import "../styles/StatsLeaderboard.css";
 import SearchBar from "./Searchbar";
 import Pagination from "./Pagination";
 import SeasonFilter from "./SeasonFilterBar";
+import { Link } from 'react-router-dom';
 
 type StatCategory = 
   | 'spikeKills' 
@@ -450,7 +451,7 @@ const StatsLeaderboard: React.FC = () => {
                     </span>
                   )}
                 </th>
-                {selectedSeason !== null && (
+                {selectedSeason !== null && viewType === 'player' && (
                   <th>Team</th>
                 )}
                 {visibleStatCategories.map((stat) => (
@@ -477,12 +478,19 @@ const StatsLeaderboard: React.FC = () => {
                 return (
                   <tr key={item.id}>
                     <td>{(currentPage - 1) * playersPerPage + index + 1}</td>
-                    <td>{item.name}</td>
-                    {selectedSeason !== null && isPlayer && (
+                    <td>{
+                      isPlayer
+                        ? <Link to={`/players/${item.id}`}>{item.name}</Link>
+                        : <Link to={`/teams/${encodeURIComponent(item.name)}`}>{item.name}</Link>
+                    }</td>
+                    {selectedSeason !== null && isPlayer && viewType === 'player' && (
                       <td>
-                        {(item as Player).teams?.find(team => 
-                          team?.season?.seasonNumber === selectedSeason
-                        )?.name || 'N/A'}
+                        {(() => {
+                          const team = (item as Player).teams?.find(team => team?.season?.seasonNumber === selectedSeason);
+                          return team ? (
+                            <Link to={`/teams/${encodeURIComponent(team.name)}`}>{team.name}</Link>
+                          ) : 'N/A';
+                        })()}
                       </td>
                     )}
                     {visibleStatCategories.map((stat) => (
