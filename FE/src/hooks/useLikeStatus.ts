@@ -18,7 +18,7 @@ export function useLikeStatus(articleId: number): UseLikeStatusReturn {
     setError(null);
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('authToken');
       
       if (!token) {
         setHasLiked(false);

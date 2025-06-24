@@ -76,6 +76,8 @@ export function useLikeArticle(): UseLikeArticleReturn {
         return false;
       }
 
+      console.log('Sending unlike request:', { articleId, token: token.substring(0, 10) + '...' });
+
       const response = await axios.delete(
         `${import.meta.env.VITE_BACKEND_URL}/api/articles/${articleId}/like`,
         {
@@ -90,6 +92,7 @@ export function useLikeArticle(): UseLikeArticleReturn {
       
       return true;
     } catch (err: any) {
+      console.error('Unlike error details:', err.response?.data || err.message);
       let errorMessage = 'Failed to unlike article';
       
       if (err.response) {

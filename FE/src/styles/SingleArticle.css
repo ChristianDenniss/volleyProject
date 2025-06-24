@@ -160,7 +160,7 @@
 }
 .sa-like-button:hover:not(:disabled)
 {
-    color                    : var(--np-accent);
+    color                    : #d32f2f; /* Red on hover for unliked hearts */
     transform                : scale(1.1);
 }
 .sa-like-button:disabled
@@ -188,12 +188,12 @@
 }
 .sa-like-button.liked
 {
-    color                    : var(--np-accent);
+    color                    : #d32f2f; /* Red color for liked state */
     animation                : likeAnimation 0.3s ease;
 }
 .sa-like-button.liked:hover:not(:disabled)
 {
-    color                    : #d32f2f;
+    color                    : #b71c1c; /* Darker red on hover */
     transform                : scale(1.1);
 }
 @keyframes likeAnimation

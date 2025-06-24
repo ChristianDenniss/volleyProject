@@ -34,7 +34,9 @@ const SingleArticle: React.FC = () => {
 
   const handleToggleLike = async () => {
     if (article) {
+      console.log('Toggle like called:', { articleId: article.id, hasLiked, displayLikeCount });
       const success = await toggleLike(article.id, hasLiked);
+      console.log('Toggle like result:', success);
       
       // Only update local like count if the API call was successful
       if (success) {
