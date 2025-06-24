@@ -409,23 +409,25 @@
 
 .stats-pill-link {
     display: inline-block;
-    padding: 4px 14px;
+    min-width: 100px;
+    text-align: center;
+    padding: 4px 12px;
     border-radius: 999px;
-    background: var(--primary-blue);
-    color: #fff !important;
+    background: #f4f7fa;
+    color: var(--primary-blue) !important;
     text-decoration: none;
     font-weight: 500;
     font-size: 1em;
-    transition: background 0.2s, color 0.2s, box-shadow 0.2s;
-    box-shadow: 0 1px 4px rgba(26,54,93,0.08);
-    border: none;
+    border: 1px solid var(--primary-blue);
+    transition: background 0.2s, color 0.2s, border 0.2s;
+    box-shadow: none;
     cursor: pointer;
 }
 .stats-pill-link:hover,
 .stats-pill-link:focus {
-    background: var(--primary-blue-hover);
-    color: #fff;
+    background: var(--primary-blue);
+    color: #fff !important;
+    border: 1px solid var(--primary-blue-hover);
     text-decoration: none;
-    box-shadow: 0 2px 8px rgba(26,54,93,0.15);
 }
 
