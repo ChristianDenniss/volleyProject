@@ -1,19 +1,24 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useSingleArticles } from "../../hooks/allFetch";
+import { useLikeArticle } from "../../hooks/useLikeArticle";
+import { useLikeStatus } from "../../hooks/useLikeStatus";
 import "../../styles/SingleArticle.css";
 import { Article } from "../../types/interfaces";
-import { FaHeart } from "react-icons/fa";
+import { FaHeart, FaRegHeart } from "react-icons/fa";
 import SEO from "../SEO";
 
 const SingleArticle: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const { toggleLike, isLiking, error: likeError } = useLikeArticle();
+  const [localLikeCount, setLocalLikeCount] = useState<number | null>(null);
 
   if (!id) {
     return <p className="sa-error">Invalid article ID.</p>;
   }
 
   const { data, loading, error } = useSingleArticles(id);
+  const { hasLiked, loading: likeStatusLoading, refetch: refetchLikeStatus } = useLikeStatus(parseInt(id));
 
   // Normalize result: support both array and single object
   const article: Article | null = useMemo(() => {
@@ -23,6 +28,27 @@ const SingleArticle: React.FC = () => {
     }
     return data as Article;
   }, [data]);
+
+  // Use local like count if available, otherwise use article likes
+  const displayLikeCount = localLikeCount !== null ? localLikeCount : (article?.likes || 0);
+
+  const handleToggleLike = async () => {
+    if (article) {
+      await toggleLike(article.id, hasLiked);
+      // Update local like count immediately for better UX
+      if (hasLiked) {
+        setLocalLikeCount(Math.max(displayLikeCount - 1, 0));
+      } else {
+        setLocalLikeCount(displayLikeCount + 1);
+      }
+      // Refetch like status to update the heart icon
+      refetchLikeStatus();
+    }
+  };
+
+  // Determine which heart icon to show
+  const HeartIcon = hasLiked ? FaHeart : FaRegHeart;
+  const heartClass = hasLiked ? 'liked' : '';
 
   return (
     <div className={`single-article-page ${loading ? 'loading' : ''}`}>
@@ -110,17 +136,28 @@ const SingleArticle: React.FC = () => {
           <div className="sa-summary">{article.summary}</div>
 
           <div className="sa-content">{article.content}</div>
+          
+          {likeError && (
+            <div className="sa-error" style={{ marginTop: '1rem', padding: '0.5rem', backgroundColor: 'rgba(255, 0, 0, 0.1)', borderRadius: '4px' }}>
+              {likeError}
+            </div>
+          )}
+          
           <div className="sa-likes">
             <button
-              className="sa-like-button"
-              onClick={() => {
-                /* handle like */
-              }}
+              className={`sa-like-button ${heartClass} ${isLiking ? 'liking' : ''}`}
+              onClick={handleToggleLike}
+              disabled={isLiking || likeStatusLoading}
+              title={isLiking ? 'Processing...' : hasLiked ? 'Unlike this article' : 'Like this article'}
             >
-              <FaHeart />
+              {likeStatusLoading ? (
+                <div className="sa-like-loading">❤️</div>
+              ) : (
+                <HeartIcon />
+              )}
             </button>
             <span className="sa-likes-count">
-              {article.likes} {article.likes === 1 ? "like" : "likes"}
+              {displayLikeCount} {displayLikeCount === 1 ? "like" : "likes"}
             </span>
           </div>
         </article>

@@ -41,7 +41,7 @@ const Applications: React.FC = () => {
             type: 'Content Creation & Streaming ',
             description: 'Join our media team to create content, stream RVL matches, manage social media, and help promote the league through various platforms.',
             url: 'https://forms.gle/L6QFsuztCaJMRQyp8',
-            status: 'open',
+            status: 'closed',
             icon: <FaCamera />,
             category: 'media'
         },

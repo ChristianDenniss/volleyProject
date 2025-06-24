@@ -147,10 +147,53 @@ export class ArticleController {
      */
     public likeArticle = async (req: Request, res: Response): Promise<void> => {
         const { id } = req.params;
+        const userId = (req as any).user?.id; // Get user ID from authenticated request
 
         try {
-            const updatedArticle = await this.articleService.likeArticle(Number(id));
+            const updatedArticle = await this.articleService.likeArticle(Number(id), userId);
             res.status(200).json(updatedArticle);
+        } catch (error) {
+            if (error instanceof MissingFieldError || error instanceof NotFoundError) {
+                res.status(400).json({ message: error.message });
+            } else if (error instanceof Error && error.message.includes("already liked")) {
+                res.status(409).json({ message: error.message });
+            } else {
+                res.status(500).json({ message: 'Internal server error' });
+            }
+        }
+    };
+
+    /**
+     * Unlike an article
+     */
+    public unlikeArticle = async (req: Request, res: Response): Promise<void> => {
+        const { id } = req.params;
+        const userId = (req as any).user?.id; // Get user ID from authenticated request
+
+        try {
+            const updatedArticle = await this.articleService.unlikeArticle(Number(id), userId);
+            res.status(200).json(updatedArticle);
+        } catch (error) {
+            if (error instanceof MissingFieldError || error instanceof NotFoundError) {
+                res.status(400).json({ message: error.message });
+            } else if (error instanceof Error && error.message.includes("not liked")) {
+                res.status(409).json({ message: error.message });
+            } else {
+                res.status(500).json({ message: 'Internal server error' });
+            }
+        }
+    };
+
+    /**
+     * Check if current user has liked an article
+     */
+    public checkUserLikeStatus = async (req: Request, res: Response): Promise<void> => {
+        const { id } = req.params;
+        const userId = (req as any).user?.id; // Get user ID from authenticated request
+
+        try {
+            const hasLiked = await this.articleService.hasUserLikedArticle(Number(id), userId);
+            res.status(200).json({ hasLiked });
         } catch (error) {
             if (error instanceof MissingFieldError || error instanceof NotFoundError) {
                 res.status(400).json({ message: error.message });

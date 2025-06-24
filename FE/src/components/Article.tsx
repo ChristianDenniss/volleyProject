@@ -15,8 +15,8 @@ const Articles: React.FC = () =>
     // State for search term
     const [ searchTerm, setSearchTerm ] = useState<string>("");
 
-    // State for sort order: "new" or "old"
-    const [ sortOrder, setSortOrder ] = useState<"new" | "old">("new");
+    // State for sort order: "new", "old", "likes", or "least-likes"
+    const [ sortOrder, setSortOrder ] = useState<"new" | "old" | "likes" | "least-likes">("new");
 
     // State for auth message
     const [showAuthMessage, setShowAuthMessage] = useState<boolean>(false);
@@ -57,18 +57,27 @@ const Articles: React.FC = () =>
             article.approved === true
         );
 
-        // Sort by createdAt
+        // Sort by createdAt or likes
         const sorted = filtered.sort((a: Article, b: Article) =>
         {
-            const dateA = new Date(a.createdAt).getTime();
-            const dateB = new Date(b.createdAt).getTime();
-
             if (sortOrder === "new")
             {
+                const dateA = new Date(a.createdAt).getTime();
+                const dateB = new Date(b.createdAt).getTime();
                 return dateB - dateA;
+            }
+            else if (sortOrder === "likes")
+            {
+                return (b.likes || 0) - (a.likes || 0);
+            }
+            else if (sortOrder === "least-likes")
+            {
+                return (a.likes || 0) - (b.likes || 0);
             }
             else // "old"
             {
+                const dateA = new Date(a.createdAt).getTime();
+                const dateB = new Date(b.createdAt).getTime();
                 return dateA - dateB;
             }
         });
@@ -152,12 +161,26 @@ const Articles: React.FC = () =>
                     value={ sortOrder }
                     onChange={ (e) =>
                     {
-                        setSortOrder(e.target.value as "new" | "old");
+                        setSortOrder(e.target.value as "new" | "old" | "likes" | "least-likes");
                     } }
                 >
                     <option value="new">Newest</option>
                     <option value="old">Oldest</option>
+                    <option value="likes">Most Liked</option>
+                    <option value="least-likes">Least Liked</option>
                 </select>
+
+                {/* Sort indicator */}
+                {sortOrder === "likes" && (
+                    <div className="article-list-sort-indicator">
+                        🔥 Most Popular
+                    </div>
+                )}
+                {sortOrder === "least-likes" && (
+                    <div className="article-list-sort-indicator">
+                        💡 Hidden Gems
+                    </div>
+                )}
             </div>
 
             {error ? (
@@ -180,6 +203,14 @@ const Articles: React.FC = () =>
                                     />
                                     <h2>{ article.title }</h2>
                                     <p>{ article.summary }</p>
+                                    <div className="article-list-meta">
+                                        <span className="article-list-likes">
+                                            ❤️ {article.likes || 0} likes
+                                        </span>
+                                        <span className="article-list-date">
+                                            {new Date(article.createdAt).toLocaleDateString()}
+                                        </span>
+                                    </div>
                                 </div>
                             </Link>
                         );

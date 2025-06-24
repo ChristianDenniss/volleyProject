@@ -168,10 +168,33 @@
     cursor                   : not-allowed;
     opacity                  : 0.6;
 }
+.sa-like-button.liking
+{
+    animation                : likingAnimation 1s ease infinite;
+    color                    : var(--np-accent);
+}
+@keyframes likingAnimation
+{
+    0%, 100%
+    {
+        transform            : scale(1);
+        opacity              : 1;
+    }
+    50%
+    {
+        transform            : scale(1.1);
+        opacity              : 0.7;
+    }
+}
 .sa-like-button.liked
 {
     color                    : var(--np-accent);
     animation                : likeAnimation 0.3s ease;
+}
+.sa-like-button.liked:hover:not(:disabled)
+{
+    color                    : #d32f2f;
+    transform                : scale(1.1);
 }
 @keyframes likeAnimation
 {
@@ -365,4 +388,24 @@
     font-style               : italic;
     font-size                : 0.9rem;
     margin                   : 0;
+}
+
+/* Like status loading */
+.sa-like-loading
+{
+    animation                : likeLoadingAnimation 1.5s ease infinite;
+    opacity                  : 0.7;
+}
+@keyframes likeLoadingAnimation
+{
+    0%, 100%
+    {
+        opacity              : 0.7;
+        transform            : scale(1);
+    }
+    50%
+    {
+        opacity              : 1;
+        transform            : scale(1.05);
+    }
 }

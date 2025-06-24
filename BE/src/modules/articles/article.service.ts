@@ -144,17 +144,90 @@ export class ArticleService {
     /**
      * Like an article
      */
-    async likeArticle(id: number): Promise<Article> {
+    async likeArticle(id: number, userId?: number): Promise<Article> {
         if (!id) throw new MissingFieldError("Article ID");
 
         const article = await this.articleRepository.findOne({
             where: { id },
-            relations: ["author"],  // Including author in response
+            relations: ["author", "likedBy"],  // Include likedBy relation
         });
 
         if (!article) throw new NotFoundError(`Article with ID ${id} not found`);
 
-        article.likes = (article.likes || 0) + 1;  // Increment the like count
+        // If userId is provided, check if user already liked the article
+        if (userId) {
+            const user = await this.userRepository.findOneBy({ id: userId });
+            if (!user) throw new NotFoundError(`User with ID ${userId} not found`);
+
+            // Check if user already liked this article
+            const hasLiked = article.likedBy?.some(likedUser => likedUser.id === userId);
+            if (hasLiked) {
+                throw new Error("User has already liked this article");
+            }
+
+            // Add user to likedBy array
+            if (!article.likedBy) {
+                article.likedBy = [];
+            }
+            article.likedBy.push(user);
+        }
+
+        // Increment the like count
+        article.likes = (article.likes || 0) + 1;
+        
         return this.articleRepository.save(article);
+    }
+
+    /**
+     * Unlike an article
+     */
+    async unlikeArticle(id: number, userId?: number): Promise<Article> {
+        if (!id) throw new MissingFieldError("Article ID");
+
+        const article = await this.articleRepository.findOne({
+            where: { id },
+            relations: ["author", "likedBy"],  // Include likedBy relation
+        });
+
+        if (!article) throw new NotFoundError(`Article with ID ${id} not found`);
+
+        // If userId is provided, check if user has liked the article
+        if (userId) {
+            const user = await this.userRepository.findOneBy({ id: userId });
+            if (!user) throw new NotFoundError(`User with ID ${userId} not found`);
+
+            // Check if user has liked this article
+            const hasLiked = article.likedBy?.some(likedUser => likedUser.id === userId);
+            if (!hasLiked) {
+                throw new Error("User has not liked this article");
+            }
+
+            // Remove user from likedBy array
+            if (article.likedBy) {
+                article.likedBy = article.likedBy.filter(likedUser => likedUser.id !== userId);
+            }
+        }
+
+        // Decrement the like count (but don't go below 0)
+        article.likes = Math.max((article.likes || 0) - 1, 0);
+        
+        return this.articleRepository.save(article);
+    }
+
+    /**
+     * Check if a user has liked an article
+     */
+    async hasUserLikedArticle(articleId: number, userId: number): Promise<boolean> {
+        if (!articleId) throw new MissingFieldError("Article ID");
+        if (!userId) throw new MissingFieldError("User ID");
+
+        const article = await this.articleRepository.findOne({
+            where: { id: articleId },
+            relations: ["likedBy"],
+        });
+
+        if (!article) throw new NotFoundError(`Article with ID ${articleId} not found`);
+
+        return article.likedBy?.some(user => user.id === userId) || false;
     }
 }

@@ -1,6 +1,7 @@
 import { Application, Router } from 'express';
 import { ArticleController } from './article.controller.js';
 import { validate } from '../../middleware/validate.js';
+import { authenticateToken } from '../../middleware/authentication.js';
 import { createArticleSchema, updateArticleSchema } from './article.schema.js';
 
 export function registerArticleRoutes(app: Application): void
@@ -29,8 +30,14 @@ export function registerArticleRoutes(app: Application): void
     // Delete an article
     router.delete('/:id', articleController.deleteArticle);
 
-    // Like an article
-    router.post('/:id/like', articleController.likeArticle);
+    // Like an article (requires authentication)
+    router.post('/:id/like', authenticateToken, articleController.likeArticle);
+
+    // Unlike an article (requires authentication)
+    router.delete('/:id/like', authenticateToken, articleController.unlikeArticle);
+
+    // Check if current user has liked an article (requires authentication)
+    router.get('/:id/like-status', authenticateToken, articleController.checkUserLikeStatus);
 
     // Register router with prefix
     app.use('/api/articles', router);
