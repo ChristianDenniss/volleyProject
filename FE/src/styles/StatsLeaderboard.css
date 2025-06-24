@@ -230,6 +230,8 @@
     margin-top: 20px;
     border-radius: 4px;
     box-shadow: 0 2px 8px rgba(26, 54, 93, 0.1);
+    scrollbar-width: thin;
+    scrollbar-color: #b0b0b0 #f0f0f0;
 }
 
 .stats-table-wrapper.loading {
@@ -266,6 +268,10 @@
 .sort-arrow { margin-left: 5px; font-size: 0.8em; }
 
 .stats-table tbody tr:hover { background-color: #f7fafc; }
+
+.stats-table tbody tr:last-child td {
+    border-bottom: none;
+}
 
 /* -----------------------------------------------------------
    Responsive tweaks
@@ -382,5 +388,16 @@
     100% {
         background-position: -200% 0;
     }
+}
+
+.stats-table-wrapper::-webkit-scrollbar {
+    height: 8px;
+}
+.stats-table-wrapper::-webkit-scrollbar-thumb {
+    background: #b0b0b0;
+    border-radius: 4px;
+}
+.stats-table-wrapper::-webkit-scrollbar-track {
+    background: #f0f0f0;
 }
 
