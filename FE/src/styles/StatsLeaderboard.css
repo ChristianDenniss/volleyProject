@@ -407,3 +407,25 @@
     background: #f0f0f0;
 }
 
+.stats-pill-link {
+    display: inline-block;
+    padding: 4px 14px;
+    border-radius: 999px;
+    background: var(--primary-blue);
+    color: #fff !important;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 1em;
+    transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+    box-shadow: 0 1px 4px rgba(26,54,93,0.08);
+    border: none;
+    cursor: pointer;
+}
+.stats-pill-link:hover,
+.stats-pill-link:focus {
+    background: var(--primary-blue-hover);
+    color: #fff;
+    text-decoration: none;
+    box-shadow: 0 2px 8px rgba(26,54,93,0.15);
+}
+

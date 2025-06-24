@@ -480,15 +480,15 @@ const StatsLeaderboard: React.FC = () => {
                     <td>{(currentPage - 1) * playersPerPage + index + 1}</td>
                     <td>{
                       isPlayer
-                        ? <Link to={`/players/${item.id}`}>{item.name}</Link>
-                        : <Link to={`/teams/${encodeURIComponent(item.name)}`}>{item.name}</Link>
+                        ? <Link className="stats-pill-link" to={`/players/${item.id}`}>{item.name}</Link>
+                        : <Link className="stats-pill-link" to={`/teams/${encodeURIComponent(item.name)}`}>{item.name}</Link>
                     }</td>
                     {selectedSeason !== null && isPlayer && viewType === 'player' && (
                       <td>
                         {(() => {
                           const team = (item as Player).teams?.find(team => team?.season?.seasonNumber === selectedSeason);
                           return team ? (
-                            <Link to={`/teams/${encodeURIComponent(team.name)}`}>{team.name}</Link>
+                            <Link className="stats-pill-link" to={`/teams/${encodeURIComponent(team.name)}`}>{team.name}</Link>
                           ) : 'N/A';
                         })()}
                       </td>
