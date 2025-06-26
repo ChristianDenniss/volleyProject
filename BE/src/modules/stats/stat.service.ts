@@ -8,18 +8,25 @@ import { NegativeStatError } from '../../errors/NegativeStatError.js';
 import { NotFoundError } from '../../errors/NotFoundError.js';
 import { ConflictError } from '../../errors/ConflictError.js';
 import { DuplicateError } from '../../errors/DuplicateError.js';
+import { InvalidFormatError } from '../../errors/InvalidFormatError.js';
+import { Seasons } from '../seasons/season.entity.js';
+import { Teams } from '../teams/team.entity.js';
 
 export class StatService
 {
     private statRepository: Repository<Stats>;
     private playerRepository: Repository<Players>;
     private gameRepository: Repository<Games>;
+    private seasonRepository: Repository<Seasons>;
+    private teamRepository: Repository<Teams>;
 
     constructor()
     {
         this.statRepository = AppDataSource.getRepository(Stats);
         this.playerRepository = AppDataSource.getRepository(Players);
         this.gameRepository = AppDataSource.getRepository(Games);
+        this.seasonRepository = AppDataSource.getRepository(Seasons);
+        this.teamRepository = AppDataSource.getRepository(Teams);
     }
 
     /**
@@ -535,5 +542,156 @@ export class StatService
         stat.game           = game;
 
         return this.statRepository.save(stat);
+    }
+
+    /**
+     * Batch upload from CSV data - creates game with teams and stats
+     */
+    async batchUploadFromCSV(gameData: any, statsData: any[]): Promise<{ game: Games, stats: Stats[] }> {
+        try {
+            // Validate game data
+            if (!gameData.date || !gameData.seasonId || !gameData.teamNames || !gameData.stage) {
+                throw new MissingFieldError("Game data must include date, seasonId, teamNames, and stage");
+            }
+
+            if (!Array.isArray(gameData.teamNames) || gameData.teamNames.length !== 2) {
+                throw new MissingFieldError("Exactly two team names are required");
+            }
+
+            if (!Array.isArray(statsData) || statsData.length === 0) {
+                throw new MissingFieldError("At least one stats record is required");
+            }
+
+            // Validate scores are non-negative
+            if (gameData.team1Score < 0 || gameData.team2Score < 0) {
+                throw new InvalidFormatError("Scores cannot be negative");
+            }
+
+            // Start transaction
+            const queryRunner = AppDataSource.createQueryRunner();
+            await queryRunner.startTransaction();
+
+            try {
+                // Fetch season
+                const season = await this.seasonRepository.findOne({
+                    where: { id: gameData.seasonId },
+                    relations: ["teams"]
+                });
+                if (!season) {
+                    throw new NotFoundError(`Season with ID ${gameData.seasonId} not found`);
+                }
+
+                // Fetch teams by names
+                const teams = await this.teamRepository.find({
+                    where: { name: gameData.teamNames },
+                    relations: ["players"]
+                });
+
+                if (teams.length !== 2) {
+                    const foundTeamNames = teams.map(t => t.name);
+                    const missingTeams = gameData.teamNames.filter((name: string) => !foundTeamNames.includes(name));
+                    throw new NotFoundError(`Teams not found: ${missingTeams.join(', ')}`);
+                }
+
+                // Create game
+                const newGame = new Games();
+                newGame.date = new Date(gameData.date);
+                newGame.season = season;
+                newGame.teams = teams;
+                newGame.team1Score = gameData.team1Score;
+                newGame.team2Score = gameData.team2Score;
+                newGame.stage = gameData.stage;
+                newGame.videoUrl = gameData.videoUrl || '';
+
+                const savedGame = await queryRunner.manager.save(newGame);
+
+                // Create stats records
+                const statsToCreate: Stats[] = [];
+                const createdStats: Stats[] = [];
+
+                for (const statData of statsData) {
+                    // Validate stat data
+                    if (!statData.playerName) {
+                        throw new MissingFieldError("Player name is required for all stats");
+                    }
+
+                    // Find player by name
+                    const player = await this.playerRepository.findOne({
+                        where: { name: statData.playerName },
+                        relations: ["teams"]
+                    });
+
+                    if (!player) {
+                        throw new NotFoundError(`Player "${statData.playerName}" not found`);
+                    }
+
+                    // Check if player is on one of the game's teams
+                    const playerTeamIds = player.teams.map(t => t.id);
+                    const gameTeamIds = teams.map(t => t.id);
+                    const isPlayerInGame = playerTeamIds.some(id => gameTeamIds.includes(id));
+
+                    if (!isPlayerInGame) {
+                        throw new ConflictError(
+                            `Player "${statData.playerName}" is not on any of the game's teams`
+                        );
+                    }
+
+                    // Check for duplicate stats
+                    const existingStat = await this.statRepository.findOne({
+                        where: {
+                            player: { id: player.id },
+                            game: { id: savedGame.id }
+                        }
+                    });
+
+                    if (existingStat) {
+                        throw new DuplicateError(`Stats already exist for player "${statData.playerName}" in this game`);
+                    }
+
+                    // Create stat record
+                    const newStat = new Stats();
+                    newStat.spikingErrors = statData.spikingErrors || 0;
+                    newStat.apeKills = statData.apeKills || 0;
+                    newStat.apeAttempts = statData.apeAttempts || 0;
+                    newStat.spikeKills = statData.spikeKills || 0;
+                    newStat.spikeAttempts = statData.spikeAttempts || 0;
+                    newStat.assists = statData.assists || 0;
+                    newStat.settingErrors = statData.settingErrors || 0;
+                    newStat.blocks = statData.blocks || 0;
+                    newStat.digs = statData.digs || 0;
+                    newStat.blockFollows = statData.blockFollows || 0;
+                    newStat.aces = statData.aces || 0;
+                    newStat.servingErrors = statData.servingErrors || 0;
+                    newStat.miscErrors = statData.miscErrors || 0;
+                    newStat.player = player;
+                    newStat.game = savedGame;
+
+                    statsToCreate.push(newStat);
+                }
+
+                // Save all stats
+                const savedStats = await queryRunner.manager.save(statsToCreate);
+
+                // Commit transaction
+                await queryRunner.commitTransaction();
+
+                return {
+                    game: savedGame,
+                    stats: savedStats
+                };
+
+            } catch (error) {
+                // Rollback transaction on error
+                await queryRunner.rollbackTransaction();
+                throw error;
+            } finally {
+                // Release query runner
+                await queryRunner.release();
+            }
+
+        } catch (error) {
+            console.error("Error in batchUploadFromCSV:", error);
+            throw error;
+        }
     }
 }

@@ -204,3 +204,41 @@ export type CreateAwardsInput = {
   description: string;
   seasonId:   number;
 };
+
+// CSV Upload types
+export type CSVGameData = {
+  date: string;
+  seasonId: number;
+  teamNames: string[];
+  team1Score: number;
+  team2Score: number;
+  stage: string;
+  videoUrl?: string;
+};
+
+export type CSVStatsData = {
+  playerName: string;
+  spikingErrors?: number;
+  apeKills?: number;
+  apeAttempts?: number;
+  spikeKills?: number;
+  spikeAttempts?: number;
+  assists?: number;
+  settingErrors?: number;
+  blocks?: number;
+  digs?: number;
+  blockFollows?: number;
+  aces?: number;
+  servingErrors?: number;
+  miscErrors?: number;
+};
+
+export type CSVUploadPayload = {
+  gameData: CSVGameData;
+  statsData: CSVStatsData[];
+};
+
+export type CSVUploadResult = {
+  game: Game;
+  stats: Stats[];
+};

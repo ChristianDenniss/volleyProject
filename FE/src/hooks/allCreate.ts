@@ -2,7 +2,9 @@
 
 import { useCreate } from "./useCreate";
 import { Game,Player,Stats,Team,Season,Article,CreateGameInput,Award, CreateAwardsInput,CreatePlayerInput,
-  CreateStatsInput,CreateTeamInput,CreateSeasonInput,CreateArticleInput,} from "../types/interfaces";
+  CreateStatsInput,CreateTeamInput,CreateSeasonInput,CreateArticleInput, CSVUploadPayload, CSVUploadResult } from "../types/interfaces";
+import { useState } from "react";
+import { authFetch } from "./authFetch";
 
 /**
  * useCreatePlayers
@@ -106,4 +108,49 @@ export const useCreateAwards = () => {
     loading: loadingWithNames,
     error: createErrorWithNames
   };
+};
+
+/**
+ * useCSVUpload
+ * – Uploads CSV data to create game with teams and stats
+ * – Returns uploadCSV(payload) → Promise<CSVUploadResult | null>
+ */
+export const useCSVUpload = () => {
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const uploadCSV = async (payload: CSVUploadPayload): Promise<CSVUploadResult | null> => {
+    setLoading(true);
+    setError(null);
+
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+    try {
+      const response = await authFetch(
+        `${backendUrl}/api/stats/batch-csv`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (!response.ok) {
+        const errJson = await response
+          .json()
+          .catch(() => ({ message: "CSV upload failed" }));
+        throw new Error(errJson.message || errJson.error || "CSV upload failed");
+      }
+
+      const result: CSVUploadResult = await response.json();
+      return result;
+    } catch (err: any) {
+      console.error("CSV upload error:", err);
+      setError(err.message);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { uploadCSV, loading, error };
 };

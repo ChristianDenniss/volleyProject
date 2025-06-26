@@ -5,9 +5,11 @@ import { useStats }                  from "../../hooks/allFetch";
 import { useStatsMutations }          from "../../hooks/allPatch";
 import { useCreateStats }            from "../../hooks/allCreate";
 import { useDeleteStats }            from "../../hooks/allDelete";
+import { useCSVUpload }              from "../../hooks/allCreate";
 import { useAuth }                   from "../../context/authContext";
 import { usePlayers }                from "../../hooks/allFetch";
 import type { Stats }                from "../../types/interfaces";
+import { handleFileUpload } from "../../utils/csvUploadUtils";
 import "../../styles/UsersPage.css"; // reuse table & text-muted styles
 import "../../styles/GamesPage.css"; // reuse table & text-muted styles
 import "../../styles/StatsPage.css"; // import new styles
@@ -53,6 +55,9 @@ const StatsPage: React.FC = () =>
     // Destructure deletion hook for stats
     const { deleteItem: deleteStat, loading: deleting, error: deleteError } = useDeleteStats();
 
+    // Destructure CSV upload hook
+    const { uploadCSV, error: csvUploadError } = useCSVUpload();
+
     // Retrieve current user (for permission checks)
     const { user }                      = useAuth();
 
@@ -80,6 +85,17 @@ const StatsPage: React.FC = () =>
     const [ newPlayerName, setNewPlayerName ]       = useState<string>("");
     const [ newGameId, setNewGameId ]               = useState<number>(0);
     const [ formError, setFormError ]               = useState<string>("");
+
+    // CSV Upload modal state
+    const [ isCSVModalOpen, setIsCSVModalOpen ] = useState<boolean>(false);
+    const [ csvPreview, setCsvPreview ] = useState<any>(null);
+    const [ csvParseError, setCsvParseError ] = useState<string>("");
+
+    // Add state for stage modal
+    const [isStageModalOpen, setIsStageModalOpen] = useState(false);
+    const [stageInput, setStageInput] = useState("");
+    const [pendingCSV, setPendingCSV] = useState<any>(null);
+    const [gameCreationError, setGameCreationError] = useState("");
 
     // Initialize localStats when data is fetched
     useEffect(() =>
@@ -257,6 +273,65 @@ const StatsPage: React.FC = () =>
         setFormError("");
     };
 
+    // CSV Upload functions
+    const openCSVModal = () => {
+        setIsCSVModalOpen(true);
+        setCsvPreview(null);
+        setCsvParseError("");
+    };
+
+    const closeCSVModal = () => {
+        setIsCSVModalOpen(false);
+        setCsvPreview(null);
+        setCsvParseError("");
+    };
+
+    // Update handleFileUpload to trigger stage modal after parsing
+    const handleFileUploadWrapper = (e: React.ChangeEvent<HTMLInputElement>, setCsvPreview: any, setCsvParseError: any) => {
+        handleFileUpload(e, () => {}, () => {}, setCsvPreview, setCsvParseError);
+        // If CSV is parsed, open stage modal
+        setTimeout(() => {
+            if (csvPreview) {
+                setPendingCSV(csvPreview);
+                setIsStageModalOpen(true);
+            }
+        }, 100);
+    };
+
+    // Handle stage modal submit
+    const handleStageSubmit = async () => {
+        if (!stageInput.trim()) return;
+        if (!pendingCSV) return;
+        // Prepare gameData
+        const gameData = {
+            ...pendingCSV.gameData,
+            stage: stageInput.trim(),
+            name: `${pendingCSV.teamNames[0]} vs. ${pendingCSV.teamNames[1]} (Season ${pendingCSV.seasonId})`,
+            team1Score: 0, // You may want to prompt for scores in the future
+            team2Score: 0,
+            videoUrl: "",
+            date: new Date().toISOString(),
+        };
+        // Try to create the game
+        try {
+            const result = await uploadCSV({ gameData, statsData: pendingCSV.statsData });
+            if (!result) throw new Error("Game creation failed");
+            setLocalStats(prev => [...result.stats, ...prev]);
+            setIsStageModalOpen(false);
+            setPendingCSV(null);
+            setStageInput("");
+            setGameCreationError("");
+            closeCSVModal();
+            alert(`Successfully uploaded game and ${result.stats.length} stats records!`);
+        } catch (err: any) {
+            setGameCreationError("Game creation failed, exiting creation");
+            setIsStageModalOpen(false);
+            setPendingCSV(null);
+            setStageInput("");
+            closeCSVModal();
+        }
+    };
+
     // Create new stats record handler
     const handleCreate = async (e: React.FormEvent) =>
     {
@@ -319,10 +394,15 @@ const StatsPage: React.FC = () =>
         <div className="portal-main">
             <h1 className="users-title">Stats</h1>
 
-            {/* Button to open modal for creating a new stats record */}
-            <button className="create-button" onClick={openModal}>
-                Create Stat
-            </button>
+            {/* Buttons for creating stats */}
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+                <button className="create-button" onClick={openModal}>
+                    Create Stat
+                </button>
+                <button className="create-button" onClick={openCSVModal}>
+                    Upload CSV
+                </button>
+            </div>
 
             {/* Create Modal */}
             {isModalOpen && (
@@ -532,6 +612,113 @@ const StatsPage: React.FC = () =>
                                 </p>
                             )}
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* CSV Upload Modal */}
+            {isCSVModalOpen && (
+                <div className="modal-overlay">
+                    <div className="modal" style={{ maxWidth: '800px', maxHeight: '80vh', overflow: 'auto' }}>
+                        {/* Close button */}
+                        <button
+                            onClick={closeCSVModal}
+                            className="modal-close"
+                        >
+                            ×
+                        </button>
+
+                        <h2 className="modal-title">Upload CSV</h2>
+
+                        {/* Display CSV upload errors */}
+                        {csvParseError && (
+                            <p className="modal-error">
+                                {csvParseError}
+                            </p>
+                        )}
+
+                        {csvUploadError && (
+                            <p className="modal-error">
+                                {csvUploadError}
+                            </p>
+                        )}
+
+                        {/* File upload section */}
+                        <div style={{ marginBottom: '20px' }}>
+                            <label>
+                                Select CSV File
+                                <input
+                                    type="file"
+                                    accept=".csv"
+                                    onChange={(e) => handleFileUploadWrapper(e, setCsvPreview, setCsvParseError)}
+                                    style={{ marginTop: '5px' }}
+                                />
+                            </label>
+                        </div>
+
+                        {/* CSV Preview */}
+                        {csvPreview && (
+                            <div style={{ marginBottom: '20px' }}>
+                                <h3>Preview:</h3>
+                                <div style={{ background: '#f5f5f5', padding: '10px', borderRadius: '5px' }}>
+                                    <h4>Game Data:</h4>
+                                    <p><strong>Date:</strong> {csvPreview.gameData.date}</p>
+                                    <p><strong>Season ID:</strong> {csvPreview.gameData.seasonId}</p>
+                                    <p><strong>Teams:</strong> {csvPreview.gameData.teamNames.join(' vs ')}</p>
+                                    <p><strong>Score:</strong> {csvPreview.gameData.team1Score} - {csvPreview.gameData.team2Score}</p>
+                                    <p><strong>Stage:</strong> {csvPreview.gameData.stage}</p>
+                                    
+                                    <h4>Stats Data ({csvPreview.statsData.length} players):</h4>
+                                    <div style={{ maxHeight: '200px', overflow: 'auto' }}>
+                                        {csvPreview.statsData.map((stat: any, index: number) => (
+                                            <div key={index} style={{ marginBottom: '10px', padding: '5px', background: 'white', borderRadius: '3px' }}>
+                                                <strong>{stat.playerName}</strong> - 
+                                                Kills: {stat.spikeKills}, Assists: {stat.assists}, Blocks: {stat.blocks}, Digs: {stat.digs}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Action buttons */}
+                        <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                            <button
+                                onClick={closeCSVModal}
+                                style={{ padding: '10px 20px', background: '#6c757d', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Stage Modal */}
+            {isStageModalOpen && (
+                <div className="modal-overlay">
+                    <div className="modal">
+                        <h2 className="modal-title">Enter Match Stage</h2>
+                        <input
+                            type="text"
+                            value={stageInput}
+                            onChange={e => setStageInput(e.target.value)}
+                            placeholder="e.g. Winners Bracket Round 1"
+                            style={{ width: '100%', marginBottom: '1rem' }}
+                        />
+                        <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                            <button onClick={() => { setIsStageModalOpen(false); setStageInput(""); setPendingCSV(null); }} style={{ padding: '10px 20px', background: '#6c757d', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>Cancel</button>
+                            <button onClick={handleStageSubmit} className="create-button" disabled={!stageInput.trim()}>Submit</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {gameCreationError && (
+                <div className="modal-overlay">
+                    <div className="modal">
+                        <h2 className="modal-title">Error</h2>
+                        <p className="modal-error">{gameCreationError}</p>
+                        <button onClick={() => setGameCreationError("")} className="create-button">Close</button>
                     </div>
                 </div>
             )}

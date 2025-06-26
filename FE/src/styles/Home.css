@@ -1,29 +1,28 @@
 .home
 {
-    max-width: 1800px;
-    margin: 0 auto;
-    padding: 1rem;
+    /* max-width: 1800px; */
+    width: 100vw;
+    margin: 0;
+    padding: 1rem 2vw; /* Add side padding for aesthetics */
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
     color: #222;
-    width: 100%;
     box-sizing: border-box;
-    min-height: 100vh; /* Prevent layout shift by setting minimum height */
-    contain: layout style paint; /* Improve performance */
+    min-height: 100vh;
+    contain: layout style paint;
 }
 
 .headline-section
 {
+    /* max-width: 1500px; */
+    width: 100vw;
+    margin-left: 0;
+    margin-right: 0;
+    padding: 0 2vw; /* Add side padding for aesthetics */
     display: flex;
     gap: 1rem;
     margin-top: 2rem;
     margin-bottom: 4rem;
-
-    /* NEW: Center and constrain width */
-    max-width: 1500px;
-    margin-left: auto;
-    margin-right: auto;
-    width: 100%;
-    min-height: 400px; /* Reserve minimum space for content */
+    min-height: 400px;
 }
 
 .featured-article
@@ -34,7 +33,9 @@
     overflow: hidden;
     box-shadow: 0 2px 8px rgb(0 0 0 / 0.1);
     aspect-ratio: 17.5/9;
-    min-height: 300px; /* Reserve minimum height */
+    min-height: 300px;
+    width: 100%; /* Ensure it fills available space */
+    max-width: none; /* Remove any inherited max-width */
 }
 
 .featured-image
