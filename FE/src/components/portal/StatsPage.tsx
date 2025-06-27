@@ -116,7 +116,7 @@ const StatsPage: React.FC = () =>
     const [ csvPreview, setCsvPreview ] = useState<any>(null);
     const [ csvParseError, setCsvParseError ] = useState<string>("");
     const [ csvUploadMode, setCsvUploadMode ] = useState<'create' | 'add'>('create');
-    const [ existingGameId, setExistingGameId ] = useState<number>(0);
+    const [ existingGameId, setExistingGameId ] = useState<string>("");
 
     // Add state for stage modal
     const [isStageModalOpen, setIsStageModalOpen] = useState(false);
@@ -381,15 +381,18 @@ const StatsPage: React.FC = () =>
             }
         } else {
             // Add to existing game mode
-            if (!existingGameId) return;
+            if (!existingGameId || isNaN(Number(existingGameId)) || Number(existingGameId) < 1) {
+                showErrorModal({ message: "Please enter a valid Game ID (a positive number)." });
+                return;
+            }
             
             try {
-                const result = await addStatsToGame(existingGameId, pendingCSV.statsData);
+                const result = await addStatsToGame(Number(existingGameId), pendingCSV.statsData);
                 if (!result) throw new Error("Failed to add stats to game");
                 setLocalStats(prev => [...result, ...prev]);
                 setIsStageModalOpen(false);
                 setPendingCSV(null);
-                setExistingGameId(0);
+                setExistingGameId("");
                 setGameCreationError("");
                 closeCSVModal();
                 alert(`Successfully added ${result.length} stats records to game ${existingGameId}!`);
@@ -397,7 +400,7 @@ const StatsPage: React.FC = () =>
                 showErrorModal(err);
                 setIsStageModalOpen(false);
                 setPendingCSV(null);
-                setExistingGameId(0);
+                setExistingGameId("");
                 closeCSVModal();
             }
         }
@@ -750,10 +753,9 @@ const StatsPage: React.FC = () =>
                                     <label>
                                         Existing Game ID*
                                         <input
-                                            type="number"
+                                            type="text"
                                             value={existingGameId}
-                                            onChange={(e) => setExistingGameId(Number(e.target.value))}
-                                            min="1"
+                                            onChange={(e) => setExistingGameId(e.target.value)}
                                             placeholder="Enter game ID"
                                             style={{ width: '100%', marginTop: '5px', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
                                         />
@@ -976,8 +978,7 @@ const StatsPage: React.FC = () =>
                                 >
                                     {editing?.id === s.id && editing.field === "gameId" ? (
                                         <input
-                                            type="number"
-                                            min="1"
+                                            type="text"
                                             value={editing.value}
                                             onChange={(e) =>
                                                 setEditing({ ...editing, value: e.target.value })
@@ -1015,8 +1016,7 @@ const StatsPage: React.FC = () =>
                                 >
                                     {editing?.id === s.id && editing.field === "playerId" ? (
                                         <input
-                                            type="number"
-                                            min="1"
+                                            type="text"
                                             value={editing.value}
                                             onChange={(e) =>
                                                 setEditing({ ...editing, value: e.target.value })
@@ -1053,8 +1053,7 @@ const StatsPage: React.FC = () =>
                                 >
                                     {editing?.id === s.id && editing.field === "spikingErrors" ? (
                                         <input
-                                            type="number"
-                                            min="0"
+                                            type="text"
                                             value={editing.value}
                                             onChange={(e) =>
                                                 setEditing({ ...editing, value: e.target.value })
@@ -1091,8 +1090,7 @@ const StatsPage: React.FC = () =>
                                 >
                                     {editing?.id === s.id && editing.field === "apeKills" ? (
                                         <input
-                                            type="number"
-                                            min="0"
+                                            type="text"
                                             value={editing.value}
                                             onChange={(e) =>
                                                 setEditing({ ...editing, value: e.target.value })
@@ -1129,8 +1127,7 @@ const StatsPage: React.FC = () =>
                                 >
                                     {editing?.id === s.id && editing.field === "apeAttempts" ? (
                                         <input
-                                            type="number"
-                                            min="0"
+                                            type="text"
                                             value={editing.value}
                                             onChange={(e) =>
                                                 setEditing({ ...editing, value: e.target.value })
@@ -1167,8 +1164,7 @@ const StatsPage: React.FC = () =>
                                 >
                                     {editing?.id === s.id && editing.field === "spikeKills" ? (
                                         <input
-                                            type="number"
-                                            min="0"
+                                            type="text"
                                             value={editing.value}
                                             onChange={(e) =>
                                                 setEditing({ ...editing, value: e.target.value })
@@ -1205,8 +1201,7 @@ const StatsPage: React.FC = () =>
                                 >
                                     {editing?.id === s.id && editing.field === "spikeAttempts" ? (
                                         <input
-                                            type="number"
-                                            min="0"
+                                            type="text"
                                             value={editing.value}
                                             onChange={(e) =>
                                                 setEditing({ ...editing, value: e.target.value })
@@ -1243,8 +1238,7 @@ const StatsPage: React.FC = () =>
                                 >
                                     {editing?.id === s.id && editing.field === "assists" ? (
                                         <input
-                                            type="number"
-                                            min="0"
+                                            type="text"
                                             value={editing.value}
                                             onChange={(e) =>
                                                 setEditing({ ...editing, value: e.target.value })
@@ -1281,8 +1275,7 @@ const StatsPage: React.FC = () =>
                                 >
                                     {editing?.id === s.id && editing.field === "settingErrors" ? (
                                         <input
-                                            type="number"
-                                            min="0"
+                                            type="text"
                                             value={editing.value}
                                             onChange={(e) =>
                                                 setEditing({ ...editing, value: e.target.value })
@@ -1319,8 +1312,7 @@ const StatsPage: React.FC = () =>
                                 >
                                     {editing?.id === s.id && editing.field === "blocks" ? (
                                         <input
-                                            type="number"
-                                            min="0"
+                                            type="text"
                                             value={editing.value}
                                             onChange={(e) =>
                                                 setEditing({ ...editing, value: e.target.value })
@@ -1357,8 +1349,7 @@ const StatsPage: React.FC = () =>
                                 >
                                     {editing?.id === s.id && editing.field === "digs" ? (
                                         <input
-                                            type="number"
-                                            min="0"
+                                            type="text"
                                             value={editing.value}
                                             onChange={(e) =>
                                                 setEditing({ ...editing, value: e.target.value })
@@ -1395,8 +1386,7 @@ const StatsPage: React.FC = () =>
                                 >
                                     {editing?.id === s.id && editing.field === "blockFollows" ? (
                                         <input
-                                            type="number"
-                                            min="0"
+                                            type="text"
                                             value={editing.value}
                                             onChange={(e) =>
                                                 setEditing({ ...editing, value: e.target.value })
@@ -1433,8 +1423,7 @@ const StatsPage: React.FC = () =>
                                 >
                                     {editing?.id === s.id && editing.field === "aces" ? (
                                         <input
-                                            type="number"
-                                            min="0"
+                                            type="text"
                                             value={editing.value}
                                             onChange={(e) =>
                                                 setEditing({ ...editing, value: e.target.value })
@@ -1471,8 +1460,7 @@ const StatsPage: React.FC = () =>
                                 >
                                     {editing?.id === s.id && editing.field === "servingErrors" ? (
                                         <input
-                                            type="number"
-                                            min="0"
+                                            type="text"
                                             value={editing.value}
                                             onChange={(e) =>
                                                 setEditing({ ...editing, value: e.target.value })
@@ -1509,8 +1497,7 @@ const StatsPage: React.FC = () =>
                                 >
                                     {editing?.id === s.id && editing.field === "miscErrors" ? (
                                         <input
-                                            type="number"
-                                            min="0"
+                                            type="text"
                                             value={editing.value}
                                             onChange={(e) =>
                                                 setEditing({ ...editing, value: e.target.value })
