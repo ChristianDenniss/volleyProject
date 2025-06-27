@@ -691,7 +691,7 @@ const StatsPage: React.FC = () =>
                                         {csvPreview.statsData.map((stat: any, index: number) => (
                                             <div key={index} style={{ marginBottom: '10px', padding: '5px', background: 'white', borderRadius: '3px' }}>
                                                 <strong>{stat.playerName}</strong><br/>
-                                                Kills: {stat.spikeKills} | Assists: {stat.assists} | Blocks: {stat.blocks} | Digs: {stat.digs} | Aces: {stat.aces} | Errors: {stat.spikingErrors + stat.settingErrors + stat.servingErrors + stat.miscErrors} | Attempts: {stat.spikeAttempts}
+                                                Kills: {stat.spikeKills} | Assists: {stat.assists} | Blocks: {stat.blocks} | Digs: {stat.digs} | Aces: {stat.aces} | Block Follows: {stat.blockFollows} | Errors: {stat.spikingErrors + stat.settingErrors + stat.servingErrors + stat.miscErrors} | Attempts: {stat.spikeAttempts} | Ape Kills: {stat.apeKills}
                                             </div>
                                         ))}
                                     </div>
@@ -727,7 +727,7 @@ const StatsPage: React.FC = () =>
             {/* Stage Modal */}
             {isStageModalOpen && (
                 <div className="modal-overlay">
-                    <div className="modal">
+                    <div className="modal" style={{ maxWidth: '400px' }}>
                         <h2 className="modal-title">Select Match Stage</h2>
                         <label>
                             Stage*
