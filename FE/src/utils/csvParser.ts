@@ -50,9 +50,9 @@ export function parseCSV(csvText: string): ParsedCSVData {
           throw new Error("Set scores cannot be tied. One team must win the match.");
         }
         
-        // At least one score must be above 2 (best of 5 sets)
-        if (score1 <= 2 && score2 <= 2) {
-          throw new Error("At least one team score must be above 2 for a valid match result.");
+        // At least one score must be 2 or above
+        if (score1 < 2 && score2 < 2) {
+          throw new Error("At least one team score must be 2 or above for a valid match result.");
         }
         
         team1Score = score1;
