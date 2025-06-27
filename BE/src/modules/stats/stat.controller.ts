@@ -452,8 +452,12 @@ export class StatController
             ) {
                 res.status(400).json({ error: errorMessage });
             } else {
+                // Log the full error stack for debugging
                 console.error("Error adding stats to existing game:", error);
-                res.status(500).json({ error: "Failed to add stats to existing game" });
+                res.status(500).json({
+                    error: errorMessage,
+                    stack: error instanceof Error ? error.stack : undefined
+                });
             }
         }
     };
