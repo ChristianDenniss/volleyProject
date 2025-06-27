@@ -55,22 +55,40 @@ export function parseCSV(csvText: string): ParsedCSVData {
     // If this is a player row (first cell is not empty, not a header, and not a team name row)
     if (currentTeam && firstCell && row.length >= 14 && row.slice(1).some(cell => cell !== "")) {
       // Strict mapping for stat fields
-      statsData.push({
-        playerName: firstCell,
-        spikingErrors: parseInt(row[1]) || 0,
-        apeKills: parseInt(row[2]) || 0,
-        apeAttempts: parseInt(row[3]) || 0,
-        spikeKills: parseInt(row[4]) || 0,
-        spikeAttempts: parseInt(row[5]) || 0,
-        blocks: parseInt(row[6]) || 0,
-        assists: parseInt(row[7]) || 0,
-        digs: parseInt(row[8]) || 0,
-        blockFollows: parseInt(row[9]) || 0,
-        aces: parseInt(row[10]) || 0,
-        miscErrors: parseInt(row[11]) || 0,
-        settingErrors: parseInt(row[12]) || 0,
-        servingErrors: parseInt(row[13]) || 0,
-      });
+      const statValues = [
+        parseInt(row[1]) || 0, // spikingErrors
+        parseInt(row[2]) || 0, // apeKills
+        parseInt(row[3]) || 0, // apeAttempts
+        parseInt(row[4]) || 0, // spikeKills
+        parseInt(row[5]) || 0, // spikeAttempts
+        parseInt(row[6]) || 0, // blocks
+        parseInt(row[7]) || 0, // assists
+        parseInt(row[8]) || 0, // digs
+        parseInt(row[9]) || 0, // blockFollows
+        parseInt(row[10]) || 0, // aces
+        parseInt(row[11]) || 0, // miscErrors
+        parseInt(row[12]) || 0, // settingErrors
+        parseInt(row[13]) || 0, // servingErrors
+      ];
+      // Only add if at least one stat is non-zero
+      if (statValues.some(val => val !== 0)) {
+        statsData.push({
+          playerName: firstCell,
+          spikingErrors: statValues[0],
+          apeKills: statValues[1],
+          apeAttempts: statValues[2],
+          spikeKills: statValues[3],
+          spikeAttempts: statValues[4],
+          blocks: statValues[5],
+          assists: statValues[6],
+          digs: statValues[7],
+          blockFollows: statValues[8],
+          aces: statValues[9],
+          miscErrors: statValues[10],
+          settingErrors: statValues[11],
+          servingErrors: statValues[12],
+        });
+      }
     }
   }
 
