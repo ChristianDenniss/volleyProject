@@ -12,7 +12,6 @@ export const handleFileUpload = (
     if (!file) return;
 
     if (!file.name.toLowerCase().endsWith('.csv')) {
-        setCsvParseError("Please select a CSV file");
         showErrorModal("Please select a CSV file");
         return;
     }
@@ -30,9 +29,8 @@ export const handleFileUpload = (
             setCsvPreview(parsed);
             setCsvParseError("");
         } catch (error: any) {
-            setCsvParseError(error.message);
-            setCsvPreview(null);
             showErrorModal(error);
+            setCsvPreview(null);
         }
     };
     reader.readAsText(file);
