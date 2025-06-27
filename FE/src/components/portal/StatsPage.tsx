@@ -709,7 +709,7 @@ const StatsPage: React.FC = () =>
                         <div style={{ marginBottom: '20px' }}>
                             <h3>Upload Mode:</h3>
                             <div style={{ display: 'flex', gap: '30px', marginBottom: '10px', alignItems: 'center' }}>
-                                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 500 }}>
+                                <label style={{ display: 'inline-flex', flexDirection: 'row', alignItems: 'center', gap: '8px', fontWeight: 500 }}>
                                     <input
                                         type="radio"
                                         name="uploadMode"
@@ -719,7 +719,7 @@ const StatsPage: React.FC = () =>
                                     />
                                     Create New Game + Stats
                                 </label>
-                                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 500 }}>
+                                <label style={{ display: 'inline-flex', flexDirection: 'row', alignItems: 'center', gap: '8px', fontWeight: 500 }}>
                                     <input
                                         type="radio"
                                         name="uploadMode"
