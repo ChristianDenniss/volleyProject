@@ -635,6 +635,7 @@ export class StatService
                 newGame.team2Score = gameData.team2Score;
                 newGame.stage = gameData.stage;
                 newGame.videoUrl = gameData.videoUrl || '';
+                newGame.name = gameData.name || `${teams[0].name} vs. ${teams[1].name} S${gameData.seasonId}`;
 
                 const savedGame = await queryRunner.manager.save(newGame);
 
