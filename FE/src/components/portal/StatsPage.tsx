@@ -679,19 +679,19 @@ const StatsPage: React.FC = () =>
                             <div style={{ marginBottom: '20px' }}>
                                 <h3>Preview:</h3>
                                 <div style={{ background: '#f5f5f5', padding: '10px', borderRadius: '5px' }}>
-                                    <h4>Game Data:</h4>
+                                    <h4>Game Data</h4>
                                     <p><strong>Date:</strong> {new Date().toLocaleDateString()}</p>
                                     <p><strong>Season ID:</strong> {csvPreview.gameData.seasonId}</p>
                                     <p><strong>Teams:</strong> {csvPreview.gameData.teamNames.join(' vs ')}</p>
                                     <p><strong>Team 1 Score:</strong> {csvPreview.gameData.team1Score}</p>
                                     <p><strong>Team 2 Score:</strong> {csvPreview.gameData.team2Score}</p>
                                     
-                                    <h4>Stats Data ({csvPreview.statsData.length} players):</h4>
+                                    <h4>Stats Data ({csvPreview.statsData.length} players)</h4>
                                     <div style={{ maxHeight: '200px', overflow: 'auto' }}>
                                         {csvPreview.statsData.map((stat: any, index: number) => (
                                             <div key={index} style={{ marginBottom: '10px', padding: '5px', background: 'white', borderRadius: '3px' }}>
-                                                <strong>{stat.playerName}</strong> - 
-                                                Kills: {stat.spikeKills}, Assists: {stat.assists}, Blocks: {stat.blocks}, Digs: {stat.digs}
+                                                <strong>{stat.playerName}</strong><br/>
+                                                Kills: {stat.spikeKills} | Assists: {stat.assists} | Blocks: {stat.blocks} | Digs: {stat.digs} | Aces: {stat.aces} | Errors: {stat.spikingErrors + stat.settingErrors + stat.servingErrors + stat.miscErrors} | Attempts: {stat.spikeAttempts}
                                             </div>
                                         ))}
                                     </div>
