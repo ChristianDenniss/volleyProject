@@ -23,7 +23,7 @@ export function parseCSV(csvText: string): ParsedCSVData {
     if (line.toLowerCase().startsWith("season:")) {
       const match = line.match(/season:\s*(\d+)/i);
       if (match) {
-        seasonId = parseInt(match[1], 10);
+        seasonId = parseInt(match[1].trim(), 10);
       }
     }
     
@@ -31,8 +31,8 @@ export function parseCSV(csvText: string): ParsedCSVData {
     if (line.toLowerCase().startsWith("sets:")) {
       const setsMatch = line.match(/sets:\s*(\d+)\s*-\s*(\d+)/i);
       if (setsMatch) {
-        const score1 = parseInt(setsMatch[1], 10);
-        const score2 = parseInt(setsMatch[2], 10);
+        const score1 = parseInt(setsMatch[1].trim(), 10);
+        const score2 = parseInt(setsMatch[2].trim(), 10);
         
         // Validation for set scores
         if (score1 < 0 || score2 < 0) {
@@ -77,14 +77,14 @@ export function parseCSV(csvText: string): ParsedCSVData {
     // If this is a team name row (not a player row)
     if (!foundFirstTeam) {
       currentTeam = firstCell;
-      teamNames.push(currentTeam.toLowerCase());
+      teamNames.push(currentTeam.trim().toLowerCase());
       foundFirstTeam = true;
       continue;
     }
     // If we hit a new team name (after first team block)
     if (foundFirstTeam && !foundSecondTeam && firstCell && row.slice(1).every(cell => cell === "")) {
       currentTeam = firstCell;
-      teamNames.push(currentTeam.toLowerCase());
+      teamNames.push(currentTeam.trim().toLowerCase());
       foundSecondTeam = true;
       continue;
     }

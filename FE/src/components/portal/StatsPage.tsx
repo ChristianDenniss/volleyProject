@@ -300,12 +300,14 @@ const StatsPage: React.FC = () =>
         setIsCSVModalOpen(true);
         setCsvPreview(null);
         setCsvParseError("");
+        setGameCreationError("");
     };
 
     const closeCSVModal = () => {
         setIsCSVModalOpen(false);
         setCsvPreview(null);
         setCsvParseError("");
+        setGameCreationError("");
     };
 
     // Update handleFileUpload to trigger stage modal after parsing
@@ -774,7 +776,7 @@ const StatsPage: React.FC = () =>
             )}
             {gameCreationError && (
                 <div className="modal-overlay">
-                    <div className="modal">
+                    <div className="modal" style={{ maxWidth: '400px' }}>
                         <h2 className="modal-title">Error</h2>
                         <p className="modal-error">{gameCreationError}</p>
                         <button onClick={() => setGameCreationError("")} className="create-button">Close</button>
