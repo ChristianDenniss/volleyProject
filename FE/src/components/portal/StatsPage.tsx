@@ -41,19 +41,23 @@ interface EditingState {
 // Common stage options for dropdown
 const STAGE_OPTIONS = [
     "Winners Bracket; Round of 16",
-    "Winners Bracket; Quarter Finals",
-    "Winners Bracket; Semi Finals",
+    "Winners Bracket; Quarterfinals",
+    "Winners Bracket; Semifinals",
     "Winners Bracket; Finals",
     "Losers Bracket; Round 1",
     "Losers Bracket; Round 2",
-    "Losers Bracket; Quarter Finals",
-    "Losers Bracket; Semi Finals",
+    "Losers Bracket; Round 3",
+    "Losers Bracket; Quarterfinals",
+    "Losers Bracket; Semifinals",
     "Losers Bracket; Finals",
     "Grand Finals",
-    "Consolation Finals",
-    "Play-in Round",
-    "Group Stage",
-    "Qualifiers"
+    "Grand Finals; Bracket Reset",
+    "3rd Place Match",
+    "Single Elimination; Round of 16",
+    "Single Elimination; Quarterfinals",
+    "Single Elimination; Semifinals",
+    "Single Elimination; Finals",
+
 ];
 
 const StatsPage: React.FC = () =>
