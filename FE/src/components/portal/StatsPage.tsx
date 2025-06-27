@@ -687,11 +687,11 @@ const StatsPage: React.FC = () =>
                                     <p><strong>Team 2 Score:</strong> {csvPreview.gameData.team2Score}</p>
                                     
                                     <h4>Stats Data ({csvPreview.statsData.length} players)</h4>
-                                    <div style={{ maxHeight: '200px', overflow: 'auto' }}>
+                                    <div style={{ maxHeight: '300px', overflow: 'auto' }}>
                                         {csvPreview.statsData.map((stat: any, index: number) => (
                                             <div key={index} style={{ marginBottom: '10px', padding: '5px', background: 'white', borderRadius: '3px' }}>
                                                 <strong>{stat.playerName}</strong><br/>
-                                                Kills: {stat.spikeKills} | Assists: {stat.assists} | Blocks: {stat.blocks} | Digs: {stat.digs} | Aces: {stat.aces} | Block Follows: {stat.blockFollows} | Errors: {stat.spikingErrors + stat.settingErrors + stat.servingErrors + stat.miscErrors} | Attempts: {stat.spikeAttempts} | Ape Kills: {stat.apeKills}
+                                                Spiking Errors: {stat.spikingErrors} | Ape Kills: {stat.apeKills} | Ape Attempts: {stat.apeAttempts} | Spike Kills: {stat.spikeKills} | Spike Attempts: {stat.spikeAttempts} | Assists: {stat.assists} | Setting Errors: {stat.settingErrors} | Blocks: {stat.blocks} | Digs: {stat.digs} | Block Follows: {stat.blockFollows} | Aces: {stat.aces} | Serving Errors: {stat.servingErrors} | Misc Errors: {stat.miscErrors}
                                             </div>
                                         ))}
                                     </div>
