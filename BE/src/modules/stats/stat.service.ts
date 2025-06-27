@@ -581,16 +581,25 @@ export class StatService
                     throw new NotFoundError(`Season with ID ${gameData.seasonId} not found`);
                 }
 
-                // Fetch teams by names
+                // Fetch teams by names within the season
+                console.log('Searching for teams:', gameData.teamNames, 'in season:', gameData.seasonId);
                 const teams = await this.teamRepository.find({
-                    where: { name: gameData.teamNames },
+                    where: { 
+                        name: gameData.teamNames,
+                        season: { id: gameData.seasonId }
+                    },
                     relations: ["players"]
                 });
+
+                console.log('Found teams:', teams.map(t => ({ name: t.name, seasonId: t.season.id })));
 
                 if (teams.length !== 2) {
                     const foundTeamNames = teams.map(t => t.name);
                     const missingTeams = gameData.teamNames.filter((name: string) => !foundTeamNames.includes(name));
-                    throw new NotFoundError(`Teams not found: ${missingTeams.join(', ')}`);
+                    console.log('Missing teams:', missingTeams);
+                    console.log('Found team names:', foundTeamNames);
+                    console.log('Searched for team names:', gameData.teamNames);
+                    throw new NotFoundError(`Teams not found in season ${gameData.seasonId}: ${missingTeams.join(', ')}`);
                 }
 
                 // Create game
