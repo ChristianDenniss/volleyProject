@@ -189,7 +189,6 @@ export const useAddStatsToExistingGame = () => {
       const result = await response.json();
       return result.stats;
     } catch (err: any) {
-      console.error("Add stats to game error:", err);
       setError(err.message);
       return null;
     } finally {
