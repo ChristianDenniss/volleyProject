@@ -1,8 +1,8 @@
 .home
 {
     /* max-width: 1800px; */
-    width: 100vw;
-    margin: 0;
+    width: 95vw;
+    margin: 0 auto;
     padding: 1rem 2vw; /* Add side padding for aesthetics */
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
     color: #222;
@@ -14,9 +14,9 @@
 .headline-section
 {
     /* max-width: 1500px; */
-    width: 100vw;
-    margin-left: 0;
-    margin-right: 0;
+    width: 95vw;
+    margin-left: auto;
+    margin-right: auto;
     padding: 0 2vw; /* Add side padding for aesthetics */
     display: flex;
     gap: 1rem;
@@ -101,6 +101,7 @@
     gap: 1rem;
     margin-top: 1.5rem;
     min-height: 400px; /* Reserve minimum space for side articles */
+    min-width: 260px;
 }
 
 .side-articles article
