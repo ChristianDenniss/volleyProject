@@ -589,7 +589,7 @@ export class StatService
                 }
                 console.log('Found season:', { id: season.id });
 
-                // Fetch teams by names within the season
+                // Fetch teams by names within the season (following established pattern)
                 console.log('Searching for teams:', gameData.teamNames, 'in season:', gameData.seasonId);
                 
                 // Let's also check what teams exist in this season
@@ -599,13 +599,20 @@ export class StatService
                 });
                 console.log('All teams in season', gameData.seasonId, ':', allTeamsInSeason.map(t => ({ name: t.name, id: t.id })));
                 
-                const teams = await this.teamRepository.find({
-                    where: { 
-                        name: gameData.teamNames,
-                        season: { id: gameData.seasonId }
-                    },
-                    relations: ["players"]
-                });
+                // Search for each team individually (following the pattern from TeamService)
+                const teams: any[] = [];
+                for (const teamName of gameData.teamNames) {
+                    const team = await this.teamRepository.findOne({
+                        where: { 
+                            name: teamName,
+                            season: { id: gameData.seasonId }
+                        },
+                        relations: ["players"]
+                    });
+                    if (team) {
+                        teams.push(team);
+                    }
+                }
 
                 console.log('Found teams:', teams.map(t => ({ name: t.name, seasonId: t.season.id })));
 
