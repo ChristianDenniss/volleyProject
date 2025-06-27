@@ -38,6 +38,24 @@ interface EditingState {
     value: string;
 }
 
+// Common stage options for dropdown
+const STAGE_OPTIONS = [
+    "Winners Bracket; Round of 16",
+    "Winners Bracket; Quarter Finals",
+    "Winners Bracket; Semi Finals",
+    "Winners Bracket; Finals",
+    "Losers Bracket; Round 1",
+    "Losers Bracket; Round 2",
+    "Losers Bracket; Quarter Finals",
+    "Losers Bracket; Semi Finals",
+    "Losers Bracket; Finals",
+    "Grand Finals",
+    "Consolation Finals",
+    "Play-in Round",
+    "Group Stage",
+    "Qualifiers"
+];
+
 const StatsPage: React.FC = () =>
 {
     // Retrieve stats list from API
@@ -307,8 +325,8 @@ const StatsPage: React.FC = () =>
             ...pendingCSV.gameData,
             stage: stageInput.trim(),
             name: `${pendingCSV.teamNames[0]} vs. ${pendingCSV.teamNames[1]} (Season ${pendingCSV.seasonId})`,
-            team1Score: 0, // You may want to prompt for scores in the future
-            team2Score: 0,
+            team1Score: pendingCSV.gameData.team1Score || 0,
+            team2Score: pendingCSV.gameData.team2Score || 0,
             videoUrl: "",
             date: new Date().toISOString(),
         };
@@ -662,11 +680,11 @@ const StatsPage: React.FC = () =>
                                 <h3>Preview:</h3>
                                 <div style={{ background: '#f5f5f5', padding: '10px', borderRadius: '5px' }}>
                                     <h4>Game Data:</h4>
-                                    <p><strong>Date:</strong> {csvPreview.gameData.date}</p>
+                                    <p><strong>Date:</strong> {new Date().toLocaleDateString()}</p>
                                     <p><strong>Season ID:</strong> {csvPreview.gameData.seasonId}</p>
                                     <p><strong>Teams:</strong> {csvPreview.gameData.teamNames.join(' vs ')}</p>
-                                    <p><strong>Score:</strong> {csvPreview.gameData.team1Score} - {csvPreview.gameData.team2Score}</p>
-                                    <p><strong>Stage:</strong> {csvPreview.gameData.stage}</p>
+                                    <p><strong>Team 1 Score:</strong> {csvPreview.gameData.team1Score}</p>
+                                    <p><strong>Team 2 Score:</strong> {csvPreview.gameData.team2Score}</p>
                                     
                                     <h4>Stats Data ({csvPreview.statsData.length} players):</h4>
                                     <div style={{ maxHeight: '200px', overflow: 'auto' }}>
@@ -685,10 +703,22 @@ const StatsPage: React.FC = () =>
                         <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
                             <button
                                 onClick={closeCSVModal}
-                                style={{ padding: '10px 20px', background: '#6c757d', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
+                                className="create-button"
+                                style={{ background: '#dc3545', color: 'white' }}
                             >
                                 Cancel
                             </button>
+                            {csvPreview && (
+                                <button
+                                    onClick={() => {
+                                        setPendingCSV(csvPreview);
+                                        setIsStageModalOpen(true);
+                                    }}
+                                    className="create-button"
+                                >
+                                    Create Game
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -698,17 +728,42 @@ const StatsPage: React.FC = () =>
             {isStageModalOpen && (
                 <div className="modal-overlay">
                     <div className="modal">
-                        <h2 className="modal-title">Enter Match Stage</h2>
-                        <input
-                            type="text"
-                            value={stageInput}
-                            onChange={e => setStageInput(e.target.value)}
-                            placeholder="e.g. Winners Bracket Round 1"
-                            style={{ width: '100%', marginBottom: '1rem' }}
-                        />
+                        <h2 className="modal-title">Select Match Stage</h2>
+                        <label>
+                            Stage*
+                            <select
+                                value={stageInput}
+                                onChange={e => setStageInput(e.target.value)}
+                                style={{ width: '100%', marginBottom: '1rem', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+                                required
+                            >
+                                <option value="">Select a stage</option>
+                                {STAGE_OPTIONS.map(stage => (
+                                    <option key={stage} value={stage}>
+                                        {stage}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
                         <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-                            <button onClick={() => { setIsStageModalOpen(false); setStageInput(""); setPendingCSV(null); }} style={{ padding: '10px 20px', background: '#6c757d', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>Cancel</button>
-                            <button onClick={handleStageSubmit} className="create-button" disabled={!stageInput.trim()}>Submit</button>
+                            <button 
+                                onClick={() => { 
+                                    setIsStageModalOpen(false); 
+                                    setStageInput(""); 
+                                    setPendingCSV(null); 
+                                }} 
+                                className="create-button"
+                                style={{ background: '#dc3545', color: 'white' }}
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={handleStageSubmit} 
+                                className="create-button" 
+                                disabled={!stageInput.trim()}
+                            >
+                                Submit
+                            </button>
                         </div>
                     </div>
                 </div>
