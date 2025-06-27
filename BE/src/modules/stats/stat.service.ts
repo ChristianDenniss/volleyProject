@@ -607,14 +607,14 @@ export class StatService
                             name: teamName,
                             season: { id: gameData.seasonId }
                         },
-                        relations: ["players"]
+                        relations: ["players", "season"]
                     });
                     if (team) {
                         teams.push(team);
                     }
                 }
 
-                console.log('Found teams:', teams.map(t => ({ name: t.name, seasonId: t.season.id })));
+                console.log('Found teams:', teams.map(t => ({ name: t.name, seasonId: t.season?.id || 'no season relation' })));
 
                 if (teams.length !== 2) {
                     const foundTeamNames = teams.map(t => t.name);
@@ -715,15 +715,22 @@ export class StatService
 
             } catch (error) {
                 // Rollback transaction on error
+                console.error("Transaction error, rolling back:", error);
                 await queryRunner.rollbackTransaction();
                 throw error;
             } finally {
                 // Release query runner
+                console.log("Releasing query runner");
                 await queryRunner.release();
             }
 
         } catch (error) {
             console.error("Error in batchUploadFromCSV:", error);
+            console.error("Error details:", {
+                message: error instanceof Error ? error.message : 'Unknown error',
+                stack: error instanceof Error ? error.stack : 'No stack trace',
+                name: error instanceof Error ? error.name : 'Unknown error type'
+            });
             throw error;
         }
     }
