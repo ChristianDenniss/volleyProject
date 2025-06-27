@@ -5,13 +5,15 @@ export const handleFileUpload = (
     setCsvFile: (file: File | null) => void,
     setCsvContent: (content: string) => void,
     setCsvPreview: (preview: any) => void,
-    setCsvParseError: (error: string) => void
+    setCsvParseError: (error: string) => void,
+    showErrorModal: (err: any) => void
 ) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     if (!file.name.toLowerCase().endsWith('.csv')) {
         setCsvParseError("Please select a CSV file");
+        showErrorModal("Please select a CSV file");
         return;
     }
 
@@ -30,6 +32,7 @@ export const handleFileUpload = (
         } catch (error: any) {
             setCsvParseError(error.message);
             setCsvPreview(null);
+            showErrorModal(error);
         }
     };
     reader.readAsText(file);

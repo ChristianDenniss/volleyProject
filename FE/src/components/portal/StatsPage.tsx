@@ -127,6 +127,19 @@ const StatsPage: React.FC = () =>
     // Add state for missing players error modal
     const [missingPlayersError, setMissingPlayersError] = useState<string | null>(null);
 
+    // Add state for generic failure modal
+    const [failureModal, setFailureModal] = useState<string | null>(null);
+
+    // Helper to show error modal with any error object
+    function showErrorModal(err: any) {
+        let errorMsg = '';
+        if (err?.message) errorMsg = err.message;
+        else if (err?.error) errorMsg = err.error;
+        else if (err?.response?.data?.error) errorMsg = err.response.data.error;
+        else errorMsg = 'Unknown error';
+        setFailureModal(errorMsg);
+    }
+
     // Initialize localStats when data is fetched
     useEffect(() =>
     {
@@ -318,9 +331,9 @@ const StatsPage: React.FC = () =>
         setGameCreationError("");
     };
 
-    // Update handleFileUpload to trigger stage modal after parsing
+    // Update handleFileUploadWrapper to pass showErrorModal
     const handleFileUploadWrapper = (e: React.ChangeEvent<HTMLInputElement>, setCsvPreview: any, setCsvParseError: any) => {
-        handleFileUpload(e, () => {}, () => {}, setCsvPreview, setCsvParseError);
+        handleFileUpload(e, () => {}, () => {}, setCsvPreview, setCsvParseError, showErrorModal);
         // If CSV is parsed, open stage modal
         setTimeout(() => {
             if (csvPreview) {
@@ -357,11 +370,10 @@ const StatsPage: React.FC = () =>
                 setIsStageModalOpen(false);
                 setPendingCSV(null);
                 setStageInput("");
-                setGameCreationError("");
                 closeCSVModal();
                 alert(`Successfully uploaded game and ${result.stats.length} stats records!`);
             } catch (err: any) {
-                setGameCreationError("Game creation failed, exiting creation");
+                showErrorModal(err);
                 setIsStageModalOpen(false);
                 setPendingCSV(null);
                 setStageInput("");
@@ -382,11 +394,7 @@ const StatsPage: React.FC = () =>
                 closeCSVModal();
                 alert(`Successfully added ${result.length} stats records to game ${existingGameId}!`);
             } catch (err: any) {
-                if (err.message && err.message.includes("Players not found:")) {
-                    setMissingPlayersError(err.message);
-                } else {
-                    setGameCreationError("Failed to add stats to game");
-                }
+                showErrorModal(err);
                 setIsStageModalOpen(false);
                 setPendingCSV(null);
                 setExistingGameId(0);
@@ -901,6 +909,17 @@ const StatsPage: React.FC = () =>
                         <h2 className="modal-title">Missing Players</h2>
                         <p className="modal-error">{missingPlayersError}</p>
                         <button onClick={() => setMissingPlayersError(null)} className="create-button">Close</button>
+                    </div>
+                </div>
+            )}
+
+            {/* Generic Failure Modal */}
+            {failureModal && (
+                <div className="modal-overlay">
+                    <div className="modal" style={{ maxWidth: '400px' }}>
+                        <h2 className="modal-title">Upload Failed</h2>
+                        <p className="modal-error">{failureModal}</p>
+                        <button onClick={() => setFailureModal(null)} className="create-button">Close</button>
                     </div>
                 </div>
             )}
