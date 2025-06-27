@@ -549,6 +549,13 @@ export class StatService
      */
     async batchUploadFromCSV(gameData: any, statsData: any[]): Promise<{ game: Games, stats: Stats[] }> {
         try {
+            console.log('=== CSV UPLOAD DEBUG ===');
+            console.log('Raw gameData:', JSON.stringify(gameData, null, 2));
+            console.log('Raw teamNames:', gameData.teamNames);
+            console.log('Team names type:', typeof gameData.teamNames);
+            console.log('Team names length:', gameData.teamNames?.length);
+            console.log('Season ID:', gameData.seasonId, 'Type:', typeof gameData.seasonId);
+            
             // Validate game data
             if (!gameData.date || !gameData.seasonId || !gameData.teamNames || !gameData.stage) {
                 throw new MissingFieldError("Game data must include date, seasonId, teamNames, and stage");
@@ -580,9 +587,18 @@ export class StatService
                 if (!season) {
                     throw new NotFoundError(`Season with ID ${gameData.seasonId} not found`);
                 }
+                console.log('Found season:', { id: season.id });
 
                 // Fetch teams by names within the season
                 console.log('Searching for teams:', gameData.teamNames, 'in season:', gameData.seasonId);
+                
+                // Let's also check what teams exist in this season
+                const allTeamsInSeason = await this.teamRepository.find({
+                    where: { season: { id: gameData.seasonId } },
+                    relations: ["season"]
+                });
+                console.log('All teams in season', gameData.seasonId, ':', allTeamsInSeason.map(t => ({ name: t.name, id: t.id })));
+                
                 const teams = await this.teamRepository.find({
                     where: { 
                         name: gameData.teamNames,
@@ -599,6 +615,7 @@ export class StatService
                     console.log('Missing teams:', missingTeams);
                     console.log('Found team names:', foundTeamNames);
                     console.log('Searched for team names:', gameData.teamNames);
+                    console.log('=== END CSV UPLOAD DEBUG ===');
                     throw new NotFoundError(`Teams not found in season ${gameData.seasonId}: ${missingTeams.join(', ')}`);
                 }
 
