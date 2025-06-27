@@ -738,7 +738,7 @@ const StatsPage: React.FC = () =>
                             <select
                                 value={stageInput}
                                 onChange={e => setStageInput(e.target.value)}
-                                style={{ width: '100%', marginBottom: '1rem', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+                                style={{ width: '100%', marginBottom: '1rem', padding: '8px', borderRadius: '4px', border: '1px solid #ccc', maxHeight: '200px' }}
                                 required
                             >
                                 <option value="">Select a stage</option>
