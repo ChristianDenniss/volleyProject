@@ -708,8 +708,8 @@ const StatsPage: React.FC = () =>
                         {/* Upload Mode Selection */}
                         <div style={{ marginBottom: '20px' }}>
                             <h3>Upload Mode:</h3>
-                            <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
-                                <label style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            <div style={{ display: 'flex', gap: '30px', marginBottom: '10px', alignItems: 'center' }}>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 500 }}>
                                     <input
                                         type="radio"
                                         name="uploadMode"
@@ -719,7 +719,7 @@ const StatsPage: React.FC = () =>
                                     />
                                     Create New Game + Stats
                                 </label>
-                                <label style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 500 }}>
                                     <input
                                         type="radio"
                                         name="uploadMode"
@@ -730,7 +730,6 @@ const StatsPage: React.FC = () =>
                                     Add Stats to Existing Game
                                 </label>
                             </div>
-                            
                             {csvUploadMode === 'add' && (
                                 <div style={{ marginTop: '10px' }}>
                                     <label>
