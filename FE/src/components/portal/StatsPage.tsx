@@ -124,6 +124,9 @@ const StatsPage: React.FC = () =>
     const [pendingCSV, setPendingCSV] = useState<any>(null);
     const [gameCreationError, setGameCreationError] = useState("");
 
+    // Add state for missing players error modal
+    const [missingPlayersError, setMissingPlayersError] = useState<string | null>(null);
+
     // Initialize localStats when data is fetched
     useEffect(() =>
     {
@@ -379,7 +382,11 @@ const StatsPage: React.FC = () =>
                 closeCSVModal();
                 alert(`Successfully added ${result.length} stats records to game ${existingGameId}!`);
             } catch (err: any) {
-                setGameCreationError("Failed to add stats to game");
+                if (err.message && err.message.includes("Players not found:")) {
+                    setMissingPlayersError(err.message);
+                } else {
+                    setGameCreationError("Failed to add stats to game");
+                }
                 setIsStageModalOpen(false);
                 setPendingCSV(null);
                 setExistingGameId(0);
@@ -883,6 +890,17 @@ const StatsPage: React.FC = () =>
                         <h2 className="modal-title">Error</h2>
                         <p className="modal-error">{gameCreationError}</p>
                         <button onClick={() => setGameCreationError("")} className="create-button">Close</button>
+                    </div>
+                </div>
+            )}
+
+            {/* Missing Players Error Modal */}
+            {missingPlayersError && (
+                <div className="modal-overlay">
+                    <div className="modal" style={{ maxWidth: '400px' }}>
+                        <h2 className="modal-title">Missing Players</h2>
+                        <p className="modal-error">{missingPlayersError}</p>
+                        <button onClick={() => setMissingPlayersError(null)} className="create-button">Close</button>
                     </div>
                 </div>
             )}

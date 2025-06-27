@@ -773,11 +773,13 @@ export class StatService
             try {
                 // Create stats records
                 const statsToCreate: Stats[] = [];
+                const missingPlayers: string[] = [];
 
                 for (const statData of statsData) {
                     // Validate stat data
                     if (!statData.playerName) {
-                        throw new MissingFieldError("Player name is required for all stats");
+                        missingPlayers.push('(blank)');
+                        continue;
                     }
 
                     // Find player by name
@@ -787,7 +789,8 @@ export class StatService
                     });
 
                     if (!player) {
-                        throw new NotFoundError(`Player "${statData.playerName}" not found`);
+                        missingPlayers.push(statData.playerName);
+                        continue;
                     }
 
                     // Check if player is on one of the game's teams
@@ -832,6 +835,10 @@ export class StatService
                     newStat.game = game;
 
                     statsToCreate.push(newStat);
+                }
+
+                if (missingPlayers.length > 0) {
+                    throw new NotFoundError(`Players not found: ${missingPlayers.join(', ')}`);
                 }
 
                 // Save all stats
