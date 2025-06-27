@@ -112,7 +112,7 @@ export function parseCSV(csvText: string): ParsedCSVData {
       // Only add if at least one stat is non-zero
       if (statValues.some(val => val !== 0)) {
         statsData.push({
-          playerName: firstCell,
+          playerName: firstCell.toLowerCase(),
           spikingErrors: statValues[0],
           apeKills: statValues[1],
           apeAttempts: statValues[2],

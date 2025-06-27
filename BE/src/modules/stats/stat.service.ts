@@ -735,4 +735,133 @@ export class StatService
             throw error;
         }
     }
+
+    /**
+     * Add stats to an existing game from CSV data
+     */
+    async addStatsToExistingGame(gameId: number, statsData: any[]): Promise<Stats[]> {
+        try {
+            console.log('=== ADD STATS TO EXISTING GAME DEBUG ===');
+            console.log('Game ID:', gameId);
+            console.log('Stats data length:', statsData.length);
+            
+            // Validate input
+            if (!gameId) {
+                throw new MissingFieldError("Game ID is required");
+            }
+
+            if (!Array.isArray(statsData) || statsData.length === 0) {
+                throw new MissingFieldError("At least one stats record is required");
+            }
+
+            // Fetch the existing game with teams
+            const game = await this.gameRepository.findOne({
+                where: { id: gameId },
+                relations: ["teams"]
+            });
+
+            if (!game) {
+                throw new NotFoundError(`Game with ID ${gameId} not found`);
+            }
+
+            console.log('Found game:', { id: game.id, name: game.name, teams: game.teams.map(t => t.name) });
+
+            // Start transaction
+            const queryRunner = AppDataSource.createQueryRunner();
+            await queryRunner.startTransaction();
+
+            try {
+                // Create stats records
+                const statsToCreate: Stats[] = [];
+
+                for (const statData of statsData) {
+                    // Validate stat data
+                    if (!statData.playerName) {
+                        throw new MissingFieldError("Player name is required for all stats");
+                    }
+
+                    // Find player by name
+                    const player = await this.playerRepository.findOne({
+                        where: { name: statData.playerName },
+                        relations: ["teams"]
+                    });
+
+                    if (!player) {
+                        throw new NotFoundError(`Player "${statData.playerName}" not found`);
+                    }
+
+                    // Check if player is on one of the game's teams
+                    const playerTeamIds = player.teams.map(t => t.id);
+                    const gameTeamIds = game.teams.map(t => t.id);
+                    const isPlayerInGame = playerTeamIds.some(id => gameTeamIds.includes(id));
+
+                    if (!isPlayerInGame) {
+                        throw new ConflictError(
+                            `Player "${statData.playerName}" is not on any of the game's teams`
+                        );
+                    }
+
+                    // Check for duplicate stats
+                    const existingStat = await this.statRepository.findOne({
+                        where: {
+                            player: { id: player.id },
+                            game: { id: game.id }
+                        }
+                    });
+
+                    if (existingStat) {
+                        throw new DuplicateError(`Stats already exist for player "${statData.playerName}" in this game`);
+                    }
+
+                    // Create stat record
+                    const newStat = new Stats();
+                    newStat.spikingErrors = statData.spikingErrors || 0;
+                    newStat.apeKills = statData.apeKills || 0;
+                    newStat.apeAttempts = statData.apeAttempts || 0;
+                    newStat.spikeKills = statData.spikeKills || 0;
+                    newStat.spikeAttempts = statData.spikeAttempts || 0;
+                    newStat.assists = statData.assists || 0;
+                    newStat.settingErrors = statData.settingErrors || 0;
+                    newStat.blocks = statData.blocks || 0;
+                    newStat.digs = statData.digs || 0;
+                    newStat.blockFollows = statData.blockFollows || 0;
+                    newStat.aces = statData.aces || 0;
+                    newStat.servingErrors = statData.servingErrors || 0;
+                    newStat.miscErrors = statData.miscErrors || 0;
+                    newStat.player = player;
+                    newStat.game = game;
+
+                    statsToCreate.push(newStat);
+                }
+
+                // Save all stats
+                const savedStats = await queryRunner.manager.save(statsToCreate);
+
+                // Commit transaction
+                await queryRunner.commitTransaction();
+
+                console.log('Successfully added', savedStats.length, 'stats to game', gameId);
+                return savedStats;
+
+            } catch (error) {
+                // Rollback transaction on error
+                console.error("Transaction error, rolling back:", error);
+                await queryRunner.rollbackTransaction();
+                throw error;
+            } finally {
+                // Release query runner
+                console.log("Releasing query runner");
+                await queryRunner.release();
+            }
+
+        } catch (error) {
+            console.error("Error in addStatsToExistingGame:", error);
+            console.error("Error details:", {
+                message: error instanceof Error ? error.message : 'Unknown error',
+                stack: error instanceof Error ? error.stack : 'No stack trace',
+                name: error instanceof Error ? error.name : 'Unknown error type'
+            });
+            throw error;
+        }
+    }
 }

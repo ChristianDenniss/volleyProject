@@ -5,7 +5,7 @@ import { useStats }                  from "../../hooks/allFetch";
 import { useStatsMutations }          from "../../hooks/allPatch";
 import { useCreateStats }            from "../../hooks/allCreate";
 import { useDeleteStats }            from "../../hooks/allDelete";
-import { useCSVUpload }              from "../../hooks/allCreate";
+import { useCSVUpload, useAddStatsToExistingGame } from "../../hooks/allCreate";
 import { useAuth }                   from "../../context/authContext";
 import { usePlayers }                from "../../hooks/allFetch";
 import type { Stats }                from "../../types/interfaces";
@@ -78,7 +78,10 @@ const StatsPage: React.FC = () =>
     const { deleteItem: deleteStat, loading: deleting, error: deleteError } = useDeleteStats();
 
     // Destructure CSV upload hook
-    const { uploadCSV, error: csvUploadError } = useCSVUpload();
+    const { uploadCSV, loading: csvUploadLoading, error: csvUploadError } = useCSVUpload();
+
+    // Destructure add stats to existing game hook
+    const { addStatsToGame, loading: addStatsLoading, error: addStatsError } = useAddStatsToExistingGame();
 
     // Retrieve current user (for permission checks)
     const { user }                      = useAuth();
@@ -112,6 +115,8 @@ const StatsPage: React.FC = () =>
     const [ isCSVModalOpen, setIsCSVModalOpen ] = useState<boolean>(false);
     const [ csvPreview, setCsvPreview ] = useState<any>(null);
     const [ csvParseError, setCsvParseError ] = useState<string>("");
+    const [ csvUploadMode, setCsvUploadMode ] = useState<'create' | 'add'>('create');
+    const [ existingGameId, setExistingGameId ] = useState<number>(0);
 
     // Add state for stage modal
     const [isStageModalOpen, setIsStageModalOpen] = useState(false);
@@ -324,35 +329,62 @@ const StatsPage: React.FC = () =>
 
     // Handle stage modal submit
     const handleStageSubmit = async () => {
-        if (!stageInput.trim()) return;
         if (!pendingCSV) return;
-        // Prepare gameData
-        const gameData = {
-            ...pendingCSV.gameData,
-            stage: stageInput.trim(),
-            name: `${pendingCSV.teamNames[0]} vs. ${pendingCSV.teamNames[1]} (Season ${pendingCSV.seasonId})`,
-            team1Score: pendingCSV.gameData.team1Score || 0,
-            team2Score: pendingCSV.gameData.team2Score || 0,
-            videoUrl: "",
-            date: new Date().toISOString(),
-        };
-        // Try to create the game
-        try {
-            const result = await uploadCSV({ gameData, statsData: pendingCSV.statsData });
-            if (!result) throw new Error("Game creation failed");
-            setLocalStats(prev => [...result.stats, ...prev]);
-            setIsStageModalOpen(false);
-            setPendingCSV(null);
-            setStageInput("");
-            setGameCreationError("");
-            closeCSVModal();
-            alert(`Successfully uploaded game and ${result.stats.length} stats records!`);
-        } catch (err: any) {
-            setGameCreationError("Game creation failed, exiting creation");
-            setIsStageModalOpen(false);
-            setPendingCSV(null);
-            setStageInput("");
-            closeCSVModal();
+        
+        if (csvUploadMode === 'create') {
+            // Create new game mode
+            if (!stageInput.trim()) return;
+            
+            // Prepare gameData
+            const gameData = {
+                ...pendingCSV.gameData,
+                stage: stageInput.trim(),
+                name: `${pendingCSV.teamNames[0]} vs. ${pendingCSV.teamNames[1]} (Season ${pendingCSV.seasonId})`,
+                team1Score: pendingCSV.gameData.team1Score || 0,
+                team2Score: pendingCSV.gameData.team2Score || 0,
+                videoUrl: "",
+                date: new Date().toISOString(),
+            };
+            
+            // Try to create the game
+            try {
+                const result = await uploadCSV({ gameData, statsData: pendingCSV.statsData });
+                if (!result) throw new Error("Game creation failed");
+                setLocalStats(prev => [...result.stats, ...prev]);
+                setIsStageModalOpen(false);
+                setPendingCSV(null);
+                setStageInput("");
+                setGameCreationError("");
+                closeCSVModal();
+                alert(`Successfully uploaded game and ${result.stats.length} stats records!`);
+            } catch (err: any) {
+                setGameCreationError("Game creation failed, exiting creation");
+                setIsStageModalOpen(false);
+                setPendingCSV(null);
+                setStageInput("");
+                closeCSVModal();
+            }
+        } else {
+            // Add to existing game mode
+            if (!existingGameId) return;
+            
+            try {
+                const result = await addStatsToGame(existingGameId, pendingCSV.statsData);
+                if (!result) throw new Error("Failed to add stats to game");
+                setLocalStats(prev => [...result, ...prev]);
+                setIsStageModalOpen(false);
+                setPendingCSV(null);
+                setExistingGameId(0);
+                setGameCreationError("");
+                closeCSVModal();
+                alert(`Successfully added ${result.length} stats records to game ${existingGameId}!`);
+            } catch (err: any) {
+                setGameCreationError("Failed to add stats to game");
+                setIsStageModalOpen(false);
+                setPendingCSV(null);
+                setExistingGameId(0);
+                closeCSVModal();
+            }
         }
     };
 
@@ -667,6 +699,55 @@ const StatsPage: React.FC = () =>
                             </p>
                         )}
 
+                        {addStatsError && (
+                            <p className="modal-error">
+                                {addStatsError}
+                            </p>
+                        )}
+
+                        {/* Upload Mode Selection */}
+                        <div style={{ marginBottom: '20px' }}>
+                            <h3>Upload Mode:</h3>
+                            <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                    <input
+                                        type="radio"
+                                        name="uploadMode"
+                                        value="create"
+                                        checked={csvUploadMode === 'create'}
+                                        onChange={(e) => setCsvUploadMode(e.target.value as 'create' | 'add')}
+                                    />
+                                    Create New Game + Stats
+                                </label>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                    <input
+                                        type="radio"
+                                        name="uploadMode"
+                                        value="add"
+                                        checked={csvUploadMode === 'add'}
+                                        onChange={(e) => setCsvUploadMode(e.target.value as 'create' | 'add')}
+                                    />
+                                    Add Stats to Existing Game
+                                </label>
+                            </div>
+                            
+                            {csvUploadMode === 'add' && (
+                                <div style={{ marginTop: '10px' }}>
+                                    <label>
+                                        Existing Game ID*
+                                        <input
+                                            type="number"
+                                            value={existingGameId}
+                                            onChange={(e) => setExistingGameId(Number(e.target.value))}
+                                            min="1"
+                                            placeholder="Enter game ID"
+                                            style={{ width: '100%', marginTop: '5px', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+                                        />
+                                    </label>
+                                </div>
+                            )}
+                        </div>
+
                         {/* File upload section */}
                         <div style={{ marginBottom: '20px' }}>
                             <label>
@@ -685,12 +766,22 @@ const StatsPage: React.FC = () =>
                             <div style={{ marginBottom: '20px' }}>
                                 <h3>Preview:</h3>
                                 <div style={{ background: '#f5f5f5', padding: '10px', borderRadius: '5px' }}>
-                                    <h4>Game Data</h4>
-                                    <p><strong>Date:</strong> {new Date().toLocaleDateString()}</p>
-                                    <p><strong>Season ID:</strong> {csvPreview.gameData.seasonId}</p>
-                                    <p><strong>Teams:</strong> {csvPreview.gameData.teamNames.join(' vs ')}</p>
-                                    <p><strong>Team 1 Score:</strong> {csvPreview.gameData.team1Score}</p>
-                                    <p><strong>Team 2 Score:</strong> {csvPreview.gameData.team2Score}</p>
+                                    {csvUploadMode === 'create' ? (
+                                        <>
+                                            <h4>Game Data</h4>
+                                            <p><strong>Date:</strong> {new Date().toLocaleDateString()}</p>
+                                            <p><strong>Season ID:</strong> {csvPreview.gameData.seasonId}</p>
+                                            <p><strong>Teams:</strong> {csvPreview.gameData.teamNames.join(' vs ')}</p>
+                                            <p><strong>Team 1 Score:</strong> {csvPreview.gameData.team1Score}</p>
+                                            <p><strong>Team 2 Score:</strong> {csvPreview.gameData.team2Score}</p>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <h4>Adding to Game ID: {existingGameId}</h4>
+                                            <p><strong>Season ID:</strong> {csvPreview.gameData.seasonId}</p>
+                                            <p><strong>Teams:</strong> {csvPreview.gameData.teamNames.join(' vs ')}</p>
+                                        </>
+                                    )}
                                     
                                     <h4>Stats Data ({csvPreview.statsData.length} players)</h4>
                                     <div style={{ maxHeight: '300px', overflow: 'auto' }}>
@@ -711,6 +802,7 @@ const StatsPage: React.FC = () =>
                                 onClick={closeCSVModal}
                                 className="create-button"
                                 style={{ background: '#dc3545', color: 'white' }}
+                                disabled={csvUploadLoading || addStatsLoading}
                             >
                                 Cancel
                             </button>
@@ -718,11 +810,22 @@ const StatsPage: React.FC = () =>
                                 <button
                                     onClick={() => {
                                         setPendingCSV(csvPreview);
-                                        setIsStageModalOpen(true);
+                                        if (csvUploadMode === 'create') {
+                                            setIsStageModalOpen(true);
+                                        } else {
+                                            // For add mode, directly submit if game ID is provided
+                                            if (existingGameId) {
+                                                handleStageSubmit();
+                                            } else {
+                                                alert('Please enter a valid Game ID');
+                                            }
+                                        }
                                     }}
                                     className="create-button"
+                                    disabled={csvUploadLoading || addStatsLoading || (csvUploadMode === 'add' && !existingGameId)}
                                 >
-                                    Create Game
+                                    {csvUploadLoading || addStatsLoading ? 'Processing...' : 
+                                     csvUploadMode === 'create' ? 'Create Game' : 'Add Stats'}
                                 </button>
                             )}
                         </div>
@@ -731,7 +834,7 @@ const StatsPage: React.FC = () =>
             )}
 
             {/* Stage Modal */}
-            {isStageModalOpen && (
+            {isStageModalOpen && csvUploadMode === 'create' && (
                 <div className="modal-overlay">
                     <div className="modal" style={{ maxWidth: '400px' }}>
                         <h2 className="modal-title">Select Match Stage</h2>
@@ -760,15 +863,16 @@ const StatsPage: React.FC = () =>
                                 }} 
                                 className="create-button"
                                 style={{ background: '#dc3545', color: 'white' }}
+                                disabled={csvUploadLoading}
                             >
                                 Cancel
                             </button>
                             <button 
                                 onClick={handleStageSubmit} 
                                 className="create-button" 
-                                disabled={!stageInput.trim()}
+                                disabled={!stageInput.trim() || csvUploadLoading}
                             >
-                                Submit
+                                {csvUploadLoading ? 'Creating...' : 'Submit'}
                             </button>
                         </div>
                     </div>

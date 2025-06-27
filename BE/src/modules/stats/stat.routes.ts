@@ -11,6 +11,7 @@ export function registerStatRoutes(app: Application): void {
     router.post('/', validate(createStatSchema), statController.createStat);
     router.post('/by-name', validate(createStatByNameSchema), statController.createStatByName);
     router.post('/batch-csv', statController.batchUploadFromCSV);
+    router.post('/add-to-game', statController.addStatsToExistingGame);
     router.get('/', statController.getStats);
     router.get('/player/:playerId', statController.getStatsByPlayerId);
     router.get('/game/:gameId', statController.getStatsByGameId);

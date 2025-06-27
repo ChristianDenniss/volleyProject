@@ -154,3 +154,48 @@ export const useCSVUpload = () => {
 
   return { uploadCSV, loading, error };
 };
+
+/**
+ * useAddStatsToExistingGame
+ * – Adds stats to an existing game from CSV data
+ * – Returns addStatsToGame(payload) → Promise<Stats[] | null>
+ */
+export const useAddStatsToExistingGame = () => {
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const addStatsToGame = async (gameId: number, statsData: any[]): Promise<Stats[] | null> => {
+    setLoading(true);
+    setError(null);
+
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+    try {
+      const response = await authFetch(
+        `${backendUrl}/api/stats/add-to-game`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ gameId, statsData }),
+        }
+      );
+
+      if (!response.ok) {
+        const errJson = await response
+          .json()
+          .catch(() => ({ message: "Failed to add stats to game" }));
+        throw new Error(errJson.message || errJson.error || "Failed to add stats to game");
+      }
+
+      const result = await response.json();
+      return result.stats;
+    } catch (err: any) {
+      console.error("Add stats to game error:", err);
+      setError(err.message);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { addStatsToGame, loading, error };
+};

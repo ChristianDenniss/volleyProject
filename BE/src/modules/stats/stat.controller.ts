@@ -421,4 +421,40 @@ export class StatController
             }
         }
     };
+
+    // Add stats to existing game from CSV data
+    addStatsToExistingGame = async (req: Request, res: Response): Promise<void> => {
+        try {
+            const { gameId, statsData } = req.body;
+
+            // Validate required fields
+            if (!gameId || !statsData) {
+                res.status(400).json({ 
+                    error: "Missing required fields: gameId and statsData are required" 
+                });
+                return;
+            }
+
+            // Call service method to add stats to existing game
+            const result = await this.statService.addStatsToExistingGame(gameId, statsData);
+            
+            res.status(201).json({ stats: result });
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : "Failed to add stats to existing game";
+            
+            if (
+                errorMessage.includes("required") ||
+                errorMessage.includes("not found") ||
+                errorMessage.includes("cannot be negative") ||
+                errorMessage.includes("already exist") ||
+                errorMessage.includes("invalid") ||
+                errorMessage.includes("duplicate")
+            ) {
+                res.status(400).json({ error: errorMessage });
+            } else {
+                console.error("Error adding stats to existing game:", error);
+                res.status(500).json({ error: "Failed to add stats to existing game" });
+            }
+        }
+    };
 }
