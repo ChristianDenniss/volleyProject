@@ -4,10 +4,10 @@ export interface ParsedCSVData {
   gameData: Partial<CSVGameData>;
   statsData: CSVStatsData[];
   teamNames: string[];
-  seasonId: number;
+  seasonId: number | undefined;
 }
 
-export function parseCSV(csvText: string): ParsedCSVData {
+export function parseCSV(csvText: string, mode: 'create' | 'add' = 'create'): ParsedCSVData {
   const lines = csvText.trim().split(/\r?\n/);
   let seasonId: number | null = null;
   let teamNames: string[] = [];
@@ -35,37 +35,34 @@ export function parseCSV(csvText: string): ParsedCSVData {
       if (setsMatch) {
         const score1 = parseInt(setsMatch[1].trim(), 10);
         const score2 = parseInt(setsMatch[2].trim(), 10);
-        
-        // Validation for set scores
-        if (score1 < 0 || score2 < 0) {
-          throw new Error("Set scores cannot be negative. All scores must be 0 or positive.");
+        // Validation for set scores (only in create mode)
+        if (mode === 'create') {
+          if (score1 < 0 || score2 < 0) {
+            throw new Error("Set scores cannot be negative. All scores must be 0 or positive.");
+          }
+          if (score1 === 0 && score2 === 0) {
+            throw new Error("Set scores cannot be 0 for both teams. At least one team must have a score above 0.");
+          }
+          if (score1 === score2) {
+            throw new Error("Set scores cannot be tied. One team must win the match.");
+          }
+          if (score1 < 2 && score2 < 2) {
+            throw new Error("At least one team score must be 2 or above for a valid match result.");
+          }
         }
-        
-        if (score1 === 0 && score2 === 0) {
-          throw new Error("Set scores cannot be 0 for both teams. At least one team must have a score above 0.");
-        }
-        
-        if (score1 === score2) {
-          throw new Error("Set scores cannot be tied. One team must win the match.");
-        }
-        
-        // At least one score must be 2 or above
-        if (score1 < 2 && score2 < 2) {
-          throw new Error("At least one team score must be 2 or above for a valid match result.");
-        }
-        
         team1Score = score1;
         team2Score = score2;
       }
     }
   }
   
-  if (!seasonId) {
-    throw new Error("Could not find season number in the CSV (e.g., 'SEASON: 5')");
-  }
-  
-  if (team1Score === null || team2Score === null) {
-    throw new Error("Could not find sets score in the CSV (e.g., 'Sets: 3 - 1' or 'Score: 2 - 0')");
+  if (mode === 'create') {
+    if (!seasonId) {
+      throw new Error("Could not find season number in the CSV (e.g., 'SEASON: 5')");
+    }
+    if (team1Score === null || team2Score === null) {
+      throw new Error("Could not find sets score in the CSV (e.g., 'Sets: 3 - 1' or 'Score: 2 - 0')");
+    }
   }
 
   // Find team names and player rows
@@ -140,13 +137,13 @@ export function parseCSV(csvText: string): ParsedCSVData {
   return {
     gameData: {
       teamNames,
-      seasonId,
-      team1Score,
-      team2Score,
+      seasonId: mode === 'create' ? seasonId! : undefined,
+      team1Score: mode === 'create' ? team1Score! : undefined,
+      team2Score: mode === 'create' ? team2Score! : undefined,
     },
     statsData,
     teamNames,
-    seasonId,
+    seasonId: mode === 'create' ? seasonId! : undefined,
   };
 }
 
