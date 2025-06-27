@@ -28,11 +28,10 @@ export function parseCSV(csvText: string): ParsedCSVData {
     }
     
     // Find sets score in format "Sets: # - #" or "Score: # - # [additional text]"
-    if (line.toLowerCase().startsWith("sets:") || line.toLowerCase().startsWith("score:")) {
-      // Updated regex to handle various spacing formats:
-      // "Score: 2-0", "Score: 2 - 0", "Score:2-0", "Sets: 3-1", "Sets: 3 - 1", "Sets:3-1", etc.
-      // This will match the score numbers and ignore any additional text after the score
-      const setsMatch = line.match(/(?:sets|score):\s*(\d+)\s*-\s*(\d+)/i);
+    const trimmedLine = line.trim();
+    if (trimmedLine.toLowerCase().startsWith("sets:") || trimmedLine.toLowerCase().startsWith("score:")) {
+      // More robust regex: allow spaces before/after colon
+      const setsMatch = trimmedLine.match(/(?:sets|score)\s*:\s*(\d+)\s*-\s*(\d+)/i);
       if (setsMatch) {
         const score1 = parseInt(setsMatch[1].trim(), 10);
         const score2 = parseInt(setsMatch[2].trim(), 10);
