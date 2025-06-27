@@ -130,6 +130,14 @@ const StatsPage: React.FC = () =>
     // Add state for generic failure modal
     const [failureModal, setFailureModal] = useState<string | null>(null);
 
+    // Open stage modal automatically when csvPreview is set
+    useEffect(() => {
+        if (csvPreview) {
+            setPendingCSV(csvPreview);
+            setIsStageModalOpen(true);
+        }
+    }, [csvPreview]);
+
     // Helper to show error modal with any error object
     function showErrorModal(err: any) {
         let errorMsg = '';
@@ -331,16 +339,9 @@ const StatsPage: React.FC = () =>
         setGameCreationError("");
     };
 
-    // Update handleFileUploadWrapper to pass showErrorModal
+    // Update handleFileUploadWrapper to only handle file upload
     const handleFileUploadWrapper = (e: React.ChangeEvent<HTMLInputElement>, setCsvPreview: any, setCsvParseError: any) => {
         handleFileUpload(e, () => {}, () => {}, setCsvPreview, setCsvParseError, showErrorModal);
-        // If CSV is parsed, open stage modal
-        setTimeout(() => {
-            if (csvPreview) {
-                setPendingCSV(csvPreview);
-                setIsStageModalOpen(true);
-            }
-        }, 100);
     };
 
     // Handle stage modal submit
