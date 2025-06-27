@@ -5,6 +5,8 @@ import { useCreateAwards } from "../../hooks/allCreate";
 import { useDeleteAwards } from "../../hooks/allDelete";
 import { useAuth } from "../../context/authContext";
 import type { Award } from "../../types/interfaces";
+import SearchBar from "../Searchbar";
+import Pagination from "../Pagination";
 import "../../styles/UsersPage.css";
 import "../../styles/AwardsPage.css";
 
@@ -41,6 +43,9 @@ const AwardsPage: React.FC = () => {
   const [localAwards, setLocalAwards] = useState<Award[]>([]);
   const [editing, setEditing] = useState<EditingState | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const awardsPerPage = 10;
 
   // Filter states
   const [seasonFilter, setSeasonFilter] = useState<string>("");
@@ -62,27 +67,45 @@ const AwardsPage: React.FC = () => {
   // Get unique seasons for filter options
   const uniqueSeasons = Array.from(new Set(localAwards.map(award => award.season.seasonNumber))).sort((a, b) => a - b);
 
-  // Filter awards based on season and award type
+  // Filter awards based on search query, season and award type
   const filteredAwards = localAwards.filter(award => {
+    const matchesSearch = award.players[0]?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false;
     const matchesSeason = !seasonFilter || award.season.seasonNumber.toString() === seasonFilter;
     const matchesAwardType = !awardTypeFilter || award.type === awardTypeFilter;
     
-    return matchesSeason && matchesAwardType;
+    return matchesSearch && matchesSeason && matchesAwardType;
   });
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredAwards.length / awardsPerPage);
+  const paginatedAwards = filteredAwards.slice(
+    (currentPage - 1) * awardsPerPage,
+    currentPage * awardsPerPage
+  );
+
+  // Handle search
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    setCurrentPage(1); // Reset to first page when searching
+  };
 
   // Handle filter changes
   const handleSeasonFilterChange = (value: string) => {
     setSeasonFilter(value);
+    setCurrentPage(1); // Reset to first page when filtering
   };
 
   const handleAwardTypeFilterChange = (value: string) => {
     setAwardTypeFilter(value);
+    setCurrentPage(1); // Reset to first page when filtering
   };
 
   // Clear all filters
   const clearFilters = () => {
+    setSearchQuery("");
     setSeasonFilter("");
     setAwardTypeFilter("");
+    setCurrentPage(1);
   };
 
   // Commit inline edits
@@ -217,13 +240,23 @@ const AwardsPage: React.FC = () => {
     <div className="portal-main">
       <h1 className="users-title">Awards</h1>
 
-      {/* "Create Award" Button */}
-      <button
-        onClick={openModal}
-        className="create-button"
-      >
-        Create Award
-      </button>
+      {/* Search and Controls */}
+      <div className="players-controls">
+        <button
+          onClick={openModal}
+          className="create-button"
+        >
+          Create Award
+        </button>
+        <div className="players-controls-right">
+          <SearchBar onSearch={handleSearch} placeholder="Search player names..." />
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        </div>
+      </div>
 
       {/* Filters */}
       <div className="filters-container">
@@ -259,7 +292,7 @@ const AwardsPage: React.FC = () => {
           </select>
         </div>
 
-        {(seasonFilter || awardTypeFilter) && (
+        {(searchQuery || seasonFilter || awardTypeFilter) && (
           <button
             className="clear-filters-button"
             onClick={clearFilters}
@@ -269,79 +302,9 @@ const AwardsPage: React.FC = () => {
         )}
 
         <div className="results-counter">
-          Showing {filteredAwards.length} of {localAwards.length} awards
+          Showing {((currentPage - 1) * awardsPerPage) + 1}-{Math.min(currentPage * awardsPerPage, filteredAwards.length)} of {filteredAwards.length} awards
         </div>
       </div>
-
-      {/* Modal Overlay for Creating a New Award */}
-      {isModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h2>Create New Award</h2>
-            <form onSubmit={handleCreate}>
-              <div className="form-group">
-                <label>Type:</label>
-                <select
-                  value={newType}
-                  onChange={(e) => setNewType(e.target.value)}
-                  required
-                >
-                  <option value="">Select an award type</option>
-                  {AWARD_TYPES.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Description:</label>
-                <textarea
-                  value={newDescription}
-                  onChange={(e) => setNewDescription(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Season ID:</label>
-                <input
-                  type="number"
-                  value={newSeasonId}
-                  onChange={(e) => setNewSeasonId(Number(e.target.value))}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Player Name:</label>
-                <input
-                  type="text"
-                  value={newPlayerName}
-                  onChange={(e) => setNewPlayerName(e.target.value.toLowerCase())}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Image URL:</label>
-                <input
-                  type="url"
-                  value={newImageUrl}
-                  onChange={(e) => setNewImageUrl(e.target.value)}
-                  placeholder="https://example.com/image.jpg"
-                />
-              </div>
-              {formError && <p className="error-message">{formError}</p>}
-              <div className="modal-buttons">
-                <button type="submit" disabled={creating}>
-                  {creating ? "Creating..." : "Create"}
-                </button>
-                <button type="button" onClick={closeModal}>
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* Awards Table */}
       <div className="table-container">
@@ -358,7 +321,7 @@ const AwardsPage: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredAwards.map((award) => (
+            {paginatedAwards.map((award) => (
               <tr key={award.id}>
                 <td>{award.id}</td>
                 <td>
@@ -549,6 +512,76 @@ const AwardsPage: React.FC = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Modal Overlay for Creating a New Award */}
+      {isModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h2>Create New Award</h2>
+            <form onSubmit={handleCreate}>
+              <div className="form-group">
+                <label>Type:</label>
+                <select
+                  value={newType}
+                  onChange={(e) => setNewType(e.target.value)}
+                  required
+                >
+                  <option value="">Select an award type</option>
+                  {AWARD_TYPES.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Description:</label>
+                <textarea
+                  value={newDescription}
+                  onChange={(e) => setNewDescription(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Season ID:</label>
+                <input
+                  type="number"
+                  value={newSeasonId}
+                  onChange={(e) => setNewSeasonId(Number(e.target.value))}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Player Name:</label>
+                <input
+                  type="text"
+                  value={newPlayerName}
+                  onChange={(e) => setNewPlayerName(e.target.value.toLowerCase())}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Image URL:</label>
+                <input
+                  type="url"
+                  value={newImageUrl}
+                  onChange={(e) => setNewImageUrl(e.target.value)}
+                  placeholder="https://example.com/image.jpg"
+                />
+              </div>
+              {formError && <p className="error-message">{formError}</p>}
+              <div className="modal-buttons">
+                <button type="submit" disabled={creating}>
+                  {creating ? "Creating..." : "Create"}
+                </button>
+                <button type="button" onClick={closeModal}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

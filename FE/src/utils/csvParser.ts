@@ -15,19 +15,55 @@ export function parseCSV(csvText: string): ParsedCSVData {
   let foundFirstTeam = false;
   let foundSecondTeam = false;
   let statsData: CSVStatsData[] = [];
+  let team1Score: number | null = null;
+  let team2Score: number | null = null;
 
-  // Find season number
+  // Find season number and sets score
   for (const line of lines) {
     if (line.toLowerCase().startsWith("season:")) {
       const match = line.match(/season:\s*(\d+)/i);
       if (match) {
         seasonId = parseInt(match[1], 10);
       }
-      break;
+    }
+    
+    // Find sets score in format "Sets: # - #"
+    if (line.toLowerCase().startsWith("sets:")) {
+      const setsMatch = line.match(/sets:\s*(\d+)\s*-\s*(\d+)/i);
+      if (setsMatch) {
+        const score1 = parseInt(setsMatch[1], 10);
+        const score2 = parseInt(setsMatch[2], 10);
+        
+        // Validation for set scores
+        if (score1 < 0 || score2 < 0) {
+          throw new Error("Set scores cannot be negative. All scores must be 0 or positive.");
+        }
+        
+        if (score1 === 0 && score2 === 0) {
+          throw new Error("Set scores cannot be 0 for both teams. At least one team must have a score above 0.");
+        }
+        
+        if (score1 === score2) {
+          throw new Error("Set scores cannot be tied. One team must win the match.");
+        }
+        
+        // At least one score must be above 2 (best of 5 sets)
+        if (score1 <= 2 && score2 <= 2) {
+          throw new Error("At least one team score must be above 2 for a valid match result.");
+        }
+        
+        team1Score = score1;
+        team2Score = score2;
+      }
     }
   }
+  
   if (!seasonId) {
     throw new Error("Could not find season number in the CSV (e.g., 'SEASON: 5')");
+  }
+  
+  if (team1Score === null || team2Score === null) {
+    throw new Error("Could not find sets score in the CSV (e.g., 'Sets: 3 - 1')");
   }
 
   // Find team names and player rows
@@ -103,6 +139,8 @@ export function parseCSV(csvText: string): ParsedCSVData {
     gameData: {
       teamNames,
       seasonId,
+      team1Score,
+      team2Score,
     },
     statsData,
     teamNames,
@@ -112,7 +150,7 @@ export function parseCSV(csvText: string): ParsedCSVData {
 
 export function generateCSVTemplate(): string {
   return `SEASON: 5,Spikes,,,,,Blocks,Sets,Recieves,,Serves,,Errors,
-Sets: 0 - 0,Spiking Errors,Ape Kills,Ape Attempts,Kills,Attempts,Total,Assists,Spike,BFs,Aces,Misc. Errors,Set. Errors,Serve Errors
+Sets: 3 - 1,Spiking Errors,Ape Kills,Ape Attempts,Kills,Attempts,Total,Assists,Spike,BFs,Aces,Misc. Errors,Set. Errors,Serve Errors
 Yoru,,,,,,,,,,,,,
 m_ochii3,0,0,0,0,0,0,0,0,0,0,0,0,0
 xavier200iqq,0,0,0,0,0,0,0,0,0,0,0,0,0
