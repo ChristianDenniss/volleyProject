@@ -78,10 +78,10 @@ const StatsPage: React.FC = () =>
     const { deleteItem: deleteStat, loading: deleting, error: deleteError } = useDeleteStats();
 
     // Destructure CSV upload hook
-    const { uploadCSV, loading: csvUploadLoading, error: csvUploadError } = useCSVUpload();
+    const { uploadCSV, loading: csvUploadLoading, error: csvUploadError } = useCSVUpload(showErrorModal);
 
     // Destructure add stats to existing game hook
-    const { addStatsToGame, loading: addStatsLoading, error: addStatsError } = useAddStatsToExistingGame();
+    const { addStatsToGame, loading: addStatsLoading, error: addStatsError } = useAddStatsToExistingGame(showErrorModal);
 
     // Retrieve current user (for permission checks)
     const { user }                      = useAuth();

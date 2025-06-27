@@ -114,8 +114,9 @@ export const useCreateAwards = () => {
  * useCSVUpload
  * – Uploads CSV data to create game with teams and stats
  * – Returns uploadCSV(payload) → Promise<CSVUploadResult | null>
+ * – Accepts showErrorModal callback for error display
  */
-export const useCSVUpload = () => {
+export const useCSVUpload = (showErrorModal?: (err: any) => void) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -138,14 +139,14 @@ export const useCSVUpload = () => {
         const errJson = await response
           .json()
           .catch(() => ({ message: "CSV upload failed" }));
-        throw new Error(errJson.message || errJson.error || "CSV upload failed");
+        if (showErrorModal) showErrorModal(errJson.message || errJson.error || "CSV upload failed");
+        return null;
       }
 
       const result: CSVUploadResult = await response.json();
       return result;
     } catch (err: any) {
-      console.error("CSV upload error:", err);
-      setError(err.message);
+      if (showErrorModal) showErrorModal(err);
       return null;
     } finally {
       setLoading(false);
@@ -159,8 +160,9 @@ export const useCSVUpload = () => {
  * useAddStatsToExistingGame
  * – Adds stats to an existing game from CSV data
  * – Returns addStatsToGame(payload) → Promise<Stats[] | null>
+ * – Accepts showErrorModal callback for error display
  */
-export const useAddStatsToExistingGame = () => {
+export const useAddStatsToExistingGame = (showErrorModal?: (err: any) => void) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -183,13 +185,14 @@ export const useAddStatsToExistingGame = () => {
         const errJson = await response
           .json()
           .catch(() => ({ message: "Failed to add stats to game" }));
-        throw new Error(errJson.message || errJson.error || "Failed to add stats to game");
+        if (showErrorModal) showErrorModal(errJson.message || errJson.error || "Failed to add stats to game");
+        return null;
       }
 
       const result = await response.json();
       return result.stats;
     } catch (err: any) {
-      setError(err.message);
+      if (showErrorModal) showErrorModal(err);
       return null;
     } finally {
       setLoading(false);
