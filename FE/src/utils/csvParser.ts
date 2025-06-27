@@ -27,9 +27,12 @@ export function parseCSV(csvText: string): ParsedCSVData {
       }
     }
     
-    // Find sets score in format "Sets: # - #"
-    if (line.toLowerCase().startsWith("sets:")) {
-      const setsMatch = line.match(/sets:\s*(\d+)\s*-\s*(\d+)/i);
+    // Find sets score in format "Sets: # - #" or "Score: # - # [additional text]"
+    if (line.toLowerCase().startsWith("sets:") || line.toLowerCase().startsWith("score:")) {
+      // Updated regex to handle various spacing formats:
+      // "Score: 2-0", "Score: 2 - 0", "Score:2-0", "Sets: 3-1", "Sets: 3 - 1", "Sets:3-1", etc.
+      // This will match the score numbers and ignore any additional text after the score
+      const setsMatch = line.match(/(?:sets|score):\s*(\d+)\s*-\s*(\d+)/i);
       if (setsMatch) {
         const score1 = parseInt(setsMatch[1].trim(), 10);
         const score2 = parseInt(setsMatch[2].trim(), 10);
@@ -63,7 +66,7 @@ export function parseCSV(csvText: string): ParsedCSVData {
   }
   
   if (team1Score === null || team2Score === null) {
-    throw new Error("Could not find sets score in the CSV (e.g., 'Sets: 3 - 1')");
+    throw new Error("Could not find sets score in the CSV (e.g., 'Sets: 3 - 1' or 'Score: 2 - 0')");
   }
 
   // Find team names and player rows
@@ -71,7 +74,7 @@ export function parseCSV(csvText: string): ParsedCSVData {
     const row = lines[i].split(",").map(cell => cell.trim());
     const firstCell = row[0];
     // Skip header and empty rows
-    if (!firstCell || firstCell.toLowerCase().startsWith("season") || firstCell.toLowerCase().startsWith("sets") || firstCell.toLowerCase().startsWith("spiking errors") || firstCell.toLowerCase().startsWith("spikes")) {
+    if (!firstCell || firstCell.toLowerCase().startsWith("season") || firstCell.toLowerCase().startsWith("sets") || firstCell.toLowerCase().startsWith("score") || firstCell.toLowerCase().startsWith("spiking errors") || firstCell.toLowerCase().startsWith("spikes")) {
       continue;
     }
     // If this is a team name row (not a player row)
@@ -150,7 +153,7 @@ export function parseCSV(csvText: string): ParsedCSVData {
 
 export function generateCSVTemplate(): string {
   return `SEASON: 5,Spikes,,,,,Blocks,Sets,Recieves,,Serves,,Errors,
-Sets: 3 - 1,Spiking Errors,Ape Kills,Ape Attempts,Kills,Attempts,Total,Assists,Spike,BFs,Aces,Misc. Errors,Set. Errors,Serve Errors
+Score: 3 - 1,Spiking Errors,Ape Kills,Ape Attempts,Kills,Attempts,Total,Assists,Spike,BFs,Aces,Misc. Errors,Set. Errors,Serve Errors
 Yoru,,,,,,,,,,,,,
 m_ochii3,0,0,0,0,0,0,0,0,0,0,0,0,0
 xavier200iqq,0,0,0,0,0,0,0,0,0,0,0,0,0
