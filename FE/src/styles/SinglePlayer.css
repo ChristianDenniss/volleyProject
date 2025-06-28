@@ -170,9 +170,9 @@
     font-size: 1.4rem;
     font-weight: 800;
     color: #ffffff9e !important;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
     min-height: 1.5rem;
 }
 
