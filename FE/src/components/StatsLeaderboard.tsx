@@ -197,18 +197,21 @@ const StatsLeaderboard: React.FC = () => {
         
         // Add player stats to team totals
         if (player.stats) {
-          const relevantStats = selectedSeason === null 
+          const relevantStats = (selectedSeason === null 
             ? player.stats 
-            : player.stats.filter(statRecord => statRecord.game?.season?.seasonNumber === selectedSeason);
+            : player.stats.filter(statRecord => statRecord.game?.season?.seasonNumber === selectedSeason)
+          ).filter(statRecord => 
+            statRecord.game &&
+            statRecord.game.teams &&
+            statRecord.game.teams.some(gTeam => gTeam.name === team.name && gTeam.season?.seasonNumber === team.season?.seasonNumber)
+          );
           
           relevantStats.forEach(statRecord => {
             teamData.gamesPlayed.add(statRecord.game?.id || 0);
-            
             // Add to total sets
             if (statRecord.game && typeof statRecord.game.team1Score === 'number' && typeof statRecord.game.team2Score === 'number') {
               teamData.totalSets += statRecord.game.team1Score + statRecord.game.team2Score;
             }
-            
             // Add to stat totals
             Object.keys(teamData.totalStats).forEach(statKey => {
               const key = statKey as StatCategory;
@@ -371,6 +374,40 @@ const StatsLeaderboard: React.FC = () => {
                 <option value="team">Teams</option>
               </select>
             </div>
+            <div className="stats-filter-menu">
+              <button 
+                className="filter-menu-button"
+                onClick={() => setShowFilterMenu(!showFilterMenu)}
+              >
+                Filter Stats
+              </button>
+              {showFilterMenu && (
+                <div className="filter-menu-dropdown">
+                  <div className="filter-menu-header">
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={Object.values(visibleStats).every(v => v)}
+                        onChange={toggleAllStats}
+                      />
+                      All Stats
+                    </label>
+                  </div>
+                  <div className="filter-menu-items">
+                    {statCategories.map((stat) => (
+                      <label key={stat} className="filter-menu-item">
+                        <input
+                          type="checkbox"
+                          checked={visibleStats[stat]}
+                          onChange={() => toggleStatVisibility(stat)}
+                        />
+                        {stat.replace(/([A-Z])/g, ' $1').trim()}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
           <div className="stats-search-row">
             <SearchBar onSearch={handleSearch} placeholder={viewType === 'team' ? "Search Teams..." : "Search Players..."} />
@@ -383,41 +420,6 @@ const StatsLeaderboard: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
-
-      <div className="stats-filter-menu">
-        <button 
-          className="filter-menu-button"
-          onClick={() => setShowFilterMenu(!showFilterMenu)}
-        >
-          Filter Stats
-        </button>
-        {showFilterMenu && (
-          <div className="filter-menu-dropdown">
-            <div className="filter-menu-header">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={Object.values(visibleStats).every(v => v)}
-                  onChange={toggleAllStats}
-                />
-                All Stats
-              </label>
-            </div>
-            <div className="filter-menu-items">
-              {statCategories.map((stat) => (
-                <label key={stat} className="filter-menu-item">
-                  <input
-                    type="checkbox"
-                    checked={visibleStats[stat]}
-                    onChange={() => toggleStatVisibility(stat)}
-                  />
-                  {stat.replace(/([A-Z])/g, ' $1').trim()}
-                </label>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
 
       {error ? (
