@@ -244,11 +244,13 @@
 .stats-table
 {
     width: 100%;
+    min-width: 800px;
     border-collapse: collapse;
     border-bottom: none; /* Remove table bottom border */
     background-color: transparent; /* Let wrapper background show through */
     margin-bottom: 0;
     padding-bottom: 0;
+    table-layout: fixed; /* Prevent table from shrinking based on content */
 }
 
 .stats-table th,
