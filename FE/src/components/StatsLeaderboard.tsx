@@ -371,40 +371,6 @@ const StatsLeaderboard: React.FC = () => {
                 <option value="team">Teams</option>
               </select>
             </div>
-            <div className="stats-filter-menu">
-              <button 
-                className="filter-menu-button"
-                onClick={() => setShowFilterMenu(!showFilterMenu)}
-              >
-                Filter Stats
-              </button>
-              {showFilterMenu && (
-                <div className="filter-menu-dropdown">
-                  <div className="filter-menu-header">
-                    <label>
-                      <input
-                        type="checkbox"
-                        checked={Object.values(visibleStats).every(v => v)}
-                        onChange={toggleAllStats}
-                      />
-                      All Stats
-                    </label>
-                  </div>
-                  <div className="filter-menu-items">
-                    {statCategories.map((stat) => (
-                      <label key={stat} className="filter-menu-item">
-                        <input
-                          type="checkbox"
-                          checked={visibleStats[stat]}
-                          onChange={() => toggleStatVisibility(stat)}
-                        />
-                        {stat.replace(/([A-Z])/g, ' $1').trim()}
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
           </div>
           <div className="stats-search-row">
             <SearchBar onSearch={handleSearch} placeholder={viewType === 'team' ? "Search Teams..." : "Search Players..."} />
@@ -417,6 +383,41 @@ const StatsLeaderboard: React.FC = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="stats-filter-menu">
+        <button 
+          className="filter-menu-button"
+          onClick={() => setShowFilterMenu(!showFilterMenu)}
+        >
+          Filter Stats
+        </button>
+        {showFilterMenu && (
+          <div className="filter-menu-dropdown">
+            <div className="filter-menu-header">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={Object.values(visibleStats).every(v => v)}
+                  onChange={toggleAllStats}
+                />
+                All Stats
+              </label>
+            </div>
+            <div className="filter-menu-items">
+              {statCategories.map((stat) => (
+                <label key={stat} className="filter-menu-item">
+                  <input
+                    type="checkbox"
+                    checked={visibleStats[stat]}
+                    onChange={() => toggleStatVisibility(stat)}
+                  />
+                  {stat.replace(/([A-Z])/g, ' $1').trim()}
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {error ? (
