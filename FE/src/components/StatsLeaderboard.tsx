@@ -53,7 +53,7 @@ const StatsLeaderboard: React.FC = () => {
   const [selectedSeason, setSelectedSeason] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
-  const [sortColumn, setSortColumn] = useState<StatCategory | 'name' | null>(null);
+  const [sortColumn, setSortColumn] = useState<StatCategory | 'name'>('totalKills');
   const [showFilterMenu, setShowFilterMenu] = useState(false);
   const [statType, setStatType] = useState<StatType>('total');
   const [viewType, setViewType] = useState<ViewType>('player');
@@ -109,7 +109,7 @@ const StatsLeaderboard: React.FC = () => {
 
   const handleSort = (stat: StatCategory | 'name') => {
     if (sortColumn === stat) {
-      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
       setSortColumn(stat);
       setSortDirection('desc');
@@ -349,11 +349,11 @@ const StatsLeaderboard: React.FC = () => {
     }
     
     const statA = viewType === 'team' 
-      ? getTeamStat(a as TeamStatsData, sortColumn as StatCategory || 'spikeKills')
-      : getPlayerStat(a as Player, sortColumn as StatCategory || 'spikeKills');
+      ? getTeamStat(a as TeamStatsData, sortColumn as StatCategory || 'totalKills')
+      : getPlayerStat(a as Player, sortColumn as StatCategory || 'totalKills');
     const statB = viewType === 'team' 
-      ? getTeamStat(b as TeamStatsData, sortColumn as StatCategory || 'spikeKills')
-      : getPlayerStat(b as Player, sortColumn as StatCategory || 'spikeKills');
+      ? getTeamStat(b as TeamStatsData, sortColumn as StatCategory || 'totalKills')
+      : getPlayerStat(b as Player, sortColumn as StatCategory || 'totalKills');
     
     return sortDirection === 'desc' ? statB - statA : statA - statB;
   });
