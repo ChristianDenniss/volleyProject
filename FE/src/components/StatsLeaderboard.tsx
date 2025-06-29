@@ -25,7 +25,7 @@ type StatCategory =
   // Calculated columns:
   | 'totalAttempts'
   | 'totalKills'
-  | 'totalSpikingPct'
+  | 'totalSpike%'
   | 'totalReceives'
   | 'PRF'
   | 'totalErrors'
@@ -74,7 +74,7 @@ const StatsLeaderboard: React.FC = () => {
     // Calculated columns
     totalAttempts: true,
     totalKills: true,
-    totalSpikingPct: true,
+    'totalSpike%': true,
     totalReceives: true,
     PRF: false,
     totalErrors: true,
@@ -148,7 +148,7 @@ const StatsLeaderboard: React.FC = () => {
         return sum('apeAttempts') + sum('spikeAttempts');
       case 'totalKills':
         return sum('apeKills') + sum('spikeKills');
-      case 'totalSpikingPct': {
+      case 'totalSpike%': {
         const attempts = sum('apeAttempts') + sum('spikeAttempts');
         const kills = sum('apeKills') + sum('spikeKills');
         return attempts > 0 ? kills / attempts : 0;
@@ -216,7 +216,7 @@ const StatsLeaderboard: React.FC = () => {
               miscErrors: 0,
               totalAttempts: 0,
               totalKills: 0,
-              totalSpikingPct: 0,
+              'totalSpike%': 0,
               totalReceives: 0,
               PRF: 0,
               totalErrors: 0,
@@ -274,7 +274,7 @@ const StatsLeaderboard: React.FC = () => {
         return sum('apeAttempts') + sum('spikeAttempts');
       case 'totalKills':
         return sum('apeKills') + sum('spikeKills');
-      case 'totalSpikingPct': {
+      case 'totalSpike%': {
         const attempts = sum('apeAttempts') + sum('spikeAttempts');
         const kills = sum('apeKills') + sum('spikeKills');
         return attempts > 0 ? kills / attempts : 0;
@@ -367,7 +367,7 @@ const StatsLeaderboard: React.FC = () => {
   const statCategories: StatCategory[] = [
     'totalKills',
     'totalAttempts', 
-    'totalSpikingPct',
+    'totalSpike%',
     'blocks',
     'assists',
     'totalReceives',
@@ -394,6 +394,18 @@ const StatsLeaderboard: React.FC = () => {
       .split(' ')
       .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
       .join(' ');
+  };
+
+  const formatStatValue = (stat: StatCategory, value: number, statType: StatType): string => {
+    if (stat === 'totalSpike%') {
+      // Format as percentage with exactly 2 decimal places
+      return `${(value * 100).toFixed(2)}%`;
+    }
+    
+    // For other stats, use existing logic
+    return statType === 'total' 
+      ? value.toString()
+      : value.toFixed(1);
   };
 
   return (
@@ -561,9 +573,7 @@ const StatsLeaderboard: React.FC = () => {
                             ? getTeamStat(item as TeamStatsData, stat)
                             : getPlayerStat(item as Player, stat);
                           
-                          return statType === 'total' 
-                            ? statValue
-                            : statValue.toFixed(1);
+                          return formatStatValue(stat, statValue, statType);
                         })()}
                       </td>
                     ))}
