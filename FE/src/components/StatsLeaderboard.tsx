@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import ReactDOM from "react-dom";
 import { usePlayers } from "../hooks/allFetch";
-import { Player } from "../types/interfaces";
+import { Player, Stats } from "../types/interfaces";
 import "../styles/StatsLeaderboard.css";
 import SearchBar from "./Searchbar";
 import Pagination from "./Pagination";
@@ -20,7 +21,15 @@ type StatCategory =
   | 'settingErrors'
   | 'blockFollows'
   | 'servingErrors'
-  | 'miscErrors';
+  | 'miscErrors'
+  // Calculated columns:
+  | 'totalAttempts'
+  | 'totalKills'
+  | 'totalSpikingPct'
+  | 'totalReceives'
+  | 'PRF'
+  | 'totalErrors'
+  | 'plusMinus';
 
 type StatType = 'total' | 'perGame' | 'perSet';
 type ViewType = 'player' | 'team';
@@ -49,21 +58,44 @@ const StatsLeaderboard: React.FC = () => {
   const [statType, setStatType] = useState<StatType>('total');
   const [viewType, setViewType] = useState<ViewType>('player');
   const [visibleStats, setVisibleStats] = useState<Record<StatCategory, boolean>>({
-    spikeKills: true,
-    spikeAttempts: true,
-    apeKills: true,
-    apeAttempts: true,
-    spikingErrors: true,
-    digs: true,
+    spikeKills: false,
+    spikeAttempts: false,
+    apeKills: false,
+    apeAttempts: false,
+    spikingErrors: false,
+    digs: false,
     blocks: true,
     assists: true,
     aces: true,
-    settingErrors: true,
-    blockFollows: true,
-    servingErrors: true,
-    miscErrors: true
+    settingErrors: false,
+    blockFollows: false,
+    servingErrors: false,
+    miscErrors: false,
+    // Calculated columns
+    totalAttempts: true,
+    totalKills: true,
+    totalSpikingPct: true,
+    totalReceives: true,
+    PRF: false,
+    totalErrors: true,
+    plusMinus: false,
   });
   const playersPerPage = 25;
+  const filterButtonRef = useRef<HTMLButtonElement>(null);
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
+
+  useEffect(() => {
+    if (showFilterMenu && filterButtonRef.current) {
+      const rect = filterButtonRef.current.getBoundingClientRect();
+      setDropdownStyle({
+        position: "absolute",
+        top: rect.bottom + window.scrollY + 4,
+        left: rect.left + window.scrollX,
+        minWidth: 400,
+        zIndex: 1000,
+      });
+    }
+  }, [showFilterMenu]);
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -103,42 +135,38 @@ const StatsLeaderboard: React.FC = () => {
 
   const getPlayerStat = (player: Player, stat: StatCategory): number => {
     if (!player.stats || player.stats.length === 0) return 0;
-    
-    // Filter stats by selected season if one is selected
-    const relevantStats = selectedSeason === null 
-      ? player.stats 
+    const relevantStats = selectedSeason === null
+      ? player.stats
       : player.stats.filter(statRecord => statRecord.game?.season?.seasonNumber === selectedSeason);
-    
     if (relevantStats.length === 0) return 0;
-    
-    // Calculate total stat value
-    const totalStat = relevantStats.reduce((total, statRecord) => total + (statRecord[stat] || 0), 0);
-    
-    if (statType === 'total') {
-      return totalStat;
+    const sum = (key: keyof Stats) => relevantStats.reduce((total, statRecord) => {
+      const value = statRecord[key];
+      return total + (typeof value === 'number' ? value : 0);
+    }, 0);
+    switch (stat) {
+      case 'totalAttempts':
+        return sum('apeAttempts') + sum('spikeAttempts');
+      case 'totalKills':
+        return sum('apeKills') + sum('spikeKills');
+      case 'totalSpikingPct': {
+        const attempts = sum('apeAttempts') + sum('spikeAttempts');
+        const kills = sum('apeKills') + sum('spikeKills');
+        return attempts > 0 ? kills / attempts : 0;
+      }
+      case 'totalReceives':
+        return sum('digs') + sum('blockFollows');
+      case 'PRF':
+        return sum('apeKills') + sum('spikeKills') + sum('aces') + sum('assists');
+      case 'totalErrors':
+        return sum('miscErrors') + sum('spikingErrors') + sum('settingErrors') + sum('servingErrors');
+      case 'plusMinus': {
+        const prf = sum('apeKills') + sum('spikeKills') + sum('aces') + sum('assists');
+        const lrf = sum('miscErrors') + sum('spikingErrors') + sum('settingErrors') + sum('servingErrors');
+        return prf - lrf;
+      }
+      default:
+        return (stat in relevantStats[0]) ? sum(stat as keyof Stats) : 0;
     }
-    
-    if (statType === 'perGame') {
-      // Get unique games to count games played
-      const uniqueGames = new Set(relevantStats.map(statRecord => statRecord.game?.id));
-      const gamesPlayed = uniqueGames.size;
-      return gamesPlayed > 0 ? totalStat / gamesPlayed : 0;
-    }
-    
-    if (statType === 'perSet') {
-      // Calculate total sets played from game scores
-      const totalSets = relevantStats.reduce((total, statRecord) => {
-        const game = statRecord.game;
-        if (game && typeof game.team1Score === 'number' && typeof game.team2Score === 'number') {
-          return total + game.team1Score + game.team2Score;
-        }
-        return total;
-      }, 0);
-      
-      return totalSets > 0 ? totalStat / totalSets : 0;
-    }
-    
-    return totalStat;
   };
 
   // Function to aggregate stats by team
@@ -185,7 +213,14 @@ const StatsLeaderboard: React.FC = () => {
               settingErrors: 0,
               blockFollows: 0,
               servingErrors: 0,
-              miscErrors: 0
+              miscErrors: 0,
+              totalAttempts: 0,
+              totalKills: 0,
+              totalSpikingPct: 0,
+              totalReceives: 0,
+              PRF: 0,
+              totalErrors: 0,
+              plusMinus: 0,
             },
             gamesPlayed: new Set(),
             totalSets: 0
@@ -215,7 +250,10 @@ const StatsLeaderboard: React.FC = () => {
             // Add to stat totals
             Object.keys(teamData.totalStats).forEach(statKey => {
               const key = statKey as StatCategory;
-              teamData.totalStats[key] += statRecord[key] || 0;
+              // Only add actual Stats properties, not calculated fields
+              if (key in statRecord && typeof statRecord[key as keyof Stats] === 'number') {
+                teamData.totalStats[key] += statRecord[key as keyof Stats] as number;
+              }
             });
           });
         }
@@ -230,21 +268,31 @@ const StatsLeaderboard: React.FC = () => {
   };
 
   const getTeamStat = (teamData: any, stat: StatCategory): number => {
-    const totalStat = teamData.totalStats[stat];
-    
-    if (statType === 'total') {
-      return totalStat;
+    const sum = (key: StatCategory) => teamData.totalStats[key] || 0;
+    switch (stat) {
+      case 'totalAttempts':
+        return sum('apeAttempts') + sum('spikeAttempts');
+      case 'totalKills':
+        return sum('apeKills') + sum('spikeKills');
+      case 'totalSpikingPct': {
+        const attempts = sum('apeAttempts') + sum('spikeAttempts');
+        const kills = sum('apeKills') + sum('spikeKills');
+        return attempts > 0 ? kills / attempts : 0;
+      }
+      case 'totalReceives':
+        return sum('digs') + sum('blockFollows');
+      case 'PRF':
+        return sum('apeKills') + sum('spikeKills') + sum('aces') + sum('assists');
+      case 'totalErrors':
+        return sum('miscErrors') + sum('spikingErrors') + sum('settingErrors') + sum('servingErrors');
+      case 'plusMinus': {
+        const prf = sum('apeKills') + sum('spikeKills') + sum('aces') + sum('assists');
+        const lrf = sum('miscErrors') + sum('spikingErrors') + sum('settingErrors') + sum('servingErrors');
+        return prf - lrf;
+      }
+      default:
+        return sum(stat);
     }
-    
-    if (statType === 'perGame') {
-      return teamData.gamesPlayed > 0 ? totalStat / teamData.gamesPlayed : 0;
-    }
-    
-    if (statType === 'perSet') {
-      return teamData.totalSets > 0 ? totalStat / teamData.totalSets : 0;
-    }
-    
-    return totalStat;
   };
 
   const hasAnyStats = (player: Player): boolean => {
@@ -317,19 +365,26 @@ const StatsLeaderboard: React.FC = () => {
   );
 
   const statCategories: StatCategory[] = [
+    'totalKills',
+    'totalAttempts', 
+    'totalSpikingPct',
+    'blocks',
+    'assists',
+    'totalReceives',
+    'aces',
+    'totalErrors',
     'spikeKills',
     'spikeAttempts',
     'apeKills',
     'apeAttempts',
     'spikingErrors',
     'digs',
-    'blocks',
-    'assists',
-    'aces',
     'settingErrors',
     'blockFollows',
     'servingErrors',
-    'miscErrors'
+    'miscErrors',
+    'PRF',
+    'plusMinus'
   ];
   const visibleStatCategories = statCategories.filter(stat => visibleStats[stat]);
 
@@ -375,38 +430,13 @@ const StatsLeaderboard: React.FC = () => {
               </select>
             </div>
             <div className="stats-filter-menu">
-              <button 
+              <button
                 className="filter-menu-button"
+                ref={filterButtonRef}
                 onClick={() => setShowFilterMenu(!showFilterMenu)}
               >
                 Filter Stats
               </button>
-              {showFilterMenu && (
-                <div className="filter-menu-dropdown">
-                  <div className="filter-menu-header">
-                    <label>
-                      <input
-                        type="checkbox"
-                        checked={Object.values(visibleStats).every(v => v)}
-                        onChange={toggleAllStats}
-                      />
-                      All Stats
-                    </label>
-                  </div>
-                  <div className="filter-menu-items">
-                    {statCategories.map((stat) => (
-                      <label key={stat} className="filter-menu-item">
-                        <input
-                          type="checkbox"
-                          checked={visibleStats[stat]}
-                          onChange={() => toggleStatVisibility(stat)}
-                        />
-                        {stat.replace(/([A-Z])/g, ' $1').trim()}
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           </div>
           <div className="stats-search-row">
@@ -421,6 +451,34 @@ const StatsLeaderboard: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {showFilterMenu && ReactDOM.createPortal(
+        <div className="filter-menu-dropdown" style={dropdownStyle}>
+          <div className="filter-menu-header">
+            <label>
+              <input
+                type="checkbox"
+                checked={Object.values(visibleStats).every(v => v)}
+                onChange={toggleAllStats}
+              />
+              All Stats
+            </label>
+          </div>
+          <div className="filter-menu-items">
+            {statCategories.map((stat) => (
+              <label key={stat} className="filter-menu-item">
+                <input
+                  type="checkbox"
+                  checked={visibleStats[stat]}
+                  onChange={() => toggleStatVisibility(stat)}
+                />
+                {stat.replace(/([A-Z])/g, ' $1').trim()}
+              </label>
+            ))}
+          </div>
+        </div>,
+        document.body
+      )}
 
       {error ? (
         <div>Error: {error}</div>

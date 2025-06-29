@@ -69,6 +69,15 @@ interface Stats
     player: Player;
     playerId: number;
     game: Game;
+
+    // Calculated columns (frontend only)
+    totalAttempts?: number;
+    totalKills?: number;
+    totalSpikingPct?: number;
+    totalReceives?: number;
+    PRF?: number;
+    LRF?: number;
+    plusMinus?: number;
 }
 
 interface Team 
