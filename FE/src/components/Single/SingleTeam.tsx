@@ -356,6 +356,9 @@ const SingleTeam: React.FC = () =>
                                     <strong>Spike Attempts:</strong> {teamTotals.spikeAttempts}
                                 </div>
                                 <div className="totals-item">
+                                    <strong>Spike %:</strong> {teamTotals.spikeAttempts > 0 ? ((teamTotals.spikeKills / teamTotals.spikeAttempts) * 100).toFixed(1) : '0.0'}%
+                                </div>
+                                <div className="totals-item">
                                     <strong>Ape Kills:</strong> {teamTotals.apeKills}
                                 </div>
                                 <div className="totals-item">
