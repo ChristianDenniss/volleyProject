@@ -220,7 +220,7 @@ const SingleTeam: React.FC = () =>
                             return (
                                 <li key={player.id}>
                                     <details>
-                                        <summary className="player-info">
+                                        <summary className="team-player-summary">
                                             <strong>{player.name}</strong> — Position: {player.position}
                                         </summary>
 

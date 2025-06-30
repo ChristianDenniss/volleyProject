@@ -26,6 +26,8 @@ type StatCategory =
   | 'totalAttempts'
   | 'totalKills'
   | 'totalSpike%'
+  | 'Spike%'
+  | 'Ape%'
   | 'totalReceives'
   | 'PRF'
   | 'totalErrors'
@@ -75,6 +77,8 @@ const StatsLeaderboard: React.FC = () => {
     totalAttempts: true,
     totalKills: true,
     'totalSpike%': true,
+    'Spike%': false,
+    'Ape%': false,
     totalReceives: true,
     PRF: false,
     totalErrors: true,
@@ -143,30 +147,77 @@ const StatsLeaderboard: React.FC = () => {
       const value = statRecord[key];
       return total + (typeof value === 'number' ? value : 0);
     }, 0);
+    
+    let totalStat = 0;
     switch (stat) {
       case 'totalAttempts':
-        return sum('apeAttempts') + sum('spikeAttempts');
+        totalStat = sum('apeAttempts') + sum('spikeAttempts');
+        break;
       case 'totalKills':
-        return sum('apeKills') + sum('spikeKills');
+        totalStat = sum('apeKills') + sum('spikeKills');
+        break;
       case 'totalSpike%': {
         const attempts = sum('apeAttempts') + sum('spikeAttempts');
         const kills = sum('apeKills') + sum('spikeKills');
-        return attempts > 0 ? kills / attempts : 0;
+        totalStat = attempts > 0 ? kills / attempts : 0;
+        break;
       }
       case 'totalReceives':
-        return sum('digs') + sum('blockFollows');
+        totalStat = sum('digs') + sum('blockFollows');
+        break;
       case 'PRF':
-        return sum('apeKills') + sum('spikeKills') + sum('aces') + sum('assists');
+        totalStat = sum('apeKills') + sum('spikeKills') + sum('aces') + sum('assists');
+        break;
       case 'totalErrors':
-        return sum('miscErrors') + sum('spikingErrors') + sum('settingErrors') + sum('servingErrors');
+        totalStat = sum('miscErrors') + sum('spikingErrors') + sum('settingErrors') + sum('servingErrors');
+        break;
       case 'plusMinus': {
         const prf = sum('apeKills') + sum('spikeKills') + sum('aces') + sum('assists');
         const lrf = sum('miscErrors') + sum('spikingErrors') + sum('settingErrors') + sum('servingErrors');
-        return prf - lrf;
+        totalStat = prf - lrf;
+        break;
+      }
+      case 'Spike%': {
+        const attempts = sum('spikeAttempts');
+        const kills = sum('spikeKills');
+        totalStat = attempts > 0 ? kills / attempts : 0;
+        break;
+      }
+      case 'Ape%': {
+        const attempts = sum('apeAttempts');
+        const kills = sum('apeKills');
+        totalStat = attempts > 0 ? kills / attempts : 0;
+        break;
       }
       default:
-        return (stat in relevantStats[0]) ? sum(stat as keyof Stats) : 0;
+        totalStat = (stat in relevantStats[0]) ? sum(stat as keyof Stats) : 0;
     }
+
+    if (statType === 'total') {
+      return totalStat;
+    }
+
+    if (statType === 'perGame') {
+      // Get unique games to count games played
+      const uniqueGames = new Set(relevantStats.map(statRecord => statRecord.game?.id));
+      const gamesPlayed = uniqueGames.size;
+      return gamesPlayed > 0 ? totalStat / gamesPlayed : 0;
+    }
+
+    if (statType === 'perSet') {
+      // Calculate total sets played from game scores
+      const totalSets = relevantStats.reduce((total, statRecord) => {
+        const game = statRecord.game;
+        if (game && typeof game.team1Score === 'number' && typeof game.team2Score === 'number') {
+          return total + game.team1Score + game.team2Score;
+        }
+        return total;
+      }, 0);
+      
+      return totalSets > 0 ? totalStat / totalSets : 0;
+    }
+
+    return totalStat;
   };
 
   // Function to aggregate stats by team
@@ -217,6 +268,8 @@ const StatsLeaderboard: React.FC = () => {
               totalAttempts: 0,
               totalKills: 0,
               'totalSpike%': 0,
+              'Spike%': 0,
+              'Ape%': 0,
               totalReceives: 0,
               PRF: 0,
               totalErrors: 0,
@@ -269,30 +322,65 @@ const StatsLeaderboard: React.FC = () => {
 
   const getTeamStat = (teamData: any, stat: StatCategory): number => {
     const sum = (key: StatCategory) => teamData.totalStats[key] || 0;
+    
+    let totalStat = 0;
     switch (stat) {
       case 'totalAttempts':
-        return sum('apeAttempts') + sum('spikeAttempts');
+        totalStat = sum('apeAttempts') + sum('spikeAttempts');
+        break;
       case 'totalKills':
-        return sum('apeKills') + sum('spikeKills');
+        totalStat = sum('apeKills') + sum('spikeKills');
+        break;
       case 'totalSpike%': {
         const attempts = sum('apeAttempts') + sum('spikeAttempts');
         const kills = sum('apeKills') + sum('spikeKills');
-        return attempts > 0 ? kills / attempts : 0;
+        totalStat = attempts > 0 ? kills / attempts : 0;
+        break;
       }
       case 'totalReceives':
-        return sum('digs') + sum('blockFollows');
+        totalStat = sum('digs') + sum('blockFollows');
+        break;
       case 'PRF':
-        return sum('apeKills') + sum('spikeKills') + sum('aces') + sum('assists');
+        totalStat = sum('apeKills') + sum('spikeKills') + sum('aces') + sum('assists');
+        break;
       case 'totalErrors':
-        return sum('miscErrors') + sum('spikingErrors') + sum('settingErrors') + sum('servingErrors');
+        totalStat = sum('miscErrors') + sum('spikingErrors') + sum('settingErrors') + sum('servingErrors');
+        break;
       case 'plusMinus': {
         const prf = sum('apeKills') + sum('spikeKills') + sum('aces') + sum('assists');
         const lrf = sum('miscErrors') + sum('spikingErrors') + sum('settingErrors') + sum('servingErrors');
-        return prf - lrf;
+        totalStat = prf - lrf;
+        break;
+      }
+      case 'Spike%': {
+        const attempts = sum('spikeAttempts');
+        const kills = sum('spikeKills');
+        totalStat = attempts > 0 ? kills / attempts : 0;
+        break;
+      }
+      case 'Ape%': {
+        const attempts = sum('apeAttempts');
+        const kills = sum('apeKills');
+        totalStat = attempts > 0 ? kills / attempts : 0;
+        break;
       }
       default:
-        return sum(stat);
+        totalStat = sum(stat);
     }
+
+    if (statType === 'total') {
+      return totalStat;
+    }
+
+    if (statType === 'perGame') {
+      return teamData.gamesPlayed > 0 ? totalStat / teamData.gamesPlayed : 0;
+    }
+
+    if (statType === 'perSet') {
+      return teamData.totalSets > 0 ? totalStat / teamData.totalSets : 0;
+    }
+
+    return totalStat;
   };
 
   const hasAnyStats = (player: Player): boolean => {
@@ -365,26 +453,28 @@ const StatsLeaderboard: React.FC = () => {
   );
 
   const statCategories: StatCategory[] = [
-    'totalKills',
-    'totalAttempts', 
-    'totalSpike%',
-    'blocks',
-    'assists',
-    'totalReceives',
-    'aces',
-    'totalErrors',
     'spikeKills',
     'spikeAttempts',
     'apeKills',
     'apeAttempts',
+    'totalKills',
+    'totalAttempts',
     'spikingErrors',
-    'digs',
+    'blocks',
+    'assists',
     'settingErrors',
+    'digs',
     'blockFollows',
+    'totalReceives',
+    'aces',
     'servingErrors',
-    'miscErrors',
     'PRF',
-    'plusMinus'
+    'plusMinus',
+    'totalErrors',
+    'totalSpike%',
+    'Spike%',
+    'Ape%',
+    'miscErrors'
   ];
   const visibleStatCategories = statCategories.filter(stat => visibleStats[stat]);
 
@@ -397,7 +487,7 @@ const StatsLeaderboard: React.FC = () => {
   };
 
   const formatStatValue = (stat: StatCategory, value: number, statType: StatType): string => {
-    if (stat === 'totalSpike%') {
+    if (stat === 'totalSpike%' || stat === 'Spike%' || stat === 'Ape%') {
       // Format as percentage with exactly 2 decimal places
       return `${(value * 100).toFixed(2)}%`;
     }

@@ -209,7 +209,7 @@
 .players-list li {
     list-style: none;
     margin: 0 0 20px;
-    min-height: 60px; /* Reserve space for player items */
+    min-height: 40px; /* Reserve space for player items */
 }
 
 /* Detail wrapper styled as the card container */
@@ -219,20 +219,19 @@
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     overflow: hidden;
-    min-height: 60px; /* Reserve minimum height */
+    min-height: 40px; /* Reserve minimum height */
     contain: layout style; /* Optimize rendering */
 }
 
 /* Summary header: fill the box, make clickable */
-.players-list li details > summary 
-{
+.team-player-summary {
     all: unset;            /* reset default */
     display: flex;
     align-items: center;
     cursor: pointer;
-    padding: 25px;
+    padding: 15px 25px;
     font-size: 1.1rem;
-    min-height: 60px; /* Reserve space for summary */
+    min-height: 40px; /* Reserve space for summary */
 }
 
 /* Custom arrow: hide native, inject our own */
