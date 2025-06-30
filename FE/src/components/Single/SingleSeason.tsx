@@ -89,7 +89,7 @@ const SingleSeason: React.FC = () =>
                         <div className="ss-skeleton-title"></div>
                     </header>
 
-                    <div className="ss-meta">
+                    <div className="single-season-meta">
                         <div className="ss-skeleton-meta"></div>
                     </div>
                     
@@ -154,7 +154,7 @@ const SingleSeason: React.FC = () =>
                         Season {(Array.isArray(seasons) ? seasons[0] : seasons).seasonNumber}
                     </header>
 
-                    <div className="ss-meta">
+                    <div className="single-season-meta">
                         <span>Theme: {(Array.isArray(seasons) ? seasons[0] : seasons).theme}</span>
                         <span>Start Date: {new Date((Array.isArray(seasons) ? seasons[0] : seasons).startDate).toLocaleDateString()}</span>
                         <span>End Date: {(Array.isArray(seasons) ? seasons[0] : seasons).endDate ? new Date((Array.isArray(seasons) ? seasons[0] : seasons).endDate!).toLocaleDateString() : 'TBD'}</span>

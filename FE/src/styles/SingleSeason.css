@@ -47,16 +47,17 @@
 }
 
 /* Single-season meta as boxed items */
-.ss-meta {
+.single-season-meta {
     display: flex;
     justify-content: center;
+    align-items: center;
     gap: 1.5rem;
     margin-bottom: 1rem;
-    min-height: 60px; /* Reserve minimum height for meta */
+    min-height: 40px; /* Reserve minimum height for meta */
 }
 
 /* Each meta span styled as box */
-.ss-meta span {
+.single-season-meta span {
     background: #1a1a1a;
     color: #fff;
     padding: 0.5rem 1rem;
