@@ -16,14 +16,8 @@ export function globalMiddleware(app: Application): void
     // app.use(cors({
     //     origin: 'http://localhost:3000' 
     //   }));
-
-    // Code to allow all origins
     app.use(cors());
-    
-    // Parse JSON bodies
     app.use(express.json()); 
-
-    // Log requests
     app.use(loggerMiddleware);
 
     app.use(

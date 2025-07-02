@@ -44,7 +44,7 @@ const ProfilePage: React.FC = () =>
 
         if (!isAuthenticated)
         {
-            navigate("/login");
+            navigate("/");
             return;
         }
 
@@ -63,7 +63,7 @@ const ProfilePage: React.FC = () =>
                 if (res.status === 401)
                 {
                     logout();
-                    navigate("/login");
+                    navigate("/");
                     return;
                 }
 

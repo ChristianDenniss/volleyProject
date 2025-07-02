@@ -3,6 +3,8 @@ import { UserService } from './user.service.ts';
 import { OAuth } from '../../oauth.ts';
 import { log } from 'console';
 import { User } from './user.entity.ts';
+import jwt from "jsonwebtoken"
+import { cookieKey, newJWT } from '../../middleware/authentication.ts';
 
 export class UserController {
     private userService: UserService;
@@ -92,8 +94,7 @@ export class UserController {
 
             // lets get or get a user
             const userId = Number(userInfoJson.sub)
-            let user: User | "new" = await this.userService.getProfile(userId).catch((err) => {
-                console.log(err)
+            let user: User | "new" = await this.userService.getProfile(userId).catch((_err) => {
                 return "new"
             })
 
@@ -113,9 +114,14 @@ export class UserController {
                 })
             }
 
-            res.json({
-                user    
+            
+            const jwt = newJWT({
+                id: userId,
+                role: user.role,
+                username: user.username,
             })
+            res.cookie(cookieKey, jwt)
+            res.redirect(`http://localhost:5173?jwt=${jwt}`)
         }   
     }
 

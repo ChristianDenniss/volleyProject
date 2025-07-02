@@ -1,5 +1,5 @@
 import { Application } from 'express';
-import { registerTeamRoutes } from './teams/team.routes.tss';
+import { registerTeamRoutes } from './teams/team.routes.ts';
 import { registerPlayerRoutes } from './players/player.routes.ts';
 import { registerGameRoutes } from './games/game.routes.ts';
 import { registerSeasonRoutes } from './seasons/season.routes.ts';

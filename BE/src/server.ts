@@ -29,7 +29,6 @@ async function startServer(): Promise<void> {
   try {
     // Initialize TypeORM DataSource
     await initializeDataSource();
-    console.log("Database connection established");
 
     const app = createApp();
 

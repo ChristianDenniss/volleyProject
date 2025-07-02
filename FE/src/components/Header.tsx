@@ -6,6 +6,7 @@ import "../styles/Header.css";
 import rvlLogo from "../images/rvlLogo.png";  
 // import blueTexture from "../images/blue_texture_strip.png";  
 import pfp from "../images/pfpLogo.png";  
+import { BACKEND_OAUTH_LOGIN } from "../utils/constants"
 
 const Header: React.FC = () =>
 {
@@ -77,8 +78,7 @@ const Header: React.FC = () =>
                         </div>
                         {dropdownOpen && (
                             <div ref={dropdownRef} className="dropdown-menu">
-                                <Link to="/login">Login</Link>
-                                <Link to="/signup">Sign Up</Link>
+                                <Link to={BACKEND_OAUTH_LOGIN}>Login</Link>
                             </div>
                         )}
                     </div>
