@@ -31,7 +31,7 @@ const Applications: React.FC = () => {
             type: 'General Staff Position',
             description: 'Apply to become a staff member of the Roblox Volleyball League. Help manage the community and ensure smooth operations for each season.',
             url: 'https://forms.gle/TgpFMdP8zVmyqKjk6',
-            status: 'open',
+            status: 'closed',
             icon: <FaUsers />,
             category: 'staff'
         },
