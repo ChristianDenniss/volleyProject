@@ -356,7 +356,7 @@ const StatsPage: React.FC = () =>
             const gameData = {
                 ...pendingCSV.gameData,
                 stage: stageInput.trim(),
-                name: `${pendingCSV.teamNames[0]} vs. ${pendingCSV.teamNames[1]} (Season ${pendingCSV.seasonId})`,
+                name: `${pendingCSV.teamNames[0]} vs. ${pendingCSV.teamNames[1]} S${pendingCSV.seasonId}`,
                 team1Score: pendingCSV.gameData.team1Score || 0,
                 team2Score: pendingCSV.gameData.team2Score || 0,
                 videoUrl: "",
