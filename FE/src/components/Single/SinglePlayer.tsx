@@ -108,6 +108,9 @@ const calculateHOFScore = (player: any, awards: any[], careerTotals: any): numbe
         player.teams.forEach((team: { placement?: string }) => {
             if (team.placement) {
                 switch(team.placement) {
+                    case 'G.O.A.T.':
+                        score = Infinity; // Instant Hall of Fame induction
+                        break;
                     case '1st Place':
                         score += 20;
                         break;
@@ -412,7 +415,8 @@ const PlayerProfiles: React.FC = () =>
     }
 
     const hofScore = calculateHOFScore(player, awards || [], careerTotals)
-    const hofPercentage = Math.min((hofScore / 100) * 100, 100); // Cap percentage at 100 for display
+    const isGOAT = hofScore === Infinity
+    const hofPercentage = isGOAT ? 100 : Math.min((hofScore / 100) * 100, 100); // Cap percentage at 100 for display
 
     return (
         <div className="player-profile-container">
@@ -612,22 +616,28 @@ const PlayerProfiles: React.FC = () =>
                 )}
             </div>
 
-            <div className="player-hof-section">
+            <div className={`player-hof-section ${isGOAT ? 'goat-section' : ''}`}>
                 <h3>Hall of Fame Progress</h3>
                 <div className="hof-progress-container">
                     <div className="hof-score">
                         <FontAwesomeIcon icon={faStar} className="hof-icon" />
-                        <span className="hof-score-value">{hofScore}</span>
-                        <span className="hof-score-max">/100</span>
+                        <span className={`hof-score-value ${isGOAT ? 'goat-infinity' : ''}`}>
+                            {isGOAT ? '∞' : hofScore}
+                        </span>
+                        <span className="hof-score-max">
+                            {isGOAT ? '' : '/100'}
+                        </span>
                     </div>
                     <div className="hof-progress-bar">
                         <div 
-                            className="hof-progress-fill"
+                            className={`hof-progress-fill ${isGOAT ? 'goat-fill' : ''}`}
                             style={{ width: `${hofPercentage}%` }}
                         />
                     </div>
                     <div className="hof-status">
-                        {hofScore >= 100 ? (
+                        {isGOAT ? (
+                            <span className="hof-inducted">G.O.A.T. - Hall of Fame Inducted!</span>
+                        ) : hofScore >= 100 ? (
                             <span className="hof-inducted">Hall of Fame Inducted! (+{hofScore - 100} points)</span>
                         ) : (
                             <span className="hof-progress">{Math.round(hofPercentage)}% to Hall of Fame</span>
