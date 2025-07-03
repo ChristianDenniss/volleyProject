@@ -292,13 +292,19 @@ const StatsLeaderboard: React.FC = () => {
           relevantStats.forEach(statRecord => {
             // Verify that this game involves the team we're aggregating for
             const game = statRecord.game;
-            if (!game || !game.teams) return;
+            if (!game) return;
             
-            // Check if the team is one of the teams in this game
-            const teamInGame = game.teams.some(gameTeam => 
-              gameTeam.name === team.name && 
-              gameTeam.season?.seasonNumber === team.season?.seasonNumber
-            );
+            // If game.teams is not available (backend hasn't been updated yet), 
+            // fall back to a simpler approach: assume the player's stats belong to their current team
+            let teamInGame = true;
+            
+            if (game.teams && game.teams.length > 0) {
+              // Check if the team is one of the teams in this game
+              teamInGame = game.teams.some(gameTeam => 
+                gameTeam.name === team.name && 
+                gameTeam.season?.seasonNumber === team.season?.seasonNumber
+              );
+            }
             
             // Only add stats if the team was actually involved in this game
             if (teamInGame) {

@@ -100,7 +100,7 @@ export class PlayerService
     async getAllPlayers(): Promise<Players[]> 
     {
         return this.playerRepository.find({
-            relations: ["teams", "teams.season", "stats", "stats.game", "stats.game.season"], // Include game and season relations for stats
+            relations: ["teams", "teams.season", "stats", "stats.game", "stats.game.season", "stats.game.teams"], // Include game and season relations for stats
         });
     }
 
