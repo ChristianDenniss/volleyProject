@@ -459,6 +459,7 @@ const StatsLeaderboard: React.FC = () => {
     'apeAttempts',
     'totalKills',
     'totalAttempts',
+    'totalSpike%',
     'spikingErrors',
     'blocks',
     'assists',
@@ -471,7 +472,6 @@ const StatsLeaderboard: React.FC = () => {
     'PRF',
     'plusMinus',
     'totalErrors',
-    'totalSpike%',
     'Spike%',
     'Ape%',
     'miscErrors'
