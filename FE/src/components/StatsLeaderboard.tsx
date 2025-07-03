@@ -285,29 +285,43 @@ const StatsLeaderboard: React.FC = () => {
         
         // Add player stats to team totals
         if (player.stats) {
-          const relevantStats = (selectedSeason === null 
+          const relevantStats = selectedSeason === null 
             ? player.stats 
-            : player.stats.filter(statRecord => statRecord.game?.season?.seasonNumber === selectedSeason)
-          ).filter(statRecord => 
-            statRecord.game &&
-            statRecord.game.teams &&
-            statRecord.game.teams.some(gTeam => gTeam.name === team.name && gTeam.season?.seasonNumber === team.season?.seasonNumber)
-          );
+            : player.stats.filter(statRecord => statRecord.game?.season?.seasonNumber === selectedSeason);
           
           relevantStats.forEach(statRecord => {
-            teamData.gamesPlayed.add(statRecord.game?.id || 0);
-            // Add to total sets
-            if (statRecord.game && typeof statRecord.game.team1Score === 'number' && typeof statRecord.game.team2Score === 'number') {
-              teamData.totalSets += statRecord.game.team1Score + statRecord.game.team2Score;
-            }
-            // Add to stat totals
-            Object.keys(teamData.totalStats).forEach(statKey => {
-              const key = statKey as StatCategory;
-              // Only add actual Stats properties, not calculated fields
-              if (key in statRecord && typeof statRecord[key as keyof Stats] === 'number') {
-                teamData.totalStats[key] += statRecord[key as keyof Stats] as number;
+            // Verify that this game involves the team we're aggregating for
+            const game = statRecord.game;
+            if (!game || !game.teams) return;
+            
+            // Check if the team is one of the teams in this game
+            const teamInGame = game.teams.some(gameTeam => 
+              gameTeam.name === team.name && 
+              gameTeam.season?.seasonNumber === team.season?.seasonNumber
+            );
+            
+            // Only add stats if the team was actually involved in this game
+            if (teamInGame) {
+              teamData.gamesPlayed.add(game.id || 0);
+              // Add to total sets
+              if (typeof game.team1Score === 'number' && typeof game.team2Score === 'number') {
+                teamData.totalSets += game.team1Score + game.team2Score;
               }
-            });
+              // Add to stat totals - only add actual Stats properties, not calculated fields
+              if (statRecord.spikeKills !== undefined) teamData.totalStats.spikeKills += statRecord.spikeKills;
+              if (statRecord.spikeAttempts !== undefined) teamData.totalStats.spikeAttempts += statRecord.spikeAttempts;
+              if (statRecord.apeKills !== undefined) teamData.totalStats.apeKills += statRecord.apeKills;
+              if (statRecord.apeAttempts !== undefined) teamData.totalStats.apeAttempts += statRecord.apeAttempts;
+              if (statRecord.spikingErrors !== undefined) teamData.totalStats.spikingErrors += statRecord.spikingErrors;
+              if (statRecord.digs !== undefined) teamData.totalStats.digs += statRecord.digs;
+              if (statRecord.blocks !== undefined) teamData.totalStats.blocks += statRecord.blocks;
+              if (statRecord.assists !== undefined) teamData.totalStats.assists += statRecord.assists;
+              if (statRecord.aces !== undefined) teamData.totalStats.aces += statRecord.aces;
+              if (statRecord.settingErrors !== undefined) teamData.totalStats.settingErrors += statRecord.settingErrors;
+              if (statRecord.blockFollows !== undefined) teamData.totalStats.blockFollows += statRecord.blockFollows;
+              if (statRecord.servingErrors !== undefined) teamData.totalStats.servingErrors += statRecord.servingErrors;
+              if (statRecord.miscErrors !== undefined) teamData.totalStats.miscErrors += statRecord.miscErrors;
+            }
           });
         }
       });
