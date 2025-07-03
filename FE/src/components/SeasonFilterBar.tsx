@@ -7,7 +7,7 @@ interface SeasonFilterProps {
 }
 
 const SeasonFilter: React.FC<SeasonFilterProps> = ({ selectedSeason, onSeasonChange }) => {
-  const seasons = Array.from({ length: 13 }, (_, i) => i + 1); // Generates seasons 1 to 13
+  const seasons = Array.from({ length: 14 }, (_, i) => i + 1); // Generates seasons 1 to 14
 
   return (
     <div className="season-filter-bar">  {/* Use a unique class for scoping */}

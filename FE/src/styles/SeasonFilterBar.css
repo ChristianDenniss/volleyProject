@@ -42,3 +42,31 @@
     border-color: var(--primary-blue-hover);
     box-shadow: 0 0 0 2px rgba(26, 54, 93, 0.2);
 }
+
+/* Limit dropdown height and add scrollbar */
+.season-filter-bar select {
+    max-height: 200px;
+}
+
+.season-filter-bar select option {
+    padding: 4px 8px;
+}
+
+/* For webkit browsers (Chrome, Safari, Edge) */
+.season-filter-bar select::-webkit-scrollbar {
+    width: 8px;
+}
+
+.season-filter-bar select::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.season-filter-bar select::-webkit-scrollbar-thumb {
+    background: var(--primary-blue);
+    border-radius: 4px;
+}
+
+.season-filter-bar select::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-blue-hover);
+}
