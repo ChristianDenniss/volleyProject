@@ -620,10 +620,11 @@ const PlayerProfiles: React.FC = () =>
                 <h3>Hall of Fame Progress</h3>
                 <div className="hof-progress-container">
                     <div className="hof-score">
-                        <FontAwesomeIcon icon={faStar} className="hof-icon" />
+                        {!isGOAT && <FontAwesomeIcon icon={faStar} className="hof-icon" />}
                         <span className={`hof-score-value ${isGOAT ? 'goat-infinity' : ''}`}>
                             {isGOAT ? '∞' : hofScore}
                         </span>
+                        {isGOAT && <FontAwesomeIcon icon={faStar} className="hof-icon" />}
                         <span className="hof-score-max">
                             {isGOAT ? '' : '/100'}
                         </span>
