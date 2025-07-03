@@ -289,22 +289,23 @@ const StatsLeaderboard: React.FC = () => {
             ? player.stats 
             : player.stats.filter(statRecord => statRecord.game?.season?.seasonNumber === selectedSeason);
           
+          console.log(`Player ${player.name} has ${relevantStats.length} relevant stats for team ${team.name}`);
+          
           relevantStats.forEach(statRecord => {
             // Verify that this game involves the team we're aggregating for
             const game = statRecord.game;
             if (!game) return;
             
-            // If game.teams is not available (backend hasn't been updated yet), 
-            // fall back to a simpler approach: assume the player's stats belong to their current team
-            let teamInGame = true;
-            
+            // Check if the team is one of the teams in this game
+            let teamInGame = false;
             if (game.teams && game.teams.length > 0) {
-              // Check if the team is one of the teams in this game
               teamInGame = game.teams.some(gameTeam => 
                 gameTeam.name === team.name && 
                 gameTeam.season?.seasonNumber === team.season?.seasonNumber
               );
             }
+            
+            console.log(`Game ${game.id}: Team ${team.name} in game? ${teamInGame}, Game teams:`, game.teams?.map(t => t.name) || 'none');
             
             // Only add stats if the team was actually involved in this game
             if (teamInGame) {
@@ -333,11 +334,20 @@ const StatsLeaderboard: React.FC = () => {
       });
     });
     
-    return Array.from(teamStatsMap.values()).map(teamData => ({
+    const result = Array.from(teamStatsMap.values()).map(teamData => ({
       ...teamData,
       totalSets: teamData.totalSets / teamData.players.length, // Average sets per player to avoid double counting
       gamesPlayed: teamData.gamesPlayed.size
     }));
+    
+    console.log('Team stats result:', result.map(team => ({
+      name: team.name,
+      players: team.players.length,
+      gamesPlayed: team.gamesPlayed,
+      totalStats: team.totalStats
+    })));
+    
+    return result;
   };
 
   const getTeamStat = (teamData: any, stat: StatCategory): number => {
