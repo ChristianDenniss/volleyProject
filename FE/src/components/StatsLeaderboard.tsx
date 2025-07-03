@@ -292,7 +292,6 @@ const StatsLeaderboard: React.FC = () => {
           console.log(`Player ${player.name} has ${relevantStats.length} relevant stats for team ${team.name}`);
           
           relevantStats.forEach(statRecord => {
-            // Verify that this game involves the team we're aggregating for
             const game = statRecord.game;
             if (!game) return;
             
@@ -305,9 +304,15 @@ const StatsLeaderboard: React.FC = () => {
               );
             }
             
+            // If game.teams is not available or empty, assume the player's stats belong to their current team
+            // This is a fallback for when the game-team relationship data isn't fully populated
+            if (!game.teams || game.teams.length === 0) {
+              teamInGame = true;
+            }
+            
             console.log(`Game ${game.id}: Team ${team.name} in game? ${teamInGame}, Game teams:`, game.teams?.map(t => t.name) || 'none');
             
-            // Only add stats if the team was actually involved in this game
+            // Add stats if team was in game OR if we don't have game teams data (fallback)
             if (teamInGame) {
               teamData.gamesPlayed.add(game.id || 0);
               // Add to total sets
