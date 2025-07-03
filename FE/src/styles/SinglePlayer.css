@@ -704,40 +704,33 @@
 
 /* G.O.A.T. Infinity Symbol Glowing Effect */
 .hof-score-value.goat-infinity {
-    font-size: 5rem;
+    font-size: 7rem;
     font-weight: 900;
     color: #ffd700;
     text-shadow: 
+        0 0 5px #ffd700,
         0 0 10px #ffd700,
-        0 0 20px #ffd700,
-        0 0 30px #ffd700,
-        0 0 40px #ff6b35,
-        0 0 50px #ff6b35,
-        0 0 60px #ff6b35;
+        0 0 15px #ff6b35,
+        0 0 20px #ff6b35;
     animation: goatGlow 2s ease-in-out infinite alternate;
-    filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.8));
+    filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.6));
 }
 
 @keyframes goatGlow {
     0% {
         text-shadow: 
+            0 0 5px #ffd700,
             0 0 10px #ffd700,
-            0 0 20px #ffd700,
-            0 0 30px #ffd700,
-            0 0 40px #ff6b35,
-            0 0 50px #ff6b35,
-            0 0 60px #ff6b35;
+            0 0 15px #ff6b35,
+            0 0 20px #ff6b35;
         transform: scale(1);
     }
     100% {
         text-shadow: 
+            0 0 8px #ffd700,
             0 0 15px #ffd700,
-            0 0 25px #ffd700,
-            0 0 35px #ffd700,
-            0 0 45px #ff6b35,
-            0 0 55px #ff6b35,
-            0 0 65px #ff6b35,
-            0 0 75px #ff4500;
+            0 0 20px #ff6b35,
+            0 0 25px #ff6b35;
         transform: scale(1.05);
     }
 }
