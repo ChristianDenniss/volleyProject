@@ -35,6 +35,14 @@ type StatCategory =
 
 type StatType = 'total' | 'perGame' | 'perSet';
 type ViewType = 'player' | 'team';
+type ComparisonOperator = '==' | '!=' | '>' | '>=' | '<' | '<=';
+
+interface FilterCondition {
+  id: string;
+  stat: StatCategory;
+  operator: ComparisonOperator;
+  value: number;
+}
 
 interface TeamStatsData {
   id: string;
@@ -49,6 +57,112 @@ interface TeamStatsData {
 
 type DisplayData = Player | TeamStatsData;
 
+// Advanced Filter Component
+const AdvancedFilter: React.FC<{
+  conditions: FilterCondition[];
+  onConditionsChange: (conditions: FilterCondition[]) => void;
+  statCategories: StatCategory[];
+}> = ({ conditions, onConditionsChange, statCategories }) => {
+  const addCondition = () => {
+    const newCondition: FilterCondition = {
+      id: Date.now().toString(),
+      stat: 'totalKills',
+      operator: '>',
+      value: 0
+    };
+    onConditionsChange([...conditions, newCondition]);
+  };
+
+  const removeCondition = (id: string) => {
+    onConditionsChange(conditions.filter(c => c.id !== id));
+  };
+
+  const updateCondition = (id: string, updates: Partial<FilterCondition>) => {
+    onConditionsChange(conditions.map(c => 
+      c.id === id ? { ...c, ...updates } : c
+    ));
+  };
+
+  const formatStatName = (stat: string): string => {
+    return stat
+      .replace(/([A-Z])/g, ' $1')
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+  };
+
+  return (
+    <div className="advanced-filter">
+      <div className="advanced-filter-header">
+        <h3>Advanced Filters</h3>
+        <button 
+          className="add-filter-button"
+          onClick={addCondition}
+          type="button"
+        >
+          + Add Filter
+        </button>
+      </div>
+      
+      {conditions.length === 0 && (
+        <div className="no-filters-message">
+          No filters applied. Click "Add Filter" to start filtering.
+        </div>
+      )}
+      
+      {conditions.map((condition, index) => (
+        <div key={condition.id} className="filter-condition">
+          {index > 0 && <div className="filter-connector">AND</div>}
+          
+          <div className="filter-condition-content">
+            <select
+              value={condition.stat}
+              onChange={(e) => updateCondition(condition.id, { stat: e.target.value as StatCategory })}
+              className="filter-stat-select"
+            >
+              {statCategories.map(stat => (
+                <option key={stat} value={stat}>
+                  {formatStatName(stat)}
+                </option>
+              ))}
+            </select>
+            
+            <select
+              value={condition.operator}
+              onChange={(e) => updateCondition(condition.id, { operator: e.target.value as ComparisonOperator })}
+              className="filter-operator-select"
+            >
+              <option value="==">=</option>
+              <option value="!=">≠</option>
+              <option value=">">&gt;</option>
+              <option value=">=">≥</option>
+              <option value="<">&lt;</option>
+              <option value="<=">≤</option>
+            </select>
+            
+            <input
+              type="number"
+              value={condition.value}
+              onChange={(e) => updateCondition(condition.id, { value: parseFloat(e.target.value) || 0 })}
+              className="filter-value-input"
+              step="0.01"
+              min="0"
+            />
+            
+            <button
+              onClick={() => removeCondition(condition.id)}
+              className="remove-filter-button"
+              type="button"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 const StatsLeaderboard: React.FC = () => {
   const { data: players, error } = usePlayers();
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -57,8 +171,10 @@ const StatsLeaderboard: React.FC = () => {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [sortColumn, setSortColumn] = useState<StatCategory | 'name'>('totalKills');
   const [showFilterMenu, setShowFilterMenu] = useState(false);
+  const [showAdvancedFilter, setShowAdvancedFilter] = useState(false);
   const [statType, setStatType] = useState<StatType>('total');
   const [viewType, setViewType] = useState<ViewType>('player');
+  const [filterConditions, setFilterConditions] = useState<FilterCondition[]>([]);
   const [visibleStats, setVisibleStats] = useState<Record<StatCategory, boolean>>({
     spikeKills: false,
     spikeAttempts: false,
@@ -109,6 +225,39 @@ const StatsLeaderboard: React.FC = () => {
   const handleSeasonChange = (season: number | null) => {
     setSelectedSeason(season);
     setCurrentPage(1);
+  };
+
+  const handleFilterConditionsChange = (conditions: FilterCondition[]) => {
+    setFilterConditions(conditions);
+    setCurrentPage(1);
+  };
+
+  // Function to check if a player/team passes all filter conditions
+  const passesFilterConditions = (item: DisplayData): boolean => {
+    if (filterConditions.length === 0) return true;
+    
+    return filterConditions.every(condition => {
+      const statValue = viewType === 'team' 
+        ? getTeamStat(item as TeamStatsData, condition.stat)
+        : getPlayerStat(item as Player, condition.stat);
+      
+      switch (condition.operator) {
+        case '==':
+          return Math.abs(statValue - condition.value) < 0.001; // Handle floating point precision
+        case '!=':
+          return Math.abs(statValue - condition.value) >= 0.001;
+        case '>':
+          return statValue > condition.value;
+        case '>=':
+          return statValue >= condition.value;
+        case '<':
+          return statValue < condition.value;
+        case '<=':
+          return statValue <= condition.value;
+        default:
+          return true;
+      }
+    });
   };
 
   const handleSort = (stat: StatCategory | 'name') => {
@@ -445,19 +594,24 @@ const StatsLeaderboard: React.FC = () => {
 
   // Get data based on view type
   const getDisplayData = (): DisplayData[] => {
+    let data: DisplayData[] = [];
+    
     if (viewType === 'team') {
-      return getTeamStats();
+      data = getTeamStats();
+    } else {
+      // Player view - filter players
+      data = players?.filter((player) => {
+        const matchesSearchQuery = player.name.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesSeason = selectedSeason === null || player.teams?.some(
+          (team) => team?.season?.seasonNumber === selectedSeason
+        );
+        const hasStats = hasAnyStats(player);
+        return matchesSearchQuery && matchesSeason && hasStats;
+      }) || [];
     }
     
-    // Player view - filter players
-    return players?.filter((player) => {
-      const matchesSearchQuery = player.name.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesSeason = selectedSeason === null || player.teams?.some(
-        (team) => team?.season?.seasonNumber === selectedSeason
-      );
-      const hasStats = hasAnyStats(player);
-      return matchesSearchQuery && matchesSeason && hasStats;
-    }) || [];
+    // Apply advanced filter conditions
+    return data.filter(item => passesFilterConditions(item));
   };
 
   const displayData = getDisplayData();
@@ -575,6 +729,14 @@ const StatsLeaderboard: React.FC = () => {
                 Filter Stats
               </button>
             </div>
+            <div className="stats-advanced-filter">
+              <button
+                className={`advanced-filter-button ${showAdvancedFilter ? 'active' : ''}`}
+                onClick={() => setShowAdvancedFilter(!showAdvancedFilter)}
+              >
+                Advanced Filters {filterConditions.length > 0 && `(${filterConditions.length})`}
+              </button>
+            </div>
           </div>
           <div className="stats-search-row">
             <SearchBar onSearch={handleSearch} placeholder={viewType === 'team' ? "Search Teams..." : "Search Players..."} />
@@ -617,16 +779,36 @@ const StatsLeaderboard: React.FC = () => {
         document.body
       )}
 
+      {showAdvancedFilter && (
+        <div className="advanced-filter-panel">
+          <AdvancedFilter
+            conditions={filterConditions}
+            onConditionsChange={handleFilterConditionsChange}
+            statCategories={statCategories}
+          />
+        </div>
+      )}
+
       {error ? (
         <div>Error: {error}</div>
       ) : !players ? (
         <div className="stats-table-wrapper">
           <div className="stats-skeleton-table">
             {/* Skeleton loaders for table */}
-            {Array.from({ length: 10 }).map((_, index) => (
+            {Array.from({ length: 15 }).map((_, index) => (
               <div key={index} className="stats-skeleton-row">
-                {Array.from({ length: 8 }).map((_, cellIndex) => (
-                  <div key={cellIndex} className="stats-skeleton-cell"></div>
+                <div className="stats-skeleton-cell rank"></div>
+                <div className="stats-skeleton-cell name"></div>
+                {selectedSeason !== null && viewType === 'player' && (
+                  <div className="stats-skeleton-cell team"></div>
+                )}
+                {Array.from({ length: Math.min(visibleStatCategories.length, 8) }).map((_, cellIndex) => (
+                  <div 
+                    key={cellIndex} 
+                    className={`stats-skeleton-cell ${
+                      visibleStatCategories[cellIndex]?.includes('%') ? 'percentage' : 'stat'
+                    }`}
+                  ></div>
                 ))}
               </div>
             ))}

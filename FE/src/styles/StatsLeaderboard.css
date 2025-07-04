@@ -30,7 +30,7 @@
 
 .stats-controls-wrapper { 
     margin: 20px 0; 
-    min-height: 120px; /* Reserve space for controls to prevent shift */
+    min-height: 140px; /* Increased space for controls to prevent shift */
 }
 
 .stats-controls-container
@@ -38,7 +38,7 @@
     display: flex;
     flex-direction: column;
     gap: 15px;
-    min-height: 100px; /* Reserve space for container */
+    min-height: 120px; /* Increased space for container */
 }
 
 .stats-filters-row
@@ -359,6 +359,17 @@
     pointer-events: none;
 }
 
+/* Ensure consistent spacing during loading */
+.stats-leaderboard-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.stats-leaderboard-page > * {
+    flex-shrink: 0;
+}
+
 /* Prevent layout shift during data loading */
 .stats-table-wrapper:empty::before {
     content: "";
@@ -371,22 +382,64 @@
 .stats-skeleton-table {
     width: 100%;
     border-collapse: collapse;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    overflow: hidden;
 }
 
 .stats-skeleton-row {
     display: flex;
-    gap: 1px;
-    margin-bottom: 1px;
-    height: 40px;
+    gap: 0;
+    margin-bottom: 0;
+    height: 48px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.stats-skeleton-row:last-child {
+    border-bottom: none;
 }
 
 .stats-skeleton-cell {
     background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
     background-size: 200% 100%;
     animation: loading 1.5s infinite;
-    border-radius: 4px;
+    border-right: 1px solid #e2e8f0;
     flex: 1;
     height: 100%;
+    min-width: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.stats-skeleton-cell:last-child {
+    border-right: none;
+}
+
+/* Specific column widths to match actual table */
+.stats-skeleton-cell.rank {
+    flex: 0 0 60px;
+    min-width: 60px;
+}
+
+.stats-skeleton-cell.name {
+    flex: 0 0 200px;
+    min-width: 200px;
+}
+
+.stats-skeleton-cell.team {
+    flex: 0 0 150px;
+    min-width: 150px;
+}
+
+.stats-skeleton-cell.stat {
+    flex: 0 0 100px;
+    min-width: 100px;
+}
+
+.stats-skeleton-cell.percentage {
+    flex: 0 0 120px;
+    min-width: 120px;
 }
 
 @keyframes loading {
@@ -431,5 +484,221 @@
     color: #fff !important;
     border: 1px solid var(--primary-blue-hover);
     text-decoration: none;
+}
+
+/* -----------------------------------------------------------
+   Advanced Filter Styles
+----------------------------------------------------------- */
+.stats-advanced-filter {
+    position: relative;
+    display: inline-block;
+    white-space: nowrap;
+}
+
+.advanced-filter-button {
+    font-size: 15px;
+    padding: 8px 16px;
+    border: 1px solid var(--primary-blue);
+    border-radius: 4px;
+    background-color: #ffffff;
+    color: var(--primary-blue);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.advanced-filter-button:hover,
+.advanced-filter-button:focus {
+    background-color: var(--primary-blue);
+    color: #ffffff;
+}
+
+.advanced-filter-button.active {
+    background-color: var(--primary-blue);
+    color: #ffffff;
+}
+
+.advanced-filter-panel {
+    background-color: #ffffff;
+    border: 1px solid var(--primary-blue);
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(26, 54, 93, 0.2);
+    margin-top: 10px;
+    padding: 20px;
+    max-width: 800px;
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.advanced-filter {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.advanced-filter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 10px;
+}
+
+.advanced-filter-header h3 {
+    margin: 0;
+    color: var(--primary-blue);
+    font-size: 1.1rem;
+}
+
+.add-filter-button {
+    font-size: 14px;
+    padding: 6px 12px;
+    border: 1px solid var(--primary-blue);
+    border-radius: 4px;
+    background-color: var(--primary-blue);
+    color: #ffffff;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.add-filter-button:hover {
+    background-color: var(--primary-blue-hover);
+}
+
+.no-filters-message {
+    text-align: center;
+    color: #666;
+    font-style: italic;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+}
+
+.filter-condition {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.filter-connector {
+    text-align: center;
+    font-weight: 600;
+    color: var(--primary-blue);
+    background-color: #f8f9fa;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.filter-condition-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.filter-stat-select,
+.filter-operator-select {
+    font-size: 14px;
+    padding: 6px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    background-color: #ffffff;
+    min-width: 120px;
+}
+
+.filter-stat-select {
+    min-width: 150px;
+}
+
+.filter-operator-select {
+    min-width: 60px;
+}
+
+.filter-value-input {
+    font-size: 14px;
+    padding: 6px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    background-color: #ffffff;
+    width: 80px;
+    text-align: center;
+}
+
+.filter-value-input:focus {
+    outline: none;
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 2px rgba(26, 54, 93, 0.1);
+}
+
+.remove-filter-button {
+    font-size: 16px;
+    padding: 6px 10px;
+    border: 1px solid #dc2626;
+    border-radius: 4px;
+    background-color: #ffffff;
+    color: #dc2626;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 32px;
+}
+
+.remove-filter-button:hover {
+    background-color: #dc2626;
+    color: #ffffff;
+}
+
+/* Mobile responsiveness for advanced filters */
+@media (max-width: 768px) {
+    .advanced-filter-panel {
+        margin: 10px 0;
+        padding: 15px;
+    }
+    
+    .filter-condition-content {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+    
+    .filter-stat-select,
+    .filter-operator-select,
+    .filter-value-input {
+        width: 100%;
+        min-width: auto;
+    }
+    
+    .remove-filter-button {
+        align-self: flex-end;
+        width: auto;
+    }
+    
+    .advanced-filter-header {
+        flex-direction: column;
+        gap: 10px;
+        align-items: stretch;
+    }
+    
+    .add-filter-button {
+        align-self: flex-start;
+    }
 }
 
