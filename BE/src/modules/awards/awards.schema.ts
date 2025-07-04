@@ -44,7 +44,8 @@ export const updateAwardSchema = z.object({
     seasonId: z.number().int().positive({ message: "Season ID must be a positive number" }).optional(),
     imageUrl: z.string().url().optional(),
     playerIds: z.array(z.number().int().positive()).optional(),
-    playerName: z.string().min(1, { message: "Player name is required" }).transform(val => val.toLowerCase()).optional()
+    playerName: z.string().min(1, { message: "Player name is required" }).transform(val => val.toLowerCase()).optional(),
+    createdAt: z.string().datetime().optional() // Allow updating the award date
 });
 
 export type UpdateAwardDto = z.infer<typeof updateAwardSchema>; 

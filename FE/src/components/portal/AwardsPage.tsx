@@ -25,7 +25,7 @@ const AWARD_TYPES = [
   "LuvLate Award"
 ] as const;
 
-type EditField = "type" | "description" | "seasonId" | "playerName" | "imageUrl";
+type EditField = "type" | "description" | "seasonId" | "playerName" | "imageUrl" | "createdAt";
 
 interface EditingState {
   id: number;
@@ -128,6 +128,7 @@ const AwardsPage: React.FC = () => {
       case "seasonId": origValue = orig.season.id.toString(); break;
       case "playerName": origValue = orig.players[0]?.name || ""; break;
       case "imageUrl": origValue = orig.imageUrl || ""; break;
+      case "createdAt": origValue = new Date(orig.createdAt).toISOString(); break;
       default: origValue = "";
     }
 
@@ -143,6 +144,7 @@ const AwardsPage: React.FC = () => {
       seasonId: "Season ID",
       playerName: "Player Name",
       imageUrl: "Image URL",
+      createdAt: "Award Date",
     };
 
     if (!window.confirm(`Change ${labelMap[field]} from "${origValue}" to "${value}"?`)) {
@@ -152,13 +154,14 @@ const AwardsPage: React.FC = () => {
     }
 
     // Build payload
-    const payload: Partial<Award> & Record<string, any> = {};
+    const payload: Record<string, any> = {};
     switch (field) {
       case "type": payload.type = value; break;
       case "description": payload.description = value; break;
       case "seasonId": payload.seasonId = Number(value); break;
       case "playerName": payload.playerName = value.toLowerCase(); break;
       case "imageUrl": payload.imageUrl = value; break;
+      case "createdAt": payload.createdAt = value; break;
     }
 
     try {
@@ -316,6 +319,7 @@ const AwardsPage: React.FC = () => {
               <th>Description</th>
               <th>Season</th>
               <th>Player</th>
+              <th>Award Date</th>
               <th>Image</th>
               <th>Actions</th>
             </tr>
@@ -444,6 +448,38 @@ const AwardsPage: React.FC = () => {
                       }
                     >
                       {award.players[0]?.name || "N/A"}
+                    </span>
+                  )}
+                </td>
+                <td>
+                  {editing?.id === award.id && editing.field === "createdAt" ? (
+                    <input
+                      type="datetime-local"
+                      value={editing.value.slice(0, 16)} // Format for datetime-local input
+                      onChange={(e) =>
+                        setEditing({ ...editing, value: new Date(e.target.value).toISOString() })
+                      }
+                      onBlur={commitEdit}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !isSubmitting) {
+                          e.preventDefault();
+                          commitEdit();
+                        }
+                      }}
+                      disabled={isSubmitting}
+                      autoFocus
+                    />
+                  ) : (
+                    <span
+                      onClick={() =>
+                        !isSubmitting && setEditing({
+                          id: award.id,
+                          field: "createdAt",
+                          value: new Date(award.createdAt).toISOString(),
+                        })
+                      }
+                    >
+                      {new Date(award.createdAt).toLocaleDateString()}
                     </span>
                   )}
                 </td>
