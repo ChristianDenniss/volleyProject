@@ -161,8 +161,10 @@ const AwardsPage: React.FC = () => {
       case "seasonId": payload.seasonId = Number(value); break;
       case "playerName": payload.playerName = value.toLowerCase(); break;
       case "imageUrl": payload.imageUrl = value; break;
-      case "createdAt": payload.createdAt = value; break;
+      case "createdAt": payload.createdAt = value.toString(); break;
     }
+    
+    console.log('AwardsPage: Sending payload for createdAt update:', payload);
 
     try {
       const updated = await patchAward(id, payload);
@@ -319,7 +321,7 @@ const AwardsPage: React.FC = () => {
               <th>Description</th>
               <th>Season</th>
               <th>Player</th>
-              <th>Award Date</th>
+              <th>Awarded Date</th>
               <th>Image</th>
               <th>Actions</th>
             </tr>
@@ -454,10 +456,10 @@ const AwardsPage: React.FC = () => {
                 <td>
                   {editing?.id === award.id && editing.field === "createdAt" ? (
                     <input
-                      type="datetime-local"
-                      value={editing.value.slice(0, 16)} // Format for datetime-local input
+                      type="date"
+                      value={editing.value.slice(0, 10)} // Format for date input (YYYY-MM-DD)
                       onChange={(e) =>
-                        setEditing({ ...editing, value: new Date(e.target.value).toISOString() })
+                        setEditing({ ...editing, value: new Date(e.target.value + 'T00:00:00').toISOString() })
                       }
                       onBlur={commitEdit}
                       onKeyDown={(e) => {
