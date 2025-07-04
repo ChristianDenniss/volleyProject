@@ -142,11 +142,16 @@ const AdvancedFilter: React.FC<{
             
             <input
               type="number"
-              value={condition.value}
-              onChange={(e) => updateCondition(condition.id, { value: parseFloat(e.target.value) || 0 })}
+              value={condition.stat.includes('%') ? (condition.value * 100).toFixed(0) : condition.value}
+              onChange={(e) => {
+                const inputValue = parseFloat(e.target.value) || 0;
+                const actualValue = condition.stat.includes('%') ? inputValue / 100 : inputValue;
+                updateCondition(condition.id, { value: actualValue });
+              }}
               className="filter-value-input"
-              step={condition.stat.includes('%') ? "0.01" : "1"}
+              step={condition.stat.includes('%') ? "1" : "1"}
               min="0"
+              max={condition.stat.includes('%') ? "100" : undefined}
             />
             
             <button
