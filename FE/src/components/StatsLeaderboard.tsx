@@ -145,7 +145,7 @@ const AdvancedFilter: React.FC<{
               value={condition.value}
               onChange={(e) => updateCondition(condition.id, { value: parseFloat(e.target.value) || 0 })}
               className="filter-value-input"
-              step="0.01"
+              step={condition.stat.includes('%') ? "0.01" : "1"}
               min="0"
             />
             
