@@ -229,7 +229,7 @@
     scrollbar-color: #b0b0b0 #f0f0f0;
     border-radius: 4px 4px 0 0; /* Only top corners */
     box-shadow: 0 2px 8px rgba(26, 54, 93, 0.08); /* Lighter shadow */
-    margin-top: 20px;
+    margin-top: 0;
     /* Remove any bottom margin or padding */
     margin-bottom: 0;
     padding-bottom: 0;
@@ -637,6 +637,15 @@
     background-color: #ffffff;
     width: 80px;
     text-align: center;
+}
+
+.filter-percentage-symbol {
+    position: absolute;
+    right: 8px;
+    color: #6b7280;
+    font-size: 14px;
+    font-weight: 500;
+    pointer-events: none;
 }
 
 .filter-value-input:focus {

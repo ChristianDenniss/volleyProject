@@ -140,19 +140,22 @@ const AdvancedFilter: React.FC<{
               <option value="<=">≤</option>
             </select>
             
-            <input
-              type="number"
-              value={condition.stat.includes('%') ? (condition.value * 100).toFixed(0) : condition.value}
-              onChange={(e) => {
-                const inputValue = parseFloat(e.target.value) || 0;
-                const actualValue = condition.stat.includes('%') ? inputValue / 100 : inputValue;
-                updateCondition(condition.id, { value: actualValue });
-              }}
-              className="filter-value-input"
-              step={condition.stat.includes('%') ? "1" : "1"}
-              min="0"
-              max={condition.stat.includes('%') ? "100" : undefined}
-            />
+            <div className="filter-value-container">
+              <input
+                type="number"
+                value={condition.stat.includes('%') ? (condition.value * 100).toFixed(0) : condition.value}
+                onChange={(e) => {
+                  const inputValue = parseFloat(e.target.value) || 0;
+                  const actualValue = condition.stat.includes('%') ? inputValue / 100 : inputValue;
+                  updateCondition(condition.id, { value: actualValue });
+                }}
+                className="filter-value-input"
+                step={condition.stat.includes('%') ? "1" : "1"}
+                min="0"
+                max={condition.stat.includes('%') ? "100" : undefined}
+              />
+              {condition.stat.includes('%') && <span className="filter-percentage-symbol">%</span>}
+            </div>
             
             <button
               onClick={() => removeCondition(condition.id)}
