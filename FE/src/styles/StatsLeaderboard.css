@@ -29,7 +29,7 @@
 }
 
 .stats-controls-wrapper { 
-    margin: 20px 0; 
+    margin: 10px 0; 
     min-height: 140px; /* Increased space for controls to prevent shift */
 }
 
@@ -229,7 +229,7 @@
     scrollbar-color: #b0b0b0 #f0f0f0;
     border-radius: 4px 4px 0 0; /* Only top corners */
     box-shadow: 0 2px 8px rgba(26, 54, 93, 0.08); /* Lighter shadow */
-    margin-top: 0;
+    margin-top: 10px;
     /* Remove any bottom margin or padding */
     margin-bottom: 0;
     padding-bottom: 0;
