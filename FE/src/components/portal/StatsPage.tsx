@@ -10,6 +10,8 @@ import { useAuth }                   from "../../context/authContext";
 import { usePlayers }                from "../../hooks/allFetch";
 import type { Stats }                from "../../types/interfaces";
 import { handleFileUpload } from "../../utils/csvUploadUtils";
+import SearchBar from "../Searchbar";
+import Pagination from "../Pagination";
 import "../../styles/UsersPage.css"; // reuse table & text-muted styles
 import "../../styles/GamesPage.css"; // reuse table & text-muted styles
 import "../../styles/StatsPage.css"; // import new styles
@@ -92,6 +94,11 @@ const StatsPage: React.FC = () =>
     // Track which cell is being edited
     const [ editing, setEditing ]       = useState<EditingState | null>(null);
 
+    // Search and pagination state
+    const [ searchQuery, setSearchQuery ] = useState<string>("");
+    const [ currentPage, setCurrentPage ] = useState<number>(1);
+    const statsPerPage = 10;
+
     // Modal state for creating a new stats record
     const [ isModalOpen, setIsModalOpen ]           = useState<boolean>(false);
     const [ newSpikingErrors, setNewSpikingErrors ] = useState<number>(0);
@@ -156,6 +163,39 @@ const StatsPage: React.FC = () =>
             setLocalStats(stats);
         }
     }, [stats]);
+
+    // Filter stats based on search query
+    const filteredStats = localStats.filter(stat => {
+        const playerName = stat.player?.name || '';
+        const gameId = stat.game?.id?.toString() || '';
+        const playerId = stat.player?.id?.toString() || '';
+        
+        const searchLower = searchQuery.toLowerCase();
+        return (
+            playerName.toLowerCase().includes(searchLower) ||
+            gameId.includes(searchLower) ||
+            playerId.includes(searchLower)
+        );
+    });
+
+    // Calculate pagination
+    const totalPages = Math.ceil(filteredStats.length / statsPerPage);
+    const paginatedStats = filteredStats.slice(
+        (currentPage - 1) * statsPerPage,
+        currentPage * statsPerPage
+    );
+
+    // Handle search
+    const handleSearch = (query: string) => {
+        setSearchQuery(query);
+        setCurrentPage(1); // Reset to first page when searching
+    };
+
+    // Clear all filters
+    const clearFilters = () => {
+        setSearchQuery("");
+        setCurrentPage(1);
+    };
 
     // Commit inline edits to the server and update local state
     const commitEdit = async () =>
@@ -469,14 +509,24 @@ const StatsPage: React.FC = () =>
         <div className="portal-main">
             <h1 className="users-title">Stats</h1>
 
-            {/* Buttons for creating stats */}
-            <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-                <button className="create-button" onClick={openModal}>
-                    Create Stat
-                </button>
-                <button className="create-button" onClick={openCSVModal}>
-                    Upload CSV
-                </button>
+            {/* Search and Controls */}
+            <div className="players-controls">
+                <div style={{ display: 'flex', gap: '10px' }}>
+                    <button className="create-button" onClick={openModal}>
+                        Create Stat
+                    </button>
+                    <button className="create-button" onClick={openCSVModal}>
+                        Upload CSV
+                    </button>
+                </div>
+                <div className="players-controls-right">
+                    <SearchBar onSearch={handleSearch} placeholder="Search stats..." />
+                    <Pagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={setCurrentPage}
+                    />
+                </div>
             </div>
 
             {/* Create Modal */}
@@ -927,6 +977,34 @@ const StatsPage: React.FC = () =>
                 </div>
             )}
 
+            {/* Results Counter and Clear Filters */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <div className="results-counter">
+                    {filteredStats.length > 0 ? (
+                        `Showing ${((currentPage - 1) * statsPerPage) + 1}-${Math.min(currentPage * statsPerPage, filteredStats.length)} of ${filteredStats.length} stats`
+                    ) : (
+                        'No stats found'
+                    )}
+                </div>
+                {searchQuery && (
+                    <button
+                        className="clear-filters-button"
+                        onClick={clearFilters}
+                        style={{
+                            background: 'transparent',
+                            border: '1px solid #e5e7eb',
+                            borderRadius: '0.375rem',
+                            padding: '0.5rem 1rem',
+                            fontSize: '0.875rem',
+                            cursor: 'pointer',
+                            color: '#6b7280'
+                        }}
+                    >
+                        Clear Filters
+                    </button>
+                )}
+            </div>
+
             {/* Stats Table */}
             <table className="stats-table">
                 <thead>
@@ -951,7 +1029,7 @@ const StatsPage: React.FC = () =>
                     </tr>
                 </thead>
                 <tbody>
-                    {localStats.map((s) =>
+                    {paginatedStats.map((s) =>
                     {
                         // Helper to convert values to strings
                         const toStr = (field: EditField) => {
