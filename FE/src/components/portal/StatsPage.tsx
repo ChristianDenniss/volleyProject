@@ -14,6 +14,7 @@ import SearchBar from "../Searchbar";
 import Pagination from "../Pagination";
 import "../../styles/UsersPage.css"; // reuse table & text-muted styles
 import "../../styles/GamesPage.css"; // reuse table & text-muted styles
+import "../../styles/PortalPlayersPage.css"; // portal-specific styles
 import "../../styles/StatsPage.css"; // import new styles
 
 // Define the fields eligible for inline editing

@@ -308,8 +308,11 @@ export class GameService {
             game.teams = teams;
         }
 
-        if (team1Score !== undefined && team2Score !== undefined) {
+        if (team1Score !== undefined) {
             game.team1Score = team1Score;
+        }
+        
+        if (team2Score !== undefined) {
             game.team2Score = team2Score;
         }
 

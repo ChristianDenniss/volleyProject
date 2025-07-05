@@ -88,9 +88,9 @@ const GamesPage: React.FC = () => {
     }
 
     try {
-      await patchGame(editing.id, payload);
+      const updatedGame = await patchGame(editing.id, payload);
       setLocalGames((prev) =>
-        prev.map((g) => (g.id === editing.id ? { ...g, ...payload } : g))
+        prev.map((g) => (g.id === editing.id ? updatedGame : g))
       );
     } catch (error) {
       console.error("Error updating game:", error);
