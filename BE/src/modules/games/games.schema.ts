@@ -12,6 +12,14 @@ export const createGameSchema = z.object({
     stage: z.string().min(2, { message: "stage is required, min 2 characters" }),
 });
 
-export const updateGameSchema = createGameSchema.partial();         
+export const updateGameSchema = z.object({
+    name: z.string().optional(),
+    seasonId: z.number().int().positive().optional(),
+    team1Score: z.number().int().min(0).optional(),
+    team2Score: z.number().int().min(0).optional(),
+    date: z.date().optional(),
+    videoUrl: z.string().optional(),
+    stage: z.string().optional(),
+});         
 
 

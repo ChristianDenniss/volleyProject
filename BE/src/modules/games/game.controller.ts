@@ -225,8 +225,8 @@ export class GameController {
     updateGame = async (req: Request, res: Response): Promise<void> => {
         try {
             const { id } = req.params;
-            const { date, seasonId, teamIds, homeScore, awayScore, videoUrl, stage } = req.body;
-            const updatedGame = await this.gameService.updateGame(parseInt(id), date, seasonId, teamIds, homeScore, awayScore, stage, videoUrl);
+            const { date, seasonId, teamIds, team1Score, team2Score, videoUrl, stage } = req.body;
+            const updatedGame = await this.gameService.updateGame(parseInt(id), date, seasonId, teamIds, team1Score, team2Score, stage, videoUrl);
             res.json(updatedGame);
         } catch (error: any) {
             if (error instanceof MissingFieldError || 
