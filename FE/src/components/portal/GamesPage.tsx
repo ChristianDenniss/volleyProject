@@ -6,7 +6,7 @@ import { useGameMutations } from "../../hooks/allPatch";
 import { useCreateGames } from "../../hooks/allCreate";
 import { useDeleteGames } from "../../hooks/allDelete";
 import { useAuth } from "../../context/authContext";
-import type { Game, Season } from "../../types/interfaces";
+import type { Game } from "../../types/interfaces";
 import "../../styles/UsersPage.css";       // table & button styling
 import "../../styles/PlayersPage.css";     // custom modal styling
 import "../../styles/PortalPlayersPage.css"; // portal-specific styles
