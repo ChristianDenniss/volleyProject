@@ -85,6 +85,58 @@ export class SeasonService
     }
 
     /**
+     * Get all seasons without relations / minimal data
+     */
+    async getSkinnyAllSeasons(): Promise<Seasons[]>
+    {
+        try {
+            console.log('Fetching all seasons without relations...');
+            const seasons = await this.seasonRepository.find({
+                relations: [],
+                order: { seasonNumber: "DESC" }
+            });
+            console.log(`Found ${seasons.length} seasons`);
+            return seasons;
+        } catch (error) {
+            console.error('Error in getSkinnyAllSeasons:', {
+                error: error instanceof Error ? {
+                    message: error.message,
+                    stack: error.stack,
+                    name: error.name
+                } : error,
+                timestamp: new Date().toISOString()
+            });
+            throw error;
+        }
+    }
+
+    /**
+     * Get all seasons with medium relations / minimal data
+     */
+    async getMediumAllSeasons(): Promise<Seasons[]>
+    {
+        try {
+            console.log('Fetching all seasons with medium relations...');
+            const seasons = await this.seasonRepository.find({
+                relations: ["teams", "games"],
+                order: { seasonNumber: "DESC" }
+            });
+            console.log(`Found ${seasons.length} seasons`);
+            return seasons;
+        } catch (error) {
+            console.error('Error in getMediumAllSeasons:', {
+                error: error instanceof Error ? {
+                    message: error.message,
+                    stack: error.stack,
+                    name: error.name
+                } : error,
+                timestamp: new Date().toISOString()
+            });
+            throw error;
+        }
+    }
+
+    /**
      * Get season by ID with validation
      */
     async getSeasonById(id: number): Promise<Seasons>

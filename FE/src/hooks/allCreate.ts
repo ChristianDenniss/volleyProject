@@ -2,7 +2,9 @@
 
 import { useCreate } from "./useCreate";
 import { Game,Player,Stats,Team,Season,Article,CreateGameInput,Award, CreateAwardsInput,CreatePlayerInput,
-  CreateStatsInput,CreateTeamInput,CreateSeasonInput,CreateArticleInput,} from "../types/interfaces";
+  CreateStatsInput,CreateTeamInput,CreateSeasonInput,CreateArticleInput, CSVUploadPayload, CSVUploadResult } from "../types/interfaces";
+import { useState } from "react";
+import { authFetch } from "./authFetch";
 
 /**
  * useCreatePlayers
@@ -52,7 +54,7 @@ export const useCreateSeasons = () => {
  * – Returns createGame(payload) → Promise<Game | null>
  */
 export const useCreateGames = () => {
-  const { createItem, loading, error } = useCreate<Game, CreateGameInput>("games");
+  const { createItem, loading, error } = useCreate<Game, CreateGameInput>("games/createByNames");
   return {
     createGame: createItem,
     loading,
@@ -80,11 +82,21 @@ export const useCreateArticles = () => {
  * – Returns createStats(payload) → Promise<Stats | null>
  */
 export const useCreateStats = () => {
-  const { createItem, loading, error } = useCreate<Stats, CreateStatsInput>("stats");
+  const { createItem: createById, loading: loadingById, error: errorById } = useCreate<Stats, CreateStatsInput>("stats");
+  const { createItem: createByName, loading: loadingByName, error: errorByName } = useCreate<Stats, CreateStatsInput>("stats/by-name");
+
+  const createStats = async (payload: CreateStatsInput): Promise<Stats | null> => {
+    if (payload.playerName) {
+      return createByName(payload);
+    } else {
+      return createById(payload);
+    }
+  };
+
   return {
-    createStats: createItem,
-    loading,
-    error,
+    createStats,
+    loading: loadingById || loadingByName,
+    error: errorById || errorByName
   };
 };
 
@@ -96,4 +108,96 @@ export const useCreateAwards = () => {
     loading: loadingWithNames,
     error: createErrorWithNames
   };
+};
+
+/**
+ * useCSVUpload
+ * – Uploads CSV data to create game with teams and stats
+ * – Returns uploadCSV(payload) → Promise<CSVUploadResult | null>
+ * – Accepts showErrorModal callback for error display
+ */
+export const useCSVUpload = (showErrorModal?: (err: any) => void) => {
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const uploadCSV = async (payload: CSVUploadPayload): Promise<CSVUploadResult | null> => {
+    setLoading(true);
+    setError(null);
+
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+    try {
+      const response = await authFetch(
+        `${backendUrl}/api/stats/batch-csv`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (!response.ok) {
+        const errJson = await response
+          .json()
+          .catch(() => ({ message: "CSV upload failed" }));
+        if (showErrorModal) showErrorModal(errJson.message || errJson.error || "CSV upload failed");
+        return null;
+      }
+
+      const result: CSVUploadResult = await response.json();
+      return result;
+    } catch (err: any) {
+      if (showErrorModal) showErrorModal(err);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { uploadCSV, loading, error };
+};
+
+/**
+ * useAddStatsToExistingGame
+ * – Adds stats to an existing game from CSV data
+ * – Returns addStatsToGame(payload) → Promise<Stats[] | null>
+ * – Accepts showErrorModal callback for error display
+ */
+export const useAddStatsToExistingGame = (showErrorModal?: (err: any) => void) => {
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const addStatsToGame = async (gameId: number, statsData: any[]): Promise<Stats[] | null> => {
+    setLoading(true);
+    setError(null);
+
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+    try {
+      const response = await authFetch(
+        `${backendUrl}/api/stats/add-to-game`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ gameId, statsData }),
+        }
+      );
+
+      if (!response.ok) {
+        const errJson = await response
+          .json()
+          .catch(() => ({ message: "Failed to add stats to game" }));
+        if (showErrorModal) showErrorModal(errJson.message || errJson.error || "Failed to add stats to game");
+        return null;
+      }
+
+      const result = await response.json();
+      return result.stats;
+    } catch (err: any) {
+      if (showErrorModal) showErrorModal(err);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { addStatsToGame, loading, error };
 };

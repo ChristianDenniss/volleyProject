@@ -69,6 +69,15 @@ interface Stats
     player: Player;
     playerId: number;
     game: Game;
+
+    // Calculated columns (frontend only)
+    totalAttempts?: number;
+    totalKills?: number;
+    totalSpikingPct?: number;
+    totalReceives?: number;
+    PRF?: number;
+    LRF?: number;
+    plusMinus?: number;
 }
 
 interface Team 
@@ -132,14 +141,14 @@ export type { Game, Player, Stats, Team, Season, Article, User,Award, AuthContex
 // When creating a Game, we send primitive fields + foreign IDs.
 // We omit nested "season" and "teams" arrays.
 export type CreateGameInput = {
-  name:       string;
-  seasonId:   number;
+  name: string;
+  seasonId: number;
   team1Score: number;
   team2Score: number;
-  videoUrl?:  string | null;
-  date:       string; 
-  stage:      string;
-  teamIds?:   number[];
+  videoUrl?: string | null;
+  date: Date;
+  stage: string;
+  teamNames: string[];
 };
 
 // When creating a Player, omit "id" and nested arrays.
@@ -164,7 +173,9 @@ export type CreateStatsInput = {
   aces:          number;
   servingErrors: number;
   miscErrors:    number;
-  playerId:      number;
+  playerId?:     number;  // Optional for backward compatibility
+  playerName?:   string;  // New field for creating by name
+  gameId:        number;  // Added gameId which was missing
 };
 
 // When creating a Team, omit "id" and nested arrays; supply seasonId instead of Season object.
@@ -201,4 +212,42 @@ export type CreateAwardsInput = {
   playerName: string;
   description: string;
   seasonId:   number;
+};
+
+// CSV Upload types
+export type CSVGameData = {
+  date: string;
+  seasonId: number;
+  teamNames: string[];
+  team1Score: number;
+  team2Score: number;
+  stage: string;
+  videoUrl?: string;
+};
+
+export type CSVStatsData = {
+  playerName: string;
+  spikingErrors?: number;
+  apeKills?: number;
+  apeAttempts?: number;
+  spikeKills?: number;
+  spikeAttempts?: number;
+  assists?: number;
+  settingErrors?: number;
+  blocks?: number;
+  digs?: number;
+  blockFollows?: number;
+  aces?: number;
+  servingErrors?: number;
+  miscErrors?: number;
+};
+
+export type CSVUploadPayload = {
+  gameData: CSVGameData;
+  statsData: CSVStatsData[];
+};
+
+export type CSVUploadResult = {
+  game: Game;
+  stats: Stats[];
 };

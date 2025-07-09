@@ -25,10 +25,7 @@ export const createTeamSchema = z.object({
 //we are using a partial extend to make the fields we want to update optional
 //we are also making sure the given team id is valid
 //this is not adding any new fields, it is just updating existing fields
-export const updateTeamSchema = createTeamSchema.partial().extend(
-{
-    id: z.number().int().positive(),
-});
+export const updateTeamSchema = createTeamSchema.partial();
 
 export interface CreateTeamDto {
     name: string;

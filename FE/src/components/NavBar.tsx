@@ -25,10 +25,10 @@ const Navbar: React.FC = () =>
                         </a>
                     </li>
                     <li>
-                        <Link to="/games">Games</Link>
+                        <Link to="/stats">Stats</Link>
                     </li>
                     <li>
-                        <Link to="/about">About</Link>
+                        <Link to="/games">Games</Link>
                     </li>
                     <li>
                         <Link to="/teams">Teams</Link>
@@ -41,6 +41,9 @@ const Navbar: React.FC = () =>
                     </li>
                     <li>
                         <Link to="/articles">Articles</Link>
+                    </li>
+                    <li>
+                        <Link to="/faq">FAQ</Link>
                     </li>
 
                     {/* ↓↓↓ new: portal link only for admin / superadmin */}

@@ -42,6 +42,9 @@
     overflow: hidden;
     font-family: "Poppins", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
     color: var(--text-main);
+    min-height: 100vh; /* Prevent layout shift by setting minimum height */
+    box-sizing: border-box;
+    contain: layout style paint; /* Improve performance */
 }
 
 /*  Header section with background image  */
@@ -63,6 +66,7 @@
 
     /*  Establish stacking context for overlay  */
     position: relative;
+    min-height: 320px; /* Reserve minimum height for header */
 }
 
 /*  Dark gradient overlay to ensure readability  */
@@ -152,6 +156,9 @@
     padding: 2rem;
     display: grid;
     gap: 2rem;
+    min-height: 400px; /* Reserve minimum space for content */
+    content-visibility: auto; /* Optimize rendering performance */
+    contain-intrinsic-size: 400px; /* Help browser calculate size */
 }
 
 /*  Sub-section header styling  */
@@ -257,4 +264,76 @@
         margin: 2rem auto;
         padding: 0 1rem;
     }
+}
+
+/* Loading state to prevent layout shift */
+.award-container.loading {
+    opacity: 0.8;
+    pointer-events: none;
+}
+
+/* Skeleton loader for better UX */
+.award-skeleton-header {
+    background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    height: 320px;
+    width: 100%;
+    border-top-left-radius: var(--radius-lg);
+    border-top-right-radius: var(--radius-lg);
+}
+
+.award-skeleton-description {
+    background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    height: 60px;
+    width: 100%;
+    padding: 1.75rem 2rem;
+    background-color: var(--bg-light);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.award-skeleton-section {
+    background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    height: 100px;
+    width: 100%;
+    border-radius: var(--radius-lg);
+}
+
+.award-skeleton-meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.25rem;
+    background: var(--bg-light);
+    padding: 1.5rem;
+    border-radius: var(--radius-lg);
+}
+
+.award-skeleton-meta-item {
+    background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    height: 80px;
+    width: 100%;
+    border-radius: 8px;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* Prevent layout shift during data loading */
+.award-container:empty::before {
+    content: "";
+    display: block;
+    height: 800px;
+    width: 100%;
 }

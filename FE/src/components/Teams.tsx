@@ -1,21 +1,30 @@
 import React, { useState, useEffect, useMemo } from "react";
 /* Bring in the navigate helper from React Router */
 import { useNavigate }                          from "react-router-dom";
-import { useTeams }                             from "../hooks/allFetch";
+import { useMediumTeams }                             from "../hooks/allFetch";
 import "../styles/Teams.css";
 import SearchBar                                from "./Searchbar";
+import Pagination                               from "./Pagination";
 
 const Teams: React.FC = () =>
 {
     /* Get team data via custom hook */
-    const { data, error } = useTeams();
+    const { data, error } = useMediumTeams();
 
-    /* Track the currently “opened” team card */
+    /* Track the currently "opened" team card */
     const [ activeTeam,         setActiveTeam ]         = useState<string | null>(null);
     const [ previousActiveTeam, setPreviousActiveTeam ] = useState<string | null>(null);
 
     /* Track the search-box value */
     const [ searchQuery, setSearchQuery ] = useState<string>("");
+
+    /* Filter states */
+    const [ seasonFilter, setSeasonFilter ] = useState<string>("");
+    const [ placementFilter, setPlacementFilter ] = useState<string>("");
+
+    /* Pagination state */
+    const [ currentPage, setCurrentPage ] = useState<number>(1);
+    const teamsPerPage = 12;
 
     /* Hook for programmatic navigation */
     const navigate = useNavigate();
@@ -29,7 +38,7 @@ const Teams: React.FC = () =>
         }
     }, [ previousActiveTeam ]);
 
-    /* Helper – turn “Team Name” → “team-name” */
+    /* Helper – turn "Team Name" → "team-name" */
     const slugify = (name: string): string =>
     {
         return name.toLowerCase().replace(/\s+/g, "-");
@@ -50,33 +59,185 @@ const Teams: React.FC = () =>
         navigate(slugify(teamName));
     };
 
-    /* Filter list according to search box */
+    /* Get unique seasons and placements for filter options */
+    const uniqueSeasons = useMemo(() => {
+        return Array.from(new Set(data?.map(team => team.season.seasonNumber) ?? []))
+            .sort((a, b) => a - b)
+    }, [data])
+
+    const uniquePlacements = useMemo(() => {
+        const normalizedPlacements = new Set<string>();
+        data?.forEach(team => {
+            if (team.placement) {
+                // Remove (D#) from placements like "Top 8 (D2)"
+                const normalized = team.placement.replace(/\s*\([Dd]\d\)$/, '').trim();
+                normalizedPlacements.add(normalized);
+            }
+        });
+
+        const placementOrder = [
+            '1st Place',
+            '2nd Place',
+            '3rd Place',
+            'Top 4',
+            'Top 6',
+            'Top 8',
+            'Top 12',
+            'Top 16',
+            'TBD',
+            'Didnt make playoffs',
+            'G.O.A.T.'
+        ];
+        
+        const placementsArray = Array.from(normalizedPlacements);
+
+        placementsArray.sort((a, b) => {
+            const indexA = placementOrder.indexOf(a);
+            const indexB = placementOrder.indexOf(b);
+
+            // If an item isn't in our custom order, give it a high index
+            const effectiveIndexA = indexA === -1 ? Infinity : indexA;
+            const effectiveIndexB = indexB === -1 ? Infinity : indexB;
+
+            if (effectiveIndexA !== effectiveIndexB) {
+                // Sort by custom order
+                return effectiveIndexA - effectiveIndexB;
+            }
+            
+            // If both have the same custom order index (or are both not in the list), sort alphabetically
+            return a.localeCompare(b);
+        });
+
+        return placementsArray;
+    }, [data])
+
+    /* Filter list according to search box and filters */
     const filteredTeams = useMemo(() =>
     {
-        return data?.filter(team =>
-            team.name.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-    }, [ data, searchQuery ]);
+        return data?.filter(team => {
+            const matchesSearch = team.name.toLowerCase().includes(searchQuery.toLowerCase());
+            const matchesSeason = !seasonFilter || team.season.seasonNumber.toString() === seasonFilter;
+            
+            // Normalize the team's placement before comparing
+            const normalizedTeamPlacement = team.placement.replace(/\s*\([Dd]\d\)$/, '').trim();
+            const matchesPlacement = !placementFilter || normalizedTeamPlacement === placementFilter;
+            
+            return matchesSearch && matchesSeason && matchesPlacement;
+        }) ?? [];
+    }, [ data, searchQuery, seasonFilter, placementFilter ]);
+
+    /* Calculate pagination */
+    const totalPages = Math.ceil(filteredTeams.length / teamsPerPage)
+    const paginatedTeams = filteredTeams.slice(
+        (currentPage - 1) * teamsPerPage,
+        currentPage * teamsPerPage
+    )
 
     /* Update search box state */
     const handleSearch = (query: string): void =>
     {
         setSearchQuery(query);
+        setCurrentPage(1); // Reset to first page when searching
     };
 
+    /* Clear all filters */
+    const clearFilters = () => {
+        setSearchQuery("")
+        setSeasonFilter("")
+        setPlacementFilter("")
+        setCurrentPage(1) // Reset to first page when clearing filters
+    }
+
     return (
-        <div>
+        <div className={`teams-page ${!data ? 'loading' : ''}`}>
             <h1>Teams Info</h1>
 
-            {/* Search box */}
-            <SearchBar onSearch={handleSearch} />
+            {/* Controls */}
+            <div className="teams-controls-wrapper">
+                <div className="teams-controls-container">
+                    {/* Filters Row */}
+                    <div className="teams-filters-row">
+                        <div className="teams-season-filter">
+                            <label htmlFor="season-filter">Season:</label>
+                            <select
+                                id="season-filter"
+                                value={seasonFilter}
+                                onChange={(e) => {
+                                    setSeasonFilter(e.target.value)
+                                    setCurrentPage(1)
+                                }}
+                            >
+                                <option value="">All Seasons</option>
+                                {uniqueSeasons.map(season => (
+                                    <option key={season} value={season.toString()}>
+                                        Season {season}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="teams-placement-filter">
+                            <label htmlFor="placement-filter">Placement:</label>
+                            <select
+                                id="placement-filter"
+                                value={placementFilter}
+                                onChange={(e) => {
+                                    setPlacementFilter(e.target.value)
+                                    setCurrentPage(1)
+                                }}
+                            >
+                                <option value="">All Placements</option>
+                                {uniquePlacements.map(placement => (
+                                    <option key={placement} value={placement}>
+                                        {placement}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {(searchQuery || seasonFilter || placementFilter) && (
+                            <button
+                                className="clear-filters-button"
+                                onClick={clearFilters}
+                            >
+                                Clear Filters
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Search and Pagination Row */}
+                    <div className="teams-search-row">
+                        <SearchBar 
+                            onSearch={handleSearch} 
+                            placeholder="Search teams..." 
+                            className="teams-search-bar"
+                        />
+                        <div className="teams-pagination-wrapper">
+                            <Pagination
+                                currentPage={currentPage}
+                                totalPages={totalPages}
+                                onPageChange={setCurrentPage}
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             {error ? (
                 <div>Error: {error}</div>
-            ) : filteredTeams ? (
+            ) : !data ? (
                 <div className="teams-wrapper">
                     <div className="teams-container">
-                        {filteredTeams.map(team => (
+                        {/* Skeleton loaders */}
+                        {Array.from({ length: 12 }).map((_, index) => (
+                            <div key={index} className="teams-skeleton"></div>
+                        ))}
+                    </div>
+                </div>
+            ) : (
+                <div className="teams-wrapper">
+                    <div className="teams-container">
+                        {paginatedTeams.map(team => (
                             <div
                                 key={team.id}
                                 className={`team-card ${activeTeam === team.name ? "active" : ""}`}
@@ -105,8 +266,6 @@ const Teams: React.FC = () =>
                         ))}
                     </div>
                 </div>
-            ) : (
-                <div>Loading...</div>
             )}
         </div>
     );

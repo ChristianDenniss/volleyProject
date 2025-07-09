@@ -20,6 +20,7 @@ import {
     faStar,
 } from '@fortawesome/free-solid-svg-icons'
 import "../../styles/SinglePlayer.css"
+import SEO from "../SEO"
 
 const awardIcons: { [key: string]: any } = {
     "MVP": faTrophy,
@@ -107,6 +108,9 @@ const calculateHOFScore = (player: any, awards: any[], careerTotals: any): numbe
         player.teams.forEach((team: { placement?: string }) => {
             if (team.placement) {
                 switch(team.placement) {
+                    case 'G.O.A.T.':
+                        score = Infinity; // Instant Hall of Fame induction
+                        break;
                     case '1st Place':
                         score += 20;
                         break;
@@ -203,7 +207,7 @@ const PlayerProfiles: React.FC = () =>
 {
     const { id } = useParams<{ id: string }>()
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
-    const { data, error } = useSinglePlayer(id || "")
+    const { data, error, loading } = useSinglePlayer(id || "")
     const [selectedSeason, setSelectedSeason] = useState<number>(0)
     const [showAllGames, setShowAllGames] = useState<boolean>(false)
     const { data: awards, loading: awardsLoading, error: awardsError } = useAwardsByPlayerID(id || "")
@@ -219,7 +223,87 @@ const PlayerProfiles: React.FC = () =>
     }, [data?.name])
 
     if (!id) return <div className="player-profile-container">URL ID is undefined</div>
-    if (!data && !error) return <div className="player-profile-container">Loading…</div>
+    
+    // Loading state with skeleton
+    if (loading) {
+        return (
+            <div className="player-profile-container loading">
+                <div className="player-main-header">
+                    <div className="avatar-header-info">
+                        <div className="avatar-left">
+                            <div className="skeleton-avatar"></div>
+                        </div>
+                        <div className="avatar-right">
+                            <div className="skeleton-player-name"></div>
+                            <div className="skeleton-player-meta">
+                                {[1, 2, 3, 4, 5, 6, 7].map(i => (
+                                    <div key={i} className="skeleton-meta-item"></div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div className="skeleton-season-select"></div>
+                
+                <div className="player-profiles-grid">
+                    <div className="player-card">
+                        <div className="player-stats">
+                            <div className="stat-category">
+                                <div className="skeleton-category-title"></div>
+                                <div className="skeleton-stat-grid">
+                                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].map(i => (
+                                        <div key={i} className="skeleton-stat-item"></div>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="stat-category">
+                                <div className="skeleton-category-title"></div>
+                                <div className="skeleton-stat-grid">
+                                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].map(i => (
+                                        <div key={i} className="skeleton-stat-item"></div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div className="player-teams-section">
+                    <div className="skeleton-section-title"></div>
+                    <div className="skeleton-teams-list">
+                        {[1, 2, 3, 4, 5].map(i => (
+                            <div key={i} className="skeleton-team-item"></div>
+                        ))}
+                    </div>
+                </div>
+                
+                <div className="player-games-section">
+                    <div className="skeleton-section-title"></div>
+                    <div className="skeleton-games-list">
+                        {[1, 2, 3, 4, 5].map(i => (
+                            <div key={i} className="skeleton-game-item"></div>
+                        ))}
+                    </div>
+                </div>
+                
+                <div className="player-awards-section">
+                    <div className="skeleton-section-title"></div>
+                    <div className="skeleton-awards-list">
+                        {[1, 2, 3].map(i => (
+                            <div key={i} className="skeleton-award-item"></div>
+                        ))}
+                    </div>
+                </div>
+                
+                <div className="player-hof-section">
+                    <div className="skeleton-section-title"></div>
+                    <div className="skeleton-hof-progress"></div>
+                </div>
+            </div>
+        );
+    }
+    
     if (error) return <div className="player-profile-container">Error: {error}</div>
     if (!data) return <div className="player-profile-container">No player found.</div>
 
@@ -331,10 +415,42 @@ const PlayerProfiles: React.FC = () =>
     }
 
     const hofScore = calculateHOFScore(player, awards || [], careerTotals)
-    const hofPercentage = Math.min((hofScore / 100) * 100, 100); // Cap percentage at 100 for display
+    const isGOAT = hofScore === Infinity
+    const hofPercentage = isGOAT ? 100 : Math.min((hofScore / 100) * 100, 100); // Cap percentage at 100 for display
 
     return (
         <div className="player-profile-container">
+            {/* SEO Meta Tags for Social Media Embedding */}
+            {player && (
+                <SEO
+                    title={`${player.name} - Player Profile`}
+                    description={`${player.name} is a ${player.position} in the Roblox Volleyball League. View stats, teams, awards, and career highlights.`}
+                    image={avatarUrl || "https://volleyball4-2.com/rvlLogo.png"}
+                    url={`https://volleyball4-2.com/players/${player.id}`}
+                    type="profile"
+                    structuredData={{
+                        "@context": "https://schema.org",
+                        "@type": "Person",
+                        "name": player.name,
+                        "jobTitle": player.position,
+                        "description": `${player.name} is a ${player.position} in the Roblox Volleyball League`,
+                        "image": avatarUrl || "https://volleyball4-2.com/rvlLogo.png",
+                        "url": `https://volleyball4-2.com/players/${player.id}`,
+                        "worksFor": {
+                            "@type": "Organization",
+                            "name": "Roblox Volleyball League",
+                            "url": "https://volleyball4-2.com"
+                        },
+                        "knowsAbout": ["Volleyball", "Gaming", "Sports"],
+                        "alumniOf": player.teams?.map(team => ({
+                            "@type": "SportsTeam",
+                            "name": team.name,
+                            "url": `https://volleyball4-2.com/teams/${encodeURIComponent(team.name.toLowerCase().replace(/\s+/g, "-"))}`
+                        })) || []
+                    }}
+                />
+            )}
+
             <div className="player-main-header">
                 <div className="avatar-header-info">
                     {avatarUrl && (
@@ -500,22 +616,29 @@ const PlayerProfiles: React.FC = () =>
                 )}
             </div>
 
-            <div className="player-hof-section">
+            <div className={`player-hof-section ${isGOAT ? 'goat-section' : ''}`}>
                 <h3>Hall of Fame Progress</h3>
                 <div className="hof-progress-container">
                     <div className="hof-score">
-                        <FontAwesomeIcon icon={faStar} className="hof-icon" />
-                        <span className="hof-score-value">{hofScore}</span>
-                        <span className="hof-score-max">/100</span>
+                        {!isGOAT && <FontAwesomeIcon icon={faStar} className="hof-icon" />}
+                        <span className={`hof-score-value ${isGOAT ? 'goat-infinity' : ''}`}>
+                            {isGOAT ? '∞' : hofScore}
+                        </span>
+                        {isGOAT && <FontAwesomeIcon icon={faStar} className="hof-icon" />}
+                        <span className="hof-score-max">
+                            {isGOAT ? '' : '/100'}
+                        </span>
                     </div>
                     <div className="hof-progress-bar">
                         <div 
-                            className="hof-progress-fill"
+                            className={`hof-progress-fill ${isGOAT ? 'goat-fill' : ''}`}
                             style={{ width: `${hofPercentage}%` }}
                         />
                     </div>
                     <div className="hof-status">
-                        {hofScore >= 100 ? (
+                        {isGOAT ? (
+                            <span className="hof-inducted">G.O.A.T. - Hall of Fame Inducted!</span>
+                        ) : hofScore >= 100 ? (
                             <span className="hof-inducted">Hall of Fame Inducted! (+{hofScore - 100} points)</span>
                         ) : (
                             <span className="hof-progress">{Math.round(hofPercentage)}% to Hall of Fame</span>

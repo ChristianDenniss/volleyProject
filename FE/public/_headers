@@ -1,0 +1,16 @@
+# Cache busting for static assets
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Force revalidation for HTML
+/*.html
+  Cache-Control: no-cache, no-store, must-revalidate
+  Pragma: no-cache
+  Expires: 0
+
+# Force revalidation for CSS and JS with hashes
+/*.css
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.js
+  Cache-Control: public, max-age=31536000, immutable 

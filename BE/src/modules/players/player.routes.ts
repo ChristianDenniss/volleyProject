@@ -20,7 +20,7 @@ export function registerPlayerRoutes(app: Application): void
     router.post('/merge', playerController.mergePlayers);
 
     router.get('/', playerController.getPlayers);
-
+    router.get('/medium', playerController.getMediumPlayers);
     // Above the ID route
     router.get('/teams/:playerName', playerController.getTeamsByPlayerName);
 

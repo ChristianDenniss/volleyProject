@@ -18,6 +18,9 @@ export function registerAwardRoutes(app: Application): void {
     // Get all awards
     router.get('/', awardController.getAwards);
 
+    // Get all awards without relations / minimal data
+    router.get('/skinny', awardController.getSkinnyAwards);
+
     // Get award by ID
     router.get('/:id', awardController.getAwardById);
 

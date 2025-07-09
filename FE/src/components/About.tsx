@@ -8,7 +8,7 @@ const About: React.FC = () =>
             <h1 className="about-title">About Volleyball 4.2</h1>
 
             <p className="about-intro">
-                Welcome to the official platform for Volleyball 4.2, the premier competitive volleyball experience in Roblox. Our platform serves as the central hub for the Roblox Volleyball League (RVL), providing comprehensive tools for players, teams, and fans.
+                Welcome to the official platform for Volleyball 4.2, the Pinnacle competitive volleyball experience on Roblox. Our platform serves as the central hub for the Roblox Volleyball League (RVL), providing comprehensive tools for players, teams, and fans.
             </p>
 
             <section className="about-section">

@@ -221,7 +221,7 @@ const CreateArticle: React.FC = () => {
                         className={!fieldValidation.imageUrl.isValid && formData.imageUrl ? 'invalid' : ''}
                     />
                     <div className="url-hint">
-                        Must be a valid URL (e.g., https://example.com/image.jpg)
+                        <p>Discord image links are not accepted. Please upload your image to a trusted image hosting service first.</p>
                     </div>
                 </div>
 

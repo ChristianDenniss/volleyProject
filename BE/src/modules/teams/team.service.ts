@@ -190,6 +190,27 @@ export class TeamService {
             ]
         });
     }
+    /**
+     * Get all teams without relations / minimal data
+     */
+    async getSkinnyAllTeams(): Promise<Teams[]> {
+        return this.teamRepository.find({
+            relations: [
+                "season"
+            ]
+        });
+    }
+
+    /**
+     * Get all teams without relations / minimal data (players, season)
+     */
+    async getMediumAllTeams(): Promise<Teams[]> {
+        return this.teamRepository.find({
+            relations: [
+                "season", "players"
+            ]
+        });
+    }
 
     /**
      * Get team by ID with validation

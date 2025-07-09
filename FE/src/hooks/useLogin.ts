@@ -39,7 +39,7 @@ export function useLogin() {
       if (!res.ok) throw new Error(data.message || "Login failed");
 
       // save token
-      localStorage.setItem("authToken", data.token);
+      localStorage.setItem("authToken_v2", data.token);
 
       // save user object
       localStorage.setItem("currentUser", JSON.stringify(data.user));

@@ -85,6 +85,7 @@ th {
 .action-buttons {
     display: flex;
     gap: 0.5rem;
+    flex-wrap: wrap;
 }
 
 .approve-btn, .reject-btn {
@@ -94,6 +95,7 @@ th {
     cursor: pointer;
     font-weight: 500;
     transition: all 0.2s;
+    white-space: nowrap;
 }
 
 .approve-btn {
@@ -137,21 +139,30 @@ th {
     display: flex;
     gap: 2rem;
     align-items: flex-start;
+    max-width: 100%;
+    overflow: hidden;
 }
 
 .article-image {
     flex: 0 0 300px;
+    max-width: 300px;
+    position: relative;
 }
 
 .article-image img {
     width: 100%;
     height: auto;
+    max-height: 400px;
+    object-fit: contain;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .article-text {
     flex: 1;
+    min-width: 0;
+    overflow-wrap: break-word;
+    word-break: break-all;
 }
 
 .article-text h3 {
@@ -164,6 +175,10 @@ th {
     margin: 0 0 1.5rem 0;
     color: #666;
     line-height: 1.6;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-all;
 }
 
 /* Responsive styles */
@@ -175,6 +190,35 @@ th {
     .article-image {
         flex: 0 0 auto;
         width: 100%;
+        max-width: 100%;
         margin-bottom: 1rem;
+    }
+
+    .article-image img {
+        max-height: 300px;
+    }
+
+    .action-buttons {
+        justify-content: flex-start;
+    }
+}
+
+/* Ensure table cells don't overflow on small screens */
+@media (max-width: 576px) {
+    th, td {
+        padding: 0.75rem;
+        font-size: 0.9rem;
+    }
+
+    .article-content {
+        padding: 1rem;
+    }
+
+    .article-text h3 {
+        font-size: 1rem;
+    }
+
+    .article-text p {
+        font-size: 0.9rem;
     }
 } 

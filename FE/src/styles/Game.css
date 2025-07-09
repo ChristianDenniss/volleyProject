@@ -1,6 +1,37 @@
+/* -----------------------------------------------------------
+   Page wrapper
+----------------------------------------------------------- */
+.games-page
+{
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    min-height: 100vh; /* Prevent layout shift by setting minimum height */
+    box-sizing: border-box;
+    contain: layout style paint; /* Improve performance */
+}
+
+/* -----------------------------------------------------------
+   Page title styling
+----------------------------------------------------------- */
+h1
+{
+    margin: 0 0 20px 0;
+    padding: 0;
+    border: none;
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+/* -----------------------------------------------------------
+   Wrapper sections
+----------------------------------------------------------- */
 .games-wrapper
 {
     padding: 10px 0;
+    min-height: 600px; /* Reserve minimum space for content */
+    content-visibility: auto; /* Optimize rendering performance */
+    contain-intrinsic-size: 600px; /* Help browser calculate size */
 }
 
 .games-container
@@ -8,48 +39,303 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
-    padding-left: 40px;
-    padding-right: 20px;
+    padding: 10px 0;
+    min-height: 500px; /* Reserve minimum space for cards */
 }
 
-/* Game card styles */
-.game-card
+/* -----------------------------------------------------------
+   Controls layout – following StatsLeaderboard pattern
+----------------------------------------------------------- */
+.games-controls-wrapper
+{
+    margin: 20px 0;
+    min-height: 120px; /* Reserve space for controls to prevent shift */
+}
+
+.games-controls-container
+{
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    min-height: 100px; /* Reserve space for container */
+}
+
+.games-filters-row
 {
     display: flex;
     flex-direction: row;
-    justify-content: space-between;
+    gap: 15px;
     align-items: center;
-    flex-wrap: nowrap;
-    width: 1100px;
-    height: 60px;
-    background-color: #e6f2ff;
-    border: 2px solid #CFFFFF;
-    border-radius: 20px;
-    padding: 0 30px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-    color: #000000;
-    overflow: hidden;
+    flex-wrap: wrap;
+    min-height: 40px; /* Reserve space for filters */
+}
+
+.games-search-row
+{
+    display: flex;
+    flex-direction: row;
+    gap: 15px;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    min-height: 50px; /* Reserve space for search and pagination */
+}
+
+/* -----------------------------------------------------------
+   Filter styling
+----------------------------------------------------------- */
+.games-season-filter,
+.games-stage-filter
+{
+    margin: 0;
     white-space: nowrap;
-    transition: background-color 0.3s ease;
+}
+
+.games-season-filter label,
+.games-stage-filter label
+{
+    margin-right: 8px;
+    color: #2d3748;
+    font-weight: 500;
+}
+
+.games-season-filter select,
+.games-stage-filter select
+{
+    font-size: 15px;
+    padding: 8px 16px;
+    padding-right: 32px;
+    border: 1px solid #2D3C50;
+    border-radius: 4px;
+    background: #2D3C50 url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e") no-repeat right 8px center / 20px;
+    color: #ffffff;
     cursor: pointer;
+    transition: background-color 0.2s ease;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    box-shadow: none;
+}
+
+.games-season-filter select:hover,
+.games-season-filter select:focus,
+.games-stage-filter select:hover,
+.games-stage-filter select:focus
+{
+    background-color: #2a4a7d;
+    border-color: #2a4a7d;
+    background: #2a4a7d url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e") no-repeat right 8px center / 20px;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(26, 54, 93, 0.2);
+}
+
+/* -----------------------------------------------------------
+   Clear-filters button
+----------------------------------------------------------- */
+.clear-filters-button
+{
+    padding: 8px 16px;
+    font-size: 14px;
+    border-radius: 6px;
+    border: 1px solid #ff6b6b;
+    background: #ff6b6b;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.clear-filters-button:hover
+{
+    background-color: #ff5252;
+    border-color: #ff5252;
+}
+
+/* -----------------------------------------------------------
+   Search and pagination
+----------------------------------------------------------- */
+.games-search-row .search-bar
+{
+    flex-grow: 1;
+}
+
+.games-search-row .search-bar input
+{
+    width: 100%;
+}
+
+.games-pagination-wrapper
+{
+    white-space: nowrap;
+}
+
+/* -----------------------------------------------------------
+   Game card styles
+----------------------------------------------------------- */
+.game-card,
+.game-card.skeleton {
+    display: grid;
+    /* Columns: name, id, score, season, stage, date                                */
+    grid-template-columns: 3fr 1fr 1.5fr 1fr 2.5fr 1.5fr;   /* NEW – gave Stage more room */
+    align-items: center;
+    gap: 20px;
+    width: 100%;
+    padding: 10px 20px;
+    background-color: #f0f5ff;                             /* Light blue */
+    border: 1px solid #d1e7ff;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    color: #2d3748;                                        /* Dark grey text */
+    text-decoration: none;
+    transition: background-color 0.2s, box-shadow 0.2s, transform 0.2s;
+    cursor: pointer;
+    min-height: 60px;
+    line-height: 1.4;
+    box-sizing: border-box;
+    contain: layout style; /* Optimize card rendering */
+    transform: translateZ(0); /* Force hardware acceleration */
+    backface-visibility: hidden; /* Prevent flickering */
+    min-width: 700px;
 }
 
 .game-card:hover
 {
-    background-color: #cce0ff;
+    background-color: #e6f2ff;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    transform: translateY(-2px);
 }
 
-/* Game details styling */
+/* -----------------------------------------------------------
+   Game details styling
+----------------------------------------------------------- */
 .game-name,
 .game-id,
 .game-score,
-.game-teams,
 .game-season,
+.all-games-stage,
 .game-date
 {
-    font-size: 22px;
-    font-weight: bold;
-    margin: 0 20px;
-    flex-shrink: 0;
+    font-size: 15px;
+    font-weight: 500;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: left;
+}
+
+/* Name should pop a little more */
+.game-name
+{
+    font-weight: 700;
+    font-size: 16px;
+    color: #1a202c;
+}
+
+/* Label styling (e.g., "ID:", "Score:") */
+.game-card div strong
+{
+    font-weight: 600;
+    color: #4a5568;
+    margin-right: 6px;
+}
+
+/* Preserve inherited colour on .game-name */
+.game-name strong
+{
+    color: inherit;
+    margin-right: 0;
+}
+
+/* -----------------------------------------------------------
+   Responsive tweaks
+----------------------------------------------------------- */
+@media (max-width: 768px)
+{
+    .games-filters-row,
+    .games-search-row
+    {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .games-pagination-wrapper,
+    .search-bar
+    {
+        width: 100%;
+        margin: 0;
+    }
+
+    .search-bar input
+    {
+        width: 100%;
+    }
+    
+    /* Adjust minimum heights for mobile */
+    .games-controls-wrapper {
+        min-height: 150px;
+    }
+    
+    .games-wrapper {
+        min-height: 500px;
+    }
+    
+    .games-container {
+        min-height: 400px;
+    }
+}
+
+/* Loading state to prevent layout shift */
+.games-page.loading {
+    opacity: 0.8;
+    pointer-events: none;
+}
+
+/* Prevent layout shift during data loading */
+.games-container:empty::before {
+    content: "";
+    display: block;
+    height: 500px;
+    width: 100%;
+}
+
+/* Skeleton loader for better UX */
+.game-card.skeleton {
+    display: grid;
+    grid-template-columns: 3fr 1fr 1.5fr 1fr 2.5fr 1.5fr;
+    align-items: center;
+    gap: 20px;
+    width: 100%;
+    padding: 10px 20px;
+    background-color: #f0f5ff;
+    border: 1px solid #d1e7ff;
+    border-radius: 8px;
+    min-height: 60px;
+    box-sizing: border-box;
+    margin-bottom: 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.game-card.skeleton .skeleton-block {
+    height: 18px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+.game-card.skeleton .skeleton-block.name { width: 90%; min-width: 120px; height: 20px; }
+.game-card.skeleton .skeleton-block.id { width: 60%; min-width: 60px; }
+.game-card.skeleton .skeleton-block.score { width: 70%; min-width: 80px; }
+.game-card.skeleton .skeleton-block.season { width: 60%; min-width: 60px; }
+.game-card.skeleton .skeleton-block.stage { width: 80%; min-width: 120px; }
+.game-card.skeleton .skeleton-block.date { width: 70%; min-width: 90px; }
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
 }

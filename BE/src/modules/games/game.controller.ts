@@ -176,6 +176,29 @@ export class GameController {
         }
     };
 
+    // Get all games without relations / minimal data
+    getSkinnyGames = async (req: Request, res: Response): Promise<void> => {
+        try {
+            const games = await this.gameService.getSkinnyAllGames();
+            res.json(games);
+        } catch (error: any) {
+            if (error !instanceof MissingFieldError || 
+                error instanceof NotFoundError || 
+                error instanceof InvalidFormatError || 
+                error instanceof DateError || 
+                error instanceof ConflictError || 
+                error instanceof DuplicateError) {
+                console.error("Custom error fetching games without relations:", error);
+                res.status(400).json({ error: error.message });
+            } 
+            else 
+            {
+                console.error("Unexpected error fetching games without relations:", error);
+                res.status(500).json({ error: "Failed to fetch games without relations" });
+            }
+        }
+    };
+
     // Get game by ID
     getGameById = async (req: Request, res: Response): Promise<void> => {
         try {
@@ -202,8 +225,8 @@ export class GameController {
     updateGame = async (req: Request, res: Response): Promise<void> => {
         try {
             const { id } = req.params;
-            const { date, seasonId, teamIds, homeScore, awayScore, videoUrl, stage } = req.body;
-            const updatedGame = await this.gameService.updateGame(parseInt(id), date, seasonId, teamIds, homeScore, awayScore, stage, videoUrl);
+            const { date, seasonId, teamIds, team1Score, team2Score, videoUrl, stage } = req.body;
+            const updatedGame = await this.gameService.updateGame(parseInt(id), date, seasonId, teamIds, team1Score, team2Score, stage, videoUrl);
             res.json(updatedGame);
         } catch (error: any) {
             if (error instanceof MissingFieldError || 

@@ -100,7 +100,17 @@ export class PlayerService
     async getAllPlayers(): Promise<Players[]> 
     {
         return this.playerRepository.find({
-            relations: ["teams", "teams.season", "stats"], // Include season relation for teams
+            relations: ["teams", "teams.season", "stats", "stats.game", "stats.game.season", "stats.game.teams"], // Include game and season relations for stats
+        });
+    }
+
+    /**
+     * Get all players with medium relations / minimal data
+     */
+    async getMediumAllPlayers(): Promise<Players[]> 
+    {
+        return this.playerRepository.find({
+            relations: ["teams", "teams.season"],
         });
     }
 

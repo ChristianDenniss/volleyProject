@@ -8,7 +8,7 @@ export async function authFetch(
 ): Promise<Response>
 {
     // grab your token out of localStorage
-    const token = localStorage.getItem("authToken");
+    const token = localStorage.getItem("authToken_v2");
 
     // merge headers (preserve any you passed in)
     const headers = new Headers(init.headers);

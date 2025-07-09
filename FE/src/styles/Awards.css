@@ -10,6 +10,8 @@
     flex-direction: column;
     gap: 2rem;
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    min-height: 100vh; /* Prevent layout shift by setting minimum height */
+    contain: layout style paint; /* Improve performance */
 }
 
 /* -----------------------------------------------------------
@@ -33,6 +35,7 @@
     gap: 1rem;
     align-items: center;
     justify-content: center;
+    min-height: 60px; /* Reserve space for controls */
 }
 
 .volley-awards-controls select
@@ -62,6 +65,9 @@
     column-gap: clamp(1rem, 2vw, 1.4rem);
     row-gap: clamp(1.5rem, 3vw, 2.2rem);   /* extra vertical space */
     width: 100%;
+    min-height: 600px; /* Reserve minimum space for content */
+    content-visibility: auto; /* Optimize rendering performance */
+    contain-intrinsic-size: 600px; /* Help browser calculate size */
 }
 
 /* -----------------------------------------------------------
@@ -96,6 +102,11 @@
                 border-color 0.25s ease;
     cursor: pointer;
     overflow: hidden;                /* keep overlay bounds */
+    min-height: 200px; /* Reserve minimum height for cards */
+    box-sizing: border-box;
+    contain: layout style; /* Optimize card rendering */
+    transform: translateZ(0); /* Force hardware acceleration */
+    backface-visibility: hidden; /* Prevent flickering */
 }
 
 /* Dark overlay for readability */
@@ -199,5 +210,44 @@
     .volley-awards-grid
     {
         grid-template-columns: 1fr;
+        min-height: 500px;
+    }
+    
+    .volley-awards-controls {
+        min-height: 80px;
+    }
+}
+
+/* Loading state to prevent layout shift */
+.volley-awards-container.loading {
+    opacity: 0.8;
+    pointer-events: none;
+}
+
+/* Prevent layout shift during data loading */
+.volley-awards-grid:empty::before {
+    content: "";
+    display: block;
+    height: 600px;
+    width: 100%;
+}
+
+/* Skeleton loader for better UX */
+.awards-skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: 16px;
+    height: 200px;
+    width: 100%;
+    min-width: 240px;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
     }
 }

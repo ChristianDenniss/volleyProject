@@ -1,4 +1,136 @@
+/* Page wrapper */
+.teams-page {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    box-sizing: border-box;
+    min-height: 100vh; /* Prevent layout shift by setting minimum height */
+    contain: layout style paint; /* Improve performance */
+}
+
+/* Page title styling */
+.teams-page h1 {
+    margin: 0 0 20px 0;
+    padding: 0;
+    border: none;
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+/* Controls layout - following Games pattern */
+.teams-controls-wrapper { 
+    margin: 20px 0; 
+    min-height: 120px; /* Reserve space for controls to prevent shift */
+}
+
+.teams-controls-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    min-height: 100px; /* Reserve space for container */
+}
+
+.teams-filters-row {
+    display: flex;
+    flex-direction: row;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+    min-height: 40px; /* Reserve space for filters */
+}
+
+.teams-search-row {
+    display: flex;
+    flex-direction: row;
+    gap: 15px;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    min-height: 50px; /* Reserve space for search and pagination */
+}
+
+/* Filter styling */
+.teams-season-filter, 
+.teams-placement-filter { 
+    margin: 0; 
+    white-space: nowrap; 
+}
+
+.teams-season-filter label,
+.teams-placement-filter label {
+    margin-right: 8px;
+    color: #2d3748;
+    font-weight: 500;
+}
+
+.teams-season-filter select,
+.teams-placement-filter select {
+    font-size: 15px;
+    padding: 8px 16px;
+    padding-right: 32px;
+    border: 1px solid #2D3C50;
+    border-radius: 4px;
+    background: #2D3C50 url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e") no-repeat right 8px center / 20px;
+    color: #ffffff;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    box-shadow: none;
+}
+
+.teams-season-filter select:hover,
+.teams-placement-filter select:hover,
+.teams-season-filter select:focus,
+.teams-placement-filter select:focus {
+    background-color: #5b7dab;
+    border-color: #5b7dab;
+    background: #5b7dab url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e") no-repeat right 8px center / 20px;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(45, 60, 80, 0.2);
+}
+
+/* Clear filters button */
+.clear-filters-button {
+    padding: 8px 16px;
+    font-size: 14px;
+    border-radius: 6px;
+    border: 1px solid #ff6b6b;
+    background: #ff6b6b;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.clear-filters-button:hover {
+    background-color: #ff5252;
+    border-color: #ff5252;
+}
+
+/* Search and pagination */
+.teams-search-row .search-bar {
+    flex-grow: 1;
+}
+
+.teams-search-row .search-bar input {
+    width: 100%;
+}
+
+.teams-pagination-wrapper { 
+    white-space: nowrap; 
+}
+
 /*  Arrange cards in an auto-fill grid with consistent gaps               */
+.teams-wrapper {
+    padding: 10px 0;
+    min-height: 600px; /* Reserve minimum space for content */
+    content-visibility: auto; /* Optimize rendering performance */
+    contain-intrinsic-size: 600px; /* Help browser calculate size */
+}
+
 .teams-container
 {
     /* create responsive grid */
@@ -6,12 +138,18 @@
 
     /* min 250 px, stretch to fill */
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-
+    
+    /* Prevent rows from stretching - each row should only be as tall as needed */
+    grid-template-rows: auto;
+    
     /* gap between cards */
     gap: 1.5rem;
 
     /* side padding */
-    padding: 2rem 1.25rem;
+    padding: 10px 0;
+    min-height: 500px; /* Reserve minimum space for cards */
+
+    align-content: start; /* Prevent grid rows from stretching */
 }
 
 /* ----- Base card ------------------------------------------------------ */
@@ -38,6 +176,11 @@
 
     /* pointer cursor */
     cursor: pointer;
+    min-height: 120px; /* Reserve minimum height for cards */
+    box-sizing: border-box;
+    contain: layout style; /* Optimize card rendering */
+    transform: translateZ(0); /* Force hardware acceleration */
+    backface-visibility: hidden; /* Prevent flickering */
 }
 
 /* ----- Hover / active effect ----------------------------------------- */
@@ -75,25 +218,81 @@
 .team-card-stage,      /* ← NEW placement row                              */
 .team-players
 {
-    /* small caps feel */
-    font-size: 0.85rem;
+    /* smaller font */
+    font-size: 0.875rem;
 
-    /* subtle grey */
-    color: #b0b0b0;
+    /* lighter weight */
+    font-weight: 500;
 
-    /* line height */
-    line-height: 1.4;
+    /* muted color */
+    color: #a0a0a0;
+
+    /* consistent spacing */
+    margin-bottom: 0.25rem;
 }
 
-/*  Label emphasis                                                       */
-.team-id strong,
-.team-season strong,
-.team-card-stage strong,   /* ← NEW                                         */
-.team-players strong
-{
-    /* label brighter */
-    color: #ffffff;
+/* Responsive design */
+@media (max-width: 768px) {
+    .teams-filters-row,
+    .teams-search-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
 
-    /* some separation */
-    margin-right: 0.25rem;
+    .teams-pagination-wrapper,
+    .search-bar {
+        width: 100%;
+        margin: 0;
+    }
+
+    .search-bar input {
+        width: 100%;
+    }
+    
+    /* Adjust minimum heights for mobile */
+    .teams-controls-wrapper {
+        min-height: 150px;
+    }
+    
+    .teams-wrapper {
+        min-height: 500px;
+    }
+    
+    .teams-container {
+        min-height: 400px;
+    }
+}
+
+/* Loading state to prevent layout shift */
+.teams-page.loading {
+    opacity: 0.8;
+    pointer-events: none;
+}
+
+/* Prevent layout shift during data loading */
+.teams-container:empty::before {
+    content: "";
+    display: block;
+    height: 500px;
+    width: 100%;
+}
+
+/* Skeleton loader for better UX */
+.teams-skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: 0.85rem;
+    height: 120px;
+    margin-bottom: 1.5rem;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
 }

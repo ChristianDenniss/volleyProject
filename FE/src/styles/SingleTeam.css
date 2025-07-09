@@ -8,6 +8,9 @@
     max-width: 1600px;
     width: 90%;
     box-sizing: border-box;
+    min-height: 100vh; /* Prevent layout shift by setting minimum height */
+    contain: layout style paint; /* Improve performance */
+    content-visibility: auto; /* Optimize rendering */
 }
 
 /* Centered and Stylized Team Name */
@@ -18,6 +21,7 @@
     color: #1a1a1a;
     margin-bottom: 30px;
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.15);
+    min-height: 4rem; /* Reserve space for title */
 }
 
 /* Season placement and Games Info */
@@ -25,6 +29,7 @@
     font-size: 1.4rem;
     text-align: center;
     margin-bottom: 10px;
+    min-height: 2rem; /* Reserve space for info text */
 }
 
 /* Section Title Styling */
@@ -37,6 +42,7 @@
     border-bottom: 3px solid #d6ebff;
     padding-bottom: 8px;
     letter-spacing: 1px;
+    min-height: 3rem; /* Reserve space for section titles */
 }
 
 /* Collapse Button */
@@ -49,6 +55,8 @@
     cursor: pointer;
     border-radius: 6px;
     transition: background-color 0.3s ease;
+    min-height: 2.5rem; /* Reserve space for buttons */
+    min-width: 120px; /* Reserve minimum width */
 }
 
 .toggle-button:hover {
@@ -58,6 +66,7 @@
 /* Games Section */
 .games-section {
     margin-top: 40px;
+    min-height: 200px; /* Reserve space for games section */
 }
 
 /* Game Cards */
@@ -66,6 +75,8 @@
     overflow-x: auto;
     gap: 16px;
     padding: 12px 0;
+    min-height: 300px; /* Reserve space for game cards */
+    contain: layout style; /* Optimize rendering */
 }
 
 .game-card-single-team {
@@ -85,6 +96,10 @@
     color: inherit;
     box-sizing: border-box;
     justify-content: flex-start;
+    will-change: transform; /* Optimize animations */
+    transform: translateZ(0); /* Force hardware acceleration */
+    backface-visibility: hidden; /* Prevent flickering */
+    contain: layout style; /* Optimize card rendering */
 }
 
 .game-card-single-team:hover {
@@ -100,12 +115,14 @@
     word-wrap: break-word;
     display: block;
     width: 100%;
+    min-height: 1.5rem; /* Reserve space for text */
 }
 
 .game-card-single-team p:first-child {
     font-size: 1.1em;
     margin-bottom: 30px;
     color: #1e3d59;
+    min-height: 2rem; /* Reserve space for title */
 }
 
 /* Toggle Button overrides */
@@ -122,6 +139,7 @@
 /* Team Totals Section */
 .team-totals {
     margin-top: 40px;
+    min-height: 200px; /* Reserve space for totals section */
 }
 
 .team-totals .totals-columns {
@@ -131,6 +149,7 @@
     flex-wrap: wrap;
     width: 100%;
     justify-content: flex-start;
+    min-height: 200px; /* Reserve space for totals content */
 }
 
 .team-totals .totals-column {
@@ -142,6 +161,7 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     margin-bottom: 1rem;
     box-sizing: border-box;
+    min-height: 150px; /* Reserve space for column content */
 }
 
 .team-totals .totals-column .totals-item {
@@ -150,6 +170,7 @@
     align-items: center;
     padding: 12px 0;
     border-bottom: 1px dashed #a8c9e3;
+    min-height: 2rem; /* Reserve space for items */
 }
 
 .team-totals .totals-column .totals-item:last-child {
@@ -188,6 +209,7 @@
 .players-list li {
     list-style: none;
     margin: 0 0 20px;
+    min-height: 40px; /* Reserve space for player items */
 }
 
 /* Detail wrapper styled as the card container */
@@ -197,17 +219,19 @@
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     overflow: hidden;
+    min-height: 40px; /* Reserve minimum height */
+    contain: layout style; /* Optimize rendering */
 }
 
 /* Summary header: fill the box, make clickable */
-.players-list li details > summary 
-{
+.team-player-summary {
     all: unset;            /* reset default */
     display: flex;
     align-items: center;
     cursor: pointer;
-    padding: 25px;
+    padding: 15px 25px;
     font-size: 1.1rem;
+    min-height: 40px; /* Reserve space for summary */
 }
 
 /* Custom arrow: hide native, inject our own */
@@ -237,6 +261,7 @@
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    min-height: 200px; /* Reserve space for stats */
 }
 
 /* Stat Rows: fixed 3-column grid, full-width dashed border */
@@ -248,6 +273,7 @@
     border-bottom: 1px dashed #a8c9e3;
     padding: 6px 0;
     width: 100%;
+    min-height: 2rem; /* Reserve space for stat rows */
 }
 
 /* Remove border on last row */
@@ -260,9 +286,155 @@
     display: flex;
     justify-content: space-between;
     width: 100%;
+    min-height: 1.5rem; /* Reserve space for items */
 }
 
 .stat-item span {
     font-size: 1.2rem;
     color: #333;
+}
+
+/* Loading state to prevent layout shift */
+.team-details.loading {
+    opacity: 0.8;
+    pointer-events: none;
+}
+
+/* Skeleton loader styles */
+.team-skeleton {
+    margin-bottom: 40px;
+}
+
+.skeleton-title {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: 8px;
+    height: 4rem;
+    margin-bottom: 20px;
+    width: 60%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.skeleton-info {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: 8px;
+    height: 2rem;
+    margin-bottom: 10px;
+    width: 40%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.skeleton-section-title {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: 8px;
+    height: 3rem;
+    margin-bottom: 15px;
+    width: 30%;
+}
+
+.skeleton-button {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: 6px;
+    height: 2.5rem;
+    margin-bottom: 20px;
+    width: 120px;
+}
+
+.skeleton-players {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.skeleton-player-item {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: 8px;
+    height: 60px;
+    width: 100%;
+}
+
+.skeleton-games {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    padding: 12px 0;
+}
+
+.skeleton-game-card {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: 16px;
+    height: 250px;
+    width: 270px;
+    flex-shrink: 0;
+}
+
+.skeleton-totals {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: 8px;
+    height: 200px;
+    width: 100%;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* Optimize for Core Web Vitals */
+.team-details {
+    contain: layout style; /* Optimize rendering */
+}
+
+.players-list {
+    min-height: 200px; /* Reserve space for players section */
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .team-details {
+        min-height: 80vh;
+    }
+    
+    .skeleton-title {
+        width: 80%;
+    }
+    
+    .skeleton-info {
+        width: 60%;
+    }
+    
+    .skeleton-section-title {
+        width: 50%;
+    }
+    
+    .games-scroll-container {
+        min-height: 250px;
+    }
+    
+    .players-list {
+        min-height: 300px;
+    }
+    
+    .team-totals {
+        min-height: 250px;
+    }
 }

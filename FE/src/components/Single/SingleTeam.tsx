@@ -4,6 +4,7 @@ import { useParams, Link }                           from 'react-router-dom';
 import { Player, Stats, Game, Team }                 from '../../types/interfaces';
 import { useSingleTeam }                             from '../../hooks/allFetch';
 import "../../styles/SingleTeam.css";
+import SEO from "../SEO";
 
 const SingleTeam: React.FC = () =>
 {
@@ -19,10 +20,45 @@ const SingleTeam: React.FC = () =>
     const [ showGames,      setShowGames ]      = useState(false);
     const [ showTeamTotals, setShowTeamTotals ] = useState(false);
 
-    // Loading / error / not found
+    // Loading state with skeleton
     if ( loading )
     {
-        return <p>Loading team…</p>;
+        return (
+            <div className="team-details loading">
+                <div className="team-skeleton">
+                    <div className="skeleton-title"></div>
+                    <div className="skeleton-info"></div>
+                    <div className="skeleton-info"></div>
+                    <div className="skeleton-info"></div>
+                </div>
+                
+                <div className="players-list">
+                    <div className="skeleton-section-title"></div>
+                    <div className="skeleton-button"></div>
+                    <div className="skeleton-players">
+                        {[1, 2, 3].map(i => (
+                            <div key={i} className="skeleton-player-item"></div>
+                        ))}
+                    </div>
+                </div>
+                
+                <div className="games-section">
+                    <div className="skeleton-section-title"></div>
+                    <div className="skeleton-button"></div>
+                    <div className="skeleton-games">
+                        {[1, 2, 3].map(i => (
+                            <div key={i} className="skeleton-game-card"></div>
+                        ))}
+                    </div>
+                </div>
+                
+                <div className="team-totals">
+                    <div className="skeleton-section-title"></div>
+                    <div className="skeleton-button"></div>
+                    <div className="skeleton-totals"></div>
+                </div>
+            </div>
+        );
     }
 
     if ( error )
@@ -88,6 +124,44 @@ const SingleTeam: React.FC = () =>
 
     return (
         <div className="team-details">
+            {/* SEO Meta Tags for Social Media Embedding */}
+            {team && (
+                <SEO
+                    title={`${team.name} - Team Profile`}
+                    description={`${team.name} finished ${team.placement} in Season ${team.season.seasonNumber} of the Roblox Volleyball League. View team stats, players, and game results.`}
+                    image="https://volleyball4-2.com/rvlLogo.png"
+                    url={`https://volleyball4-2.com/teams/${encodeURIComponent(team.name.toLowerCase().replace(/\s+/g, "-"))}`}
+                    type="sports_event"
+                    structuredData={{
+                        "@context": "https://schema.org",
+                        "@type": "SportsTeam",
+                        "name": team.name,
+                        "description": `${team.name} finished ${team.placement} in Season ${team.season.seasonNumber}`,
+                        "url": `https://volleyball4-2.com/teams/${encodeURIComponent(team.name.toLowerCase().replace(/\s+/g, "-"))}`,
+                        "sport": "Volleyball",
+                        "league": {
+                            "@type": "SportsOrganization",
+                            "name": "Roblox Volleyball League",
+                            "url": "https://volleyball4-2.com"
+                        },
+                        "season": {
+                            "@type": "SportsSeason",
+                            "name": `Season ${team.season.seasonNumber}`,
+                            "seasonNumber": team.season.seasonNumber
+                        },
+                        "athlete": team.players?.map(player => ({
+                            "@type": "Person",
+                            "name": player.name,
+                            "jobTitle": player.position,
+                            "url": `https://volleyball4-2.com/players/${player.id}`
+                        })) || [],
+                        "location": {
+                            "@type": "Place",
+                            "name": "Roblox Volleyball League"
+                        }
+                    }}
+                />
+            )}
 
             {/* Team Header */}
             <h1 className="team-title">{team.name}</h1>
@@ -109,7 +183,7 @@ const SingleTeam: React.FC = () =>
                     <ul>
                         {team.players?.map((player: Player) =>
                         {
-                            // Gather this player’s stats
+                            // Gather this player's stats
                             const statsForPlayer = statsByPlayer[player.id] || [];
                             const combined = statsForPlayer.reduce((tot, stat) =>
                             {
@@ -146,7 +220,7 @@ const SingleTeam: React.FC = () =>
                             return (
                                 <li key={player.id}>
                                     <details>
-                                        <summary className="player-info">
+                                        <summary className="team-player-summary">
                                             <strong>{player.name}</strong> — Position: {player.position}
                                         </summary>
 
@@ -280,6 +354,9 @@ const SingleTeam: React.FC = () =>
                                 </div>
                                 <div className="totals-item">
                                     <strong>Spike Attempts:</strong> {teamTotals.spikeAttempts}
+                                </div>
+                                <div className="totals-item">
+                                    <strong>Spike %:</strong> {teamTotals.spikeAttempts > 0 ? ((teamTotals.spikeKills / teamTotals.spikeAttempts) * 100).toFixed(1) : '0.0'}%
                                 </div>
                                 <div className="totals-item">
                                     <strong>Ape Kills:</strong> {teamTotals.apeKills}

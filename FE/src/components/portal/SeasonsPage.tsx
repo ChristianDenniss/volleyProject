@@ -1,7 +1,7 @@
 // src/pages/SeasonsPage.tsx
 
 import React, { useState, useEffect } from "react";
-import { useSeasons }                  from "../../hooks/allFetch";
+import { useSkinnySeasons }                  from "../../hooks/allFetch";
 import { useSeasonMutations }          from "../../hooks/allPatch";
 import { useCreateSeasons }            from "../../hooks/allCreate";
 import { useDeleteSeasons }            from "../../hooks/allDelete";
@@ -19,7 +19,7 @@ interface EditingState {
 const SeasonsPage: React.FC = () =>
 {
     // Fetch existing seasons
-    const { data: seasons, loading, error } = useSeasons();
+    const { data: seasons, loading, error } = useSkinnySeasons();
 
     // Patch (edit) existing seasons
     const { patchSeason }                   = useSeasonMutations();

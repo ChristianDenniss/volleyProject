@@ -10,6 +10,8 @@ export function registerSeasonRoutes(app: Application): void {
     // Season routes
     router.post('/', validate(createSeasonSchema), seasonController.createSeason);
     router.get('/', seasonController.getAllSeasons);
+    router.get('/skinny', seasonController.getSkinnyAllSeasons);
+    router.get('/medium', seasonController.getMediumAllSeasons);
     router.get('/:id', seasonController.getSeasonById);
     router.put('/:id', seasonController.updateSeason);
     router.patch('/:id', validate(updateSeasonSchema), seasonController.updateSeason);

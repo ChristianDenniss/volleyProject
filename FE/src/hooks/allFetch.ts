@@ -24,6 +24,15 @@ export const useArticles = () => useFetch<Article>("articles");
 
 export const useAwards = () => useFetch<Award>("awards");
 
+// Skinny hooks for faster loading without relations
+export const useSkinnyTeams = () => useFetch<Team>("teams/skinny");
+export const useMediumTeams = () => useFetch<Team>("teams/medium");
+export const useSkinnySeasons = () => useFetch<Season>("seasons/skinny");
+export const useMediumSeasons = () => useFetch<Season>("seasons/medium");
+export const useSkinnyGames = () => useFetch<Game>("games/skinny");
+export const useSkinnyAwards = () => useFetch<Award>("awards/skinny");
+export const useMediumPlayers = () => useFetch<Player>("players/medium");
+
 export const useSingleArticles = (articleId: string) => useFetchArticleById<Article>(`${articleId}`);
 
 export const useSingleTeam = (teamName: string) => useFetchTeamByName<Team>(`${teamName}`);

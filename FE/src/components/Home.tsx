@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import "../styles/Home.css";
 import promoImg from "../images/callToAction.png";
 import { useArticles } from "../hooks/allFetch";
+import SEO from "./SEO";
 
 const Home: React.FC = () => {
     const playerRef = useRef<any>(null);
@@ -102,14 +103,47 @@ const Home: React.FC = () => {
 
     return (
         <div style={{ overflowX: "hidden" }}>
-            <main className="home">
+            {/* SEO Meta Tags for Social Media Embedding */}
+            <SEO
+                title="Volleyball 4-2 - Official Roblox Volleyball League"
+                description="Join the official Roblox Volleyball League (RVL). Watch matches, track player stats, view team rankings, and stay updated with the latest volleyball news and events."
+                image="https://volleyball4-2.com/rvlLogo.png"
+                url="https://volleyball4-2.com"
+                type="website"
+                structuredData={{
+                    "@context": "https://schema.org",
+                    "@type": "WebSite",
+                    "name": "Volleyball 4-2",
+                    "alternateName": "RVL",
+                    "url": "https://volleyball4-2.com",
+                    "description": "Official Roblox Volleyball League - Competitive volleyball gaming community",
+                    "publisher": {
+                        "@type": "Organization",
+                        "name": "Roblox Volleyball League",
+                        "logo": {
+                            "@type": "ImageObject",
+                            "url": "https://volleyball4-2.com/rvlLogo.png"
+                        }
+                    },
+                    "potentialAction": {
+                        "@type": "SearchAction",
+                        "target": "https://volleyball4-2.com/search?q={search_term_string}",
+                        "query-input": "required name=search_term_string"
+                    }
+                }}
+            />
+
+            <main className={`home ${loading ? 'loading' : ''}`}>
                 <section className="headline-section">
-                    {featuredArticle ? (
+                    {loading ? (
+                        <div className="featured-article">
+                            <div className="home-skeleton-featured"></div>
+                        </div>
+                    ) : featuredArticle ? (
                         <Link to={`/articles/${featuredArticle.id}`}>
                             <div className="featured-article">
-                                {loading && <p>Loading featured…</p>}
                                 {error && <p>Error: {error}</p>}
-                                {!loading && !error && (
+                                {!error && (
                                     <>
                                         <img
                                             src={featuredArticle.imageUrl}
@@ -142,9 +176,14 @@ const Home: React.FC = () => {
                     )}
 
                     <aside className="side-articles">
-                        {loading && <p>Loading articles…</p>}
-                        {error && <p>Error loading articles: {error}</p>}
-                        {!loading && !error && sideArticles.length > 0 ? (
+                        {loading ? (
+                            // Skeleton loaders for side articles
+                            Array.from({ length: 4 }).map((_, index) => (
+                                <div key={index} className="home-skeleton-side"></div>
+                            ))
+                        ) : error ? (
+                            <p>Error loading articles: {error}</p>
+                        ) : sideArticles.length > 0 ? (
                             sideArticles.map(article => (
                                 <Link
                                     key={article.id}

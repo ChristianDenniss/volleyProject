@@ -156,6 +156,17 @@ export class GameService {
         });
     }
 
+    /**
+     * Get all games without relations / minimal data
+     */
+    async getSkinnyAllGames(): Promise<Games[]> {
+        return this.gameRepository.find({
+            relations: ["season"],
+            order: { date: "DESC" } // Most recent games first
+        });
+    }
+
+
     async createGameByNames(
         date: Date, 
         seasonId: number, 
@@ -297,8 +308,11 @@ export class GameService {
             game.teams = teams;
         }
 
-        if (team1Score !== undefined && team2Score !== undefined) {
+        if (team1Score !== undefined) {
             game.team1Score = team1Score;
+        }
+        
+        if (team2Score !== undefined) {
             game.team2Score = team2Score;
         }
 

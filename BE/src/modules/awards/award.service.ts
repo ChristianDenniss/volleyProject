@@ -93,6 +93,15 @@ export class AwardService {
     }
 
     /**
+     * Find all awards without relations / minimal data
+     */
+    async findSkinnyAllAwards(): Promise<Awards[]> {
+        return this.awardRepository.find({
+            relations: ["players", "season"]
+        });
+    }
+
+    /**
      * Find an award by ID
      * @param id - The award ID
      * @returns The found award or null
@@ -136,7 +145,7 @@ export class AwardService {
      * @throws {NotFoundError} If the award is not found
      */
     async updateAward(id: number, awardData: UpdateAwardDto): Promise<Awards | null> {
-        const { description, type, imageUrl, seasonId, playerIds, playerName } = awardData;
+        const { description, type, imageUrl, seasonId, playerIds, playerName, createdAt } = awardData;
 
         const award = await this.awardRepository.findOne({
             where: { id },
@@ -150,6 +159,7 @@ export class AwardService {
         if (description) award.description = description;
         if (type) award.type = type;
         if (imageUrl) award.imageUrl = imageUrl;
+        if (createdAt) award.createdAt = new Date(createdAt);
 
         // Update season if provided
         if (seasonId) {

@@ -188,10 +188,10 @@ const PlayersPage: React.FC = () => {
       {/* Search and Controls */}
       <div className="players-controls">
         <button className="create-button" onClick={() => setIsModalOpen(true)}>
-          Submit Players
+          Create Players
         </button>
         <div className="players-controls-right">
-          <SearchBar onSearch={handleSearch} />
+          <SearchBar onSearch={handleSearch} placeholder="Search players..." />
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}

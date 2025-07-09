@@ -4,9 +4,11 @@ import "../styles/Searchbar.css";
 
 interface SearchBarProps {
     onSearch: (query: string) => void;
+    placeholder?: string;
+    className?: string;
 }
 
-const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
+const SearchBar: React.FC<SearchBarProps> = ({ onSearch, placeholder = "Search...", className = "" }) => {
     const [query, setQuery] = useState<string>("");
 
     // Handle input change and pass the query to the parent component
@@ -16,10 +18,10 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
     };
 
     return (
-        <div className="search-bar">
+        <div className={`search-bar ${className}`}>
             <input
                 type="text"
-                placeholder="Search players..."
+                placeholder={placeholder}
                 value={query}
                 onChange={handleInputChange}
             />

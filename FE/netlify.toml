@@ -1,0 +1,68 @@
+[build]
+  publish = "dist"
+  functions = "netlify/functions"
+
+[[redirects]]
+  from = "/articles/*"
+  to = "/.netlify/functions/meta-tags"
+  status = 200
+  conditions = {User_Agent = ["facebookexternalhit", "Twitterbot", "Discordbot", "WhatsApp", "TelegramBot", "Slackbot", "LinkedInBot", "Instagram", "Pinterest", "Snapchat"]}
+
+[[redirects]]
+  from = "/players/*"
+  to = "/.netlify/functions/meta-tags"
+  status = 200
+  conditions = {User_Agent = ["facebookexternalhit", "Twitterbot", "Discordbot", "WhatsApp", "TelegramBot", "Slackbot", "LinkedInBot", "Instagram", "Pinterest", "Snapchat"]}
+
+[[redirects]]
+  from = "/teams/*"
+  to = "/.netlify/functions/meta-tags"
+  status = 200
+  conditions = {User_Agent = ["facebookexternalhit", "Twitterbot", "Discordbot", "WhatsApp", "TelegramBot", "Slackbot", "LinkedInBot", "Instagram", "Pinterest", "Snapchat"]}
+
+[[redirects]]
+  from = "/games/*"
+  to = "/.netlify/functions/meta-tags"
+  status = 200
+  conditions = {User_Agent = ["facebookexternalhit", "Twitterbot", "Discordbot", "WhatsApp", "TelegramBot", "Slackbot", "LinkedInBot", "Instagram", "Pinterest", "Snapchat"]}
+
+[[redirects]]
+  from = "/seasons/*"
+  to = "/.netlify/functions/meta-tags"
+  status = 200
+  conditions = {User_Agent = ["facebookexternalhit", "Twitterbot", "Discordbot", "WhatsApp", "TelegramBot", "Slackbot", "LinkedInBot", "Instagram", "Pinterest", "Snapchat"]}
+
+[[redirects]]
+  from = "/awards/*"
+  to = "/.netlify/functions/meta-tags"
+  status = 200
+  conditions = {User_Agent = ["facebookexternalhit", "Twitterbot", "Discordbot", "WhatsApp", "TelegramBot", "Slackbot", "LinkedInBot", "Instagram", "Pinterest", "Snapchat"]}
+
+# Handle SPA routing for non-crawler requests
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Headers for better caching
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+    Pragma = "no-cache"
+    Expires = "0" 

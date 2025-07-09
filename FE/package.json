@@ -7,17 +7,20 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "generate-meta": "node scripts/generate-meta-tags.js"
   },
   "dependencies": {
+    "@dr.pogodin/react-helmet": "^3.0.2",
     "@fortawesome/fontawesome-svg-core": "^6.5.1",
     "@fortawesome/free-solid-svg-icons": "^6.5.1",
     "@fortawesome/react-fontawesome": "^0.2.0",
     "axios": "^1.9.0",
+    "node-fetch": "^2.7.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-icons": "^5.5.0",
-    "react-router-dom": "^7.5.3",
+    "react-router-dom": "^6.22.3",
     "react-select": "^5.10.1",
     "sass": "^1.85.1",
     "simplebar-react": "^3.3.1"

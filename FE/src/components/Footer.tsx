@@ -1,7 +1,8 @@
 import React from 'react';
 import '../styles/Footer.css';
 import rvlLogo from "../images/rvlLogo.png";
-import { FaFacebookF, FaYoutube, FaInstagram, FaTwitter } from 'react-icons/fa';
+import { FaYoutube, FaTwitter } from 'react-icons/fa';
+import { FaDiscord } from 'react-icons/fa6';
 
 const Footer: React.FC = () =>
 {
@@ -38,14 +39,6 @@ const Footer: React.FC = () =>
 
                 <div className="footer-socials">
                     <a
-                        href="https://facebook.com"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label="Facebook"
-                    >
-                        <FaFacebookF />
-                    </a>
-                    <a
                         href="https://www.youtube.com/@RobloxVolleyballLeague"
                         target="_blank"
                         rel="noopener noreferrer"
@@ -54,12 +47,12 @@ const Footer: React.FC = () =>
                         <FaYoutube />
                     </a>
                     <a
-                        href="https://instagram.com"
+                        href="https://discord.gg/volleyball"
                         target="_blank"
                         rel="noopener noreferrer"
-                        aria-label="Instagram"
+                        aria-label="Discord"
                     >
-                        <FaInstagram />
+                        <FaDiscord />
                     </a>
                     <a
                         href="https://twitter.com"

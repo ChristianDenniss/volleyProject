@@ -2,7 +2,7 @@
 import React from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./context/authContext";
-
+import Applications from "./components/Applications";
 import Header         from "./components/Header";
 import Navbar         from "./components/NavBar";
 import Footer         from "./components/Footer";
@@ -36,6 +36,8 @@ import PrivateRoute   from "./components/portal/PrivateRoute";      // ← NEW i
 import AwardsPage   from "./components/portal/AwardsPage";  
 import CreateArticle from "./components/CreateArticle";
 import ArticlesPage from "./components/portal/ArticlesPage";
+import StatsLeaderboard from "./components/StatsLeaderboard";
+import FAQ from "./components/FAQ";
 
 const App: React.FC = () => (
   <AuthProvider>
@@ -64,6 +66,9 @@ const App: React.FC = () => (
           <Route path="/awards/:id" element={< SingleAward />}/>
           <Route path="/awards" element={<Awards />} />
           <Route path="/articles/create" element={<CreateArticle />} />
+          <Route path="/stats" element={<StatsLeaderboard />} />
+          <Route path="/applications" element={<Applications />} />
+          <Route path="/faq" element={<FAQ />} />
 
           {/* auth & profile */}
           <Route path="/profile" element={<UserProfile />} />
@@ -88,7 +93,6 @@ const App: React.FC = () => (
             <Route path="stats" element={<StatsPage />} />
             <Route path="awards" element={<AwardsPage />} />
             <Route path="articles" element={<ArticlesPage />} />
-
           </Route>
         </Routes>
       </div>

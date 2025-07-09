@@ -81,13 +81,13 @@
 }
 
 .submit-btn {
-    background-color: #a1d2ff;
+    background-color: #2D3C50;
     border: none;
-    color: #000000;
+    color: #ffffff;
 }
 
 .submit-btn:hover {
-    background-color: #85c4ff;
+    background-color: #5b7dab;
 }
 
 .success-message {
@@ -113,10 +113,23 @@
 }
 
 .url-hint {
-    font-size: 0.9em;
+    margin-top: 8px;
+    font-size: 0.9rem;
     color: #666;
-    margin-top: 4px;
-    font-style: italic;
+}
+
+.url-hint p {
+    margin: 4px 0;
+    line-height: 1.4;
+}
+
+.url-hint p:first-child {
+    color: #2c5282;
+}
+
+.url-hint p:last-child {
+    color: #c53030;
+    font-weight: 500;
 }
 
 .error-message ul {
