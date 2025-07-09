@@ -652,8 +652,10 @@ const StatsLeaderboard: React.FC = () => {
   const statCategories: StatCategory[] = [
     'spikeKills',
     'spikeAttempts',
+    'Spike%',
     'apeKills',
     'apeAttempts',
+    'Ape%',
     'totalKills',
     'totalAttempts',
     'totalSpike%',
@@ -669,8 +671,6 @@ const StatsLeaderboard: React.FC = () => {
     'PRF',
     'plusMinus',
     'totalErrors',
-    'Spike%',
-    'Ape%',
     'miscErrors'
   ];
   const visibleStatCategories = statCategories.filter(stat => visibleStats[stat]);
