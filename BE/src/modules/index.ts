@@ -1,13 +1,13 @@
 import { Application } from 'express';
-import { registerTeamRoutes } from './teams/team.routes.js';
-import { registerPlayerRoutes } from './players/player.routes.js';
-import { registerGameRoutes } from './games/game.routes.js';
-import { registerSeasonRoutes } from './seasons/season.routes.js';
-import { registerStatRoutes } from './stats/stat.routes.js';
-import { registerUserRoutes } from './user/user.routes.js';
-import { registerArticleRoutes } from './articles/article.routes.js';
-import { registerRobloxRoutes } from './roblox/roblox.routes.js'
-import { registerAwardRoutes } from './awards/award.routes.js';
+import { registerTeamRoutes } from './teams/team.routes.ts';
+import { registerPlayerRoutes } from './players/player.routes.ts';
+import { registerGameRoutes } from './games/game.routes.ts';
+import { registerSeasonRoutes } from './seasons/season.routes.ts';
+import { registerStatRoutes } from './stats/stat.routes.ts';
+import { registerUserRoutes } from './user/user.routes.ts';
+import { registerArticleRoutes } from './articles/article.routes.ts';
+import { registerRobloxRoutes } from './roblox/roblox.routes.ts'
+import { registerAwardRoutes } from './awards/award.routes.ts';
 
 /**
  * Register all module routes with the Express application

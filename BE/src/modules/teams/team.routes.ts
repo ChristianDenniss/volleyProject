@@ -1,7 +1,7 @@
 import { Application, Router } from 'express';
-import { validate } from '../../middleware/validate.js';
-import { createTeamSchema, updateTeamSchema } from './teams.schema.js';
-import { TeamController } from './team.controller.js';
+import { validate } from '../../middleware/validate.ts';
+import { createTeamSchema, updateTeamSchema } from './teams.schema.ts';
+import { TeamController } from './team.controller.ts';
 
 export function registerTeamRoutes(app: Application): void {
     const router = Router();

@@ -9,14 +9,14 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Entities from modules
-import { Teams } from "../modules/teams/team.entity.js";
-import { Players } from "../modules/players/player.entity.js";
-import { Games } from "../modules/games/game.entity.js";
-import { Seasons } from "../modules/seasons/season.entity.js";
-import { Stats } from "../modules/stats/stat.entity.js";
-import { User } from "../modules/user/user.entity.js";
-import { Article } from "../modules/articles/article.entity.js";
-import { Awards } from "../modules/awards/award.entity.js";
+import { Teams } from "../modules/teams/team.entity.ts";
+import { Players } from "../modules/players/player.entity.ts";
+import { Games } from "../modules/games/game.entity.ts";
+import { Seasons } from "../modules/seasons/season.entity.ts";
+import { Stats } from "../modules/stats/stat.entity.ts";
+import { User } from "../modules/user/user.entity.ts";
+import { Article } from "../modules/articles/article.entity.ts";
+import { Awards } from "../modules/awards/award.entity.ts";
 
 dotenv.config();
 
@@ -31,6 +31,7 @@ const entities = [
     Article,
     Awards
 ];
+
 
 // Configure AppDataSource
 export const AppDataSource = new DataSource({

@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { UserController } from '../user.controller.js';
+import { UserController } from '../user.controller.ts';
 
 // Mock data
 const mockUser = {

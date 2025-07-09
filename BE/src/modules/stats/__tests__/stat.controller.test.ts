@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { StatController } from '../stat.controller.js';
+import { StatController } from '../stat.controller.ts';
 
 // Mock data
 const mockStat = {

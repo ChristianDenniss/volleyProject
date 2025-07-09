@@ -1,6 +1,6 @@
 import { z } from "zod";
-import type { Players } from '../players/player.entity.js';
-import type { Games } from '../games/game.entity.js';
+import type { Players } from '../players/player.entity.ts';
+import type { Games } from '../games/game.entity.ts';
 
 export const createTeamSchema = z.object({
     name: z.string().min(1, { message: "Team Name is required" })

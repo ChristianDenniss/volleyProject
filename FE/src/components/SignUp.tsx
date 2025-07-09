@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { useNavigate }        from "react-router-dom";
 import { useSignup }          from "../hooks/useSignUp";
 import "../styles/Login.css";
+import { BACKEND_OAUTH_LOGIN } from "../utils/constants";
 
 const SignupPage: React.FC = () =>
 {
@@ -41,7 +42,7 @@ const SignupPage: React.FC = () =>
         {
             // show success and redirect
             setSuccess("Account created successfully! Redirecting to login…");
-            setTimeout(() => navigate("/login"), 2000);
+            setTimeout(() => navigate(BACKEND_OAUTH_LOGIN), 2000);
         }
     };
 
@@ -100,7 +101,7 @@ const SignupPage: React.FC = () =>
                 Already have an account?{' '}
                 <span
                     className="auth-link"
-                    onClick={() => navigate("/login")}
+                    onClick={() => navigate(BACKEND_OAUTH_LOGIN)}
                 >
                     Log in
                 </span>

@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
-import { MissingFieldError } from '../../errors/MissingFieldError.js';
-import { NotFoundError } from '../../errors/NotFoundError.js';
-import { PlayerService } from './player.service.js';
+import { MissingFieldError } from '../../errors/MissingFieldError.ts';
+import { NotFoundError } from '../../errors/NotFoundError.ts';
+import { PlayerService } from './player.service.ts';
 
 export class PlayerController {
     private playerService: PlayerService;

@@ -7,7 +7,6 @@ import Header         from "./components/Header";
 import Navbar         from "./components/NavBar";
 import Footer         from "./components/Footer";
 import UserProfile    from "./components/UserProfile";
-import SignUp         from "./components/SignUp";
 import Home           from "./components/Home";
 import About          from "./components/About";
 import Players        from "./components/Players";
@@ -33,7 +32,6 @@ import SeasonsPage      from "./components/portal/SeasonsPage";
 import GamesPage from "./components/portal/GamesPage";
 import StatsPage from "./components/portal/StatsPage";
 import SingleAward from "./components/Single/SingleAward";
-import LoginPage      from "./components/Login";
 import PrivateRoute   from "./components/portal/PrivateRoute";      // ← NEW import
 import AwardsPage   from "./components/portal/AwardsPage";  
 import CreateArticle from "./components/CreateArticle";
@@ -74,8 +72,6 @@ const App: React.FC = () => (
 
           {/* auth & profile */}
           <Route path="/profile" element={<UserProfile />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/signup" element={<SignUp />} />
 
           {/* ---------- Admin / Developer Portal ---------- */}
           <Route

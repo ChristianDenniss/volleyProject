@@ -1,8 +1,8 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, ManyToMany, JoinTable } from 'typeorm';
 // I think this may be a circular depend issue occuring
-import { Teams } from '../teams/team.entity.js';
-import { Stats } from '../stats/stat.entity.js';
-import { Awards } from '../awards/award.entity.js';
+import { Teams } from '../teams/team.entity.ts';
+import { Stats } from '../stats/stat.entity.ts';
+import { Awards } from '../awards/award.entity.ts';
 
 @Entity()
 export class Players {

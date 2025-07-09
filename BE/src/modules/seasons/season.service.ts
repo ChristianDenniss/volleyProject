@@ -1,12 +1,12 @@
 import { Repository } from "typeorm";
-import { AppDataSource } from "../../db/data-source.js";
-import { Seasons } from "./season.entity.js";
-import { MissingFieldError } from "../../errors/MissingFieldError.js";
-import { DuplicateError } from "../../errors/DuplicateError.js";
-import { NotFoundError } from "../../errors/NotFoundError.js";
-import { DateError } from "../../errors/DateErrors.js";
-import { OutOfBoundsError } from "../../errors/OutOfBoundsError.js";
-import { ConflictError } from "../../errors/ConflictError.js";
+import { AppDataSource } from "../../db/data-source.ts";
+import { Seasons } from "./season.entity.ts";
+import { MissingFieldError } from "../../errors/MissingFieldError.ts";
+import { DuplicateError } from "../../errors/DuplicateError.ts";
+import { NotFoundError } from "../../errors/NotFoundError.ts";
+import { DateError } from "../../errors/DateErrors.ts";
+import { OutOfBoundsError } from "../../errors/OutOfBoundsError.ts";
+import { ConflictError } from "../../errors/ConflictError.ts";
 
 export class SeasonService
 {

@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
-import { TeamService } from './team.service.js';
-import { MissingFieldError } from '../../errors/MissingFieldError.js';
-import { NotFoundError } from '../../errors/NotFoundError.js';
-import { CreateTeamDto, UpdateTeamDto } from './teams.schema.js';
+import { TeamService } from './team.service.ts';
+import { MissingFieldError } from '../../errors/MissingFieldError.ts';
+import { NotFoundError } from '../../errors/NotFoundError.ts';
+import { CreateTeamDto, UpdateTeamDto } from './teams.schema.ts';
 
 export class TeamController {
     private teamService: TeamService;

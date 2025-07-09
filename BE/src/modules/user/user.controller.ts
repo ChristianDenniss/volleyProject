@@ -1,5 +1,10 @@
 import { Request, Response } from 'express';
-import { UserService } from './user.service.js';
+import { UserService } from './user.service.ts';
+import { OAuth } from '../../oauth.ts';
+import { log } from 'console';
+import { User } from './user.entity.ts';
+import jwt from "jsonwebtoken"
+import { cookieKey, newJWT } from '../../middleware/authentication.ts';
 
 export class UserController {
     private userService: UserService;
@@ -8,74 +13,117 @@ export class UserController {
         this.userService = new UserService();
     }
 
-    // Register a new user
-    //  Register a new user – always creates a plain user (role = "user")
-    register = async (req: Request, res: Response): Promise<void> =>
-    {
-        try
-        {
-            const { username, email, password } = req.body;
-    
-            //  Ignore any role sent from client
-            const newUser = await this.userService.createUser(
-                username,
-                email,
-                password,
-                "user"           //  ← hard-coded role
-            );
-    
-            const { password: _p, ...userWithoutPassword } = newUser;
-    
-            res.status(201).json(userWithoutPassword);
-        }
-        catch (error)
-        {
-            const msg = error instanceof Error ? error.message : "Failed to register user";
-    
-            if (
-                msg.includes("required")      ||
-                msg.includes("already in use")||
-                msg.includes("must be")       ||
-                msg.includes("Invalid")
-            )
-            {
-                res.status(400).json({ error: msg });
+    getUrl = (options: OAuth) => {
+        const url = new URL(options.AUTHORIZE_URL)
+        url.searchParams.set("redirect_uri", options.CALLBACK)
+        url.searchParams.set("client_id", options.ID)
+        url.searchParams.set("scope", options.SCOPES.join(" "))
+        url.searchParams.set("response_type", "code")        
+
+        const built = url.toString()
+
+        return async (_req: Request, res: Response): Promise<void> => {
+            log(url.toString())
+            return res.redirect(built)
+        }   
+    }
+
+    getCallback = (options: OAuth) => {
+        return async (req: Request, res: Response): Promise<void> => {
+            const code = req.query["code"]
+            const isError = req.query["error"]
+            if (!!isError) {
+                res.status(500).send(`${isError}: description: ${req.query["description"]}`)
+                return 
             }
-            else
-            {
-                console.error("Error registering user:", error);
-                res.status(500).json({ error: "Failed to register user" });
+            if (typeof code !== "string") {
+                res.status(400).send(`unpexected code value`)
+                return
             }
-        }
-    };
-    
 
-    // User login
-    login = async (req: Request, res: Response): Promise<void> => {
-        try {
-            const { username, password } = req.body;
-            const { user, token } = await this.userService.authenticateUser(username, password);
+            // const url = new URL(options.TOKEN_URL)
+            // url.searchParams.set("client_id", options.ID)
+            // url.searchParams.set("client_secret", options.SECRET)
+            // url.searchParams.set("code", code)
+            // url.searchParams.set("scope", options.SCOPES.join(" "))
+            // url.searchParams.set("grant_type", "authorization_code")
 
-            // Remove password from response
-            const { password: _, ...userWithoutPassword } = user;
+            // const built = url.toString()
 
-            res.json({
-                user: userWithoutPassword,
-                token
-            });
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to login";
             
-            if (errorMessage.includes("required")) {
-                res.status(400).json({ error: errorMessage });
-            } else if (errorMessage.includes("Invalid username or password")) {
-                res.status(401).json({ error: "Invalid username or password" });
-            } else {
-                console.error("Error logging in:", error);
-                res.status(500).json({ error: "Failed to login" });
+            const formData = new URLSearchParams()
+            formData.set("client_id", options.ID)
+            formData.set("client_secret", options.SECRET)
+            formData.set("code", code)
+            formData.set("scope", options.SCOPES.join(" "))
+            formData.set("grant_type", "authorization_code")
+
+            const result = await fetch(options.TOKEN_URL, { 
+                method: "POST", 
+                body: formData.toString(),
+                headers: {["Content-Type"]: "application/x-www-form-urlencoded"} 
+            })
+
+            if (result.status !== 200) {
+                res.status(500).send("got unexpected response")
+                return 
             }
-        }
-    };
+            const json = await result.json() as {
+                access_token: string,
+                refresh_token: string,
+                token_type: string,
+                expires_in: number,
+                scope: string
+            }
+            // most likely token_type is bearer????
+            if (json.token_type !== "Bearer") {
+                res.status(500).send(`expected token_type 'Bearer' got ${json.token_type}`)
+                return 
+            }
+
+            const userInfo = await fetch(options.GET_USER_INFO, {headers: {["Authorization"]: `${json.token_type} ${json.access_token}`}})
+            const userInfoJson = await userInfo.json() as {
+                "sub": string, // userid in stirng
+                "name": string, // displayname LMFAOO
+                "nickname": string, // displayname
+                "preferred_username": string, // actual username
+                "created_at": null,
+                "profile": string, // ignore, you can construct this yourself
+                "picture": string, // url for their pfp
+            }
+
+            // lets get or get a user
+            const userId = Number(userInfoJson.sub)
+            let user: User | "new" = await this.userService.getProfile(userId).catch((_err) => {
+                return "new"
+            })
+
+            if (user === "new") {
+                user = await this.userService.createUser({
+                    displayName: userInfoJson.nickname,
+                    userId: userId,
+                    username: userInfoJson.preferred_username,
+                    img: userInfoJson.picture
+                })
+            } else {
+                user = await this.userService.updateUser({
+                    displayName: userInfoJson.nickname,
+                    userId: userId,
+                    username: userInfoJson.preferred_username,
+                    img: userInfoJson.picture
+                })
+            }
+
+            
+            const jwt = newJWT({
+                id: userId,
+                role: user.role,
+                username: user.username,
+            })
+            res.cookie(cookieKey, jwt)
+            res.redirect(`http://localhost:5173?jwt=${jwt}`)
+        }   
+    }
 
     // Get all users (admin only)
     getUsers = async (req: Request, res: Response): Promise<void> => {
@@ -84,7 +132,7 @@ export class UserController {
             
             // Remove passwords from response
             const usersWithoutPasswords = users.map(user => {
-                const { password, ...userWithoutPassword } = user;
+                const { ...userWithoutPassword } = user;
                 return userWithoutPassword;
             });
             
@@ -102,7 +150,7 @@ export class UserController {
             const user = await this.userService.getUserById(parseInt(id));
 
             // Remove password from response
-            const { password, ...userWithoutPassword } = user;
+            const { ...userWithoutPassword } = user;
             
             res.json(userWithoutPassword);
         } catch (error) {
@@ -113,40 +161,6 @@ export class UserController {
             } else {
                 console.error("Error fetching user by ID:", error);
                 res.status(500).json({ error: "Failed to fetch user" });
-            }
-        }
-    };
-
-    // Update a user
-    updateUser = async (req: Request, res: Response): Promise<void> => {
-        try {
-            const { id } = req.params;
-            const { username, email, password, role } = req.body;
-
-            const updatedUser = await this.userService.updateUser(
-                parseInt(id),
-                username,
-                email,
-                password,
-                role
-            );
-
-            // Remove password from response
-            const { password: _, ...userWithoutPassword } = updatedUser;
-            
-            res.json(userWithoutPassword);
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to update user";
-            
-            if (errorMessage.includes("not found")) {
-                res.status(404).json({ error: errorMessage });
-            } else if (errorMessage.includes("required") || 
-                       errorMessage.includes("already in use") ||
-                       errorMessage.includes("Invalid")) {
-                res.status(400).json({ error: errorMessage });
-            } else {
-                console.error("Error updating user:", error);
-                res.status(500).json({ error: "Failed to update user" });
             }
         }
     };
@@ -185,7 +199,7 @@ export class UserController {
     
                 const user = await this.userService.getProfile(authUser.id);
     
-                const { password, ...userWithoutPassword } = user;
+                const { ...userWithoutPassword } = user;
     
                 res.json(userWithoutPassword);
             }
@@ -221,10 +235,10 @@ export class UserController {
             const updated = await this.userService.changeUserRole(requester, targetId, desiredRole);
     
             //  Strip password
-            const { password, ...userWithoutPassword } = updated;
+            const { ...userWithoutPassword } = updated;
     
             res.json(userWithoutPassword);
-        }
+        }   
         catch (error)
         {
             const msg = error instanceof Error ? error.message : "Failed to set role";

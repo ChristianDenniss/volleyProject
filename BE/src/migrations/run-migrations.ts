@@ -63,7 +63,6 @@ console.log("Initializing database connection...");
 // Run migrations
 AppDataSource.initialize()
     .then(async () => {
-        console.log("Database connection established");
         console.log("Running migrations...");
         
         try {

@@ -1,8 +1,8 @@
-import '../../../__mocks__/data-source.js';
-import { PlayerService } from '../player.service.js';
-import { mockRepository, mockPlayer, mockPlayers, mockTeam } from '../../../__mocks__/fixtures.js';
-import { NotFoundError } from '../../../errors/NotFoundError.js';
-import { MissingFieldError } from '../../../errors/MissingFieldError.js';
+import '../../../__mocks__/data-source.ts';
+import { PlayerService } from '../player.service.ts';
+import { mockRepository, mockPlayer, mockPlayers, mockTeam } from '../../../__mocks__/fixtures.ts';
+import { NotFoundError } from '../../../errors/NotFoundError.ts';
+import { MissingFieldError } from '../../../errors/MissingFieldError.ts';
 
 describe('PlayerService', () => 
 {

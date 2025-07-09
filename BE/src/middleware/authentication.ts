@@ -5,7 +5,7 @@
 
 import { Request, Response, NextFunction } from "express";
 import jwt                                from "jsonwebtoken";
-import { UnauthorizedError }              from "../errors/UnauthorizedError.js";
+import { UnauthorizedError }              from "../errors/UnauthorizedError.ts";
 
 //  You can create a narrow interface if you like, without touching global types
 export interface JwtPayload
@@ -15,10 +15,24 @@ export interface JwtPayload
     username: string;
 }
 
+const getSignSecret = () => process.env.JWT_SECRET || ""
+
+export const cookieKey = "authorization"
+export const newJWT = (payload: JwtPayload) => {
+    return jwt.sign(payload, getSignSecret())
+}
+
 export const authenticateToken = (req: Request, res: Response, next: NextFunction): void =>
 {
     //  Pull the Bearer token from the Authorization header
-    const token = req.header("Authorization")?.replace("Bearer ", "");
+    let token: string | undefined = req.cookies[cookieKey]
+    if (typeof token !== "string") {
+        token = req.header("Authorization")?.replace("Bearer ", "");
+    } else {
+        console.log("got from cookies")
+    }
+
+    console.log('cookies', req.cookies)
 
     //  Fail early if missing
     if (!token)
@@ -27,7 +41,7 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
     }
 
     //  Verify the token
-    jwt.verify(token, process.env.JWT_SECRET || "", (err, decoded) =>
+    jwt.verify(token, getSignSecret(), (err, decoded) =>
     {
         //  Any error → unauth
         if (err)
