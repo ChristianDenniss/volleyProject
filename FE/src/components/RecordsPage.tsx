@@ -116,13 +116,20 @@ const RecordsPage: React.FC = () => {
         const value = record.value;
         const recordType = record.record;
         
+        // Check if value is a valid number
+        if (value === null || value === undefined || isNaN(Number(value))) {
+            return 'N/A';
+        }
+        
+        const numValue = Number(value);
+        
         // Format percentage records
         if (recordType.includes('spiking %')) {
-            return `${value.toFixed(1)}%`;
+            return `${numValue.toFixed(1)}%`;
         }
         
         // Format integer records
-        return Math.round(value).toString();
+        return Math.round(numValue).toString();
     };
 
     // Format date for display
