@@ -1,7 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, RelationId } from 'typeorm';
-
-import { Players } from '../players/player.entity.js';
-import { Seasons } from '../seasons/season.entity.js';
+import type { Players } from '../players/player.entity.js';
+import type { Seasons } from '../seasons/season.entity.js';
 
 @Entity()
 export class Records {
