@@ -5,8 +5,6 @@ import { useRecords } from "../hooks/allFetch";
 import { useCalculateRecords } from "../hooks/allCreate";
 import { useAuth } from "../context/authContext";
 import type { Records } from "../types/interfaces";
-import SearchBar from "./Searchbar";
-import Pagination from "./Pagination";
 import "../styles/RecordsPage.css";
 
 const RecordsPage: React.FC = () => {
@@ -21,11 +19,6 @@ const RecordsPage: React.FC = () => {
 
     // Switch bar state: 'game' or 'season'
     const [recordTypeView, setRecordTypeView] = useState<'game' | 'season'>('game');
-
-    // Search and pagination state
-    const [searchQuery, setSearchQuery] = useState<string>("");
-    const [currentPage, setCurrentPage] = useState<number>(1);
-    const recordsPerPage = 20;
 
     // Calculate records hook
     const { calculateRecords, loading: calculating } = useCalculateRecords(showErrorModal);
@@ -50,23 +43,9 @@ const RecordsPage: React.FC = () => {
         }
     }, [records]);
 
-    // Filter records based on search query and selected type
+    // Filter records based on selected type
     const filteredRecords = localRecords.filter(record => {
-        if (record.type !== recordTypeView) return false;
-        const playerName = record.player?.name || '';
-        const recordType = record.record || '';
-        const seasonNumber = record.season?.seasonNumber?.toString() || '';
-        const rank = record.rank?.toString() || '';
-        const value = record.value?.toString() || '';
-        
-        const searchLower = searchQuery.toLowerCase();
-        return (
-            playerName.toLowerCase().includes(searchLower) ||
-            recordType.toLowerCase().includes(searchLower) ||
-            seasonNumber.includes(searchLower) ||
-            rank.includes(searchLower) ||
-            value.includes(searchLower)
-        );
+        return record.type === recordTypeView;
     });
 
     // Group records by record type
@@ -80,27 +59,65 @@ const RecordsPage: React.FC = () => {
     }, {} as { [key: string]: Records[] });
 
     // Sort record types for consistent display
-    const sortedRecordTypes = Object.keys(groupedRecords).sort();
-
-    // Calculate pagination for each record type
-    const getPaginatedRecords = (records: Records[]) => {
-        return records.slice(
-            (currentPage - 1) * recordsPerPage,
-            currentPage * recordsPerPage
-        );
-    };
-
-    // Handle search
-    const handleSearch = (query: string) => {
-        setSearchQuery(query);
-        setCurrentPage(1); // Reset to first page when searching
-    };
-
-    // Clear all filters
-    const clearFilters = () => {
-        setSearchQuery("");
-        setCurrentPage(1);
-    };
+    const sortedRecordTypes = Object.keys(groupedRecords).sort((a, b) => {
+        // Check if either record type is a spiking percentage record
+        const aIsSpikingPercent = a.includes('best total spiking %');
+        const bIsSpikingPercent = b.includes('best total spiking %');
+        
+        // If both are spiking percentage records, sort by attempts (higher attempts first)
+        if (aIsSpikingPercent && bIsSpikingPercent) {
+            const aAttempts = parseInt(a.match(/\d+/)?.[0] || '0');
+            const bAttempts = parseInt(b.match(/\d+/)?.[0] || '0');
+            return bAttempts - aAttempts; // Higher attempts first
+        }
+        
+        // If only one is spiking percentage, put it last
+        if (aIsSpikingPercent && !bIsSpikingPercent) {
+            return 1; // a goes after b
+        }
+        if (!aIsSpikingPercent && bIsSpikingPercent) {
+            return -1; // a goes before b
+        }
+        
+        // Custom order for non-spiking percentage records
+        const customOrder = [
+            'most total kills',
+            'most total attempts',
+            'most spike kills',
+            'most spike attempts',
+            'most ape kills',
+            'most ape attempts',
+            'most spike errors',
+            'most blocks',
+            'most assists',
+            'most set errors',
+            'most digs',
+            'most block follows',
+            'most aces',
+            'most serve errors',
+            'most misc errors',
+            'most total errors'
+        ];
+        
+        const aIndex = customOrder.indexOf(a);
+        const bIndex = customOrder.indexOf(b);
+        
+        // If both are in the custom order, sort by their position
+        if (aIndex !== -1 && bIndex !== -1) {
+            return aIndex - bIndex;
+        }
+        
+        // If only one is in the custom order, prioritize it
+        if (aIndex !== -1 && bIndex === -1) {
+            return -1; // a goes before b
+        }
+        if (aIndex === -1 && bIndex !== -1) {
+            return 1; // a goes after b
+        }
+        
+        // If neither is in the custom order, use alphabetical sorting
+        return a.localeCompare(b);
+    });
 
     // Handle calculate records
     const handleCalculateRecords = async () => {
@@ -209,11 +226,9 @@ const RecordsPage: React.FC = () => {
             {/* Header */}
             <h1 className="records-header">Records</h1>
 
-            {/* Meta information */}
-            <div className="records-meta">
-                <span>{recordTypeView === 'game' ? 'Game Records' : 'Season Records'}</span>
-                <span>{filteredRecords.length} Total Records</span>
-                {user && (user.role === 'admin' || user.role === 'superadmin') && (
+            {/* Calculate button for admins */}
+            {user && (user.role === 'admin' || user.role === 'superadmin') && (
+                <div style={{ textAlign: 'center' }}>
                     <button
                         className="calculate-button"
                         onClick={handleCalculateRecords}
@@ -228,8 +243,8 @@ const RecordsPage: React.FC = () => {
                             'Re-calculate Records'
                         )}
                     </button>
-                )}
-            </div>
+                </div>
+            )}
 
             {/* Switch bar for record type */}
             <div className="records-switch-bar">
@@ -247,110 +262,65 @@ const RecordsPage: React.FC = () => {
                 </button>
             </div>
 
-            {/* Search and filters */}
-            <div className="records-search-section">
-                <div className="records-search-container">
-                    <SearchBar onSearch={handleSearch} placeholder="Search records..." />
-                </div>
-                <button className="clear-filters-button" onClick={clearFilters}>
-                    Clear Filters
-                </button>
-            </div>
+            {/* Records grid */}
+            <div className="records-grid">
+                {sortedRecordTypes.map((recordType) => {
+                    const recordsForType = groupedRecords[recordType];
 
-            {/* Records count */}
-            <div className="records-count">
-                Showing {filteredRecords.length} of {localRecords.filter(r => r.type === recordTypeView).length} {recordTypeView} records
-            </div>
-
-            {/* Record type sections */}
-            {sortedRecordTypes.map((recordType) => {
-                const recordsForType = groupedRecords[recordType];
-                const paginatedRecords = getPaginatedRecords(recordsForType);
-                const totalPages = Math.ceil(recordsForType.length / recordsPerPage);
-
-                return (
-                    <div key={recordType} className="record-type-section">
-                        <h2 className="record-type-header">{getRecordDisplayName(recordType)}</h2>
-                        
-                        <div className="records-table-container">
-                            <table className="records-table">
-                                <thead>
-                                    <tr>
-                                        <th>Rank</th>
-                                        <th>Player</th>
-                                        <th>Value</th>
-                                        <th>Date</th>
-                                        <th>Game</th>
-                                        <th>Season</th>
-                                        <th>Type</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {paginatedRecords.map((record) => (
-                                        <tr key={record.id}>
-                                            <td className="record-rank">
-                                                <span className={getRankBadgeClass(record.rank)}>
-                                                    {record.rank}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <a 
-                                                    href={`/players/${record.player?.id}`}
-                                                    className="record-link"
-                                                >
-                                                    {record.player?.name || 'Unknown Player'}
-                                                </a>
-                                            </td>
-                                            <td>
-                                                <span className="record-value">{formatRecordValue(record)}</span>
-                                            </td>
-                                            <td>
-                                                <span className="record-date">{formatDate(record.date)}</span>
-                                            </td>
-                                            <td>
-                                                {record.gameId && record.type === 'game' ? (
+                    return (
+                        <div key={recordType} className="record-type-section">
+                            <h2 className="record-type-header">{getRecordDisplayName(recordType)}</h2>
+                            
+                            <div className="records-table-container">
+                                <table className="records-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Rank</th>
+                                            <th>Player</th>
+                                            <th>Value</th>
+                                            <th>Date</th>
+                                            <th>Season</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {recordsForType.map((record) => (
+                                            <tr key={record.id}>
+                                                <td className="record-rank">
+                                                    <span className={getRankBadgeClass(record.rank)}>
+                                                        {record.rank}
+                                                    </span>
+                                                </td>
+                                                <td>
                                                     <a 
-                                                        href={`/games/${record.gameId}`}
+                                                        href={`/players/${record.player?.id}`}
                                                         className="record-link"
                                                     >
-                                                        View Game
+                                                        {record.player?.name || 'Unknown Player'}
                                                     </a>
-                                                ) : (
-                                                    <span className="record-date">-</span>
-                                                )}
-                                            </td>
-                                            <td>
-                                                <a 
-                                                    href={`/seasons/${record.season?.id}`}
-                                                    className="record-link"
-                                                >
-                                                    Season {record.season?.seasonNumber || 'Unknown'}
-                                                </a>
-                                            </td>
-                                            <td>
-                                                <span className={`record-type-badge ${record.type}`}>
-                                                    {record.type === 'game' ? 'Game' : 'Season'}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-
-                        {/* Pagination for this record type */}
-                        {totalPages > 1 && (
-                            <div className="records-pagination">
-                                <Pagination
-                                    currentPage={currentPage}
-                                    totalPages={totalPages}
-                                    onPageChange={setCurrentPage}
-                                />
+                                                </td>
+                                                <td>
+                                                    <span className="record-value">{formatRecordValue(record)}</span>
+                                                </td>
+                                                <td>
+                                                    <span className="record-date">{formatDate(record.date)}</span>
+                                                </td>
+                                                <td>
+                                                    <a 
+                                                        href={`/seasons/${record.season?.id}`}
+                                                        className="record-link"
+                                                    >
+                                                        S{record.season?.seasonNumber || '?'}
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
                             </div>
-                        )}
-                    </div>
-                );
-            })}
+                        </div>
+                    );
+                })}
+            </div>
 
             {/* Error Modal */}
             {errorModal && (
