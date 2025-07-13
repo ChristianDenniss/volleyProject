@@ -247,6 +247,7 @@ const RecordsPage: React.FC = () => {
                             <th>Player</th>
                             <th>Value</th>
                             <th>Date</th>
+                            <th>Game</th>
                             <th>Season</th>
                             <th>Type</th>
                         </tr>
@@ -264,7 +265,7 @@ const RecordsPage: React.FC = () => {
                                 </td>
                                 <td>
                                     <a 
-                                        href={`/players/${record.playerId}`}
+                                        href={`/players/${record.player?.id}`}
                                         className="text-decoration-none"
                                     >
                                         {record.player?.name || 'Unknown Player'}
@@ -277,8 +278,20 @@ const RecordsPage: React.FC = () => {
                                     <span className="text-muted">{formatDate(record.date)}</span>
                                 </td>
                                 <td>
+                                    {record.gameId && record.type === 'game' ? (
+                                        <a 
+                                            href={`/games/${record.gameId}`}
+                                            className="text-decoration-none"
+                                        >
+                                            View Game
+                                        </a>
+                                    ) : (
+                                        <span className="text-muted">-</span>
+                                    )}
+                                </td>
+                                <td>
                                     <a 
-                                        href={`/seasons/${record.seasonId}`}
+                                        href={`/seasons/${record.season?.id}`}
                                         className="text-decoration-none"
                                     >
                                         Season {record.season?.seasonNumber || 'Unknown'}

@@ -135,9 +135,8 @@ interface Records
   createdAt: string;
   updatedAt: string;
   season: Season;
-  seasonId: number;
   player: Player;
-  playerId: number;
+  gameId?: number; // Optional, only for game records
 }
 
 /** what your AuthContext provides */

@@ -50,15 +50,13 @@ export class Records {
     @ManyToOne('Seasons', 'records')
     season!: Seasons;
 
-    @RelationId((record: Records) => record.season)
-    seasonId!: number;
-
     // Many-to-one relationship with players
     @ManyToOne('Players', 'records')
     player!: Players;
 
-    @RelationId((record: Records) => record.player)
-    playerId!: number;
+    // Game ID (optional, only for game records)
+    @Column({ type: 'int', nullable: true })
+    gameId!: number;
 
 
 

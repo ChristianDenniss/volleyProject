@@ -54,7 +54,7 @@ export class RecordService {
                 record: recordData.record,
                 type: recordData.type,
                 rank: recordData.rank,
-                seasonId: recordData.seasonId
+                season: { id: recordData.seasonId }
             }
         });
 
@@ -80,7 +80,7 @@ export class RecordService {
      */
     async getAllRecords(): Promise<Records[]> {
         return this.recordRepository.find({
-            select: ["id", "record", "type", "rank", "value", "date", "createdAt", "updatedAt", "seasonId", "playerId"]
+            relations: ["player", "season"]
         });
     }
 
@@ -94,8 +94,8 @@ export class RecordService {
         if (!season) throw new NotFoundError(`Season with ID ${seasonId} not found`);
 
         return this.recordRepository.find({
-            where: { seasonId },
-            select: ["id", "record", "type", "rank", "value", "date", "createdAt", "updatedAt", "seasonId", "playerId"],
+            where: { season: { id: seasonId } },
+            relations: ["player", "season"],
             order: { record: "ASC", rank: "ASC" }
         });
     }
@@ -108,7 +108,7 @@ export class RecordService {
 
         return this.recordRepository.find({
             where: { record: recordType },
-            select: ["id", "record", "type", "rank", "value", "date", "createdAt", "updatedAt", "seasonId", "playerId"],
+            relations: ["player", "season"],
             order: { rank: "ASC" }
         });
     }
@@ -123,8 +123,8 @@ export class RecordService {
         if (!player) throw new NotFoundError(`Player with ID ${playerId} not found`);
 
         return this.recordRepository.find({
-            where: { playerId },
-            select: ["id", "record", "type", "rank", "value", "date", "createdAt", "updatedAt", "seasonId", "playerId"],
+            where: { player: { id: playerId } },
+            relations: ["player", "season"],
             order: { record: "ASC", rank: "ASC" }
         });
     }
@@ -137,7 +137,7 @@ export class RecordService {
 
         const record = await this.recordRepository.findOne({
             where: { id },
-            select: ["id", "record", "type", "rank", "value", "date", "createdAt", "updatedAt", "seasonId", "playerId"],
+            relations: ["player", "season"],
         });
 
         if (!record) throw new NotFoundError(`Record with ID ${id} not found`);
@@ -214,8 +214,8 @@ export class RecordService {
         if (!season) throw new NotFoundError(`Season with ID ${seasonId} not found`);
 
         return this.recordRepository.find({
-            where: { record: recordType, seasonId },
-            select: ["id", "record", "type", "rank", "value", "createdAt", "updatedAt", "seasonId", "playerId"],
+            where: { record: recordType, season: { id: seasonId } },
+            relations: ["player", "season"],
             order: { rank: "ASC" },
             take: 10
         });
@@ -259,6 +259,7 @@ export class RecordService {
                 newRecord.date = stat.game.date;
                 newRecord.season = stat.game.season;
                 newRecord.player = stat.player;
+                newRecord.gameId = stat.game.id; // Set the game ID
 
                 await this.recordRepository.save(newRecord);
                 recordsCreated++;
@@ -287,6 +288,7 @@ export class RecordService {
                 newRecord.date = stat.game.date;
                 newRecord.season = stat.game.season;
                 newRecord.player = stat.player;
+                newRecord.gameId = stat.game.id; // Set the game ID
 
                 await this.recordRepository.save(newRecord);
                 recordsCreated++;
@@ -370,6 +372,7 @@ export class RecordService {
                     newRecord.date = stat.game.date;
                     newRecord.season = stat.game.season;
                     newRecord.player = stat.player;
+                    newRecord.gameId = stat.game.id; // Set the game ID
 
                     await this.recordRepository.save(newRecord);
                     recordsCreated++;
