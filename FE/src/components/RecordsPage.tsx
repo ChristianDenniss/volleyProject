@@ -252,7 +252,7 @@ const RecordsPage: React.FC = () => {
                     className={`records-switch-button ${recordTypeView === 'game' ? 'active' : ''}`}
                     onClick={() => setRecordTypeView('game')}
                 >
-                    Game Records
+                    Single Game Records
                 </button>
                 <button
                     className={`records-switch-button ${recordTypeView === 'season' ? 'active' : ''}`}
@@ -279,7 +279,7 @@ const RecordsPage: React.FC = () => {
                                             <th>Player</th>
                                             <th>Value</th>
                                             <th>Date</th>
-                                            <th>Season</th>
+                                            <th>{recordTypeView === 'game' ? 'Game' : 'Season'}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -305,12 +305,21 @@ const RecordsPage: React.FC = () => {
                                                     <span className="record-date">{formatDate(record.date)}</span>
                                                 </td>
                                                 <td>
-                                                    <a 
-                                                        href={`/seasons/${record.season?.id}`}
-                                                        className="record-link"
-                                                    >
-                                                        S{record.season?.seasonNumber || '?'}
-                                                    </a>
+                                                    {recordTypeView === 'game' ? (
+                                                        <a 
+                                                            href={`/games/${record.gameId}`}
+                                                            className="record-link"
+                                                        >
+                                                            View Game
+                                                        </a>
+                                                    ) : (
+                                                        <a 
+                                                            href={`/seasons/${record.season?.id}`}
+                                                            className="record-link"
+                                                        >
+                                                            S{record.season?.seasonNumber || '?'}
+                                                        </a>
+                                                    )}
                                                 </td>
                                             </tr>
                                         ))}

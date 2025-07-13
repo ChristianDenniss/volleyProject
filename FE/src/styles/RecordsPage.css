@@ -130,18 +130,6 @@
     max-width: fit-content;
 }
 
-.record-type-header::before {
-    content: "";
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 110%;
-    height: 0.3em;
-    background: #2D3C50;
-    transform: translate(-50%, -50%) skewX(-15deg);
-    z-index: -1;
-}
-
 /* Records table styling - compact */
 .records-table-container {
     background: #1a1a1a;
@@ -150,7 +138,7 @@
     overflow: hidden;
     margin-bottom: 1rem;
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    max-height: 400px;
+    max-height: 500px;
     overflow-y: auto;
     padding: 1rem;
 }
@@ -236,13 +224,13 @@
 /* Record value styling */
 .record-value {
     font-weight: bold;
-    color: #2D3C50;
+    color: #fff;
     font-size: 1rem;
 }
 
 /* Player and season links */
 .record-link {
-    color: #2D3C50;
+    color: #fff;
     text-decoration: none;
     font-weight: 500;
     transition: color 0.2s ease;
