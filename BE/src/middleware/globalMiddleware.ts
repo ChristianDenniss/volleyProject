@@ -12,13 +12,31 @@ import { authorizeRoles } from "./authorizeRoles.js"
  */
 export function globalMiddleware(app: Application): void
 {
-    // Code to only allow requests from a specific origin
-    // app.use(cors({
-    //     origin: 'http://localhost:3000' 
-    //   }));
+    // CORS configuration for production and development
+    const allowedOrigins = [
+        'https://volleyball4-2.com',
+        'https://www.volleyball4-2.com',
+        'http://localhost:3000',
+        'http://localhost:5173',
+        'http://localhost:4173'
+    ];
 
-    // Code to allow all origins
-    app.use(cors());
+    app.use(cors({
+        origin: function (origin, callback) {
+            // Allow requests with no origin (like mobile apps or curl requests)
+            if (!origin) return callback(null, true);
+            
+            if (allowedOrigins.indexOf(origin) !== -1) {
+                callback(null, true);
+            } else {
+                console.log('CORS blocked origin:', origin);
+                callback(new Error('Not allowed by CORS'));
+            }
+        },
+        credentials: true,
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+    }));
     
     // Parse JSON bodies
     app.use(express.json()); 
