@@ -1,0 +1,62 @@
+/* RecordsPage.css */
+
+.records-page {
+    padding: 20px 0;
+}
+
+.records-table {
+    margin-top: 20px;
+}
+
+.record-rank {
+    font-weight: bold;
+    text-align: center;
+}
+
+.record-value {
+    font-weight: bold;
+    color: #007bff;
+}
+
+.record-type-badge {
+    font-size: 0.8em;
+}
+
+.player-link {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.player-link:hover {
+    text-decoration: underline;
+}
+
+.season-link {
+    color: #28a745;
+    text-decoration: none;
+}
+
+.season-link:hover {
+    text-decoration: underline;
+}
+
+.calculate-button {
+    min-width: 150px;
+}
+
+.records-count {
+    color: #6c757d;
+    font-size: 0.9em;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .table-responsive {
+        font-size: 0.9em;
+    }
+    
+    .calculate-button {
+        min-width: 120px;
+        font-size: 0.9em;
+    }
+} 

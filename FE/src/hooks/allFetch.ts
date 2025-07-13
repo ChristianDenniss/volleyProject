@@ -1,5 +1,6 @@
 import { useFetch, useFetchTeamByName, useFetchGameById, useFetchSeasonById, useFetchArticleById, useFetchPlayerById, useObjectFetch } from "./useFetch";
-import { Player, Team, Season, Game, Article, Stats, User, Award } from "../types/interfaces";
+import { Player, Team, Season, Game, Article, Stats, User, Award, Records } from "../types/interfaces";
+import { useState } from "react";
 
 // Hook to fetch players
 export const usePlayers = () => useFetch<Player>("players");
@@ -23,6 +24,16 @@ export const useStats = () => useFetch<Stats>("stats");
 export const useArticles = () => useFetch<Article>("articles");
 
 export const useAwards = () => useFetch<Award>("awards");
+
+// Hook to fetch records
+export const useRecords = () => {
+    const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
+    const { data, loading, error } = useFetch<Records>(`records?refresh=${refreshTrigger}`);
+    
+    const refetch = () => setRefreshTrigger((prev: number) => prev + 1);
+    
+    return { data, loading, error, refetch };
+};
 
 // Skinny hooks for faster loading without relations
 export const useSkinnyTeams = () => useFetch<Team>("teams/skinny");

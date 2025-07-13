@@ -124,6 +124,22 @@ interface User
   role: "user" | "admin" | "superadmin"; 
 }
 
+interface Records 
+{
+  id: number;
+  record: string;
+  type: 'game' | 'season';
+  rank: number;
+  value: number;
+  date: string;
+  createdAt: string;
+  updatedAt: string;
+  season: Season;
+  seasonId: number;
+  player: Player;
+  playerId: number;
+}
+
 /** what your AuthContext provides */
  interface AuthContextType 
  {
@@ -135,7 +151,7 @@ interface User
   loading: boolean;
 }
 
-export type { Game, Player, Stats, Team, Season, Article, User,Award, AuthContextType };
+export type { Game, Player, Stats, Team, Season, Article, User, Award, Records, AuthContextType };
 
 
 // When creating a Game, we send primitive fields + foreign IDs.

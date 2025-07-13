@@ -201,3 +201,47 @@ export const useAddStatsToExistingGame = (showErrorModal?: (err: any) => void) =
 
   return { addStatsToGame, loading, error };
 };
+
+/**
+ * useCalculateRecords
+ * – Triggers the backend to recalculate all records
+ * – Returns calculateRecords() → Promise<boolean>
+ * – Accepts showErrorModal callback for error display
+ */
+export const useCalculateRecords = (showErrorModal?: (err: any) => void) => {
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const calculateRecords = async (): Promise<boolean> => {
+    setLoading(true);
+    setError(null);
+
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+    try {
+      const response = await authFetch(
+        `${backendUrl}/api/records/calculate`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+
+      if (!response.ok) {
+        const errJson = await response
+          .json()
+          .catch(() => ({ message: "Failed to calculate records" }));
+        if (showErrorModal) showErrorModal(errJson.message || errJson.error || "Failed to calculate records");
+        return false;
+      }
+
+      return true;
+    } catch (err: any) {
+      if (showErrorModal) showErrorModal(err);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { calculateRecords, loading, error };
+};

@@ -21,8 +21,8 @@ export class SeasonController
                 seasonNumber,
                 startDate,
                 endDate,
-                theme,        // NEW – required
-                image         // NEW – optional
+                theme,        
+                image    
             } = req.body;
 
             const savedSeason = await this.seasonService.createSeason(

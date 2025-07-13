@@ -64,4 +64,6 @@ export class Stats {
 
     @RelationId((stat: Stats) => stat.player)
     playerId!: number;
+
+
 }
