@@ -7,8 +7,7 @@ import { useAuth } from "../context/authContext";
 import type { Records } from "../types/interfaces";
 import SearchBar from "./Searchbar";
 import Pagination from "./Pagination";
-import "../styles/UsersPage.css"; // reuse table & text-muted styles
-import "../styles/RecordsPage.css"; // import new styles
+import "../styles/RecordsPage.css";
 
 const RecordsPage: React.FC = () => {
     // Retrieve records list from API
@@ -70,12 +69,26 @@ const RecordsPage: React.FC = () => {
         );
     });
 
-    // Calculate pagination
-    const totalPages = Math.ceil(filteredRecords.length / recordsPerPage);
-    const paginatedRecords = filteredRecords.slice(
-        (currentPage - 1) * recordsPerPage,
-        currentPage * recordsPerPage
-    );
+    // Group records by record type
+    const groupedRecords = filteredRecords.reduce((groups, record) => {
+        const recordType = record.record;
+        if (!groups[recordType]) {
+            groups[recordType] = [];
+        }
+        groups[recordType].push(record);
+        return groups;
+    }, {} as { [key: string]: Records[] });
+
+    // Sort record types for consistent display
+    const sortedRecordTypes = Object.keys(groupedRecords).sort();
+
+    // Calculate pagination for each record type
+    const getPaginatedRecords = (records: Records[]) => {
+        return records.slice(
+            (currentPage - 1) * recordsPerPage,
+            currentPage * recordsPerPage
+        );
+    };
 
     // Handle search
     const handleSearch = (query: string) => {
@@ -152,10 +165,18 @@ const RecordsPage: React.FC = () => {
         return typeMap[recordType] || recordType;
     };
 
+    // Get rank badge class
+    const getRankBadgeClass = (rank: number) => {
+        if (rank === 1) return 'record-rank-badge gold';
+        if (rank === 2) return 'record-rank-badge silver';
+        if (rank === 3) return 'record-rank-badge bronze';
+        return 'record-rank-badge';
+    };
+
     if (loading) {
         return (
-            <div className="container mt-4">
-                <div className="text-center">
+            <div className="records-container">
+                <div className="records-loading">
                     <div className="spinner-border" role="status">
                         <span className="visually-hidden">Loading...</span>
                     </div>
@@ -167,9 +188,9 @@ const RecordsPage: React.FC = () => {
 
     if (error) {
         return (
-            <div className="container mt-4">
-                <div className="alert alert-danger" role="alert">
-                    <h4 className="alert-heading">Error Loading Records</h4>
+            <div className="records-container">
+                <div className="records-error">
+                    <h4>Error Loading Records</h4>
                     <p>{error}</p>
                 </div>
             </div>
@@ -177,12 +198,17 @@ const RecordsPage: React.FC = () => {
     }
 
     return (
-        <div className="container mt-4">
-            <div className="d-flex justify-content-between align-items-center mb-4">
-                <h1>Records</h1>
+        <div className="records-container">
+            {/* Header */}
+            <h1 className="records-header">Records</h1>
+
+            {/* Meta information */}
+            <div className="records-meta">
+                <span>{recordTypeView === 'game' ? 'Game Records' : 'Season Records'}</span>
+                <span>{filteredRecords.length} Total Records</span>
                 {user && (user.role === 'admin' || user.role === 'superadmin') && (
                     <button
-                        className="btn btn-primary"
+                        className="calculate-button"
                         onClick={handleCalculateRecords}
                         disabled={calculating}
                     >
@@ -199,125 +225,125 @@ const RecordsPage: React.FC = () => {
             </div>
 
             {/* Switch bar for record type */}
-            <div className="mb-3 d-flex justify-content-center">
-                <div className="btn-group" role="group" aria-label="Record Type Switch">
-                    <button
-                        type="button"
-                        className={`btn btn${recordTypeView === 'game' ? '' : '-outline'}-secondary`}
-                        onClick={() => setRecordTypeView('game')}
-                    >
-                        Game Records
-                    </button>
-                    <button
-                        type="button"
-                        className={`btn btn${recordTypeView === 'season' ? '' : '-outline'}-secondary`}
-                        onClick={() => setRecordTypeView('season')}
-                    >
-                        Season Records
-                    </button>
-                </div>
+            <div className="records-switch-bar">
+                <button
+                    className={`records-switch-button ${recordTypeView === 'game' ? 'active' : ''}`}
+                    onClick={() => setRecordTypeView('game')}
+                >
+                    Game Records
+                </button>
+                <button
+                    className={`records-switch-button ${recordTypeView === 'season' ? 'active' : ''}`}
+                    onClick={() => setRecordTypeView('season')}
+                >
+                    Season Records
+                </button>
             </div>
 
             {/* Search and filters */}
-            <div className="row mb-3">
-                <div className="col-md-6">
+            <div className="records-search-section">
+                <div className="records-search-container">
                     <SearchBar onSearch={handleSearch} placeholder="Search records..." />
                 </div>
-                <div className="col-md-6 text-end">
-                    <button className="btn btn-outline-secondary" onClick={clearFilters}>
-                        Clear Filters
-                    </button>
-                </div>
+                <button className="clear-filters-button" onClick={clearFilters}>
+                    Clear Filters
+                </button>
             </div>
 
             {/* Records count */}
-            <div className="mb-3">
-                <p className="text-muted">
-                    Showing {filteredRecords.length} of {localRecords.filter(r => r.type === recordTypeView).length} {recordTypeView} records
-                </p>
+            <div className="records-count">
+                Showing {filteredRecords.length} of {localRecords.filter(r => r.type === recordTypeView).length} {recordTypeView} records
             </div>
 
-            {/* Records table */}
-            <div className="table-responsive">
-                <table className="table table-striped table-hover">
-                    <thead className="table-dark">
-                        <tr>
-                            <th>Rank</th>
-                            <th>Record Type</th>
-                            <th>Player</th>
-                            <th>Value</th>
-                            <th>Date</th>
-                            <th>Game</th>
-                            <th>Season</th>
-                            <th>Type</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {paginatedRecords.map((record) => (
-                            <tr key={record.id}>
-                                <td>
-                                    <span className={`badge ${record.rank <= 3 ? 'bg-warning' : 'bg-secondary'}`}>
-                                        #{record.rank}
-                                    </span>
-                                </td>
-                                <td>
-                                    <strong>{getRecordDisplayName(record.record)}</strong>
-                                </td>
-                                <td>
-                                    <a 
-                                        href={`/players/${record.player?.id}`}
-                                        className="text-decoration-none"
-                                    >
-                                        {record.player?.name || 'Unknown Player'}
-                                    </a>
-                                </td>
-                                <td>
-                                    <span className="fw-bold">{formatRecordValue(record)}</span>
-                                </td>
-                                <td>
-                                    <span className="text-muted">{formatDate(record.date)}</span>
-                                </td>
-                                <td>
-                                    {record.gameId && record.type === 'game' ? (
-                                        <a 
-                                            href={`/games/${record.gameId}`}
-                                            className="text-decoration-none"
-                                        >
-                                            View Game
-                                        </a>
-                                    ) : (
-                                        <span className="text-muted">-</span>
-                                    )}
-                                </td>
-                                <td>
-                                    <a 
-                                        href={`/seasons/${record.season?.id}`}
-                                        className="text-decoration-none"
-                                    >
-                                        Season {record.season?.seasonNumber || 'Unknown'}
-                                    </a>
-                                </td>
-                                <td>
-                                    <span className={`badge ${record.type === 'game' ? 'bg-info' : 'bg-success'}`}>
-                                        {record.type === 'game' ? 'Game' : 'Season'}
-                                    </span>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+            {/* Record type sections */}
+            {sortedRecordTypes.map((recordType) => {
+                const recordsForType = groupedRecords[recordType];
+                const paginatedRecords = getPaginatedRecords(recordsForType);
+                const totalPages = Math.ceil(recordsForType.length / recordsPerPage);
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-                <div className="d-flex justify-content-center mt-4">
-                    <Pagination
-                        currentPage={currentPage}
-                        totalPages={totalPages}
-                        onPageChange={setCurrentPage}
-                    />
-                </div>
-            )}
+                return (
+                    <div key={recordType} className="record-type-section">
+                        <h2 className="record-type-header">{getRecordDisplayName(recordType)}</h2>
+                        
+                        <div className="records-table-container">
+                            <table className="records-table">
+                                <thead>
+                                    <tr>
+                                        <th>Rank</th>
+                                        <th>Player</th>
+                                        <th>Value</th>
+                                        <th>Date</th>
+                                        <th>Game</th>
+                                        <th>Season</th>
+                                        <th>Type</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {paginatedRecords.map((record) => (
+                                        <tr key={record.id}>
+                                            <td className="record-rank">
+                                                <span className={getRankBadgeClass(record.rank)}>
+                                                    {record.rank}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <a 
+                                                    href={`/players/${record.player?.id}`}
+                                                    className="record-link"
+                                                >
+                                                    {record.player?.name || 'Unknown Player'}
+                                                </a>
+                                            </td>
+                                            <td>
+                                                <span className="record-value">{formatRecordValue(record)}</span>
+                                            </td>
+                                            <td>
+                                                <span className="record-date">{formatDate(record.date)}</span>
+                                            </td>
+                                            <td>
+                                                {record.gameId && record.type === 'game' ? (
+                                                    <a 
+                                                        href={`/games/${record.gameId}`}
+                                                        className="record-link"
+                                                    >
+                                                        View Game
+                                                    </a>
+                                                ) : (
+                                                    <span className="record-date">-</span>
+                                                )}
+                                            </td>
+                                            <td>
+                                                <a 
+                                                    href={`/seasons/${record.season?.id}`}
+                                                    className="record-link"
+                                                >
+                                                    Season {record.season?.seasonNumber || 'Unknown'}
+                                                </a>
+                                            </td>
+                                            <td>
+                                                <span className={`record-type-badge ${record.type}`}>
+                                                    {record.type === 'game' ? 'Game' : 'Season'}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* Pagination for this record type */}
+                        {totalPages > 1 && (
+                            <div className="records-pagination">
+                                <Pagination
+                                    currentPage={currentPage}
+                                    totalPages={totalPages}
+                                    onPageChange={setCurrentPage}
+                                />
+                            </div>
+                        )}
+                    </div>
+                );
+            })}
 
             {/* Error Modal */}
             {errorModal && (

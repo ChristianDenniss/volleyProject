@@ -40,7 +40,7 @@ import CreateArticle from "./components/CreateArticle";
 import ArticlesPage from "./components/portal/ArticlesPage";
 import StatsLeaderboard from "./components/StatsLeaderboard";
 import FAQ from "./components/FAQ";
-import RecordsPage from "./components/RecordsPage";
+import RecordsPage from "./components/RecordsPage"; 
 
 const App: React.FC = () => (
   <AuthProvider>
