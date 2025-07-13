@@ -64,11 +64,11 @@ const RecordsPage: React.FC = () => {
         const aIsSpikingPercent = a.includes('best total spiking %');
         const bIsSpikingPercent = b.includes('best total spiking %');
         
-        // If both are spiking percentage records, sort by attempts (higher attempts first)
+        // If both are spiking percentage records, sort by attempts (lower attempts first)
         if (aIsSpikingPercent && bIsSpikingPercent) {
             const aAttempts = parseInt(a.match(/\d+/)?.[0] || '0');
             const bAttempts = parseInt(b.match(/\d+/)?.[0] || '0');
-            return bAttempts - aAttempts; // Higher attempts first
+            return aAttempts - bAttempts; // Lower attempts first
         }
         
         // If only one is spiking percentage, put it last

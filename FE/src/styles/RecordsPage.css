@@ -33,7 +33,7 @@
     left: 50%;
     top: 50%;
     width: 120%;
-    height: 0.4em;
+    height: 0.25em;
     background: #2D3C50;
     transform: translate(-50%, -50%) skewX(-25deg);
     z-index: -1;
