@@ -198,9 +198,9 @@ const Dashboard: React.FC = () => {
               <p><strong>Instructions:</strong></p>
               <ol>
                 <li>Copy this API key</li>
-                <li>Add it to your <code>.env</code> file as: <code>API_SECRET_KEY=your-key-here</code></li>
-                <li>Restart your server</li>
-                <li>Use it in Postman with header: <code>X-API-Key: your-key-here</code></li>
+                <li>Use it directly in Postman with header: <code>X-API-Key: your-key-here</code></li>
+                <li>This key is now active and tied to your account</li>
+                <li>You can generate multiple keys if needed</li>
               </ol>
               <p><strong>⚠️ Keep this key secret!</strong> Anyone with this key can access your API.</p>
             </div>
@@ -218,9 +218,9 @@ const Dashboard: React.FC = () => {
           <ul>
             <li>Click "Generate API Key" to create a new secure key</li>
             <li>Copy the generated key to your clipboard</li>
-            <li>Add the key to your backend .env file</li>
-            <li>Use the key in Postman or other API tools</li>
-            <li>Keep your API keys secure and private</li>
+            <li>Use the key directly in Postman or other API tools</li>
+            <li>Keys are stored securely and tied to your account</li>
+            <li>Generate multiple keys for different purposes</li>
           </ul>
           <div className="important-note">
             <strong>Important Notes:</strong>
@@ -228,7 +228,8 @@ const Dashboard: React.FC = () => {
               <li>Only admins can generate API keys</li>
               <li>API keys provide full access to protected endpoints</li>
               <li>Never share your API key publicly</li>
-              <li>Rotate keys regularly for security</li>
+              <li>Keys are active immediately after generation</li>
+              <li>No need to restart servers or modify .env files</li>
             </ul>
           </div>
         </div>

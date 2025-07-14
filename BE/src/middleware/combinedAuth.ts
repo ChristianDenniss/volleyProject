@@ -6,6 +6,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { UnauthorizedError } from "../errors/UnauthorizedError.js";
+import { UserService } from "../modules/user/user.service.js";
 
 export interface JwtPayload {
     id: number;
@@ -24,17 +25,25 @@ export const authenticateCombined = (req: Request, res: Response, next: NextFunc
 
     // Try API key first (simpler check)
     if (apiKeyHeader) {
-        const validApiKey = process.env.API_SECRET_KEY;
+        const userService = new UserService();
         
-        if (validApiKey && apiKeyHeader === validApiKey) {
-            (req as any).user = {
-                id: 0,
-                role: "api",
-                username: "api-user"
-            };
-            next();
-            return;
-        }
+        userService.validateApiKey(apiKeyHeader)
+            .then((userInfo) => {
+                if (userInfo) {
+                    (req as any).user = {
+                        id: userInfo.userId,
+                        role: userInfo.role,
+                        username: "api-user"
+                    };
+                    next();
+                } else {
+                    throw new UnauthorizedError("Invalid API key");
+                }
+            })
+            .catch((error) => {
+                throw new UnauthorizedError("Invalid API key");
+            });
+        return;
     }
 
     // Try JWT token

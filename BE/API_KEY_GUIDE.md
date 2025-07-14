@@ -16,9 +16,8 @@ Your admin dashboard now includes a built-in API key generator! Here's how to us
 
 ### **Step 3: Copy and Use**
 1. Click the "Copy" button to copy the key to your clipboard
-2. Add it to your `.env` file: `API_SECRET_KEY=your-generated-key-here`
-3. Restart your backend server
-4. Use it in Postman or other tools
+2. Use it directly in Postman or other API tools
+3. **No server restart needed!** Keys are active immediately
 
 ## **Using the API Key**
 
@@ -53,9 +52,10 @@ curl -X POST http://localhost:3000/api/players \
 
 ✅ **Admin Only**: Only admin/superadmin users can generate keys  
 ✅ **Secure Generation**: Uses cryptographically secure random generation  
-✅ **One-Time Display**: Key is only shown once after generation  
-✅ **Copy Protection**: Easy one-click copy to clipboard  
-✅ **Clear Instructions**: Step-by-step usage guide included  
+✅ **Dynamic Storage**: Keys are stored securely and tied to your account  
+✅ **Immediate Activation**: No server restart or .env file changes needed  
+✅ **Multiple Keys**: Generate different keys for different purposes  
+✅ **Account Tracking**: Each key is linked to the user who generated it  
 
 ## **What the API Key Gives You Access To**
 
@@ -73,7 +73,7 @@ curl -X POST http://localhost:3000/api/players \
 
 ⚠️ **Keep Your Key Secret**: Anyone with this key can access your API  
 ⚠️ **Don't Share Publicly**: Never commit API keys to version control  
-⚠️ **Rotate Regularly**: Generate new keys periodically for security  
+⚠️ **Account-Linked**: Keys are tied to your admin account  
 ⚠️ **Monitor Usage**: Watch for unusual API activity  
 
 ## **Troubleshooting**
@@ -84,14 +84,14 @@ curl -X POST http://localhost:3000/api/players \
 - Ensure the backend server is running
 
 ### **"Invalid API key" in Postman**
-- Make sure you added the key to your `.env` file
-- Restart your backend server after adding the key
+- Make sure you copied the key correctly (no extra spaces)
 - Check that the header is exactly: `X-API-Key: your-key-here`
+- Verify the key was generated successfully
 
 ### **Key not working**
 - Verify the key was copied correctly (no extra spaces)
-- Make sure the server was restarted after adding to `.env`
-- Check that the environment variable is named `API_SECRET_KEY`
+- Make sure you're using the correct header format
+- Check that you generated the key as an admin user
 
 ## **Need Help?**
 
@@ -99,6 +99,6 @@ If you're having issues:
 1. Check the browser console for errors
 2. Verify your admin privileges
 3. Make sure your backend server is running
-4. Check that the `.env` file is in the correct location
+4. Try generating a new key
 
 Your API is now secure and easy to access! 🎉 

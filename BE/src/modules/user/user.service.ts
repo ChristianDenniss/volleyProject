@@ -8,9 +8,20 @@ import { DuplicateError } from '../../errors/DuplicateError.js';
 import { NotFoundError } from '../../errors/NotFoundError.js';
 import { UnauthorizedError } from '../../errors/UnauthorizedError.js';
 
+// API Key interface
+interface ApiKey {
+    id: number;
+    key: string;
+    userId: number;
+    createdAt: Date;
+    lastUsed?: Date;
+    isActive: boolean;
+}
+
 export class UserService {
     private userRepository: Repository<User>;
     private readonly JWT_SECRET: string;
+    private apiKeys: Map<string, ApiKey> = new Map(); // In-memory storage for API keys
 
     constructor() {
         this.userRepository = AppDataSource.getRepository(User);
@@ -26,8 +37,77 @@ export class UserService {
     }
 
     // Verify password using bcrypt
-    private async verifyPassword(plainPassword: string, hashedPassword: string): Promise<boolean> {
-        return bcrypt.compare(plainPassword, hashedPassword);
+    private async verifyPassword(password: string, hashedPassword: string): Promise<boolean> {
+        return bcrypt.compare(password, hashedPassword);
+    }
+
+    // Generate a secure API key
+    private generateApiKey(): string {
+        const crypto = require('crypto');
+        return crypto.randomBytes(32).toString('base64');
+    }
+
+    // Store API key in memory (in production, you'd use a database)
+    async storeApiKey(userId: number): Promise<string> {
+        const apiKey = this.generateApiKey();
+        const keyData: ApiKey = {
+            id: Date.now(), // Simple ID generation
+            key: apiKey,
+            userId: userId,
+            createdAt: new Date(),
+            isActive: true
+        };
+        
+        this.apiKeys.set(apiKey, keyData);
+        return apiKey;
+    }
+
+    // Validate API key
+    async validateApiKey(apiKey: string): Promise<{ userId: number; role: string } | null> {
+        const keyData = this.apiKeys.get(apiKey);
+        
+        if (!keyData || !keyData.isActive) {
+            return null;
+        }
+
+        // Update last used timestamp
+        keyData.lastUsed = new Date();
+        this.apiKeys.set(apiKey, keyData);
+
+        // Get user info
+        try {
+            const user = await this.getUserById(keyData.userId);
+            return {
+                userId: user.id,
+                role: user.role
+            };
+        } catch (error) {
+            return null;
+        }
+    }
+
+    // Get all API keys for a user (admin only)
+    async getUserApiKeys(userId: number): Promise<ApiKey[]> {
+        const keys: ApiKey[] = [];
+        for (const [key, keyData] of this.apiKeys.entries()) {
+            if (keyData.userId === userId) {
+                keys.push({ ...keyData, key: '***' + key.slice(-8) }); // Only show last 8 chars
+            }
+        }
+        return keys;
+    }
+
+    // Revoke API key
+    async revokeApiKey(apiKey: string, userId: number): Promise<boolean> {
+        const keyData = this.apiKeys.get(apiKey);
+        
+        if (keyData && keyData.userId === userId) {
+            keyData.isActive = false;
+            this.apiKeys.set(apiKey, keyData);
+            return true;
+        }
+        
+        return false;
     }
 
     /**

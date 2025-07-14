@@ -255,14 +255,14 @@ export class UserController {
                 return;
             }
 
-            // Generate a secure API key
-            const crypto = await import('crypto');
-            const apiKey = crypto.randomBytes(32).toString('base64');
+            // Generate and store the API key
+            const apiKey = await this.userService.storeApiKey(requester.id);
 
             res.json({ 
                 apiKey,
-                message: "API key generated successfully. Copy this key and add it to your .env file as API_SECRET_KEY",
-                usage: "Use this key in the X-API-Key header for direct API access"
+                message: "API key generated and stored successfully. This key is now active and can be used for API access.",
+                usage: "Use this key in the X-API-Key header for direct API access",
+                note: "This key is tied to your account and can be revoked if needed"
             });
         } catch (error) {
             console.error("Error generating API key:", error);
