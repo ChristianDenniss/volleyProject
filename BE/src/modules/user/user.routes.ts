@@ -19,8 +19,9 @@ export function registerUserRoutes(app: Application): void {
     router.put('/api/users/:id', authenticateToken, userController.updateUser);
     router.delete('/api/users/:id', authenticateToken, userController.deleteUser);
 
-    // Promote / demote a user’s role — goes through the app-level /api/admin guard
+    // Admin-only routes
     router.patch('/api/admin/users/:id/role', userController.setRole);
+    router.post('/api/admin/generate-api-key', authenticateToken, userController.generateApiKey);
 
     // Register router
     app.use(router);

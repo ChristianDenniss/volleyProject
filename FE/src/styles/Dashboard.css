@@ -180,6 +180,118 @@
   color: #856404;
 }
 
+/* API Key Section */
+.api-key-section {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  color: white;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.api-key-section h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.api-key-display {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  align-items: center;
+}
+
+.api-key-input {
+  flex: 1;
+  padding: 0.75rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  backdrop-filter: blur(10px);
+}
+
+.api-key-input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.copy-button {
+  padding: 0.75rem 1.5rem;
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.copy-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+}
+
+.api-key-instructions {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 1rem;
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+}
+
+.api-key-instructions p {
+  margin: 0.5rem 0;
+}
+
+.api-key-instructions ol {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+
+.api-key-instructions li {
+  margin: 0.25rem 0;
+}
+
+.api-key-instructions code {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+}
+
+/* API Key Button */
+.api-key-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.api-key-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.api-key-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.button-icon {
+  font-size: 1rem;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .dashboard-container {
@@ -216,5 +328,18 @@
   
   .help-category {
     padding: 1rem;
+  }
+
+  .api-key-display {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .copy-button {
+    width: 100%;
+  }
+  
+  .api-key-input {
+    font-size: 0.8rem;
   }
 } 

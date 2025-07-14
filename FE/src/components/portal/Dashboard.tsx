@@ -1,5 +1,7 @@
 import { useStats, useSkinnyTeams, useArticles, usePlayers, useSkinnySeasons, useSkinnyGames, useUsers, useSkinnyAwards } from "../../hooks/allFetch";
-import { FaUsers, FaVolleyballBall, FaNewspaper, FaCalendarAlt, FaGamepad, FaChartBar, FaUserAlt, FaTrophy } from "react-icons/fa";
+import { FaUsers, FaVolleyballBall, FaNewspaper, FaCalendarAlt, FaGamepad, FaChartBar, FaUserAlt, FaTrophy, FaKey } from "react-icons/fa";
+import { useState } from "react";
+import { useAuth } from "../../context/authContext";
 import "../../styles/Dashboard.css";
 
 const Dashboard: React.FC = () => {
@@ -11,6 +13,11 @@ const Dashboard: React.FC = () => {
   const { data: games, loading: gamesLoading } = useSkinnyGames();
   const { data: users, loading: usersLoading } = useUsers();
   const { data: awards, loading: awardsLoading } = useSkinnyAwards();
+  const { user } = useAuth();
+  
+  const [apiKey, setApiKey] = useState<string | null>(null);
+  const [generating, setGenerating] = useState(false);
+  const [showApiKey, setShowApiKey] = useState(false);
   
   const totalStats = stats?.length ?? 0;
   const totalTeams = teams?.length ?? 0;
@@ -21,6 +28,41 @@ const Dashboard: React.FC = () => {
   const totalUsers = users?.length ?? 0;
   const totalAwards = awards?.length ?? 0;
   const isLoading = statsLoading || teamsLoading || articlesLoading || playersLoading || seasonsLoading || gamesLoading || usersLoading || awardsLoading;
+
+  const generateApiKey = async () => {
+    if (!user) return;
+    
+    setGenerating(true);
+    try {
+      const response = await fetch('/api/admin/generate-api-key', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setApiKey(data.apiKey);
+        setShowApiKey(true);
+      } else {
+        alert('Failed to generate API key. Make sure you have admin privileges.');
+      }
+    } catch (error) {
+      console.error('Error generating API key:', error);
+      alert('Error generating API key');
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const copyToClipboard = () => {
+    if (apiKey) {
+      navigator.clipboard.writeText(apiKey);
+      alert('API key copied to clipboard!');
+    }
+  };
 
   if (isLoading) {
     return <div className="dashboard-container"><p>Loading dashboard data...</p></div>;
@@ -125,13 +167,72 @@ const Dashboard: React.FC = () => {
           <button className="action-button" onClick={() => window.location.href = '/portal/awards'}>
             Manage Awards
           </button>
+          {(user?.role === 'admin' || user?.role === 'superadmin') && (
+            <button 
+              className="action-button api-key-button" 
+              onClick={generateApiKey}
+              disabled={generating}
+            >
+              <FaKey className="button-icon" />
+              {generating ? 'Generating...' : 'Generate API Key'}
+            </button>
+          )}
         </div>
+
+        {/* API Key Display */}
+        {showApiKey && apiKey && (
+          <div className="api-key-section">
+            <h3>🔑 Your API Key</h3>
+            <div className="api-key-display">
+              <input 
+                type="text" 
+                value={apiKey} 
+                readOnly 
+                className="api-key-input"
+              />
+              <button onClick={copyToClipboard} className="copy-button">
+                Copy
+              </button>
+            </div>
+            <div className="api-key-instructions">
+              <p><strong>Instructions:</strong></p>
+              <ol>
+                <li>Copy this API key</li>
+                <li>Add it to your <code>.env</code> file as: <code>API_SECRET_KEY=your-key-here</code></li>
+                <li>Restart your server</li>
+                <li>Use it in Postman with header: <code>X-API-Key: your-key-here</code></li>
+              </ol>
+              <p><strong>⚠️ Keep this key secret!</strong> Anyone with this key can access your API.</p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Help Section */}
       <div className="help-section">
         <h2>Portal Guide</h2>
         
+        <div className="help-category">
+          <h3>🔑 API Key Management</h3>
+          <p>Generate API keys for direct API access:</p>
+          <ul>
+            <li>Click "Generate API Key" to create a new secure key</li>
+            <li>Copy the generated key to your clipboard</li>
+            <li>Add the key to your backend .env file</li>
+            <li>Use the key in Postman or other API tools</li>
+            <li>Keep your API keys secure and private</li>
+          </ul>
+          <div className="important-note">
+            <strong>Important Notes:</strong>
+            <ul>
+              <li>Only admins can generate API keys</li>
+              <li>API keys provide full access to protected endpoints</li>
+              <li>Never share your API key publicly</li>
+              <li>Rotate keys regularly for security</li>
+            </ul>
+          </div>
+        </div>
+
         <div className="help-category">
           <h3>📊 Stats Management</h3>
           <p>Track and manage player statistics:</p>

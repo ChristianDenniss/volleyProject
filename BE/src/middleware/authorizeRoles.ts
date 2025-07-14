@@ -3,7 +3,7 @@
 //  Gate a request by role.
 //  • Requires `authenticateToken` to have already attached `req.user`
 //  • Sends 401 if no user, 403 if role not allowed
-//  • Returns *void* so Express types are satisfied
+//  • Returns *void* so Express types are satisfied
 //  ────────────────────────────────────────────────────────────────
 
 import { Request, Response, NextFunction } from "express";
@@ -21,6 +21,13 @@ export function authorizeRoles(...allowed: string[])
         {
             res.status(401).json({ message: "Unauthorized" });
             return;                 //  explicit void return
+        }
+
+        //  API key users have full access (role: "api")
+        if (user.role === "api")
+        {
+            next();
+            return;
         }
 
         //  Reject when role is not in the allowed list

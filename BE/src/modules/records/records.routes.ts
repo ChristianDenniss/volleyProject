@@ -1,36 +1,31 @@
 import { Application, Router } from 'express';
 import { RecordController } from './records.controller.js';
 import { validate } from '../../middleware/validate.js';
+import { authenticateCombined } from '../../middleware/combinedAuth.js';
 import { createRecordSchema, updateRecordSchema } from './records.schema.js';
 
 export function registerRecordRoutes(app: Application): void {
     const router = Router();
     const recordController = new RecordController();
 
-    // Record routes
-    router.post('/', validate(createRecordSchema), recordController.createRecord);
-    router.get('/', recordController.getRecords);
+    // Record routes - PROTECTED (require authentication)
+    router.post('/', authenticateCombined, validate(createRecordSchema), recordController.createRecord);
     
-    // Get records by season
-    router.get('/season/:seasonId', recordController.getRecordsBySeason);
-    
-    // Get records by type
-    router.get('/type/:recordType', recordController.getRecordsByType);
-    
-    // Get records by player
-    router.get('/player/:playerId', recordController.getRecordsByPlayer);
-    
-    // Get top 10 records for a specific record type and season
-    router.get('/top10/:recordType/:seasonId', recordController.getTop10Records);
-    
-    // Calculate all records across all seasons
-    router.post('/calculate', recordController.calculateAllRecords);
+    // Calculate all records across all seasons - PROTECTED
+    router.post('/calculate', authenticateCombined, recordController.calculateAllRecords);
 
-    // Individual record routes (must come after specific routes)
+    // GET routes - PUBLIC (for website display)
+    router.get('/', recordController.getRecords);
+    router.get('/season/:seasonId', recordController.getRecordsBySeason);
+    router.get('/type/:recordType', recordController.getRecordsByType);
+    router.get('/player/:playerId', recordController.getRecordsByPlayer);
+    router.get('/top10/:recordType/:seasonId', recordController.getTop10Records);
     router.get('/:id', recordController.getRecordById);
-    router.put('/:id', recordController.updateRecord);
-    router.patch('/:id', validate(updateRecordSchema), recordController.updateRecord);
-    router.delete('/:id', recordController.deleteRecord);
+    
+    // UPDATE/DELETE routes - PROTECTED
+    router.put('/:id', authenticateCombined, recordController.updateRecord);
+    router.patch('/:id', authenticateCombined, validate(updateRecordSchema), recordController.updateRecord);
+    router.delete('/:id', authenticateCombined, recordController.deleteRecord);
 
     app.use('/api/records', router);
 }
