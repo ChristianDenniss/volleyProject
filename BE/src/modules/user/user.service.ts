@@ -7,6 +7,7 @@ import { MissingFieldError } from '../../errors/MissingFieldError.js';
 import { DuplicateError } from '../../errors/DuplicateError.js';
 import { NotFoundError } from '../../errors/NotFoundError.js';
 import { UnauthorizedError } from '../../errors/UnauthorizedError.js';
+import { logApiKeyOperation } from '../../middleware/logger.js';
 
 // API Key interface
 interface ApiKey {
@@ -59,6 +60,11 @@ export class UserService {
         };
         
         this.apiKeys.set(apiKey, keyData);
+        
+        // Log the API key generation
+        logApiKeyOperation('GENERATE', userId, keyData.id.toString());
+        console.log(`🔑 Generated API key for user ${userId}. Key ID: ${keyData.id}`);
+        
         return apiKey;
     }
 
@@ -67,12 +73,17 @@ export class UserService {
         const keyData = this.apiKeys.get(apiKey);
         
         if (!keyData || !keyData.isActive) {
+            console.log(`❌ Invalid API key attempt: ${apiKey.substring(0, 8)}...`);
             return null;
         }
 
         // Update last used timestamp
         keyData.lastUsed = new Date();
         this.apiKeys.set(apiKey, keyData);
+
+        // Log the API key usage
+        logApiKeyOperation('VALIDATE', keyData.userId, keyData.id.toString());
+        console.log(`🔑 API key validated for user ${keyData.userId}. Key ID: ${keyData.id}`);
 
         // Get user info
         try {
@@ -82,6 +93,7 @@ export class UserService {
                 role: user.role
             };
         } catch (error) {
+            console.log(`❌ User not found for API key. User ID: ${keyData.userId}`);
             return null;
         }
     }
@@ -94,6 +106,11 @@ export class UserService {
                 keys.push({ ...keyData, key: '***' + key.slice(-8) }); // Only show last 8 chars
             }
         }
+        
+        // Log the API key listing
+        logApiKeyOperation('LIST', userId);
+        console.log(`🔑 Listed ${keys.length} API keys for user ${userId}`);
+        
         return keys;
     }
 
@@ -104,9 +121,15 @@ export class UserService {
         if (keyData && keyData.userId === userId) {
             keyData.isActive = false;
             this.apiKeys.set(apiKey, keyData);
+            
+            // Log the API key revocation
+            logApiKeyOperation('REVOKE', userId, keyData.id.toString());
+            console.log(`🔑 API key revoked for user ${userId}. Key ID: ${keyData.id}`);
+            
             return true;
         }
         
+        console.log(`❌ Failed to revoke API key for user ${userId}`);
         return false;
     }
 

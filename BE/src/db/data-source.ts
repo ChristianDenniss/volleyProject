@@ -48,7 +48,15 @@ export const AppDataSource = new DataSource({
         }
     ),
     synchronize: false, // Disable synchronize to prevent automatic schema updates
-    logging: process.env.NODE_ENV !== 'production',
+    logging: [
+        "error",           // Log all errors
+        "warn",            // Log warnings
+        "query",           // Log all queries
+        "schema",          // Log schema changes
+        "migration",       // Log migrations
+        "info"             // Log general info
+    ],
+    maxQueryExecutionTime: 1000, // Log queries that take more than 1 second
     entities: entities,
     migrations: [join(__dirname, "..", "..", "migrations", "*.{js,ts}")], // Point to dist/migrations in production
     migrationsTableName: "migrations", // Explicitly set migrations table name
@@ -62,6 +70,7 @@ export async function initializeDataSource(): Promise<DataSource> {
         if (!AppDataSource.isInitialized) {
             await AppDataSource.initialize();
             console.log("Database connection established");
+            console.log("TypeORM logging enabled for: error, warn, query, schema, migration, info");
         }
         return AppDataSource;
     } catch (error) {
