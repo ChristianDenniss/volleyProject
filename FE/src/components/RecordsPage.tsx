@@ -199,12 +199,30 @@ const RecordsPage: React.FC = () => {
 
     if (loading) {
         return (
-            <div className="records-container">
-                <div className="records-loading">
-                    <div className="spinner-border" role="status">
-                        <span className="visually-hidden">Loading...</span>
+            <div className="records-container loading">
+                {/* Skeleton header */}
+                <div className="records-skeleton-header"></div>
+                
+                {/* Skeleton calculate button for admins */}
+                {user && (user.role === 'admin' || user.role === 'superadmin') && (
+                    <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                        <div className="records-skeleton-button"></div>
                     </div>
-                    <p className="mt-2">Loading records...</p>
+                )}
+                
+                {/* Skeleton switch bar */}
+                <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                    <div className="records-skeleton-switch"></div>
+                </div>
+                
+                {/* Skeleton grid */}
+                <div className="records-grid">
+                    {[1, 2, 3, 4, 5, 6].map((i) => (
+                        <div key={i} className="record-type-section">
+                            <div className="records-skeleton-header" style={{ height: '40px', width: '200px' }}></div>
+                            <div className="records-skeleton-table"></div>
+                        </div>
+                    ))}
                 </div>
             </div>
         );

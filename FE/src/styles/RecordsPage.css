@@ -297,6 +297,70 @@
     text-align: center;
 }
 
+/* Loading state to prevent layout shift */
+.records-container.loading {
+    opacity: 0.8;
+    pointer-events: none;
+}
+
+/* Skeleton loader for better UX */
+.records-skeleton-header {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    height: 80px;
+    width: 300px;
+    margin: 0 auto;
+    border-radius: 8px;
+}
+
+.records-skeleton-button {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    height: 50px;
+    width: 200px;
+    margin: 0 auto;
+    border-radius: 8px;
+}
+
+.records-skeleton-switch {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    height: 50px;
+    width: 400px;
+    margin: 0 auto;
+    border-radius: 8px;
+}
+
+.records-skeleton-table {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    height: 500px;
+    width: 100%;
+    border-radius: 8px;
+    border: 2px solid #e0e0e0;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* Prevent layout shift during data loading */
+.records-grid:empty::before {
+    content: "";
+    display: block;
+    height: 600px;
+    width: 100%;
+}
+
 /* Responsive adjustments */
 @media (max-width: 1200px) {
     .records-grid {
