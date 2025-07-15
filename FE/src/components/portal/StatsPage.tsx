@@ -86,6 +86,19 @@ const StatsPage: React.FC = () =>
     // Destructure add stats to existing game hook
     const { addStatsToGame, loading: addStatsLoading, error: addStatsError } = useAddStatsToExistingGame(showErrorModal);
 
+    // Debug logging for error states
+    useEffect(() => {
+        if (csvUploadError) {
+            console.log('CSV Upload Error State Changed:', csvUploadError);
+        }
+    }, [csvUploadError]);
+
+    useEffect(() => {
+        if (addStatsError) {
+            console.log('Add Stats Error State Changed:', addStatsError);
+        }
+    }, [addStatsError]);
+
     // Retrieve current user (for permission checks)
     const { user }                      = useAuth();
 
@@ -138,6 +151,13 @@ const StatsPage: React.FC = () =>
     // Add state for generic failure modal
     const [failureModal, setFailureModal] = useState<string | null>(null);
 
+    // Debug logging for failure modal state
+    useEffect(() => {
+        if (failureModal) {
+            console.log('Failure Modal State Changed:', failureModal);
+        }
+    }, [failureModal]);
+
     // Open stage modal automatically when csvPreview is set
     useEffect(() => {
         if (csvPreview) {
@@ -149,10 +169,20 @@ const StatsPage: React.FC = () =>
     // Helper to show error modal with any error object
     function showErrorModal(err: any) {
         let errorMsg = '';
-        if (err?.message) errorMsg = err.message;
-        else if (err?.error) errorMsg = err.error;
-        else if (err?.response?.data?.error) errorMsg = err.response.data.error;
-        else errorMsg = 'Unknown error';
+        if (typeof err === 'string') {
+            errorMsg = err;
+        } else if (err?.message) {
+            errorMsg = err.message;
+        } else if (err?.error) {
+            errorMsg = err.error;
+        } else if (err?.response?.data?.error) {
+            errorMsg = err.response.data.error;
+        } else if (err?.response?.data?.message) {
+            errorMsg = err.response.data.message;
+        } else {
+            errorMsg = 'Unknown error occurred';
+        }
+        console.error('CSV Upload Error:', err);
         setFailureModal(errorMsg);
     }
 
@@ -378,6 +408,8 @@ const StatsPage: React.FC = () =>
         setCsvPreview(null);
         setCsvParseError("");
         setGameCreationError("");
+        setFailureModal(null);
+        setMissingPlayersError(null);
     };
 
     // Update handleFileUploadWrapper to only handle file upload
@@ -407,7 +439,10 @@ const StatsPage: React.FC = () =>
             // Try to create the game
             try {
                 const result = await uploadCSV({ gameData, statsData: pendingCSV.statsData });
-                if (!result) throw new Error("Game creation failed");
+                if (!result) {
+                    // Error is already handled by the hook and shown via showErrorModal
+                    return;
+                }
                 setLocalStats(prev => [...result.stats, ...prev]);
                 setIsStageModalOpen(false);
                 setPendingCSV(null);
@@ -419,7 +454,6 @@ const StatsPage: React.FC = () =>
                 setIsStageModalOpen(false);
                 setPendingCSV(null);
                 setStageInput("");
-                closeCSVModal();
             }
         } else {
             // Add to existing game mode
@@ -430,7 +464,10 @@ const StatsPage: React.FC = () =>
             
             try {
                 const result = await addStatsToGame(Number(existingGameId), pendingCSV.statsData);
-                if (!result) throw new Error("Failed to add stats to game");
+                if (!result) {
+                    // Error is already handled by the hook and shown via showErrorModal
+                    return;
+                }
                 setLocalStats(prev => [...result, ...prev]);
                 setIsStageModalOpen(false);
                 setPendingCSV(null);
@@ -443,7 +480,6 @@ const StatsPage: React.FC = () =>
                 setIsStageModalOpen(false);
                 setPendingCSV(null);
                 setExistingGameId("");
-                closeCSVModal();
             }
         }
     };
@@ -765,13 +801,20 @@ const StatsPage: React.FC = () =>
 
                         {csvUploadError && (
                             <p className="modal-error">
-                                {csvUploadError}
+                                CSV Upload Error: {csvUploadError}
                             </p>
                         )}
 
                         {addStatsError && (
                             <p className="modal-error">
-                                {addStatsError}
+                                Add Stats Error: {addStatsError}
+                            </p>
+                        )}
+
+                        {/* Debug info */}
+                        {(csvUploadError || addStatsError) && (
+                            <p style={{ fontSize: '12px', color: '#666', marginTop: '10px' }}>
+                                Debug: Check the browser console for more details
                             </p>
                         )}
 
@@ -928,6 +971,8 @@ const StatsPage: React.FC = () =>
                                     setIsStageModalOpen(false); 
                                     setStageInput(""); 
                                     setPendingCSV(null); 
+                                    setFailureModal(null);
+                                    setGameCreationError("");
                                 }} 
                                 className="create-button"
                                 style={{ background: '#dc3545', color: 'white' }}

@@ -139,14 +139,27 @@ export const useCSVUpload = (showErrorModal?: (err: any) => void) => {
         const errJson = await response
           .json()
           .catch(() => ({ message: "CSV upload failed" }));
-        if (showErrorModal) showErrorModal(errJson.message || errJson.error || "CSV upload failed");
+        
+        const errorMessage = errJson.message || errJson.error || "CSV upload failed, correct & try again";
+        console.error('CSV Upload Hook Error:', { status: response.status, error: errJson, message: errorMessage });
+        setError(errorMessage);
+        
+        if (showErrorModal) {
+          showErrorModal({ message: errorMessage });
+        }
         return null;
       }
 
       const result: CSVUploadResult = await response.json();
       return result;
     } catch (err: any) {
-      if (showErrorModal) showErrorModal(err);
+      const errorMessage = err?.message || err?.error || "CSV upload failed";
+      console.error('CSV Upload Hook Catch Error:', err);
+      setError(errorMessage);
+      
+      if (showErrorModal) {
+        showErrorModal({ message: errorMessage });
+      }
       return null;
     } finally {
       setLoading(false);
@@ -185,14 +198,27 @@ export const useAddStatsToExistingGame = (showErrorModal?: (err: any) => void) =
         const errJson = await response
           .json()
           .catch(() => ({ message: "Failed to add stats to game" }));
-        if (showErrorModal) showErrorModal(errJson.message || errJson.error || "Failed to add stats to game");
+        
+        const errorMessage = errJson.message || errJson.error || "Failed to add stats to game";
+        console.error('Add Stats Hook Error:', { status: response.status, error: errJson, message: errorMessage });
+        setError(errorMessage);
+        
+        if (showErrorModal) {
+          showErrorModal({ message: errorMessage });
+        }
         return null;
       }
 
       const result = await response.json();
       return result.stats;
     } catch (err: any) {
-      if (showErrorModal) showErrorModal(err);
+      const errorMessage = err?.message || err?.error || "Failed to add stats to game";
+      console.error('Add Stats Hook Catch Error:', err);
+      setError(errorMessage);
+      
+      if (showErrorModal) {
+        showErrorModal({ message: errorMessage });
+      }
       return null;
     } finally {
       setLoading(false);
