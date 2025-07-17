@@ -260,7 +260,58 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
     'Total Errors'
   ];
 
+  // For historical comparison, we need per-set stats for the current player
+  const getPlayerPerSetStats = (player: Player) => {
+    if (!player.stats || player.stats.length === 0) return null;
+    const relevantStats = selectedSeason === null
+      ? player.stats
+      : player.stats.filter(statRecord => statRecord.game?.season?.seasonNumber === selectedSeason);
+    if (relevantStats.length === 0) return null;
+    
+    const sum = (key: keyof Stats) => relevantStats.reduce((total, statRecord) => {
+      const value = statRecord[key];
+      return total + (typeof value === 'number' ? value : 0);
+    }, 0);
+    
+    const totalSets = relevantStats.reduce((total, statRecord) => {
+      const game = statRecord.game;
+      if (game && typeof game.team1Score === 'number' && typeof game.team2Score === 'number') {
+        return total + game.team1Score + game.team2Score;
+      }
+      return total;
+    }, 0);
+    
+    return {
+      spikeKills: totalSets > 0 ? sum('spikeKills') / totalSets : 0,
+      apeKills: totalSets > 0 ? sum('apeKills') / totalSets : 0,
+      spikeAttempts: totalSets > 0 ? sum('spikeAttempts') / totalSets : 0,
+      apeAttempts: totalSets > 0 ? sum('apeAttempts') / totalSets : 0,
+      blocks: totalSets > 0 ? sum('blocks') / totalSets : 0,
+      assists: totalSets > 0 ? sum('assists') / totalSets : 0,
+      aces: totalSets > 0 ? sum('aces') / totalSets : 0,
+      digs: totalSets > 0 ? sum('digs') / totalSets : 0,
+      blockFollows: totalSets > 0 ? sum('blockFollows') / totalSets : 0,
+      totalErrors: totalSets > 0 ? (sum('miscErrors') + sum('spikingErrors') + sum('settingErrors') + sum('servingErrors')) / totalSets : 0,
+      totalSets: totalSets,
+      miscErrors: totalSets > 0 ? sum('miscErrors') / totalSets : 0,
+      spikingErrors: totalSets > 0 ? sum('spikingErrors') / totalSets : 0,
+      settingErrors: totalSets > 0 ? sum('settingErrors') / totalSets : 0,
+      servingErrors: totalSets > 0 ? sum('servingErrors') / totalSets : 0,
+    };
+  };
+
+  const playerPerSetStats = getPlayerPerSetStats(player);
+
+  if (!playerStats || !leagueAverages || !playerPerSetStats) {
+    return (
+      <div className="player-visualization">
+        <p>No stats available for this player in the selected season.</p>
+      </div>
+    );
+  }
+
   const playerNormalized = normalizeStats(playerStats);
+  const playerPerSetNormalized = normalizeStats(playerPerSetStats);
   const leagueNormalized = normalizeStats(leagueAverages);
   
   const radarData = {
@@ -313,16 +364,16 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
   if (selectedSeason === null) {
     // All seasons view: Show historical seasons radar chart
     const currentData = [
-      playerNormalized.spikeKills,
-      playerNormalized.apeKills,
-      playerNormalized.spikeAttempts,
-      playerNormalized.apeAttempts,
-      playerNormalized.blocks,
-      playerNormalized.assists,
-      playerNormalized.aces,
-      playerNormalized.digs,
-      playerNormalized.blockFollows,
-      playerNormalized.totalErrors,
+      playerPerSetNormalized.spikeKills,
+      playerPerSetNormalized.apeKills,
+      playerPerSetNormalized.spikeAttempts,
+      playerPerSetNormalized.apeAttempts,
+      playerPerSetNormalized.blocks,
+      playerPerSetNormalized.assists,
+      playerPerSetNormalized.aces,
+      playerPerSetNormalized.digs,
+      playerPerSetNormalized.blockFollows,
+      playerPerSetNormalized.totalErrors,
     ];
     
     const seasonDatasets = historicalSeasons.map((season, index) => {
