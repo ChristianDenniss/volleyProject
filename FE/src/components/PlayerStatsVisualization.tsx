@@ -312,50 +312,58 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
 
   if (selectedSeason === null) {
     // All seasons view: Show historical seasons radar chart
+    const currentData = [
+      playerNormalized.spikeKills,
+      playerNormalized.apeKills,
+      playerNormalized.spikeAttempts,
+      playerNormalized.apeAttempts,
+      playerNormalized.blocks,
+      playerNormalized.assists,
+      playerNormalized.aces,
+      playerNormalized.digs,
+      playerNormalized.blockFollows,
+      playerNormalized.totalErrors,
+    ];
+    
+    const seasonDatasets = historicalSeasons.map((season, index) => {
+      // Normalize historical season using the same absolute thresholds
+      const normalizedSeason = normalizeStats(season);
+      
+      return {
+        label: `Season ${season.seasonNumber}`,
+        data: [
+          normalizedSeason.spikeKills,
+          normalizedSeason.apeKills,
+          normalizedSeason.spikeAttempts,
+          normalizedSeason.apeAttempts,
+          normalizedSeason.blocks,
+          normalizedSeason.assists,
+          normalizedSeason.aces,
+          normalizedSeason.digs,
+          normalizedSeason.blockFollows,
+          normalizedSeason.totalErrors,
+        ],
+        backgroundColor: `hsla(${200 + index * 30}, 70%, 60%, 0.2)`,
+        borderColor: `hsla(${200 + index * 30}, 70%, 60%, 1)`,
+        borderWidth: 2,
+      };
+    });
+    
+    // Calculate global maximum across all datasets
+    const allDataPoints = [currentData, ...seasonDatasets.map(dataset => dataset.data)];
+    const globalMax = Math.max(...allDataPoints.flat());
+    
     const historicalData = {
       labels: radarLabels,
       datasets: [
         {
           label: 'Current (All Seasons)',
-          data: [
-            playerNormalized.spikeKills,
-            playerNormalized.apeKills,
-            playerNormalized.spikeAttempts,
-            playerNormalized.apeAttempts,
-            playerNormalized.blocks,
-            playerNormalized.assists,
-            playerNormalized.aces,
-            playerNormalized.digs,
-            playerNormalized.blockFollows,
-            playerNormalized.totalErrors,
-          ],
+          data: currentData,
           backgroundColor: 'rgba(45, 60, 80, 0.2)',
           borderColor: 'rgba(45, 60, 80, 1)',
           borderWidth: 2,
         },
-        ...historicalSeasons.map((season, index) => {
-          // Normalize historical season using the same absolute thresholds
-          const normalizedSeason = normalizeStats(season);
-          
-          return {
-            label: `Season ${season.seasonNumber}`,
-            data: [
-              normalizedSeason.spikeKills,
-              normalizedSeason.apeKills,
-              normalizedSeason.spikeAttempts,
-              normalizedSeason.apeAttempts,
-              normalizedSeason.blocks,
-              normalizedSeason.assists,
-              normalizedSeason.aces,
-              normalizedSeason.digs,
-              normalizedSeason.blockFollows,
-              normalizedSeason.totalErrors,
-            ],
-            backgroundColor: `hsla(${200 + index * 30}, 70%, 60%, 0.2)`,
-            borderColor: `hsla(${200 + index * 30}, 70%, 60%, 1)`,
-            borderWidth: 2,
-          };
-        })
+        ...seasonDatasets
       ]
     };
     
@@ -427,7 +435,7 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
       scales: {
         r: {
           beginAtZero: true,
-          // Let Chart.js auto-scale based on the data
+          max: Math.ceil(globalMax / 20) * 20, // Round up to nearest 20 for clean tick marks
           ticks: { stepSize: 20 }
         }
       }
