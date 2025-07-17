@@ -40,45 +40,19 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
   selectedSeason
 }) => {
   // Helper function to normalize stats within their categories
-  const normalizeStats = (playerData: any, baselineData?: any) => {
-    // If baselineData is provided, normalize relative to it (for historical seasons)
-    if (baselineData) {
-      const spikeKillsNorm = baselineData.spikeKills > 0 ? (playerData.spikeKills / baselineData.spikeKills) * 100 : 0;
-      const apeKillsNorm = baselineData.apeKills > 0 ? (playerData.apeKills / baselineData.apeKills) * 100 : 0;
-      const spikeAttemptsNorm = baselineData.spikeAttempts > 0 ? (playerData.spikeAttempts / baselineData.spikeAttempts) * 100 : 0;
-      const apeAttemptsNorm = baselineData.apeAttempts > 0 ? (playerData.apeAttempts / baselineData.apeAttempts) * 100 : 0;
-      const blocksNorm = baselineData.blocks > 0 ? (playerData.blocks / baselineData.blocks) * 100 : 0;
-      const assistsNorm = baselineData.assists > 0 ? (playerData.assists / baselineData.assists) * 100 : 0;
-      const acesNorm = baselineData.aces > 0 ? (playerData.aces / baselineData.aces) * 100 : 0;
-      const digsNorm = baselineData.digs > 0 ? (playerData.digs / baselineData.digs) * 100 : 0;
-      const blockFollowsNorm = baselineData.blockFollows > 0 ? (playerData.blockFollows / baselineData.blockFollows) * 100 : 0;
-      const totalErrorsNorm = baselineData.totalErrors > 0 ? (playerData.totalErrors / baselineData.totalErrors) * 100 : 0;
-      
-      return {
-        spikeKills: spikeKillsNorm,
-        apeKills: apeKillsNorm,
-        spikeAttempts: spikeAttemptsNorm,
-        apeAttempts: apeAttemptsNorm,
-        blocks: blocksNorm,
-        assists: assistsNorm,
-        aces: acesNorm,
-        digs: digsNorm,
-        blockFollows: blockFollowsNorm,
-        totalErrors: totalErrorsNorm
-      };
-    }
+  const normalizeStats = (playerData: any) => {
+    const baseline = 10; // Minimum baseline value to keep shape visible
     
-    // Otherwise use absolute thresholds (for league comparison)
-    const spikeKillsNorm = Math.min(playerData.spikeKills / playerData.totalSets / 5, 1) * 100;
-    const apeKillsNorm = Math.min(playerData.apeKills / playerData.totalSets / 3, 1) * 100;
-    const spikeAttemptsNorm = Math.min(playerData.spikeAttempts / playerData.totalSets / 15, 1) * 100;
-    const apeAttemptsNorm = Math.min(playerData.apeAttempts / playerData.totalSets / 8, 1) * 100;
-    const blocksNorm = Math.min(playerData.blocks / playerData.totalSets / 3, 1) * 100;
-    const digsNorm = Math.min(playerData.digs / playerData.totalSets / 4, 1) * 100;
-    const blockFollowsNorm = Math.min(playerData.blockFollows / playerData.totalSets / 2, 1) * 100;
-    const assistsNorm = Math.min(playerData.assists / playerData.totalSets / 2, 1) * 100;
-    const acesNorm = Math.min(playerData.aces / playerData.totalSets / 1.5, 1) * 100;
-    const totalErrorsNorm = Math.min((playerData.miscErrors + playerData.spikingErrors + playerData.settingErrors + playerData.servingErrors) / playerData.totalSets / 3, 1) * 100;
+    const spikeKillsNorm = Math.max(baseline, Math.min(playerData.spikeKills / playerData.totalSets / 5, 1) * 100);
+    const apeKillsNorm = Math.max(baseline, Math.min(playerData.apeKills / playerData.totalSets / 3, 1) * 100);
+    const spikeAttemptsNorm = Math.max(baseline, Math.min(playerData.spikeAttempts / playerData.totalSets / 15, 1) * 100);
+    const apeAttemptsNorm = Math.max(baseline, Math.min(playerData.apeAttempts / playerData.totalSets / 8, 1) * 100);
+    const blocksNorm = Math.max(baseline, Math.min(playerData.blocks / playerData.totalSets / 3, 1) * 100);
+    const digsNorm = Math.max(baseline, Math.min(playerData.digs / playerData.totalSets / 4, 1) * 100);
+    const blockFollowsNorm = Math.max(baseline, Math.min(playerData.blockFollows / playerData.totalSets / 2, 1) * 100);
+    const assistsNorm = Math.max(baseline, Math.min(playerData.assists / playerData.totalSets / 2, 1) * 100);
+    const acesNorm = Math.max(baseline, Math.min(playerData.aces / playerData.totalSets / 1.5, 1) * 100);
+    const totalErrorsNorm = Math.max(baseline, Math.min((playerData.miscErrors + playerData.spikingErrors + playerData.settingErrors + playerData.servingErrors) / playerData.totalSets / 3, 1) * 100);
     
     return {
       spikeKills: spikeKillsNorm,
@@ -360,19 +334,8 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
           borderWidth: 2,
         },
         ...historicalSeasons.map((season, index) => {
-          // Normalize historical season relative to current player stats
-          const normalizedSeason = normalizeStats(season, {
-            spikeKills: playerStats.spikeKills / playerStats.totalSets,
-            apeKills: playerStats.apeKills / playerStats.totalSets,
-            spikeAttempts: playerStats.spikeAttempts / playerStats.totalSets,
-            apeAttempts: playerStats.apeAttempts / playerStats.totalSets,
-            blocks: playerStats.blocks / playerStats.totalSets,
-            assists: playerStats.assists / playerStats.totalSets,
-            aces: playerStats.aces / playerStats.totalSets,
-            digs: playerStats.digs / playerStats.totalSets,
-            blockFollows: playerStats.blockFollows / playerStats.totalSets,
-            totalErrors: (playerStats.miscErrors + playerStats.spikingErrors + playerStats.settingErrors + playerStats.servingErrors) / playerStats.totalSets,
-          });
+          // Normalize historical season using the same absolute thresholds
+          const normalizedSeason = normalizeStats(season);
           
           return {
             label: `Season ${season.seasonNumber}`,
@@ -464,7 +427,7 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
       scales: {
         r: {
           beginAtZero: true,
-          max: 100,
+          // Let Chart.js auto-scale based on the data
           ticks: { stepSize: 20 }
         }
       }
