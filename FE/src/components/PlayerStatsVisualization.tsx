@@ -39,6 +39,42 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
   allPlayers,
   selectedSeason
 }) => {
+  // Helper function to normalize stats within their categories
+  const normalizeStats = (playerData: any) => {
+    // Group 1: Kills (0-10 range typical)
+    const spikeKillsNorm = Math.min(playerData.spikeKills / playerData.totalSets / 5, 1) * 100;
+    const apeKillsNorm = Math.min(playerData.apeKills / playerData.totalSets / 3, 1) * 100;
+    
+    // Group 2: Attempts (0-20 range typical)
+    const spikeAttemptsNorm = Math.min(playerData.spikeAttempts / playerData.totalSets / 15, 1) * 100;
+    const apeAttemptsNorm = Math.min(playerData.apeAttempts / playerData.totalSets / 8, 1) * 100;
+    
+    // Group 3: Defensive stats (0-5 range typical)
+    const blocksNorm = Math.min(playerData.blocks / playerData.totalSets / 3, 1) * 100;
+    const digsNorm = Math.min(playerData.digs / playerData.totalSets / 4, 1) * 100;
+    const blockFollowsNorm = Math.min(playerData.blockFollows / playerData.totalSets / 2, 1) * 100;
+    
+    // Group 4: Offensive support (0-3 range typical)
+    const assistsNorm = Math.min(playerData.assists / playerData.totalSets / 2, 1) * 100;
+    const acesNorm = Math.min(playerData.aces / playerData.totalSets / 1.5, 1) * 100;
+    
+    // Group 5: Errors (0-4 range typical)
+    const totalErrorsNorm = Math.min((playerData.miscErrors + playerData.spikingErrors + playerData.settingErrors + playerData.servingErrors) / playerData.totalSets / 3, 1) * 100;
+    
+    return {
+      spikeKills: spikeKillsNorm,
+      apeKills: apeKillsNorm,
+      spikeAttempts: spikeAttemptsNorm,
+      apeAttempts: apeAttemptsNorm,
+      blocks: blocksNorm,
+      assists: assistsNorm,
+      aces: acesNorm,
+      digs: digsNorm,
+      blockFollows: blockFollowsNorm,
+      totalErrors: totalErrorsNorm
+    };
+  };
+
   // Helper to aggregate stats
   const getPlayerStats = (player: Player) => {
     if (!player.stats || player.stats.length === 0) return null;
@@ -227,41 +263,6 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
     'Total Errors'
   ];
 
-  // Helper function to normalize stats within their categories
-  const normalizeStats = (playerData: any) => {
-    // Group 1: Kills (0-10 range typical)
-    const spikeKillsNorm = Math.min(playerData.spikeKills / playerData.totalSets / 5, 1) * 100;
-    const apeKillsNorm = Math.min(playerData.apeKills / playerData.totalSets / 3, 1) * 100;
-    
-    // Group 2: Attempts (0-20 range typical)
-    const spikeAttemptsNorm = Math.min(playerData.spikeAttempts / playerData.totalSets / 15, 1) * 100;
-    const apeAttemptsNorm = Math.min(playerData.apeAttempts / playerData.totalSets / 8, 1) * 100;
-    
-    // Group 3: Defensive stats (0-5 range typical)
-    const blocksNorm = Math.min(playerData.blocks / playerData.totalSets / 3, 1) * 100;
-    const digsNorm = Math.min(playerData.digs / playerData.totalSets / 4, 1) * 100;
-    const blockFollowsNorm = Math.min(playerData.blockFollows / playerData.totalSets / 2, 1) * 100;
-    
-    // Group 4: Offensive support (0-3 range typical)
-    const assistsNorm = Math.min(playerData.assists / playerData.totalSets / 2, 1) * 100;
-    const acesNorm = Math.min(playerData.aces / playerData.totalSets / 1.5, 1) * 100;
-    
-    // Group 5: Errors (0-4 range typical)
-    const totalErrorsNorm = Math.min((playerData.miscErrors + playerData.spikingErrors + playerData.settingErrors + playerData.servingErrors) / playerData.totalSets / 3, 1) * 100;
-    
-    return {
-      spikeKills: spikeKillsNorm,
-      apeKills: apeKillsNorm,
-      spikeAttempts: spikeAttemptsNorm,
-      apeAttempts: apeAttemptsNorm,
-      blocks: blocksNorm,
-      assists: assistsNorm,
-      aces: acesNorm,
-      digs: digsNorm,
-      blockFollows: blockFollowsNorm,
-      totalErrors: totalErrorsNorm
-    };
-  };
   const playerNormalized = normalizeStats(playerStats);
   const leagueNormalized = normalizeStats(leagueAverages);
   
