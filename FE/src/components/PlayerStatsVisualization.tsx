@@ -469,40 +469,14 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
           position: 'top' as const,
           labels: {
             usePointStyle: true,
-            pointStyle: 'circle',
-            padding: 15,
-            boxWidth: 12,
-            boxHeight: 12,
-            generateLabels: function(chart: any) {
-              const datasets = chart.data.datasets;
-              return datasets.map((dataset: any, index: number) => ({
-                text: dataset.label || '',
-                fillStyle: dataset.backgroundColor,
-                strokeStyle: dataset.borderColor,
-                lineWidth: dataset.borderWidth,
-                pointStyle: 'circle',
-                hidden: false,
-                index: index
-              }));
-            }
-          },
-          onClick: function(legendItem: any, legend: any) {
-            // Toggle dataset visibility
-            const index = legendItem.index;
-            const ci = legend.chart;
-            const meta = ci.getDatasetMeta(index);
-            meta.hidden = !meta.hidden;
-            ci.update();
+            pointStyle: 'circle'
           }
         },
         title: {
           display: true,
           text: `${player.name} - Historical Seasons Comparison (Per Set)`
         },
-        subtitle: {
-          display: true,
-          text: 'Click legend items to show/hide seasons'
-        },
+
         tooltip: {
           callbacks: {
             label: function(context: any) {
