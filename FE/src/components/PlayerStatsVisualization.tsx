@@ -176,13 +176,24 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
           (sum('miscErrors') + sum('spikingErrors') + sum('settingErrors') + sum('servingErrors'))) / totalSets : 0,
       };
       
-      const normalized = normalizeStats(seasonData, leagueAverages);
+      const normalized = normalizeStats(seasonData);
       
       return {
         seasonNumber,
         ...normalized,
         PRF: seasonData.PRF,
         plusMinus: seasonData.plusMinus,
+        // Store original per-set values for tooltips
+        originalSpikeKills: seasonData.spikeKills,
+        originalApeKills: seasonData.apeKills,
+        originalSpikeAttempts: seasonData.spikeAttempts,
+        originalApeAttempts: seasonData.apeAttempts,
+        originalBlocks: seasonData.blocks,
+        originalAssists: seasonData.assists,
+        originalAces: seasonData.aces,
+        originalDigs: seasonData.digs,
+        originalBlockFollows: seasonData.blockFollows,
+        originalTotalErrors: seasonData.totalErrors,
       };
     });
     
@@ -217,7 +228,7 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
   ];
 
   // Helper function to normalize stats within their categories
-  const normalizeStats = (playerData: any, leagueData: any) => {
+  const normalizeStats = (playerData: any) => {
     // Group 1: Kills (0-10 range typical)
     const spikeKillsNorm = Math.min(playerData.spikeKills / playerData.totalSets / 5, 1) * 100;
     const apeKillsNorm = Math.min(playerData.apeKills / playerData.totalSets / 3, 1) * 100;
@@ -251,8 +262,8 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
       totalErrors: totalErrorsNorm
     };
   };
-  const playerNormalized = normalizeStats(playerStats, leagueAverages);
-  const leagueNormalized = normalizeStats(leagueAverages, leagueAverages);
+  const playerNormalized = normalizeStats(playerStats);
+  const leagueNormalized = normalizeStats(leagueAverages);
   
   const radarData = {
     labels: radarLabels,
@@ -346,7 +357,7 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
     };
     
     rightChartData = historicalData;
-    rightChartOptions = {
+        rightChartOptions = {
       responsive: true,
       plugins: {
         legend: { 
@@ -359,15 +370,64 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
         title: {
           display: true,
           text: `${player.name} - Historical Seasons Comparison (Per Set)`
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context: any) {
+              const label = context.label || '';
+              const datasetIndex = context.datasetIndex;
+              const dataIndex = context.dataIndex;
+              
+              // Get the actual per-set values for the current dataset
+              let actualValue = 0;
+              if (datasetIndex === 0) {
+                // Current (All Seasons) data
+                const actualValues = [
+                  playerStats.spikeKills / playerStats.totalSets,
+                  playerStats.apeKills / playerStats.totalSets,
+                  playerStats.spikeAttempts / playerStats.totalSets,
+                  playerStats.apeAttempts / playerStats.totalSets,
+                  playerStats.blocks / playerStats.totalSets,
+                  playerStats.assists / playerStats.totalSets,
+                  playerStats.aces / playerStats.totalSets,
+                  playerStats.digs / playerStats.totalSets,
+                  playerStats.blockFollows / playerStats.totalSets,
+                  (playerStats.miscErrors + playerStats.spikingErrors + playerStats.settingErrors + playerStats.servingErrors) / playerStats.totalSets,
+                ];
+                actualValue = actualValues[dataIndex];
+              } else {
+                // Historical season data
+                const seasonIndex = datasetIndex - 1;
+                const season = historicalSeasons[seasonIndex];
+                if (season) {
+                  const actualValues = [
+                    season.originalSpikeKills,
+                    season.originalApeKills,
+                    season.originalSpikeAttempts,
+                    season.originalApeAttempts,
+                    season.originalBlocks,
+                    season.originalAssists,
+                    season.originalAces,
+                    season.originalDigs,
+                    season.originalBlockFollows,
+                    season.originalTotalErrors,
+                  ];
+                  actualValue = actualValues[dataIndex];
+                }
+              }
+              
+              return `${context.dataset.label}: ${label} (${actualValue.toFixed(2)} per set)`;
+            }
+          }
         }
       },
-          scales: {
-      r: {
-        beginAtZero: true,
-        max: 100,
-        ticks: { stepSize: 20 }
+      scales: {
+        r: {
+          beginAtZero: true,
+          max: 100,
+          ticks: { stepSize: 20 }
+        }
       }
-    }
     };
     rightChartComponent = Radar;
   } else {
@@ -408,7 +468,7 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
     rightChartComponent = Bar;
   }
 
-  const radarOptions = {
+    const radarOptions = {
     responsive: true,
     plugins: {
       legend: { 
@@ -421,15 +481,60 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
       title: {
         display: true,
         text: `${player.name} vs League Average (Per Set)`
-      }
-    },
-          scales: {
-        r: {
-          beginAtZero: true,
-          max: 100,
-          ticks: { stepSize: 20 }
+      },
+      tooltip: {
+        callbacks: {
+          label: function(context: any) {
+            const label = context.label || '';
+            const datasetIndex = context.datasetIndex;
+            const dataIndex = context.dataIndex;
+            
+            // Get the actual per-set values
+            let actualValue = 0;
+            if (datasetIndex === 0) {
+              // Player data
+              const actualValues = [
+                playerStats.spikeKills / playerStats.totalSets,
+                playerStats.apeKills / playerStats.totalSets,
+                playerStats.spikeAttempts / playerStats.totalSets,
+                playerStats.apeAttempts / playerStats.totalSets,
+                playerStats.blocks / playerStats.totalSets,
+                playerStats.assists / playerStats.totalSets,
+                playerStats.aces / playerStats.totalSets,
+                playerStats.digs / playerStats.totalSets,
+                playerStats.blockFollows / playerStats.totalSets,
+                (playerStats.miscErrors + playerStats.spikingErrors + playerStats.settingErrors + playerStats.servingErrors) / playerStats.totalSets,
+              ];
+              actualValue = actualValues[dataIndex];
+            } else {
+              // League average data
+              const actualValues = [
+                leagueAverages.spikeKills / leagueAverages.totalSets,
+                leagueAverages.apeKills / leagueAverages.totalSets,
+                leagueAverages.spikeAttempts / leagueAverages.totalSets,
+                leagueAverages.apeAttempts / leagueAverages.totalSets,
+                leagueAverages.blocks / leagueAverages.totalSets,
+                leagueAverages.assists / leagueAverages.totalSets,
+                leagueAverages.aces / leagueAverages.totalSets,
+                leagueAverages.digs / leagueAverages.totalSets,
+                leagueAverages.blockFollows / leagueAverages.totalSets,
+                (leagueAverages.miscErrors + leagueAverages.spikingErrors + leagueAverages.settingErrors + leagueAverages.servingErrors) / leagueAverages.totalSets,
+              ];
+              actualValue = actualValues[dataIndex];
+            }
+            
+            return `${context.dataset.label}: ${label} (${actualValue.toFixed(2)} per set)`;
+          }
         }
       }
+    },
+    scales: {
+      r: {
+        beginAtZero: true,
+        max: 100,
+        ticks: { stepSize: 20 }
+      }
+    }
   };
 
   return (
