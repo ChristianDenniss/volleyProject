@@ -120,9 +120,64 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
       .filter(item => item.stats !== null);
   };
 
+  // Get player's historical seasons data
+  const getPlayerHistoricalSeasons = () => {
+    if (!player.stats || player.stats.length === 0) return [];
+    
+    // Group stats by season
+    const seasonStats = new Map<number, any[]>();
+    player.stats.forEach(statRecord => {
+      const seasonNumber = statRecord.game?.season?.seasonNumber;
+      if (seasonNumber) {
+        if (!seasonStats.has(seasonNumber)) {
+          seasonStats.set(seasonNumber, []);
+        }
+        seasonStats.get(seasonNumber)!.push(statRecord);
+      }
+    });
+    
+    // Calculate per-set stats for each season
+    const historicalSeasons = Array.from(seasonStats.entries()).map(([seasonNumber, stats]) => {
+      const sum = (key: keyof Stats) => stats.reduce((total, statRecord) => {
+        const value = statRecord[key];
+        return total + (typeof value === 'number' ? value : 0);
+      }, 0);
+      
+      const spikeKills = sum('spikeKills');
+      const apeKills = sum('apeKills');
+      const spikeAttempts = sum('spikeAttempts');
+      const apeAttempts = sum('apeAttempts');
+      const totalSets = stats.reduce((total, statRecord) => {
+        const game = statRecord.game;
+        if (game && typeof game.team1Score === 'number' && typeof game.team2Score === 'number') {
+          return total + game.team1Score + game.team2Score;
+        }
+        return total;
+      }, 0);
+      
+      return {
+        seasonNumber,
+        spikeKills: totalSets > 0 ? spikeKills / totalSets : 0,
+        apeKills: totalSets > 0 ? apeKills / totalSets : 0,
+        spikeAttempts: totalSets > 0 ? spikeAttempts / totalSets : 0,
+        apeAttempts: totalSets > 0 ? apeAttempts / totalSets : 0,
+        blocks: totalSets > 0 ? sum('blocks') / totalSets : 0,
+        assists: totalSets > 0 ? sum('assists') / totalSets : 0,
+        aces: totalSets > 0 ? sum('aces') / totalSets : 0,
+        digs: totalSets > 0 ? sum('digs') / totalSets : 0,
+        PRF: totalSets > 0 ? (apeKills + spikeKills + sum('aces') + sum('assists')) / totalSets : 0,
+        plusMinus: totalSets > 0 ? ((apeKills + spikeKills + sum('aces') + sum('assists')) - 
+          (sum('miscErrors') + sum('spikingErrors') + sum('settingErrors') + sum('servingErrors'))) / totalSets : 0,
+      };
+    });
+    
+    return historicalSeasons.sort((a, b) => a.seasonNumber - b.seasonNumber);
+  };
+
   const playerStats = getPlayerStats(player);
   const leagueAverages = getLeagueAverages();
   const teammateStats = getTeammateStats();
+  const historicalSeasons = getPlayerHistoricalSeasons();
 
   if (!playerStats || !leagueAverages) {
     return (
@@ -187,25 +242,110 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
     ]
   };
 
-  // Bar chart: player vs teammates (PRF)
-  const teammateData = {
-    labels: [player.name, ...teammateStats.map(t => t.player.name)],
-    datasets: [
-      {
-        label: 'PRF',
-        data: [
-          playerStats.PRF,
-          ...teammateStats.map(t => {
-            const s = t.stats!;
-            return s.PRF;
-          })
-        ],
-        backgroundColor: 'rgba(45, 60, 80, 0.2)',
-        borderColor: 'rgba(45, 60, 80, 1)',
-        borderWidth: 1
+  // Right chart: either teammate comparison or historical seasons
+  let rightChartData: any;
+  let rightChartOptions: any;
+  let rightChartComponent: any;
+
+  if (selectedSeason === null) {
+    // All seasons view: Show historical seasons radar chart
+    const historicalData = {
+      labels: radarLabels,
+      datasets: [
+        {
+          label: 'Current (All Seasons)',
+          data: [
+            playerStats.spikeKills / playerStats.totalSets,
+            playerStats.apeKills / playerStats.totalSets,
+            playerStats.spikeAttempts / playerStats.totalSets,
+            playerStats.apeAttempts / playerStats.totalSets,
+            playerStats.blocks / playerStats.totalSets,
+            playerStats.assists / playerStats.totalSets,
+            playerStats.aces / playerStats.totalSets,
+            playerStats.digs / playerStats.totalSets,
+            playerStats.PRF / playerStats.totalSets,
+            playerStats.plusMinus / playerStats.totalSets,
+          ],
+          backgroundColor: 'rgba(45, 60, 80, 0.2)',
+          borderColor: 'rgba(45, 60, 80, 1)',
+          borderWidth: 2,
+        },
+        ...historicalSeasons.map((season, index) => ({
+          label: `Season ${season.seasonNumber}`,
+          data: [
+            season.spikeKills,
+            season.apeKills,
+            season.spikeAttempts,
+            season.apeAttempts,
+            season.blocks,
+            season.assists,
+            season.aces,
+            season.digs,
+            season.PRF,
+            season.plusMinus,
+          ],
+          backgroundColor: `hsla(${200 + index * 30}, 70%, 60%, 0.2)`,
+          borderColor: `hsla(${200 + index * 30}, 70%, 60%, 1)`,
+          borderWidth: 2,
+        }))
+      ]
+    };
+    
+    rightChartData = historicalData;
+    rightChartOptions = {
+      responsive: true,
+      plugins: {
+        legend: { position: 'top' as const },
+        title: {
+          display: true,
+          text: `${player.name} - Historical Seasons Comparison (Per Set)`
+        }
+      },
+      scales: {
+        r: {
+          beginAtZero: true,
+          ticks: { stepSize: 1 }
+        }
       }
-    ]
-  };
+    };
+    rightChartComponent = Radar;
+  } else {
+    // Specific season view: Show teammate comparison bar chart
+    const teammateData = {
+      labels: [player.name, ...teammateStats.map(t => t.player.name)],
+      datasets: [
+        {
+          label: 'PRF',
+          data: [
+            playerStats.PRF,
+            ...teammateStats.map(t => {
+              const s = t.stats!;
+              return s.PRF;
+            })
+          ],
+          backgroundColor: 'rgba(45, 60, 80, 0.2)',
+          borderColor: 'rgba(45, 60, 80, 1)',
+          borderWidth: 1
+        }
+      ]
+    };
+    
+    rightChartData = teammateData;
+    rightChartOptions = {
+      responsive: true,
+      plugins: {
+        legend: { position: 'top' as const },
+        title: {
+          display: true,
+          text: `${player.name} vs Teammates - PRF (Total)`
+        }
+      },
+      scales: {
+        y: { beginAtZero: true }
+      }
+    };
+    rightChartComponent = Bar;
+  }
 
   const radarOptions = {
     responsive: true,
@@ -224,20 +364,6 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
     }
   };
 
-  const barOptions = {
-    responsive: true,
-    plugins: {
-      legend: { position: 'top' as const },
-      title: {
-        display: true,
-        text: `${player.name} vs Teammates - PRF (Total)`
-      }
-    },
-    scales: {
-      y: { beginAtZero: true }
-    }
-  };
-
   return (
     <div className="player-visualization">
       <div className="visualization-grid">
@@ -245,7 +371,7 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
           <Radar data={radarData} options={radarOptions} />
         </div>
         <div className="visualization-chart">
-          <Bar data={teammateData} options={barOptions} />
+          {React.createElement(rightChartComponent, { data: rightChartData, options: rightChartOptions })}
         </div>
       </div>
     </div>
