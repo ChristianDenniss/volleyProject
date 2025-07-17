@@ -564,7 +564,7 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
         legend: { position: 'top' as const },
         title: {
           display: true,
-          text: `${player.name} vs Teammates - PRF (Total)`
+          text: `${player.name} vs Teammates - Total PRF (Points Responsible For)`
         }
       },
       scales: {
