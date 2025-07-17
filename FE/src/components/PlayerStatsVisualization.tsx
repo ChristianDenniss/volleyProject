@@ -160,8 +160,7 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
         return total;
       }, 0);
       
-      return {
-        seasonNumber,
+      const seasonData = {
         spikeKills: totalSets > 0 ? spikeKills / totalSets : 0,
         apeKills: totalSets > 0 ? apeKills / totalSets : 0,
         spikeAttempts: totalSets > 0 ? spikeAttempts / totalSets : 0,
@@ -175,6 +174,15 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
         PRF: totalSets > 0 ? (apeKills + spikeKills + sum('aces') + sum('assists')) / totalSets : 0,
         plusMinus: totalSets > 0 ? ((apeKills + spikeKills + sum('aces') + sum('assists')) - 
           (sum('miscErrors') + sum('spikingErrors') + sum('settingErrors') + sum('servingErrors'))) / totalSets : 0,
+      };
+      
+      const normalized = normalizeStats(seasonData, leagueAverages);
+      
+      return {
+        seasonNumber,
+        ...normalized,
+        PRF: seasonData.PRF,
+        plusMinus: seasonData.plusMinus,
       };
     });
     
@@ -207,22 +215,61 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
     'Block Follows',
     'Total Errors'
   ];
+
+  // Helper function to normalize stats within their categories
+  const normalizeStats = (playerData: any, leagueData: any) => {
+    // Group 1: Kills (0-10 range typical)
+    const spikeKillsNorm = Math.min(playerData.spikeKills / playerData.totalSets / 5, 1) * 100;
+    const apeKillsNorm = Math.min(playerData.apeKills / playerData.totalSets / 3, 1) * 100;
+    
+    // Group 2: Attempts (0-20 range typical)
+    const spikeAttemptsNorm = Math.min(playerData.spikeAttempts / playerData.totalSets / 15, 1) * 100;
+    const apeAttemptsNorm = Math.min(playerData.apeAttempts / playerData.totalSets / 8, 1) * 100;
+    
+    // Group 3: Defensive stats (0-5 range typical)
+    const blocksNorm = Math.min(playerData.blocks / playerData.totalSets / 3, 1) * 100;
+    const digsNorm = Math.min(playerData.digs / playerData.totalSets / 4, 1) * 100;
+    const blockFollowsNorm = Math.min(playerData.blockFollows / playerData.totalSets / 2, 1) * 100;
+    
+    // Group 4: Offensive support (0-3 range typical)
+    const assistsNorm = Math.min(playerData.assists / playerData.totalSets / 2, 1) * 100;
+    const acesNorm = Math.min(playerData.aces / playerData.totalSets / 1.5, 1) * 100;
+    
+    // Group 5: Errors (0-4 range typical)
+    const totalErrorsNorm = Math.min((playerData.miscErrors + playerData.spikingErrors + playerData.settingErrors + playerData.servingErrors) / playerData.totalSets / 3, 1) * 100;
+    
+    return {
+      spikeKills: spikeKillsNorm,
+      apeKills: apeKillsNorm,
+      spikeAttempts: spikeAttemptsNorm,
+      apeAttempts: apeAttemptsNorm,
+      blocks: blocksNorm,
+      assists: assistsNorm,
+      aces: acesNorm,
+      digs: digsNorm,
+      blockFollows: blockFollowsNorm,
+      totalErrors: totalErrorsNorm
+    };
+  };
+  const playerNormalized = normalizeStats(playerStats, leagueAverages);
+  const leagueNormalized = normalizeStats(leagueAverages, leagueAverages);
+  
   const radarData = {
     labels: radarLabels,
     datasets: [
       {
         label: player.name,
         data: [
-          playerStats.spikeKills / playerStats.totalSets,
-          playerStats.apeKills / playerStats.totalSets,
-          playerStats.spikeAttempts / playerStats.totalSets,
-          playerStats.apeAttempts / playerStats.totalSets,
-          playerStats.blocks / playerStats.totalSets,
-          playerStats.assists / playerStats.totalSets,
-          playerStats.aces / playerStats.totalSets,
-          playerStats.digs / playerStats.totalSets,
-          playerStats.blockFollows / playerStats.totalSets,
-          (playerStats.miscErrors + playerStats.spikingErrors + playerStats.settingErrors + playerStats.servingErrors) / playerStats.totalSets,
+          playerNormalized.spikeKills,
+          playerNormalized.apeKills,
+          playerNormalized.spikeAttempts,
+          playerNormalized.apeAttempts,
+          playerNormalized.blocks,
+          playerNormalized.assists,
+          playerNormalized.aces,
+          playerNormalized.digs,
+          playerNormalized.blockFollows,
+          playerNormalized.totalErrors,
         ],
         backgroundColor: 'rgba(45, 60, 80, 0.2)',
         borderColor: 'rgba(45, 60, 80, 1)',
@@ -231,16 +278,16 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
       {
         label: 'League Average',
         data: [
-          leagueAverages.spikeKills / leagueAverages.totalSets,
-          leagueAverages.apeKills / leagueAverages.totalSets,
-          leagueAverages.spikeAttempts / leagueAverages.totalSets,
-          leagueAverages.apeAttempts / leagueAverages.totalSets,
-          leagueAverages.blocks / leagueAverages.totalSets,
-          leagueAverages.assists / leagueAverages.totalSets,
-          leagueAverages.aces / leagueAverages.totalSets,
-          leagueAverages.digs / leagueAverages.totalSets,
-          leagueAverages.blockFollows / leagueAverages.totalSets,
-          (leagueAverages.miscErrors + leagueAverages.spikingErrors + leagueAverages.settingErrors + leagueAverages.servingErrors) / leagueAverages.totalSets,
+          leagueNormalized.spikeKills,
+          leagueNormalized.apeKills,
+          leagueNormalized.spikeAttempts,
+          leagueNormalized.apeAttempts,
+          leagueNormalized.blocks,
+          leagueNormalized.assists,
+          leagueNormalized.aces,
+          leagueNormalized.digs,
+          leagueNormalized.blockFollows,
+          leagueNormalized.totalErrors,
         ],
         backgroundColor: 'rgba(255, 99, 132, 0.2)',
         borderColor: 'rgba(255, 99, 132, 1)',
@@ -262,16 +309,16 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
         {
           label: 'Current (All Seasons)',
           data: [
-            playerStats.spikeKills / playerStats.totalSets,
-            playerStats.apeKills / playerStats.totalSets,
-            playerStats.spikeAttempts / playerStats.totalSets,
-            playerStats.apeAttempts / playerStats.totalSets,
-            playerStats.blocks / playerStats.totalSets,
-            playerStats.assists / playerStats.totalSets,
-            playerStats.aces / playerStats.totalSets,
-            playerStats.digs / playerStats.totalSets,
-            playerStats.blockFollows / playerStats.totalSets,
-            (playerStats.miscErrors + playerStats.spikingErrors + playerStats.settingErrors + playerStats.servingErrors) / playerStats.totalSets,
+            playerNormalized.spikeKills,
+            playerNormalized.apeKills,
+            playerNormalized.spikeAttempts,
+            playerNormalized.apeAttempts,
+            playerNormalized.blocks,
+            playerNormalized.assists,
+            playerNormalized.aces,
+            playerNormalized.digs,
+            playerNormalized.blockFollows,
+            playerNormalized.totalErrors,
           ],
           backgroundColor: 'rgba(45, 60, 80, 0.2)',
           borderColor: 'rgba(45, 60, 80, 1)',
@@ -314,12 +361,13 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
           text: `${player.name} - Historical Seasons Comparison (Per Set)`
         }
       },
-      scales: {
-        r: {
-          beginAtZero: true,
-          ticks: { stepSize: 2 }
-        }
+          scales: {
+      r: {
+        beginAtZero: true,
+        max: 100,
+        ticks: { stepSize: 20 }
       }
+    }
     };
     rightChartComponent = Radar;
   } else {
@@ -375,12 +423,13 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
         text: `${player.name} vs League Average (Per Set)`
       }
     },
-    scales: {
-      r: {
-        beginAtZero: true,
-        ticks: { stepSize: 2 }
+          scales: {
+        r: {
+          beginAtZero: true,
+          max: 100,
+          ticks: { stepSize: 20 }
+        }
       }
-    }
   };
 
   return (
