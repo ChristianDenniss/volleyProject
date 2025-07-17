@@ -210,6 +210,11 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
         PRF: totalSets > 0 ? (apeKills + spikeKills + sum('aces') + sum('assists')) / totalSets : 0,
         plusMinus: totalSets > 0 ? ((apeKills + spikeKills + sum('aces') + sum('assists')) - 
           (sum('miscErrors') + sum('spikingErrors') + sum('settingErrors') + sum('servingErrors'))) / totalSets : 0,
+        totalSets: totalSets, // Add this for normalization
+        miscErrors: totalSets > 0 ? sum('miscErrors') / totalSets : 0,
+        spikingErrors: totalSets > 0 ? sum('spikingErrors') / totalSets : 0,
+        settingErrors: totalSets > 0 ? sum('settingErrors') / totalSets : 0,
+        servingErrors: totalSets > 0 ? sum('servingErrors') / totalSets : 0,
       };
       
       const normalized = normalizeStats(seasonData);
