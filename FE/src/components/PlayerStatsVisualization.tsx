@@ -65,6 +65,11 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
       assists: sum('assists'),
       aces: sum('aces'),
       digs: sum('digs'),
+      blockFollows: sum('blockFollows'),
+      miscErrors: sum('miscErrors'),
+      spikingErrors: sum('spikingErrors'),
+      settingErrors: sum('settingErrors'),
+      servingErrors: sum('servingErrors'),
       PRF: apeKills + spikeKills + sum('aces') + sum('assists'),
       plusMinus: (apeKills + spikeKills + sum('aces') + sum('assists')) -
         (sum('miscErrors') + sum('spikingErrors') + sum('settingErrors') + sum('servingErrors')),
@@ -93,7 +98,7 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
     });
     if (playersWithStats.length === 0) return null;
     const allStats = playersWithStats.map(p => getPlayerStats(p)).filter(Boolean) as ReturnType<typeof getPlayerStats>[];
-    const keys = ['spikeKills', 'apeKills', 'blocks', 'assists', 'aces', 'digs', 'PRF', 'plusMinus', 'gamesPlayed', 'totalSets', 'totalKills', 'totalSpikePct'] as const;
+    const keys = ['spikeKills', 'apeKills', 'blocks', 'assists', 'aces', 'digs', 'blockFollows', 'miscErrors', 'spikingErrors', 'settingErrors', 'servingErrors', 'PRF', 'plusMinus', 'gamesPlayed', 'totalSets', 'totalKills', 'totalSpikePct'] as const;
     const averages: any = {};
     keys.forEach(key => {
       averages[key] = allStats.reduce((sum, s) => sum + (s ? s[key] : 0), 0) / allStats.length;
@@ -165,6 +170,8 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
         assists: totalSets > 0 ? sum('assists') / totalSets : 0,
         aces: totalSets > 0 ? sum('aces') / totalSets : 0,
         digs: totalSets > 0 ? sum('digs') / totalSets : 0,
+        blockFollows: totalSets > 0 ? sum('blockFollows') / totalSets : 0,
+        totalErrors: totalSets > 0 ? (sum('miscErrors') + sum('spikingErrors') + sum('settingErrors') + sum('servingErrors')) / totalSets : 0,
         PRF: totalSets > 0 ? (apeKills + spikeKills + sum('aces') + sum('assists')) / totalSets : 0,
         plusMinus: totalSets > 0 ? ((apeKills + spikeKills + sum('aces') + sum('assists')) - 
           (sum('miscErrors') + sum('spikingErrors') + sum('settingErrors') + sum('servingErrors'))) / totalSets : 0,
@@ -197,8 +204,8 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
     'Assists',
     'Aces',
     'Digs',
-    'PRF',
-    'Plus/Minus'
+    'Block Follows',
+    'Total Errors'
   ];
   const radarData = {
     labels: radarLabels,
@@ -214,8 +221,8 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
           playerStats.assists / playerStats.totalSets,
           playerStats.aces / playerStats.totalSets,
           playerStats.digs / playerStats.totalSets,
-          playerStats.PRF / playerStats.totalSets,
-          playerStats.plusMinus / playerStats.totalSets,
+          playerStats.blockFollows / playerStats.totalSets,
+          (playerStats.miscErrors + playerStats.spikingErrors + playerStats.settingErrors + playerStats.servingErrors) / playerStats.totalSets,
         ],
         backgroundColor: 'rgba(45, 60, 80, 0.2)',
         borderColor: 'rgba(45, 60, 80, 1)',
@@ -232,8 +239,8 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
           leagueAverages.assists / leagueAverages.totalSets,
           leagueAverages.aces / leagueAverages.totalSets,
           leagueAverages.digs / leagueAverages.totalSets,
-          leagueAverages.PRF / leagueAverages.totalSets,
-          leagueAverages.plusMinus / leagueAverages.totalSets,
+          leagueAverages.blockFollows / leagueAverages.totalSets,
+          (leagueAverages.miscErrors + leagueAverages.spikingErrors + leagueAverages.settingErrors + leagueAverages.servingErrors) / leagueAverages.totalSets,
         ],
         backgroundColor: 'rgba(255, 99, 132, 0.2)',
         borderColor: 'rgba(255, 99, 132, 1)',
@@ -263,8 +270,8 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
             playerStats.assists / playerStats.totalSets,
             playerStats.aces / playerStats.totalSets,
             playerStats.digs / playerStats.totalSets,
-            playerStats.PRF / playerStats.totalSets,
-            playerStats.plusMinus / playerStats.totalSets,
+            playerStats.blockFollows / playerStats.totalSets,
+            (playerStats.miscErrors + playerStats.spikingErrors + playerStats.settingErrors + playerStats.servingErrors) / playerStats.totalSets,
           ],
           backgroundColor: 'rgba(45, 60, 80, 0.2)',
           borderColor: 'rgba(45, 60, 80, 1)',
@@ -281,8 +288,8 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
             season.assists,
             season.aces,
             season.digs,
-            season.PRF,
-            season.plusMinus,
+            season.blockFollows,
+            season.totalErrors,
           ],
           backgroundColor: `hsla(${200 + index * 30}, 70%, 60%, 0.2)`,
           borderColor: `hsla(${200 + index * 30}, 70%, 60%, 1)`,
@@ -304,7 +311,7 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
       scales: {
         r: {
           beginAtZero: true,
-          ticks: { stepSize: 1 }
+          ticks: { stepSize: 2 }
         }
       }
     };
@@ -359,7 +366,7 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
     scales: {
       r: {
         beginAtZero: true,
-        ticks: { stepSize: 1 }
+        ticks: { stepSize: 2 }
       }
     }
   };
