@@ -302,7 +302,13 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
     rightChartOptions = {
       responsive: true,
       plugins: {
-        legend: { position: 'top' as const },
+        legend: { 
+          position: 'top' as const,
+          labels: {
+            usePointStyle: true,
+            pointStyle: 'circle'
+          }
+        },
         title: {
           display: true,
           text: `${player.name} - Historical Seasons Comparison (Per Set)`
@@ -357,7 +363,13 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
   const radarOptions = {
     responsive: true,
     plugins: {
-      legend: { position: 'top' as const },
+      legend: { 
+        position: 'top' as const,
+        labels: {
+          usePointStyle: true,
+          pointStyle: 'circle'
+        }
+      },
       title: {
         display: true,
         text: `${player.name} vs League Average (Per Set)`
