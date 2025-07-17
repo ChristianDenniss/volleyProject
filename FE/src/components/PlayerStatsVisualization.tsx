@@ -28,20 +28,16 @@ ChartJS.register(
   Title
 );
 
-type StatType = 'total' | 'perGame' | 'perSet';
-
 interface PlayerStatsVisualizationProps {
   player: Player;
   allPlayers: Player[];
   selectedSeason: number | null;
-  statType: StatType;
 }
 
 const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
   player,
   allPlayers,
-  selectedSeason,
-  statType
+  selectedSeason
 }) => {
   // Helper to aggregate stats
   const getPlayerStats = (player: Player) => {
@@ -155,16 +151,16 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
       {
         label: player.name,
         data: [
-          statType === 'total' ? playerStats.spikeKills : statType === 'perGame' ? playerStats.spikeKills / playerStats.gamesPlayed : playerStats.spikeKills / playerStats.totalSets,
-          statType === 'total' ? playerStats.apeKills : statType === 'perGame' ? playerStats.apeKills / playerStats.gamesPlayed : playerStats.apeKills / playerStats.totalSets,
-          statType === 'total' ? playerStats.spikeAttempts : statType === 'perGame' ? playerStats.spikeAttempts / playerStats.gamesPlayed : playerStats.spikeAttempts / playerStats.totalSets,
-          statType === 'total' ? playerStats.apeAttempts : statType === 'perGame' ? playerStats.apeAttempts / playerStats.gamesPlayed : playerStats.apeAttempts / playerStats.totalSets,
-          statType === 'total' ? playerStats.blocks : statType === 'perGame' ? playerStats.blocks / playerStats.gamesPlayed : playerStats.blocks / playerStats.totalSets,
-          statType === 'total' ? playerStats.assists : statType === 'perGame' ? playerStats.assists / playerStats.gamesPlayed : playerStats.assists / playerStats.totalSets,
-          statType === 'total' ? playerStats.aces : statType === 'perGame' ? playerStats.aces / playerStats.gamesPlayed : playerStats.aces / playerStats.totalSets,
-          statType === 'total' ? playerStats.digs : statType === 'perGame' ? playerStats.digs / playerStats.gamesPlayed : playerStats.digs / playerStats.totalSets,
-          statType === 'total' ? playerStats.PRF : statType === 'perGame' ? playerStats.PRF / playerStats.gamesPlayed : playerStats.PRF / playerStats.totalSets,
-          statType === 'total' ? playerStats.plusMinus : statType === 'perGame' ? playerStats.plusMinus / playerStats.gamesPlayed : playerStats.plusMinus / playerStats.totalSets,
+          playerStats.spikeKills / playerStats.totalSets,
+          playerStats.apeKills / playerStats.totalSets,
+          playerStats.spikeAttempts / playerStats.totalSets,
+          playerStats.apeAttempts / playerStats.totalSets,
+          playerStats.blocks / playerStats.totalSets,
+          playerStats.assists / playerStats.totalSets,
+          playerStats.aces / playerStats.totalSets,
+          playerStats.digs / playerStats.totalSets,
+          playerStats.PRF / playerStats.totalSets,
+          playerStats.plusMinus / playerStats.totalSets,
         ],
         backgroundColor: 'rgba(45, 60, 80, 0.2)',
         borderColor: 'rgba(45, 60, 80, 1)',
@@ -173,16 +169,16 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
       {
         label: 'League Average',
         data: [
-          statType === 'total' ? leagueAverages.spikeKills : statType === 'perGame' ? leagueAverages.spikeKills / leagueAverages.gamesPlayed : leagueAverages.spikeKills / leagueAverages.totalSets,
-          statType === 'total' ? leagueAverages.apeKills : statType === 'perGame' ? leagueAverages.apeKills / leagueAverages.gamesPlayed : leagueAverages.apeKills / leagueAverages.totalSets,
-          statType === 'total' ? leagueAverages.spikeAttempts : statType === 'perGame' ? leagueAverages.spikeAttempts / leagueAverages.gamesPlayed : leagueAverages.spikeAttempts / leagueAverages.totalSets,
-          statType === 'total' ? leagueAverages.apeAttempts : statType === 'perGame' ? leagueAverages.apeAttempts / leagueAverages.gamesPlayed : leagueAverages.apeAttempts / leagueAverages.totalSets,
-          statType === 'total' ? leagueAverages.blocks : statType === 'perGame' ? leagueAverages.blocks / leagueAverages.gamesPlayed : leagueAverages.blocks / leagueAverages.totalSets,
-          statType === 'total' ? leagueAverages.assists : statType === 'perGame' ? leagueAverages.assists / leagueAverages.gamesPlayed : leagueAverages.assists / leagueAverages.totalSets,
-          statType === 'total' ? leagueAverages.aces : statType === 'perGame' ? leagueAverages.aces / leagueAverages.gamesPlayed : leagueAverages.aces / leagueAverages.totalSets,
-          statType === 'total' ? leagueAverages.digs : statType === 'perGame' ? leagueAverages.digs / leagueAverages.gamesPlayed : leagueAverages.digs / leagueAverages.totalSets,
-          statType === 'total' ? leagueAverages.PRF : statType === 'perGame' ? leagueAverages.PRF / leagueAverages.gamesPlayed : leagueAverages.PRF / leagueAverages.totalSets,
-          statType === 'total' ? leagueAverages.plusMinus : statType === 'perGame' ? leagueAverages.plusMinus / leagueAverages.gamesPlayed : leagueAverages.plusMinus / leagueAverages.totalSets,
+          leagueAverages.spikeKills / leagueAverages.totalSets,
+          leagueAverages.apeKills / leagueAverages.totalSets,
+          leagueAverages.spikeAttempts / leagueAverages.totalSets,
+          leagueAverages.apeAttempts / leagueAverages.totalSets,
+          leagueAverages.blocks / leagueAverages.totalSets,
+          leagueAverages.assists / leagueAverages.totalSets,
+          leagueAverages.aces / leagueAverages.totalSets,
+          leagueAverages.digs / leagueAverages.totalSets,
+          leagueAverages.PRF / leagueAverages.totalSets,
+          leagueAverages.plusMinus / leagueAverages.totalSets,
         ],
         backgroundColor: 'rgba(255, 99, 132, 0.2)',
         borderColor: 'rgba(255, 99, 132, 1)',
@@ -198,10 +194,10 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
       {
         label: 'PRF',
         data: [
-          statType === 'total' ? playerStats.PRF : statType === 'perGame' ? playerStats.PRF / playerStats.gamesPlayed : playerStats.PRF / playerStats.totalSets,
+          playerStats.PRF,
           ...teammateStats.map(t => {
             const s = t.stats!;
-            return statType === 'total' ? s.PRF : statType === 'perGame' ? s.PRF / s.gamesPlayed : s.PRF / s.totalSets;
+            return s.PRF;
           })
         ],
         backgroundColor: 'rgba(45, 60, 80, 0.2)',
@@ -217,7 +213,7 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
       legend: { position: 'top' as const },
       title: {
         display: true,
-        text: `${player.name} vs League Average (${statType === 'perGame' ? 'Per Game' : statType === 'perSet' ? 'Per Set' : 'Total'})`
+        text: `${player.name} vs League Average (Per Set)`
       }
     },
     scales: {
@@ -234,7 +230,7 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
       legend: { position: 'top' as const },
       title: {
         display: true,
-        text: `${player.name} vs Teammates - PRF (${statType === 'perGame' ? 'Per Game' : statType === 'perSet' ? 'Per Set' : 'Total'})`
+        text: `${player.name} vs Teammates - PRF (Total)`
       }
     },
     scales: {
@@ -250,24 +246,6 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
         </div>
         <div className="visualization-chart">
           <Bar data={teammateData} options={barOptions} />
-        </div>
-      </div>
-      <div className="visualization-stats">
-        <div className="stats-summary">
-          <h4>Season Summary</h4>
-          <div className="stats-grid">
-            <div className="stat-item"><span className="stat-label">Games Played:</span> <span className="stat-value">{playerStats.gamesPlayed}</span></div>
-            <div className="stat-item"><span className="stat-label">Total Sets:</span> <span className="stat-value">{playerStats.totalSets}</span></div>
-            <div className="stat-item"><span className="stat-label">Spike Attempts:</span> <span className="stat-value">{playerStats.spikeAttempts}</span></div>
-            <div className="stat-item"><span className="stat-label">Ape Attempts:</span> <span className="stat-value">{playerStats.apeAttempts}</span></div>
-            <div className="stat-item"><span className="stat-label">Spike Kills:</span> <span className="stat-value">{playerStats.spikeKills}</span></div>
-            <div className="stat-item"><span className="stat-label">Ape Kills:</span> <span className="stat-value">{playerStats.apeKills}</span></div>
-            <div className="stat-item"><span className="stat-label">Total Kills:</span> <span className="stat-value">{playerStats.totalKills}</span></div>
-            <div className="stat-item"><span className="stat-label">Total Attempts:</span> <span className="stat-value">{playerStats.totalAttempts}</span></div>
-            <div className="stat-item"><span className="stat-label">Kill %:</span> <span className="stat-value">{(playerStats.totalSpikePct * 100).toFixed(1)}%</span></div>
-            <div className="stat-item"><span className="stat-label">PRF:</span> <span className="stat-value">{playerStats.PRF}</span></div>
-            <div className="stat-item"><span className="stat-label">Plus/Minus:</span> <span className="stat-value">{playerStats.plusMinus}</span></div>
-          </div>
         </div>
       </div>
     </div>

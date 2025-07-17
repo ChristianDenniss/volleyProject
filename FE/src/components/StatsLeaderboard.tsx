@@ -912,7 +912,6 @@ const StatsLeaderboard: React.FC = () => {
                             player={item as Player}
                             allPlayers={players || []}
                             selectedSeason={selectedSeason}
-                            statType={statType}
                           />
                         </td>
                       </tr>
