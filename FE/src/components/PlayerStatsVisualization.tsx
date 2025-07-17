@@ -134,7 +134,7 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
     });
     if (playersWithStats.length === 0) return null;
     const allStats = playersWithStats.map(p => getPlayerStats(p)).filter(Boolean) as ReturnType<typeof getPlayerStats>[];
-    const keys = ['spikeKills', 'apeKills', 'blocks', 'assists', 'aces', 'digs', 'blockFollows', 'miscErrors', 'spikingErrors', 'settingErrors', 'servingErrors', 'PRF', 'plusMinus', 'gamesPlayed', 'totalSets', 'totalKills', 'totalSpikePct'] as const;
+    const keys = ['spikeKills', 'apeKills', 'spikeAttempts', 'apeAttempts', 'blocks', 'assists', 'aces', 'digs', 'blockFollows', 'miscErrors', 'spikingErrors', 'settingErrors', 'servingErrors', 'PRF', 'plusMinus', 'gamesPlayed', 'totalSets', 'totalKills', 'totalSpikePct'] as const;
     const averages: any = {};
     keys.forEach(key => {
       averages[key] = allStats.reduce((sum, s) => sum + (s ? s[key] : 0), 0) / allStats.length;
