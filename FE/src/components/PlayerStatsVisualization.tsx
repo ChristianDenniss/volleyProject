@@ -444,6 +444,9 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
     const allDataPoints = [currentDataArray, ...seasonDatasets.map(dataset => dataset.data)];
     const globalMax = Math.max(...allDataPoints.flat());
     
+    // Ensure the chart scales to fit the highest value with some padding
+    const chartMax = Math.ceil(globalMax / 10) * 10; // Round up to nearest 10
+    
     const historicalData = {
       labels: radarLabels,
       datasets: [
@@ -526,8 +529,8 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
       scales: {
         r: {
           beginAtZero: true,
-          max: Math.ceil(globalMax / 20) * 20, // Round up to nearest 20 for clean tick marks
-          ticks: { stepSize: 20 }
+          max: chartMax, // Use calculated max to fit all data
+          ticks: { stepSize: Math.ceil(chartMax / 5) } // Dynamic step size
         }
       }
     };
