@@ -7,6 +7,7 @@ import SearchBar from "./Searchbar";
 import Pagination from "./Pagination";
 import SeasonFilter from "./SeasonFilterBar";
 import { Link } from 'react-router-dom';
+import PlayerStatsVisualization from "./PlayerStatsVisualization";
 
 type StatCategory = 
   | 'spikeKills' 
@@ -211,6 +212,7 @@ const StatsLeaderboard: React.FC = () => {
   const playersPerPage = 25;
   const filterButtonRef = useRef<HTMLButtonElement>(null);
   const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
+  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (showFilterMenu && filterButtonRef.current) {
@@ -695,6 +697,11 @@ const StatsLeaderboard: React.FC = () => {
       : value.toFixed(1);
   };
 
+  // Toggle accordion for player rows
+  const handleRowClick = (id: string) => {
+    setExpandedRows(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
   return (
     <div className={`stats-leaderboard-page ${!players ? 'loading' : ''}`}>
       <h1>Statistics Leaderboard</h1>
@@ -862,37 +869,55 @@ const StatsLeaderboard: React.FC = () => {
               {paginatedData.map((item, index) => {
                 const isPlayer = 'position' in item;
                 const isTeam = 'totalStats' in item;
-                
+                const rowId = String(item.id);
                 return (
-                  <tr key={item.id}>
-                    <td>{(currentPage - 1) * playersPerPage + index + 1}</td>
-                    <td>{
-                      isPlayer
-                        ? <Link className="stats-pill-link" to={`/players/${item.id}`}>{item.name}</Link>
-                        : <Link className="stats-pill-link" to={`/teams/${encodeURIComponent(item.name)}`}>{item.name}</Link>
-                    }</td>
-                    {selectedSeason !== null && isPlayer && viewType === 'player' && (
-                      <td>
-                        {(() => {
-                          const team = (item as Player).teams?.find(team => team?.season?.seasonNumber === selectedSeason);
-                          return team ? (
-                            <Link className="stats-pill-link" to={`/teams/${encodeURIComponent(team.name)}`}>{team.name}</Link>
-                          ) : 'N/A';
-                        })()}
-                      </td>
+                  <React.Fragment key={rowId}>
+                    <tr
+                      className={isPlayer ? 'player-row' : ''}
+                      onClick={isPlayer ? () => handleRowClick(rowId) : undefined}
+                      style={isPlayer ? { cursor: 'pointer' } : {}}
+                    >
+                      <td>{(currentPage - 1) * playersPerPage + index + 1}</td>
+                      <td>{
+                        isPlayer
+                          ? <Link className="stats-pill-link" to={`/players/${item.id}`}>{item.name}</Link>
+                          : <Link className="stats-pill-link" to={`/teams/${encodeURIComponent(item.name)}`}>{item.name}</Link>
+                      }</td>
+                      {selectedSeason !== null && isPlayer && viewType === 'player' && (
+                        <td>
+                          {(() => {
+                            const team = (item as Player).teams?.find(team => team?.season?.seasonNumber === selectedSeason);
+                            return team ? (
+                              <Link className="stats-pill-link" to={`/teams/${encodeURIComponent(team.name)}`}>{team.name}</Link>
+                            ) : 'N/A';
+                          })()}
+                        </td>
+                      )}
+                      {visibleStatCategories.map((stat) => (
+                        <td key={stat}>
+                          {(() => {
+                            const statValue = isTeam 
+                              ? getTeamStat(item as TeamStatsData, stat)
+                              : getPlayerStat(item as Player, stat);
+                            return formatStatValue(stat, statValue, statType);
+                          })()}
+                        </td>
+                      ))}
+                    </tr>
+                    {/* Accordion row for player visualization */}
+                    {isPlayer && expandedRows[rowId] && (
+                      <tr className="player-visualization-row">
+                        <td colSpan={2 + (selectedSeason !== null && viewType === 'player' ? 1 : 0) + visibleStatCategories.length}>
+                          <PlayerStatsVisualization
+                            player={item as Player}
+                            allPlayers={players || []}
+                            selectedSeason={selectedSeason}
+                            statType={statType}
+                          />
+                        </td>
+                      </tr>
                     )}
-                    {visibleStatCategories.map((stat) => (
-                      <td key={stat}>
-                        {(() => {
-                          const statValue = isTeam 
-                            ? getTeamStat(item as TeamStatsData, stat)
-                            : getPlayerStat(item as Player, stat);
-                          
-                          return formatStatValue(stat, statValue, statType);
-                        })()}
-                      </td>
-                    ))}
-                  </tr>
+                  </React.Fragment>
                 );
               })}
             </tbody>
