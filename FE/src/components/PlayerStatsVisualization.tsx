@@ -39,7 +39,31 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
   allPlayers,
   selectedSeason
 }) => {
-  // Helper function to normalize stats within their categories
+  // Helper function to normalize stats relative to player's own range
+  const normalizeStatsRelative = (playerData: any, ranges: any) => {
+    const baseline = 10; // Minimum baseline value to keep shape visible
+    
+    const normalizeValue = (value: number, min: number, max: number) => {
+      if (max === min) return baseline + 50; // If all values are the same, put in middle
+      const normalized = ((value - min) / (max - min)) * (100 - baseline) + baseline; // Scale baseline-100
+      return Math.max(baseline, Math.min(normalized, 100));
+    };
+    
+    return {
+      spikeKills: normalizeValue(playerData.spikeKills, ranges.spikeKills.min, ranges.spikeKills.max),
+      apeKills: normalizeValue(playerData.apeKills, ranges.apeKills.min, ranges.apeKills.max),
+      spikeAttempts: normalizeValue(playerData.spikeAttempts, ranges.spikeAttempts.min, ranges.spikeAttempts.max),
+      apeAttempts: normalizeValue(playerData.apeAttempts, ranges.apeAttempts.min, ranges.apeAttempts.max),
+      blocks: normalizeValue(playerData.blocks, ranges.blocks.min, ranges.blocks.max),
+      assists: normalizeValue(playerData.assists, ranges.assists.min, ranges.assists.max),
+      aces: normalizeValue(playerData.aces, ranges.aces.min, ranges.aces.max),
+      digs: normalizeValue(playerData.digs, ranges.digs.min, ranges.digs.max),
+      blockFollows: normalizeValue(playerData.blockFollows, ranges.blockFollows.min, ranges.blockFollows.max),
+      totalErrors: normalizeValue(playerData.totalErrors, ranges.totalErrors.min, ranges.totalErrors.max)
+    };
+  };
+
+  // Helper function to normalize stats within their categories (for league comparison)
   const normalizeStats = (playerData: any) => {
     const baseline = 10; // Minimum baseline value to keep shape visible
     
@@ -311,7 +335,6 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
   }
 
   const playerNormalized = normalizeStats(playerStats);
-  const playerPerSetNormalized = normalizeStats(playerPerSetStats);
   const leagueNormalized = normalizeStats(leagueAverages);
   
   const radarData = {
@@ -363,22 +386,39 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
 
   if (selectedSeason === null) {
     // All seasons view: Show historical seasons radar chart
-    const currentData = [
-      playerPerSetNormalized.spikeKills,
-      playerPerSetNormalized.apeKills,
-      playerPerSetNormalized.spikeAttempts,
-      playerPerSetNormalized.apeAttempts,
-      playerPerSetNormalized.blocks,
-      playerPerSetNormalized.assists,
-      playerPerSetNormalized.aces,
-      playerPerSetNormalized.digs,
-      playerPerSetNormalized.blockFollows,
-      playerPerSetNormalized.totalErrors,
+    
+    // Calculate ranges for each stat category across all seasons
+    const allSeasonData = [playerPerSetStats, ...historicalSeasons];
+    const ranges = {
+      spikeKills: { min: Math.min(...allSeasonData.map(d => d.spikeKills)), max: Math.max(...allSeasonData.map(d => d.spikeKills)) },
+      apeKills: { min: Math.min(...allSeasonData.map(d => d.apeKills)), max: Math.max(...allSeasonData.map(d => d.apeKills)) },
+      spikeAttempts: { min: Math.min(...allSeasonData.map(d => d.spikeAttempts)), max: Math.max(...allSeasonData.map(d => d.spikeAttempts)) },
+      apeAttempts: { min: Math.min(...allSeasonData.map(d => d.apeAttempts)), max: Math.max(...allSeasonData.map(d => d.apeAttempts)) },
+      blocks: { min: Math.min(...allSeasonData.map(d => d.blocks)), max: Math.max(...allSeasonData.map(d => d.blocks)) },
+      assists: { min: Math.min(...allSeasonData.map(d => d.assists)), max: Math.max(...allSeasonData.map(d => d.assists)) },
+      aces: { min: Math.min(...allSeasonData.map(d => d.aces)), max: Math.max(...allSeasonData.map(d => d.aces)) },
+      digs: { min: Math.min(...allSeasonData.map(d => d.digs)), max: Math.max(...allSeasonData.map(d => d.digs)) },
+      blockFollows: { min: Math.min(...allSeasonData.map(d => d.blockFollows)), max: Math.max(...allSeasonData.map(d => d.blockFollows)) },
+      totalErrors: { min: Math.min(...allSeasonData.map(d => d.totalErrors)), max: Math.max(...allSeasonData.map(d => d.totalErrors)) },
+    };
+    
+    const currentData = normalizeStatsRelative(playerPerSetStats, ranges);
+    const currentDataArray = [
+      currentData.spikeKills,
+      currentData.apeKills,
+      currentData.spikeAttempts,
+      currentData.apeAttempts,
+      currentData.blocks,
+      currentData.assists,
+      currentData.aces,
+      currentData.digs,
+      currentData.blockFollows,
+      currentData.totalErrors,
     ];
     
     const seasonDatasets = historicalSeasons.map((season, index) => {
-      // Normalize historical season using the same absolute thresholds
-      const normalizedSeason = normalizeStats(season);
+      // Normalize historical season relative to player's own range
+      const normalizedSeason = normalizeStatsRelative(season, ranges);
       
       return {
         label: `Season ${season.seasonNumber}`,
@@ -401,7 +441,7 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
     });
     
     // Calculate global maximum across all datasets
-    const allDataPoints = [currentData, ...seasonDatasets.map(dataset => dataset.data)];
+    const allDataPoints = [currentDataArray, ...seasonDatasets.map(dataset => dataset.data)];
     const globalMax = Math.max(...allDataPoints.flat());
     
     const historicalData = {
@@ -409,7 +449,7 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
       datasets: [
         {
           label: 'Current (All Seasons)',
-          data: currentData,
+          data: currentDataArray,
           backgroundColor: 'rgba(45, 60, 80, 0.2)',
           borderColor: 'rgba(45, 60, 80, 1)',
           borderWidth: 2,
