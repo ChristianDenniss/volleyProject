@@ -29,13 +29,15 @@ The application now uses Redis as a caching layer to store frequently accessed d
 
 ### Environment Variables
 ```bash
-REDIS_HOST=localhost          # Redis host (default: localhost)
-REDIS_PORT=6379              # Redis port (default: 6379)
+REDIS_URL=redis://your-redis-server:6379  # Redis URL (production)
+# OR for development (optional):
+REDIS_HOST=localhost          # Redis host (development only)
+REDIS_PORT=6379              # Redis port (development only)
 REDIS_PASSWORD=              # Redis password (optional)
 ```
 
 ### Docker Setup
-Redis is included in the docker-compose.yml file:
+For development, Redis is included in the docker-compose.yml file:
 ```yaml
 redis:
   image: redis:7-alpine
@@ -44,6 +46,8 @@ redis:
   volumes:
     - redis_data:/data
 ```
+
+For production, set the `REDIS_URL` environment variable to your Redis server.
 
 ## Usage
 

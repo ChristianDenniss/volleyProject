@@ -22,22 +22,33 @@ export class CacheService {
   private redis: Redis;
   private defaultTTL: number = 300; // 5 minutes default
   private version: string = '1.0.0'; // Cache version for invalidation
+  private connectionErrorLogged: boolean = false;
 
   constructor() {
-    this.redis = new Redis({
-      host: process.env.REDIS_HOST || 'localhost',
-      port: parseInt(process.env.REDIS_PORT || '6379'),
-      password: process.env.REDIS_PASSWORD,
-      lazyConnect: true,
-    });
+    // Use REDIS_URL for production (like DATABASE_URL) or fallback to localhost for development
+    const redisUrl = process.env.REDIS_URL || (process.env.NODE_ENV === 'production' ? null : 'redis://localhost:6379');
+    
+    if (redisUrl) {
+      this.redis = new Redis(redisUrl, {
+        lazyConnect: true,
+      });
 
-    this.redis.on('error', (error: any) => {
-      logger.error('Redis connection error:', error);
-    });
+      this.redis.on('error', (error: any) => {
+        // Only log connection errors once to avoid spam
+        if (!this.connectionErrorLogged) {
+          logger.error('Redis connection error - cache will be disabled:', error.message);
+          this.connectionErrorLogged = true;
+        }
+      });
 
-    this.redis.on('connect', () => {
-      logger.info('Redis connected successfully');
-    });
+      this.redis.on('connect', () => {
+        logger.info('Redis connected successfully');
+      });
+    } else {
+      // No Redis configured - cache will be disabled
+      this.redis = null as any;
+      logger.info('Redis not configured - caching disabled');
+    }
   }
 
   /**
@@ -52,6 +63,10 @@ export class CacheService {
    * Get data from cache
    */
   async get<T>(key: string, prefix?: string): Promise<T | null> {
+    if (!this.redis) {
+      return null; // Cache disabled
+    }
+
     try {
       const cacheKey = this.generateKey(key, prefix);
       const cached = await this.redis.get(cacheKey);
@@ -71,7 +86,7 @@ export class CacheService {
       logger.debug(`Cache hit for key: ${cacheKey}`);
       return entry.data;
     } catch (error) {
-      logger.error('Cache get error:', error);
+      // Don't log every cache get error to avoid spam
       return null;
     }
   }
@@ -80,6 +95,10 @@ export class CacheService {
    * Set data in cache
    */
   async set<T>(key: string, data: T, options?: CacheOptions): Promise<void> {
+    if (!this.redis) {
+      return; // Cache disabled
+    }
+
     try {
       const cacheKey = this.generateKey(key, options?.prefix);
       const ttl = options?.ttl || this.defaultTTL;
@@ -93,7 +112,7 @@ export class CacheService {
       await this.redis.setex(cacheKey, ttl, JSON.stringify(entry));
       logger.debug(`Cache set for key: ${cacheKey} with TTL: ${ttl}s`);
     } catch (error) {
-      logger.error('Cache set error:', error);
+      // Don't log every cache set error to avoid spam
     }
   }
 
@@ -101,6 +120,10 @@ export class CacheService {
    * Delete specific cache key
    */
   async del(key: string, prefix?: string): Promise<void> {
+    if (!this.redis) {
+      return; // Cache disabled
+    }
+
     try {
       const cacheKey = this.generateKey(key, prefix);
       await this.redis.del(cacheKey);
@@ -114,6 +137,10 @@ export class CacheService {
    * Invalidate all cache entries with a specific prefix
    */
   async invalidatePattern(pattern: string): Promise<void> {
+    if (!this.redis) {
+      return; // Cache disabled
+    }
+
     try {
       const keys = await this.redis.keys(pattern);
       if (keys.length > 0) {
@@ -150,6 +177,10 @@ export class CacheService {
    * Get cache statistics
    */
   async getStats(): Promise<{ keys: number; memory: string }> {
+    if (!this.redis) {
+      return { keys: 0, memory: 'cache disabled' };
+    }
+
     try {
       const info = await this.redis.info('memory');
       const keys = await this.redis.dbsize();
@@ -169,6 +200,10 @@ export class CacheService {
    * Health check for cache service
    */
   async healthCheck(): Promise<boolean> {
+    if (!this.redis) {
+      return false; // Cache disabled
+    }
+
     try {
       await this.redis.ping();
       return true;
@@ -182,7 +217,9 @@ export class CacheService {
    * Close Redis connection
    */
   async close(): Promise<void> {
-    await this.redis.quit();
+    if (this.redis) {
+      await this.redis.quit();
+    }
   }
 }
 
