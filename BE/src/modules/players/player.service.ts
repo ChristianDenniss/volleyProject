@@ -5,14 +5,16 @@ import { Teams } from '../teams/team.entity.js';
 import { Stats } from '../stats/stat.entity.js';
 import { MissingFieldError } from '../../errors/MissingFieldError.js';
 import { NotFoundError } from '../../errors/NotFoundError.js';
+import { CacheableService } from '../../utils/cacheService.js';
 
-export class PlayerService 
+export class PlayerService extends CacheableService
 {
     private playerRepository: Repository<Players>;
     private teamRepository: Repository<Teams>;
 
     constructor() 
     {
+        super({ entityType: 'players', defaultTTL: 600 }); // 10 minutes TTL for players
         this.playerRepository = AppDataSource.getRepository(Players);
         this.teamRepository = AppDataSource.getRepository(Teams);
     }
@@ -37,7 +39,13 @@ export class PlayerService
         newPlayer.position = position;
         newPlayer.teams = [team]; // Associate player with team via the many-to-many relation
 
-        return this.playerRepository.save(newPlayer);
+        const savedPlayer = await this.playerRepository.save(newPlayer);
+        
+        // Invalidate relevant caches
+        await this.invalidateEntityCache(); // Invalidate all players cache
+        await this.invalidateEntityCache('medium'); // Invalidate medium players cache
+        
+        return savedPlayer;
     }
 
     /**
@@ -99,9 +107,11 @@ export class PlayerService
      */
     async getAllPlayers(): Promise<Players[]> 
     {
-        return this.playerRepository.find({
-            relations: ["teams", "teams.season", "stats", "stats.game", "stats.game.season", "stats.game.teams"], // Include game and season relations for stats
-        });
+        return this.getCachedList('all', () =>
+            this.playerRepository.find({
+                relations: ["teams", "teams.season", "stats", "stats.game", "stats.game.season", "stats.game.teams"], // Include game and season relations for stats
+            })
+        );
     }
 
     /**
@@ -109,9 +119,11 @@ export class PlayerService
      */
     async getMediumAllPlayers(): Promise<Players[]> 
     {
-        return this.playerRepository.find({
-            relations: ["teams", "teams.season"],
-        });
+        return this.getCachedList('medium', () =>
+            this.playerRepository.find({
+                relations: ["teams", "teams.season"],
+            })
+        );
     }
 
     /**
@@ -121,9 +133,13 @@ export class PlayerService
     {
         if (!id) throw new MissingFieldError("Player ID");
 
-        const player = await this.playerRepository.findOne({
-            where: { id },
-            relations: ["teams", "stats", "stats.game", "stats.game.season", "teams.season", "teams.games", "teams.games.season"],
+        const player = await this.getCachedById(id, async () => {
+            const player = await this.playerRepository.findOne({
+                where: { id },
+                relations: ["teams", "stats", "stats.game", "stats.game.season", "teams.season", "teams.games", "teams.games.season"],
+            });
+
+            return player;
         });
 
         if (!player) throw new NotFoundError(`Player with ID ${id} not found`);
@@ -161,7 +177,14 @@ export class PlayerService
             player.teams = teams;
         }
 
-        return this.playerRepository.save(player);
+        const updatedPlayer = await this.playerRepository.save(player);
+        
+        // Invalidate relevant caches
+        await this.invalidateEntityCache(); // Invalidate all players cache
+        await this.invalidateEntityCache('medium'); // Invalidate medium players cache
+        await this.invalidateEntityCache(updatedPlayer.id); // Invalidate specific player cache
+        
+        return updatedPlayer;
     }
 
     /**
@@ -179,6 +202,11 @@ export class PlayerService
         if (!player) throw new NotFoundError(`Player with ID ${id} not found`);
 
         await this.playerRepository.remove(player);
+        
+        // Invalidate relevant caches
+        await this.invalidateEntityCache(); // Invalidate all players cache
+        await this.invalidateEntityCache('medium'); // Invalidate medium players cache
+        await this.invalidateEntityCache(id); // Invalidate specific player cache
     }
 
     /**

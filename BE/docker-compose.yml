@@ -16,6 +16,7 @@ services:
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/volleyball?sslmode=disable
     depends_on:
       - db                          # Ensure DB service starts before backend
+      - redis                       # Ensure Redis service starts before backend
     logging:
       driver: "json-file"
       options:
@@ -40,5 +41,19 @@ services:
         max-file: "3"
         tag: "{{.Name}}"
 
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        tag: "{{.Name}}"
+
 volumes:
   postgres_data:
+  redis_data:

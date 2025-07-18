@@ -9,6 +9,7 @@ import { registerArticleRoutes } from './articles/article.routes.js';
 import { registerRobloxRoutes } from './roblox/roblox.routes.js'
 import { registerAwardRoutes } from './awards/award.routes.js';
 import { registerRecordRoutes } from './records/records.routes.js';
+import { cacheHealthCheck } from '../middleware/cache.js';
 
 /**
  * Register all module routes with the Express application
@@ -26,6 +27,9 @@ export function registerModules(app: Application): void
     registerArticleRoutes(app);
     registerAwardRoutes(app);
     registerRecordRoutes(app);
+
+    // Cache health check route
+    app.get('/api/cache/health', cacheHealthCheck);
 
     // Default route
     app.get('/', (req, res) => {

@@ -8,11 +8,12 @@ import { NegativeStatError } from '../../errors/NegativeStatError.js';
 import { NotFoundError } from '../../errors/NotFoundError.js';
 import { ConflictError } from '../../errors/ConflictError.js';
 import { DuplicateError } from '../../errors/DuplicateError.js';
+import { CacheableService } from '../../utils/cacheService.js';
 import { InvalidFormatError } from '../../errors/InvalidFormatError.js';
 import { Seasons } from '../seasons/season.entity.js';
 import { Teams } from '../teams/team.entity.js';
 
-export class StatService
+export class StatService extends CacheableService
 {
     private statRepository: Repository<Stats>;
     private playerRepository: Repository<Players>;
@@ -22,6 +23,7 @@ export class StatService
 
     constructor()
     {
+        super({ entityType: 'stats', defaultTTL: 600 }); // 10 minutes TTL for stats
         this.statRepository = AppDataSource.getRepository(Stats);
         this.playerRepository = AppDataSource.getRepository(Players);
         this.gameRepository = AppDataSource.getRepository(Games);
@@ -146,7 +148,14 @@ export class StatService
         newStat.player         = player;
         newStat.game           = game;
 
-        return this.statRepository.save(newStat);
+        const savedStat = await this.statRepository.save(newStat);
+        
+        // Invalidate relevant caches
+        await this.invalidateEntityCache(); // Invalidate all stats cache
+        await this.invalidateEntityCache(`player:${playerId}`); // Invalidate player-specific cache
+        await this.invalidateEntityCache(`game:${gameId}`); // Invalidate game-specific cache
+        
+        return savedStat;
     }
 
     /**
@@ -317,7 +326,14 @@ export class StatService
             stat.game = game;
         }
 
-        return this.statRepository.save(stat);
+        const updatedStat = await this.statRepository.save(stat);
+        
+        // Invalidate relevant caches
+        await this.invalidateEntityCache(); // Invalidate all stats cache
+        await this.invalidateEntityCache(`player:${stat.player.id}`); // Invalidate player-specific cache
+        await this.invalidateEntityCache(`game:${stat.game.id}`); // Invalidate game-specific cache
+        
+        return updatedStat;
     }
 
     /**
@@ -367,9 +383,11 @@ export class StatService
      */
     async getAllStats(): Promise<Stats[]>
     {
-        return this.statRepository.find({
-            relations: ["player", "game"]
-        });
+        return this.getCachedList('all', () => 
+            this.statRepository.find({
+                relations: ["player", "game"]
+            })
+        );
     }
 
     /**
@@ -377,10 +395,12 @@ export class StatService
      */
     async getStatsByPlayerId(playerId: number): Promise<Stats[]>
     {
-        return this.statRepository.find({
-            where: { player: { id: playerId } },
-            relations: ["game"]
-        });
+        return this.getCachedByField('player', playerId, () =>
+            this.statRepository.find({
+                where: { player: { id: playerId } },
+                relations: ["game"]
+            })
+        );
     }
 
     /**
@@ -388,10 +408,12 @@ export class StatService
      */
     async getStatsByGameId(gameId: number): Promise<Stats[]>
     {
-        return this.statRepository.find({
-            where: { game: { id: gameId } },
-            relations: ["player"]
-        });
+        return this.getCachedByField('game', gameId, () =>
+            this.statRepository.find({
+                where: { game: { id: gameId } },
+                relations: ["player"]
+            })
+        );
     }
 
     /**
@@ -407,6 +429,11 @@ export class StatService
         if (!stat) throw new NotFoundError(`Stat with ID: ${id} not found`);
 
         await this.statRepository.remove(stat);
+        
+        // Invalidate relevant caches
+        await this.invalidateEntityCache(); // Invalidate all stats cache
+        await this.invalidateEntityCache(`player:${stat.player.id}`); // Invalidate player-specific cache
+        await this.invalidateEntityCache(`game:${stat.game.id}`); // Invalidate game-specific cache
     }
 
     /**

@@ -3,6 +3,7 @@ import { PlayerController } from './player.controller.js';
 import { validate } from '../../middleware/validate.js';
 import { authenticateCombined } from '../../middleware/combinedAuth.js';
 import { createPlayerSchema, updatePlayerSchema, createMultiplePlayersByNameSchema } from './players.schema.js';
+import { cacheMiddleware, invalidateCacheMiddleware } from '../../middleware/cache.js';
 
 export function registerPlayerRoutes(app: Application): void 
 {
@@ -20,20 +21,20 @@ export function registerPlayerRoutes(app: Application): void
     // Merge two players into one - PROTECTED
     router.post('/merge', authenticateCombined, playerController.mergePlayers);
 
-    // GET routes - PUBLIC (for website display)
-    router.get('/', playerController.getPlayers);
-    router.get('/medium', playerController.getMediumPlayers);
+    // GET routes - PUBLIC (for website display) - with caching
+    router.get('/', cacheMiddleware({ prefix: 'players', ttl: 600 }), playerController.getPlayers);
+    router.get('/medium', cacheMiddleware({ prefix: 'players', ttl: 600 }), playerController.getMediumPlayers);
     // Above the ID route
-    router.get('/teams/:playerName', playerController.getTeamsByPlayerName);
+    router.get('/teams/:playerName', cacheMiddleware({ prefix: 'players', ttl: 600 }), playerController.getTeamsByPlayerName);
 
     // 🔻 This must come AFTER /teams/:playerName
-    router.get('/:id', playerController.getPlayerById);
+    router.get('/:id', cacheMiddleware({ prefix: 'players', ttl: 600 }), playerController.getPlayerById);
 
-    // UPDATE/DELETE routes - PROTECTED
-    router.put('/:id', authenticateCombined, playerController.updatePlayer);
-    router.patch('/:id', authenticateCombined, validate(updatePlayerSchema), playerController.updatePlayer);         
-    router.delete('/:id', authenticateCombined, playerController.deletePlayer);
-    router.get('/team/:teamId', playerController.getPlayersByTeamId);
+    // UPDATE/DELETE routes - PROTECTED - with cache invalidation
+    router.put('/:id', authenticateCombined, invalidateCacheMiddleware('players'), playerController.updatePlayer);
+    router.patch('/:id', authenticateCombined, validate(updatePlayerSchema), invalidateCacheMiddleware('players'), playerController.updatePlayer);         
+    router.delete('/:id', authenticateCombined, invalidateCacheMiddleware('players'), playerController.deletePlayer);
+    router.get('/team/:teamId', cacheMiddleware({ prefix: 'players', ttl: 600 }), playerController.getPlayersByTeamId);
 
     app.use('/api/players', router);
 }
