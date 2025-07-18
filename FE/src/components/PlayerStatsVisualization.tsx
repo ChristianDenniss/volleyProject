@@ -474,7 +474,7 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
         },
         title: {
           display: true,
-          text: `${player.name} - Historical Seasons Comparison (Per Set)`
+          text: `${player.name} - Seasons Comparison (Per Set)`
         },
 
         tooltip: {
