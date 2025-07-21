@@ -12,7 +12,7 @@ import { useTriviaPlayer, useTriviaTeam, useTriviaSeason, useSubmitTriviaGuess }
 
 type GameState = 'selection' | 'playing' | 'result';
 
-type Difficulty = 'easy' | 'medium' | 'hard';
+type Difficulty = 'easy' | 'medium' | 'hard' | 'impossible';
 type TriviaType = 'player' | 'team' | 'season';
 
 const DEBOUNCE_MS = 1200;
@@ -68,18 +68,15 @@ const TriviaPage: React.FC = () => {
             
             if (selectedType === 'player') {
                 console.log('🎮 [TriviaPage] Fetching trivia player...');
-                await triviaPlayer.fetchTriviaPlayer();
-                triviaData = triviaPlayer.data;
+                triviaData = await triviaPlayer.fetchTriviaPlayer();
                 console.log('🎮 [TriviaPage] Trivia player data:', triviaData);
             } else if (selectedType === 'team') {
                 console.log('🎮 [TriviaPage] Fetching trivia team...');
-                await triviaTeam.fetchTriviaTeam();
-                triviaData = triviaTeam.data;
+                triviaData = await triviaTeam.fetchTriviaTeam();
                 console.log('🎮 [TriviaPage] Trivia team data:', triviaData);
             } else if (selectedType === 'season') {
                 console.log('🎮 [TriviaPage] Fetching trivia season...');
-                await triviaSeason.fetchTriviaSeason();
-                triviaData = triviaSeason.data;
+                triviaData = await triviaSeason.fetchTriviaSeason();
                 console.log('🎮 [TriviaPage] Trivia season data:', triviaData);
             }
             
@@ -313,6 +310,13 @@ const TriviaPage: React.FC = () => {
                             disabled={debounce}
                         >
                             Hard
+                        </button>
+                        <button
+                            className={`difficulty-btn impossible ${selectedDifficulty === 'impossible' ? 'selected' : ''}`}
+                            onClick={() => setSelectedDifficulty('impossible')}
+                            disabled={debounce}
+                        >
+                            Impossible
                         </button>
                     </div>
                 </div>

@@ -142,7 +142,7 @@ export const useObjectFetch = <T>(endpoint: string) =>
 };
 
 // Trivia hooks
-export const useTriviaPlayer = (difficulty: 'easy' | 'medium' | 'hard') => {
+export const useTriviaPlayer = (difficulty: 'easy' | 'medium' | 'hard' | 'impossible') => {
   const [data, setData] = useState<TriviaPlayer | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -154,7 +154,7 @@ export const useTriviaPlayer = (difficulty: 'easy' | 'medium' | 'hard') => {
     if (!difficulty) {
       console.error('❌ [useTriviaPlayer] No difficulty provided');
       setError('Difficulty is required');
-      return;
+      return null;
     }
 
     console.log('🔍 [useTriviaPlayer] Starting fetch with difficulty:', difficulty);
@@ -182,6 +182,7 @@ export const useTriviaPlayer = (difficulty: 'easy' | 'medium' | 'hard') => {
       console.log('✅ [useTriviaPlayer] Successfully fetched trivia player:', result);
       
       setData(result);
+      return result;
     } catch (err: any) {
       console.error('❌ [useTriviaPlayer] Fetch error:', err);
       console.error('❌ [useTriviaPlayer] Error details:', {
@@ -190,6 +191,7 @@ export const useTriviaPlayer = (difficulty: 'easy' | 'medium' | 'hard') => {
         name: err.name
       });
       setError(err.message || 'Unknown error');
+      return null;
     } finally {
       console.log('🔍 [useTriviaPlayer] Setting loading to false');
       setLoading(false);
@@ -205,7 +207,7 @@ export const useTriviaPlayer = (difficulty: 'easy' | 'medium' | 'hard') => {
   return { data, loading, error, fetchTriviaPlayer };
 };
 
-export const useTriviaTeam = (difficulty: 'easy' | 'medium' | 'hard') => {
+export const useTriviaTeam = (difficulty: 'easy' | 'medium' | 'hard' | 'impossible') => {
   const [data, setData] = useState<TriviaTeam | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -217,7 +219,7 @@ export const useTriviaTeam = (difficulty: 'easy' | 'medium' | 'hard') => {
     if (!difficulty) {
       console.error('❌ [useTriviaTeam] No difficulty provided');
       setError('Difficulty is required');
-      return;
+      return null;
     }
 
     console.log('🔍 [useTriviaTeam] Starting fetch with difficulty:', difficulty);
@@ -245,6 +247,7 @@ export const useTriviaTeam = (difficulty: 'easy' | 'medium' | 'hard') => {
       console.log('✅ [useTriviaTeam] Successfully fetched trivia team:', result);
       
       setData(result);
+      return result;
     } catch (err: any) {
       console.error('❌ [useTriviaTeam] Fetch error:', err);
       console.error('❌ [useTriviaTeam] Error details:', {
@@ -253,6 +256,7 @@ export const useTriviaTeam = (difficulty: 'easy' | 'medium' | 'hard') => {
         name: err.name
       });
       setError(err.message || 'Unknown error');
+      return null;
     } finally {
       console.log('🔍 [useTriviaTeam] Setting loading to false');
       setLoading(false);
@@ -268,7 +272,7 @@ export const useTriviaTeam = (difficulty: 'easy' | 'medium' | 'hard') => {
   return { data, loading, error, fetchTriviaTeam };
 };
 
-export const useTriviaSeason = (difficulty: 'easy' | 'medium' | 'hard') => {
+export const useTriviaSeason = (difficulty: 'easy' | 'medium' | 'hard' | 'impossible') => {
   const [data, setData] = useState<TriviaSeason | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -280,7 +284,7 @@ export const useTriviaSeason = (difficulty: 'easy' | 'medium' | 'hard') => {
     if (!difficulty) {
       console.error('❌ [useTriviaSeason] No difficulty provided');
       setError('Difficulty is required');
-      return;
+      return null;
     }
 
     console.log('🔍 [useTriviaSeason] Starting fetch with difficulty:', difficulty);
@@ -308,6 +312,7 @@ export const useTriviaSeason = (difficulty: 'easy' | 'medium' | 'hard') => {
       console.log('✅ [useTriviaSeason] Successfully fetched trivia season:', result);
       
       setData(result);
+      return result;
     } catch (err: any) {
       console.error('❌ [useTriviaSeason] Fetch error:', err);
       console.error('❌ [useTriviaSeason] Error details:', {
@@ -316,6 +321,7 @@ export const useTriviaSeason = (difficulty: 'easy' | 'medium' | 'hard') => {
         name: err.name
       });
       setError(err.message || 'Unknown error');
+      return null;
     } finally {
       console.log('🔍 [useTriviaSeason] Setting loading to false');
       setLoading(false);

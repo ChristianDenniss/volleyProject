@@ -241,6 +241,16 @@
     color: var(--white);
 }
 
+.difficulty-btn.impossible {
+    border-color: #8e44ad;
+    color: #8e44ad;
+}
+
+.difficulty-btn.impossible.selected {
+    background: #8e44ad;
+    color: var(--white);
+}
+
 .difficulty-btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
