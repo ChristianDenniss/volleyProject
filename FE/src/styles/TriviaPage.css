@@ -1,26 +1,55 @@
+/* -----------------------------------------------------------
+   Shared colour palette - matching site theme
+----------------------------------------------------------- */
+:root {
+    --primary-blue: #2D3C50;
+    --primary-blue-hover: #2a4a7d;
+    --dark-bg: #262626;
+    --light-bg: #f8f9fa;
+    --text-dark: #2c3e50;
+    --text-light: #7f8c8d;
+    --white: #ffffff;
+    --success: #27ae60;
+    --warning: #f39c12;
+    --error: #e74c3c;
+    --border: #e0e0e0;
+    --shadow: rgba(0, 0, 0, 0.1);
+    --shadow-hover: rgba(0, 0, 0, 0.2);
+}
+
+/* -----------------------------------------------------------
+   Page wrapper
+----------------------------------------------------------- */
 .trivia-page {
-    max-width: 800px;
+    max-width: 900px;
     margin: 0 auto;
     padding: 2rem;
     min-height: 70vh;
+    background: var(--white);
+    font-family: 'Inter', sans-serif;
 }
 
-/* Selection Screen */
+/* -----------------------------------------------------------
+   Selection Screen
+----------------------------------------------------------- */
 .trivia-selection {
     text-align: center;
+    padding: 2rem 0;
 }
 
 .trivia-selection h1 {
-    font-size: 2.5rem;
-    color: #2c3e50;
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--primary-blue);
     margin-bottom: 1rem;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    letter-spacing: -0.02em;
 }
 
 .trivia-selection p {
     font-size: 1.2rem;
-    color: #7f8c8d;
+    color: var(--text-light);
     margin-bottom: 3rem;
+    font-weight: 400;
 }
 
 .selection-section {
@@ -29,11 +58,14 @@
 
 .selection-section h2 {
     font-size: 1.5rem;
-    color: #34495e;
-    margin-bottom: 1.5rem;
+    color: var(--text-dark);
+    margin-bottom: 2rem;
+    font-weight: 600;
 }
 
-/* Type Buttons */
+/* -----------------------------------------------------------
+   Type Buttons - Clean, modern design
+----------------------------------------------------------- */
 .type-buttons {
     display: flex;
     justify-content: center;
@@ -45,40 +77,78 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 2rem;
-    border: 3px solid #e0e0e0;
-    border-radius: 15px;
-    background: white;
+    padding: 2.5rem 2rem;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    background: var(--white);
     cursor: pointer;
     transition: all 0.3s ease;
-    min-width: 150px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    min-width: 160px;
+    box-shadow: 0 2px 8px var(--shadow);
+    position: relative;
+    overflow: hidden;
+}
+
+.type-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--primary-blue);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
 }
 
 .type-btn:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
-    border-color: #3498db;
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px var(--shadow-hover);
+    border-color: var(--primary-blue);
+}
+
+.type-btn:hover::before {
+    transform: scaleX(1);
 }
 
 .type-btn.selected {
-    border-color: #3498db;
-    background: linear-gradient(135deg, #3498db, #2980b9);
-    color: white;
-    transform: translateY(-5px);
+    border-color: var(--primary-blue);
+    background: linear-gradient(135deg, var(--primary-blue), var(--primary-blue-hover));
+    color: var(--white);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(45, 60, 80, 0.3);
+}
+
+.type-btn.selected::before {
+    transform: scaleX(1);
+    background: var(--white);
+}
+
+.type-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
 }
 
 .type-icon {
-    font-size: 3rem;
+    font-size: 3.5rem;
     margin-bottom: 1rem;
+    transition: transform 0.3s ease;
+}
+
+.type-btn:hover .type-icon {
+    transform: scale(1.1);
 }
 
 .type-label {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     font-weight: 600;
+    letter-spacing: 0.02em;
 }
 
-/* Difficulty Buttons */
+/* -----------------------------------------------------------
+   Difficulty Buttons
+----------------------------------------------------------- */
 .difficulty-buttons {
     display: flex;
     justify-content: center;
@@ -87,102 +157,130 @@
 }
 
 .difficulty-btn {
-    padding: 1rem 2rem;
-    border: 2px solid #e0e0e0;
-    border-radius: 25px;
-    background: white;
+    padding: 1rem 2.5rem;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    background: var(--white);
     cursor: pointer;
     transition: all 0.3s ease;
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 600;
-    min-width: 100px;
+    min-width: 120px;
+    position: relative;
+    overflow: hidden;
+}
+
+.difficulty-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: currentColor;
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
 .difficulty-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 15px var(--shadow-hover);
 }
 
 .difficulty-btn.selected {
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 15px var(--shadow-hover);
 }
 
 .difficulty-btn.easy {
-    border-color: #27ae60;
-    color: #27ae60;
+    border-color: var(--success);
+    color: var(--success);
 }
 
 .difficulty-btn.easy.selected {
-    background: #27ae60;
-    color: white;
+    background: var(--success);
+    color: var(--white);
 }
 
 .difficulty-btn.medium {
-    border-color: #f39c12;
-    color: #f39c12;
+    border-color: var(--warning);
+    color: var(--warning);
 }
 
 .difficulty-btn.medium.selected {
-    background: #f39c12;
-    color: white;
+    background: var(--warning);
+    color: var(--white);
 }
 
 .difficulty-btn.hard {
-    border-color: #e74c3c;
-    color: #e74c3c;
+    border-color: var(--error);
+    color: var(--error);
 }
 
 .difficulty-btn.hard.selected {
-    background: #e74c3c;
-    color: white;
+    background: var(--error);
+    color: var(--white);
 }
 
-/* Start Game Button */
+.difficulty-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* -----------------------------------------------------------
+   Start Game Button
+----------------------------------------------------------- */
 .start-game-btn {
-    padding: 1rem 3rem;
-    font-size: 1.3rem;
+    padding: 1.2rem 3rem;
+    font-size: 1.2rem;
     font-weight: 600;
-    background: linear-gradient(135deg, #3498db, #2980b9);
-    color: white;
+    background: linear-gradient(135deg, var(--primary-blue), var(--primary-blue-hover));
+    color: var(--white);
     border: none;
-    border-radius: 30px;
+    border-radius: 8px;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+    box-shadow: 0 4px 15px rgba(45, 60, 80, 0.3);
+    letter-spacing: 0.02em;
 }
 
 .start-game-btn:hover:not(:disabled) {
     transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(52, 152, 219, 0.4);
+    box-shadow: 0 8px 25px rgba(45, 60, 80, 0.4);
 }
 
 .start-game-btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+    transform: none;
 }
 
-/* Game Screen */
+/* -----------------------------------------------------------
+   Game Screen
+----------------------------------------------------------- */
 .trivia-game {
-    background: white;
-    border-radius: 15px;
-    padding: 2rem;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    background: var(--white);
+    border-radius: 12px;
+    padding: 2.5rem;
+    box-shadow: 0 8px 30px var(--shadow);
+    border: 1px solid var(--border);
 }
 
 .game-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
-    padding-bottom: 1rem;
-    border-bottom: 2px solid #ecf0f1;
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid var(--light-bg);
 }
 
 .game-header h2 {
-    font-size: 1.8rem;
-    color: #2c3e50;
+    font-size: 2rem;
+    color: var(--text-dark);
     margin: 0;
+    font-weight: 700;
 }
 
 .game-info {
@@ -193,115 +291,130 @@
 
 .difficulty-badge {
     padding: 0.5rem 1rem;
-    border-radius: 15px;
-    font-size: 0.9rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
     font-weight: 600;
     text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 .difficulty-badge.easy {
-    background: #d5f4e6;
-    color: #27ae60;
+    background: rgba(39, 174, 96, 0.1);
+    color: var(--success);
+    border: 1px solid rgba(39, 174, 96, 0.2);
 }
 
 .difficulty-badge.medium {
-    background: #fef9e7;
-    color: #f39c12;
+    background: rgba(243, 156, 18, 0.1);
+    color: var(--warning);
+    border: 1px solid rgba(243, 156, 18, 0.2);
 }
 
 .difficulty-badge.hard {
-    background: #fadbd8;
-    color: #e74c3c;
+    background: rgba(231, 76, 60, 0.1);
+    color: var(--error);
+    border: 1px solid rgba(231, 76, 60, 0.2);
 }
 
 .hint-counter {
     padding: 0.5rem 1rem;
-    background: #ecf0f1;
-    border-radius: 15px;
-    font-size: 0.9rem;
+    background: var(--light-bg);
+    border-radius: 20px;
+    font-size: 0.85rem;
     font-weight: 600;
-    color: #7f8c8d;
+    color: var(--text-light);
+    border: 1px solid var(--border);
 }
 
-/* Hints Section */
+/* -----------------------------------------------------------
+   Hints Section
+----------------------------------------------------------- */
 .hints-section {
-    margin-bottom: 2rem;
+    margin-bottom: 2.5rem;
 }
 
 .hints-section h3 {
     font-size: 1.3rem;
-    color: #34495e;
-    margin-bottom: 1rem;
+    color: var(--text-dark);
+    margin-bottom: 1.5rem;
+    font-weight: 600;
 }
 
 .hints-list {
     display: flex;
     flex-direction: column;
-    gap: 0.8rem;
+    gap: 1rem;
 }
 
 .hint {
-    padding: 1rem;
-    border-radius: 10px;
-    font-size: 1.1rem;
+    padding: 1.2rem;
+    border-radius: 8px;
+    font-size: 1rem;
     font-weight: 500;
     transition: all 0.3s ease;
+    border-left: 4px solid;
+    position: relative;
 }
 
 .hint-level-1 {
-    background: #e8f5e8;
-    color: #27ae60;
-    border-left: 4px solid #27ae60;
+    background: rgba(39, 174, 96, 0.05);
+    color: var(--success);
+    border-left-color: var(--success);
 }
 
 .hint-level-2 {
-    background: #fff3cd;
-    color: #856404;
-    border-left: 4px solid #ffc107;
+    background: rgba(243, 156, 18, 0.05);
+    color: var(--warning);
+    border-left-color: var(--warning);
 }
 
 .hint-level-3 {
-    background: #f8d7da;
-    color: #721c24;
-    border-left: 4px solid #dc3545;
+    background: rgba(231, 76, 60, 0.05);
+    color: var(--error);
+    border-left-color: var(--error);
 }
 
 .hint-level-4 {
-    background: #d1ecf1;
-    color: #0c5460;
-    border-left: 4px solid #17a2b8;
+    background: rgba(52, 152, 219, 0.05);
+    color: #3498db;
+    border-left-color: #3498db;
 }
 
 .hint-level-5 {
-    background: #e2e3e5;
-    color: #383d41;
-    border-left: 4px solid #6c757d;
+    background: rgba(155, 89, 182, 0.05);
+    color: #9b59b6;
+    border-left-color: #9b59b6;
 }
 
-/* Guess Section */
+/* -----------------------------------------------------------
+   Guess Section
+----------------------------------------------------------- */
 .guess-section {
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
 }
 
 .guess-input {
     width: 100%;
-    padding: 1rem;
+    padding: 1.2rem;
     font-size: 1.1rem;
-    border: 2px solid #e0e0e0;
-    border-radius: 10px;
-    margin-bottom: 1rem;
-    transition: border-color 0.3s ease;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    transition: all 0.3s ease;
+    font-family: inherit;
+    box-sizing: border-box;
 }
 
 .guess-input:focus {
     outline: none;
-    border-color: #3498db;
-    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 3px rgba(45, 60, 80, 0.1);
 }
 
 .guess-input:disabled {
-    background: #f8f9fa;
+    background: var(--light-bg);
     cursor: not-allowed;
+    opacity: 0.7;
 }
 
 .guess-buttons {
@@ -311,58 +424,65 @@
 }
 
 .submit-btn {
-    padding: 1rem 2rem;
-    background: linear-gradient(135deg, #27ae60, #229954);
-    color: white;
+    padding: 1rem 2.5rem;
+    background: linear-gradient(135deg, var(--success), #229954);
+    color: var(--white);
     border: none;
-    border-radius: 25px;
-    font-size: 1.1rem;
+    border-radius: 8px;
+    font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
 }
 
 .submit-btn:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+    box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
 }
 
 .submit-btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+    transform: none;
 }
 
 .give-up-btn {
-    padding: 1rem 2rem;
-    background: linear-gradient(135deg, #e74c3c, #c0392b);
-    color: white;
+    padding: 1rem 2.5rem;
+    background: linear-gradient(135deg, var(--error), #c0392b);
+    color: var(--white);
     border: none;
-    border-radius: 25px;
-    font-size: 1.1rem;
+    border-radius: 8px;
+    font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
 }
 
 .give-up-btn:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
 }
 
 .give-up-btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+    transform: none;
 }
 
-/* Incorrect Message */
+/* -----------------------------------------------------------
+   Incorrect Message
+----------------------------------------------------------- */
 .incorrect-message {
     padding: 1rem;
-    background: #f8d7da;
-    color: #721c24;
-    border-radius: 10px;
+    background: rgba(231, 76, 60, 0.1);
+    color: var(--error);
+    border-radius: 8px;
     text-align: center;
     font-weight: 600;
     margin-top: 1rem;
+    border: 1px solid rgba(231, 76, 60, 0.2);
     animation: shake 0.5s ease-in-out;
 }
 
@@ -372,19 +492,23 @@
     75% { transform: translateX(5px); }
 }
 
-/* Result Screen */
+/* -----------------------------------------------------------
+   Result Screen
+----------------------------------------------------------- */
 .trivia-result {
     text-align: center;
-    background: white;
-    border-radius: 15px;
+    background: var(--white);
+    border-radius: 12px;
     padding: 3rem 2rem;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 30px var(--shadow);
+    border: 1px solid var(--border);
 }
 
 .trivia-result h2 {
     font-size: 2.5rem;
-    color: #2c3e50;
+    color: var(--text-dark);
     margin-bottom: 2rem;
+    font-weight: 700;
 }
 
 .result-content {
@@ -403,45 +527,49 @@
 
 .correct-result h3 {
     font-size: 1.8rem;
-    color: #27ae60;
+    color: var(--success);
     margin-bottom: 0.5rem;
+    font-weight: 600;
 }
 
 .incorrect-result h3 {
     font-size: 1.8rem;
-    color: #e74c3c;
+    color: var(--error);
     margin-bottom: 0.5rem;
+    font-weight: 600;
 }
 
 .correct-answer {
     font-size: 1.5rem;
     font-weight: 600;
-    color: #2c3e50;
-    background: #ecf0f1;
-    padding: 1rem;
-    border-radius: 10px;
+    color: var(--text-dark);
+    background: var(--light-bg);
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
     display: inline-block;
     margin-top: 0.5rem;
+    border: 1px solid var(--border);
 }
 
 .game-stats {
-    background: #f8f9fa;
+    background: var(--light-bg);
     padding: 1.5rem;
-    border-radius: 10px;
+    border-radius: 8px;
     text-align: left;
     max-width: 300px;
     margin: 0 auto;
+    border: 1px solid var(--border);
 }
 
 .game-stats p {
     margin: 0.5rem 0;
-    font-size: 1.1rem;
-    color: #7f8c8d;
+    font-size: 1rem;
+    color: var(--text-light);
 }
 
 .stat-value {
     font-weight: 600;
-    color: #2c3e50;
+    color: var(--text-dark);
 }
 
 .result-buttons {
@@ -449,40 +577,43 @@
 }
 
 .play-again-btn {
-    padding: 1rem 3rem;
+    padding: 1.2rem 3rem;
     font-size: 1.2rem;
     font-weight: 600;
-    background: linear-gradient(135deg, #3498db, #2980b9);
-    color: white;
+    background: linear-gradient(135deg, var(--primary-blue), var(--primary-blue-hover));
+    color: var(--white);
     border: none;
-    border-radius: 30px;
+    border-radius: 8px;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+    box-shadow: 0 4px 15px rgba(45, 60, 80, 0.3);
 }
 
 .play-again-btn:hover {
     transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(52, 152, 219, 0.4);
+    box-shadow: 0 8px 25px rgba(45, 60, 80, 0.4);
 }
 
-/* Error Message */
+/* -----------------------------------------------------------
+   Error Message
+----------------------------------------------------------- */
 .error-message {
-    background: #f8d7da;
-    color: #721c24;
-    padding: 1rem;
-    border-radius: 10px;
+    background: rgba(231, 76, 60, 0.1);
+    color: var(--error);
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
     margin-bottom: 2rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
     animation: slideIn 0.3s ease;
+    border: 1px solid rgba(231, 76, 60, 0.2);
 }
 
 .error-message button {
     background: none;
     border: none;
-    color: #721c24;
+    color: var(--error);
     font-size: 1.5rem;
     cursor: pointer;
     padding: 0;
@@ -496,7 +627,7 @@
 }
 
 .error-message button:hover {
-    background: rgba(114, 28, 36, 0.1);
+    background: rgba(231, 76, 60, 0.1);
 }
 
 @keyframes slideIn {
@@ -510,10 +641,16 @@
     }
 }
 
-/* Responsive Design */
+/* -----------------------------------------------------------
+   Responsive Design
+----------------------------------------------------------- */
 @media (max-width: 768px) {
     .trivia-page {
         padding: 1rem;
+    }
+
+    .trivia-selection h1 {
+        font-size: 2.5rem;
     }
 
     .type-buttons {
@@ -548,5 +685,9 @@
     .submit-btn, .give-up-btn {
         width: 100%;
         max-width: 200px;
+    }
+
+    .trivia-game {
+        padding: 1.5rem;
     }
 } 

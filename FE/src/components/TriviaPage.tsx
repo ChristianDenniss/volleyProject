@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import '../styles/TriviaPage.css';
 import { 
     TriviaPlayer, 
@@ -8,59 +8,80 @@ import {
     GuessResult, 
     TriviaData 
 } from '../types/interfaces';
+import { useTriviaPlayer, useTriviaTeam, useTriviaSeason, useSubmitTriviaGuess } from '../hooks/useTrivia';
 
 type GameState = 'selection' | 'playing' | 'result';
 
+type Difficulty = 'easy' | 'medium' | 'hard';
+type TriviaType = 'player' | 'team' | 'season';
+
+const DEBOUNCE_MS = 1200;
+
 const TriviaPage: React.FC = () => {
     const [gameState, setGameState] = useState<GameState>('selection');
-    const [selectedType, setSelectedType] = useState<'player' | 'team' | 'season' | null>(null);
-    const [selectedDifficulty, setSelectedDifficulty] = useState<'easy' | 'medium' | 'hard' | null>(null);
+    const [selectedType, setSelectedType] = useState<TriviaType | null>(null);
+    const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty | null>(null);
     const [currentTrivia, setCurrentTrivia] = useState<TriviaData | null>(null);
     const [currentHints, setCurrentHints] = useState<Hint[]>([]);
     const [userGuess, setUserGuess] = useState('');
     const [guessResult, setGuessResult] = useState<GuessResult | null>(null);
     const [hintLevel, setHintLevel] = useState(1);
-    const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [debounce, setDebounce] = useState(false);
+    const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
 
-    const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    // Hooks for fetching trivia
+    const triviaPlayer = useTriviaPlayer(selectedDifficulty || 'easy');
+    const triviaTeam = useTriviaTeam(selectedDifficulty || 'easy');
+    const triviaSeason = useTriviaSeason(selectedDifficulty || 'easy');
+    const submitGuessHook = useSubmitTriviaGuess();
 
+    // Helper to debounce button actions
+    const triggerDebounce = () => {
+        setDebounce(true);
+        if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
+        debounceTimeout.current = setTimeout(() => setDebounce(false), DEBOUNCE_MS);
+    };
+
+    // Start game using hooks
     const startGame = async () => {
-        if (!selectedType || !selectedDifficulty) return;
-
-        setIsLoading(true);
+        if (!selectedType || !selectedDifficulty || debounce) return;
         setError(null);
-
+        setCurrentTrivia(null);
+        setCurrentHints([]);
+        setUserGuess('');
+        setGuessResult(null);
+        setHintLevel(1);
+        setGameState('playing');
+        triggerDebounce();
         try {
-            const endpoint = `/api/trivia/${selectedType}`;
-            const response = await fetch(
-                `${API_BASE}${endpoint}?difficulty=${selectedDifficulty}`
-            );
-
-            if (!response.ok) {
-                throw new Error('Failed to get trivia item');
+            let triviaData: TriviaData | null = null;
+            if (selectedType === 'player') {
+                await triviaPlayer.fetchTriviaPlayer();
+                triviaData = triviaPlayer.data;
+            } else if (selectedType === 'team') {
+                await triviaTeam.fetchTriviaTeam();
+                triviaData = triviaTeam.data;
+            } else if (selectedType === 'season') {
+                await triviaSeason.fetchTriviaSeason();
+                triviaData = triviaSeason.data;
             }
-
-            const triviaData: TriviaData = await response.json();
+            if (!triviaData) {
+                setError('No trivia data found.');
+                setGameState('selection');
+                return;
+            }
             setCurrentTrivia(triviaData);
-            setGameState('playing');
-            setHintLevel(1);
-            setCurrentHints([]);
-            setUserGuess('');
-            setGuessResult(null);
-
-            // Generate first hint
             generateHints(triviaData, selectedType, 1);
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'An error occurred');
-        } finally {
-            setIsLoading(false);
+        } catch (err: any) {
+            setError(err.message || 'Failed to start game');
+            setGameState('selection');
         }
     };
 
+    // Generate hints
     const generateHints = (triviaData: TriviaData, type: string, maxLevel: number) => {
         const hints: Hint[] = [];
-
         switch (type) {
             case 'player':
                 hints.push(...generatePlayerHints(triviaData as TriviaPlayer, maxLevel));
@@ -72,200 +93,94 @@ const TriviaPage: React.FC = () => {
                 hints.push(...generateSeasonHints(triviaData as TriviaSeason, maxLevel));
                 break;
         }
-
         setCurrentHints(hints);
     };
 
+    // Hint generators (same as before)
     const generatePlayerHints = (player: TriviaPlayer, maxLevel: number): Hint[] => {
         const hints: Hint[] = [];
-        
-        // Level 1: First letter
-        hints.push({
-            text: `First letter: ${player.name.charAt(0)}`,
-            level: 1
-        });
-
-        // Level 2: Position
+        hints.push({ text: `First letter: ${player.name.charAt(0)}`, level: 1 });
         if (player.position && player.position !== "N/A") {
-            hints.push({
-                text: `Position: ${player.position}`,
-                level: 2
-            });
+            hints.push({ text: `Position: ${player.position}`, level: 2 });
         }
-
-        // Level 3: Number of teams
         if (player.teams && player.teams.length > 0) {
-            hints.push({
-                text: `Has played for ${player.teams.length} team(s)`,
-                level: 3
-            });
+            hints.push({ text: `Has played for ${player.teams.length} team(s)`, level: 3 });
         }
-
-        // Level 4: Awards
         if (player.awards && player.awards.length > 0) {
-            hints.push({
-                text: `Has won ${player.awards.length} award(s)`,
-                level: 4
-            });
+            hints.push({ text: `Has won ${player.awards.length} award(s)`, level: 4 });
         }
-
-        // Level 5: Specific team names
         if (player.teams && player.teams.length > 0) {
             const teamNames = player.teams.map(t => t.name).join(', ');
-            hints.push({
-                text: `Teams: ${teamNames}`,
-                level: 5
-            });
+            hints.push({ text: `Teams: ${teamNames}`, level: 5 });
         }
-
         return hints.slice(0, maxLevel);
     };
-
     const generateTeamHints = (team: TriviaTeam, maxLevel: number): Hint[] => {
         const hints: Hint[] = [];
-        
-        // Level 1: First letter
-        hints.push({
-            text: `First letter: ${team.name.charAt(0)}`,
-            level: 1
-        });
-
-        // Level 2: Season
+        hints.push({ text: `First letter: ${team.name.charAt(0)}`, level: 1 });
         if (team.season) {
-            hints.push({
-                text: `Played in Season ${team.season.seasonNumber}`,
-                level: 2
-            });
+            hints.push({ text: `Played in Season ${team.season.seasonNumber}`, level: 2 });
         }
-
-        // Level 3: Placement
         if (team.placement && team.placement !== "Didnt make playoffs") {
-            hints.push({
-                text: `Placement: ${team.placement}`,
-                level: 3
-            });
+            hints.push({ text: `Placement: ${team.placement}`, level: 3 });
         }
-
-        // Level 4: Number of players
         if (team.players && team.players.length > 0) {
-            hints.push({
-                text: `Has ${team.players.length} player(s)`,
-                level: 4
-            });
+            hints.push({ text: `Has ${team.players.length} player(s)`, level: 4 });
         }
-
-        // Level 5: Player names
         if (team.players && team.players.length > 0) {
             const playerNames = team.players.map(p => p.name).join(', ');
-            hints.push({
-                text: `Players: ${playerNames}`,
-                level: 5
-            });
+            hints.push({ text: `Players: ${playerNames}`, level: 5 });
         }
-
         return hints.slice(0, maxLevel);
     };
-
     const generateSeasonHints = (season: TriviaSeason, maxLevel: number): Hint[] => {
         const hints: Hint[] = [];
-        
-        // Level 1: Season number range
         const seasonNum = season.seasonNumber;
         if (seasonNum <= 5) {
-            hints.push({
-                text: 'Season number is 5 or lower',
-                level: 1
-            });
+            hints.push({ text: 'Season number is 5 or lower', level: 1 });
         } else if (seasonNum <= 10) {
-            hints.push({
-                text: 'Season number is between 6 and 10',
-                level: 1
-            });
+            hints.push({ text: 'Season number is between 6 and 10', level: 1 });
         } else {
-            hints.push({
-                text: 'Season number is higher than 10',
-                level: 1
-            });
+            hints.push({ text: 'Season number is higher than 10', level: 1 });
         }
-
-        // Level 2: Theme
         if (season.theme && season.theme !== "None") {
-            hints.push({
-                text: `Theme: ${season.theme}`,
-                level: 2
-            });
+            hints.push({ text: `Theme: ${season.theme}`, level: 2 });
         }
-
-        // Level 3: Number of teams
         if (season.teams && season.teams.length > 0) {
-            hints.push({
-                text: `Has ${season.teams.length} team(s)`,
-                level: 3
-            });
+            hints.push({ text: `Has ${season.teams.length} team(s)`, level: 3 });
         }
-
-        // Level 4: Year
         const year = new Date(season.startDate).getFullYear();
-        hints.push({
-            text: `Started in ${year}`,
-            level: 4
-        });
-
-        // Level 5: Team names
+        hints.push({ text: `Started in ${year}`, level: 4 });
         if (season.teams && season.teams.length > 0) {
             const teamNames = season.teams.map(t => t.name).join(', ');
-            hints.push({
-                text: `Teams: ${teamNames}`,
-                level: 5
-            });
+            hints.push({ text: `Teams: ${teamNames}`, level: 5 });
         }
-
         return hints.slice(0, maxLevel);
     };
 
+    // Submit guess using hook
     const submitGuess = async () => {
-        if (!currentTrivia || !userGuess.trim()) return;
-
-        setIsLoading(true);
-        setError(null);
-
+        if (!currentTrivia || !userGuess.trim() || debounce) return;
+        triggerDebounce();
         try {
-            const response = await fetch(`${API_BASE}/api/trivia/guess`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    type: selectedType,
-                    id: currentTrivia.id,
-                    guess: userGuess.trim()
-                })
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to validate guess');
-            }
-
-            const result: GuessResult = await response.json();
+            const type = selectedType!;
+            const id = currentTrivia.id;
+            const guess = userGuess.trim();
+            const result = await submitGuessHook.submitGuess(type, id, guess);
             setGuessResult(result);
-
-            if (result.correct) {
+            if (result?.correct) {
                 setGameState('result');
             } else {
-                // Show next hint if available
                 const nextLevel = hintLevel + 1;
-                if (nextLevel <= currentTrivia.hintCount) {
+                if (nextLevel <= (currentTrivia as any).hintCount) {
                     setHintLevel(nextLevel);
-                    generateHints(currentTrivia, selectedType!, nextLevel);
+                    generateHints(currentTrivia, type, nextLevel);
                 } else {
-                    // Out of hints, show result
                     setGameState('result');
                 }
             }
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to submit guess');
-        } finally {
-            setIsLoading(false);
+        } catch (err: any) {
+            setError(err.message || 'Failed to submit guess');
         }
     };
 
@@ -286,7 +201,6 @@ const TriviaPage: React.FC = () => {
             const answer = selectedType === 'season' 
                 ? `Season ${(currentTrivia as TriviaSeason).seasonNumber}`
                 : (currentTrivia as TriviaPlayer | TriviaTeam).name;
-            
             setGuessResult({
                 correct: false,
                 answer,
@@ -306,13 +220,13 @@ const TriviaPage: React.FC = () => {
         <div className="trivia-selection">
             <h1>Volleyball Trivia</h1>
             <p>Test your knowledge of RVL players, teams, and seasons!</p>
-            
             <div className="selection-section">
                 <h2>What would you like to guess?</h2>
                 <div className="type-buttons">
                     <button
                         className={`type-btn ${selectedType === 'player' ? 'selected' : ''}`}
                         onClick={() => setSelectedType('player')}
+                        disabled={debounce}
                     >
                         <span className="type-icon">👤</span>
                         <span className="type-label">Player</span>
@@ -320,6 +234,7 @@ const TriviaPage: React.FC = () => {
                     <button
                         className={`type-btn ${selectedType === 'team' ? 'selected' : ''}`}
                         onClick={() => setSelectedType('team')}
+                        disabled={debounce}
                     >
                         <span className="type-icon">🏆</span>
                         <span className="type-label">Team</span>
@@ -327,13 +242,13 @@ const TriviaPage: React.FC = () => {
                     <button
                         className={`type-btn ${selectedType === 'season' ? 'selected' : ''}`}
                         onClick={() => setSelectedType('season')}
+                        disabled={debounce}
                     >
                         <span className="type-icon">📅</span>
                         <span className="type-label">Season</span>
                     </button>
                 </div>
             </div>
-
             {selectedType && (
                 <div className="selection-section">
                     <h2>Choose difficulty:</h2>
@@ -341,32 +256,34 @@ const TriviaPage: React.FC = () => {
                         <button
                             className={`difficulty-btn easy ${selectedDifficulty === 'easy' ? 'selected' : ''}`}
                             onClick={() => setSelectedDifficulty('easy')}
+                            disabled={debounce}
                         >
                             Easy
                         </button>
                         <button
                             className={`difficulty-btn medium ${selectedDifficulty === 'medium' ? 'selected' : ''}`}
                             onClick={() => setSelectedDifficulty('medium')}
+                            disabled={debounce}
                         >
                             Medium
                         </button>
                         <button
                             className={`difficulty-btn hard ${selectedDifficulty === 'hard' ? 'selected' : ''}`}
                             onClick={() => setSelectedDifficulty('hard')}
+                            disabled={debounce}
                         >
                             Hard
                         </button>
                     </div>
                 </div>
             )}
-
             {selectedType && selectedDifficulty && (
                 <button 
                     className="start-game-btn"
                     onClick={startGame}
-                    disabled={isLoading}
+                    disabled={debounce}
                 >
-                    {isLoading ? 'Loading...' : 'Start Game!'}
+                    {debounce ? 'Please wait...' : 'Start Game!'}
                 </button>
             )}
         </div>
@@ -381,7 +298,6 @@ const TriviaPage: React.FC = () => {
                     <span className="hint-counter">Hint {hintLevel}/{currentTrivia?.hintCount}</span>
                 </div>
             </div>
-
             <div className="hints-section">
                 <h3>Hints:</h3>
                 <div className="hints-list">
@@ -392,7 +308,6 @@ const TriviaPage: React.FC = () => {
                     ))}
                 </div>
             </div>
-
             <div className="guess-section">
                 <input
                     type="text"
@@ -401,26 +316,25 @@ const TriviaPage: React.FC = () => {
                     onKeyPress={handleKeyPress}
                     placeholder={`Enter your guess...`}
                     className="guess-input"
-                    disabled={isLoading}
+                    disabled={debounce}
                 />
                 <div className="guess-buttons">
                     <button 
                         className="submit-btn"
                         onClick={submitGuess}
-                        disabled={!userGuess.trim() || isLoading}
+                        disabled={!userGuess.trim() || debounce}
                     >
-                        {isLoading ? 'Checking...' : 'Submit Guess'}
+                        {debounce ? 'Please wait...' : 'Submit Guess'}
                     </button>
                     <button 
                         className="give-up-btn"
                         onClick={giveUp}
-                        disabled={isLoading}
+                        disabled={debounce}
                     >
                         Give Up
                     </button>
                 </div>
             </div>
-
             {guessResult && !guessResult.correct && (
                 <div className="incorrect-message">
                     {guessResult.message}
@@ -432,7 +346,6 @@ const TriviaPage: React.FC = () => {
     const renderResultScreen = () => (
         <div className="trivia-result">
             <h2>Game Over!</h2>
-            
             <div className="result-content">
                 {guessResult?.correct ? (
                     <div className="correct-result">
@@ -447,14 +360,12 @@ const TriviaPage: React.FC = () => {
                         <p className="correct-answer">{guessResult?.answer}</p>
                     </div>
                 )}
-
                 <div className="game-stats">
                     <p>Difficulty: <span className="stat-value">{selectedDifficulty}</span></p>
                     <p>Type: <span className="stat-value">{selectedType}</span></p>
                     <p>Hints used: <span className="stat-value">{hintLevel}</span></p>
                 </div>
             </div>
-
             <div className="result-buttons">
                 <button className="play-again-btn" onClick={resetGame}>
                     Play Again
@@ -471,7 +382,6 @@ const TriviaPage: React.FC = () => {
                     <button onClick={() => setError(null)}>×</button>
                 </div>
             )}
-
             {gameState === 'selection' && renderSelectionScreen()}
             {gameState === 'playing' && renderGameScreen()}
             {gameState === 'result' && renderResultScreen()}
