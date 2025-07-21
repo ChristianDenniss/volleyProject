@@ -45,7 +45,14 @@ const TriviaPage: React.FC = () => {
 
     // Start game using hooks
     const startGame = async () => {
-        if (!selectedType || !selectedDifficulty || debounce) return;
+        console.log('🎮 [TriviaPage] Starting game with:', { selectedType, selectedDifficulty, debounce });
+        
+        if (!selectedType || !selectedDifficulty || debounce) {
+            console.log('❌ [TriviaPage] Cannot start game - missing data or debounced');
+            return;
+        }
+        
+        console.log('🎮 [TriviaPage] Initializing game state...');
         setError(null);
         setCurrentTrivia(null);
         setCurrentHints([]);
@@ -54,26 +61,40 @@ const TriviaPage: React.FC = () => {
         setHintLevel(1);
         setGameState('playing');
         triggerDebounce();
+        
         try {
+            console.log('🎮 [TriviaPage] Fetching trivia data for type:', selectedType);
             let triviaData: TriviaData | null = null;
+            
             if (selectedType === 'player') {
+                console.log('🎮 [TriviaPage] Fetching trivia player...');
                 await triviaPlayer.fetchTriviaPlayer();
                 triviaData = triviaPlayer.data;
+                console.log('🎮 [TriviaPage] Trivia player data:', triviaData);
             } else if (selectedType === 'team') {
+                console.log('🎮 [TriviaPage] Fetching trivia team...');
                 await triviaTeam.fetchTriviaTeam();
                 triviaData = triviaTeam.data;
+                console.log('🎮 [TriviaPage] Trivia team data:', triviaData);
             } else if (selectedType === 'season') {
+                console.log('🎮 [TriviaPage] Fetching trivia season...');
                 await triviaSeason.fetchTriviaSeason();
                 triviaData = triviaSeason.data;
+                console.log('🎮 [TriviaPage] Trivia season data:', triviaData);
             }
+            
             if (!triviaData) {
+                console.error('❌ [TriviaPage] No trivia data found after fetch');
                 setError('No trivia data found.');
                 setGameState('selection');
                 return;
             }
+            
+            console.log('✅ [TriviaPage] Successfully got trivia data, setting current trivia');
             setCurrentTrivia(triviaData);
             generateHints(triviaData, selectedType, 1);
         } catch (err: any) {
+            console.error('❌ [TriviaPage] Error starting game:', err);
             setError(err.message || 'Failed to start game');
             setGameState('selection');
         }
@@ -160,26 +181,45 @@ const TriviaPage: React.FC = () => {
 
     // Submit guess using hook
     const submitGuess = async () => {
-        if (!currentTrivia || !userGuess.trim() || debounce) return;
+        console.log('🎯 [TriviaPage] Submitting guess:', { 
+            currentTrivia: currentTrivia?.id, 
+            userGuess: userGuess.trim(), 
+            debounce 
+        });
+        
+        if (!currentTrivia || !userGuess.trim() || debounce) {
+            console.log('❌ [TriviaPage] Cannot submit guess - missing data or debounced');
+            return;
+        }
+        
         triggerDebounce();
         try {
             const type = selectedType!;
             const id = currentTrivia.id;
             const guess = userGuess.trim();
+            
+            console.log('🎯 [TriviaPage] Submitting guess with:', { type, id, guess });
             const result = await submitGuessHook.submitGuess(type, id, guess);
+            console.log('🎯 [TriviaPage] Guess result:', result);
+            
             setGuessResult(result);
             if (result?.correct) {
+                console.log('✅ [TriviaPage] Correct guess! Moving to result screen');
                 setGameState('result');
             } else {
+                console.log('❌ [TriviaPage] Incorrect guess, checking hint levels');
                 const nextLevel = hintLevel + 1;
                 if (nextLevel <= (currentTrivia as any).hintCount) {
+                    console.log('🎯 [TriviaPage] More hints available, increasing level to:', nextLevel);
                     setHintLevel(nextLevel);
                     generateHints(currentTrivia, type, nextLevel);
                 } else {
+                    console.log('🎯 [TriviaPage] No more hints, moving to result screen');
                     setGameState('result');
                 }
             }
         } catch (err: any) {
+            console.error('❌ [TriviaPage] Error submitting guess:', err);
             setError(err.message || 'Failed to submit guess');
         }
     };

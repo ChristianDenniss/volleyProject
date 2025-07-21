@@ -40,16 +40,22 @@ export class TriviaService {
      * Get a random trivia player with all relations - OPTIMIZED VERSION
      */
     async getRandomTriviaPlayer(difficulty: string): Promise<TriviaPlayer> {
+        console.log('🎯 [TriviaService] getRandomTriviaPlayer called with difficulty:', difficulty);
+        
         // Step 1: Fetch all player IDs only (minimal memory usage)
+        console.log('🎯 [TriviaService] Step 1: Fetching all player IDs...');
         const playerIds = await this.playerRepository.find({ 
             select: ['id'] 
         });
+        console.log('✅ [TriviaService] Found', playerIds.length, 'player IDs');
 
         if (playerIds.length === 0) {
+            console.error('❌ [TriviaService] No players found in database');
             throw new Error('No players found in database');
         }
 
         // Step 2: Find candidates that match difficulty (fetch minimal data for each)
+        console.log('🎯 [TriviaService] Step 2: Finding candidates for difficulty:', difficulty);
         const candidates: number[] = [];
         
         for (const { id } of playerIds) {
@@ -63,29 +69,45 @@ export class TriviaService {
 
                 if (player && this.calculatePlayerDifficulty(player) === difficulty) {
                     candidates.push(id);
+                    console.log('✅ [TriviaService] Player', player.name, 'matches difficulty', difficulty);
                 }
             } catch (error) {
-                console.warn(`Error processing player ${id}:`, error);
+                console.warn(`❌ [TriviaService] Error processing player ${id}:`, error);
                 continue; // Skip this player and continue with others
             }
         }
 
+        console.log('✅ [TriviaService] Found', candidates.length, 'candidates for difficulty:', difficulty);
+
         if (candidates.length === 0) {
+            console.error('❌ [TriviaService] No players found for difficulty:', difficulty);
             throw new Error(`No players found for difficulty: ${difficulty}`);
         }
 
         // Step 3: Pick a random candidate ID
         const randomId = candidates[Math.floor(Math.random() * candidates.length)];
+        console.log('🎯 [TriviaService] Step 3: Selected random player ID:', randomId);
 
         // Step 4: Fetch the full player with all relations
+        console.log('🎯 [TriviaService] Step 4: Fetching full player data...');
         const randomPlayer = await this.playerRepository.findOne({
             where: { id: randomId },
             relations: ['teams', 'awards', 'stats', 'records']
         });
 
         if (!randomPlayer) {
+            console.error('❌ [TriviaService] Failed to fetch player with ID:', randomId);
             throw new Error(`Failed to fetch player with ID ${randomId}`);
         }
+        
+        console.log('✅ [TriviaService] Successfully fetched player:', {
+            id: randomPlayer.id,
+            name: randomPlayer.name,
+            teams: randomPlayer.teams?.length || 0,
+            awards: randomPlayer.awards?.length || 0,
+            stats: randomPlayer.stats?.length || 0,
+            records: randomPlayer.records?.length || 0
+        });
         
         const triviaPlayer = {
             id: randomPlayer.id,
@@ -100,7 +122,10 @@ export class TriviaService {
         };
 
         // Validate with Zod schema
-        return TriviaPlayerSchema.parse(triviaPlayer);
+        console.log('🎯 [TriviaService] Validating with Zod schema...');
+        const validatedPlayer = TriviaPlayerSchema.parse(triviaPlayer);
+        console.log('✅ [TriviaService] Validation successful, returning trivia player');
+        return validatedPlayer;
     }
 
     /**
