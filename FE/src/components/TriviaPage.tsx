@@ -8,7 +8,7 @@ import {
     GuessResult, 
     TriviaData 
 } from '../types/interfaces';
-import { useTriviaPlayer, useTriviaTeam, useTriviaSeason, useSubmitTriviaGuess } from '../hooks/useTrivia';
+import { useTriviaPlayer, useTriviaTeam, useTriviaSeason, useSubmitTriviaGuess } from '../hooks/allFetch';
 
 type GameState = 'selection' | 'playing' | 'result';
 
