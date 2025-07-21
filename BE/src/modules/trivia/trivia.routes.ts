@@ -1,5 +1,6 @@
 import { Application, Router } from 'express';
 import { TriviaController } from './trivia.controller.js';
+import { loggerMiddleware } from '../../middleware/logger.js';
 
 /**
  * Register trivia routes with the Express application
@@ -7,6 +8,9 @@ import { TriviaController } from './trivia.controller.js';
 export function registerTriviaRoutes(app: Application): void {
     const router = Router();
     const triviaController = new TriviaController();
+
+    // Apply logging middleware to all trivia routes
+    router.use(loggerMiddleware);
 
     // GET routes - PUBLIC (for website display)
     router.get('/player', triviaController.getRandomTriviaPlayer);
