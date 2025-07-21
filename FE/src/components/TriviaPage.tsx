@@ -68,14 +68,17 @@ const TriviaPage: React.FC = () => {
             
             if (selectedType === 'player') {
                 console.log('🎮 [TriviaPage] Fetching trivia player...');
+                await triviaPlayer.fetchTriviaPlayer();
                 triviaData = triviaPlayer.data;
                 console.log('🎮 [TriviaPage] Trivia player data:', triviaData);
             } else if (selectedType === 'team') {
                 console.log('🎮 [TriviaPage] Fetching trivia team...');
+                await triviaTeam.fetchTriviaTeam();
                 triviaData = triviaTeam.data;
                 console.log('🎮 [TriviaPage] Trivia team data:', triviaData);
             } else if (selectedType === 'season') {
                 console.log('🎮 [TriviaPage] Fetching trivia season...');
+                await triviaSeason.fetchTriviaSeason();
                 triviaData = triviaSeason.data;
                 console.log('🎮 [TriviaPage] Trivia season data:', triviaData);
             }
