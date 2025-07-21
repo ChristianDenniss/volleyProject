@@ -381,12 +381,12 @@ export class TriviaService {
             stat_count: statCount,
             record_count: recordCount,
             totalRelations,
-            difficulty: totalRelations >= 12 ? 'easy' : totalRelations >= 8 ? 'medium' : totalRelations >= 4 ? 'hard' : 'impossible'
+            difficulty: totalRelations >= 20 ? 'easy' : totalRelations >= 12 ? 'medium' : totalRelations >= 6 ? 'hard' : 'impossible'
         });
 
-        if (totalRelations >= 12) return 'easy';
-        if (totalRelations >= 8) return 'medium';
-        if (totalRelations >= 4) return 'hard';
+        if (totalRelations >= 20) return 'easy';
+        if (totalRelations >= 12) return 'medium';
+        if (totalRelations >= 6) return 'hard';
         return 'impossible';
     }
 
@@ -446,12 +446,12 @@ export class TriviaService {
             player_count: playerCount,
             game_count: gameCount,
             totalRelations,
-            difficulty: totalRelations >= 20 ? 'easy' : totalRelations >= 15 ? 'medium' : totalRelations >= 8 ? 'hard' : 'impossible'
+            difficulty: totalRelations >= 35 ? 'easy' : totalRelations >= 20 ? 'medium' : totalRelations >= 10 ? 'hard' : 'impossible'
         });
 
-        if (totalRelations >= 20) return 'easy';
-        if (totalRelations >= 15) return 'medium';
-        if (totalRelations >= 8) return 'hard';
+        if (totalRelations >= 35) return 'easy';
+        if (totalRelations >= 20) return 'medium';
+        if (totalRelations >= 10) return 'hard';
         return 'impossible';
     }
 
@@ -518,12 +518,12 @@ export class TriviaService {
             award_count: awardCount,
             record_count: recordCount,
             totalRelations,
-            difficulty: totalRelations >= 30 ? 'easy' : totalRelations >= 20 ? 'medium' : totalRelations >= 10 ? 'hard' : 'impossible'
+            difficulty: totalRelations >= 50 ? 'easy' : totalRelations >= 30 ? 'medium' : totalRelations >= 15 ? 'hard' : 'impossible'
         });
 
-        if (totalRelations >= 30) return 'easy';
-        if (totalRelations >= 20) return 'medium';
-        if (totalRelations >= 10) return 'hard';
+        if (totalRelations >= 50) return 'easy';
+        if (totalRelations >= 30) return 'medium';
+        if (totalRelations >= 15) return 'hard';
         return 'impossible';
     }
 
