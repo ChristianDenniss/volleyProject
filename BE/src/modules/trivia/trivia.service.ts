@@ -51,15 +51,15 @@ export class TriviaService {
                 p.name,
                 p.position,
                 LENGTH(p.name) as name_length,
-                COUNT(DISTINCT pt.teams_id) as team_count,
-                COUNT(DISTINCT ap.awards_id) as award_count,
+                COUNT(DISTINCT pt."teamsId") as team_count,
+                COUNT(DISTINCT ap."awardsId") as award_count,
                 COUNT(DISTINCT s.id) as stat_count,
                 COUNT(DISTINCT r.id) as record_count
             FROM players p
-            LEFT JOIN players_teams_teams pt ON p.id = pt.players_id
-            LEFT JOIN awards_players_players ap ON p.id = ap.players_id
-            LEFT JOIN stats s ON p.id = s.player_id
-            LEFT JOIN records r ON p.id = r.player_id
+            LEFT JOIN players_teams_teams pt ON p.id = pt."playersId"
+            LEFT JOIN awards_players_players ap ON p.id = ap."playersId"
+            LEFT JOIN stats s ON p.id = s."playerId"
+            LEFT JOIN records r ON p.id = r."playerId"
             GROUP BY p.id, p.name, p.position
         `;
         
@@ -68,8 +68,13 @@ export class TriviaService {
         
         // Step 2: Filter by difficulty using the scoring algorithm
         const candidates = playersWithScores.filter((player: any) => {
-            const score = this.calculatePlayerDifficultyFromScores(player);
-            return score === difficulty;
+            try {
+                const score = this.calculatePlayerDifficultyFromScores(player);
+                return score === difficulty;
+            } catch (error) {
+                console.warn(`❌ [TriviaService] Error calculating difficulty for player ${player.id}:`, error);
+                return false;
+            }
         });
         
         console.log('✅ [TriviaService] Found', candidates.length, 'candidates for difficulty:', difficulty);
@@ -138,11 +143,11 @@ export class TriviaService {
                 t.name,
                 t.placement,
                 LENGTH(t.name) as name_length,
-                COUNT(DISTINCT pt.players_id) as player_count,
-                COUNT(DISTINCT tg.games_id) as game_count
+                COUNT(DISTINCT pt."playersId") as player_count,
+                COUNT(DISTINCT tg."gamesId") as game_count
             FROM teams t
-            LEFT JOIN players_teams_teams pt ON t.id = pt.teams_id
-            LEFT JOIN teams_games tg ON t.id = tg.teams_id
+            LEFT JOIN players_teams_teams pt ON t.id = pt."teamsId"
+            LEFT JOIN teams_games tg ON t.id = tg."teamsId"
             GROUP BY t.id, t.name, t.placement
         `;
         
@@ -151,8 +156,13 @@ export class TriviaService {
         
         // Step 2: Filter by difficulty using the scoring algorithm
         const candidates = teamsWithScores.filter((team: any) => {
-            const score = this.calculateTeamDifficultyFromScores(team);
-            return score === difficulty;
+            try {
+                const score = this.calculateTeamDifficultyFromScores(team);
+                return score === difficulty;
+            } catch (error) {
+                console.warn(`❌ [TriviaService] Error calculating difficulty for team ${team.id}:`, error);
+                return false;
+            }
         });
         
         console.log('✅ [TriviaService] Found', candidates.length, 'candidates for difficulty:', difficulty);
@@ -226,8 +236,13 @@ export class TriviaService {
         
         // Step 2: Filter by difficulty using the scoring algorithm
         const candidates = seasonsWithScores.filter((season: any) => {
-            const score = this.calculateSeasonDifficultyFromScores(season);
-            return score === difficulty;
+            try {
+                const score = this.calculateSeasonDifficultyFromScores(season);
+                return score === difficulty;
+            } catch (error) {
+                console.warn(`❌ [TriviaService] Error calculating difficulty for season ${season.id}:`, error);
+                return false;
+            }
         });
         
         console.log('✅ [TriviaService] Found', candidates.length, 'candidates for difficulty:', difficulty);

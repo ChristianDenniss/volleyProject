@@ -33,7 +33,7 @@
   border-radius: 4px;
   flex: 1;
   min-width: 200px;
-  min-height: 2rem; /* Reserve space for search input */
+  min-height: 1.5rem; /* Reserve space for search input */
 }
 
 .article-list-sort {
