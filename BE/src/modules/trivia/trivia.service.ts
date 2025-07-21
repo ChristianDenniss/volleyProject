@@ -16,11 +16,25 @@ import {
 } from './trivia.schema.js';
 
 export class TriviaService {
-    private playerRepository = AppDataSource.getRepository(Players);
-    private teamRepository = AppDataSource.getRepository(Teams);
-    private seasonRepository = AppDataSource.getRepository(Seasons);
-    private awardRepository = AppDataSource.getRepository(Awards);
-    private statRepository = AppDataSource.getRepository(Stats);
+    private get playerRepository() {
+        return AppDataSource.getRepository(Players);
+    }
+    
+    private get teamRepository() {
+        return AppDataSource.getRepository(Teams);
+    }
+    
+    private get seasonRepository() {
+        return AppDataSource.getRepository(Seasons);
+    }
+    
+    private get awardRepository() {
+        return AppDataSource.getRepository(Awards);
+    }
+    
+    private get statRepository() {
+        return AppDataSource.getRepository(Stats);
+    }
 
     /**
      * Get a random trivia player with all relations
