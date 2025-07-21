@@ -30,7 +30,7 @@ const TriviaPage: React.FC = () => {
     const [debounce, setDebounce] = useState(false);
     const debounceTimeout = useRef<number | null>(null);
 
-    // Hooks for fetching trivia - only initialize when difficulty is selected
+    // Hooks for fetching trivia - initialize with current difficulty
     const triviaPlayer = useTriviaPlayer(selectedDifficulty || 'easy');
     const triviaTeam = useTriviaTeam(selectedDifficulty || 'easy');
     const triviaSeason = useTriviaSeason(selectedDifficulty || 'easy');

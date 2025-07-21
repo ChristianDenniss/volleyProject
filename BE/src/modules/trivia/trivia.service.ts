@@ -306,13 +306,37 @@ export class TriviaService {
     private calculatePlayerDifficulty(player: Players): 'easy' | 'medium' | 'hard' {
         let score = 0;
         
-        score += (player.teams?.length || 0) * 2; // More teams = easier
-        score += (player.awards?.length || 0) * 3; // More awards = easier
-        score += (player.stats?.length || 0); // More stats = easier
-        score += (player.records?.length || 0) * 2; // Records = easier
+        // Name complexity (harder names = harder difficulty)
+        const nameLength = player.name?.length || 0;
+        if (nameLength <= 5) score += 2; // Short names are easier
+        else if (nameLength <= 10) score += 1; // Medium names are medium
+        // Long names (10+) get no bonus = harder
+        
+        // Teams (more teams = more recognizable)
+        score += Math.min((player.teams?.length || 0), 3); // Cap at 3 teams
+        
+        // Awards (more awards = more famous)
+        score += Math.min((player.awards?.length || 0), 2); // Cap at 2 awards
+        
+        // Stats (more stats = more data available)
+        score += Math.min((player.stats?.length || 0) / 2, 2); // Cap at 2 points for stats
+        
+        // Records (records = very famous)
+        score += Math.min((player.records?.length || 0), 1); // Cap at 1 record
 
-        if (score >= 8) return 'easy';
-        if (score >= 4) return 'medium';
+        console.log(`🎯 [TriviaService] Player ${player.name} difficulty calculation:`, {
+            name: player.name,
+            nameLength,
+            teams: player.teams?.length || 0,
+            awards: player.awards?.length || 0,
+            stats: player.stats?.length || 0,
+            records: player.records?.length || 0,
+            score,
+            difficulty: score >= 6 ? 'easy' : score >= 3 ? 'medium' : 'hard'
+        });
+
+        if (score >= 6) return 'easy';
+        if (score >= 3) return 'medium';
         return 'hard';
     }
 
@@ -322,15 +346,39 @@ export class TriviaService {
     private calculateTeamDifficulty(team: Teams): 'easy' | 'medium' | 'hard' {
         let score = 0;
         
-        score += (team.players?.length || 0); // More players = easier
-        score += (team.games?.length || 0); // More games = easier
-        // Better placement = easier
+        // Name complexity (harder names = harder difficulty)
+        const nameLength = team.name?.length || 0;
+        if (nameLength <= 8) score += 2; // Short names are easier
+        else if (nameLength <= 15) score += 1; // Medium names are medium
+        // Long names (15+) get no bonus = harder
+        
+        // Players (more players = more recognizable)
+        score += Math.min((team.players?.length || 0) / 2, 2); // Cap at 2 points for players
+        
+        // Games (more games = more data available)
+        score += Math.min((team.games?.length || 0) / 3, 2); // Cap at 2 points for games
+        
+        // Placement (better placement = more memorable)
         if (team.placement && team.placement !== "Didnt make playoffs") {
-            score += 3;
+            if (team.placement.includes("1st") || team.placement.includes("2nd") || team.placement.includes("3rd")) {
+                score += 2; // Top 3 placements
+            } else {
+                score += 1; // Made playoffs but not top 3
+            }
         }
 
-        if (score >= 8) return 'easy';
-        if (score >= 4) return 'medium';
+        console.log(`🎯 [TriviaService] Team ${team.name} difficulty calculation:`, {
+            name: team.name,
+            nameLength,
+            players: team.players?.length || 0,
+            games: team.games?.length || 0,
+            placement: team.placement,
+            score,
+            difficulty: score >= 6 ? 'easy' : score >= 3 ? 'medium' : 'hard'
+        });
+
+        if (score >= 6) return 'easy';
+        if (score >= 3) return 'medium';
         return 'hard';
     }
 
@@ -340,16 +388,42 @@ export class TriviaService {
     private calculateSeasonDifficulty(season: Seasons): 'easy' | 'medium' | 'hard' {
         let score = 0;
         
-        score += (season.teams?.length || 0); // More teams = easier
-        score += (season.games?.length || 0); // More games = easier
-        score += (season.awards?.length || 0) * 2; // More awards = easier
-        // More recent = easier
+        // Season number complexity (lower numbers = easier to remember)
+        const seasonNum = season.seasonNumber;
+        if (seasonNum <= 5) score += 3; // Very early seasons are easy
+        else if (seasonNum <= 10) score += 2; // Early seasons are medium-easy
+        else if (seasonNum <= 15) score += 1; // Mid seasons are medium
+        // Higher season numbers (15+) get no bonus = harder
+        
+        // Teams (more teams = more data available)
+        score += Math.min((season.teams?.length || 0) / 2, 2); // Cap at 2 points for teams
+        
+        // Games (more games = more data available)
+        score += Math.min((season.games?.length || 0) / 5, 2); // Cap at 2 points for games
+        
+        // Awards (more awards = more memorable events)
+        score += Math.min((season.awards?.length || 0), 1); // Cap at 1 award
+        
+        // Recency (more recent = easier to remember, but not as heavily weighted)
         const currentYear = new Date().getFullYear();
         const seasonYear = new Date(season.startDate).getFullYear();
-        score += Math.max(0, 5 - (currentYear - seasonYear));
+        const yearsAgo = currentYear - seasonYear;
+        if (yearsAgo <= 2) score += 2; // Very recent
+        else if (yearsAgo <= 5) score += 1; // Recent
+        // Older seasons get no bonus = harder
 
-        if (score >= 8) return 'easy';
-        if (score >= 4) return 'medium';
+        console.log(`🎯 [TriviaService] Season ${seasonNum} difficulty calculation:`, {
+            seasonNumber: seasonNum,
+            teams: season.teams?.length || 0,
+            games: season.games?.length || 0,
+            awards: season.awards?.length || 0,
+            yearsAgo,
+            score,
+            difficulty: score >= 6 ? 'easy' : score >= 3 ? 'medium' : 'hard'
+        });
+
+        if (score >= 6) return 'easy';
+        if (score >= 3) return 'medium';
         return 'hard';
     }
 

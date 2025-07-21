@@ -1,6 +1,8 @@
-/* -----------------------------------------------------------
-   Shared colour palette - matching site theme
------------------------------------------------------------ */
+/* =========================================================
+   Trivia Page – Clean, Modern Style
+   ========================================================= */
+
+/* ===== Color tokens ===== */
 :root {
     --primary-blue: #2D3C50;
     --primary-blue-hover: #2a4a7d;
@@ -17,29 +19,25 @@
     --shadow-hover: rgba(0, 0, 0, 0.2);
 }
 
-/* -----------------------------------------------------------
-   Page wrapper
------------------------------------------------------------ */
+/* ===== Page wrapper ===== */
 .trivia-page {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 3rem 2rem;
-    min-height: 70vh;
-    background: var(--white);
+    padding: 5.5rem 2rem 2rem;
     font-family: 'Inter', sans-serif;
-    border: none !important;
+    color: var(--text-dark);
+    min-height: 80vh;
+    box-sizing: border-box;
+    contain: layout style paint;
 }
 
-.trivia-page {
-    margin: 0 auto !important;
-}
-
-/* -----------------------------------------------------------
-   Selection Screen
------------------------------------------------------------ */
+/* ===== Selection Screen ===== */
 .trivia-selection {
     text-align: center;
-    padding: 2rem 0;
+    padding: 3rem 2rem;
+    background: var(--white);
+    border-radius: 12px;
+    box-shadow: 0 4px 15px var(--shadow);
 }
 
 .trivia-selection h1 {
@@ -68,9 +66,7 @@
     font-weight: 600;
 }
 
-/* -----------------------------------------------------------
-   Type Buttons - Clean, modern design
------------------------------------------------------------ */
+/* ===== Type Buttons ===== */
 .type-buttons {
     display: flex;
     justify-content: center;
@@ -171,9 +167,7 @@
     letter-spacing: 0.02em;
 }
 
-/* -----------------------------------------------------------
-   Difficulty Buttons
------------------------------------------------------------ */
+/* ===== Difficulty Buttons ===== */
 .difficulty-buttons {
     display: flex;
     justify-content: center;
@@ -253,9 +247,7 @@
     transform: none;
 }
 
-/* -----------------------------------------------------------
-   Start Game Button
------------------------------------------------------------ */
+/* ===== Start Game Button ===== */
 .start-game-btn {
     padding: 1.2rem 3rem;
     font-size: 1.2rem;
@@ -281,15 +273,13 @@
     transform: none;
 }
 
-/* -----------------------------------------------------------
-   Game Screen
------------------------------------------------------------ */
+/* ===== Game Screen ===== */
 .trivia-game {
     background: var(--white);
     border-radius: 12px;
-    padding: 2rem;
+    padding: 3rem 2.5rem;
     box-shadow: 0 8px 30px var(--shadow);
-    border: none !important;
+    margin: 2rem 0;
 }
 
 .game-header {
@@ -351,9 +341,7 @@
     border: 1px solid var(--border);
 }
 
-/* -----------------------------------------------------------
-   Hints Section
------------------------------------------------------------ */
+/* ===== Hints Section ===== */
 .hints-section {
     margin-bottom: 2.5rem;
 }
@@ -411,9 +399,7 @@
     border-left-color: #9b59b6;
 }
 
-/* -----------------------------------------------------------
-   Guess Section
------------------------------------------------------------ */
+/* ===== Guess Section ===== */
 .guess-section {
     margin-bottom: 1.5rem;
 }
@@ -496,9 +482,7 @@
     transform: none;
 }
 
-/* -----------------------------------------------------------
-   Incorrect Message
------------------------------------------------------------ */
+/* ===== Incorrect Message ===== */
 .incorrect-message {
     padding: 1rem;
     background: rgba(231, 76, 60, 0.1);
@@ -517,16 +501,14 @@
     75% { transform: translateX(5px); }
 }
 
-/* -----------------------------------------------------------
-   Result Screen
------------------------------------------------------------ */
+/* ===== Result Screen ===== */
 .trivia-result {
     text-align: center;
     background: var(--white);
     border-radius: 12px;
-    padding: 2.5rem 1.5rem;
+    padding: 3rem 2.5rem;
     box-shadow: 0 8px 30px var(--shadow);
-    border: none !important;
+    margin: 2rem 0;
 }
 
 .trivia-result h2 {
@@ -641,15 +623,13 @@
     box-shadow: 0 8px 25px rgba(45, 60, 80, 0.4);
 }
 
-/* -----------------------------------------------------------
-   Error Message
------------------------------------------------------------ */
+/* ===== Error Message ===== */
 .error-message {
     background: rgba(231, 76, 60, 0.1);
     color: var(--error);
-    padding: 1rem 1.5rem;
+    padding: 1.5rem 2rem;
     border-radius: 8px;
-    margin-bottom: 2rem;
+    margin: 2rem 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -688,9 +668,7 @@
     }
 }
 
-/* -----------------------------------------------------------
-   Responsive Design
------------------------------------------------------------ */
+/* ===== Responsive Design ===== */
 @media (max-width: 768px) {
     .trivia-page {
         padding: 1rem;
@@ -735,6 +713,6 @@
     }
 
     .trivia-game {
-        padding: 1.5rem;
+        padding: 2rem 1.5rem;
     }
 } 

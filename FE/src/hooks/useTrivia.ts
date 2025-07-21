@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { TriviaPlayer, TriviaTeam, TriviaSeason, GuessResult } from '../types/interfaces';
 
 const API_BASE = import.meta.env.VITE_BACKEND_URL || "https://api.volleyball4-2.com";
@@ -7,6 +7,12 @@ export const useTriviaPlayer = (difficulty: 'easy' | 'medium' | 'hard') => {
   const [data, setData] = useState<TriviaPlayer | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Clear data when difficulty changes
+  useEffect(() => {
+    setData(null);
+    setError(null);
+  }, [difficulty]);
 
   const fetchTriviaPlayer = async () => {
     console.log('🔍 [useTriviaPlayer] Starting fetch with difficulty:', difficulty);
@@ -65,6 +71,12 @@ export const useTriviaTeam = (difficulty: 'easy' | 'medium' | 'hard') => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Clear data when difficulty changes
+  useEffect(() => {
+    setData(null);
+    setError(null);
+  }, [difficulty]);
+
   const fetchTriviaTeam = async () => {
     console.log('🔍 [useTriviaTeam] Starting fetch with difficulty:', difficulty);
     console.log('🔍 [useTriviaTeam] API_BASE:', API_BASE);
@@ -121,6 +133,12 @@ export const useTriviaSeason = (difficulty: 'easy' | 'medium' | 'hard') => {
   const [data, setData] = useState<TriviaSeason | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Clear data when difficulty changes
+  useEffect(() => {
+    setData(null);
+    setError(null);
+  }, [difficulty]);
 
   const fetchTriviaSeason = async () => {
     console.log('🔍 [useTriviaSeason] Starting fetch with difficulty:', difficulty);
