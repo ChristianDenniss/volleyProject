@@ -17,7 +17,7 @@ export class TriviaController {
     /**
      * Get a random trivia player with all relations
      */
-    async getRandomTriviaPlayer(req: Request, res: Response): Promise<void> {
+    getRandomTriviaPlayer = async (req: Request, res: Response): Promise<void> => {
         try {
             // Validate query parameters
             const queryResult = DifficultyQuerySchema.safeParse(req.query);
@@ -39,12 +39,12 @@ export class TriviaController {
                 error: 'Failed to get trivia player' 
             });
         }
-    }
+    };
 
     /**
      * Get a random trivia team with all relations
      */
-    async getRandomTriviaTeam(req: Request, res: Response): Promise<void> {
+    getRandomTriviaTeam = async (req: Request, res: Response): Promise<void> => {
         try {
             // Validate query parameters
             const queryResult = DifficultyQuerySchema.safeParse(req.query);
@@ -66,12 +66,12 @@ export class TriviaController {
                 error: 'Failed to get trivia team' 
             });
         }
-    }
+    };
 
     /**
      * Get a random trivia season with all relations
      */
-    async getRandomTriviaSeason(req: Request, res: Response): Promise<void> {
+    getRandomTriviaSeason = async (req: Request, res: Response): Promise<void> => {
         try {
             // Validate query parameters
             const queryResult = DifficultyQuerySchema.safeParse(req.query);
@@ -93,32 +93,30 @@ export class TriviaController {
                 error: 'Failed to get trivia season' 
             });
         }
-    }
+    };
 
     /**
      * Validate a user's guess
      */
-    async validateGuess(req: Request, res: Response): Promise<void> {
+    validateGuess = async (req: Request, res: Response): Promise<void> => {
         try {
             // Validate request body
             const bodyResult = GuessRequestSchema.safeParse(req.body);
-            
             if (!bodyResult.success) {
-                res.status(400).json({ 
+                res.status(400).json({
                     error: 'Invalid request body',
                     details: bodyResult.error.errors
                 });
                 return;
             }
-
             const { type, id, guess } = bodyResult.data;
             const result = await this.triviaService.validateGuess(type, id, guess);
             res.json(result);
         } catch (error) {
             console.error('Error validating guess:', error);
-            res.status(500).json({ 
-                error: 'Failed to validate guess' 
+            res.status(500).json({
+                error: 'Failed to validate guess'
             });
         }
-    }
+    };
 } 

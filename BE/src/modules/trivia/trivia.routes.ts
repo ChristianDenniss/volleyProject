@@ -13,12 +13,12 @@ export function registerTriviaRoutes(app: Application): void {
     router.use(loggerMiddleware);
 
     // GET routes - PUBLIC (for website display)
-    router.get('/player', triviaController.getRandomTriviaPlayer);
-    router.get('/team', triviaController.getRandomTriviaTeam);
-    router.get('/season', triviaController.getRandomTriviaSeason);
+    router.get('/player', (req, res) => triviaController.getRandomTriviaPlayer(req, res));
+    router.get('/team', (req, res) => triviaController.getRandomTriviaTeam(req, res));
+    router.get('/season', (req, res) => triviaController.getRandomTriviaSeason(req, res));
 
     // POST route - PUBLIC
-    router.post('/guess', triviaController.validateGuess);
+    router.post('/guess', (req, res) => triviaController.validateGuess(req, res));
 
     // Register router with prefix
     app.use('/api/trivia', router);
