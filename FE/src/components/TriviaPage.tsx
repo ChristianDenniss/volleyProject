@@ -329,7 +329,6 @@ const TriviaPage: React.FC = () => {
                     <button 
                         className="give-up-btn"
                         onClick={giveUp}
-                        disabled={debounce}
                     >
                         Give Up
                     </button>

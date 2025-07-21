@@ -1,29 +1,33 @@
-import { Application } from 'express';
+import { Application, Router } from 'express';
 import { TriviaController } from './trivia.controller.js';
 
 /**
  * Register trivia routes with the Express application
  */
 export function registerTriviaRoutes(app: Application): void {
+    const router = Router();
     const triviaController = new TriviaController();
 
     // Get random trivia player
-    app.get('/api/trivia/player', (req, res) => {
+    router.get('/player', (req, res) => {
         triviaController.getRandomTriviaPlayer(req, res);
     });
 
     // Get random trivia team
-    app.get('/api/trivia/team', (req, res) => {
+    router.get('/team', (req, res) => {
         triviaController.getRandomTriviaTeam(req, res);
     });
 
     // Get random trivia season
-    app.get('/api/trivia/season', (req, res) => {
+    router.get('/season', (req, res) => {
         triviaController.getRandomTriviaSeason(req, res);
     });
 
     // Validate user guess
-    app.post('/api/trivia/guess', (req, res) => {
+    router.post('/guess', (req, res) => {
         triviaController.validateGuess(req, res);
     });
+
+    // Register router with prefix
+    app.use('/api/trivia', router);
 } 

@@ -19,7 +19,7 @@ export function globalMiddleware(app: Application): void
 
     // CORS configuration
     app.use(cors({
-        origin: ['https://volleyball4-2.com', 'http://localhost:3000', 'http://localhost:5173']
+        origin: ['https://volleyball4-2.com', 'http://localhost:3000', 'http://localhost:5173', 'http://localhost:5174']
     }));
     
     // Handle preflight requests
