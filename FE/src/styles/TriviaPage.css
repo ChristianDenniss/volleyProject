@@ -23,10 +23,15 @@
 .trivia-page {
     max-width: 900px;
     margin: 0 auto;
-    padding: 3rem 0.5rem;
+    padding: 3rem 2rem;
     min-height: 70vh;
     background: var(--white);
     font-family: 'Inter', sans-serif;
+    border: none !important;
+}
+
+.trivia-page {
+    margin: 0 auto !important;
 }
 
 /* -----------------------------------------------------------
@@ -284,7 +289,7 @@
     border-radius: 12px;
     padding: 2rem;
     box-shadow: 0 8px 30px var(--shadow);
-    border: 1px solid var(--border);
+    border: none !important;
 }
 
 .game-header {
@@ -521,7 +526,7 @@
     border-radius: 12px;
     padding: 2.5rem 1.5rem;
     box-shadow: 0 8px 30px var(--shadow);
-    border: 1px solid var(--border);
+    border: none !important;
 }
 
 .trivia-result h2 {

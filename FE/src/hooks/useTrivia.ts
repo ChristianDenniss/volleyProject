@@ -9,6 +9,10 @@ export const useTriviaPlayer = (difficulty: 'easy' | 'medium' | 'hard') => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchTriviaPlayer = async () => {
+    if (!difficulty) {
+      setError('Difficulty is required');
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -32,6 +36,10 @@ export const useTriviaTeam = (difficulty: 'easy' | 'medium' | 'hard') => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchTriviaTeam = async () => {
+    if (!difficulty) {
+      setError('Difficulty is required');
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -55,6 +63,10 @@ export const useTriviaSeason = (difficulty: 'easy' | 'medium' | 'hard') => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchTriviaSeason = async () => {
+    if (!difficulty) {
+      setError('Difficulty is required');
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
