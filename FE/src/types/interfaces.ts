@@ -272,10 +272,10 @@ export interface TriviaPlayer {
   id: number;
   name: string;
   position: string;
-  teams: any[];
-  awards: any[];
-  stats: any[];
-  records: any[];
+  teams: Team[];
+  awards: Award[];
+  stats: Stats[];
+  records: Records[];
   difficulty: 'easy' | 'medium' | 'hard';
   hintCount: number;
 }
@@ -284,9 +284,9 @@ export interface TriviaTeam {
   id: number;
   name: string;
   placement: string;
-  players: any[];
-  games: any[];
-  season: any;
+  players: Player[];
+  games: Game[];
+  season: Season;
   difficulty: 'easy' | 'medium' | 'hard';
   hintCount: number;
 }
@@ -297,10 +297,10 @@ export interface TriviaSeason {
   theme: string;
   startDate: string;
   endDate: string;
-  teams: any[];
-  games: any[];
-  awards: any[];
-  records: any[];
+  teams: Team[];
+  games: Game[];
+  awards: Award[];
+  records: Records[];
   difficulty: 'easy' | 'medium' | 'hard';
   hintCount: number;
 }
