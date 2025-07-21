@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { TriviaPlayer, TriviaTeam, TriviaSeason, GuessResult } from '../types/interfaces';
 
-const API_BASE = import.meta.env.VITE_API_URL
+const API_BASE = import.meta.env.VITE_BACKEND_URL || "https://api.volleyball4-2.com";
 
 export const useTriviaPlayer = (difficulty: 'easy' | 'medium' | 'hard') => {
   const [data, setData] = useState<TriviaPlayer | null>(null);

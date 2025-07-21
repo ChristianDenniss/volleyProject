@@ -218,7 +218,7 @@ const TriviaPage: React.FC = () => {
 
     const renderSelectionScreen = () => (
         <div className="trivia-selection">
-            <h1>Volleyball Trivia</h1>
+            <h1>Volleyball 4.2 Trivia</h1>
             <p>Test your knowledge of RVL players, teams, and seasons!</p>
             <div className="selection-section">
                 <h2>What would you like to guess?</h2>
@@ -228,7 +228,7 @@ const TriviaPage: React.FC = () => {
                         onClick={() => setSelectedType('player')}
                         disabled={debounce}
                     >
-                        <span className="type-icon">👤</span>
+                        <span className="type-icon">P</span>
                         <span className="type-label">Player</span>
                     </button>
                     <button
@@ -236,7 +236,7 @@ const TriviaPage: React.FC = () => {
                         onClick={() => setSelectedType('team')}
                         disabled={debounce}
                     >
-                        <span className="type-icon">🏆</span>
+                        <span className="type-icon">T</span>
                         <span className="type-label">Team</span>
                     </button>
                     <button
@@ -244,7 +244,7 @@ const TriviaPage: React.FC = () => {
                         onClick={() => setSelectedType('season')}
                         disabled={debounce}
                     >
-                        <span className="type-icon">📅</span>
+                        <span className="type-icon">S</span>
                         <span className="type-label">Season</span>
                     </button>
                 </div>
@@ -349,13 +349,13 @@ const TriviaPage: React.FC = () => {
             <div className="result-content">
                 {guessResult?.correct ? (
                     <div className="correct-result">
-                        <span className="result-icon">🎉</span>
+                        <span className="result-icon">✓</span>
                         <h3>Congratulations!</h3>
                         <p>You guessed correctly!</p>
                     </div>
                 ) : (
                     <div className="incorrect-result">
-                        <span className="result-icon">💡</span>
+                        <span className="result-icon">!</span>
                         <h3>The answer was:</h3>
                         <p className="correct-answer">{guessResult?.answer}</p>
                     </div>
