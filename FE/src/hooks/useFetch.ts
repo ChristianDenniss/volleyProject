@@ -147,6 +147,9 @@ export const useTriviaPlayer = (difficulty: 'easy' | 'medium' | 'hard') => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Base URL (from env or fallback)
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+
   // Fetch data on mount or when difficulty changes
   useEffect(() => {
     const fetchData = async () => {
@@ -163,7 +166,7 @@ export const useTriviaPlayer = (difficulty: 'easy' | 'medium' | 'hard') => {
       
       try {
         console.log('🔍 [useTriviaPlayer] Making fetch request...');
-        const res = await authFetch(`/api/trivia/player?difficulty=${difficulty}`, {
+        const res = await authFetch(`${backendUrl}/api/trivia/player?difficulty=${difficulty}`, {
           method: 'GET'
         });
         
@@ -197,7 +200,7 @@ export const useTriviaPlayer = (difficulty: 'easy' | 'medium' | 'hard') => {
     };
 
     fetchData();
-  }, [difficulty]);
+  }, [difficulty, backendUrl]);
 
   return { data, loading, error };
 };
@@ -206,6 +209,9 @@ export const useTriviaTeam = (difficulty: 'easy' | 'medium' | 'hard') => {
   const [data, setData] = useState<TriviaTeam | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Base URL (from env or fallback)
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
   // Fetch data on mount or when difficulty changes
   useEffect(() => {
@@ -223,7 +229,7 @@ export const useTriviaTeam = (difficulty: 'easy' | 'medium' | 'hard') => {
       
       try {
         console.log('🔍 [useTriviaTeam] Making fetch request...');
-        const res = await authFetch(`/api/trivia/team?difficulty=${difficulty}`, {
+        const res = await authFetch(`${backendUrl}/api/trivia/team?difficulty=${difficulty}`, {
           method: 'GET'
         });
         
@@ -257,7 +263,7 @@ export const useTriviaTeam = (difficulty: 'easy' | 'medium' | 'hard') => {
     };
 
     fetchData();
-  }, [difficulty]);
+  }, [difficulty, backendUrl]);
 
   return { data, loading, error };
 };
@@ -266,6 +272,9 @@ export const useTriviaSeason = (difficulty: 'easy' | 'medium' | 'hard') => {
   const [data, setData] = useState<TriviaSeason | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Base URL (from env or fallback)
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
   // Fetch data on mount or when difficulty changes
   useEffect(() => {
@@ -283,7 +292,7 @@ export const useTriviaSeason = (difficulty: 'easy' | 'medium' | 'hard') => {
       
       try {
         console.log('🔍 [useTriviaSeason] Making fetch request...');
-        const res = await authFetch(`/api/trivia/season?difficulty=${difficulty}`, {
+        const res = await authFetch(`${backendUrl}/api/trivia/season?difficulty=${difficulty}`, {
           method: 'GET'
         });
         
@@ -317,7 +326,7 @@ export const useTriviaSeason = (difficulty: 'easy' | 'medium' | 'hard') => {
     };
 
     fetchData();
-  }, [difficulty]);
+  }, [difficulty, backendUrl]);
 
   return { data, loading, error };
 };
@@ -326,6 +335,9 @@ export const useSubmitTriviaGuess = () => {
   const [result, setResult] = useState<GuessResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Base URL (from env or fallback)
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
   const submitGuess = async (
     type: 'player' | 'team' | 'season',
@@ -343,7 +355,7 @@ export const useSubmitTriviaGuess = () => {
     
     try {
       console.log('🔍 [useSubmitTriviaGuess] Making POST request...');
-      const res = await authFetch('/api/trivia/guess', {
+      const res = await authFetch(`${backendUrl}/api/trivia/guess`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody)
