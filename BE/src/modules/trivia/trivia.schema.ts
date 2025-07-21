@@ -65,7 +65,7 @@ export const TriviaPlayerSchema = z.object({
     awards: z.array(AwardSchema).default([]),
     stats: z.array(StatSchema).default([]),
     records: z.array(RecordSchema).default([]),
-    difficulty: z.enum(['easy', 'medium', 'hard']),
+    difficulty: z.enum(['easy', 'medium', 'hard', 'impossible']),
     hintCount: z.number()
 });
 
@@ -76,7 +76,7 @@ export const TriviaTeamSchema = z.object({
     players: z.array(PlayerSchema).default([]),
     games: z.array(GameSchema).default([]),
     season: SeasonSchema,
-    difficulty: z.enum(['easy', 'medium', 'hard']),
+    difficulty: z.enum(['easy', 'medium', 'hard', 'impossible']),
     hintCount: z.number()
 });
 
@@ -90,13 +90,13 @@ export const TriviaSeasonSchema = z.object({
     games: z.array(GameSchema).default([]),
     awards: z.array(AwardSchema).default([]),
     records: z.array(RecordSchema).default([]),
-    difficulty: z.enum(['easy', 'medium', 'hard']),
+    difficulty: z.enum(['easy', 'medium', 'hard', 'impossible']),
     hintCount: z.number()
 });
 
 // Request/Response schemas
 export const DifficultyQuerySchema = z.object({
-    difficulty: z.enum(['easy', 'medium', 'hard'])
+    difficulty: z.enum(['easy', 'medium', 'hard', 'impossible'])
 });
 
 export const GuessRequestSchema = z.object({

@@ -341,6 +341,12 @@
     border: 1px solid rgba(231, 76, 60, 0.2);
 }
 
+.difficulty-badge.impossible {
+    background: rgba(142, 68, 173, 0.1);
+    color: #8e44ad;
+    border: 1px solid rgba(142, 68, 173, 0.2);
+}
+
 .hint-counter {
     padding: 0.5rem 1rem;
     background: var(--light-bg);
