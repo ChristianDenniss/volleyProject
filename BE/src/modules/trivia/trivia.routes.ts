@@ -8,25 +8,13 @@ export function registerTriviaRoutes(app: Application): void {
     const router = Router();
     const triviaController = new TriviaController();
 
-    // Get random trivia player
-    router.get('/player', (req, res) => {
-        triviaController.getRandomTriviaPlayer(req, res);
-    });
+    // GET routes - PUBLIC (for website display)
+    router.get('/player', triviaController.getRandomTriviaPlayer);
+    router.get('/team', triviaController.getRandomTriviaTeam);
+    router.get('/season', triviaController.getRandomTriviaSeason);
 
-    // Get random trivia team
-    router.get('/team', (req, res) => {
-        triviaController.getRandomTriviaTeam(req, res);
-    });
-
-    // Get random trivia season
-    router.get('/season', (req, res) => {
-        triviaController.getRandomTriviaSeason(req, res);
-    });
-
-    // Validate user guess
-    router.post('/guess', (req, res) => {
-        triviaController.validateGuess(req, res);
-    });
+    // POST route - PUBLIC
+    router.post('/guess', triviaController.validateGuess);
 
     // Register router with prefix
     app.use('/api/trivia', router);
