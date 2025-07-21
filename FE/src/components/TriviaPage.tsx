@@ -28,7 +28,7 @@ const TriviaPage: React.FC = () => {
     const [hintLevel, setHintLevel] = useState(1);
     const [error, setError] = useState<string | null>(null);
     const [debounce, setDebounce] = useState(false);
-    const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
+    const debounceTimeout = useRef<number | null>(null);
 
     // Hooks for fetching trivia
     const triviaPlayer = useTriviaPlayer(selectedDifficulty || 'easy');
@@ -40,7 +40,7 @@ const TriviaPage: React.FC = () => {
     const triggerDebounce = () => {
         setDebounce(true);
         if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
-        debounceTimeout.current = setTimeout(() => setDebounce(false), DEBOUNCE_MS);
+        debounceTimeout.current = window.setTimeout(() => setDebounce(false), DEBOUNCE_MS);
     };
 
     // Start game using hooks
