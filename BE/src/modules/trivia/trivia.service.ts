@@ -37,24 +37,55 @@ export class TriviaService {
     }
 
     /**
-     * Get a random trivia player with all relations
+     * Get a random trivia player with all relations - OPTIMIZED VERSION
      */
     async getRandomTriviaPlayer(difficulty: string): Promise<TriviaPlayer> {
-        const players = await this.playerRepository.find({
-            relations: ['teams', 'awards', 'stats', 'records']
+        // Step 1: Fetch all player IDs only (minimal memory usage)
+        const playerIds = await this.playerRepository.find({ 
+            select: ['id'] 
         });
 
-        // Filter by difficulty
-        const filteredPlayers = players.filter(player => 
-            this.calculatePlayerDifficulty(player) === difficulty
-        );
+        if (playerIds.length === 0) {
+            throw new Error('No players found in database');
+        }
 
-        if (filteredPlayers.length === 0) {
+        // Step 2: Find candidates that match difficulty (fetch minimal data for each)
+        const candidates: number[] = [];
+        
+        for (const { id } of playerIds) {
+            try {
+                // Fetch minimal player data needed for difficulty calculation
+                const player = await this.playerRepository.findOne({
+                    where: { id },
+                    relations: ['teams', 'awards', 'stats', 'records'],
+                    select: ['id', 'name', 'position'] // Only fetch fields needed for difficulty calc
+                });
+
+                if (player && this.calculatePlayerDifficulty(player) === difficulty) {
+                    candidates.push(id);
+                }
+            } catch (error) {
+                console.warn(`Error processing player ${id}:`, error);
+                continue; // Skip this player and continue with others
+            }
+        }
+
+        if (candidates.length === 0) {
             throw new Error(`No players found for difficulty: ${difficulty}`);
         }
 
-        // Select random player
-        const randomPlayer = filteredPlayers[Math.floor(Math.random() * filteredPlayers.length)];
+        // Step 3: Pick a random candidate ID
+        const randomId = candidates[Math.floor(Math.random() * candidates.length)];
+
+        // Step 4: Fetch the full player with all relations
+        const randomPlayer = await this.playerRepository.findOne({
+            where: { id: randomId },
+            relations: ['teams', 'awards', 'stats', 'records']
+        });
+
+        if (!randomPlayer) {
+            throw new Error(`Failed to fetch player with ID ${randomId}`);
+        }
         
         const triviaPlayer = {
             id: randomPlayer.id,
@@ -73,24 +104,55 @@ export class TriviaService {
     }
 
     /**
-     * Get a random trivia team with all relations
+     * Get a random trivia team with all relations - OPTIMIZED VERSION
      */
     async getRandomTriviaTeam(difficulty: string): Promise<TriviaTeam> {
-        const teams = await this.teamRepository.find({
-            relations: ['players', 'games', 'season']
+        // Step 1: Fetch all team IDs only
+        const teamIds = await this.teamRepository.find({ 
+            select: ['id'] 
         });
 
-        // Filter by difficulty
-        const filteredTeams = teams.filter(team => 
-            this.calculateTeamDifficulty(team) === difficulty
-        );
+        if (teamIds.length === 0) {
+            throw new Error('No teams found in database');
+        }
 
-        if (filteredTeams.length === 0) {
+        // Step 2: Find candidates that match difficulty
+        const candidates: number[] = [];
+        
+        for (const { id } of teamIds) {
+            try {
+                // Fetch minimal team data needed for difficulty calculation
+                const team = await this.teamRepository.findOne({
+                    where: { id },
+                    relations: ['players', 'games', 'season'],
+                    select: ['id', 'name', 'placement'] // Only fetch fields needed for difficulty calc
+                });
+
+                if (team && this.calculateTeamDifficulty(team) === difficulty) {
+                    candidates.push(id);
+                }
+            } catch (error) {
+                console.warn(`Error processing team ${id}:`, error);
+                continue;
+            }
+        }
+
+        if (candidates.length === 0) {
             throw new Error(`No teams found for difficulty: ${difficulty}`);
         }
 
-        // Select random team
-        const randomTeam = filteredTeams[Math.floor(Math.random() * filteredTeams.length)];
+        // Step 3: Pick a random candidate ID
+        const randomId = candidates[Math.floor(Math.random() * candidates.length)];
+
+        // Step 4: Fetch the full team with all relations
+        const randomTeam = await this.teamRepository.findOne({
+            where: { id: randomId },
+            relations: ['players', 'games', 'season']
+        });
+
+        if (!randomTeam) {
+            throw new Error(`Failed to fetch team with ID ${randomId}`);
+        }
         
         const triviaTeam = {
             id: randomTeam.id,
@@ -108,24 +170,55 @@ export class TriviaService {
     }
 
     /**
-     * Get a random trivia season with all relations
+     * Get a random trivia season with all relations - OPTIMIZED VERSION
      */
     async getRandomTriviaSeason(difficulty: string): Promise<TriviaSeason> {
-        const seasons = await this.seasonRepository.find({
-            relations: ['teams', 'games', 'awards', 'records']
+        // Step 1: Fetch all season IDs only
+        const seasonIds = await this.seasonRepository.find({ 
+            select: ['id'] 
         });
 
-        // Filter by difficulty
-        const filteredSeasons = seasons.filter(season => 
-            this.calculateSeasonDifficulty(season) === difficulty
-        );
+        if (seasonIds.length === 0) {
+            throw new Error('No seasons found in database');
+        }
 
-        if (filteredSeasons.length === 0) {
+        // Step 2: Find candidates that match difficulty
+        const candidates: number[] = [];
+        
+        for (const { id } of seasonIds) {
+            try {
+                // Fetch minimal season data needed for difficulty calculation
+                const season = await this.seasonRepository.findOne({
+                    where: { id },
+                    relations: ['teams', 'games', 'awards', 'records'],
+                    select: ['id', 'seasonNumber', 'theme', 'startDate'] // Only fetch fields needed for difficulty calc
+                });
+
+                if (season && this.calculateSeasonDifficulty(season) === difficulty) {
+                    candidates.push(id);
+                }
+            } catch (error) {
+                console.warn(`Error processing season ${id}:`, error);
+                continue;
+            }
+        }
+
+        if (candidates.length === 0) {
             throw new Error(`No seasons found for difficulty: ${difficulty}`);
         }
 
-        // Select random season
-        const randomSeason = filteredSeasons[Math.floor(Math.random() * filteredSeasons.length)];
+        // Step 3: Pick a random candidate ID
+        const randomId = candidates[Math.floor(Math.random() * candidates.length)];
+
+        // Step 4: Fetch the full season with all relations
+        const randomSeason = await this.seasonRepository.findOne({
+            where: { id: randomId },
+            relations: ['teams', 'games', 'awards', 'records']
+        });
+
+        if (!randomSeason) {
+            throw new Error(`Failed to fetch season with ID ${randomId}`);
+        }
         
         const triviaSeason = {
             id: randomSeason.id,
