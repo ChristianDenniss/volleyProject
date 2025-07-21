@@ -266,3 +266,54 @@ export type CSVUploadResult = {
   game: Game;
   stats: Stats[];
 };
+
+// Trivia Types
+export interface TriviaPlayer {
+  id: number;
+  name: string;
+  position: string;
+  teams: any[];
+  awards: any[];
+  stats: any[];
+  records: any[];
+  difficulty: 'easy' | 'medium' | 'hard';
+  hintCount: number;
+}
+
+export interface TriviaTeam {
+  id: number;
+  name: string;
+  placement: string;
+  players: any[];
+  games: any[];
+  season: any;
+  difficulty: 'easy' | 'medium' | 'hard';
+  hintCount: number;
+}
+
+export interface TriviaSeason {
+  id: number;
+  seasonNumber: number;
+  theme: string;
+  startDate: string;
+  endDate: string;
+  teams: any[];
+  games: any[];
+  awards: any[];
+  records: any[];
+  difficulty: 'easy' | 'medium' | 'hard';
+  hintCount: number;
+}
+
+export interface Hint {
+  text: string;
+  level: number;
+}
+
+export interface GuessResult {
+  correct: boolean;
+  answer?: string;
+  message: string;
+}
+
+export type TriviaData = TriviaPlayer | TriviaTeam | TriviaSeason;
