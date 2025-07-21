@@ -39,7 +39,7 @@ export class TriviaService {
     /**
      * Get a random trivia player with all relations - ULTRA OPTIMIZED VERSION
      */
-    async getRandomTriviaPlayer(difficulty: string): Promise<TriviaPlayer> {
+    async getRandomTriviaPlayer(difficulty: 'easy' | 'medium' | 'hard' | 'impossible'): Promise<TriviaPlayer> {
         console.log('🎯 [TriviaService] getRandomTriviaPlayer called with difficulty:', difficulty);
         
         // Step 1: Use raw SQL to get difficulty scores efficiently
@@ -131,7 +131,7 @@ export class TriviaService {
     /**
      * Get a random trivia team with all relations - ULTRA OPTIMIZED VERSION
      */
-    async getRandomTriviaTeam(difficulty: string): Promise<TriviaTeam> {
+    async getRandomTriviaTeam(difficulty: 'easy' | 'medium' | 'hard' | 'impossible'): Promise<TriviaTeam> {
         console.log('🎯 [TriviaService] getRandomTriviaTeam called with difficulty:', difficulty);
         
         // Step 1: Use raw SQL to get difficulty scores efficiently
@@ -206,7 +206,7 @@ export class TriviaService {
     /**
      * Get a random trivia season with all relations - ULTRA OPTIMIZED VERSION
      */
-    async getRandomTriviaSeason(difficulty: string): Promise<TriviaSeason> {
+    async getRandomTriviaSeason(difficulty: 'easy' | 'medium' | 'hard' | 'impossible'): Promise<TriviaSeason> {
         console.log('🎯 [TriviaService] getRandomTriviaSeason called with difficulty:', difficulty);
         
         // Step 1: Use raw SQL to get difficulty scores efficiently
@@ -366,23 +366,28 @@ export class TriviaService {
     /**
      * Calculate difficulty for a player from raw SQL scores
      */
-    private calculatePlayerDifficultyFromScores(player: any): 'easy' | 'medium' | 'hard' {
-        // Simply count total relations - more relations = easier
-        const totalRelations = (player.team_count || 0) + (player.award_count || 0) + (player.stat_count || 0) + (player.record_count || 0);
+    private calculatePlayerDifficultyFromScores(player: any): 'easy' | 'medium' | 'hard' | 'impossible' {
+        // Convert string counts to numbers and sum them
+        const teamCount = parseInt(player.team_count) || 0;
+        const awardCount = parseInt(player.award_count) || 0;
+        const statCount = parseInt(player.stat_count) || 0;
+        const recordCount = parseInt(player.record_count) || 0;
+        const totalRelations = teamCount + awardCount + statCount + recordCount;
         
         console.log(`🎯 [TriviaService] Player ${player.name} difficulty calculation:`, {
             name: player.name,
-            team_count: player.team_count || 0,
-            award_count: player.award_count || 0,
-            stat_count: player.stat_count || 0,
-            record_count: player.record_count || 0,
+            team_count: teamCount,
+            award_count: awardCount,
+            stat_count: statCount,
+            record_count: recordCount,
             totalRelations,
-            difficulty: totalRelations >= 8 ? 'easy' : totalRelations >= 4 ? 'medium' : 'hard'
+            difficulty: totalRelations >= 12 ? 'easy' : totalRelations >= 8 ? 'medium' : totalRelations >= 4 ? 'hard' : 'impossible'
         });
 
-        if (totalRelations >= 8) return 'easy';
-        if (totalRelations >= 4) return 'medium';
-        return 'hard';
+        if (totalRelations >= 12) return 'easy';
+        if (totalRelations >= 8) return 'medium';
+        if (totalRelations >= 4) return 'hard';
+        return 'impossible';
     }
 
     /**
@@ -430,21 +435,24 @@ export class TriviaService {
     /**
      * Calculate difficulty for a team from raw SQL scores
      */
-    private calculateTeamDifficultyFromScores(team: any): 'easy' | 'medium' | 'hard' {
-        // Simply count total relations - more relations = easier
-        const totalRelations = (team.player_count || 0) + (team.game_count || 0);
+    private calculateTeamDifficultyFromScores(team: any): 'easy' | 'medium' | 'hard' | 'impossible' {
+        // Convert string counts to numbers and sum them
+        const playerCount = parseInt(team.player_count) || 0;
+        const gameCount = parseInt(team.game_count) || 0;
+        const totalRelations = playerCount + gameCount;
         
         console.log(`🎯 [TriviaService] Team ${team.name} difficulty calculation:`, {
             name: team.name,
-            player_count: team.player_count || 0,
-            game_count: team.game_count || 0,
+            player_count: playerCount,
+            game_count: gameCount,
             totalRelations,
-            difficulty: totalRelations >= 15 ? 'easy' : totalRelations >= 8 ? 'medium' : 'hard'
+            difficulty: totalRelations >= 20 ? 'easy' : totalRelations >= 15 ? 'medium' : totalRelations >= 8 ? 'hard' : 'impossible'
         });
 
-        if (totalRelations >= 15) return 'easy';
-        if (totalRelations >= 8) return 'medium';
-        return 'hard';
+        if (totalRelations >= 20) return 'easy';
+        if (totalRelations >= 15) return 'medium';
+        if (totalRelations >= 8) return 'hard';
+        return 'impossible';
     }
 
     /**
@@ -495,23 +503,28 @@ export class TriviaService {
     /**
      * Calculate difficulty for a season from raw SQL scores
      */
-    private calculateSeasonDifficultyFromScores(season: any): 'easy' | 'medium' | 'hard' {
-        // Simply count total relations - more relations = easier
-        const totalRelations = (season.team_count || 0) + (season.game_count || 0) + (season.award_count || 0) + (season.record_count || 0);
+    private calculateSeasonDifficultyFromScores(season: any): 'easy' | 'medium' | 'hard' | 'impossible' {
+        // Convert string counts to numbers and sum them
+        const teamCount = parseInt(season.team_count) || 0;
+        const gameCount = parseInt(season.game_count) || 0;
+        const awardCount = parseInt(season.award_count) || 0;
+        const recordCount = parseInt(season.record_count) || 0;
+        const totalRelations = teamCount + gameCount + awardCount + recordCount;
         
         console.log(`🎯 [TriviaService] Season ${season.seasonNumber} difficulty calculation:`, {
             seasonNumber: season.seasonNumber,
-            team_count: season.team_count || 0,
-            game_count: season.game_count || 0,
-            award_count: season.award_count || 0,
-            record_count: season.record_count || 0,
+            team_count: teamCount,
+            game_count: gameCount,
+            award_count: awardCount,
+            record_count: recordCount,
             totalRelations,
-            difficulty: totalRelations >= 20 ? 'easy' : totalRelations >= 10 ? 'medium' : 'hard'
+            difficulty: totalRelations >= 30 ? 'easy' : totalRelations >= 20 ? 'medium' : totalRelations >= 10 ? 'hard' : 'impossible'
         });
 
-        if (totalRelations >= 20) return 'easy';
-        if (totalRelations >= 10) return 'medium';
-        return 'hard';
+        if (totalRelations >= 30) return 'easy';
+        if (totalRelations >= 20) return 'medium';
+        if (totalRelations >= 10) return 'hard';
+        return 'impossible';
     }
 
     /**
@@ -522,6 +535,7 @@ export class TriviaService {
             case 'easy': return 3;
             case 'medium': return 4;
             case 'hard': return 5;
+            case 'impossible': return 6;
             default: return 4;
         }
     }
