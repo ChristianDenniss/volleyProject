@@ -209,6 +209,12 @@ export class TriviaService {
     async getRandomTriviaSeason(difficulty: 'easy' | 'medium' | 'hard' | 'impossible'): Promise<TriviaSeason> {
         console.log('🎯 [TriviaService] getRandomTriviaSeason called with difficulty:', difficulty);
         
+        // Seasons don't have impossible difficulty - convert to hard
+        if (difficulty === 'impossible') {
+            console.log('🎯 [TriviaService] Converting impossible to hard for seasons');
+            difficulty = 'hard';
+        }
+        
         // Step 1: Use raw SQL to get difficulty scores efficiently
         console.log('🎯 [TriviaService] Step 1: Calculating difficulty scores with raw SQL...');
         
@@ -446,11 +452,11 @@ export class TriviaService {
             player_count: playerCount,
             game_count: gameCount,
             totalRelations,
-            difficulty: totalRelations >= 35 ? 'easy' : totalRelations >= 20 ? 'medium' : totalRelations >= 10 ? 'hard' : 'impossible'
+            difficulty: totalRelations >= 15 ? 'easy' : totalRelations >= 10 ? 'medium' : totalRelations >= 5 ? 'hard' : 'impossible'
         });
 
-        if (totalRelations >= 35) return 'easy';
-        if (totalRelations >= 20) return 'medium';
+        if (totalRelations >= 20) return 'easy';
+        if (totalRelations >= 15) return 'medium';
         if (totalRelations >= 10) return 'hard';
         return 'impossible';
     }
@@ -503,28 +509,52 @@ export class TriviaService {
     /**
      * Calculate difficulty for a season from raw SQL scores
      */
-    private calculateSeasonDifficultyFromScores(season: any): 'easy' | 'medium' | 'hard' | 'impossible' {
-        // Convert string counts to numbers and sum them
+    private calculateSeasonDifficultyFromScores(season: any): 'easy' | 'medium' | 'hard' {
+        let score = 0;
+        const seasonNum = parseInt(season.seasonNumber) || 0;
+        
+        // Season number complexity (lower numbers = easier to remember)
+        if (seasonNum <= 3) score += 8; // Very early seasons are very easy
+        else if (seasonNum <= 5) score += 6; // Early seasons are easy
+        else if (seasonNum <= 8) score += 4; // Early-mid seasons are medium-easy
+        else if (seasonNum <= 12) score += 2; // Mid seasons are medium
+        else if (seasonNum <= 15) score += 1; // Mid-late seasons are medium-hard
+        // Higher season numbers (15+) get no bonus = harder
+        
+        // Recency bonus (more recent = easier to remember)
+        const currentYear = new Date().getFullYear();
+        const seasonYear = parseInt(season.startDate?.split('-')[0]) || currentYear;
+        const yearsAgo = currentYear - seasonYear;
+        if (yearsAgo <= 1) score += 4; // Very recent
+        else if (yearsAgo <= 2) score += 3; // Recent
+        else if (yearsAgo <= 3) score += 2; // Somewhat recent
+        else if (yearsAgo <= 5) score += 1; // Moderately recent
+        
+        // Data richness bonus (more data = more memorable)
         const teamCount = parseInt(season.team_count) || 0;
         const gameCount = parseInt(season.game_count) || 0;
         const awardCount = parseInt(season.award_count) || 0;
         const recordCount = parseInt(season.record_count) || 0;
-        const totalRelations = teamCount + gameCount + awardCount + recordCount;
         
-        console.log(`🎯 [TriviaService] Season ${season.seasonNumber} difficulty calculation:`, {
-            seasonNumber: season.seasonNumber,
+        if (teamCount >= 8) score += 2; // Many teams = more memorable
+        if (gameCount >= 20) score += 2; // Many games = more memorable
+        if (awardCount >= 5) score += 1; // Many awards = more memorable
+        if (recordCount >= 3) score += 1; // Many records = more memorable
+        
+        console.log(`🎯 [TriviaService] Season ${seasonNum} difficulty calculation:`, {
+            seasonNumber: seasonNum,
+            yearsAgo,
             team_count: teamCount,
             game_count: gameCount,
             award_count: awardCount,
             record_count: recordCount,
-            totalRelations,
-            difficulty: totalRelations >= 50 ? 'easy' : totalRelations >= 30 ? 'medium' : totalRelations >= 15 ? 'hard' : 'impossible'
+            score,
+            difficulty: score >= 12 ? 'easy' : score >= 8 ? 'medium' : 'hard'
         });
 
-        if (totalRelations >= 50) return 'easy';
-        if (totalRelations >= 30) return 'medium';
-        if (totalRelations >= 15) return 'hard';
-        return 'impossible';
+        if (score >= 12) return 'easy';
+        if (score >= 8) return 'medium';
+        return 'hard';
     }
 
     /**
@@ -532,11 +562,11 @@ export class TriviaService {
      */
     private getHintCount(difficulty: string): number {
         switch (difficulty) {
-            case 'easy': return 3;
-            case 'medium': return 4;
-            case 'hard': return 5;
-            case 'impossible': return 6;
-            default: return 4;
+            case 'easy': return 6;
+            case 'medium': return 8;
+            case 'hard': return 10;
+            case 'impossible': return 12;
+            default: return 8;
         }
     }
 

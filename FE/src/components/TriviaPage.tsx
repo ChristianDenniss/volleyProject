@@ -117,6 +117,8 @@ const TriviaPage: React.FC = () => {
     // Hint generators (same as before)
     const generatePlayerHints = (player: TriviaPlayer, maxLevel: number): Hint[] => {
         const hints: Hint[] = [];
+        
+        // Basic hints (levels 1-3)
         hints.push({ text: `First letter: ${player.name.charAt(0)}`, level: 1 });
         if (player.position && player.position !== "N/A") {
             hints.push({ text: `Position: ${player.position}`, level: 2 });
@@ -124,36 +126,123 @@ const TriviaPage: React.FC = () => {
         if (player.teams && player.teams.length > 0) {
             hints.push({ text: `Has played for ${player.teams.length} team(s)`, level: 3 });
         }
+        
+        // Medium hints (levels 4-6)
         if (player.awards && player.awards.length > 0) {
             hints.push({ text: `Has won ${player.awards.length} award(s)`, level: 4 });
         }
+        if (player.stats && player.stats.length > 0) {
+            hints.push({ text: `Has ${player.stats.length} game(s) with recorded stats`, level: 5 });
+        }
+        if (player.records && player.records.length > 0) {
+            hints.push({ text: `Has ${player.records.length} record(s)`, level: 6 });
+        }
+        
+        // Detailed hints (levels 7-9)
         if (player.teams && player.teams.length > 0) {
             const teamNames = player.teams.map(t => t.name).join(', ');
-            hints.push({ text: `Teams: ${teamNames}`, level: 5 });
+            hints.push({ text: `Teams: ${teamNames}`, level: 7 });
         }
+        if (player.awards && player.awards.length > 0) {
+            const awardDescriptions = player.awards.map(a => a.description || a.type).join(', ');
+            hints.push({ text: `Awards: ${awardDescriptions}`, level: 8 });
+        }
+        if (player.records && player.records.length > 0) {
+            const recordDetails = player.records.map(r => `${r.type} - ${r.rank}${r.rank === 1 ? 'st' : r.rank === 2 ? 'nd' : r.rank === 3 ? 'rd' : 'th'} place`).join(', ');
+            hints.push({ text: `Records: ${recordDetails}`, level: 9 });
+        }
+        
+        // Advanced hints (levels 10-12)
+        if (player.teams && player.teams.length > 0) {
+            const placements = player.teams.map(t => t.placement).filter(p => p && p !== "Didnt make playoffs").join(', ');
+            if (placements) {
+                hints.push({ text: `Best placement: ${placements}`, level: 10 });
+            }
+        }
+        if (player.stats && player.stats.length > 0) {
+            const totalAces = player.stats.reduce((sum, stat) => sum + (stat.aces || 0), 0);
+            if (totalAces > 0) {
+                hints.push({ text: `Total aces: ${totalAces}`, level: 11 });
+            }
+        }
+        if (player.name.length > 0) {
+            hints.push({ text: `Name length: ${player.name.length} characters`, level: 12 });
+        }
+        
         return hints.slice(0, maxLevel);
     };
     const generateTeamHints = (team: TriviaTeam, maxLevel: number): Hint[] => {
         const hints: Hint[] = [];
+        
+        // Basic hints (levels 1-3)
         hints.push({ text: `First letter: ${team.name.charAt(0)}`, level: 1 });
+        if (team.placement) {
+            if (team.placement === "Didnt make playoffs") {
+                hints.push({ text: `Did not make playoffs`, level: 2 });
+            } else if (team.placement.includes("1st")) {
+                hints.push({ text: `Championship team (1st place)`, level: 2 });
+            } else if (team.placement.includes("2nd")) {
+                hints.push({ text: `Runner-up team (2nd place)`, level: 2 });
+            } else if (team.placement.includes("3rd")) {
+                hints.push({ text: `3rd place team`, level: 2 });
+            } else {
+                hints.push({ text: `Placement: ${team.placement}`, level: 2 });
+            }
+        }
         if (team.season) {
-            hints.push({ text: `Played in Season ${team.season.seasonNumber}`, level: 2 });
+            hints.push({ text: `Played in Season ${team.season.seasonNumber}`, level: 3 });
         }
-        if (team.placement && team.placement !== "Didnt make playoffs") {
-            hints.push({ text: `Placement: ${team.placement}`, level: 3 });
-        }
+        
+        // Medium hints (levels 4-6)
         if (team.players && team.players.length > 0) {
             hints.push({ text: `Has ${team.players.length} player(s)`, level: 4 });
         }
+        if (team.games && team.games.length > 0) {
+            hints.push({ text: `Played ${team.games.length} game(s)`, level: 5 });
+        }
+        if (team.season && team.season.theme && team.season.theme !== "None") {
+            hints.push({ text: `Season theme: ${team.season.theme}`, level: 6 });
+        }
+        
+        // Detailed hints (levels 7-9)
         if (team.players && team.players.length > 0) {
             const playerNames = team.players.map(p => p.name).join(', ');
-            hints.push({ text: `Players: ${playerNames}`, level: 5 });
+            hints.push({ text: `Players: ${playerNames}`, level: 7 });
         }
+        if (team.placement) {
+            hints.push({ text: `Full placement: ${team.placement}`, level: 8 });
+        }
+        if (team.season) {
+            const year = new Date(team.season.startDate).getFullYear();
+            hints.push({ text: `Season started in ${year}`, level: 9 });
+        }
+        
+        // Advanced hints (levels 10-12)
+        if (team.players && team.players.length > 0) {
+            const positions = [...new Set(team.players.map(p => p.position).filter(p => p && p !== "N/A"))];
+            if (positions.length > 0) {
+                hints.push({ text: `Player positions: ${positions.join(', ')}`, level: 10 });
+            }
+        }
+        if (team.name.length > 0) {
+            hints.push({ text: `Team name length: ${team.name.length} characters`, level: 11 });
+        }
+        if (team.games && team.games.length > 0) {
+            const totalScore = team.games.reduce((sum, game) => {
+                // Determine if this team is team1 or team2 and get their score
+                const teamScore = game.team1Score || game.team2Score || 0;
+                return sum + teamScore;
+            }, 0);
+            hints.push({ text: `Total points scored: ${totalScore}`, level: 12 });
+        }
+        
         return hints.slice(0, maxLevel);
     };
     const generateSeasonHints = (season: TriviaSeason, maxLevel: number): Hint[] => {
         const hints: Hint[] = [];
         const seasonNum = season.seasonNumber;
+        
+        // Basic hints (levels 1-3)
         if (seasonNum <= 5) {
             hints.push({ text: 'Season number is 5 or lower', level: 1 });
         } else if (seasonNum <= 10) {
@@ -167,12 +256,49 @@ const TriviaPage: React.FC = () => {
         if (season.teams && season.teams.length > 0) {
             hints.push({ text: `Has ${season.teams.length} team(s)`, level: 3 });
         }
+        
+        // Medium hints (levels 4-6)
         const year = new Date(season.startDate).getFullYear();
         hints.push({ text: `Started in ${year}`, level: 4 });
+        if (season.games && season.games.length > 0) {
+            hints.push({ text: `Had ${season.games.length} game(s)`, level: 5 });
+        }
+        if (season.awards && season.awards.length > 0) {
+            hints.push({ text: `Had ${season.awards.length} award(s)`, level: 6 });
+        }
+        
+        // Detailed hints (levels 7-9)
         if (season.teams && season.teams.length > 0) {
             const teamNames = season.teams.map(t => t.name).join(', ');
-            hints.push({ text: `Teams: ${teamNames}`, level: 5 });
+            hints.push({ text: `Teams: ${teamNames}`, level: 7 });
         }
+        if (season.records && season.records.length > 0) {
+            hints.push({ text: `Had ${season.records.length} record(s)`, level: 8 });
+        }
+        const endYear = new Date(season.endDate).getFullYear();
+        if (endYear !== year) {
+            hints.push({ text: `Ended in ${endYear}`, level: 9 });
+        }
+        
+        // Advanced hints (levels 10-12)
+        if (season.teams && season.teams.length > 0) {
+            const placements = season.teams.map(t => t.placement).filter(p => p && p !== "Didnt make playoffs");
+            if (placements.length > 0) {
+                const topPlacements = placements.filter(p => p.includes("1st") || p.includes("2nd") || p.includes("3rd"));
+                if (topPlacements.length > 0) {
+                    hints.push({ text: `Top placements: ${topPlacements.join(', ')}`, level: 10 });
+                }
+            }
+        }
+        if (season.awards && season.awards.length > 0) {
+            const awardTypes = [...new Set(season.awards.map(a => a.type))];
+            hints.push({ text: `Award types: ${awardTypes.join(', ')}`, level: 11 });
+        }
+        if (season.records && season.records.length > 0) {
+            const recordTypes = [...new Set(season.records.map(r => r.type))];
+            hints.push({ text: `Record types: ${recordTypes.join(', ')}`, level: 12 });
+        }
+        
         return hints.slice(0, maxLevel);
     };
 
