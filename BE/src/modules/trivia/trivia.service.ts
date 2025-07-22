@@ -158,6 +158,21 @@ export class TriviaService {
         const candidates = teamsWithScores.filter((team: any) => {
             try {
                 const score = this.calculateTeamDifficultyFromScores(team);
+                
+                // Double-check: teams that didn't make playoffs should NEVER be medium
+                const placement = team.placement || '';
+                const didntMakePlayoffs = placement.includes('Didnt make playoffs') || 
+                                         placement.includes("Didn't make playoffs") ||
+                                         placement.includes('didnt make playoffs') ||
+                                         placement.includes("didn't make playoffs") ||
+                                         placement.toLowerCase().includes('didnt make playoffs') ||
+                                         placement.toLowerCase().includes("didn't make playoffs");
+                
+                if (didntMakePlayoffs && difficulty === 'medium') {
+                    console.log(`🚫 [TriviaService] Excluding team ${team.name} from medium difficulty - didn't make playoffs`);
+                    return false;
+                }
+                
                 return score === difficulty;
             } catch (error) {
                 console.warn(`❌ [TriviaService] Error calculating difficulty for team ${team.id}:`, error);
@@ -442,7 +457,12 @@ export class TriviaService {
         
         // Teams that didn't make playoffs should never be medium - they're less memorable
         const placement = team.placement || '';
-        const didntMakePlayoffs = placement.includes('Didnt make playoffs') || placement.includes("Didn't make playoffs");
+        const didntMakePlayoffs = placement.includes('Didnt make playoffs') || 
+                                 placement.includes("Didn't make playoffs") ||
+                                 placement.includes('didnt make playoffs') ||
+                                 placement.includes("didn't make playoffs") ||
+                                 placement.toLowerCase().includes('didnt make playoffs') ||
+                                 placement.toLowerCase().includes("didn't make playoffs");
         
         console.log(`🎯 [TriviaService] Team ${team.name} difficulty calculation:`, {
             name: team.name,

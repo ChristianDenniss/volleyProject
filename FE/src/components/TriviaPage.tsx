@@ -262,10 +262,6 @@ const TriviaPage: React.FC = () => {
         if (team.placement) {
             hints.push({ text: `Full placement: ${team.placement}`, level: 8 });
         }
-        if (team.season) {
-            const year = new Date(team.season.startDate).getFullYear();
-            hints.push({ text: `Season started in ${year}`, level: 9 });
-        }
         
         // Advanced hints (levels 10-12)
         if (team.players && team.players.length > 0) {
