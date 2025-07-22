@@ -276,7 +276,7 @@ export interface TriviaPlayer {
   awards: Award[];
   stats: Stats[];
   records: Records[];
-  difficulty: 'easy' | 'medium' | 'hard';
+  difficulty: 'easy' | 'medium' | 'hard' | 'impossible';
   hintCount: number;
 }
 
@@ -287,7 +287,7 @@ export interface TriviaTeam {
   players: Player[];
   games: Game[];
   season: Season;
-  difficulty: 'easy' | 'medium' | 'hard';
+  difficulty: 'easy' | 'medium' | 'hard' | 'impossible';
   hintCount: number;
 }
 

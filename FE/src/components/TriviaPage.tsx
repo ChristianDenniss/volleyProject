@@ -129,11 +129,15 @@ const TriviaPage: React.FC = () => {
         
         // Medium hints (levels 4-6)
         if (player.awards && player.awards.length > 0) {
-            hints.push({ text: `Has won ${player.awards.length} award(s)`, level: 4 });
+            // Show specific award with season
+            const firstAward = player.awards[0];
+            if (firstAward.season) {
+                hints.push({ text: `Won the ${firstAward.type} award in Season ${firstAward.season.seasonNumber}`, level: 4 });
+            } else {
+                hints.push({ text: `Won the ${firstAward.type} award`, level: 4 });
+            }
         }
-        if (player.stats && player.stats.length > 0) {
-            hints.push({ text: `Has ${player.stats.length} game(s) with recorded stats`, level: 5 });
-        }
+
         if (player.records && player.records.length > 0) {
             hints.push({ text: `Has ${player.records.length} record(s)`, level: 6 });
         }
@@ -143,9 +147,21 @@ const TriviaPage: React.FC = () => {
             const teamNames = player.teams.map(t => t.name).join(', ');
             hints.push({ text: `Teams: ${teamNames}`, level: 7 });
         }
-        if (player.awards && player.awards.length > 0) {
-            const awardDescriptions = player.awards.map(a => a.description || a.type).join(', ');
-            hints.push({ text: `Awards: ${awardDescriptions}`, level: 8 });
+        
+        // Rings hint (teams with 1st place)
+        if (player.teams && player.teams.length > 0) {
+            const championshipTeams = player.teams.filter(t => t.placement && t.placement.includes("1st"));
+            if (championshipTeams.length > 0) {
+                hints.push({ text: `Has ${championshipTeams.length} ring(s)`, level: 8 });
+            }
+        }
+        
+        // Grand finals hint (1st + 2nd place teams)
+        if (player.teams && player.teams.length > 0) {
+            const grandFinalsTeams = player.teams.filter(t => t.placement && (t.placement.includes("1st") || t.placement.includes("2nd")));
+            if (grandFinalsTeams.length > 0) {
+                hints.push({ text: `Been to grand finals ${grandFinalsTeams.length} time(s)`, level: 9 });
+            }
         }
         if (player.records && player.records.length > 0) {
             const recordDetails = player.records.map(r => `${r.type} - ${r.rank}${r.rank === 1 ? 'st' : r.rank === 2 ? 'nd' : r.rank === 3 ? 'rd' : 'th'} place`).join(', ');
@@ -154,9 +170,32 @@ const TriviaPage: React.FC = () => {
         
         // Advanced hints (levels 10-12)
         if (player.teams && player.teams.length > 0) {
-            const placements = player.teams.map(t => t.placement).filter(p => p && p !== "Didnt make playoffs").join(', ');
-            if (placements) {
-                hints.push({ text: `Best placement: ${placements}`, level: 10 });
+            const validPlacements = player.teams
+                .map(t => t.placement)
+                .filter(p => p && p !== "Didnt make playoffs");
+            
+            if (validPlacements.length > 0) {
+                // Find the best placement (G.O.A.T. > 1st > 2nd > 3rd > top 4 > top 6 > top 8 > top 12 > top 16 > didn't make playoffs)
+                const getPlacementRank = (placement: string): number => {
+                    if (placement.includes("G.O.A.T.")) return 0; // Highest placement
+                    if (placement.includes("1st")) return 1;
+                    if (placement.includes("2nd")) return 2;
+                    if (placement.includes("3rd")) return 3;
+                    if (placement.includes("top 4")) return 4;
+                    if (placement.includes("top 6")) return 6;
+                    if (placement.includes("top 8")) return 8;
+                    if (placement.includes("top 12")) return 12;
+                    if (placement.includes("top 16")) return 16;
+                    if (placement.includes("Didnt make playoffs")) return 999;
+                    return 999; // Unknown placement
+                };
+                
+                const bestPlacement = validPlacements.reduce((best, current) => {
+                    const bestRank = getPlacementRank(best);
+                    const currentRank = getPlacementRank(current);
+                    return currentRank < bestRank ? current : best;
+                });
+                hints.push({ text: `Best placement: ${bestPlacement}`, level: 10 });
             }
         }
         if (player.stats && player.stats.length > 0) {
@@ -532,7 +571,29 @@ const TriviaPage: React.FC = () => {
                 <div className="game-stats">
                     <p>Difficulty: <span className="stat-value">{selectedDifficulty}</span></p>
                     <p>Type: <span className="stat-value">{selectedType}</span></p>
-                    <p>Hints used: <span className="stat-value">{hintLevel}</span></p>
+                    <p>Hints used: <span className="stat-value">{hintLevel} / {currentTrivia?.hintCount || 0}</span></p>
+                    <p>Total hints available: <span className="stat-value">{currentTrivia?.hintCount || 0}</span></p>
+                    {currentTrivia && (
+                        <>
+                            {selectedType === 'player' && (
+                                <>
+                                    <p>Player name: <span className="stat-value">{(currentTrivia as TriviaPlayer).name}</span></p>
+                                    {(currentTrivia as TriviaPlayer).position && (
+                                        <p>Position: <span className="stat-value">{(currentTrivia as TriviaPlayer).position}</span></p>
+                                    )}
+                                </>
+                            )}
+                            {selectedType === 'team' && (
+                                <>
+                                    <p>Team name: <span className="stat-value">{(currentTrivia as TriviaTeam).name}</span></p>
+                                    <p>Placement: <span className="stat-value">{(currentTrivia as TriviaTeam).placement}</span></p>
+                                </>
+                            )}
+                            {selectedType === 'season' && (
+                                <p>Season number: <span className="stat-value">{(currentTrivia as TriviaSeason).seasonNumber}</span></p>
+                            )}
+                        </>
+                    )}
                 </div>
             </div>
             <div className="result-buttons">

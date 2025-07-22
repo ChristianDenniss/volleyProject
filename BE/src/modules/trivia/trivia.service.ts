@@ -316,7 +316,15 @@ export class TriviaService {
             throw new Error(`${type} not found`);
         }
 
-        const correctAnswer = type === 'season' ? `Season ${item.seasonNumber}` : item.name;
+        let correctAnswer: string;
+        if (type === 'season') {
+            correctAnswer = `Season ${item.seasonNumber}`;
+        } else if (type === 'team') {
+            // Remove season suffix like "(s5)" from team names for guessing
+            correctAnswer = item.name.replace(/\s*\(s\d+\)\s*$/i, '');
+        } else {
+            correctAnswer = item.name;
+        }
         const isCorrect = this.normalizeString(guess) === this.normalizeString(correctAnswer);
 
         const result = {
@@ -510,51 +518,17 @@ export class TriviaService {
      * Calculate difficulty for a season from raw SQL scores
      */
     private calculateSeasonDifficultyFromScores(season: any): 'easy' | 'medium' | 'hard' {
-        let score = 0;
         const seasonNum = parseInt(season.seasonNumber) || 0;
-        
-        // Season number complexity (lower numbers = easier to remember)
-        if (seasonNum <= 3) score += 8; // Very early seasons are very easy
-        else if (seasonNum <= 5) score += 6; // Early seasons are easy
-        else if (seasonNum <= 8) score += 4; // Early-mid seasons are medium-easy
-        else if (seasonNum <= 12) score += 2; // Mid seasons are medium
-        else if (seasonNum <= 15) score += 1; // Mid-late seasons are medium-hard
-        // Higher season numbers (15+) get no bonus = harder
-        
-        // Recency bonus (more recent = easier to remember)
-        const currentYear = new Date().getFullYear();
-        const seasonYear = parseInt(season.startDate?.split('-')[0]) || currentYear;
-        const yearsAgo = currentYear - seasonYear;
-        if (yearsAgo <= 1) score += 4; // Very recent
-        else if (yearsAgo <= 2) score += 3; // Recent
-        else if (yearsAgo <= 3) score += 2; // Somewhat recent
-        else if (yearsAgo <= 5) score += 1; // Moderately recent
-        
-        // Data richness bonus (more data = more memorable)
-        const teamCount = parseInt(season.team_count) || 0;
-        const gameCount = parseInt(season.game_count) || 0;
-        const awardCount = parseInt(season.award_count) || 0;
-        const recordCount = parseInt(season.record_count) || 0;
-        
-        if (teamCount >= 8) score += 2; // Many teams = more memorable
-        if (gameCount >= 20) score += 2; // Many games = more memorable
-        if (awardCount >= 5) score += 1; // Many awards = more memorable
-        if (recordCount >= 3) score += 1; // Many records = more memorable
         
         console.log(`🎯 [TriviaService] Season ${seasonNum} difficulty calculation:`, {
             seasonNumber: seasonNum,
-            yearsAgo,
-            team_count: teamCount,
-            game_count: gameCount,
-            award_count: awardCount,
-            record_count: recordCount,
-            score,
-            difficulty: score >= 12 ? 'easy' : score >= 8 ? 'medium' : 'hard'
+            difficulty: seasonNum >= 9 ? 'easy' : seasonNum >= 5 ? 'medium' : 'hard'
         });
 
-        if (score >= 12) return 'easy';
-        if (score >= 8) return 'medium';
-        return 'hard';
+        // Simple season number-based difficulty
+        if (seasonNum >= 9) return 'easy';      // Seasons 14-9
+        if (seasonNum >= 5) return 'medium';    // Seasons 8-5
+        return 'hard';                          // Seasons 4-1
     }
 
     /**

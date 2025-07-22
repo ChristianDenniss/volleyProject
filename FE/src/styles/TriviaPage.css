@@ -598,10 +598,10 @@
 
 .game-stats {
     background: var(--light-bg);
-    padding: 1.5rem;
+    padding: 2rem;
     border-radius: 8px;
     text-align: left;
-    max-width: 300px;
+    max-width: 500px;
     margin: 0 auto;
     border: 1px solid var(--border);
 }
