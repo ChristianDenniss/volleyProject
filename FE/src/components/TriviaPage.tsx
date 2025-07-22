@@ -111,7 +111,18 @@ const TriviaPage: React.FC = () => {
                 hints.push(...generateSeasonHints(triviaData as TriviaSeason, maxLevel));
                 break;
         }
-        setCurrentHints(hints);
+        
+        // Always start with first letter hint, then randomize the rest
+        const firstLetterHint = hints.find(hint => hint.text.includes('First letter:'));
+        const otherHints = hints.filter(hint => !hint.text.includes('First letter:'));
+        
+        // Shuffle the other hints
+        const shuffledHints = otherHints.sort(() => Math.random() - 0.5);
+        
+        // Combine first letter hint with shuffled hints
+        const finalHints = firstLetterHint ? [firstLetterHint, ...shuffledHints] : shuffledHints;
+        
+        setCurrentHints(finalHints);
     };
 
     // Hint generators (same as before)
