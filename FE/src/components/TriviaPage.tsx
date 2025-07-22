@@ -610,13 +610,24 @@ const TriviaPage: React.FC = () => {
     // Check for errors
     const hasError = triviaPlayer.error || triviaTeam.error || triviaSeason.error || error;
     
+    // Function to dismiss all errors
+    const dismissError = () => {
+        setError(null);
+        // Clear hook errors by calling their fetch functions
+        if (selectedDifficulty) {
+            triviaPlayer.fetchTriviaPlayer();
+            triviaTeam.fetchTriviaTeam();
+            triviaSeason.fetchTriviaSeason();
+        }
+    };
+    
     return (
         <div className={`trivia-page ${isLoading ? 'loading' : ''}`}>
             {hasError && (
                 <div className="error-message">
                     <h3>Error</h3>
                     <p>{hasError}</p>
-                    <button onClick={() => setError(null)}>Dismiss</button>
+                    <button onClick={dismissError}>Dismiss</button>
                 </div>
             )}
             
