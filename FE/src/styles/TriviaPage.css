@@ -601,7 +601,8 @@
     padding: 2rem;
     border-radius: 8px;
     text-align: left;
-    max-width: 500px;
+    max-width: 800px;
+    min-width: 600px;
     margin: 0 auto;
     border: 1px solid var(--border);
 }
@@ -609,12 +610,12 @@
 .game-stats p {
     margin: 0.5rem 0;
     font-size: 1rem;
-    color: var(--text-light);
+    color: var(--primary-blue);
 }
 
 .stat-value {
     font-weight: 600;
-    color: var(--text-dark);
+    color: var(--primary-blue);
 }
 
 .result-buttons {
