@@ -458,9 +458,9 @@ const TriviaPage: React.FC = () => {
                         disabled={true}
                         title="Coming soon - Season trivia is currently being fixed"
                     >
-                        <span className="type-icon">🔒</span>
+                        <span className="type-icon">S</span>
                         <span className="type-label">Season</span>
-                        <span className="lock-overlay">🔒</span>
+                        <span className="lock-overlay"></span>
                     </button>
                 </div>
             </div>
