@@ -204,7 +204,7 @@ export class TriviaService {
     }
 
     /**
-     * Get a random trivia season with all relations - ULTRA OPTIMIZED VERSION
+     * Get a random trivia season with all relations - SIMPLIFIED VERSION
      */
     async getRandomTriviaSeason(difficulty: 'easy' | 'medium' | 'hard' | 'impossible'): Promise<TriviaSeason> {
         console.log('🎯 [TriviaService] getRandomTriviaSeason called with difficulty:', difficulty);
@@ -215,40 +215,25 @@ export class TriviaService {
             difficulty = 'hard';
         }
         
-        // Step 1: Use raw SQL to get difficulty scores efficiently
-        console.log('🎯 [TriviaService] Step 1: Calculating difficulty scores with raw SQL...');
+        // Step 1: Get all seasons with their relations
+        console.log('🎯 [TriviaService] Step 1: Fetching all seasons...');
+        const allSeasons = await this.seasonRepository.find({
+            relations: ['teams', 'games', 'awards', 'records']
+        });
         
-        const difficultyQuery = `
-            SELECT 
-                s.id,
-                s."seasonNumber",
-                s.theme,
-                s."startDate",
-                s."endDate",
-                COUNT(DISTINCT t.id) as team_count,
-                COUNT(DISTINCT g.id) as game_count,
-                COUNT(DISTINCT a.id) as award_count,
-                COUNT(DISTINCT r.id) as record_count
-            FROM seasons s
-            LEFT JOIN teams t ON s.id = t."seasonId"
-            LEFT JOIN games g ON s.id = g."seasonId"
-            LEFT JOIN awards a ON s.id = a."seasonId"
-            LEFT JOIN records r ON s.id = r."seasonId"
-            GROUP BY s.id, s."seasonNumber", s.theme, s."startDate", s."endDate"
-        `;
+        console.log('✅ [TriviaService] Found', allSeasons.length, 'total seasons');
         
-        const seasonsWithScores = await this.seasonRepository.query(difficultyQuery);
-        console.log('✅ [TriviaService] Calculated scores for', seasonsWithScores.length, 'seasons');
-        
-        // Step 2: Filter by difficulty using the scoring algorithm
-        const candidates = seasonsWithScores.filter((season: any) => {
-            try {
-                const score = this.calculateSeasonDifficultyFromScores(season);
-                return score === difficulty;
-            } catch (error) {
-                console.warn(`❌ [TriviaService] Error calculating difficulty for season ${season.id}:`, error);
-                return false;
-            }
+        // Step 2: Filter by difficulty using simple season number logic
+        const candidates = allSeasons.filter((season) => {
+            const seasonNum = season.seasonNumber;
+            let seasonDifficulty: 'easy' | 'medium' | 'hard';
+            
+            if (seasonNum >= 9) seasonDifficulty = 'easy';      // Seasons 14-9
+            else if (seasonNum >= 5) seasonDifficulty = 'medium'; // Seasons 8-5
+            else seasonDifficulty = 'hard';                      // Seasons 4-1
+            
+            console.log(`🎯 [TriviaService] Season ${seasonNum} -> ${seasonDifficulty}`);
+            return seasonDifficulty === difficulty;
         });
         
         console.log('✅ [TriviaService] Found', candidates.length, 'candidates for difficulty:', difficulty);
@@ -262,28 +247,16 @@ export class TriviaService {
         const randomSeason = candidates[Math.floor(Math.random() * candidates.length)];
         console.log('🎯 [TriviaService] Step 3: Selected random season:', randomSeason.seasonNumber);
         
-        // Step 4: Fetch the full season with all relations (only for the selected one)
-        console.log('🎯 [TriviaService] Step 4: Fetching full season data...');
-        const fullSeason = await this.seasonRepository.findOne({
-            where: { id: randomSeason.id },
-            relations: ['teams', 'games', 'awards', 'records']
-        });
-        
-        if (!fullSeason) {
-            console.error('❌ [TriviaService] Failed to fetch season with ID:', randomSeason.id);
-            throw new Error(`Failed to fetch season with ID ${randomSeason.id}`);
-        }
-        
         const triviaSeason = {
-            id: fullSeason.id,
-            seasonNumber: fullSeason.seasonNumber,
-            theme: fullSeason.theme,
-            startDate: fullSeason.startDate,
-            endDate: fullSeason.endDate,
-            teams: fullSeason.teams || [],
-            games: fullSeason.games || [],
-            awards: fullSeason.awards || [],
-            records: fullSeason.records || [],
+            id: randomSeason.id,
+            seasonNumber: randomSeason.seasonNumber,
+            theme: randomSeason.theme,
+            startDate: randomSeason.startDate,
+            endDate: randomSeason.endDate,
+            teams: randomSeason.teams || [],
+            games: randomSeason.games || [],
+            awards: randomSeason.awards || [],
+            records: randomSeason.records || [],
             difficulty: difficulty as 'easy' | 'medium' | 'hard',
             hintCount: this.getHintCount(difficulty)
         };

@@ -29,8 +29,12 @@ export const SeasonSchema = z.object({
 
 export const AwardSchema = z.object({
     id: z.number(),
-    name: z.string(),
+    type: z.string(),
     description: z.string().optional(),
+    season: z.object({
+        id: z.number(),
+        seasonNumber: z.number()
+    }).optional(),
     createdAt: z.date(),
     updatedAt: z.date()
 });
@@ -90,7 +94,7 @@ export const TriviaSeasonSchema = z.object({
     games: z.array(GameSchema).default([]),
     awards: z.array(AwardSchema).default([]),
     records: z.array(RecordSchema).default([]),
-    difficulty: z.enum(['easy', 'medium', 'hard', 'impossible']),
+    difficulty: z.enum(['easy', 'medium', 'hard']),
     hintCount: z.number()
 });
 
