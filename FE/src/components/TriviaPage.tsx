@@ -453,14 +453,13 @@ const TriviaPage: React.FC = () => {
                         <span className="type-label">Team</span>
                     </button>
                     <button
-                        className={`type-btn locked ${selectedType === 'season' ? 'selected' : ''}`}
+                        className={`type-btn ${selectedType === 'season' ? 'selected' : ''}`}
                         onClick={() => setSelectedType('season')}
                         disabled={true}
                         title="Coming soon - Season trivia is currently being fixed"
                     >
                         <span className="type-icon">S</span>
                         <span className="type-label">Season</span>
-                        <span className="lock-overlay"></span>
                     </button>
                 </div>
             </div>
