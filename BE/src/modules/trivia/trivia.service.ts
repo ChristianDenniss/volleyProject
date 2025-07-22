@@ -440,17 +440,33 @@ export class TriviaService {
         const gameCount = parseInt(team.game_count) || 0;
         const totalRelations = playerCount + gameCount;
         
+        // Teams that didn't make playoffs should never be medium - they're less memorable
+        const placement = team.placement || '';
+        const didntMakePlayoffs = placement.includes('Didnt make playoffs') || placement.includes("Didn't make playoffs");
+        
         console.log(`🎯 [TriviaService] Team ${team.name} difficulty calculation:`, {
             name: team.name,
+            placement: placement,
+            didntMakePlayoffs: didntMakePlayoffs,
             player_count: playerCount,
             game_count: gameCount,
             totalRelations,
-            difficulty: totalRelations >= 15 ? 'easy' : totalRelations >= 10 ? 'medium' : totalRelations >= 5 ? 'hard' : 'impossible'
+            difficulty: didntMakePlayoffs ? 
+                (totalRelations >= 15 ? 'easy' : totalRelations >= 5 ? 'hard' : 'impossible') :
+                (totalRelations >= 15 ? 'easy' : totalRelations >= 10 ? 'medium' : totalRelations >= 5 ? 'hard' : 'impossible')
         });
 
-        if (totalRelations >= 20) return 'easy';
-        if (totalRelations >= 15) return 'medium';
-        if (totalRelations >= 10) return 'hard';
+        // If team didn't make playoffs, they can only be easy, hard, or impossible (never medium)
+        if (didntMakePlayoffs) {
+            if (totalRelations >= 15) return 'easy';
+            if (totalRelations >= 5) return 'hard';
+            return 'impossible';
+        }
+        
+        // Normal difficulty calculation for teams that made playoffs
+        if (totalRelations >= 15) return 'easy';
+        if (totalRelations >= 10) return 'medium';
+        if (totalRelations >= 5) return 'hard';
         return 'impossible';
     }
 
