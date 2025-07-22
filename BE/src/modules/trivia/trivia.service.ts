@@ -204,7 +204,7 @@ export class TriviaService {
     }
 
     /**
-     * Get a random trivia season with all relations - SIMPLIFIED VERSION
+     * Get a random trivia season with all relations - ULTRA FAST VERSION
      */
     async getRandomTriviaSeason(difficulty: 'easy' | 'medium' | 'hard' | 'impossible'): Promise<TriviaSeason> {
         console.log('🎯 [TriviaService] getRandomTriviaSeason called with difficulty:', difficulty);
@@ -215,16 +215,16 @@ export class TriviaService {
             difficulty = 'hard';
         }
         
-        // Step 1: Get all seasons with their relations
-        console.log('🎯 [TriviaService] Step 1: Fetching all seasons...');
-        const allSeasons = await this.seasonRepository.find({
-            relations: ['teams', 'games', 'awards', 'records']
+        // Step 1: Get ONLY season numbers (super fast)
+        console.log('🎯 [TriviaService] Step 1: Fetching season numbers only...');
+        const seasonNumbers = await this.seasonRepository.find({
+            select: ['id', 'seasonNumber']
         });
         
-        console.log('✅ [TriviaService] Found', allSeasons.length, 'total seasons');
+        console.log('✅ [TriviaService] Found', seasonNumbers.length, 'seasons');
         
         // Step 2: Filter by difficulty using simple season number logic
-        const candidates = allSeasons.filter((season) => {
+        const candidates = seasonNumbers.filter((season) => {
             const seasonNum = season.seasonNumber;
             let seasonDifficulty: 'easy' | 'medium' | 'hard';
             
@@ -244,19 +244,31 @@ export class TriviaService {
         }
         
         // Step 3: Pick a random candidate
-        const randomSeason = candidates[Math.floor(Math.random() * candidates.length)];
-        console.log('🎯 [TriviaService] Step 3: Selected random season:', randomSeason.seasonNumber);
+        const randomSeasonId = candidates[Math.floor(Math.random() * candidates.length)].id;
+        console.log('🎯 [TriviaService] Step 3: Selected random season ID:', randomSeasonId);
+        
+        // Step 4: Fetch ONLY the selected season with all relations
+        console.log('🎯 [TriviaService] Step 4: Fetching full season data...');
+        const fullSeason = await this.seasonRepository.findOne({
+            where: { id: randomSeasonId },
+            relations: ['teams', 'games', 'awards', 'records']
+        });
+        
+        if (!fullSeason) {
+            console.error('❌ [TriviaService] Failed to fetch season with ID:', randomSeasonId);
+            throw new Error(`Failed to fetch season with ID ${randomSeasonId}`);
+        }
         
         const triviaSeason = {
-            id: randomSeason.id,
-            seasonNumber: randomSeason.seasonNumber,
-            theme: randomSeason.theme,
-            startDate: randomSeason.startDate,
-            endDate: randomSeason.endDate,
-            teams: randomSeason.teams || [],
-            games: randomSeason.games || [],
-            awards: randomSeason.awards || [],
-            records: randomSeason.records || [],
+            id: fullSeason.id,
+            seasonNumber: fullSeason.seasonNumber,
+            theme: fullSeason.theme,
+            startDate: fullSeason.startDate,
+            endDate: fullSeason.endDate,
+            teams: fullSeason.teams || [],
+            games: fullSeason.games || [],
+            awards: fullSeason.awards || [],
+            records: fullSeason.records || [],
             difficulty: difficulty as 'easy' | 'medium' | 'hard',
             hintCount: this.getHintCount(difficulty)
         };

@@ -610,12 +610,21 @@
 .game-stats p {
     margin: 0.5rem 0;
     font-size: 1rem;
-    color: var(--primary-blue);
+    color: var(--primary-blue) !important;
 }
 
 .stat-value {
     font-weight: 600;
-    color: var(--primary-blue);
+    color: var(--primary-blue) !important;
+}
+
+/* Force all text in game stats to be visible */
+.game-stats * {
+    color: var(--primary-blue) !important;
+}
+
+.game-stats p span {
+    color: var(--primary-blue) !important;
 }
 
 .result-buttons {
