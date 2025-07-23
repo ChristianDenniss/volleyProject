@@ -63,11 +63,13 @@
 }
 
 .stats-season-filter { margin: 0; white-space: nowrap; }
+.stats-stage-filter { margin: 0; white-space: nowrap; }
 .stats-type-filter { margin: 0; white-space: nowrap; }
 .stats-view-filter { margin: 0; white-space: nowrap; }
 
 .stats-season-filter select,
 .stats-season-filter .season-filter-bar select,
+.stats-stage-filter select,
 .stats-type-filter select,
 .stats-view-filter select
 {
@@ -94,10 +96,12 @@
 
 .stats-season-filter select:hover,
 .stats-season-filter .season-filter-bar select:hover,
+.stats-stage-filter select:hover,
 .stats-type-filter select:hover,
 .stats-view-filter select:hover,
 .stats-season-filter select:focus,
 .stats-season-filter .season-filter-bar select:focus,
+.stats-stage-filter select:focus,
 .stats-type-filter select:focus,
 .stats-view-filter select:focus
 {
@@ -329,6 +333,12 @@
     .stats-table {
         min-height: 400px;
     }
+}
+
+.stats-stage-filter label {
+    margin-right: 8px;
+    color: #2d3748;
+    font-weight: 500;
 }
 
 .stats-type-filter label {

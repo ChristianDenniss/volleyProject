@@ -38,6 +38,9 @@ type StatType = 'total' | 'perGame' | 'perSet';
 type ViewType = 'player' | 'team';
 type ComparisonOperator = '==' | '!=' | '>' | '>=' | '<' | '<=';
 
+// Stage filter types
+type StageRound = 'R1' | 'R2' | 'R3' | 'R4' | 'R5' | 'R6' | 'all';
+
 interface FilterCondition {
   id: string;
   stat: StatCategory;
@@ -57,6 +60,28 @@ interface TeamStatsData {
 }
 
 type DisplayData = Player | TeamStatsData;
+
+// Stage mapping configuration
+const STAGE_ROUNDS: Record<StageRound, string[]> = {
+  'R1': ['Winners Bracket; Round of 16'],
+  'R2': ['Winners Bracket; Quarterfinals', 'Losers Bracket; Round 1'],
+  'R3': ['Winners Bracket; Semifinals', 'Losers Bracket; Round 2'],
+  'R4': ['Winners Bracket; Finals', 'Losers Bracket; Round 3', 'Losers Bracket; Quarterfinals'],
+  'R5': ['Losers Bracket; Semifinals', 'Losers Bracket; Finals'],
+  'R6': ['Grand Finals', 'Grand Finals; Bracket Reset'],
+  'all': []
+};
+
+// Helper function to get round from stage
+const getStageRound = (stage: string): StageRound => {
+  for (const [round, stages] of Object.entries(STAGE_ROUNDS)) {
+    if (round === 'all') continue;
+    if (stages.includes(stage)) {
+      return round as StageRound;
+    }
+  }
+  return 'all'; // Default to all if stage doesn't match any round
+};
 
 // Advanced Filter Component
 const AdvancedFilter: React.FC<{
@@ -184,6 +209,7 @@ const StatsLeaderboard: React.FC = () => {
   const [statType, setStatType] = useState<StatType>('total');
   const [viewType, setViewType] = useState<ViewType>('player');
   const [filterConditions, setFilterConditions] = useState<FilterCondition[]>([]);
+  const [selectedStageRound, setSelectedStageRound] = useState<StageRound>('all');
   const [visibleStats, setVisibleStats] = useState<Record<StatCategory, boolean>>({
     spikeKills: false,
     spikeAttempts: false,
@@ -239,6 +265,11 @@ const StatsLeaderboard: React.FC = () => {
 
   const handleFilterConditionsChange = (conditions: FilterCondition[]) => {
     setFilterConditions(conditions);
+    setCurrentPage(1);
+  };
+
+  const handleStageRoundChange = (stageRound: StageRound) => {
+    setSelectedStageRound(stageRound);
     setCurrentPage(1);
   };
 
@@ -298,9 +329,20 @@ const StatsLeaderboard: React.FC = () => {
 
   const getPlayerStat = (player: Player, stat: StatCategory): number => {
     if (!player.stats || player.stats.length === 0) return 0;
-    const relevantStats = selectedSeason === null
+    let relevantStats = selectedSeason === null
       ? player.stats
       : player.stats.filter(statRecord => statRecord.game?.season?.seasonNumber === selectedSeason);
+    
+    // Filter by stage round if not 'all'
+    if (selectedStageRound !== 'all') {
+      relevantStats = relevantStats.filter(statRecord => {
+        const gameStage = statRecord.game?.stage;
+        if (!gameStage) return false;
+        const stageRound = getStageRound(gameStage);
+        return stageRound === selectedStageRound;
+      });
+    }
+    
     if (relevantStats.length === 0) return 0;
     const sum = (key: keyof Stats) => relevantStats.reduce((total, statRecord) => {
       const value = statRecord[key];
@@ -444,9 +486,19 @@ const StatsLeaderboard: React.FC = () => {
         
         // Add player stats to team totals
         if (player.stats) {
-          const relevantStats = selectedSeason === null 
+          let relevantStats = selectedSeason === null 
             ? player.stats 
             : player.stats.filter(statRecord => statRecord.game?.season?.seasonNumber === selectedSeason);
+          
+          // Filter by stage round if not 'all'
+          if (selectedStageRound !== 'all') {
+            relevantStats = relevantStats.filter(statRecord => {
+              const gameStage = statRecord.game?.stage;
+              if (!gameStage) return false;
+              const stageRound = getStageRound(gameStage);
+              return stageRound === selectedStageRound;
+            });
+          }
           
           console.log(`Player ${player.name} has ${relevantStats.length} relevant stats for team ${team.name}`);
           
@@ -581,9 +633,19 @@ const StatsLeaderboard: React.FC = () => {
     if (!player.stats || player.stats.length === 0) return false;
     
     // Filter stats by selected season if one is selected
-    const relevantStats = selectedSeason === null 
+    let relevantStats = selectedSeason === null 
       ? player.stats 
       : player.stats.filter(statRecord => statRecord.game?.season?.seasonNumber === selectedSeason);
+    
+    // Filter by stage round if not 'all'
+    if (selectedStageRound !== 'all') {
+      relevantStats = relevantStats.filter(statRecord => {
+        const gameStage = statRecord.game?.stage;
+        if (!gameStage) return false;
+        const stageRound = getStageRound(gameStage);
+        return stageRound === selectedStageRound;
+      });
+    }
     
     return relevantStats.some(stat => 
       stat.spikeKills > 0 || 
@@ -711,6 +773,22 @@ const StatsLeaderboard: React.FC = () => {
           <div className="stats-filters-row">
             <div className="stats-season-filter">
               <SeasonFilter selectedSeason={selectedSeason} onSeasonChange={handleSeasonChange} />
+            </div>
+            <div className="stats-stage-filter">
+              <label htmlFor="stage-round">Stage Round:</label>
+              <select
+                id="stage-round"
+                value={selectedStageRound}
+                onChange={(e) => handleStageRoundChange(e.target.value as StageRound)}
+              >
+                <option value="all">All Stages</option>
+                <option value="R1">R1 - Winners Round of 16</option>
+                <option value="R2">R2 - Winners QF + Losers R1</option>
+                <option value="R3">R3 - Winners SF + Losers R2</option>
+                <option value="R4">R4 - Winners Finals + Losers R3/QF</option>
+                <option value="R5">R5 - Losers SF + Losers Finals</option>
+                <option value="R6">R6 - Grand Finals</option>
+              </select>
             </div>
             <div className="stats-type-filter">
               <label htmlFor="stat-type">Stat Type:</label>
