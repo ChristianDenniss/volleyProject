@@ -341,6 +341,10 @@
     font-weight: 500;
 }
 
+.stats-stage-filter select {
+    width: 90px;
+}
+
 .stats-type-filter label {
     margin-right: 8px;
     color: #2d3748;

@@ -394,6 +394,11 @@ const StatsLeaderboard: React.FC = () => {
         totalStat = (stat in relevantStats[0]) ? sum(stat as keyof Stats) : 0;
     }
 
+    // For percentage stats, always return the percentage regardless of stat type
+    if (stat === 'totalSpike%' || stat === 'Spike%' || stat === 'Ape%') {
+      return totalStat;
+    }
+
     if (statType === 'total') {
       return totalStat;
     }
@@ -614,6 +619,11 @@ const StatsLeaderboard: React.FC = () => {
         totalStat = sum(stat);
     }
 
+    // For percentage stats, always return the percentage regardless of stat type
+    if (stat === 'totalSpike%' || stat === 'Spike%' || stat === 'Ape%') {
+      return totalStat;
+    }
+
     if (statType === 'total') {
       return totalStat;
     }
@@ -775,7 +785,7 @@ const StatsLeaderboard: React.FC = () => {
               <SeasonFilter selectedSeason={selectedSeason} onSeasonChange={handleSeasonChange} />
             </div>
             <div className="stats-stage-filter">
-              <label htmlFor="stage-round">Stage Round:</label>
+              <label htmlFor="stage-round">Round:</label>
               <select
                 id="stage-round"
                 value={selectedStageRound}
