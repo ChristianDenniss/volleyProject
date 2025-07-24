@@ -26,6 +26,8 @@ const BASE_SCORES = {
 };
 
 const HINT_PENALTY = 20; // Points deducted per hint used
+const TIME_BONUS_PER_SECOND = 5; // Points added per second remaining
+const GAME_TIME_LIMIT = 60; // 60 seconds (1 minute)
 
 const TriviaPage: React.FC = () => {
     const [gameState, setGameState] = useState<GameState>('selection');
@@ -39,7 +41,12 @@ const TriviaPage: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [debounce, setDebounce] = useState(false);
     const [finalScore, setFinalScore] = useState<number>(0);
+    const [timeRemaining, setTimeRemaining] = useState<number>(GAME_TIME_LIMIT);
+    const [timeBonus, setTimeBonus] = useState<number>(0);
+    const [gameStartTime, setGameStartTime] = useState<number | null>(null);
+    const [timeSolved, setTimeSolved] = useState<number>(0);
     const debounceTimeout = useRef<number | null>(null);
+    const timerInterval = useRef<number | null>(null);
 
     // Hooks for fetching trivia - initialize with current difficulty
     const triviaPlayer = useTriviaPlayer(selectedDifficulty || 'easy');
@@ -54,13 +61,61 @@ const TriviaPage: React.FC = () => {
         debounceTimeout.current = window.setTimeout(() => setDebounce(false), DEBOUNCE_MS);
     };
 
+    // Start the game timer
+    const startTimer = () => {
+        setTimeRemaining(GAME_TIME_LIMIT);
+        setGameStartTime(Date.now());
+        
+        timerInterval.current = window.setInterval(() => {
+            setTimeRemaining(prev => {
+                if (prev <= 1) {
+                    // Time's up!
+                    if (timerInterval.current) {
+                        clearInterval(timerInterval.current);
+                        timerInterval.current = null;
+                    }
+                    // Auto-submit or give up when time runs out
+                    if (gameState === 'playing') {
+                        giveUp();
+                    }
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+    };
+
+    // Stop the timer
+    const stopTimer = () => {
+        if (timerInterval.current) {
+            clearInterval(timerInterval.current);
+            timerInterval.current = null;
+        }
+    };
+
+    // Calculate time bonus
+    const calculateTimeBonus = (): number => {
+        if (!gameStartTime) return 0;
+        const timeUsed = Math.floor((Date.now() - gameStartTime) / 1000);
+        const timeRemaining = Math.max(GAME_TIME_LIMIT - timeUsed, 0);
+        return timeRemaining * TIME_BONUS_PER_SECOND;
+    };
+
+    // Calculate time solved
+    const calculateTimeSolved = (): number => {
+        if (!gameStartTime) return 0;
+        const timeUsed = Math.floor((Date.now() - gameStartTime) / 1000);
+        return Math.min(timeUsed, GAME_TIME_LIMIT); // Cap at game time limit
+    };
+
     // Calculate final score based on difficulty and hints used
     const calculateScore = (difficulty: Difficulty, hintsUsed: number): number => {
         const baseScore = BASE_SCORES[difficulty];
         // First letter hint is free, so subtract 1 from hints used for penalty calculation
         const penaltyHints = Math.max(hintsUsed - 1, 0);
         const penalty = penaltyHints * HINT_PENALTY;
-        const finalScore = Math.max(baseScore - penalty, 0); // Ensure score doesn't go below 0
+        const timeBonus = calculateTimeBonus();
+        const finalScore = Math.max(baseScore - penalty + timeBonus, 0); // Ensure score doesn't go below 0
         return finalScore;
     };
 
@@ -81,6 +136,7 @@ const TriviaPage: React.FC = () => {
         setGuessResult(null);
         setHintLevel(1);
         setFinalScore(0);
+        setTimeBonus(0);
         setGameState('playing');
         triggerDebounce();
         
@@ -112,6 +168,9 @@ const TriviaPage: React.FC = () => {
             console.log('✅ [TriviaPage] Successfully got trivia data, setting current trivia');
             setCurrentTrivia(triviaData);
             generateHints(triviaData, selectedType, 1);
+            
+            // Start the timer after trivia data is loaded
+            startTimer();
         } catch (err: any) {
             console.error('❌ [TriviaPage] Error starting game:', err);
             setError(err.message || 'Failed to start game');
@@ -404,9 +463,14 @@ const TriviaPage: React.FC = () => {
             setGuessResult(result);
             if (result?.correct) {
                 console.log('✅ [TriviaPage] Correct guess! Calculating score and moving to result screen');
+                stopTimer();
+                const timeBonus = calculateTimeBonus();
+                const timeSolved = calculateTimeSolved();
+                setTimeBonus(timeBonus);
+                setTimeSolved(timeSolved);
                 const score = calculateScore(selectedDifficulty!, hintLevel);
                 setFinalScore(score);
-                console.log('🎯 [TriviaPage] Final score calculated:', score);
+                console.log('🎯 [TriviaPage] Final score calculated:', score, 'Time bonus:', timeBonus, 'Time solved:', timeSolved);
                 setGameState('result');
             } else {
                 console.log('❌ [TriviaPage] Incorrect guess, checking hint levels');
@@ -417,9 +481,14 @@ const TriviaPage: React.FC = () => {
                     generateHints(currentTrivia, type, nextLevel);
                 } else {
                     console.log('🎯 [TriviaPage] No more hints, calculating score and moving to result screen');
+                    stopTimer();
+                    const timeBonus = calculateTimeBonus();
+                    const timeSolved = calculateTimeSolved();
+                    setTimeBonus(timeBonus);
+                    setTimeSolved(timeSolved);
                     const score = calculateScore(selectedDifficulty!, hintLevel);
                     setFinalScore(score);
-                    console.log('🎯 [TriviaPage] Final score calculated:', score);
+                    console.log('🎯 [TriviaPage] Final score calculated:', score, 'Time bonus:', timeBonus, 'Time solved:', timeSolved);
                     setGameState('result');
                 }
             }
@@ -430,6 +499,7 @@ const TriviaPage: React.FC = () => {
     };
 
     const resetGame = () => {
+        stopTimer();
         setGameState('selection');
         setSelectedType(null);
         setSelectedDifficulty(null);
@@ -440,10 +510,17 @@ const TriviaPage: React.FC = () => {
         setHintLevel(1);
         setError(null);
         setFinalScore(0);
+        setTimeRemaining(GAME_TIME_LIMIT);
+        setTimeBonus(0);
+        setTimeSolved(0);
+        setGameStartTime(null);
     };
 
     const giveUp = () => {
         if (currentTrivia) {
+            stopTimer();
+            const timeSolved = calculateTimeSolved();
+            setTimeSolved(timeSolved);
             const answer = selectedType === 'season' 
                 ? `Season ${(currentTrivia as TriviaSeason).seasonNumber}`
                 : (currentTrivia as TriviaPlayer | TriviaTeam).name;
@@ -455,6 +532,7 @@ const TriviaPage: React.FC = () => {
             // Calculate score even when giving up (0 points for giving up)
             const score = 0;
             setFinalScore(score);
+            setTimeBonus(0);
             setGameState('result');
         }
     };
@@ -553,6 +631,11 @@ const TriviaPage: React.FC = () => {
                 <div className="game-info">
                     <span className={`difficulty-badge ${selectedDifficulty}`}>{selectedDifficulty}</span>
                     <span className="hint-counter">Hint {hintLevel}/{currentTrivia?.hintCount}</span>
+                    <div className="timer">
+                        <span className={`timer-text ${timeRemaining <= 10 ? 'warning' : ''}`}>
+                            {Math.floor(timeRemaining / 60)}:{(timeRemaining % 60).toString().padStart(2, '0')}
+                        </span>
+                    </div>
                 </div>
             </div>
             <div className="hints-section">
@@ -614,6 +697,7 @@ const TriviaPage: React.FC = () => {
                                 <p>Base Score ({selectedDifficulty}): <span className="score-detail">{BASE_SCORES[selectedDifficulty!]}</span></p>
                                 <p>Free Hint (First letter): <span className="score-detail">0</span></p>
                                 <p>Hint Penalty ({Math.max(hintLevel - 1, 0)} hints): <span className="score-detail">-{Math.max(hintLevel - 1, 0) * HINT_PENALTY}</span></p>
+                                <p>Time Bonus ({timeRemaining}s remaining): <span className="score-detail">+{timeBonus}</span></p>
                                 <p>Final Score: <span className="score-detail">{finalScore}</span></p>
                             </div>
                         </div>
@@ -630,6 +714,7 @@ const TriviaPage: React.FC = () => {
                                     <p>Base Score ({selectedDifficulty}): <span className="score-detail">{BASE_SCORES[selectedDifficulty!]}</span></p>
                                     <p>Free Hint (First letter): <span className="score-detail">0</span></p>
                                     <p>Hint Penalty ({Math.max(hintLevel - 1, 0)} hints): <span className="score-detail">-{Math.max(hintLevel - 1, 0) * HINT_PENALTY}</span></p>
+                                    <p>Time Bonus ({timeRemaining}s remaining): <span className="score-detail">+{timeBonus}</span></p>
                                     <p>Final Score: <span className="score-detail">{finalScore}</span></p>
                                 </div>
                             ) : (
@@ -643,6 +728,9 @@ const TriviaPage: React.FC = () => {
                     <p>Type: <span className="stat-value">{selectedType}</span></p>
                     <p>Hints used: <span className="stat-value">{hintLevel} / {currentTrivia?.hintCount || 0}</span></p>
                     <p>Total hints available: <span className="stat-value">{currentTrivia?.hintCount || 0}</span></p>
+                    <p>Time solved: <span className="stat-value">{timeSolved}s</span></p>
+                    <p>Time remaining: <span className="stat-value">{timeRemaining}s</span></p>
+                    <p>Time bonus: <span className="stat-value">+{timeBonus} points</span></p>
                     {currentTrivia && (
                         <>
                             {selectedType === 'player' && (

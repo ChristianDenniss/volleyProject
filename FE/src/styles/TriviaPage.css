@@ -422,6 +422,36 @@
     border: 1px solid var(--border);
 }
 
+/* ===== Timer ===== */
+.timer {
+    background: var(--light-bg);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.timer-text {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--primary-blue);
+    font-family: 'Courier New', monospace;
+    letter-spacing: 1px;
+}
+
+.timer-text.warning {
+    color: var(--warning);
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
 /* ===== Hints Section ===== */
 .hints-section {
     margin-bottom: 2.5rem;
