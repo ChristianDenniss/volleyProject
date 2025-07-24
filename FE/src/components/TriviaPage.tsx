@@ -17,6 +17,16 @@ type TriviaType = 'player' | 'team' | 'season';
 
 const DEBOUNCE_MS = 1200;
 
+// Score system constants
+const BASE_SCORES = {
+    easy: 100,
+    medium: 200,
+    hard: 300,
+    impossible: 500
+};
+
+const HINT_PENALTY = 20; // Points deducted per hint used
+
 const TriviaPage: React.FC = () => {
     const [gameState, setGameState] = useState<GameState>('selection');
     const [selectedType, setSelectedType] = useState<TriviaType | null>(null);
@@ -28,6 +38,7 @@ const TriviaPage: React.FC = () => {
     const [hintLevel, setHintLevel] = useState(1);
     const [error, setError] = useState<string | null>(null);
     const [debounce, setDebounce] = useState(false);
+    const [finalScore, setFinalScore] = useState<number>(0);
     const debounceTimeout = useRef<number | null>(null);
 
     // Hooks for fetching trivia - initialize with current difficulty
@@ -41,6 +52,16 @@ const TriviaPage: React.FC = () => {
         setDebounce(true);
         if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
         debounceTimeout.current = window.setTimeout(() => setDebounce(false), DEBOUNCE_MS);
+    };
+
+    // Calculate final score based on difficulty and hints used
+    const calculateScore = (difficulty: Difficulty, hintsUsed: number): number => {
+        const baseScore = BASE_SCORES[difficulty];
+        // First letter hint is free, so subtract 1 from hints used for penalty calculation
+        const penaltyHints = Math.max(hintsUsed - 1, 0);
+        const penalty = penaltyHints * HINT_PENALTY;
+        const finalScore = Math.max(baseScore - penalty, 0); // Ensure score doesn't go below 0
+        return finalScore;
     };
 
     // Start game using hooks
@@ -59,6 +80,7 @@ const TriviaPage: React.FC = () => {
         setUserGuess('');
         setGuessResult(null);
         setHintLevel(1);
+        setFinalScore(0);
         setGameState('playing');
         triggerDebounce();
         
@@ -119,8 +141,16 @@ const TriviaPage: React.FC = () => {
         // Shuffle the other hints
         const shuffledHints = otherHints.sort(() => Math.random() - 0.5);
         
-        // Combine first letter hint with shuffled hints
-        const finalHints = firstLetterHint ? [firstLetterHint, ...shuffledHints] : shuffledHints;
+        // Combine first letter hint with shuffled hints and reassign levels based on order
+        const finalHints: Hint[] = [];
+        if (firstLetterHint) {
+            finalHints.push({ ...firstLetterHint, level: 1 }); // First letter is always level 1
+        }
+        
+        // Assign sequential levels to shuffled hints (starting from 2)
+        shuffledHints.forEach((hint, index) => {
+            finalHints.push({ ...hint, level: index + 2 });
+        });
         
         setCurrentHints(finalHints);
     };
@@ -373,7 +403,10 @@ const TriviaPage: React.FC = () => {
             
             setGuessResult(result);
             if (result?.correct) {
-                console.log('✅ [TriviaPage] Correct guess! Moving to result screen');
+                console.log('✅ [TriviaPage] Correct guess! Calculating score and moving to result screen');
+                const score = calculateScore(selectedDifficulty!, hintLevel);
+                setFinalScore(score);
+                console.log('🎯 [TriviaPage] Final score calculated:', score);
                 setGameState('result');
             } else {
                 console.log('❌ [TriviaPage] Incorrect guess, checking hint levels');
@@ -383,7 +416,10 @@ const TriviaPage: React.FC = () => {
                     setHintLevel(nextLevel);
                     generateHints(currentTrivia, type, nextLevel);
                 } else {
-                    console.log('🎯 [TriviaPage] No more hints, moving to result screen');
+                    console.log('🎯 [TriviaPage] No more hints, calculating score and moving to result screen');
+                    const score = calculateScore(selectedDifficulty!, hintLevel);
+                    setFinalScore(score);
+                    console.log('🎯 [TriviaPage] Final score calculated:', score);
                     setGameState('result');
                 }
             }
@@ -403,6 +439,7 @@ const TriviaPage: React.FC = () => {
         setGuessResult(null);
         setHintLevel(1);
         setError(null);
+        setFinalScore(0);
     };
 
     const giveUp = () => {
@@ -415,6 +452,9 @@ const TriviaPage: React.FC = () => {
                 answer,
                 message: 'Better luck next time!'
             });
+            // Calculate score even when giving up (0 points for giving up)
+            const score = 0;
+            setFinalScore(score);
             setGameState('result');
         }
     };
@@ -568,12 +608,34 @@ const TriviaPage: React.FC = () => {
                         <span className="result-icon">✓</span>
                         <h3>Congratulations!</h3>
                         <p>You guessed correctly!</p>
+                        <div className="score-display">
+                            <h4>Your Score: <span className="score-value">{finalScore}</span></h4>
+                            <div className="score-breakdown">
+                                <p>Base Score ({selectedDifficulty}): <span className="score-detail">{BASE_SCORES[selectedDifficulty!]}</span></p>
+                                <p>Free Hint (First letter): <span className="score-detail">0</span></p>
+                                <p>Hint Penalty ({Math.max(hintLevel - 1, 0)} hints): <span className="score-detail">-{Math.max(hintLevel - 1, 0) * HINT_PENALTY}</span></p>
+                                <p>Final Score: <span className="score-detail">{finalScore}</span></p>
+                            </div>
+                        </div>
                     </div>
                 ) : (
                     <div className="incorrect-result">
                         <span className="result-icon">!</span>
                         <h3>The answer was:</h3>
                         <p className="correct-answer">{guessResult?.answer}</p>
+                        <div className="score-display">
+                            <h4>Your Score: <span className="score-value">{finalScore}</span></h4>
+                            {finalScore > 0 ? (
+                                <div className="score-breakdown">
+                                    <p>Base Score ({selectedDifficulty}): <span className="score-detail">{BASE_SCORES[selectedDifficulty!]}</span></p>
+                                    <p>Free Hint (First letter): <span className="score-detail">0</span></p>
+                                    <p>Hint Penalty ({Math.max(hintLevel - 1, 0)} hints): <span className="score-detail">-{Math.max(hintLevel - 1, 0) * HINT_PENALTY}</span></p>
+                                    <p>Final Score: <span className="score-detail">{finalScore}</span></p>
+                                </div>
+                            ) : (
+                                <p className="no-score">No points earned - try again!</p>
+                            )}
+                        </div>
                     </div>
                 )}
                 <div className="game-stats">

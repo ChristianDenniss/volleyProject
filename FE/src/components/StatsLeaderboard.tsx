@@ -791,7 +791,7 @@ const StatsLeaderboard: React.FC = () => {
                 value={selectedStageRound}
                 onChange={(e) => handleStageRoundChange(e.target.value as StageRound)}
               >
-                <option value="all">All Stages</option>
+                <option value="all">All</option>
                 <option value="R1">R1 - Winners Round of 16</option>
                 <option value="R2">R2 - Winners QF + Losers R1</option>
                 <option value="R3">R3 - Winners SF + Losers R2</option>
@@ -801,7 +801,7 @@ const StatsLeaderboard: React.FC = () => {
               </select>
             </div>
             <div className="stats-type-filter">
-              <label htmlFor="stat-type">Stat Type:</label>
+              <label htmlFor="stat-type">Stat-Type:</label>
               <select
                 id="stat-type"
                 value={statType}

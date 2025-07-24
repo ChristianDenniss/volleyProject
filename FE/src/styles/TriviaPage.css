@@ -661,6 +661,68 @@
     border: 1px solid var(--border);
 }
 
+/* ===== Score Display ===== */
+.score-display {
+    margin: 2rem 0;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 12px;
+    border: 2px solid var(--border);
+    box-shadow: 0 4px 12px var(--shadow);
+}
+
+.score-display h4 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--primary-blue);
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.score-value {
+    color: var(--success);
+    font-size: 2.2rem;
+    font-weight: 800;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.score-breakdown {
+    background: var(--white);
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    margin-top: 1rem;
+}
+
+.score-breakdown p {
+    margin: 0.5rem 0;
+    font-size: 1rem;
+    color: var(--text-dark);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.score-detail {
+    font-weight: 600;
+    color: var(--primary-blue);
+}
+
+.score-breakdown p:last-child {
+    border-top: 2px solid var(--border);
+    padding-top: 0.5rem;
+    margin-top: 0.5rem;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.no-score {
+    text-align: center;
+    color: var(--text-light);
+    font-style: italic;
+    margin: 1rem 0;
+}
+
 .game-stats {
     background: var(--light-bg);
     padding: 2rem;
