@@ -1,0 +1,3405 @@
+openapi: 3.0.3
+info:
+  title: Volleyball 4.2 API
+  description: |
+    API for managing volleyball league data including players, teams, games, seasons, stats, awards, records, articles, and trivia.
+    
+    ## Authentication
+    Most endpoints require authentication using either:
+    - JWT Token (Bearer token in Authorization header)
+    - API Key (X-API-Key header)
+    
+    ## Rate Limiting
+    Public endpoints are cached for 10 minutes (600 seconds)
+    
+    ## Base URL
+    Production: https://api.volleyball4-2.com
+    Development: http://localhost:3000
+    
+    ## Swagger UI Configuration
+    To control the default expansion state of operations, you can:
+    1. Use the "Try it out" button to test endpoints
+    2. Click on individual operations to expand/collapse them
+    3. Use the "Expand Operations" button to control all operations at once
+  version: 1.0.0
+  contact:
+    name: Volleyball API Support
+    email: support@volleyball-api.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.volleyball4-2.com
+    description: Production server
+  - url: http://localhost:3000
+    description: Development server
+
+security:
+  - BearerAuth: []
+  - ApiKeyAuth: []
+
+paths:
+  /:
+    get:
+      summary: API Health Check
+      description: Check if the API is running
+      tags:
+        - Health
+      responses:
+        '200':
+          description: API is running
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Volleyball API is running"
+
+  /api/cache/health:
+    get:
+      summary: Cache Health Check
+      description: Check the status of the caching system
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Cache health status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "healthy"
+                  message:
+                    type: string
+                    example: "Cache is working properly"
+
+  # Players endpoints
+  /api/players:
+    get:
+      summary: Get all players
+      description: Retrieve all players with full details (cached for 10 minutes)
+      tags:
+        - Players
+      parameters:
+        - name: page
+          in: query
+          description: Page number for pagination
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Number of items per page
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: List of players
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  players:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Player'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+    post:
+      summary: Create a new player
+      description: Create a new player (requires authentication)
+      tags:
+        - Players
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePlayerRequest'
+      responses:
+        '201':
+          description: Player created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Player'
+        '400':
+          description: Invalid request data
+        '401':
+          description: Unauthorized
+        '409':
+          description: Player already exists
+
+  /api/players/medium:
+    get:
+      summary: Get all players (medium details)
+      description: Retrieve all players with medium level details (cached for 10 minutes)
+      tags:
+        - Players
+      responses:
+        '200':
+          description: List of players with medium details
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PlayerMedium'
+
+  /api/players/batch:
+    post:
+      summary: Create multiple players
+      description: Create multiple players in batch (requires authentication)
+      tags:
+        - Players
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/CreatePlayerRequest'
+      responses:
+        '201':
+          description: Players created successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Player'
+
+  /api/players/{id}:
+    get:
+      summary: Get player by ID
+      description: Retrieve a specific player by their ID (cached for 10 minutes)
+      tags:
+        - Players
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Player ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Player details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Player'
+        '404':
+          description: Player not found
+    put:
+      summary: Update player
+      description: Update a player completely (requires authentication)
+      tags:
+        - Players
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Player ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePlayerRequest'
+      responses:
+        '200':
+          description: Player updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Player'
+        '404':
+          description: Player not found
+    patch:
+      summary: Partially update player
+      description: Update specific fields of a player (requires authentication)
+      tags:
+        - Players
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Player ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePlayerRequest'
+      responses:
+        '200':
+          description: Player updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Player'
+    delete:
+      summary: Delete player
+      description: Delete a player (requires authentication)
+      tags:
+        - Players
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Player ID
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Player deleted successfully
+        '404':
+          description: Player not found
+
+  /api/players/teams/{playerName}:
+    get:
+      summary: Get teams by player name
+      description: Retrieve all teams a player has been on (cached for 10 minutes)
+      tags:
+        - Players
+      parameters:
+        - name: playerName
+          in: path
+          required: true
+          description: Player name
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of teams
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Team'
+
+  /api/players/team/{teamId}:
+    get:
+      summary: Get players by team ID
+      description: Retrieve all players for a specific team (cached for 10 minutes)
+      tags:
+        - Players
+      parameters:
+        - name: teamId
+          in: path
+          required: true
+          description: Team ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of players
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Player'
+
+  /api/players/merge:
+    post:
+      summary: Merge two players
+      description: Merge two players into one (requires authentication)
+      tags:
+        - Players
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sourcePlayerId:
+                  type: integer
+                  description: ID of the player to merge from
+                targetPlayerId:
+                  type: integer
+                  description: ID of the player to merge into
+              required:
+                - sourcePlayerId
+                - targetPlayerId
+      responses:
+        '200':
+          description: Players merged successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Player'
+
+  # Teams endpoints
+  /api/teams:
+    get:
+      summary: Get all teams
+      description: Retrieve all teams with full details
+      tags:
+        - Teams
+      responses:
+        '200':
+          description: List of teams
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Team'
+    post:
+      summary: Create a new team
+      description: Create a new team (requires authentication)
+      tags:
+        - Teams
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTeamRequest'
+      responses:
+        '201':
+          description: Team created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+
+  /api/teams/skinny:
+    get:
+      summary: Get all teams (minimal details)
+      description: Retrieve all teams with minimal details
+      tags:
+        - Teams
+      responses:
+        '200':
+          description: List of teams with minimal details
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TeamSkinny'
+
+  /api/teams/medium:
+    get:
+      summary: Get all teams (medium details)
+      description: Retrieve all teams with medium level details
+      tags:
+        - Teams
+      responses:
+        '200':
+          description: List of teams with medium details
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TeamMedium'
+
+  /api/teams/batch:
+    post:
+      summary: Create multiple teams
+      description: Create multiple teams in batch (requires authentication)
+      tags:
+        - Teams
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/CreateTeamRequest'
+      responses:
+        '201':
+          description: Teams created successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Team'
+
+  /api/teams/{id}:
+    get:
+      summary: Get team by ID
+      description: Retrieve a specific team by their ID
+      tags:
+        - Teams
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Team ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Team details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+        '404':
+          description: Team not found
+    put:
+      summary: Update team
+      description: Update a team completely (requires authentication)
+      tags:
+        - Teams
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Team ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTeamRequest'
+      responses:
+        '200':
+          description: Team updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+    patch:
+      summary: Partially update team
+      description: Update specific fields of a team (requires authentication)
+      tags:
+        - Teams
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Team ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTeamRequest'
+      responses:
+        '200':
+          description: Team updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+    delete:
+      summary: Delete team
+      description: Delete a team (requires authentication)
+      tags:
+        - Teams
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Team ID
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Team deleted successfully
+        '404':
+          description: Team not found
+
+  /api/teams/season/{seasonId}:
+    get:
+      summary: Get teams by season ID
+      description: Retrieve all teams for a specific season
+      tags:
+        - Teams
+      parameters:
+        - name: seasonId
+          in: path
+          required: true
+          description: Season ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of teams
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Team'
+
+  /api/teams/name/{name}:
+    get:
+      summary: Get teams by name
+      description: Retrieve teams by name (partial match)
+      tags:
+        - Teams
+      parameters:
+        - name: name
+          in: path
+          required: true
+          description: Team name
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of teams
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Team'
+
+  /api/teams/name/{name}/players:
+    get:
+      summary: Get team players by team name
+      description: Retrieve all players for a team by team name
+      tags:
+        - Teams
+      parameters:
+        - name: name
+          in: path
+          required: true
+          description: Team name
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of players
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Player'
+
+  /api/teams/{teamId}/players:
+    get:
+      summary: Get team players by team ID
+      description: Retrieve all players for a specific team
+      tags:
+        - Teams
+      parameters:
+        - name: teamId
+          in: path
+          required: true
+          description: Team ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of players
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Player'
+
+  # Games endpoints
+  /api/games:
+    get:
+      summary: Get all games
+      description: Retrieve all games with full details
+      tags:
+        - Games
+      responses:
+        '200':
+          description: List of games
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Game'
+    post:
+      summary: Create a new game
+      description: Create a new game (requires authentication)
+      tags:
+        - Games
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateGameRequest'
+      responses:
+        '201':
+          description: Game created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Game'
+
+  /api/games/skinny:
+    get:
+      summary: Get all games (minimal details)
+      description: Retrieve all games with minimal details
+      tags:
+        - Games
+      responses:
+        '200':
+          description: List of games with minimal details
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GameSkinny'
+
+  /api/games/batch:
+    post:
+      summary: Create multiple games
+      description: Create multiple games in batch (requires authentication)
+      tags:
+        - Games
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/CreateGameRequest'
+      responses:
+        '201':
+          description: Games created successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Game'
+
+  /api/games/{id}:
+    get:
+      summary: Get game by ID
+      description: Retrieve a specific game by its ID
+      tags:
+        - Games
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Game ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Game details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Game'
+        '404':
+          description: Game not found
+    put:
+      summary: Update game
+      description: Update a game completely (requires authentication)
+      tags:
+        - Games
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Game ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateGameRequest'
+      responses:
+        '200':
+          description: Game updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Game'
+    patch:
+      summary: Partially update game
+      description: Update specific fields of a game (requires authentication)
+      tags:
+        - Games
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Game ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateGameRequest'
+      responses:
+        '200':
+          description: Game updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Game'
+    delete:
+      summary: Delete game
+      description: Delete a game (requires authentication)
+      tags:
+        - Games
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Game ID
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Game deleted successfully
+        '404':
+          description: Game not found
+
+  # Seasons endpoints
+  /api/seasons:
+    get:
+      summary: Get all seasons
+      description: Retrieve all seasons with full details
+      tags:
+        - Seasons
+      responses:
+        '200':
+          description: List of seasons
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Season'
+    post:
+      summary: Create a new season
+      description: Create a new season (requires authentication)
+      tags:
+        - Seasons
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSeasonRequest'
+      responses:
+        '201':
+          description: Season created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Season'
+
+  /api/seasons/{id}:
+    get:
+      summary: Get season by ID
+      description: Retrieve a specific season by its ID
+      tags:
+        - Seasons
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Season ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Season details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Season'
+        '404':
+          description: Season not found
+    put:
+      summary: Update season
+      description: Update a season completely (requires authentication)
+      tags:
+        - Seasons
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Season ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSeasonRequest'
+      responses:
+        '200':
+          description: Season updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Season'
+    patch:
+      summary: Partially update season
+      description: Update specific fields of a season (requires authentication)
+      tags:
+        - Seasons
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Season ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSeasonRequest'
+      responses:
+        '200':
+          description: Season updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Season'
+    delete:
+      summary: Delete season
+      description: Delete a season (requires authentication)
+      tags:
+        - Seasons
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Season ID
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Season deleted successfully
+        '404':
+          description: Season not found
+
+  # Stats endpoints
+  /api/stats:
+    get:
+      summary: Get all stats
+      description: Retrieve all statistics (cached for 10 minutes)
+      tags:
+        - Stats
+      responses:
+        '200':
+          description: List of stats
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Stat'
+    post:
+      summary: Create a new stat
+      description: Create a new statistic (requires authentication)
+      tags:
+        - Stats
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateStatRequest'
+      responses:
+        '201':
+          description: Stat created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Stat'
+
+  /api/stats/by-name:
+    post:
+      summary: Create stat by player name
+      description: Create a statistic using player name instead of ID (requires authentication)
+      tags:
+        - Stats
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateStatByNameRequest'
+      responses:
+        '201':
+          description: Stat created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Stat'
+
+  /api/stats/batch-csv:
+    post:
+      summary: Upload stats via CSV
+      description: Upload multiple statistics via CSV file (requires authentication)
+      tags:
+        - Stats
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: CSV file with stats data
+      responses:
+        '201':
+          description: Stats uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Stat'
+
+  /api/stats/{id}:
+    get:
+      summary: Get stat by ID
+      description: Retrieve a specific statistic by its ID
+      tags:
+        - Stats
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Stat ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Stat details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Stat'
+        '404':
+          description: Stat not found
+    put:
+      summary: Update stat
+      description: Update a statistic completely (requires authentication)
+      tags:
+        - Stats
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Stat ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateStatRequest'
+      responses:
+        '200':
+          description: Stat updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Stat'
+    patch:
+      summary: Partially update stat
+      description: Update specific fields of a statistic (requires authentication)
+      tags:
+        - Stats
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Stat ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateStatRequest'
+      responses:
+        '200':
+          description: Stat updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Stat'
+    delete:
+      summary: Delete stat
+      description: Delete a statistic (requires authentication)
+      tags:
+        - Stats
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Stat ID
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Stat deleted successfully
+        '404':
+          description: Stat not found
+
+  /api/stats/player/{playerId}:
+    get:
+      summary: Get stats by player ID
+      description: Retrieve all statistics for a specific player
+      tags:
+        - Stats
+      parameters:
+        - name: playerId
+          in: path
+          required: true
+          description: Player ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of stats
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Stat'
+
+  /api/stats/game/{gameId}:
+    get:
+      summary: Get stats by game ID
+      description: Retrieve all statistics for a specific game
+      tags:
+        - Stats
+      parameters:
+        - name: gameId
+          in: path
+          required: true
+          description: Game ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of stats
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Stat'
+
+  # Awards endpoints
+  /api/awards:
+    get:
+      summary: Get all awards
+      description: Retrieve all awards
+      tags:
+        - Awards
+      responses:
+        '200':
+          description: List of awards
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Award'
+    post:
+      summary: Create a new award
+      description: Create a new award (requires authentication)
+      tags:
+        - Awards
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAwardRequest'
+      responses:
+        '201':
+          description: Award created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Award'
+
+  /api/awards/with-names:
+    post:
+      summary: Create award with names
+      description: Create an award using player and season names (requires authentication)
+      tags:
+        - Awards
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAwardWithNamesRequest'
+      responses:
+        '201':
+          description: Award created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Award'
+
+  /api/awards/skinny:
+    get:
+      summary: Get all awards (minimal details)
+      description: Retrieve all awards with minimal details
+      tags:
+        - Awards
+      responses:
+        '200':
+          description: List of awards with minimal details
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AwardSkinny'
+
+  /api/awards/{id}:
+    get:
+      summary: Get award by ID
+      description: Retrieve a specific award by its ID
+      tags:
+        - Awards
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Award ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Award details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Award'
+        '404':
+          description: Award not found
+    patch:
+      summary: Update award
+      description: Update an award (requires authentication)
+      tags:
+        - Awards
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Award ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAwardRequest'
+      responses:
+        '200':
+          description: Award updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Award'
+    delete:
+      summary: Delete award
+      description: Delete an award (requires authentication)
+      tags:
+        - Awards
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Award ID
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Award deleted successfully
+        '404':
+          description: Award not found
+
+  /api/awards/type/{type}:
+    get:
+      summary: Get awards by type
+      description: Retrieve all awards of a specific type
+      tags:
+        - Awards
+      parameters:
+        - name: type
+          in: path
+          required: true
+          description: Award type
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of awards
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Award'
+
+  /api/awards/season/{seasonId}:
+    get:
+      summary: Get awards by season ID
+      description: Retrieve all awards for a specific season
+      tags:
+        - Awards
+      parameters:
+        - name: seasonId
+          in: path
+          required: true
+          description: Season ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of awards
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Award'
+
+  /api/awards/player/{playerId}:
+    get:
+      summary: Get awards by player ID
+      description: Retrieve all awards for a specific player
+      tags:
+        - Awards
+      parameters:
+        - name: playerId
+          in: path
+          required: true
+          description: Player ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of awards
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Award'
+
+  # Records endpoints
+  /api/records:
+    get:
+      summary: Get all records
+      description: Retrieve all records
+      tags:
+        - Records
+      responses:
+        '200':
+          description: List of records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Record'
+    post:
+      summary: Create a new record
+      description: Create a new record (requires authentication)
+      tags:
+        - Records
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRecordRequest'
+      responses:
+        '201':
+          description: Record created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Record'
+
+  /api/records/calculate:
+    post:
+      summary: Calculate records
+      description: Calculate records based on existing stats (requires authentication)
+      tags:
+        - Records
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Records calculated successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Record'
+
+  /api/records/{id}:
+    get:
+      summary: Get record by ID
+      description: Retrieve a specific record by its ID
+      tags:
+        - Records
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Record ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Record details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Record'
+        '404':
+          description: Record not found
+    put:
+      summary: Update record
+      description: Update a record completely (requires authentication)
+      tags:
+        - Records
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Record ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRecordRequest'
+      responses:
+        '200':
+          description: Record updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Record'
+    patch:
+      summary: Partially update record
+      description: Update specific fields of a record (requires authentication)
+      tags:
+        - Records
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Record ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRecordRequest'
+      responses:
+        '200':
+          description: Record updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Record'
+    delete:
+      summary: Delete record
+      description: Delete a record (requires authentication)
+      tags:
+        - Records
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Record ID
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Record deleted successfully
+        '404':
+          description: Record not found
+
+  /api/records/season/{seasonId}:
+    get:
+      summary: Get records by season ID
+      description: Retrieve all records for a specific season
+      tags:
+        - Records
+      parameters:
+        - name: seasonId
+          in: path
+          required: true
+          description: Season ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Record'
+
+  /api/records/type/{type}:
+    get:
+      summary: Get records by type
+      description: Retrieve all records of a specific type
+      tags:
+        - Records
+      parameters:
+        - name: type
+          in: path
+          required: true
+          description: Record type
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Record'
+
+  /api/records/player/{playerId}:
+    get:
+      summary: Get records by player ID
+      description: Retrieve all records for a specific player
+      tags:
+        - Records
+      parameters:
+        - name: playerId
+          in: path
+          required: true
+          description: Player ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Record'
+
+  /api/records/top10/{type}/{seasonId}:
+    get:
+      summary: Get top 10 records by type and season
+      description: Retrieve top 10 records of a specific type for a specific season
+      tags:
+        - Records
+      parameters:
+        - name: type
+          in: path
+          required: true
+          description: Record type
+          schema:
+            type: string
+        - name: seasonId
+          in: path
+          required: true
+          description: Season ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of top 10 records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Record'
+
+  # Articles endpoints
+  /api/articles:
+    get:
+      summary: Get all articles
+      description: Retrieve all approved articles
+      tags:
+        - Articles
+      responses:
+        '200':
+          description: List of articles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Article'
+    post:
+      summary: Create a new article
+      description: Create a new article (requires authentication)
+      tags:
+        - Articles
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateArticleRequest'
+      responses:
+        '201':
+          description: Article created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Article'
+
+  /api/articles/user/{userId}:
+    get:
+      summary: Get articles by user ID
+      description: Retrieve all articles by a specific user
+      tags:
+        - Articles
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: User ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of articles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Article'
+
+  /api/articles/{id}:
+    get:
+      summary: Get article by ID
+      description: Retrieve a specific article by its ID
+      tags:
+        - Articles
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Article ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Article details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Article'
+        '404':
+          description: Article not found
+    put:
+      summary: Update article
+      description: Update an article completely (requires authentication)
+      tags:
+        - Articles
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Article ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateArticleRequest'
+      responses:
+        '200':
+          description: Article updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Article'
+    patch:
+      summary: Partially update article
+      description: Update specific fields of an article (requires authentication)
+      tags:
+        - Articles
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Article ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateArticleRequest'
+      responses:
+        '200':
+          description: Article updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Article'
+    delete:
+      summary: Delete article
+      description: Delete an article (requires authentication)
+      tags:
+        - Articles
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Article ID
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Article deleted successfully
+        '404':
+          description: Article not found
+
+  /api/articles/{id}/like:
+    post:
+      summary: Like an article
+      description: Like an article (requires authentication)
+      tags:
+        - Articles
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Article ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Article liked successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArticleLike'
+    delete:
+      summary: Unlike an article
+      description: Unlike an article (requires authentication)
+      tags:
+        - Articles
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Article ID
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Article unliked successfully
+
+  /api/articles/{id}/like-status:
+    get:
+      summary: Get article like status
+      description: Check if current user has liked an article (requires authentication)
+      tags:
+        - Articles
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Article ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Like status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  liked:
+                    type: boolean
+                    description: Whether the user has liked the article
+
+  # Trivia endpoints
+  /api/trivia/player/{difficulty}:
+    get:
+      summary: Get random player trivia
+      description: Get a random player for trivia based on difficulty
+      tags:
+        - Trivia
+      parameters:
+        - name: difficulty
+          in: path
+          required: true
+          description: Difficulty level
+          schema:
+            type: string
+            enum: [easy, medium, hard, impossible]
+      responses:
+        '200':
+          description: Random player trivia
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TriviaPlayer'
+
+  /api/trivia/team/{difficulty}:
+    get:
+      summary: Get random team trivia
+      description: Get a random team for trivia based on difficulty
+      tags:
+        - Trivia
+      parameters:
+        - name: difficulty
+          in: path
+          required: true
+          description: Difficulty level
+          schema:
+            type: string
+            enum: [easy, medium, hard, impossible]
+      responses:
+        '200':
+          description: Random team trivia
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TriviaTeam'
+
+  /api/trivia/season/{difficulty}:
+    get:
+      summary: Get random season trivia
+      description: Get a random season for trivia based on difficulty
+      tags:
+        - Trivia
+      parameters:
+        - name: difficulty
+          in: path
+          required: true
+          description: Difficulty level
+          schema:
+            type: string
+            enum: [easy, medium, hard, impossible]
+      responses:
+        '200':
+          description: Random season trivia
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TriviaSeason'
+
+  /api/trivia/guess:
+    post:
+      summary: Submit trivia guess
+      description: Submit a guess for trivia (requires authentication)
+      tags:
+        - Trivia
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                type:
+                  type: string
+                  enum: [player, team, season]
+                  description: Type of trivia
+                id:
+                  type: integer
+                  description: ID of the trivia item
+                guess:
+                  type: string
+                  description: User's guess
+              required:
+                - type
+                - id
+                - guess
+      responses:
+        '200':
+          description: Guess result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuessResult'
+
+  # Roblox endpoints
+  /api/roblox/avatar/{username}:
+    get:
+      summary: Get Roblox avatar
+      description: Get avatar information for a Roblox username
+      tags:
+        - Roblox
+      parameters:
+        - name: username
+          in: path
+          required: true
+          description: Roblox username
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Avatar information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  username:
+                    type: string
+                  avatarUrl:
+                    type: string
+                  thumbnailUrl:
+                    type: string
+
+  # User endpoints
+  /api/users/register:
+    post:
+      summary: Register a new user
+      description: Register a new user account
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  /api/users/login:
+    post:
+      summary: Login user
+      description: Login with username/email and password
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  description: Username or email
+                password:
+                  type: string
+                  description: Password
+              required:
+                - username
+                - password
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: JWT token
+                  user:
+                    $ref: '#/components/schemas/User'
+
+  /api/users/admin/generate-api-key:
+    post:
+      summary: Generate API key
+      description: Generate a new API key for admin user (requires admin authentication)
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: API key generated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  apiKey:
+                    type: string
+                    description: Generated API key
+
+  /api/users:
+    get:
+      summary: Get all users
+      description: Retrieve all users (requires admin authentication)
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+
+  /api/users/profile:
+    get:
+      summary: Get current user profile
+      description: Get profile of currently authenticated user
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  /api/users/{id}:
+    get:
+      summary: Get user by ID
+      description: Retrieve a specific user by their ID (requires admin authentication)
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: User ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+    put:
+      summary: Update user
+      description: Update a user completely (requires authentication)
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: User ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+    patch:
+      summary: Partially update user
+      description: Update specific fields of a user (requires authentication)
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: User ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+    delete:
+      summary: Delete user
+      description: Delete a user (requires authentication)
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: User ID
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: User deleted successfully
+        '404':
+          description: User not found
+
+  /api/users/admin/{id}/set-role:
+    patch:
+      summary: Set user role
+      description: Set role for a user (requires admin authentication)
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: User ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role:
+                  type: string
+                  enum: [user, admin]
+                  description: New role for the user
+              required:
+                - role
+      responses:
+        '200':
+          description: User role updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token for authentication
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for authentication
+
+  schemas:
+    # Common schemas
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          description: Current page number
+        limit:
+          type: integer
+          description: Number of items per page
+        total:
+          type: integer
+          description: Total number of items
+        totalPages:
+          type: integer
+          description: Total number of pages
+
+    # Player schemas
+    Player:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique player ID
+        name:
+          type: string
+          description: Player name
+        position:
+          type: string
+          enum: [N/A, Setter, Spiker, Libero, Defensive Specialist, Pinch Server, Developer]
+          description: Player position
+        teams:
+          type: array
+          items:
+            $ref: '#/components/schemas/Team'
+          description: Teams the player has been on
+        stats:
+          type: array
+          items:
+            $ref: '#/components/schemas/Stat'
+          description: Player statistics
+        awards:
+          type: array
+          items:
+            $ref: '#/components/schemas/Award'
+          description: Awards won by the player
+        records:
+          type: array
+          items:
+            $ref: '#/components/schemas/Record'
+          description: Records held by the player
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - position
+
+    PlayerMedium:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        position:
+          type: string
+        teams:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeamSkinny'
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - position
+
+    CreatePlayerRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          description: Player name
+        position:
+          type: string
+          enum: [N/A, Setter, Spiker, Libero, Defensive Specialist, Pinch Server]
+          description: Player position
+        teamId:
+          type: integer
+          description: Team ID (either teamId or teamName is required)
+        teamName:
+          type: string
+          description: Team name (either teamId or teamName is required)
+      required:
+        - name
+        - position
+
+    UpdatePlayerRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          description: Player name
+        position:
+          type: string
+          enum: [N/A, Setter, Spiker, Libero, Defensive Specialist, Pinch Server, Developer]
+          description: Player position
+        teamIds:
+          type: array
+          items:
+            type: integer
+          description: Array of team IDs
+
+    # Team schemas
+    Team:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique team ID
+        name:
+          type: string
+          description: Team name
+        placement:
+          type: string
+          description: Team placement in season
+        season:
+          $ref: '#/components/schemas/Season'
+          description: Season the team played in
+        players:
+          type: array
+          items:
+            $ref: '#/components/schemas/Player'
+          description: Players on the team
+        games:
+          type: array
+          items:
+            $ref: '#/components/schemas/Game'
+          description: Games played by the team
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+
+    TeamSkinny:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        placement:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+
+    TeamMedium:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        placement:
+          type: string
+        season:
+          $ref: '#/components/schemas/SeasonSkinny'
+        players:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlayerMedium'
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+
+    CreateTeamRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          description: Team name
+        placement:
+          type: string
+          description: Team placement
+        seasonId:
+          type: integer
+          description: Season ID
+      required:
+        - name
+        - seasonId
+
+    UpdateTeamRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          description: Team name
+        placement:
+          type: string
+          description: Team placement
+        seasonId:
+          type: integer
+          description: Season ID
+
+    # Game schemas
+    Game:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique game ID
+        team1Score:
+          type: integer
+          description: Score for team 1
+        team2Score:
+          type: integer
+          description: Score for team 2
+        team1:
+          $ref: '#/components/schemas/Team'
+          description: First team
+        team2:
+          $ref: '#/components/schemas/Team'
+          description: Second team
+        season:
+          $ref: '#/components/schemas/Season'
+          description: Season the game was played in
+        stats:
+          type: array
+          items:
+            $ref: '#/components/schemas/Stat'
+          description: Statistics for the game
+        stage:
+          type: string
+          description: Game stage (e.g., regular season, playoffs)
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - team1Score
+        - team2Score
+
+    GameSkinny:
+      type: object
+      properties:
+        id:
+          type: integer
+        team1Score:
+          type: integer
+        team2Score:
+          type: integer
+        team1:
+          $ref: '#/components/schemas/TeamSkinny'
+        team2:
+          $ref: '#/components/schemas/TeamSkinny'
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - team1Score
+        - team2Score
+
+    CreateGameRequest:
+      type: object
+      properties:
+        team1Id:
+          type: integer
+          description: ID of first team
+        team2Id:
+          type: integer
+          description: ID of second team
+        team1Score:
+          type: integer
+          description: Score for team 1
+        team2Score:
+          type: integer
+          description: Score for team 2
+        seasonId:
+          type: integer
+          description: Season ID
+        stage:
+          type: string
+          description: Game stage
+      required:
+        - team1Id
+        - team2Id
+        - team1Score
+        - team2Score
+        - seasonId
+
+    UpdateGameRequest:
+      type: object
+      properties:
+        team1Id:
+          type: integer
+          description: ID of first team
+        team2Id:
+          type: integer
+          description: ID of second team
+        team1Score:
+          type: integer
+          description: Score for team 1
+        team2Score:
+          type: integer
+          description: Score for team 2
+        seasonId:
+          type: integer
+          description: Season ID
+        stage:
+          type: string
+          description: Game stage
+
+    # Season schemas
+    Season:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique season ID
+        seasonNumber:
+          type: integer
+          description: Season number
+        theme:
+          type: string
+          description: Season theme
+        startDate:
+          type: string
+          format: date
+          description: Season start date
+        endDate:
+          type: string
+          format: date
+          description: Season end date
+        teams:
+          type: array
+          items:
+            $ref: '#/components/schemas/Team'
+          description: Teams in the season
+        games:
+          type: array
+          items:
+            $ref: '#/components/schemas/Game'
+          description: Games in the season
+        awards:
+          type: array
+          items:
+            $ref: '#/components/schemas/Award'
+          description: Awards given in the season
+        records:
+          type: array
+          items:
+            $ref: '#/components/schemas/Record'
+          description: Records set in the season
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - seasonNumber
+
+    SeasonSkinny:
+      type: object
+      properties:
+        id:
+          type: integer
+        seasonNumber:
+          type: integer
+        theme:
+          type: string
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - seasonNumber
+
+    SeasonMedium:
+      type: object
+      properties:
+        id:
+          type: integer
+        seasonNumber:
+          type: integer
+        theme:
+          type: string
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        teams:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeamSkinny'
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - seasonNumber
+
+    CreateSeasonRequest:
+      type: object
+      properties:
+        seasonNumber:
+          type: integer
+          description: Season number
+        theme:
+          type: string
+          description: Season theme
+        startDate:
+          type: string
+          format: date
+          description: Season start date
+        endDate:
+          type: string
+          format: date
+          description: Season end date
+      required:
+        - seasonNumber
+        - startDate
+        - endDate
+
+    UpdateSeasonRequest:
+      type: object
+      properties:
+        seasonNumber:
+          type: integer
+          description: Season number
+        theme:
+          type: string
+          description: Season theme
+        startDate:
+          type: string
+          format: date
+          description: Season start date
+        endDate:
+          type: string
+          format: date
+          description: Season end date
+
+    # Stat schemas
+    Stat:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique stat ID
+        aces:
+          type: integer
+          description: Number of aces
+        kills:
+          type: integer
+          description: Number of kills
+        blocks:
+          type: integer
+          description: Number of blocks
+        digs:
+          type: integer
+          description: Number of digs
+        assists:
+          type: integer
+          description: Number of assists
+        player:
+          $ref: '#/components/schemas/Player'
+          description: Player the stat belongs to
+        game:
+          $ref: '#/components/schemas/Game'
+          description: Game the stat is from
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - player
+        - game
+
+    CreateStatRequest:
+      type: object
+      properties:
+        aces:
+          type: integer
+          minimum: 0
+          description: Number of aces
+        kills:
+          type: integer
+          minimum: 0
+          description: Number of kills
+        blocks:
+          type: integer
+          minimum: 0
+          description: Number of blocks
+        digs:
+          type: integer
+          minimum: 0
+          description: Number of digs
+        assists:
+          type: integer
+          minimum: 0
+          description: Number of assists
+        playerId:
+          type: integer
+          description: Player ID
+        gameId:
+          type: integer
+          description: Game ID
+      required:
+        - playerId
+        - gameId
+
+    CreateStatByNameRequest:
+      type: object
+      properties:
+        aces:
+          type: integer
+          minimum: 0
+          description: Number of aces
+        kills:
+          type: integer
+          minimum: 0
+          description: Number of kills
+        blocks:
+          type: integer
+          minimum: 0
+          description: Number of blocks
+        digs:
+          type: integer
+          minimum: 0
+          description: Number of digs
+        assists:
+          type: integer
+          minimum: 0
+          description: Number of assists
+        playerName:
+          type: string
+          description: Player name
+        gameId:
+          type: integer
+          description: Game ID
+      required:
+        - playerName
+        - gameId
+
+    UpdateStatRequest:
+      type: object
+      properties:
+        aces:
+          type: integer
+          minimum: 0
+          description: Number of aces
+        kills:
+          type: integer
+          minimum: 0
+          description: Number of kills
+        blocks:
+          type: integer
+          minimum: 0
+          description: Number of blocks
+        digs:
+          type: integer
+          minimum: 0
+          description: Number of digs
+        assists:
+          type: integer
+          minimum: 0
+          description: Number of assists
+
+    # Award schemas
+    Award:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique award ID
+        type:
+          type: string
+          description: Award type
+        player:
+          $ref: '#/components/schemas/Player'
+          description: Player who won the award
+        season:
+          $ref: '#/components/schemas/Season'
+          description: Season the award was given in
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - type
+        - player
+        - season
+
+    AwardSkinny:
+      type: object
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+        player:
+          $ref: '#/components/schemas/PlayerMedium'
+        season:
+          $ref: '#/components/schemas/SeasonSkinny'
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - type
+
+    CreateAwardRequest:
+      type: object
+      properties:
+        type:
+          type: string
+          description: Award type
+        playerId:
+          type: integer
+          description: Player ID
+        seasonId:
+          type: integer
+          description: Season ID
+      required:
+        - type
+        - playerId
+        - seasonId
+
+    CreateAwardWithNamesRequest:
+      type: object
+      properties:
+        type:
+          type: string
+          description: Award type
+        playerName:
+          type: string
+          description: Player name
+        seasonNumber:
+          type: integer
+          description: Season number
+      required:
+        - type
+        - playerName
+        - seasonNumber
+
+    UpdateAwardRequest:
+      type: object
+      properties:
+        type:
+          type: string
+          description: Award type
+        playerId:
+          type: integer
+          description: Player ID
+        seasonId:
+          type: integer
+          description: Season ID
+
+    # Record schemas
+    Record:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique record ID
+        type:
+          type: string
+          description: Record type
+        value:
+          type: number
+          description: Record value
+        rank:
+          type: integer
+          description: Record rank
+        player:
+          $ref: '#/components/schemas/Player'
+          description: Player who holds the record
+        season:
+          $ref: '#/components/schemas/Season'
+          description: Season the record was set in
+        game:
+          $ref: '#/components/schemas/Game'
+          description: Game the record was set in
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - type
+        - value
+        - rank
+        - player
+        - season
+
+    CreateRecordRequest:
+      type: object
+      properties:
+        type:
+          type: string
+          description: Record type
+        value:
+          type: number
+          description: Record value
+        rank:
+          type: integer
+          minimum: 1
+          description: Record rank
+        playerId:
+          type: integer
+          description: Player ID
+        seasonId:
+          type: integer
+          description: Season ID
+        gameId:
+          type: integer
+          description: Game ID
+      required:
+        - type
+        - value
+        - rank
+        - playerId
+        - seasonId
+
+    UpdateRecordRequest:
+      type: object
+      properties:
+        type:
+          type: string
+          description: Record type
+        value:
+          type: number
+          description: Record value
+        rank:
+          type: integer
+          minimum: 1
+          description: Record rank
+        playerId:
+          type: integer
+          description: Player ID
+        seasonId:
+          type: integer
+          description: Season ID
+        gameId:
+          type: integer
+          description: Game ID
+
+    # Article schemas
+    Article:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique article ID
+        title:
+          type: string
+          description: Article title
+        content:
+          type: string
+          description: Article content
+        author:
+          $ref: '#/components/schemas/User'
+          description: Article author
+        approved:
+          type: boolean
+          description: Whether the article is approved
+        likes:
+          type: array
+          items:
+            $ref: '#/components/schemas/ArticleLike'
+          description: Article likes
+        likeCount:
+          type: integer
+          description: Number of likes
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - content
+        - author
+
+    ArticleLike:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique like ID
+        user:
+          $ref: '#/components/schemas/User'
+          description: User who liked the article
+        article:
+          $ref: '#/components/schemas/Article'
+          description: Article that was liked
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - user
+        - article
+
+    CreateArticleRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          description: Article title
+        content:
+          type: string
+          minLength: 1
+          description: Article content
+      required:
+        - title
+        - content
+
+    UpdateArticleRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          description: Article title
+        content:
+          type: string
+          minLength: 1
+          description: Article content
+        approved:
+          type: boolean
+          description: Whether the article is approved
+
+    # User schemas
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique user ID
+        username:
+          type: string
+          description: Username
+        email:
+          type: string
+          format: email
+          description: Email address
+        role:
+          type: string
+          enum: [user, admin]
+          description: User role
+        apiKey:
+          type: string
+          description: API key
+        articles:
+          type: array
+          items:
+            $ref: '#/components/schemas/Article'
+          description: Articles written by the user
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - username
+        - email
+        - role
+
+    CreateUserRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 3
+          description: Username
+        email:
+          type: string
+          format: email
+          description: Email address
+        password:
+          type: string
+          minLength: 6
+          description: Password
+      required:
+        - username
+        - email
+        - password
+
+    UpdateUserRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 3
+          description: Username
+        email:
+          type: string
+          format: email
+          description: Email address
+        password:
+          type: string
+          minLength: 6
+          description: Password
+
+    # Trivia schemas
+    TriviaPlayer:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Player ID
+        name:
+          type: string
+          description: Player name
+        position:
+          type: string
+          description: Player position
+        teams:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeamSkinny'
+          description: Teams the player has been on
+        awards:
+          type: array
+          items:
+            $ref: '#/components/schemas/AwardSkinny'
+          description: Awards won by the player
+        records:
+          type: array
+          items:
+            $ref: '#/components/schemas/Record'
+          description: Records held by the player
+        stats:
+          type: array
+          items:
+            $ref: '#/components/schemas/Stat'
+          description: Player statistics
+        hintCount:
+          type: integer
+          description: Number of hints available
+      required:
+        - id
+        - name
+        - hintCount
+
+    TriviaTeam:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Team ID
+        name:
+          type: string
+          description: Team name
+        placement:
+          type: string
+          description: Team placement
+        season:
+          $ref: '#/components/schemas/SeasonSkinny'
+          description: Season the team played in
+        players:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlayerMedium'
+          description: Players on the team
+        games:
+          type: array
+          items:
+            $ref: '#/components/schemas/GameSkinny'
+          description: Games played by the team
+        hintCount:
+          type: integer
+          description: Number of hints available
+      required:
+        - id
+        - name
+        - hintCount
+
+    TriviaSeason:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Season ID
+        seasonNumber:
+          type: integer
+          description: Season number
+        theme:
+          type: string
+          description: Season theme
+        startDate:
+          type: string
+          format: date
+          description: Season start date
+        endDate:
+          type: string
+          format: date
+          description: Season end date
+        teams:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeamSkinny'
+          description: Teams in the season
+        games:
+          type: array
+          items:
+            $ref: '#/components/schemas/GameSkinny'
+          description: Games in the season
+        awards:
+          type: array
+          items:
+            $ref: '#/components/schemas/AwardSkinny'
+          description: Awards given in the season
+        records:
+          type: array
+          items:
+            $ref: '#/components/schemas/Record'
+          description: Records set in the season
+        hintCount:
+          type: integer
+          description: Number of hints available
+      required:
+        - id
+        - seasonNumber
+        - hintCount
+
+    GuessResult:
+      type: object
+      properties:
+        correct:
+          type: boolean
+          description: Whether the guess was correct
+        answer:
+          type: string
+          description: Correct answer
+        message:
+          type: string
+          description: Result message
+      required:
+        - correct
+        - answer
+        - message 

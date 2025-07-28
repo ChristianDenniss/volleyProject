@@ -21,7 +21,6 @@ export function registerUserRoutes(app: Application): void {
 
     // Admin-only routes
     router.patch('/api/admin/users/:id/role', userController.setRole);
-    router.post('/api/admin/generate-api-key', authenticateToken, userController.generateApiKey);
 
     // Register router
     app.use(router);

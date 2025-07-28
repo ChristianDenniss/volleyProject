@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
+import { useAuth } from '../context/authContext';
 
 interface UseLikeArticleReturn {
   likeArticle: (articleId: number) => Promise<boolean>;
@@ -12,15 +13,13 @@ interface UseLikeArticleReturn {
 export function useLikeArticle(): UseLikeArticleReturn {
   const [isLiking, setIsLiking] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { token } = useAuth();
 
   const likeArticle = async (articleId: number): Promise<boolean> => {
     setIsLiking(true);
     setError(null);
 
     try {
-      // Get the auth token from localStorage
-      const token = localStorage.getItem('authToken_v2');
-      
       if (!token) {
         setError('You must be logged in to like articles');
         return false;
@@ -68,9 +67,6 @@ export function useLikeArticle(): UseLikeArticleReturn {
     setError(null);
 
     try {
-      // Get the auth token from localStorage
-      const token = localStorage.getItem('authToken_v2');
-      
       if (!token) {
         setError('You must be logged in to unlike articles');
         return false;

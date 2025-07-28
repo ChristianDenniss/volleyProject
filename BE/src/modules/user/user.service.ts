@@ -1,136 +1,28 @@
-import { Repository } from 'typeorm';
-import { AppDataSource } from '../../db/data-source.js';
-import { User } from './user.entity.js';
-import jwt from 'jsonwebtoken';
-import bcrypt from 'bcryptjs';
-import { MissingFieldError } from '../../errors/MissingFieldError.js';
-import { DuplicateError } from '../../errors/DuplicateError.js';
-import { NotFoundError } from '../../errors/NotFoundError.js';
-import { UnauthorizedError } from '../../errors/UnauthorizedError.js';
-import { logApiKeyOperation } from '../../middleware/logger.js';
-
-// API Key interface
-interface ApiKey {
-    id: number;
-    key: string;
-    userId: number;
-    createdAt: Date;
-    lastUsed?: Date;
-    isActive: boolean;
-}
+import { Repository } from "typeorm";
+import { User } from "./user.entity.js";
+import { AppDataSource } from "../../db/data-source.js";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import { MissingFieldError } from "../../errors/MissingFieldError.js";
+import { NotFoundError } from "../../errors/NotFoundError.js";
+import { ConflictError } from "../../errors/ConflictError.js";
+import { UnauthorizedError } from "../../errors/UnauthorizedError.js";
 
 export class UserService {
     private userRepository: Repository<User>;
     private readonly JWT_SECRET: string;
-    private apiKeys: Map<string, ApiKey> = new Map(); // In-memory storage for API keys
 
     constructor() {
         this.userRepository = AppDataSource.getRepository(User);
         this.JWT_SECRET = process.env.JWT_SECRET || '';
-        if (!this.JWT_SECRET) {
-            throw new Error("JWT_SECRET must be defined in environment variables");
-        }
     }
 
-    // Hash password using bcrypt
     private async hashPassword(password: string): Promise<string> {
-        return bcrypt.hash(password, 10);
+        return await bcrypt.hash(password, 10);
     }
 
-    // Verify password using bcrypt
     private async verifyPassword(password: string, hashedPassword: string): Promise<boolean> {
-        return bcrypt.compare(password, hashedPassword);
-    }
-
-    // Generate a secure API key
-    private generateApiKey(): string {
-        const crypto = require('crypto');
-        return crypto.randomBytes(32).toString('base64');
-    }
-
-    // Store API key in memory (in production, you'd use a database)
-    async storeApiKey(userId: number): Promise<string> {
-        const apiKey = this.generateApiKey();
-        const keyData: ApiKey = {
-            id: Date.now(), // Simple ID generation
-            key: apiKey,
-            userId: userId,
-            createdAt: new Date(),
-            isActive: true
-        };
-        
-        this.apiKeys.set(apiKey, keyData);
-        
-        // Log the API key generation
-        logApiKeyOperation('GENERATE', userId, keyData.id.toString());
-        console.log(`🔑 Generated API key for user ${userId}. Key ID: ${keyData.id}`);
-        
-        return apiKey;
-    }
-
-    // Validate API key
-    async validateApiKey(apiKey: string): Promise<{ userId: number; role: string } | null> {
-        const keyData = this.apiKeys.get(apiKey);
-        
-        if (!keyData || !keyData.isActive) {
-            console.log(`❌ Invalid API key attempt: ${apiKey.substring(0, 8)}...`);
-            return null;
-        }
-
-        // Update last used timestamp
-        keyData.lastUsed = new Date();
-        this.apiKeys.set(apiKey, keyData);
-
-        // Log the API key usage
-        logApiKeyOperation('VALIDATE', keyData.userId, keyData.id.toString());
-        console.log(`🔑 API key validated for user ${keyData.userId}. Key ID: ${keyData.id}`);
-
-        // Get user info
-        try {
-            const user = await this.getUserById(keyData.userId);
-            return {
-                userId: user.id,
-                role: user.role
-            };
-        } catch (error) {
-            console.log(`❌ User not found for API key. User ID: ${keyData.userId}`);
-            return null;
-        }
-    }
-
-    // Get all API keys for a user (admin only)
-    async getUserApiKeys(userId: number): Promise<ApiKey[]> {
-        const keys: ApiKey[] = [];
-        for (const [key, keyData] of this.apiKeys.entries()) {
-            if (keyData.userId === userId) {
-                keys.push({ ...keyData, key: '***' + key.slice(-8) }); // Only show last 8 chars
-            }
-        }
-        
-        // Log the API key listing
-        logApiKeyOperation('LIST', userId);
-        console.log(`🔑 Listed ${keys.length} API keys for user ${userId}`);
-        
-        return keys;
-    }
-
-    // Revoke API key
-    async revokeApiKey(apiKey: string, userId: number): Promise<boolean> {
-        const keyData = this.apiKeys.get(apiKey);
-        
-        if (keyData && keyData.userId === userId) {
-            keyData.isActive = false;
-            this.apiKeys.set(apiKey, keyData);
-            
-            // Log the API key revocation
-            logApiKeyOperation('REVOKE', userId, keyData.id.toString());
-            console.log(`🔑 API key revoked for user ${userId}. Key ID: ${keyData.id}`);
-            
-            return true;
-        }
-        
-        console.log(`❌ Failed to revoke API key for user ${userId}`);
-        return false;
+        return await bcrypt.compare(password, hashedPassword);
     }
 
     /**
@@ -142,75 +34,73 @@ export class UserService {
         if (!email) throw new MissingFieldError("Email");
         if (!password) throw new MissingFieldError("Password");
         if (password.length < 6) throw new Error("Password must be at least 6 characters long");
-        
-        // Email validation
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            throw new Error("Invalid email format");
-        }
 
         // Check if user already exists
         const existingUser = await this.userRepository.findOne({
-            where: [{ username }, { email }],
+            where: [
+                { username },
+                { email }
+            ]
         });
 
         if (existingUser) {
-            if (existingUser.username === username) 
-            {
-                throw new DuplicateError(`Username ${username} already in use`);
-            } 
-            else 
-            {
-                throw new DuplicateError(`Email ${email} already in use`);
-            }
+            throw new ConflictError("User already exists");
         }
 
-        // Hash the password
+        // Hash password
         const hashedPassword = await this.hashPassword(password);
 
-        // Create new user
-        const newUser = new User();
-        newUser.username = username;
-        newUser.email = email;
-        newUser.password = hashedPassword;
-        newUser.role = role;
+        // Create user
+        const user = new User();
+        user.username = username;
+        user.email = email;
+        user.password = hashedPassword;
+        user.role = role;
 
-        return this.userRepository.save(newUser);
+        return await this.userRepository.save(user);
     }
 
     /**
      * Get all users
      */
     async getAllUsers(): Promise<User[]> {
-        return this.userRepository.find();
+        return await this.userRepository.find({
+            select: ['id', 'username', 'email', 'role', 'createdAt']
+        });
     }
 
     /**
-     * Get user by ID with validation
+     * Get user by ID
      */
     async getUserById(id: number): Promise<User> {
-        if (!id) throw new MissingFieldError("User ID");
+        const user = await this.userRepository.findOne({
+            where: { id }
+        });
 
-        const user = await this.userRepository.findOneBy({ id });
-        if (!user) throw new NotFoundError(`User with ID:${id} not found`);
+        if (!user) {
+            throw new NotFoundError("User not found");
+        }
 
         return user;
     }
 
     /**
-     * Get user by username with validation
+     * Get user by username
      */
     async getUserByUsername(username: string): Promise<User> {
-        if (!username) throw new MissingFieldError("Username");
+        const user = await this.userRepository.findOne({
+            where: { username }
+        });
 
-        const user = await this.userRepository.findOneBy({ username });
-        if (!user) throw new NotFoundError(`User with username ${username} not found`);
+        if (!user) {
+            throw new NotFoundError("User not found");
+        }
 
         return user;
     }
 
     /**
-     * Update a user with validation
+     * Update user
      */
     async updateUser(
         id: number,
@@ -219,39 +109,16 @@ export class UserService {
         password?: string,
         role?: string
     ): Promise<User> {
-        if (!id) throw new MissingFieldError("User ID");
+        const user = await this.getUserById(id);
 
-        const user = await this.userRepository.findOneBy({ id });
-        if (!user) throw new NotFoundError(`User with ID:${id} not found`);
-
-        // Check if username or email is already in use by another user
-        if (username) {
-            const existingUser = await this.userRepository.findOneBy({ username });
-            if (existingUser && existingUser.id !== id) {
-                throw new DuplicateError(`Username ${username} is already in use`);
-            }
-            user.username = username;
-        }
-
-        if (email) {
-            // Email validation
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(email)) {
-                throw new Error("Invalid email format");
-            }
-            
-            const existingUser = await this.userRepository.findOneBy({ email });
-            if (existingUser && existingUser.id !== id) {
-                throw new DuplicateError(`Email ${email} is already in use`);
-            }
-            user.email = email;
-        }
-
+        if (username) user.username = username;
+        if (email) user.email = email;
         if (password) {
-            if (password.length < 6) throw new Error("Password must be at least 6 characters long");
+            if (password.length < 6) {
+                throw new Error("Password must be at least 6 characters long");
+            }
             user.password = await this.hashPassword(password);
         }
-
         if (role) {
             if (!['admin', 'user', 'superadmin'].includes(role)) {
                 throw new Error("Invalid role. Role must be admin, user, or superadmin");
@@ -259,127 +126,90 @@ export class UserService {
             user.role = role;
         }
 
-        return this.userRepository.save(user);
+        return await this.userRepository.save(user);
     }
 
     /**
-     * Delete a user with validation
+     * Delete user
      */
     async deleteUser(id: number): Promise<void> {
-        if (!id) throw new MissingFieldError("User ID");
-
-        const user = await this.userRepository.findOneBy({ id });
-        if (!user) throw new NotFoundError(`User with ID:${id} not found`);
-
+        const user = await this.getUserById(id);
         await this.userRepository.remove(user);
     }
 
     /**
-     * Authenticate user with validation
+     * Authenticate user and return JWT token
      */
     async authenticateUser(username: string, password: string): Promise<{ user: User, token: string }> {
-        if (!username) throw new MissingFieldError("Username");
-        if (!password) throw new MissingFieldError("Password");
+        const user = await this.getUserByUsername(username);
 
-        const user = await this.userRepository.findOneBy({ username });
-        if (!user) throw new UnauthorizedError("Invalid username or password");
+        const isValidPassword = await this.verifyPassword(password, user.password);
+        if (!isValidPassword) {
+            throw new UnauthorizedError("Invalid credentials");
+        }
 
-        const isPasswordValid = await this.verifyPassword(password, user.password);
-        if (!isPasswordValid) throw new UnauthorizedError("Invalid username or password");
-
-        // Generate JWT token
+        // Generate JWT token with longer expiration
         const token = jwt.sign(
-            { id: user.id, 
+            { 
+                id: user.id, 
                 username: user.username, 
                 role: user.role 
             },
-
             this.JWT_SECRET,
-            { expiresIn: '24h' }
+            { expiresIn: '7d' } // Extended from 24h to 7 days
         );
 
         return { user, token };
     }
 
     /**
-     * Get current user by ID
+     * Get user profile
      */
     async getProfile(userId: number): Promise<User> {
-        if (!userId) throw new MissingFieldError("User ID");
-        
-        const user = await this.userRepository.findOne({
-            where: { id: userId },
-            relations: ['articles']
-        });
-        if (!user) throw new NotFoundError(`User with ID: ${userId} not found`);
-            
-        return user;
+        return await this.getUserById(userId);
     }
 
-    //  Change a user’s role, applying all privilege rules internally
+    /**
+     * Change user role with proper authorization
+     */
     async changeUserRole(
         requester: { id: number; role: "user" | "admin" | "superadmin" },
         targetId:  number,
         desired:   "user" | "admin" | "superadmin"
     ): Promise<User>
     {
-        //  Validate desired value
+        //  Validate desired role
         if (!["user", "admin", "superadmin"].includes(desired))
-        {
-            throw new Error("Invalid role value");
-        }
+            throw new Error("Invalid role. Role must be user, admin, or superadmin");
 
-        //  Fetch the target
-        const target = await this.getUserById(targetId); // re-use existing helper
+        //  Get target user
+        const target = await this.getUserById(targetId);
 
-        //  Disallow self-changes
-        if (requester.id === target.id)
-        {
-            throw new UnauthorizedError("You cannot change your own role");
-        }
-
-        /* ────────  RULE MATRIX  ──────── */
-
+        //  Authorization logic
         switch (requester.role)
         {
+            case "user":
+                throw new UnauthorizedError("Users cannot modify roles");
+
             case "admin":
-            {
                 //  Admin may only promote a plain user → admin
                 const allowed = target.role === "user" && desired === "admin";
                 if (!allowed)
-                {
-                    throw new UnauthorizedError("Insufficient privileges");
-                }
-                break;
-            }
+                    throw new UnauthorizedError("Admin can only promote users to admin");
 
             case "superadmin":
-            {
                 //  Superadmin cannot touch another superadmin (unless no-op)
                 if (target.role === "superadmin" && desired !== "superadmin")
-                {
                     throw new UnauthorizedError("Cannot modify another superadmin");
-                }
-                //  All other changes are allowed:
+
                 //  • user   → admin / superadmin
                 //  • admin  → superadmin / user
+                //  • superadmin → superadmin (no-op)
                 break;
-            }
-
-            default:
-                throw new UnauthorizedError("Insufficient privileges");
         }
 
-        /* ────────  APPLY CHANGE  ──────── */
-
-        //  No operation needed if role already the same
-        if (target.role === desired)
-        {
-            return target;
-        }
-
+        //  Update role
         target.role = desired;
-        return this.userRepository.save(target);
+        return await this.userRepository.save(target);
     }
-
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useAuth } from '../context/authContext';
 
 interface UseLikeStatusReturn {
   hasLiked: boolean;
@@ -12,14 +13,13 @@ export function useLikeStatus(articleId: number): UseLikeStatusReturn {
   const [hasLiked, setHasLiked] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { token } = useAuth();
 
   const fetchLikeStatus = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      const token = localStorage.getItem('authToken_v2');
-      
       if (!token) {
         setHasLiked(false);
         setLoading(false);
@@ -48,7 +48,7 @@ export function useLikeStatus(articleId: number): UseLikeStatusReturn {
 
   useEffect(() => {
     fetchLikeStatus();
-  }, [articleId]);
+  }, [articleId, token]);
 
   const refetch = () => {
     fetchLikeStatus();

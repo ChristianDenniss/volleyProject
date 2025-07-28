@@ -1,9 +1,10 @@
 // src/pages/Profile.tsx
 
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate }            from "react-router-dom";
-import { authFetch }                    from "../hooks/authFetch";
-import { useAuth }                      from "../context/authContext";
+import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { authFetch } from "../hooks/authFetch";
+import { useAuth } from "../context/authContext";
 import "../styles/UserProfile.css";
 
 interface Article {
@@ -24,18 +25,12 @@ interface UserProfile {
 
 const ProfilePage: React.FC = () =>
 {
-    const navigate = useNavigate();
-    const {
-        isAuthenticated,
-        logout,
-        loading: authLoading
-    } = useAuth();
-
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
-    const [error,   setError]   = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
+    const { isAuthenticated, loading: authLoading, logout, token } = useAuth();
+    const navigate = useNavigate();
 
-    // wait for auth to initialize before redirect/fetch
     useEffect(() =>
     {
         if (authLoading)
@@ -58,7 +53,8 @@ const ProfilePage: React.FC = () =>
             {
                 const res = await authFetch(
                     `${import.meta.env.VITE_BACKEND_URL || "http://localhost:3000"}/api/users/profile`,
-                    { method: "GET" }
+                    { method: "GET" },
+                    token
                 );
 
                 if (res.status === 401)
@@ -90,7 +86,7 @@ const ProfilePage: React.FC = () =>
         };
 
         fetchProfile();
-    }, [authLoading, isAuthenticated, navigate, logout]);
+    }, [authLoading, isAuthenticated, navigate, logout, token]);
 
     // show spinner while auth or data is loading
     if (authLoading || loading)

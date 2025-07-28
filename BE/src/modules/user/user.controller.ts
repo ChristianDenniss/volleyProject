@@ -243,32 +243,6 @@ export class UserController {
             }
         }
     };
-
-    // Generate API key for admin users
-    generateApiKey = async (req: Request, res: Response): Promise<void> => {
-        try {
-            // Check if user is admin or superadmin
-            const requester = (req as any).user as { id: number; role: "user" | "admin" | "superadmin" };
-            
-            if (requester.role !== "admin" && requester.role !== "superadmin") {
-                res.status(403).json({ error: "Only admins can generate API keys" });
-                return;
-            }
-
-            // Generate and store the API key
-            const apiKey = await this.userService.storeApiKey(requester.id);
-
-            res.json({ 
-                apiKey,
-                message: "API key generated and stored successfully. This key is now active and can be used for API access.",
-                usage: "Use this key in the X-API-Key header for direct API access",
-                note: "This key is tied to your account and can be revoked if needed"
-            });
-        } catch (error) {
-            console.error("Error generating API key:", error);
-            res.status(500).json({ error: "Failed to generate API key" });
-        }
-    };
     
     
 }
