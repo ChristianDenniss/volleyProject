@@ -1,12 +1,10 @@
 // src/middleware/combinedAuth.ts
-// — Combines JWT and API key authentication
-// — Tries JWT first, then falls back to API key
-// — Allows both web app users and direct API access
+// — JWT authentication middleware
+// — Verifies JWT tokens for web app users
 
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { UnauthorizedError } from "../errors/UnauthorizedError.js";
-import { UserService } from "../modules/user/user.service.js";
 
 export interface JwtPayload {
     id: number;
@@ -15,72 +13,41 @@ export interface JwtPayload {
 }
 
 export const authenticateCombined = (req: Request, res: Response, next: NextFunction): void => {
-    // Pull the token/key from the Authorization header
+    // Pull the token from the Authorization header
     const authHeader = req.header("Authorization");
-    const apiKeyHeader = req.header("X-API-Key");
 
-    if (!authHeader && !apiKeyHeader) {
-        throw new UnauthorizedError("Authorization token or API key is required");
+    if (!authHeader) {
+        throw new UnauthorizedError("Authorization token is required");
     }
 
-    // Try API key first (simpler check)
-    if (apiKeyHeader) {
-        const userService = new UserService();
-        
-        userService.validateApiKey(apiKeyHeader)
-            .then((userInfo) => {
-                if (userInfo) {
-                    (req as any).user = {
-                        id: userInfo.userId,
-                        role: userInfo.role,
-                        username: "api-user"
-                    };
-                    next();
-                } else {
-                    throw new UnauthorizedError("Invalid API key");
-                }
-            })
-            .catch((error) => {
-                throw new UnauthorizedError("Invalid API key");
-            });
-        return;
-    }
+    const token = authHeader.replace("Bearer ", "");
 
-    // Try JWT token
-    if (authHeader) {
-        const token = authHeader.replace("Bearer ", "");
+    // Verify the token
+    jwt.verify(token, process.env.JWT_SECRET || "", (err: any, decoded: any) => {
+        //  Any error → unauth
+        if (err) {
+            throw new UnauthorizedError("Invalid or expired token");
+        }
 
-        // Verify the token
-        jwt.verify(token, process.env.JWT_SECRET || "", (err, decoded) => {
-            //  Any error → unauth
-            if (err) {
-                throw new UnauthorizedError("Invalid or expired token");
-            }
+        //  decoded is *unknown*; validate it has the pieces we need
+        if
+        (
+            decoded &&
+            typeof decoded === "object" &&
+            "id"   in decoded &&
+            "role" in decoded
+        )
+        {
+            //  Attach the user object for downstream middleware / controllers
+            (req as any).user = decoded as JwtPayload;
+        }
+        else
+        {
+            //  Malformed payload
+            throw new UnauthorizedError("Token payload missing required fields");
+        }
 
-            //  decoded is *unknown*; validate it has the pieces we need
-            if
-            (
-                decoded &&
-                typeof decoded === "object" &&
-                "id"   in decoded &&
-                "role" in decoded
-            )
-            {
-                //  Attach the user object for downstream middleware / controllers
-                (req as any).user = decoded as JwtPayload;
-            }
-            else
-            {
-                //  Malformed payload
-                throw new UnauthorizedError("Token payload missing required fields");
-            }
-
-            //  Proceed to the next middleware / route
-            next();
-        });
-        return;
-    }
-
-    // If we get here, neither method worked
-    throw new UnauthorizedError("Invalid authentication");
+        //  Proceed to the next middleware / route
+        next();
+    });
 }; 
