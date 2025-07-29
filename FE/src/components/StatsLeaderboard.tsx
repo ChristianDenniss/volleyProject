@@ -779,11 +779,10 @@ const StatsLeaderboard: React.FC = () => {
       <h1>Statistics Leaderboard</h1>
 
       {/* Records Navigation */}
-      <div style={{ marginBottom: '1rem', textAlign: 'right' }}>
+      <div style={{ marginBottom: '0.25rem', textAlign: 'right' }}>
         <button 
           className="create-button" 
           onClick={() => window.location.href = '/records'}
-          style={{ background: '#28a745' }}
         >
           View Stat Records
         </button>
