@@ -778,6 +778,17 @@ const StatsLeaderboard: React.FC = () => {
     <div className={`stats-leaderboard-page ${!players ? 'loading' : ''}`}>
       <h1>Statistics Leaderboard</h1>
 
+      {/* Records Navigation */}
+      <div style={{ marginBottom: '1rem', textAlign: 'center' }}>
+        <button 
+          className="create-button" 
+          onClick={() => window.location.href = '/records'}
+          style={{ background: '#28a745' }}
+        >
+          View Stat Records
+        </button>
+      </div>
+
       <div className="stats-controls-wrapper">
         <div className="stats-controls-container">
           <div className="stats-filters-row">
