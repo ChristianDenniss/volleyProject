@@ -157,29 +157,29 @@ const Dashboard: React.FC = () => {
       {/* Quick Actions */}
       <div className="quick-actions">
         <h2>Quick Actions</h2>
-        <div className="action-buttons">
-          <button className="action-button" onClick={() => window.location.href = '/portal/teams'}>
+        <div className="dashboard-action-buttons">
+          <button className="dashboard-action-button" onClick={() => window.location.href = '/portal/teams'}>
             Manage Teams
           </button>
-          <button className="action-button" onClick={() => window.location.href = '/portal/articles'}>
+          <button className="dashboard-action-button" onClick={() => window.location.href = '/portal/articles'}>
             Manage Articles
           </button>
-          <button className="action-button" onClick={() => window.location.href = '/portal/seasons'}>
+          <button className="dashboard-action-button" onClick={() => window.location.href = '/portal/seasons'}>
             Manage Seasons
           </button>
-          <button className="action-button" onClick={() => window.location.href = '/portal/games'}>
+          <button className="dashboard-action-button" onClick={() => window.location.href = '/portal/games'}>
             Manage Games
           </button>
-          <button className="action-button" onClick={() => window.location.href = '/portal/stats'}>
+          <button className="dashboard-action-button" onClick={() => window.location.href = '/portal/stats'}>
             Manage Stats
           </button>
-          <button className="action-button" onClick={() => window.location.href = '/portal/players'}>
+          <button className="dashboard-action-button" onClick={() => window.location.href = '/portal/players'}>
             Manage Players
           </button>
-          <button className="action-button" onClick={() => window.location.href = '/portal/users'}>
+          <button className="dashboard-action-button" onClick={() => window.location.href = '/portal/users'}>
             Manage Users
           </button>
-          <button className="action-button" onClick={() => window.location.href = '/portal/awards'}>
+          <button className="dashboard-action-button" onClick={() => window.location.href = '/portal/awards'}>
             Manage Awards
           </button>
         </div>

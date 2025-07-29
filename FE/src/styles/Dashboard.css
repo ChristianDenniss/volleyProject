@@ -1,24 +1,24 @@
-.portal-main .dashboard-container {
+.dashboard-container {
   padding: 2rem;
   max-width: 1200px;
   margin: 0 auto;
 }
 
-.portal-main .dashboard-container h1 {
+.dashboard-container h1 {
   color: #1e3d59;
   margin-bottom: 2rem;
   font-size: 2.5rem;
 }
 
 /* Stats Grid */
-.portal-main .stats-grid {
+.stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1.5rem;
   margin-bottom: 3rem;
 }
 
-.portal-main .stat-card {
+.stat-card {
   background: white;
   border-radius: 10px;
   padding: 1.5rem;
@@ -28,23 +28,23 @@
   transition: transform 0.2s ease;
 }
 
-.portal-main .stat-card:hover {
+.stat-card:hover {
   transform: translateY(-5px);
 }
 
-.portal-main .stat-icon {
+.stat-icon {
   font-size: 2.5rem;
   color: #1e3d59;
   margin-right: 1.5rem;
 }
 
-.portal-main .stat-card .stat-content h3 {
+.stat-card .stat-content h3 {
   color: #1e3d59 !important;
   font-size: 1rem;
   margin: 0 0 0.5rem 0;
 }
 
-.portal-main .stat-card .stat-value {
+.stat-card .stat-value {
   color: #1e3d59 !important;
   font-size: 2rem;
   font-weight: bold;
@@ -52,22 +52,22 @@
 }
 
 /* Quick Actions */
-.portal-main .quick-actions {
+.quick-actions {
   margin-bottom: 3rem;
 }
 
-.portal-main .quick-actions h2 {
+.quick-actions h2 {
   color: #1e3d59;
   margin-bottom: 1.5rem;
 }
 
-.portal-main .action-buttons {
+.dashboard-action-buttons {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1rem;
 }
 
-.portal-main .action-button {
+.dashboard-action-button {
   background: #1e3d59;
   color: white;
   border: none;
@@ -78,19 +78,19 @@
   transition: background-color 0.2s ease;
 }
 
-.portal-main .action-button:hover {
+.dashboard-action-button:hover {
   background: #2c5a7d;
 }
 
 /* Help Section */
-.portal-main .help-section {
+.help-section {
   margin-top: 2rem;
   padding: 1.5rem;
   background-color: #f8f9fa;
   border-radius: 8px;
 }
 
-.portal-main .help-section h2 {
+.help-section h2 {
   color: #2c3e50;
   margin-bottom: 1.5rem;
   font-size: 1.8rem;
@@ -294,27 +294,27 @@
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .portal-main .dashboard-container {
+  .dashboard-container {
     padding: 1rem;
   }
 
-  .portal-main .stats-grid {
+  .stats-grid {
     grid-template-columns: 1fr;
   }
 
-  .portal-main .action-buttons {
+  .dashboard-action-buttons {
     grid-template-columns: 1fr;
   }
 
-  .portal-main .stat-card {
+  .stat-card {
     padding: 1rem;
   }
 
-  .portal-main .stat-icon {
+  .stat-icon {
     font-size: 2rem;
   }
 
-  .portal-main .stat-value {
+  .stat-value {
     font-size: 1.5rem;
   }
 
