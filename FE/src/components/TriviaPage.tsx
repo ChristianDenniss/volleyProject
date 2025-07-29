@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import '../styles/TriviaPage.css';
 import { 
     TriviaPlayer, 
@@ -54,6 +54,14 @@ const TriviaPage: React.FC = () => {
     const triviaSeason = useTriviaSeason(selectedDifficulty || 'easy');
     const submitGuessHook = useSubmitTriviaGuess();
 
+    // Watch for time running out
+    useEffect(() => {
+        if (timeRemaining <= 0 && gameState === 'playing') {
+            console.log('⏰ [TriviaPage] Time ran out! Calling giveUp()...');
+            giveUp();
+        }
+    }, [timeRemaining, gameState]);
+
     // Helper to debounce button actions
     const triggerDebounce = () => {
         setDebounce(true);
@@ -69,18 +77,11 @@ const TriviaPage: React.FC = () => {
         timerInterval.current = window.setInterval(() => {
             setTimeRemaining(prev => {
                 console.log('⏰ [TriviaPage] Timer tick, prev:', prev);
-                // If we're at 1 second or less, end the game
                 if (prev <= 1) {
-                    console.log('⏰ [TriviaPage] Time is up! Ending game...');
                     // Time's up!
                     if (timerInterval.current) {
                         clearInterval(timerInterval.current);
                         timerInterval.current = null;
-                    }
-                    // Auto-submit or give up when time runs out
-                    if (gameState === 'playing') {
-                        console.log('⏰ [TriviaPage] Calling giveUp()...');
-                        giveUp();
                     }
                     return 0;
                 }
@@ -553,6 +554,7 @@ const TriviaPage: React.FC = () => {
 
     const giveUp = () => {
         console.log('🏳️ [TriviaPage] giveUp() called, currentTrivia:', currentTrivia);
+        console.log('🏳️ [TriviaPage] Current game state:', gameState);
         stopTimer();
         const timeSolved = calculateTimeSolved();
         setTimeSolved(timeSolved);
@@ -579,6 +581,7 @@ const TriviaPage: React.FC = () => {
         const score = 0;
         setFinalScore(score);
         setTimeBonus(0);
+        console.log('🏳️ [TriviaPage] About to set game state to result');
         setGameState('result');
         console.log('🏳️ [TriviaPage] Game ended via giveUp()');
     };
