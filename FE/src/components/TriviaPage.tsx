@@ -734,7 +734,7 @@ const TriviaPage: React.FC = () => {
             <div className="hints-section">
                 <h3>Hints:</h3>
                 <div className="hints-list">
-                    {currentHints.map((hint, index) => (
+                    {currentHints.slice(0, hintLevel).map((hint, index) => (
                         <div key={index} className={`hint hint-level-${hint.level}`}>
                             {hint.text}
                         </div>
