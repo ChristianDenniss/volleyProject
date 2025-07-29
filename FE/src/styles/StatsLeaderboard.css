@@ -49,6 +49,8 @@
     align-items: center;
     flex-wrap: wrap;
     min-height: 40px; /* Reserve space for filters */
+    width: 100%;
+    justify-content: space-between;
 }
 
 .stats-search-row
