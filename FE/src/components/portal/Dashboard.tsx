@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaVolleyballBall, FaUserAlt, FaChartBar, FaNewspaper, FaUsers, FaCalendarAlt, FaTrophy } from 'react-icons/fa';
+import '../../styles/Dashboard.css';
 
 const Dashboard: React.FC = () => {
   const [stats, setStats] = useState<any>(null);
