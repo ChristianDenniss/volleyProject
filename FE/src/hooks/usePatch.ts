@@ -1,15 +1,22 @@
 // src/hooks/useApi.ts
 import { useCallback } from "react";
 import { authFetch }   from "./authFetch";
+import { useAuth } from "../context/authContext";
 
 const backendUrl =
   import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
 export function usePatch<T = any>(resource: string)
 {
+    const { token } = useAuth();
+    
     const patch = useCallback(
         async (id: number, data: Partial<T>): Promise<T> =>
         {
+            if (!token) {
+                throw new Error("You must be logged in to update items");
+            }
+
             const url = `${backendUrl}/api/${resource}/${id}`;
 
             // Log the URL and outgoing payload
@@ -19,7 +26,7 @@ export function usePatch<T = any>(resource: string)
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(data),
-            });
+            }, token);
 
             // Log the raw status
             console.log(`usePatch: received status ${res.status} for PATCH ${url}`);

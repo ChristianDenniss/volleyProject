@@ -5,6 +5,7 @@ import { Game,Player,Stats,Team,Season,Article,CreateGameInput,Award, CreateAwar
   CreateStatsInput,CreateTeamInput,CreateSeasonInput,CreateArticleInput, CSVUploadPayload, CSVUploadResult } from "../types/interfaces";
 import { useState } from "react";
 import { authFetch } from "./authFetch";
+import { useAuth } from "../context/authContext";
 
 /**
  * useCreatePlayers
@@ -119,10 +120,18 @@ export const useCreateAwards = () => {
 export const useCSVUpload = (showErrorModal?: (err: any) => void) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const { token } = useAuth();
 
   const uploadCSV = async (payload: CSVUploadPayload): Promise<CSVUploadResult | null> => {
     setLoading(true);
     setError(null);
+
+    if (!token) {
+      const errorMsg = "You must be logged in to upload CSV files";
+      setError(errorMsg);
+      if (showErrorModal) showErrorModal({ message: errorMsg });
+      return null;
+    }
 
     const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
     try {
@@ -132,7 +141,8 @@ export const useCSVUpload = (showErrorModal?: (err: any) => void) => {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
-        }
+        },
+        token
       );
 
       if (!response.ok) {
@@ -178,10 +188,18 @@ export const useCSVUpload = (showErrorModal?: (err: any) => void) => {
 export const useAddStatsToExistingGame = (showErrorModal?: (err: any) => void) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const { token } = useAuth();
 
   const addStatsToGame = async (gameId: number, statsData: any[]): Promise<Stats[] | null> => {
     setLoading(true);
     setError(null);
+
+    if (!token) {
+      const errorMsg = "You must be logged in to add stats to games";
+      setError(errorMsg);
+      if (showErrorModal) showErrorModal({ message: errorMsg });
+      return null;
+    }
 
     const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
     try {
@@ -191,7 +209,8 @@ export const useAddStatsToExistingGame = (showErrorModal?: (err: any) => void) =
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ gameId, statsData }),
-        }
+        },
+        token
       );
 
       if (!response.ok) {
@@ -237,10 +256,18 @@ export const useAddStatsToExistingGame = (showErrorModal?: (err: any) => void) =
 export const useCalculateRecords = (showErrorModal?: (err: any) => void) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const { token } = useAuth();
 
   const calculateRecords = async (): Promise<boolean> => {
     setLoading(true);
     setError(null);
+
+    if (!token) {
+      const errorMsg = "You must be logged in to calculate records";
+      setError(errorMsg);
+      if (showErrorModal) showErrorModal({ message: errorMsg });
+      return false;
+    }
 
     const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
     try {
@@ -249,7 +276,8 @@ export const useCalculateRecords = (showErrorModal?: (err: any) => void) => {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-        }
+        },
+        token
       );
 
       if (!response.ok) {

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { authFetch } from "./authFetch";
+import { useAuth } from "../context/authContext";
 
 /**
  * Generic hook to DELETE a resource at `${endpoint}/{id}`.
@@ -10,6 +11,7 @@ import { authFetch } from "./authFetch";
 export const useDelete = (endpoint: string) => {
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError]     = useState<string | null>(null);
+    const { token } = useAuth();
 
     /**
      * Sends a DELETE to `/api/${endpoint}/${id}`.
@@ -20,11 +22,17 @@ export const useDelete = (endpoint: string) => {
         setLoading(true);
         setError(null);
 
+        if (!token) {
+            setError("You must be logged in to delete items");
+            return null;
+        }
+
         const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
         try {
             const response = await authFetch(
                 `${backendUrl}/api/${endpoint}/${id}`,
-                { method: "DELETE" }
+                { method: "DELETE" },
+                token
             );
 
             if (!response.ok) {

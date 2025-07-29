@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { authFetch } from "./authFetch";
+import { useAuth } from "../context/authContext";
 
 /**
  * Generic hook to POST a new resource to `${endpoint}`.
@@ -16,10 +17,16 @@ import { authFetch } from "./authFetch";
 export const useCreate = <T, U>(endpoint: string) => {
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError]     = useState<string | null>(null);
+    const { token } = useAuth();
 
     async function createItem(payload: U): Promise<T | null> {
         setLoading(true);
         setError(null);
+
+        if (!token) {
+            setError("You must be logged in to create items");
+            return null;
+        }
 
         const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
         try {
@@ -30,7 +37,8 @@ export const useCreate = <T, U>(endpoint: string) => {
                     method:  "POST",
                     headers: { "Content-Type": "application/json" },
                     body:    JSON.stringify(payload),
-                }
+                },
+                token
             );
 
             if (!response.ok) {
