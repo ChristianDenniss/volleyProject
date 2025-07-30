@@ -397,6 +397,7 @@
 /* Skeleton loader for better UX */
 .stats-skeleton-table {
     width: 100%;
+    min-width: 1200px;
     border-collapse: collapse;
     border: 1px solid #e2e8f0;
     border-radius: 4px;
