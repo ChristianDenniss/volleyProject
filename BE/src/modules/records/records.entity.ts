@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
-import { Players } from '../players/player.entity.js';
-import { Seasons } from '../seasons/season.entity.js';
+import type { Seasons } from '../seasons/season.entity.js';
+import type { Players } from '../players/player.entity.js';
 
 @Entity()
 export class Records {
@@ -54,12 +54,12 @@ export class Records {
     updatedAt!: Date;
 
     // Many-to-one relationship with Players
-    @ManyToOne(() => Players, (player) => player.records)
+    @ManyToOne('Players', 'records')
     @JoinColumn()
     player!: Players;
 
     // Many-to-one relationship with Seasons
-    @ManyToOne(() => Seasons, (season) => season.records)
+    @ManyToOne('Seasons', 'records')
     @JoinColumn()
     season!: Seasons;
 
