@@ -139,7 +139,9 @@
   border-color: #9ca3af;
 }
 
-.create-button {
+/* Header button styles - more specific to override other styles */
+.portal-page .import-button,
+.portal-page .create-button {
   padding: 10px 20px;
   border: none;
   background: var(--primary-blue);
@@ -149,9 +151,11 @@
   font-size: 0.875rem;
   font-weight: 500;
   transition: background-color 0.2s;
+  min-width: 140px; /* Ensure consistent width */
 }
 
-.create-button:hover {
+.portal-page .import-button:hover,
+.portal-page .create-button:hover {
   background: var(--primary-blue-hover);
 }
 
