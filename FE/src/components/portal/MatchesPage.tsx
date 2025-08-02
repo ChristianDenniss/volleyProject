@@ -1,7 +1,7 @@
 // src/components/portal/MatchesPage.tsx
 
 import React, { useState, useEffect } from "react";
-import { useMatches } from "../../hooks/useMatches";
+import { useMatches } from "../../hooks/allFetch";
 import { useSeasons } from "../../hooks/allFetch";
 import { useAuth } from "../../context/authContext";
 import type { CreateMatchInput } from "../../types/interfaces";
@@ -80,7 +80,8 @@ const MatchesPage: React.FC = () => {
   const [newTeam2Score, setNewTeam2Score] = useState<number | undefined>(undefined);
   const [newSetScores, setNewSetScores] = useState<string[]>(["", "", "", "", ""]);
   const [newSeasonId, setNewSeasonId] = useState<number>(0);
-  const [newTeamIds, setNewTeamIds] = useState<number[]>([0, 0]);
+  const [newTeam1Name, setNewTeam1Name] = useState<string>("");
+  const [newTeam2Name, setNewTeam2Name] = useState<string>("");
   const [newTags, setNewTags] = useState<string>(""); // Comma-separated tags
   const [formError, setFormError] = useState<string>("");
 
@@ -221,7 +222,8 @@ const MatchesPage: React.FC = () => {
     setNewTeam2Score(undefined);
     setNewSetScores(["", "", "", "", ""]);
     setNewSeasonId(0);
-    setNewTeamIds([0, 0]);
+    setNewTeam1Name("");
+    setNewTeam2Name("");
     setNewTags("");
   };
 
@@ -243,7 +245,7 @@ const MatchesPage: React.FC = () => {
     e.preventDefault();
     setFormError("");
 
-    if (!newMatchNumber || !newRound || !newDate || !newSeasonId || newTeamIds[0] === 0 || newTeamIds[1] === 0) {
+    if (!newMatchNumber || !newRound || !newDate || !newSeasonId || !newTeam1Name || !newTeam2Name) {
       setFormError("Please fill in all required fields");
       return;
     }
@@ -257,7 +259,8 @@ const MatchesPage: React.FC = () => {
         team1Score: newTeam1Score,
         team2Score: newTeam2Score,
         seasonId: newSeasonId,
-        teamIds: newTeamIds,
+        team1Name: newTeam1Name,
+        team2Name: newTeam2Name,
         tags: newTags ? newTags.split(',').map(tag => tag.trim()) : undefined
       };
 
@@ -709,20 +712,15 @@ const MatchesPage: React.FC = () => {
 
               <div className="form-row">
                 <div className="form-group">
-                  <label htmlFor="team1Id">Team 1 *</label>
-                  <select
-                    id="team1Id"
-                    value={newTeamIds[0] || ""}
-                    onChange={(e) => {
-                      const newIds = [...newTeamIds];
-                      newIds[0] = parseInt(e.target.value);
-                      setNewTeamIds(newIds);
-                    }}
+                  <label htmlFor="team1Name">Team 1 Name *</label>
+                  <input
+                    type="text"
+                    id="team1Name"
+                    value={newTeam1Name}
+                    onChange={(e) => setNewTeam1Name(e.target.value)}
+                    placeholder="Enter team 1 name"
                     required
-                  >
-                    <option value="">Select Team 1</option>
-                    {/* This would need to be populated with teams from the selected season */}
-                  </select>
+                  />
                 </div>
                 <div className="form-group">
                   <label htmlFor="team2Score">Team 2 Score</label>
@@ -738,20 +736,15 @@ const MatchesPage: React.FC = () => {
 
               <div className="form-row">
                 <div className="form-group">
-                  <label htmlFor="team2Id">Team 2 *</label>
-                  <select
-                    id="team2Id"
-                    value={newTeamIds[1] || ""}
-                    onChange={(e) => {
-                      const newIds = [...newTeamIds];
-                      newIds[1] = parseInt(e.target.value);
-                      setNewTeamIds(newIds);
-                    }}
+                  <label htmlFor="team2Name">Team 2 Name *</label>
+                  <input
+                    type="text"
+                    id="team2Name"
+                    value={newTeam2Name}
+                    onChange={(e) => setNewTeam2Name(e.target.value)}
+                    placeholder="Enter team 2 name"
                     required
-                  >
-                    <option value="">Select Team 2</option>
-                    {/* This would need to be populated with teams from the selected season */}
-                  </select>
+                  />
                 </div>
               </div>
 
