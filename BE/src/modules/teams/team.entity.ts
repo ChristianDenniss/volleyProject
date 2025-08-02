@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateCol
 import type { Seasons } from '../seasons/season.entity.js';
 import type { Players } from '../players/player.entity.js';
 import type { Games } from '../games/game.entity.js';
+import type { Matches } from '../matches/match.entity.js';
 
 @Entity()
 export class Teams 
@@ -11,6 +12,9 @@ export class Teams
 
     @Column()
     name!: string;
+
+    @Column({ nullable: true })
+    logoUrl!: string; // URL for team logo/flag
 
     @CreateDateColumn({ type: 'timestamp' })
     createdAt!: Date;
@@ -37,4 +41,10 @@ export class Teams
     })
     games!: Games[];
 
+    // New relationships for matches
+    @ManyToMany('Matches', 'teams')
+    @JoinTable({
+        name: 'matches_teams',
+    })
+    matches!: Matches[];
 }

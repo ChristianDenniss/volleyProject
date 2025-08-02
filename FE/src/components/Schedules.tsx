@@ -1,0 +1,430 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import { useMatches } from '../hooks/useMatches';
+import { useSeasons } from '../hooks/allFetch';
+import SearchBar from './Searchbar';
+import Pagination from './Pagination';
+import ChallongeImport from './ChallongeImport';
+import '../styles/Schedules.css';
+
+const Schedules: React.FC = () => {
+  const { data: seasons } = useSeasons();
+  const [selectedSeason, setSelectedSeason] = useState<number | undefined>();
+  const [selectedRound, setSelectedRound] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [showLocalTime, setShowLocalTime] = useState<boolean>(false);
+  const [showImportModal, setShowImportModal] = useState<boolean>(false);
+
+  const { data: matches, error, loading, refetch } = useMatches(selectedSeason);
+
+  // Get unique rounds from matches
+  const uniqueRounds = useMemo(() => {
+    if (!matches) return [];
+    return Array.from(new Set(matches.map(match => match.round)))
+      .sort((a, b) => {
+        // Sort rounds numerically if possible
+        const aNum = parseInt(a.replace(/\D/g, ''));
+        const bNum = parseInt(b.replace(/\D/g, ''));
+        if (!isNaN(aNum) && !isNaN(bNum)) {
+          return aNum - bNum;
+        }
+        return a.localeCompare(b);
+      });
+  }, [matches]);
+
+  // Filter matches by round and search
+  const filteredMatches = useMemo(() => {
+    if (!matches) return [];
+    
+    return matches.filter(match => {
+      const matchesRound = !selectedRound || match.round === selectedRound;
+      const matchesSearch = match.matchNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          match.teams?.some((team: any) => team.name.toLowerCase().includes(searchQuery.toLowerCase()));
+      
+      return matchesRound && matchesSearch;
+    });
+  }, [matches, selectedRound, searchQuery]);
+
+  // Group matches by date
+  const matchesByDate = useMemo(() => {
+    const grouped: { [key: string]: typeof filteredMatches } = {};
+    
+    filteredMatches.forEach(match => {
+      const dateKey = new Date(match.date).toDateString();
+      if (!grouped[dateKey]) {
+        grouped[dateKey] = [];
+      }
+      grouped[dateKey].push(match);
+    });
+    
+    return grouped;
+  }, [filteredMatches]);
+
+  // Pagination
+  const matchesPerPage = 10;
+  const totalPages = Math.ceil(Object.keys(matchesByDate).length / matchesPerPage);
+  const paginatedDates = Object.keys(matchesByDate).slice(
+    (currentPage - 1) * matchesPerPage,
+    currentPage * matchesPerPage
+  );
+
+  const clearFilters = () => {
+    setSearchQuery('');
+    setSelectedRound('');
+    setCurrentPage(1);
+  };
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    setCurrentPage(1);
+  };
+
+  const handleImportSuccess = () => {
+    setShowImportModal(false);
+    refetch(); // Refresh the matches data
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const getWinningTeam = (match: any) => {
+    if (match.status !== 'completed' || !match.team1Score || !match.team2Score) {
+      return null;
+    }
+    return match.team1Score > match.team2Score ? 0 : 1;
+  };
+
+  const getPrimaryTag = (match: any) => {
+    if (!match.tags || match.tags.length === 0) {
+      return 'RVL'; // Default tag
+    }
+    return match.tags[0]; // Return the first tag as primary
+  };
+
+  const getTagColor = (tag: string) => {
+    const tagLower = tag.toLowerCase();
+    if (tagLower.includes('rvl')) return 'blue';
+    if (tagLower.includes('invitational')) return 'purple';
+    if (tagLower.includes('d-league') || tagLower.includes('dleague')) return 'green';
+    return 'default'; // Default dark gray
+  };
+
+  if (error) {
+    return <div className="schedules-error">Error: {error}</div>;
+  }
+
+  return (
+    <div className="schedules-page">
+      {/* VNL-Style Header */}
+      <div className="vnl-header">
+        <div className="color-bars">
+          <div className="bar green"></div>
+          <div className="bar yellow"></div>
+          <div className="bar purple"></div>
+          <div className="bar blue"></div>
+        </div>
+        
+        <div className="date-navigation">
+          <button className="nav-arrow" onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}>
+            ‹
+          </button>
+          <span className="date-range">
+            {paginatedDates.length > 0 ? 
+              `${new Date(paginatedDates[0]).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })} - ${new Date(paginatedDates[paginatedDates.length - 1]).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}` : 
+              'No matches'
+            }
+          </span>
+          <button className="nav-arrow" onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}>
+            ›
+          </button>
+          <button className="calendar-btn">📅</button>
+        </div>
+
+        <div className="filter-row">
+          <select className="filter-dropdown">
+            <option>PHASE</option>
+            <option>Qualifiers</option>
+            <option>Finals</option>
+          </select>
+          <select className="filter-dropdown">
+            <option>ROUND</option>
+            {uniqueRounds.map(round => (
+              <option key={round}>{round}</option>
+            ))}
+          </select>
+          <select className="filter-dropdown">
+            <option>GENDER</option>
+            <option>Men</option>
+            <option>Women</option>
+          </select>
+          <select className="filter-dropdown">
+            <option>TEAMS</option>
+            {/* Would be populated with teams */}
+          </select>
+          <select className="filter-dropdown">
+            <option>VENUE</option>
+            <option>All Venues</option>
+          </select>
+          <button className="sync-calendar">
+            SYNC TO CALENDAR 📅
+          </button>
+        </div>
+      </div>
+
+      {/* Settings Row */}
+      <div className="settings-row">
+        <label className="local-time-toggle">
+          <span>Show local match time</span>
+          <input
+            type="checkbox"
+            checked={showLocalTime}
+            onChange={(e) => setShowLocalTime(e.target.checked)}
+          />
+          <span className="toggle-slider"></span>
+        </label>
+      </div>
+
+      {/* Header */}
+      <div className="schedules-header">
+        <h1>Schedules & Results</h1>
+        <button 
+          className="import-button"
+          onClick={() => setShowImportModal(true)}
+        >
+          Import from Challonge
+        </button>
+      </div>
+
+      {/* Filters */}
+      <div className="schedules-filters">
+        <div className="filters-row">
+          <div className="filter-group">
+            <label htmlFor="season-filter">Season:</label>
+            <select
+              id="season-filter"
+              value={selectedSeason || ''}
+              onChange={(e) => {
+                setSelectedSeason(e.target.value ? parseInt(e.target.value) : undefined);
+                setCurrentPage(1);
+              }}
+            >
+              <option value="">All Seasons</option>
+              {seasons?.map(season => (
+                <option key={season.id} value={season.id}>
+                  Season {season.seasonNumber}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="filter-group">
+            <label htmlFor="round-filter">Round:</label>
+            <select
+              id="round-filter"
+              value={selectedRound}
+              onChange={(e) => {
+                setSelectedRound(e.target.value);
+                setCurrentPage(1);
+              }}
+            >
+              <option value="">All Rounds</option>
+              {uniqueRounds.map(round => (
+                <option key={round} value={round}>
+                  {round}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="filter-group">
+            <label>
+              <input
+                type="checkbox"
+                checked={showLocalTime}
+                onChange={(e) => setShowLocalTime(e.target.checked)}
+              />
+              Show local match time
+            </label>
+          </div>
+
+          {(searchQuery || selectedRound) && (
+            <button className="clear-filters-button" onClick={clearFilters}>
+              Clear Filters
+            </button>
+          )}
+        </div>
+
+        <div className="search-row">
+          <SearchBar 
+            onSearch={handleSearch} 
+            placeholder="Search matches..." 
+            className="schedules-search-bar"
+          />
+          <div className="pagination-wrapper">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Matches List */}
+      {loading ? (
+        <div className="schedules-loading">
+          <div className="loading-spinner"></div>
+          <p>Loading matches...</p>
+        </div>
+      ) : (
+        <div className="schedules-content">
+          {paginatedDates.length === 0 ? (
+            <div className="no-matches">
+              <p>No matches found for the selected criteria.</p>
+              <button 
+                className="import-button"
+                onClick={() => setShowImportModal(true)}
+              >
+                Import your first matches from Challonge
+              </button>
+            </div>
+          ) : (
+            paginatedDates.map(dateKey => {
+              const matches = matchesByDate[dateKey];
+              const date = new Date(dateKey);
+               
+              return (
+                <div key={dateKey} className="date-section">
+                  <div className="date-header">
+                    <h2>{formatDate(dateKey)}</h2>
+                  </div>
+                   
+                  <div className="matches-container">
+                    {matches.map(match => {
+                      const winningTeam = getWinningTeam(match);
+                       
+                      return (
+                        <div key={match.id} className="match-card">
+                          <div className="match-header">
+                            <div className={`gender-tag tag-${getTagColor(getPrimaryTag(match))}`}>
+                              {getPrimaryTag(match)}
+                            </div>
+                            <div className="match-info">
+                              <span className="match-type">
+                                {match.status === 'completed' ? 'Final' : 'Scheduled'} {match.round} #{match.id}
+                              </span>
+                              <span className="venue">TBD Venue</span>
+                            </div>
+                            <div className="match-status">
+                              <span className={`status-badge ${match.status}`}>
+                                {match.status}
+                              </span>
+                            </div>
+                          </div>
+                           
+                          <div className="match-teams">
+                            {match.teams?.map((team: any, index: number) => (
+                              <div key={team.id} className={`team-row ${winningTeam === index ? 'winning-team' : ''}`}>
+                                <div className="team-info">
+                                  {team.logoUrl && (
+                                    <img 
+                                      src={team.logoUrl} 
+                                      alt={`${team.name} logo`} 
+                                      className="team-logo"
+                                    />
+                                  )}
+                                  <span className="team-name">{team.name}</span>
+                                  {winningTeam === index && match.status === 'completed' && (
+                                    <span className="winner-badge">🏆</span>
+                                  )}
+                                </div>
+                                <div className="team-score">
+                                  {match.status === 'completed' && (
+                                    <div className="score-container">
+                                      <span className={`overall-score ${winningTeam === index ? 'winning-score' : ''}`}>
+                                        {index === 0 ? match.team1Score : match.team2Score}
+                                      </span>
+                                      {(match.set1Score || match.set2Score || match.set3Score || match.set4Score || match.set5Score) && (
+                                        <div className="set-scores">
+                                          {[match.set1Score, match.set2Score, match.set3Score, match.set4Score, match.set5Score]
+                                            .filter(score => score !== null && score !== undefined)
+                                            .map((setScore: string | null | undefined, setIndex: number) => {
+                                              if (!setScore) return null;
+                                              const [team1Score, team2Score] = setScore.split('-').map(Number);
+                                              const isWinningSet = index === 0 ? team1Score > team2Score : team2Score > team1Score;
+                                              return (
+                                                <span 
+                                                  key={setIndex} 
+                                                  className={`set-score ${isWinningSet ? 'winning-set' : ''}`}
+                                                >
+                                                  {index === 0 ? team1Score : team2Score}
+                                                </span>
+                                              );
+                                            })}
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                           
+                          <div className="match-details">
+                            <div className="match-time">
+                              <span className="time-label">Start Time</span>
+                              <span className="time-value">
+                                {showLocalTime ? formatTime(match.date) : 'TBD'}
+                              </span>
+                            </div>
+                            <div className="match-actions">
+                              <button className="action-button watch">WATCH</button>
+                              <button className="action-button tickets">TICKETS</button>
+                              <button className="action-button shop">SHOP</button>
+                            </div>
+                          </div>
+
+                          <div className="ranking-section">
+                            <div className="ranking-header">
+                              <span>WORLD RANKING POINTS</span>
+                              <span className="dropdown-arrow">▼</span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      )}
+
+      {/* Challonge Import Modal */}
+      {showImportModal && (
+        <ChallongeImport
+          onImportSuccess={handleImportSuccess}
+          onCancel={() => setShowImportModal(false)}
+        />
+      )}
+    </div>
+  );
+};
+
+export default Schedules; 

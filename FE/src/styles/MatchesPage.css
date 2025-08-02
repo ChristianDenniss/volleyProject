@@ -1,0 +1,117 @@
+/* MatchesPage specific styles */
+
+.team-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.team-logo-small {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.vs-separator {
+  color: #6b7280;
+  font-size: 0.75rem;
+  margin: 0 4px;
+}
+
+.score {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.set-scores {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.set-score {
+  background: #f3f4f6;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  color: #374151;
+}
+
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.status-badge.scheduled {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-badge.completed {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.set-scores-inputs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.set-scores-inputs input {
+  padding: 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+.set-scores-inputs input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .set-scores {
+    flex-direction: column;
+    gap: 2px;
+  }
+  
+  .set-scores-inputs {
+    grid-template-columns: 1fr;
+  }
+  
+  .team-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+} 
+
+/* Tag badges in admin table */
+.tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.tag-badge {
+  background: #3b82f6;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+} 

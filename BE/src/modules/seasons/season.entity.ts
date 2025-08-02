@@ -1,8 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
-import type { Teams } from '../teams/team.entity.js';
 import type { Games } from '../games/game.entity.js';
-import { Awards } from '../awards/award.entity.js';
-import { Records } from '../records/records.entity.js';
+import type { Teams } from '../teams/team.entity.js';
+import type { Matches } from '../matches/match.entity.js';
 
 @Entity()
 export class Seasons {
@@ -12,17 +11,17 @@ export class Seasons {
     @Column()
     seasonNumber!: number;
 
-    @Column({default: "None"})
-    theme!: string;
-
-    @Column( {nullable: true})
-    image?: string;
-
     @Column()
     startDate!: Date;
 
-    @Column()
+    @Column({ nullable: true })
     endDate!: Date;
+
+    @Column({ nullable: true })
+    image!: string;
+
+    @Column({ nullable: true })
+    theme!: string;
 
     @CreateDateColumn({ type: 'timestamp' })
     createdAt!: Date;
@@ -30,19 +29,13 @@ export class Seasons {
     @UpdateDateColumn({ type: 'timestamp' })
     updatedAt!: Date;
 
-    // One-to-many relationship with teams, a season can have many teams
-    @OneToMany('Teams', 'season')
-    teams!: Teams[];
-
-    // One-to-many relationship with games, a season can have many games
+    // One-to-many relationships
     @OneToMany('Games', 'season')
     games!: Games[];
 
-    // One-to-many relationship with Awards
-    @OneToMany(() => Awards, (award) => award.season)
-    awards!: Awards[];  // A season can have many awards
+    @OneToMany('Teams', 'season')
+    teams!: Teams[];
 
-    // One-to-many relationship with records, a season can have many records
-    @OneToMany(() => Records, (record) => record.season)
-    records!: Records[];
+    @OneToMany('Matches', 'season')
+    matches!: Matches[];
 }

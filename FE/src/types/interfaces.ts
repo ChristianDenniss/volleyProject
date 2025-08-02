@@ -13,6 +13,28 @@ interface Game
   stats?: Stats[]; 
 }
 
+interface Match 
+{
+  id: number;
+  matchNumber: string; // e.g., "Round 1 - Match 1"
+  status: 'scheduled' | 'completed';
+  round: string; // e.g., "Round 1"
+  date: Date; // Single date field that can be updated
+  team1Score?: number; // Overall sets won by team1
+  team2Score?: number; // Overall sets won by team2
+  set1Score?: string | null; // e.g., "25-20"
+  set2Score?: string | null; // e.g., "20-25"
+  set3Score?: string | null; // e.g., "25-22"
+  set4Score?: string | null; // e.g., "25-20"
+  set5Score?: string | null; // e.g., "15-13"
+  challongeMatchId?: string;
+  challongeTournamentId?: string;
+  challongeRound?: number;
+  tags?: string[]; // Array of tags like ["RVL", "Invitational", "D-League"]
+  season: Season;
+  teams?: Team[];
+}
+
 interface Award
 {
   id: number;
@@ -85,9 +107,11 @@ interface Team
   id: number;
   placement: string;
   name: string;
+  logoUrl?: string; // URL for team logo/flag
   season: Season;
   games?: Game[]; 
   players?: Player[]; 
+  matches?: Match[];
 }
 
 interface Season 
@@ -96,6 +120,7 @@ interface Season
   seasonNumber: number;
   games?: Game[]; 
   teams?: Team[]; 
+  matches?: Match[];
   startDate: Date; 
   endDate?: Date; 
   image?: string;
@@ -317,3 +342,32 @@ export interface GuessResult {
 }
 
 export type TriviaData = TriviaPlayer | TriviaTeam | TriviaSeason;
+
+// New types for Matches
+export type CreateMatchInput = {
+  matchNumber: string;
+  status?: 'scheduled' | 'completed';
+  round: string;
+  scheduledDate: string;
+  actualDate?: string;
+  team1Score?: number;
+  team2Score?: number;
+  challongeMatchId?: string;
+  challongeTournamentId?: string;
+  challongeRound?: number;
+  tags?: string[]; // Array of tags like ["RVL", "Invitational", "D-League"]
+  seasonId: number;
+  teamIds: number[];
+};
+
+export type UpdateMatchInput = Partial<CreateMatchInput>;
+
+export type ImportChallongeInput = {
+  challongeUrl: string;
+  seasonId: number;
+  round?: string;
+  roundStartDate: string; // ISO date string
+  roundEndDate: string; // ISO date string
+  matchSpacingMinutes?: number; // Default 30 minutes
+  tags?: string[]; // Array of tags to apply to imported matches
+};

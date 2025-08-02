@@ -32,6 +32,7 @@ import TeamsPage      from "./components/portal/TeamsPage";
 import SeasonsPage      from "./components/portal/SeasonsPage";
 import GamesPage from "./components/portal/GamesPage";
 import StatsPage from "./components/portal/StatsPage";
+import MatchesPage from "./components/portal/MatchesPage";
 import SingleAward from "./components/Single/SingleAward";
 import LoginPage      from "./components/Login";
 import PrivateRoute   from "./components/portal/PrivateRoute";      // ← NEW import
@@ -42,6 +43,7 @@ import StatsLeaderboard from "./components/StatsLeaderboard";
 import FAQ from "./components/FAQ";
 import RecordsPage from "./components/RecordsPage";
 import TriviaPage from "./components/TriviaPage"; 
+import Schedules from "./components/Schedules";
 
 const App: React.FC = () => (
   <AuthProvider>
@@ -71,6 +73,7 @@ const App: React.FC = () => (
           <Route path="/awards" element={<Awards />} />
           <Route path="/articles/create" element={<CreateArticle />} />
           <Route path="/stats" element={<StatsLeaderboard />} />
+          <Route path="/schedules" element={<Schedules />} />
           <Route path="/applications" element={<Applications />} />
           <Route path="/faq" element={<FAQ />} />
           <Route path="/records" element={<RecordsPage />} />
@@ -101,6 +104,7 @@ const App: React.FC = () => (
             <Route path="stats" element={<StatsPage />} />
             <Route path="awards" element={<AwardsPage />} />
             <Route path="articles" element={<ArticlesPage />} />
+            <Route path="matches" element={<MatchesPage />} />
           </Route>
         </Routes>
       </div>
