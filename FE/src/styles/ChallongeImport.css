@@ -1,3 +1,9 @@
+/* Color variables to match StatsLeaderboard */
+:root {
+  --primary-blue: #2D3C50;
+  --primary-blue-hover: #2a4a7d;
+}
+
 .challonge-import-overlay {
   position: fixed;
   top: 0;
@@ -88,8 +94,8 @@
 .form-group input:focus,
 .form-group select:focus {
   outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(45, 60, 80, 0.1);
 }
 
 .form-group small {
@@ -138,7 +144,7 @@
 .import-button {
   padding: 10px 20px;
   border: none;
-  background: #3b82f6;
+  background: var(--primary-blue);
   color: white;
   border-radius: 6px;
   cursor: pointer;
@@ -148,7 +154,7 @@
 }
 
 .import-button:hover:not(:disabled) {
-  background: #2563eb;
+  background: var(--primary-blue-hover);
 }
 
 .import-button:disabled {

@@ -714,6 +714,7 @@ const MatchesPage: React.FC = () => {
               <button onClick={closeModal} className="close-button">&times;</button>
             </div>
             <form onSubmit={handleCreate} className="modal-form">
+              {/* Basic Information Row */}
               <div className="form-row">
                 <div className="form-group">
                   <label htmlFor="matchNumber">Match Number *</label>
@@ -733,12 +734,13 @@ const MatchesPage: React.FC = () => {
                     onChange={(e) => setNewStatus(e.target.value)}
                     required
                   >
-                    <option value="scheduled">scheduled</option>
-                    <option value="completed">completed</option>
+                    <option value="scheduled">Scheduled</option>
+                    <option value="completed">Completed</option>
                   </select>
                 </div>
               </div>
 
+              {/* Round and Phase Row */}
               <div className="form-row">
                 <div className="form-group">
                   <label htmlFor="round">Round *</label>
@@ -764,6 +766,7 @@ const MatchesPage: React.FC = () => {
                 </div>
               </div>
 
+              {/* Region and Date Row */}
               <div className="form-row">
                 <div className="form-group">
                   <label htmlFor="region">Region *</label>
@@ -791,6 +794,7 @@ const MatchesPage: React.FC = () => {
                 </div>
               </div>
 
+              {/* Season and Team 1 Score Row */}
               <div className="form-row">
                 <div className="form-group">
                   <label htmlFor="seasonId">Season *</label>
@@ -820,6 +824,7 @@ const MatchesPage: React.FC = () => {
                 </div>
               </div>
 
+              {/* Team Names Row */}
               <div className="form-row">
                 <div className="form-group">
                   <label htmlFor="team1Name">Team 1 Name *</label>
@@ -833,19 +838,6 @@ const MatchesPage: React.FC = () => {
                   />
                 </div>
                 <div className="form-group">
-                  <label htmlFor="team2Score">Team 2 Score</label>
-                  <input
-                    type="number"
-                    id="team2Score"
-                    value={newTeam2Score || ""}
-                    onChange={(e) => setNewTeam2Score(e.target.value ? parseInt(e.target.value) : undefined)}
-                    min="0"
-                  />
-                </div>
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
                   <label htmlFor="team2Name">Team 2 Name *</label>
                   <input
                     type="text"
@@ -858,6 +850,31 @@ const MatchesPage: React.FC = () => {
                 </div>
               </div>
 
+              {/* Team 2 Score Row */}
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="team2Score">Team 2 Score</label>
+                  <input
+                    type="number"
+                    id="team2Score"
+                    value={newTeam2Score || ""}
+                    onChange={(e) => setNewTeam2Score(e.target.value ? parseInt(e.target.value) : undefined)}
+                    min="0"
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="tags">Tags (optional, comma-separated)</label>
+                  <input
+                    type="text"
+                    id="tags"
+                    value={newTags}
+                    onChange={(e) => setNewTags(e.target.value)}
+                    placeholder="e.g., RVL, Invitational, D-League"
+                  />
+                </div>
+              </div>
+
+              {/* Set Scores Section */}
               <div className="form-group">
                 <label>Set Scores (optional)</label>
                 <div className="set-scores-inputs">
@@ -871,17 +888,6 @@ const MatchesPage: React.FC = () => {
                     />
                   ))}
                 </div>
-              </div>
-
-              <div className="form-group">
-                <label>Tags (optional, comma-separated)</label>
-                <input
-                  type="text"
-                  id="tags"
-                  value={newTags}
-                  onChange={(e) => setNewTags(e.target.value)}
-                  placeholder="e.g., RVL, Invitational, D-League"
-                />
               </div>
 
               {formError && (
@@ -914,26 +920,6 @@ const MatchesPage: React.FC = () => {
           onCancel={closeImportModal}
         />
       )}
-
-      {/* Stay Updated Section */}
-      <div className="stay-updated-section">
-        <div className="stay-updated-content">
-          <h2>Stay Updated with 4.2 Schedules</h2>
-          <p>
-            The Volleyball Nations League (VNL) 4.2 season brings together the most competitive teams 
-            from around the world in an exciting tournament format. Staying updated with the upcoming 
-            volleyball game schedules is essential to ensure you never miss a moment of the action. 
-            Our platform provides the most accurate and up-to-date information on match schedules, 
-            results, and comprehensive statistics for the 4.2 season.
-          </p>
-          <div className="read-more-link">
-            <span>Read More</span>
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };

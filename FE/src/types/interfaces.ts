@@ -371,5 +371,6 @@ export type ImportChallongeInput = {
   roundStartDate: string; // ISO date string
   roundEndDate: string; // ISO date string
   matchSpacingMinutes?: number; // Default 30 minutes
+  region?: 'na' | 'eu' | 'as' | 'sa'; // Region for imported matches
   tags?: string[]; // Array of tags to apply to imported matches
 };

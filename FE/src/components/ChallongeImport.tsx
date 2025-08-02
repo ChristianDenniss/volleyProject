@@ -17,6 +17,7 @@ const ChallongeImport: React.FC<ChallongeImportProps> = ({ onImportSuccess, onCa
     roundStartDate: '',
     roundEndDate: '',
     matchSpacingMinutes: 30,
+    region: 'na', // Add default region
     tags: [] // Array of tags to apply to imported matches
   });
   const [loading, setLoading] = useState(false);
@@ -101,21 +102,38 @@ const ChallongeImport: React.FC<ChallongeImportProps> = ({ onImportSuccess, onCa
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="seasonId">Season *</label>
-            <select
-              id="seasonId"
-              value={formData.seasonId || ''}
-              onChange={(e) => handleInputChange('seasonId', parseInt(e.target.value))}
-              required
-            >
-              <option value="">Select a season</option>
-              {seasons?.map(season => (
-                <option key={season.id} value={season.id}>
-                  Season {season.seasonNumber}
-                </option>
-              ))}
-            </select>
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="seasonId">Season *</label>
+              <select
+                id="seasonId"
+                value={formData.seasonId || ''}
+                onChange={(e) => handleInputChange('seasonId', parseInt(e.target.value))}
+                required
+              >
+                <option value="">Select a season</option>
+                {seasons?.map(season => (
+                  <option key={season.id} value={season.id}>
+                    Season {season.seasonNumber}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="region">Region *</label>
+              <select
+                id="region"
+                value={formData.region || 'na'}
+                onChange={(e) => handleInputChange('region', e.target.value)}
+                required
+              >
+                <option value="na">NA</option>
+                <option value="eu">EU</option>
+                <option value="as">AS</option>
+                <option value="sa">SA</option>
+              </select>
+            </div>
           </div>
 
           <div className="form-group">
