@@ -2,6 +2,8 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateCol
 import type { Games } from '../games/game.entity.js';
 import type { Teams } from '../teams/team.entity.js';
 import type { Matches } from '../matches/match.entity.js';
+import type { Awards } from '../awards/award.entity.js';
+import type { Records } from '../records/records.entity.js';
 
 @Entity()
 export class Seasons {
@@ -38,4 +40,10 @@ export class Seasons {
 
     @OneToMany('Matches', 'season')
     matches!: Matches[];
+
+    @OneToMany('Awards', 'season')
+    awards!: Awards[];
+
+    @OneToMany('Records', 'season')
+    records!: Records[];
 }
