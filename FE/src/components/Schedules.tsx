@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useMatches } from '../hooks/useMatches';
 import { useSeasons } from '../hooks/allFetch';
 import SearchBar from './Searchbar';
@@ -306,7 +306,6 @@ const Schedules: React.FC = () => {
           ) : (
             paginatedDates.map(dateKey => {
               const matches = matchesByDate[dateKey];
-              const date = new Date(dateKey);
                
               return (
                 <div key={dateKey} className="date-section">
@@ -389,7 +388,7 @@ const Schedules: React.FC = () => {
                             <div className="match-time">
                               <span className="time-label">Start Time</span>
                               <span className="time-value">
-                                {showLocalTime ? formatTime(match.date) : 'TBD'}
+                                {showLocalTime ? formatTime(match.date.toString()) : 'TBD'}
                               </span>
                             </div>
                             <div className="match-actions">

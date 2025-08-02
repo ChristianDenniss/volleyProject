@@ -175,7 +175,7 @@ interface Records
   loading: boolean;
 }
 
-export type { Game, Player, Stats, Team, Season, Article, User, Award, Records, AuthContextType };
+export type { Game, Player, Stats, Team, Season, Article, User, Award, Records, AuthContextType, Match };
 
 
 // When creating a Game, we send primitive fields + foreign IDs.
