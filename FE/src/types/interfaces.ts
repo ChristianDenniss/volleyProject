@@ -32,7 +32,8 @@ interface Match
   challongeRound?: number;
   tags?: string[]; // Array of tags like ["RVL", "Invitational", "D-League"]
   season: Season;
-  teams?: Team[];
+  team1Name?: string; // Team name as string (from Challonge)
+  team2Name?: string; // Team name as string (from Challonge)
 }
 
 interface Award
@@ -357,7 +358,8 @@ export type CreateMatchInput = {
   challongeRound?: number;
   tags?: string[]; // Array of tags like ["RVL", "Invitational", "D-League"]
   seasonId: number;
-  teamIds: number[];
+  team1Name?: string; // Team name as string (from Challonge)
+  team2Name?: string; // Team name as string (from Challonge)
 };
 
 export type UpdateMatchInput = Partial<CreateMatchInput>;

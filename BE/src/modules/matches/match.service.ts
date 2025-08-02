@@ -1,17 +1,15 @@
 import { AppDataSource } from '../../db/data-source.js';
 import { Matches, MatchStatus } from './match.entity.js';
-import { Teams } from '../teams/team.entity.js';
 import { Seasons } from '../seasons/season.entity.js';
 import type { CreateMatchInput, UpdateMatchInput, ImportChallongeInput } from './matches.schema.js';
 
 const matchRepository = AppDataSource.getRepository(Matches);
-const teamRepository = AppDataSource.getRepository(Teams);
 const seasonRepository = AppDataSource.getRepository(Seasons);
 
 export class MatchService {
   async getAllMatches() {
     return await matchRepository.find({
-      relations: ['season', 'teams'],
+      relations: ['season'],
       order: {
         date: 'ASC'
       }
@@ -21,7 +19,7 @@ export class MatchService {
   async getMatchesBySeason(seasonId: number) {
     return await matchRepository.find({
       where: { season: { id: seasonId } },
-      relations: ['season', 'teams'],
+      relations: ['season'],
       order: {
         date: 'ASC'
       }
@@ -34,7 +32,7 @@ export class MatchService {
         season: { id: seasonId },
         round: round
       },
-      relations: ['season', 'teams'],
+      relations: ['season'],
       order: {
         date: 'ASC'
       }
@@ -44,7 +42,7 @@ export class MatchService {
   async getMatchById(id: number) {
     return await matchRepository.findOne({
       where: { id },
-      relations: ['season', 'teams']
+      relations: ['season']
     });
   }
 
@@ -52,11 +50,6 @@ export class MatchService {
     const season = await seasonRepository.findOne({ where: { id: data.seasonId } });
     if (!season) {
       throw new Error('Season not found');
-    }
-
-    const teams = await teamRepository.findByIds(data.teamIds);
-    if (teams.length !== 2) {
-      throw new Error('Exactly 2 teams are required for a match');
     }
 
     // Parse set scores and calculate overall score
@@ -78,8 +71,9 @@ export class MatchService {
       challongeMatchId: data.challongeMatchId,
       challongeTournamentId: data.challongeTournamentId,
       challongeRound: data.challongeRound,
-      season,
-      teams
+      team1Name: data.team1Name,
+      team2Name: data.team2Name,
+      season
     });
 
     return await matchRepository.save(match);
@@ -97,14 +91,6 @@ export class MatchService {
         throw new Error('Season not found');
       }
       match.season = season;
-    }
-
-    if (data.teamIds) {
-      const teams = await teamRepository.findByIds(data.teamIds);
-      if (teams.length !== 2) {
-        throw new Error('Exactly 2 teams are required for a match');
-      }
-      match.teams = teams;
     }
 
     // Update set scores if provided
@@ -180,10 +166,6 @@ export class MatchService {
         continue;
       }
 
-      // Find or create teams based on Challonge participant names
-      const team1 = await this.findOrCreateTeam(challongeMatch.player1_name, season);
-      const team2 = await this.findOrCreateTeam(challongeMatch.player2_name, season);
-
       // Parse set scores from Challonge format (e.g., "25-20,20-25,25-22")
       const setScores = this.parseChallongeSetScores(challongeMatch.scores_csv);
       const overallScore = this.calculateOverallScoreFromSetScores(setScores);
@@ -214,8 +196,9 @@ export class MatchService {
         challongeTournamentId: tournamentId,
         challongeRound: challongeMatch.round,
         tags: data.tags || [], // Apply tags from import data
-        season,
-        teams: [team1, team2]
+        team1Name: challongeMatch.player1_name,
+        team2Name: challongeMatch.player2_name,
+        season
       };
 
       const match = matchRepository.create(matchData);
@@ -305,22 +288,5 @@ export class MatchService {
     ];
   }
 
-  private async findOrCreateTeam(teamName: string, season: any) {
-    // Try to find existing team
-    let team = await teamRepository.findOne({
-      where: { name: teamName, season: { id: season.id } }
-    });
 
-    // Create team if it doesn't exist
-    if (!team) {
-      team = teamRepository.create({
-        name: teamName,
-        season,
-        placement: 'TBD'
-      });
-      team = await teamRepository.save(team);
-    }
-
-    return team;
-  }
 } 

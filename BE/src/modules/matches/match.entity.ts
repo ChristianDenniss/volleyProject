@@ -1,6 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, ManyToMany, JoinTable } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne } from 'typeorm';
 import type { Seasons } from '../seasons/season.entity.js';
-import type { Teams } from '../teams/team.entity.js';
 
 export enum MatchStatus {
     SCHEDULED = 'scheduled',
@@ -72,10 +71,10 @@ export class Matches {
     @ManyToOne('Seasons', 'matches')
     season!: Seasons;
 
-    // Many-to-many relationship with teams
-    @ManyToMany('Teams', 'matches')
-    @JoinTable({
-        name: 'matches_teams',
-    })
-    teams!: Teams[];
+    // Team names as strings (auto-filled from Challonge)
+    @Column({ nullable: true })
+    team1Name!: string;
+
+    @Column({ nullable: true })
+    team2Name!: string;
 } 

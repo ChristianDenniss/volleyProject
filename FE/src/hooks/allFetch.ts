@@ -1,6 +1,7 @@
 import { useFetch, useFetchTeamByName, useFetchGameById, useFetchSeasonById, useFetchArticleById, useFetchPlayerById, useObjectFetch, useTriviaPlayer, useTriviaTeam, useTriviaSeason, useSubmitTriviaGuess } from "./useFetch";
-import { Player, Team, Season, Game, Article, Stats, User, Award, Records } from "../types/interfaces";
+import { Player, Team, Season, Game, Article, Stats, User, Award, Records, Match } from "../types/interfaces";
 import { useState } from "react";
+import { useMatches } from "./useMatches";
 
 // Hook to fetch players
 export const usePlayers = () => useFetch<Player>("players");
@@ -57,6 +58,9 @@ export const useSinglePlayer = (playedId: string) => useFetchPlayerById<Player>(
 export const useSingleAward = (awardId: string) => useObjectFetch<Award>(`awards/${awardId}`);
 
 export const useAwardsByPlayerID = (playerId: string) => useFetch<Award>(`awards/player/${playerId}`);
+
+// Matches hooks
+export { useMatches };
 
 // Trivia hooks
 export { useTriviaPlayer, useTriviaTeam, useTriviaSeason, useSubmitTriviaGuess };

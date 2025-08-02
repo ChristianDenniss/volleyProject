@@ -1,6 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { useMatches } from '../hooks/useMatches';
-import { useSeasons } from '../hooks/allFetch';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useMatches, useSeasons } from '../hooks/allFetch';
 import SearchBar from './Searchbar';
 import Pagination from './Pagination';
 import ChallongeImport from './ChallongeImport';
@@ -14,6 +13,16 @@ const Schedules: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [showLocalTime, setShowLocalTime] = useState<boolean>(false);
   const [showImportModal, setShowImportModal] = useState<boolean>(false);
+
+  // Set default to most recent season when seasons load
+  useEffect(() => {
+    if (seasons && seasons.length > 0 && !selectedSeason) {
+      const mostRecentSeason = seasons.reduce((prev, current) => 
+        (current.seasonNumber > prev.seasonNumber) ? current : prev
+      );
+      setSelectedSeason(mostRecentSeason.id);
+    }
+  }, [seasons, selectedSeason]);
 
   const { data: matches, error, loading, refetch } = useMatches(selectedSeason);
 
@@ -36,13 +45,14 @@ const Schedules: React.FC = () => {
   const filteredMatches = useMemo(() => {
     if (!matches) return [];
     
-    return matches.filter(match => {
-      const matchesRound = !selectedRound || match.round === selectedRound;
-      const matchesSearch = match.matchNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          match.teams?.some((team: any) => team.name.toLowerCase().includes(searchQuery.toLowerCase()));
-      
-      return matchesRound && matchesSearch;
-    });
+         return matches.filter(match => {
+       const matchesRound = !selectedRound || match.round === selectedRound;
+       const matchesSearch = match.matchNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                           (match.team1Name?.toLowerCase().includes(searchQuery.toLowerCase()) || false) ||
+                           (match.team2Name?.toLowerCase().includes(searchQuery.toLowerCase()) || false);
+       
+       return matchesRound && matchesSearch;
+     });
   }, [matches, selectedRound, searchQuery]);
 
   // Group matches by date
@@ -337,51 +347,81 @@ const Schedules: React.FC = () => {
                           </div>
                            
                           <div className="match-teams">
-                            {match.teams?.map((team: any, index: number) => (
-                              <div key={team.id} className={`team-row ${winningTeam === index ? 'winning-team' : ''}`}>
-                                <div className="team-info">
-                                  {team.logoUrl && (
-                                    <img 
-                                      src={team.logoUrl} 
-                                      alt={`${team.name} logo`} 
-                                      className="team-logo"
-                                    />
-                                  )}
-                                  <span className="team-name">{team.name}</span>
-                                  {winningTeam === index && match.status === 'completed' && (
-                                    <span className="winner-badge">🏆</span>
-                                  )}
-                                </div>
-                                <div className="team-score">
-                                  {match.status === 'completed' && (
-                                    <div className="score-container">
-                                      <span className={`overall-score ${winningTeam === index ? 'winning-score' : ''}`}>
-                                        {index === 0 ? match.team1Score : match.team2Score}
-                                      </span>
-                                      {(match.set1Score || match.set2Score || match.set3Score || match.set4Score || match.set5Score) && (
-                                        <div className="set-scores">
-                                          {[match.set1Score, match.set2Score, match.set3Score, match.set4Score, match.set5Score]
-                                            .filter(score => score !== null && score !== undefined)
-                                            .map((setScore: string | null | undefined, setIndex: number) => {
-                                              if (!setScore) return null;
-                                              const [team1Score, team2Score] = setScore.split('-').map(Number);
-                                              const isWinningSet = index === 0 ? team1Score > team2Score : team2Score > team1Score;
-                                              return (
-                                                <span 
-                                                  key={setIndex} 
-                                                  className={`set-score ${isWinningSet ? 'winning-set' : ''}`}
-                                                >
-                                                  {index === 0 ? team1Score : team2Score}
-                                                </span>
-                                              );
-                                            })}
-                                        </div>
-                                      )}
-                                    </div>
-                                  )}
-                                </div>
+                            {/* Team 1 */}
+                            <div className={`team-row ${winningTeam === 0 ? 'winning-team' : ''}`}>
+                              <div className="team-info">
+                                <span className="team-name">{match.team1Name || 'TBD'}</span>
+                                {winningTeam === 0 && match.status === 'completed' && (
+                                  <span className="winner-badge">🏆</span>
+                                )}
                               </div>
-                            ))}
+                              <div className="team-score">
+                                {match.status === 'completed' && (
+                                  <div className="score-container">
+                                    <span className={`overall-score ${winningTeam === 0 ? 'winning-score' : ''}`}>
+                                      {match.team1Score}
+                                    </span>
+                                    {(match.set1Score || match.set2Score || match.set3Score || match.set4Score || match.set5Score) && (
+                                      <div className="set-scores">
+                                        {[match.set1Score, match.set2Score, match.set3Score, match.set4Score, match.set5Score]
+                                          .filter(score => score !== null && score !== undefined)
+                                          .map((setScore: string | null | undefined, setIndex: number) => {
+                                            if (!setScore) return null;
+                                            const [team1Score, team2Score] = setScore.split('-').map(Number);
+                                            const isWinningSet = team1Score > team2Score;
+                                            return (
+                                              <span 
+                                                key={setIndex} 
+                                                className={`set-score ${isWinningSet ? 'winning-set' : ''}`}
+                                              >
+                                                {team1Score}
+                                              </span>
+                                            );
+                                          })}
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            
+                            {/* Team 2 */}
+                            <div className={`team-row ${winningTeam === 1 ? 'winning-team' : ''}`}>
+                              <div className="team-info">
+                                <span className="team-name">{match.team2Name || 'TBD'}</span>
+                                {winningTeam === 1 && match.status === 'completed' && (
+                                  <span className="winner-badge">🏆</span>
+                                )}
+                              </div>
+                              <div className="team-score">
+                                {match.status === 'completed' && (
+                                  <div className="score-container">
+                                    <span className={`overall-score ${winningTeam === 1 ? 'winning-score' : ''}`}>
+                                      {match.team2Score}
+                                    </span>
+                                    {(match.set1Score || match.set2Score || match.set3Score || match.set4Score || match.set5Score) && (
+                                      <div className="set-scores">
+                                        {[match.set1Score, match.set2Score, match.set3Score, match.set4Score, match.set5Score]
+                                          .filter(score => score !== null && score !== undefined)
+                                          .map((setScore: string | null | undefined, setIndex: number) => {
+                                            if (!setScore) return null;
+                                            const [team1Score, team2Score] = setScore.split('-').map(Number);
+                                            const isWinningSet = team2Score > team1Score;
+                                            return (
+                                              <span 
+                                                key={setIndex} 
+                                                className={`set-score ${isWinningSet ? 'winning-set' : ''}`}
+                                              >
+                                                {team2Score}
+                                              </span>
+                                            );
+                                          })}
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
                           </div>
                            
                           <div className="match-details">

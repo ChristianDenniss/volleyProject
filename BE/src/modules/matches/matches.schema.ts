@@ -19,7 +19,8 @@ export const createMatchSchema = z.object({
   challongeTournamentId: z.string().optional(),
   challongeRound: z.number().optional(),
   seasonId: z.number(),
-  teamIds: z.array(z.number()).min(2).max(2),
+  team1Name: z.string().optional(), // Team name as string (from Challonge)
+  team2Name: z.string().optional(), // Team name as string (from Challonge)
   tags: z.array(z.string()).optional() // Array of tags like ["RVL", "Invitational"]
 });
 
