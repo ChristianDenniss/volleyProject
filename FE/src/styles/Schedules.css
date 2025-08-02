@@ -1,7 +1,8 @@
 /* Schedules Page Styles */
 .schedules-page {
   width: 100%;
-  padding: 20px 0 0 0;
+  margin: 0 auto;
+  padding: 2rem 2rem 0 2rem; /* Using REM units for better responsive design */
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
@@ -753,11 +754,11 @@
 
 .ranking-header:hover .dropdown-arrow {
   transform: rotate(180deg);
-}
+} 
 
-/* Stay Updated Section */
+/* Stay Updated Section - now outside schedules-page div */
 .stay-updated-section {
-  margin: 0 -10px 0 -10px;
+  margin: 0;
   padding: 40px 60px 40px 80px;
   background: linear-gradient(135deg, #f7f7f7 0%, #f0f4f8 100%);
   position: relative;
@@ -827,7 +828,6 @@
 
 @media (max-width: 768px) {
   .stay-updated-section {
-    margin: 0 -10px 0 -10px;
     padding: 24px 40px 24px 60px;
     clip-path: polygon(0 0, 100% 0, 90% 100%, 0 100%);
   }

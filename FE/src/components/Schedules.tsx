@@ -134,9 +134,10 @@ const Schedules: React.FC = () => {
   }
 
   return (
-    <div className="schedules-page">
-      {/* VNL-Style Header */}
-      <div className="vnl-header">
+    <>
+      <div className="schedules-page">
+        {/* VNL-Style Header */}
+        <div className="vnl-header">
         <div className="color-bars">
           <div className="bar green"></div>
           <div className="bar yellow"></div>
@@ -447,6 +448,7 @@ const Schedules: React.FC = () => {
           )}
         </div>
       )}
+      </div>
 
       {/* Stay Updated Section */}
       <div className="stay-updated-section">
@@ -467,8 +469,7 @@ const Schedules: React.FC = () => {
           </div>
         </div>
       </div>
-      
-    </div>
+    </>
   );
 };
 
