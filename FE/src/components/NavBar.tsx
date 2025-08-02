@@ -40,6 +40,9 @@ const Navbar: React.FC = () =>
                         <Link to="/seasons">Seasons</Link>
                     </li>
                     <li>
+                        <Link to="/schedules">Schedules</Link>
+                    </li>
+                    <li>
                         <Link to="/articles">Articles</Link>
                     </li>
                     <li>
