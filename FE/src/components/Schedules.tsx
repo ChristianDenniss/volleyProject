@@ -162,9 +162,10 @@ const Schedules: React.FC = () => {
 
         <div className="filter-row">
           <select className="filter-dropdown">
-            <option>PHASE</option>
+            <option value="" disabled>PHASE</option>
+            <option selected>All</option>
             <option>Qualifiers</option>
-            <option>Finals</option>
+            <option>Playoffs</option>
           </select>
           <select className="filter-dropdown">
             <option>ROUND</option>
@@ -173,20 +174,29 @@ const Schedules: React.FC = () => {
             ))}
           </select>
           <select className="filter-dropdown">
-            <option>GENDER</option>
-            <option>Men</option>
-            <option>Women</option>
+            <option value="" disabled>REGION</option>
+            <option selected>All</option>
+            <option>NA</option>
+            <option>EU</option>
+            <option>AS</option>
+            <option>SA</option>
           </select>
           <select className="filter-dropdown">
             <option>TEAMS</option>
             {/* Would be populated with teams */}
           </select>
           <select className="filter-dropdown">
-            <option>VENUE</option>
-            <option>All Venues</option>
+            <option value="" disabled>DIVISION</option>
+            <option selected>All</option>
+            <option>Invitational</option>
+            <option>RVL</option>
+            <option>D-League</option>
           </select>
           <button className="sync-calendar">
-            SYNC TO CALENDAR 📅
+            SYNC TO CALENDAR
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 2V6M16 2V6M3 10H21M5 4H19C20.1046 4 21 4.89543 21 6V20C21 21.1046 20.1046 22 19 22H5C3.89543 22 3 21.1046 3 20V6C3 4.89543 3.89543 4 5 4Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
           </button>
         </div>
       </div>
