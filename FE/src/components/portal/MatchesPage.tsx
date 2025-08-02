@@ -4,9 +4,16 @@ import React, { useState, useEffect } from "react";
 import { useMatches } from "../../hooks/allFetch";
 import { useSeasons } from "../../hooks/allFetch";
 import { useAuth } from "../../context/authContext";
-import type { CreateMatchInput } from "../../types/interfaces";
+import type { CreateMatchInput as ImportedCreateMatchInput } from "../../types/interfaces";
+
+// Extend the imported CreateMatchInput to include our new fields
+type CreateMatchInput = ImportedCreateMatchInput & {
+  phase?: 'qualifiers' | 'playoffs';
+  region?: 'na' | 'eu' | 'as' | 'sa';
+};
 import SearchBar from "../Searchbar";
 import Pagination from "../Pagination";
+import ChallongeImport from "../ChallongeImport";
 import "../../styles/UsersPage.css";
 import "../../styles/PlayersPage.css";
 import "../../styles/PortalPlayersPage.css";
@@ -18,6 +25,8 @@ interface Match {
   matchNumber: string;
   status: 'scheduled' | 'completed';
   round: string;
+  phase: 'qualifiers' | 'playoffs';
+  region: 'na' | 'eu' | 'as' | 'sa';
   date: Date;
   team1Score?: number;
   team2Score?: number;
@@ -38,6 +47,8 @@ type EditField =
   | "matchNumber"
   | "status"
   | "round"
+  | "phase"
+  | "region"
   | "date"
   | "team1Score"
   | "team2Score"
@@ -75,6 +86,8 @@ const MatchesPage: React.FC = () => {
   const [newMatchNumber, setNewMatchNumber] = useState<string>("");
   const [newStatus, setNewStatus] = useState<string>("scheduled");
   const [newRound, setNewRound] = useState<string>("");
+  const [newPhase, setNewPhase] = useState<string>("qualifiers");
+  const [newRegion, setNewRegion] = useState<string>("na");
   const [newDate, setNewDate] = useState<string>("");
   const [newTeam1Score, setNewTeam1Score] = useState<number | undefined>(undefined);
   const [newTeam2Score, setNewTeam2Score] = useState<number | undefined>(undefined);
@@ -86,7 +99,7 @@ const MatchesPage: React.FC = () => {
   const [formError, setFormError] = useState<string>("");
 
   useEffect(() => {
-    if (matches) setLocalMatches(matches);
+    if (matches) setLocalMatches(matches as Match[]);
   }, [matches]);
 
   // Get unique seasons, statuses, and rounds for filter options
@@ -217,6 +230,8 @@ const MatchesPage: React.FC = () => {
     setNewMatchNumber("");
     setNewStatus("scheduled");
     setNewRound("");
+    setNewPhase("qualifiers");
+    setNewRegion("na");
     setNewDate("");
     setNewTeam1Score(undefined);
     setNewTeam2Score(undefined);
@@ -255,6 +270,8 @@ const MatchesPage: React.FC = () => {
         matchNumber: newMatchNumber,
         status: newStatus as "scheduled" | "completed",
         round: newRound,
+        phase: newPhase as "qualifiers" | "playoffs",
+        region: newRegion as "na" | "eu" | "as" | "sa",
         scheduledDate: newDate,
         team1Score: newTeam1Score,
         team2Score: newTeam2Score,
@@ -404,6 +421,8 @@ const MatchesPage: React.FC = () => {
               <th>Match Number</th>
               <th>Status</th>
               <th>Round</th>
+              <th>Phase</th>
+              <th>Region</th>
               <th>Date</th>
               <th>Teams</th>
               <th>Score</th>
@@ -510,6 +529,68 @@ const MatchesPage: React.FC = () => {
                     />
                   ) : (
                     match.round
+                  )}
+                </td>
+
+                {/* Phase */}
+                <td
+                  style={{ cursor: "pointer" }}
+                  onClick={() =>
+                    setEditing({
+                      id: match.id,
+                      field: "phase",
+                      value: toStr("phase", match),
+                    })
+                  }
+                >
+                  {editing?.id === match.id && editing?.field === "phase" ? (
+                    <select
+                      value={editing.value}
+                      onChange={(e) =>
+                        setEditing({ ...editing, value: e.target.value })
+                      }
+                      onBlur={commitEdit}
+                      autoFocus
+                    >
+                      <option value="qualifiers">qualifiers</option>
+                      <option value="playoffs">playoffs</option>
+                    </select>
+                  ) : (
+                    <span className={`phase-badge ${match.phase}`}>
+                      {match.phase}
+                    </span>
+                  )}
+                </td>
+
+                {/* Region */}
+                <td
+                  style={{ cursor: "pointer" }}
+                  onClick={() =>
+                    setEditing({
+                      id: match.id,
+                      field: "region",
+                      value: toStr("region", match),
+                    })
+                  }
+                >
+                  {editing?.id === match.id && editing?.field === "region" ? (
+                    <select
+                      value={editing.value}
+                      onChange={(e) =>
+                        setEditing({ ...editing, value: e.target.value })
+                      }
+                      onBlur={commitEdit}
+                      autoFocus
+                    >
+                      <option value="na">NA</option>
+                      <option value="eu">EU</option>
+                      <option value="as">AS</option>
+                      <option value="sa">SA</option>
+                    </select>
+                  ) : (
+                    <span className={`region-badge ${match.region}`}>
+                      {match.region.toUpperCase()}
+                    </span>
                   )}
                 </td>
 
@@ -670,6 +751,35 @@ const MatchesPage: React.FC = () => {
                   />
                 </div>
                 <div className="form-group">
+                  <label htmlFor="phase">Phase *</label>
+                  <select
+                    id="phase"
+                    value={newPhase}
+                    onChange={(e) => setNewPhase(e.target.value)}
+                    required
+                  >
+                    <option value="qualifiers">Qualifiers</option>
+                    <option value="playoffs">Playoffs</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="region">Region *</label>
+                  <select
+                    id="region"
+                    value={newRegion}
+                    onChange={(e) => setNewRegion(e.target.value)}
+                    required
+                  >
+                    <option value="na">NA</option>
+                    <option value="eu">EU</option>
+                    <option value="as">AS</option>
+                    <option value="sa">SA</option>
+                  </select>
+                </div>
+                <div className="form-group">
                   <label htmlFor="date">Date *</label>
                   <input
                     type="datetime-local"
@@ -795,23 +905,14 @@ const MatchesPage: React.FC = () => {
 
       {/* Import Modal */}
       {isImportModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <div className="modal-header">
-              <h2>Import from Challonge</h2>
-              <button onClick={closeImportModal} className="close-button">&times;</button>
-            </div>
-            <div className="modal-content">
-              <p>This feature allows you to import matches from a Challonge tournament.</p>
-              <p>Please use the import functionality from the main schedules page for now.</p>
-              <div className="modal-actions">
-                <button onClick={closeImportModal} className="cancel-button">
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <ChallongeImport
+          onImportSuccess={() => {
+            closeImportModal();
+            // Refresh the matches data
+            window.location.reload();
+          }}
+          onCancel={closeImportModal}
+        />
       )}
     </div>
   );

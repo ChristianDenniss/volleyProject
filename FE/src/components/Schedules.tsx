@@ -2,7 +2,6 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useMatches, useSeasons } from '../hooks/allFetch';
 import SearchBar from './Searchbar';
 import Pagination from './Pagination';
-import ChallongeImport from './ChallongeImport';
 import '../styles/Schedules.css';
 
 const Schedules: React.FC = () => {
@@ -12,7 +11,6 @@ const Schedules: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [showLocalTime, setShowLocalTime] = useState<boolean>(false);
-  const [showImportModal, setShowImportModal] = useState<boolean>(false);
 
   // Set default to most recent season when seasons load
   useEffect(() => {
@@ -24,7 +22,7 @@ const Schedules: React.FC = () => {
     }
   }, [seasons, selectedSeason]);
 
-  const { data: matches, error, loading, refetch } = useMatches(selectedSeason);
+  const { data: matches, error, loading } = useMatches(selectedSeason);
 
   // Get unique rounds from matches
   const uniqueRounds = useMemo(() => {
@@ -89,10 +87,7 @@ const Schedules: React.FC = () => {
     setCurrentPage(1);
   };
 
-  const handleImportSuccess = () => {
-    setShowImportModal(false);
-    refetch(); // Refresh the matches data
-  };
+
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -209,16 +204,10 @@ const Schedules: React.FC = () => {
         </label>
       </div>
 
-      {/* Header */}
-      <div className="schedules-header">
-        <h1>Schedules & Results</h1>
-        <button 
-          className="import-button"
-          onClick={() => setShowImportModal(true)}
-        >
-          Import from Challonge
-        </button>
-      </div>
+             {/* Header */}
+       <div className="schedules-header">
+         <h1>Schedules & Results</h1>
+       </div>
 
       {/* Filters */}
       <div className="schedules-filters">
@@ -306,12 +295,6 @@ const Schedules: React.FC = () => {
           {paginatedDates.length === 0 ? (
             <div className="no-matches">
               <p>No matches found for the selected criteria.</p>
-              <button 
-                className="import-button"
-                onClick={() => setShowImportModal(true)}
-              >
-                Import your first matches from Challonge
-              </button>
             </div>
           ) : (
             paginatedDates.map(dateKey => {
@@ -455,13 +438,7 @@ const Schedules: React.FC = () => {
         </div>
       )}
 
-      {/* Challonge Import Modal */}
-      {showImportModal && (
-        <ChallongeImport
-          onImportSuccess={handleImportSuccess}
-          onCancel={() => setShowImportModal(false)}
-        />
-      )}
+      
     </div>
   );
 };

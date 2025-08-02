@@ -6,6 +6,18 @@ export enum MatchStatus {
     COMPLETED = 'completed'
 }
 
+export enum MatchPhase {
+    QUALIFIERS = 'qualifiers',
+    PLAYOFFS = 'playoffs'
+}
+
+export enum MatchRegion {
+    NA = 'na',
+    EU = 'eu',
+    AS = 'as',
+    SA = 'sa'
+}
+
 @Entity()
 export class Matches {
     @PrimaryGeneratedColumn()
@@ -23,6 +35,20 @@ export class Matches {
 
     @Column()
     round!: string; // e.g., "Round 1", "Semi-Finals"
+
+    @Column({
+        type: 'enum',
+        enum: MatchPhase,
+        default: MatchPhase.QUALIFIERS
+    })
+    phase!: MatchPhase; // e.g., "qualifiers", "playoffs"
+
+    @Column({
+        type: 'enum',
+        enum: MatchRegion,
+        default: MatchRegion.NA
+    })
+    region!: MatchRegion; // e.g., "na", "eu", "as", "sa"
 
     @Column()
     date!: Date; // Single date field that can be updated

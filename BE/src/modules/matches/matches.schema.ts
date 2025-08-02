@@ -11,6 +11,8 @@ export const createMatchSchema = z.object({
   matchNumber: z.string(),
   status: z.enum(['scheduled', 'completed']).default('scheduled'),
   round: z.string(),
+  phase: z.enum(['qualifiers', 'playoffs']).default('qualifiers'),
+  region: z.enum(['na', 'eu', 'as', 'sa']).default('na'),
   date: z.string().transform((str) => new Date(str)),
   team1Score: z.number().optional(),
   team2Score: z.number().optional(),

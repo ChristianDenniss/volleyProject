@@ -1,5 +1,5 @@
 import { AppDataSource } from '../../db/data-source.js';
-import { Matches, MatchStatus } from './match.entity.js';
+import { Matches, MatchStatus, MatchPhase, MatchRegion } from './match.entity.js';
 import { Seasons } from '../seasons/season.entity.js';
 import type { CreateMatchInput, UpdateMatchInput, ImportChallongeInput } from './matches.schema.js';
 
@@ -60,6 +60,8 @@ export class MatchService {
       matchNumber: data.matchNumber,
       status: data.status as MatchStatus,
       round: data.round,
+      phase: data.phase as MatchPhase,
+      region: data.region as MatchRegion,
       date: data.date,
       team1Score: data.team1Score || overallScore.team1Sets,
       team2Score: data.team2Score || overallScore.team2Sets,
