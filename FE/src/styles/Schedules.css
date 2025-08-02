@@ -758,12 +758,14 @@
 
 /* Stay Updated Section - now outside schedules-page div */
 .stay-updated-section {
-  margin: 0;
-  padding: 40px 60px 40px 80px;
+  margin: 0; /* Remove all margins */
+  padding: 2.5rem 3.75rem 0 0; /* Keep top and right padding, remove left and bottom */
   background: linear-gradient(135deg, #f7f7f7 0%, #f0f4f8 100%);
   position: relative;
   overflow: hidden;
   clip-path: polygon(0 0, 100% 0, 85% 100%, 0 100%);
+  width: fit-content; /* Only take up natural content width */
+  max-width: 600px; /* Limit maximum width */
 }
 
 .stay-updated-section::before {
