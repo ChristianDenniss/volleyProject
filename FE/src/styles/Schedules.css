@@ -1,8 +1,8 @@
 /* Schedules Page Styles */
 .schedules-page {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 20px 10px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
@@ -757,12 +757,12 @@
 
 /* Stay Updated Section */
 .stay-updated-section {
-  margin-top: 40px;
-  padding: 40px;
+  margin: 40px -10px 0 -10px;
+  padding: 40px 60px 40px 80px;
   background: linear-gradient(135deg, #f7f7f7 0%, #f0f4f8 100%);
-  border-radius: 12px;
   position: relative;
   overflow: hidden;
+  clip-path: polygon(0 0, 100% 0, 95% 100%, 0 100%);
 }
 
 .stay-updated-section::before {
@@ -783,6 +783,7 @@
   position: relative;
   z-index: 1;
   max-width: 800px;
+  margin-left: 20px;
 }
 
 .stay-updated-content h2 {
@@ -826,8 +827,13 @@
 
 @media (max-width: 768px) {
   .stay-updated-section {
-    padding: 24px;
-    margin-top: 24px;
+    margin: 24px -10px 0 -10px;
+    padding: 24px 40px 24px 60px;
+    clip-path: polygon(0 0, 100% 0, 98% 100%, 0 100%);
+  }
+
+  .stay-updated-content {
+    margin-left: 10px;
   }
 
   .stay-updated-content h2 {
