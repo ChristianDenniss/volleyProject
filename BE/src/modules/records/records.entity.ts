@@ -1,5 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
-import { Players } from '../players/player.entity.js';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 
 @Entity()
 export class Records {
@@ -43,16 +42,14 @@ export class Records {
     @Column()
     seasonId!: number; // Foreign key to seasons table
 
+    @Column()
+    playerId!: number; // Foreign key to players table
+
     @CreateDateColumn({ type: 'timestamp' })
     createdAt!: Date;
 
     @UpdateDateColumn({ type: 'timestamp' })
     updatedAt!: Date;
-
-    // Many-to-one relationship with Players
-    @ManyToOne(() => Players, (player) => player.records)
-    @JoinColumn()
-    player!: Players;
 
     // Game ID (optional, only for game records)
     @Column({ type: 'int', nullable: true })
