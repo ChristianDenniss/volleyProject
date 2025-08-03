@@ -773,7 +773,7 @@
   overflow: hidden;
   clip-path: polygon(0 0, 100% 0, 85% 100%, 0 100%);
   width: fit-content; /* Only take up natural content width */
-  max-width: 900px; /* Increased from 600px to 900px for more width */
+  max-width: 1200px; /* Increased from 900px to 1200px for more width */
 }
 
 .stay-updated-section::before {
@@ -794,7 +794,8 @@
   position: relative;
   z-index: 1;
   max-width: 800px;
-  margin-left: 20px;
+  margin-left: 40px; /* Increased from 20px to 40px for more left margin */
+  margin-bottom: 20px; /* Added bottom margin */
 }
 
 .stay-updated-content h2 {

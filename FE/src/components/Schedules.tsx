@@ -449,19 +449,13 @@ const Schedules: React.FC = () => {
       <div className="stay-updated-section">
         <div className="stay-updated-content">
           <h2>Stay Updated with 4.2 Schedules</h2>
-          <p>
-            The Volleyball Nations League (VNL) 4.2 season brings together the most competitive teams 
-            from around the world in an exciting tournament format. Staying updated with the upcoming 
-            volleyball game schedules is essential to ensure you never miss a moment of the action. 
-            Our platform provides the most accurate and up-to-date information on match schedules, 
-            results, and comprehensive statistics for the 4.2 season.
-          </p>
-          <div className="read-more-link">
-            <span>Read More</span>
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </div>
+                     <p>
+             The Volleyball Nations League (VNL) 4.2 season brings together the most competitive teams 
+             from around the world in an exciting tournament format. Staying updated with the upcoming 
+             volleyball game schedules is essential to ensure you never miss a moment of the action. 
+             Our platform provides the most accurate and up-to-date information on match schedules, 
+             results, and comprehensive statistics for the 4.2 season.
+           </p>
         </div>
       </div>
     </>
