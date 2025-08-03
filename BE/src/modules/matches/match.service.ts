@@ -284,8 +284,12 @@ export class MatchService {
     roundNumber: number
   ): Date {
     if (isCompleted) {
-      // For completed matches, use the round start date (they happened during the round)
-      return new Date(roundStartDate);
+      // For completed matches, distribute them across the date range
+      const totalDays = Math.floor((roundEndDate.getTime() - roundStartDate.getTime()) / (1000 * 60 * 60 * 24));
+      const dayOffset = Math.min(matchIndex, totalDays);
+      const matchDate = new Date(roundStartDate);
+      matchDate.setDate(matchDate.getDate() + dayOffset);
+      return matchDate;
     } else {
       // For scheduled matches, ensure different rounds are in different weeks
       const baseDate = new Date(roundStartDate);
