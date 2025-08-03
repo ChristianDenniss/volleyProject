@@ -205,6 +205,8 @@ export class MatchService {
         data.matchSpacingMinutes,
         challongeMatch.round
       );
+      
+      console.log(`Round ${challongeMatch.round} match scheduled for: ${matchDate.toISOString()}`);
 
       // Create match
       const matchData = {
@@ -271,22 +273,68 @@ export class MatchService {
         weekendDate.setDate(weekendDate.getDate() + 1);
       }
       
-      // Calculate match spacing within the weekend
+      // Ensure we're scheduling in the correct week for this round
+      // Round 1 should be in the first week, Round 2 in the second week, etc.
+      // Calculate the start of the target week for this round
+      const targetWeekStart = new Date(baseDate);
+      targetWeekStart.setDate(targetWeekStart.getDate() + weekOffset);
+      
+      // Find the weekend of the target week
+      const targetWeekend = new Date(targetWeekStart);
+      while (!weekendDays.includes(targetWeekend.getDay())) {
+        targetWeekend.setDate(targetWeekend.getDate() + 1);
+      }
+      
+      // Use the target weekend date
+      weekendDate = targetWeekend;
+      
+      // Distribute matches evenly across the 3 weekend days
+      // Calculate which day of the weekend this match should be on
+      const totalMatches = matchIndex + 1; // Total matches in this round
+      const baseMatchesPerDay = Math.floor(totalMatches / 3); // Base matches per day
+      const extraMatches = totalMatches % 3; // Extra matches to distribute
+      
+      // Calculate which day this match goes on
+      let dayOfWeekend;
+      if (matchIndex < baseMatchesPerDay * 3) {
+        // Base distribution
+        dayOfWeekend = Math.floor(matchIndex / baseMatchesPerDay);
+      } else {
+        // Extra matches - distribute them evenly
+        const extraMatchIndex = matchIndex - (baseMatchesPerDay * 3);
+        dayOfWeekend = extraMatchIndex;
+      }
+      
+      // Calculate which match number this is on the specific day
+      let matchNumberOnDay;
+      if (matchIndex < baseMatchesPerDay * 3) {
+        // Base distribution
+        matchNumberOnDay = matchIndex % baseMatchesPerDay;
+      } else {
+        // Extra matches
+        matchNumberOnDay = baseMatchesPerDay + (matchIndex - (baseMatchesPerDay * 3));
+      }
+      
+      // Find the specific weekend day for this match
+      const matchDate = new Date(weekendDate);
+      matchDate.setDate(matchDate.getDate() + dayOfWeekend);
+      
+      // Calculate match spacing within the day
       const spacingMs = spacingMinutes * 60 * 1000;
       const startOffset = 30 * 60 * 1000; // 30 minutes after start
       
+      // Calculate time offset within the day
+      const timeOffset = startOffset + (matchNumberOnDay * spacingMs);
+      
       // Ensure we don't exceed the round end date
       const maxOffset = Math.min(
-        (roundEndDate.getTime() - weekendDate.getTime()) - (60 * 60 * 1000), // 1 hour before round end
-        3 * 24 * 60 * 60 * 1000 // Max 3 days (weekend only)
+        (roundEndDate.getTime() - matchDate.getTime()) - (60 * 60 * 1000), // 1 hour before round end
+        24 * 60 * 60 * 1000 // Max 1 day per match
       );
       
-      const matchOffset = Math.min(
-        startOffset + (matchIndex * spacingMs),
-        maxOffset
-      );
+      const finalOffset = Math.min(timeOffset, maxOffset);
       
-      return new Date(weekendDate.getTime() + matchOffset);
+      return new Date(matchDate.getTime() + finalOffset);
     }
   }
 
