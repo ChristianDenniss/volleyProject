@@ -94,12 +94,12 @@
 }
 
 .calendar-day.in-range {
-  background-color: var(--primary-blue);
-  color: white;
+  background-color: #dbeafe;
+  color: #1e40af;
   font-weight: 600;
 }
 
-.calendar-day.weekend {
+.calendar-day.weekday {
   color: #dc2626;
 }
 

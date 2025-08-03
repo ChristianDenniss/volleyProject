@@ -64,6 +64,11 @@ const CalendarModal: React.FC<CalendarModalProps> = ({
     return day === 0 || day === 5 || day === 6; // Sunday, Friday, Saturday
   };
 
+  const isWeekday = (date: Date) => {
+    const day = date.getDay();
+    return day >= 1 && day <= 4; // Monday, Tuesday, Wednesday, Thursday
+  };
+
   const handleDateClick = (date: Date) => {
     // Set the date range to start from this date
     const newRangeStart = new Date(date);
@@ -121,11 +126,11 @@ const CalendarModal: React.FC<CalendarModalProps> = ({
           {days.map((day, index) => (
             <div
               key={index}
-              className={`calendar-day ${!day ? 'empty' : ''} ${
-                day && isInCurrentRange(day) ? 'in-range' : ''
-              } ${day && isWeekend(day) ? 'weekend' : ''} ${
-                day && day.toDateString() === new Date().toDateString() ? 'today' : ''
-              }`}
+                             className={`calendar-day ${!day ? 'empty' : ''} ${
+                 day && isInCurrentRange(day) ? 'in-range' : ''
+               } ${day && isWeekday(day) ? 'weekday' : ''} ${
+                 day && day.toDateString() === new Date().toDateString() ? 'today' : ''
+               }`}
               onClick={() => day && handleDateClick(day)}
             >
               {day ? day.getDate() : ''}
