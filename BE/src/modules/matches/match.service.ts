@@ -180,12 +180,44 @@ export class MatchService {
         continue;
       }
 
-      // Get player names directly from Challonge match data
-      if (!challongeMatch.player1_name || !challongeMatch.player2_name) {
-        throw new Error(`Missing player names for match ${challongeMatch.id}. Player1: ${challongeMatch.player1_name}, Player2: ${challongeMatch.player2_name}`);
-      }
-      const player1Name = challongeMatch.player1_name;
-      const player2Name = challongeMatch.player2_name;
+             // Get player names from Challonge match data
+       let player1Name = challongeMatch.player1_name;
+       let player2Name = challongeMatch.player2_name;
+       
+       // Since we're getting IDs instead of names, always fetch participants
+       console.log(`Match ${challongeMatch.id} has player1_id: ${challongeMatch.player1_id}, player2_id: ${challongeMatch.player2_id}`);
+       
+       try {
+         console.log(`About to fetch participants for tournament ${tournamentId}...`);
+         const participants = await this.fetchChallongeParticipants(tournamentId);
+         console.log(`Fetched ${participants.length} participants`);
+         console.log(`First few participants:`, participants.slice(0, 3));
+         
+         // Find participant names by ID
+         const player1Participant = participants.find((p: any) => p.id === challongeMatch.player1_id);
+         const player2Participant = participants.find((p: any) => p.id === challongeMatch.player2_id);
+         
+         console.log(`Found player1 participant:`, player1Participant);
+         console.log(`Found player2 participant:`, player2Participant);
+         
+         if (player1Participant) {
+           player1Name = player1Participant.name || player1Participant.username || `Player ${challongeMatch.player1_id}`;
+         } else {
+           player1Name = `Player ${challongeMatch.player1_id}`;
+         }
+         if (player2Participant) {
+           player2Name = player2Participant.name || player2Participant.username || `Player ${challongeMatch.player2_id}`;
+         } else {
+           player2Name = `Player ${challongeMatch.player2_id}`;
+         }
+         
+         console.log(`Resolved names: ${player1Name} vs ${player2Name}`);
+       } catch (error) {
+         console.error(`Failed to fetch participant data: ${error}`);
+         // Fallback to using participant IDs as names
+         player1Name = `Player ${challongeMatch.player1_id}`;
+         player2Name = `Player ${challongeMatch.player2_id}`;
+       }
 
       // Parse set scores from Challonge format (e.g., "25-20,20-25,25-22")
       const setScores = this.parseChallongeSetScores(challongeMatch.scores_csv);
@@ -418,21 +450,59 @@ export class MatchService {
     const data = await response.json();
     console.log(`Fetched ${data.length} matches from Challonge API`);
     
-    // Transform Challonge API response to our format
-    return data.map((match: any) => {
-      console.log('Raw Challonge match data:', JSON.stringify(match, null, 2));
-      
-             // Return the raw match data with player names directly from Challonge API
+         // Transform Challonge API response to our format
+     return data.map((match: any) => {
+       console.log('Raw Challonge match data:', JSON.stringify(match, null, 2));
+       
+              // Return the raw match data with player names directly from Challonge API
+        return {
+          id: match.match.id,
+          number: match.match.match_number,
+          round: match.match.round,
+          state: match.match.state,
+          player1_name: match.match.player1_name,
+          player2_name: match.match.player2_name,
+          player1_id: match.match.player1_id,
+          player2_id: match.match.player2_id,
+          scores_csv: match.match.scores_csv || ''
+        };
+     });
+   }
+
+   private async fetchChallongeParticipants(tournamentId: string) {
+     // Get Challonge API key from environment
+     const apiKey = process.env.CHALLONGE_API_KEY;
+     if (!apiKey) {
+       throw new Error('CHALLONGE_API_KEY not found in environment. Please set the API key to use Challonge import.');
+     }
+
+     const apiUrl = `https://api.challonge.com/v1/tournaments/${tournamentId}/participants.json?api_key=${apiKey}`;
+     console.log(`Fetching participants from: ${apiUrl.replace(apiKey, '[API_KEY_HIDDEN]')}`);
+
+     const response = await fetch(apiUrl, {
+       method: 'GET',
+       headers: {
+         'Content-Type': 'application/json'
+       }
+     });
+
+     if (!response.ok) {
+       const errorText = await response.text();
+       console.error(`Challonge API error response: ${errorText}`);
+       throw new Error(`Challonge API error: ${response.status} ${response.statusText} - Tournament ID: ${tournamentId}`);
+     }
+
+     const data = await response.json();
+     console.log(`Fetched ${data.length} participants from Challonge API`);
+     
+     // Transform Challonge API response to our format
+     return data.map((participant: any) => {
        return {
-         id: match.match.id,
-         number: match.match.match_number,
-         round: match.match.round,
-         state: match.match.state,
-         player1_name: match.match.player1_name,
-         player2_name: match.match.player2_name,
-         scores_csv: match.match.scores_csv || ''
+         id: participant.participant.id,
+         name: participant.participant.name,
+         username: participant.participant.username
        };
-    });
-  }
+     });
+   }
 
 } 
