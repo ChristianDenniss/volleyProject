@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useMatches, useSeasons } from '../hooks/allFetch';
 import SearchBar from './Searchbar';
+import CalendarModal from './CalendarModal';
 import '../styles/Schedules.css';
 
 const Schedules: React.FC = () => {
@@ -11,6 +12,7 @@ const Schedules: React.FC = () => {
   const [currentDateRange, setCurrentDateRange] = useState<Date>(new Date());
   const [showLocalTime, setShowLocalTime] = useState<boolean>(false);
   const [collapsedDates, setCollapsedDates] = useState<Set<string>>(new Set());
+  const [isCalendarOpen, setIsCalendarOpen] = useState<boolean>(false);
 
   // Don't auto-select any season - let user choose or show all
   // useEffect(() => {
@@ -193,9 +195,9 @@ const Schedules: React.FC = () => {
           }}>
             ‹
           </button>
-          <span className="date-range">
-            {`${startDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short' })} - ${endDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}`}
-          </span>
+                  <span className="date-range">
+          {`${startDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })} - ${endDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}`}
+        </span>
           <button className="nav-arrow" onClick={() => {
             const newDate = new Date(currentDateRange);
             newDate.setDate(newDate.getDate() + 14); // Move forward 2 weeks
@@ -203,7 +205,7 @@ const Schedules: React.FC = () => {
           }}>
             ›
           </button>
-                     <button className="calendar-btn">
+                     <button className="calendar-btn" onClick={() => setIsCalendarOpen(true)}>
              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                <path d="M8 2V6M16 2V6M3 10H21M5 4H19C20.1046 4 21 4.89543 21 6V20C21 21.1046 20.1046 22 19 22H5C3.89543 22 3 21.1046 3 20V6C3 4.89543 3.89543 4 5 4Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
              </svg>
@@ -468,6 +470,14 @@ const Schedules: React.FC = () => {
            </p>
         </div>
       </div>
+
+      {/* Calendar Modal */}
+      <CalendarModal
+        isOpen={isCalendarOpen}
+        onClose={() => setIsCalendarOpen(false)}
+        currentDateRange={currentDateRange}
+        onDateRangeChange={setCurrentDateRange}
+      />
     </>
   );
 };
