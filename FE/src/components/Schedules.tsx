@@ -127,10 +127,24 @@ const Schedules: React.FC = () => {
   };
 
   const getWinningTeam = (match: any) => {
-    if (match.status !== 'completed' || !match.team1Score || !match.team2Score) {
+    if (match.status !== 'completed') {
       return null;
     }
-    return match.team1Score > match.team2Score ? 0 : 1;
+    
+    // Handle cases where one team has a valid score and the other is null (e.g., 2-0)
+    if (match.team1Score !== null && match.team1Score !== undefined && (match.team2Score === null || match.team2Score === undefined)) {
+      return 0; // Team 1 wins
+    }
+    if (match.team2Score !== null && match.team2Score !== undefined && (match.team1Score === null || match.team1Score === undefined)) {
+      return 1; // Team 2 wins
+    }
+    
+    // Both scores exist, compare them
+    if (match.team1Score !== null && match.team1Score !== undefined && match.team2Score !== null && match.team2Score !== undefined) {
+      return match.team1Score > match.team2Score ? 0 : 1;
+    }
+    
+    return null;
   };
 
   const getPrimaryTag = (match: any) => {
@@ -360,13 +374,8 @@ const Schedules: React.FC = () => {
                           <div className="match-teams">
                             {/* Team 1 */}
                             <div className={`team-row ${winningTeam === 0 ? 'winning-team' : ''}`}>
-                              <div className="team-info">
+                                                            <div className="team-info">
                                 <span className="team-name">{match.team1Name || 'TBD'}</span>
-                                                                 {winningTeam === 0 && match.status === 'completed' && (
-                                   <span className="winner-badge">
-                                     <i className="fas fa-star"></i>
-                                   </span>
-                                 )}
                               </div>
                               <div className="team-score">
                                 {match.status === 'completed' && (
@@ -402,11 +411,6 @@ const Schedules: React.FC = () => {
                             <div className={`team-row ${winningTeam === 1 ? 'winning-team' : ''}`}>
                               <div className="team-info">
                                 <span className="team-name">{match.team2Name || 'TBD'}</span>
-                                                                 {winningTeam === 1 && match.status === 'completed' && (
-                                   <span className="winner-badge">
-                                     <i className="fas fa-star"></i>
-                                   </span>
-                                 )}
                               </div>
                               <div className="team-score">
                                 {match.status === 'completed' && (

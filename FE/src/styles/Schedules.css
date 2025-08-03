@@ -377,27 +377,7 @@
   background-color: #fef2f2;
 }
 
-.winner-badge {
-  display: inline-flex;
-  align-items: center;
-  margin-left: 4px;
-  animation: pulse 2s infinite;
-}
 
-.winner-badge svg {
-  width: 16px;
-  height: 16px;
-  color: #22c55e;
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
-}
 
 .overall-score {
   font-size: 1.3rem;
