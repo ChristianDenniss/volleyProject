@@ -340,9 +340,11 @@ const Schedules: React.FC = () => {
                             <div className={`team-row ${winningTeam === 0 ? 'winning-team' : ''}`}>
                               <div className="team-info">
                                 <span className="team-name">{match.team1Name || 'TBD'}</span>
-                                {winningTeam === 0 && match.status === 'completed' && (
-                                  <span className="winner-badge">🏆</span>
-                                )}
+                                                                 {winningTeam === 0 && match.status === 'completed' && (
+                                   <span className="winner-badge">
+                                     <i className="fas fa-star"></i>
+                                   </span>
+                                 )}
                               </div>
                               <div className="team-score">
                                 {match.status === 'completed' && (
@@ -378,9 +380,11 @@ const Schedules: React.FC = () => {
                             <div className={`team-row ${winningTeam === 1 ? 'winning-team' : ''}`}>
                               <div className="team-info">
                                 <span className="team-name">{match.team2Name || 'TBD'}</span>
-                                {winningTeam === 1 && match.status === 'completed' && (
-                                  <span className="winner-badge">🏆</span>
-                                )}
+                                                                 {winningTeam === 1 && match.status === 'completed' && (
+                                   <span className="winner-badge">
+                                     <i className="fas fa-star"></i>
+                                   </span>
+                                 )}
                               </div>
                               <div className="team-score">
                                 {match.status === 'completed' && (
