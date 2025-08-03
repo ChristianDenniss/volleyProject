@@ -2,7 +2,7 @@
 
 import { useCreate } from "./useCreate";
 import { Game,Player,Stats,Team,Season,Article,CreateGameInput,Award, CreateAwardsInput,CreatePlayerInput,
-  CreateStatsInput,CreateTeamInput,CreateSeasonInput,CreateArticleInput, CSVUploadPayload, CSVUploadResult } from "../types/interfaces";
+  CreateStatsInput,CreateTeamInput,CreateSeasonInput,CreateArticleInput, CSVUploadPayload, CSVUploadResult, Match, CreateMatchInput } from "../types/interfaces";
 import { useState } from "react";
 import { authFetch } from "./authFetch";
 import { useAuth } from "../context/authContext";
@@ -245,6 +245,20 @@ export const useAddStatsToExistingGame = (showErrorModal?: (err: any) => void) =
   };
 
   return { addStatsToGame, loading, error };
+};
+
+/**
+ * useCreateMatches
+ * – Enforces CreateMatchInput
+ * – Returns createMatch(payload) → Promise<Match | null>
+ */
+export const useCreateMatches = () => {
+  const { createItem, loading, error } = useCreate<Match, CreateMatchInput>("matches");
+  return {
+    createMatch: createItem,
+    loading,
+    error,
+  };
 };
 
 /**

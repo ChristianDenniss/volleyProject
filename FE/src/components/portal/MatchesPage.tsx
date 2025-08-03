@@ -4,13 +4,11 @@ import React, { useState, useEffect } from "react";
 import { useMatches } from "../../hooks/allFetch";
 import { useSeasons } from "../../hooks/allFetch";
 import { useAuth } from "../../context/authContext";
-import type { CreateMatchInput as ImportedCreateMatchInput } from "../../types/interfaces";
-
-// Extend the imported CreateMatchInput to include our new fields
-type CreateMatchInput = ImportedCreateMatchInput & {
-  phase?: 'qualifiers' | 'playoffs';
-  region?: 'na' | 'eu' | 'as' | 'sa';
-};
+import { useMatchMutations } from "../../hooks/allPatch";
+import { useCreateMatches } from "../../hooks/allCreate";
+import { useDeleteMatches } from "../../hooks/allDelete";
+import type { CreateMatchInput } from "../../types/interfaces";
+import type { Match } from "../../types/interfaces";
 import SearchBar from "../Searchbar";
 import Pagination from "../Pagination";
 import ChallongeImport from "../ChallongeImport";
@@ -19,36 +17,10 @@ import "../../styles/PlayersPage.css";
 import "../../styles/PortalPlayersPage.css";
 import "../../styles/MatchesPage.css";
 
-// Define Match interface locally since it's not exported from interfaces
-interface Match {
-  id: number;
-  matchNumber: string;
-  status: 'scheduled' | 'completed';
-  round: string;
-  phase: 'qualifiers' | 'playoffs';
-  region: 'na' | 'eu' | 'as' | 'sa';
-  date: Date;
-  team1Score?: number;
-  team2Score?: number;
-  set1Score?: string | null;
-  set2Score?: string | null;
-  set3Score?: string | null;
-  set4Score?: string | null;
-  set5Score?: string | null;
-  challongeMatchId?: string;
-  challongeTournamentId?: string;
-  challongeRound?: number;
-  tags?: string[]; // Array of tags like ["RVL", "Invitational", "D-League"]
-  season: any;
-  teams?: any[];
-}
-
 type EditField =
   | "matchNumber"
   | "status"
   | "round"
-  | "phase"
-  | "region"
   | "date"
   | "team1Score"
   | "team2Score"
@@ -68,6 +40,9 @@ const MatchesPage: React.FC = () => {
   const { data: matches, loading, error } = useMatches();
   const { data: seasons } = useSeasons();
   const { user } = useAuth();
+  const { patchMatch } = useMatchMutations();
+  const { createMatch } = useCreateMatches();
+  const { deleteItem: deleteMatch } = useDeleteMatches();
 
   const [localMatches, setLocalMatches] = useState<Match[]>([]);
   const [editing, setEditing] = useState<EditingState | null>(null);
@@ -86,12 +61,10 @@ const MatchesPage: React.FC = () => {
   const [newMatchNumber, setNewMatchNumber] = useState<string>("");
   const [newStatus, setNewStatus] = useState<string>("scheduled");
   const [newRound, setNewRound] = useState<string>("");
-  const [newPhase, setNewPhase] = useState<string>("qualifiers");
-  const [newRegion, setNewRegion] = useState<string>("na");
+
   const [newDate, setNewDate] = useState<string>("");
   const [newTeam1Score, setNewTeam1Score] = useState<number | undefined>(undefined);
   const [newTeam2Score, setNewTeam2Score] = useState<number | undefined>(undefined);
-  const [newSetScores, setNewSetScores] = useState<string[]>(["", "", "", "", ""]);
   const [newSeasonId, setNewSeasonId] = useState<number>(0);
   const [newTeam1Name, setNewTeam1Name] = useState<string>("");
   const [newTeam2Name, setNewTeam2Name] = useState<string>("");
@@ -176,20 +149,7 @@ const MatchesPage: React.FC = () => {
         updateData[field] = value === "" ? undefined : parseInt(value);
       }
 
-      const response = await fetch(`/api/matches/${id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify(updateData),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to update match");
-      }
-
-      const updatedMatch = await response.json();
+      const updatedMatch = await patchMatch(id, updateData);
       setLocalMatches(prev =>
         prev.map(m => (m.id === id ? updatedMatch : m))
       );
@@ -205,17 +165,7 @@ const MatchesPage: React.FC = () => {
     if (!confirm("Are you sure you want to delete this match?")) return;
 
     try {
-      const response = await fetch(`/api/matches/${id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to delete match");
-      }
-
+      await deleteMatch(id.toString());
       setLocalMatches(prev => prev.filter(m => m.id !== id));
     } catch (error) {
       console.error("Error deleting match:", error);
@@ -230,12 +180,10 @@ const MatchesPage: React.FC = () => {
     setNewMatchNumber("");
     setNewStatus("scheduled");
     setNewRound("");
-    setNewPhase("qualifiers");
-    setNewRegion("na");
+
     setNewDate("");
     setNewTeam1Score(undefined);
     setNewTeam2Score(undefined);
-    setNewSetScores(["", "", "", "", ""]);
     setNewSeasonId(0);
     setNewTeam1Name("");
     setNewTeam2Name("");
@@ -270,8 +218,6 @@ const MatchesPage: React.FC = () => {
         matchNumber: newMatchNumber,
         status: newStatus as "scheduled" | "completed",
         round: newRound,
-        phase: newPhase as "qualifiers" | "playoffs",
-        region: newRegion as "na" | "eu" | "as" | "sa",
         scheduledDate: newDate,
         team1Score: newTeam1Score,
         team2Score: newTeam2Score,
@@ -281,36 +227,19 @@ const MatchesPage: React.FC = () => {
         tags: newTags ? newTags.split(',').map(tag => tag.trim()) : undefined
       };
 
-      const response = await fetch("/api/matches", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify(matchData),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to create match");
+      const newMatch = await createMatch(matchData);
+      if (newMatch) {
+        setLocalMatches(prev => [newMatch, ...prev]);
+        closeModal();
+        alert("Match created successfully!");
       }
-
-      const newMatch = await response.json();
-      setLocalMatches(prev => [newMatch, ...prev]);
-      closeModal();
-      alert("Match created successfully!");
     } catch (error) {
       console.error("Error creating match:", error);
       setFormError(error instanceof Error ? error.message : "Failed to create match");
     }
   };
 
-  // Handle set score change
-  const handleSetScoreChange = (index: number, value: string) => {
-    const newScores = [...newSetScores];
-    newScores[index] = value;
-    setNewSetScores(newScores);
-  };
+
 
   // Helper function to convert field values to strings for editing
   const toStr = (field: EditField, match: Match) => {
@@ -418,17 +347,15 @@ const MatchesPage: React.FC = () => {
         <table className="data-table">
           <thead>
             <tr>
-              <th>Match Number</th>
-              <th>Status</th>
-              <th>Round</th>
-              <th>Phase</th>
-              <th>Region</th>
-              <th>Date</th>
-              <th>Teams</th>
-              <th>Score</th>
-              <th>Set Scores</th>
-              <th>Tags</th>
-              <th>Actions</th>
+                               <th>Match Number</th>
+                 <th>Status</th>
+                 <th>Round</th>
+                 <th>Date</th>
+                 <th>Teams</th>
+                 <th>Score</th>
+                 <th>Set Scores</th>
+                 <th>Tags</th>
+                 <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -532,67 +459,7 @@ const MatchesPage: React.FC = () => {
                   )}
                 </td>
 
-                {/* Phase */}
-                <td
-                  style={{ cursor: "pointer" }}
-                  onClick={() =>
-                    setEditing({
-                      id: match.id,
-                      field: "phase",
-                      value: toStr("phase", match),
-                    })
-                  }
-                >
-                  {editing?.id === match.id && editing?.field === "phase" ? (
-                    <select
-                      value={editing.value}
-                      onChange={(e) =>
-                        setEditing({ ...editing, value: e.target.value })
-                      }
-                      onBlur={commitEdit}
-                      autoFocus
-                    >
-                      <option value="qualifiers">qualifiers</option>
-                      <option value="playoffs">playoffs</option>
-                    </select>
-                  ) : (
-                    <span className={`phase-badge ${match.phase}`}>
-                      {match.phase}
-                    </span>
-                  )}
-                </td>
-
-                {/* Region */}
-                <td
-                  style={{ cursor: "pointer" }}
-                  onClick={() =>
-                    setEditing({
-                      id: match.id,
-                      field: "region",
-                      value: toStr("region", match),
-                    })
-                  }
-                >
-                  {editing?.id === match.id && editing?.field === "region" ? (
-                    <select
-                      value={editing.value}
-                      onChange={(e) =>
-                        setEditing({ ...editing, value: e.target.value })
-                      }
-                      onBlur={commitEdit}
-                      autoFocus
-                    >
-                      <option value="na">NA</option>
-                      <option value="eu">EU</option>
-                      <option value="as">AS</option>
-                      <option value="sa">SA</option>
-                    </select>
-                  ) : (
-                    <span className={`region-badge ${match.region}`}>
-                      {match.region.toUpperCase()}
-                    </span>
-                  )}
-                </td>
+                
 
                 {/* Date */}
                 <td
@@ -628,22 +495,14 @@ const MatchesPage: React.FC = () => {
                   )}
                 </td>
 
-                {/* Teams */}
-                <td>
-                  {match.teams?.map((team, index) => (
-                    <div key={team.id} className="team-info">
-                      {team.logoUrl && (
-                        <img 
-                          src={team.logoUrl} 
-                          alt={`${team.name} logo`} 
-                          className="team-logo-small"
-                        />
-                      )}
-                      <span>{team.name}</span>
-                      {index === 0 && <span className="vs-separator">vs</span>}
-                    </div>
-                  ))}
-                </td>
+                                 {/* Teams */}
+                 <td>
+                   <div className="team-info">
+                     <span>{match.team1Name || 'TBD'}</span>
+                     <span className="vs-separator">vs</span>
+                     <span>{match.team2Name || 'TBD'}</span>
+                   </div>
+                 </td>
 
                 {/* Score */}
                 <td>
@@ -740,59 +599,29 @@ const MatchesPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Round and Phase Row */}
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="round">Round *</label>
-                  <input
-                    type="text"
-                    id="round"
-                    value={newRound}
-                    onChange={(e) => setNewRound(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="phase">Phase *</label>
-                  <select
-                    id="phase"
-                    value={newPhase}
-                    onChange={(e) => setNewPhase(e.target.value)}
-                    required
-                  >
-                    <option value="qualifiers">Qualifiers</option>
-                    <option value="playoffs">Playoffs</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Region and Date Row */}
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="region">Region *</label>
-                  <select
-                    id="region"
-                    value={newRegion}
-                    onChange={(e) => setNewRegion(e.target.value)}
-                    required
-                  >
-                    <option value="na">NA</option>
-                    <option value="eu">EU</option>
-                    <option value="as">AS</option>
-                    <option value="sa">SA</option>
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label htmlFor="date">Date *</label>
-                  <input
-                    type="datetime-local"
-                    id="date"
-                    value={newDate}
-                    onChange={(e) => setNewDate(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
+                             {/* Round and Date Row */}
+               <div className="form-row">
+                 <div className="form-group">
+                   <label htmlFor="round">Round *</label>
+                   <input
+                     type="text"
+                     id="round"
+                     value={newRound}
+                     onChange={(e) => setNewRound(e.target.value)}
+                     required
+                   />
+                 </div>
+                 <div className="form-group">
+                   <label htmlFor="date">Date *</label>
+                   <input
+                     type="datetime-local"
+                     id="date"
+                     value={newDate}
+                     onChange={(e) => setNewDate(e.target.value)}
+                     required
+                   />
+                 </div>
+               </div>
 
               {/* Season and Team 1 Score Row */}
               <div className="form-row">
@@ -874,21 +703,7 @@ const MatchesPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Set Scores Section */}
-              <div className="form-group">
-                <label>Set Scores (optional)</label>
-                <div className="set-scores-inputs">
-                  {newSetScores.map((score, index) => (
-                    <input
-                      key={index}
-                      type="text"
-                      placeholder={`Set ${index + 1} (e.g., 25-20)`}
-                      value={score}
-                      onChange={(e) => handleSetScoreChange(index, e.target.value)}
-                    />
-                  ))}
-                </div>
-              </div>
+              
 
               {formError && (
                 <div className="error-message">

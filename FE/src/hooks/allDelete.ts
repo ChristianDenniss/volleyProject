@@ -56,5 +56,14 @@ export const useDeleteUsers = () => {
   };
 
   export const useDeleteAwards = () => {
-    return useDelete("awards");
-  };
+  return useDelete("awards");
+};
+
+/**
+ * Hook to delete a match by ID:
+ *   const { deleteItem, loading, error } = useDeleteMatches();
+ *   await deleteItem("123");
+ */
+export const useDeleteMatches = () => {
+  return useDelete("matches");
+};
