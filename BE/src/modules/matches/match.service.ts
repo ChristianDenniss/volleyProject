@@ -195,7 +195,8 @@ export class MatchService {
         data.roundStartDate,
         data.roundEndDate,
         matchCounter,
-        data.matchSpacingMinutes
+        data.matchSpacingMinutes,
+        challongeMatch.round
       );
 
       // Create match
@@ -236,27 +237,47 @@ export class MatchService {
     roundStartDate: Date,
     roundEndDate: Date,
     matchIndex: number,
-    spacingMinutes: number
+    spacingMinutes: number,
+    roundNumber: number
   ): Date {
     if (isCompleted) {
       // For completed matches, use the round start date (they happened during the round)
       return new Date(roundStartDate);
     } else {
-      // For scheduled matches, space them out within the round time window
-      const totalDuration = roundEndDate.getTime() - roundStartDate.getTime();
-      const spacingMs = spacingMinutes * 60 * 1000;
+      // For scheduled matches, ensure different rounds are in different weeks
+      const baseDate = new Date(roundStartDate);
       
-      // Calculate a reasonable time within the window
-      // Start matches 30 minutes after round start, space them out, but don't go too close to end
-      const startOffset = 30 * 60 * 1000; // 30 minutes after round start
-      const maxOffset = totalDuration - (60 * 60 * 1000); // 1 hour before round end
+      // Calculate week offset based on round number
+      // Round 1: Week 0, Round 2: Week 1, Round 3: Week 2, etc.
+      const weekOffset = (roundNumber - 1) * 7; // 7 days per week
+      const adjustedDate = new Date(baseDate);
+      adjustedDate.setDate(adjustedDate.getDate() + weekOffset);
+      
+      // Find the next weekend day (Friday = 5, Saturday = 6, Sunday = 0)
+      const weekendDays = [5, 6, 0]; // Friday, Saturday, Sunday
+      let weekendDate = new Date(adjustedDate);
+      
+      // Find the next available weekend day
+      while (!weekendDays.includes(weekendDate.getDay())) {
+        weekendDate.setDate(weekendDate.getDate() + 1);
+      }
+      
+      // Calculate match spacing within the weekend
+      const spacingMs = spacingMinutes * 60 * 1000;
+      const startOffset = 30 * 60 * 1000; // 30 minutes after start
+      
+      // Ensure we don't exceed the round end date
+      const maxOffset = Math.min(
+        (roundEndDate.getTime() - weekendDate.getTime()) - (60 * 60 * 1000), // 1 hour before round end
+        3 * 24 * 60 * 60 * 1000 // Max 3 days (weekend only)
+      );
       
       const matchOffset = Math.min(
         startOffset + (matchIndex * spacingMs),
         maxOffset
       );
       
-      return new Date(roundStartDate.getTime() + matchOffset);
+      return new Date(weekendDate.getTime() + matchOffset);
     }
   }
 
