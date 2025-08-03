@@ -42,7 +42,10 @@ const ChallongeImport: React.FC<ChallongeImportProps> = ({ onImportSuccess, onCa
         throw new Error('Round start date must be before round end date');
       }
 
-      const response = await fetch('/api/matches/import-challonge', {
+      // Use the same backend URL pattern as other hooks
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+      
+      const response = await fetch(`${backendUrl}/api/matches/import-challonge`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
