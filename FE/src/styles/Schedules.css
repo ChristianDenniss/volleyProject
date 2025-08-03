@@ -305,7 +305,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 2px 8px;
+  padding: 2px 1.5rem;
   border-bottom: 1px solid #e5e7eb;
   transition: all 0.2s ease;
 }
@@ -400,9 +400,10 @@
 }
 
 .overall-score {
-  font-size: 1.2rem;
+  font-size: 1.3rem;
   font-weight: 700;
   color: #374151;
+  padding-right: 1.5rem;
 }
 
 .winning-score {
@@ -415,7 +416,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: 6px;
+  padding: 6px 1.5rem 0 1.5rem;
   border-top: 1px solid #e1e5e9;
 }
 

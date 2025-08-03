@@ -182,7 +182,7 @@
 .score {
   font-weight: 600;
   color: #1f2937;
-  padding-right: 1.5rem;
+  padding-right: 12px;
   font-size: 1.1rem;
 }
 
@@ -307,7 +307,7 @@
 
 /* Actions column padding */
 .data-table td:last-child {
-  padding-right: 1.5rem;
+  padding-right: 12px;
 }
 
 /* Stay Updated Section */
