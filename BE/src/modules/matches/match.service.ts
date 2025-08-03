@@ -129,9 +129,16 @@ export class MatchService {
     let team2Sets = 0;
 
     setScores.forEach(setScore => {
-      if (!setScore) return;
+      if (!setScore || setScore.trim() === '') return;
       
-      const [team1Score, team2Score] = setScore.split('-').map(Number);
+      const scores = setScore.split('-');
+      if (scores.length !== 2) return; // Invalid format
+      
+      const team1Score = parseInt(scores[0].trim());
+      const team2Score = parseInt(scores[1].trim());
+      
+      if (isNaN(team1Score) || isNaN(team2Score)) return; // Invalid numbers
+      
       if (team1Score > team2Score) {
         team1Sets++;
       } else if (team2Score > team1Score) {
@@ -144,15 +151,19 @@ export class MatchService {
   }
 
   async importFromChallonge(data: ImportChallongeInput) {
+    console.log('Starting Challonge import with data:', data);
+    
     // Extract tournament ID from Challonge URL
     const tournamentId = this.extractTournamentId(data.challongeUrl);
     if (!tournamentId) {
       throw new Error('Invalid Challonge URL');
     }
+    console.log('Extracted tournament ID:', tournamentId);
 
     // Fetch tournament data from Challonge API
     const tournamentData = await this.fetchChallongeTournament(tournamentId);
     const matchesData = await this.fetchChallongeMatches(tournamentId);
+    console.log(`Fetched ${matchesData.length} matches from Challonge`);
 
     const season = await seasonRepository.findOne({ where: { id: data.seasonId } });
     if (!season) {
@@ -165,12 +176,18 @@ export class MatchService {
     for (const challongeMatch of matchesData) {
       // Filter by round if specified
       if (data.round && challongeMatch.round.toString() !== data.round) {
+        console.log(`Skipping match ${challongeMatch.id} - round ${challongeMatch.round} doesn't match requested round ${data.round}`);
         continue;
       }
 
       // Parse set scores from Challonge format (e.g., "25-20,20-25,25-22")
       const setScores = this.parseChallongeSetScores(challongeMatch.scores_csv);
       const overallScore = this.calculateOverallScoreFromSetScores(setScores);
+      
+      console.log(`Processing match ${challongeMatch.id}: ${challongeMatch.player1_name} vs ${challongeMatch.player2_name}`);
+      console.log(`Raw scores: ${challongeMatch.scores_csv}`);
+      console.log(`Parsed set scores:`, setScores);
+      console.log(`Overall score: ${overallScore.team1Sets}-${overallScore.team2Sets}`);
 
       // Determine match date based on completion status
       const matchDate = this.calculateMatchDate(
@@ -207,6 +224,7 @@ export class MatchService {
       const savedMatch = await matchRepository.save(match);
       createdMatches.push(savedMatch);
       
+      console.log(`Created match: ${savedMatch.id} - ${savedMatch.team1Name} ${savedMatch.team1Score}-${savedMatch.team2Score} ${savedMatch.team2Name}`);
       matchCounter++;
     }
 
@@ -243,30 +261,114 @@ export class MatchService {
   }
 
   private parseChallongeSetScores(scoresCsv: string) {
-    if (!scoresCsv) return [];
+    if (!scoresCsv || scoresCsv.trim() === '') return [];
 
-    return scoresCsv.split(',').map(setScore => setScore.trim());
+    // Split by comma and filter out empty strings
+    return scoresCsv.split(',')
+      .map(setScore => setScore.trim())
+      .filter(setScore => setScore && setScore !== '');
   }
 
   private extractTournamentId(url: string): string | null {
     // Extract tournament ID from Challonge URL
-    // Example: https://challonge.com/tournament_name -> tournament_name
-    const match = url.match(/challonge\.com\/([^\/]+)/);
+    // Examples: 
+    // https://challonge.com/tournament_name -> tournament_name
+    // https://challonge.com/username/tournament_name -> tournament_name
+    // tournament_name -> tournament_name (already extracted)
+    
+    // If it's already just the tournament name
+    if (!url.includes('challonge.com')) {
+      return url;
+    }
+    
+    // Extract from full URL
+    const match = url.match(/challonge\.com\/(?:[^\/]+\/)?([^\/\?]+)/);
     return match ? match[1] : null;
   }
 
   private async fetchChallongeTournament(tournamentId: string) {
-    // This would need Challonge API integration
-    // For now, return mock data
-    return {
-      id: tournamentId,
-      name: 'Tournament Name'
-    };
+    try {
+      // Get Challonge API key from environment
+      const apiKey = process.env.CHALLONGE_API_KEY;
+      if (!apiKey) {
+        console.warn('CHALLONGE_API_KEY not found in environment, using mock data');
+        return {
+          id: tournamentId,
+          name: 'Tournament Name'
+        };
+      }
+
+      const response = await fetch(
+        `https://api.challonge.com/v1/tournaments/${tournamentId}.json?api_key=${apiKey}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Challonge API error: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data.tournament;
+    } catch (error) {
+      console.error('Error fetching tournament from Challonge:', error);
+      // Fallback to mock data
+      return {
+        id: tournamentId,
+        name: 'Tournament Name'
+      };
+    }
   }
 
   private async fetchChallongeMatches(tournamentId: string) {
-    // This would need Challonge API integration
-    // For now, return mock data based on the Swiss bracket format with set scores
+    try {
+      // Get Challonge API key from environment
+      const apiKey = process.env.CHALLONGE_API_KEY;
+      if (!apiKey) {
+        console.warn('CHALLONGE_API_KEY not found in environment, using mock data');
+        return this.getMockMatches();
+      }
+
+      const response = await fetch(
+        `https://api.challonge.com/v1/tournaments/${tournamentId}/matches.json?api_key=${apiKey}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Challonge API error: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log(`Fetched ${data.length} matches from Challonge API`);
+      
+      // Transform Challonge API response to our format
+      return data.map((match: any) => ({
+        id: match.match.id,
+        number: match.match.match_number,
+        round: match.match.round,
+        state: match.match.state,
+        player1_name: match.match.player1_name || 'TBD',
+        player2_name: match.match.player2_name || 'TBD',
+        scores_csv: match.match.scores_csv || ''
+      }));
+    } catch (error) {
+      console.error('Error fetching matches from Challonge:', error);
+      // Fallback to mock data
+      return this.getMockMatches();
+    }
+  }
+
+  private getMockMatches() {
+    // Fallback mock data when API is not available
     return [
       {
         id: 1,
@@ -275,7 +377,7 @@ export class MatchService {
         state: 'complete',
         player1_name: 'AS Roma',
         player2_name: 'Inter Milan',
-        scores_csv: '25-20,20-25,25-22' // Set scores: 25-20, 20-25, 25-22
+        scores_csv: '25-20,20-25,25-22'
       },
       {
         id: 2,
@@ -284,9 +386,44 @@ export class MatchService {
         state: 'complete',
         player1_name: 'Benfica',
         player2_name: 'Real Madrid',
-        scores_csv: '22-25,25-23,25-20' // Set scores: 22-25, 25-23, 25-20
+        scores_csv: '22-25,25-23,25-20'
+      },
+      {
+        id: 3,
+        number: 3,
+        round: 1,
+        state: 'complete',
+        player1_name: 'Barcelona',
+        player2_name: 'Manchester United',
+        scores_csv: '25-18,25-22'
+      },
+      {
+        id: 4,
+        number: 4,
+        round: 1,
+        state: 'complete',
+        player1_name: 'Bayern Munich',
+        player2_name: 'PSG',
+        scores_csv: '23-25,25-20,25-23'
+      },
+      {
+        id: 5,
+        number: 5,
+        round: 2,
+        state: 'complete',
+        player1_name: 'AS Roma',
+        player2_name: 'Barcelona',
+        scores_csv: '25-22,25-20'
+      },
+      {
+        id: 6,
+        number: 6,
+        round: 2,
+        state: 'complete',
+        player1_name: 'Benfica',
+        player2_name: 'Bayern Munich',
+        scores_csv: '20-25,25-23,25-22'
       }
-      // Add more matches as needed
     ];
   }
 

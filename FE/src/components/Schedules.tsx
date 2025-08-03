@@ -11,6 +11,7 @@ const Schedules: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [showLocalTime, setShowLocalTime] = useState<boolean>(false);
+  const [collapsedDates, setCollapsedDates] = useState<Set<string>>(new Set());
 
   // Set default to most recent season when seasons load
   useEffect(() => {
@@ -85,6 +86,18 @@ const Schedules: React.FC = () => {
   const handleSearch = (query: string) => {
     setSearchQuery(query);
     setCurrentPage(1);
+  };
+
+  const toggleDateSection = (dateKey: string) => {
+    setCollapsedDates(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(dateKey)) {
+        newSet.delete(dateKey);
+      } else {
+        newSet.add(dateKey);
+      }
+      return newSet;
+    });
   };
 
 
@@ -306,13 +319,16 @@ const Schedules: React.FC = () => {
             paginatedDates.map(dateKey => {
               const matches = matchesByDate[dateKey];
                
-              return (
-                <div key={dateKey} className="date-section">
-                  <div className="date-header">
-                    <h2>{formatDate(dateKey)}</h2>
-                  </div>
-                   
-                  <div className="matches-container">
+                             return (
+                 <div key={dateKey} className="date-section">
+                   <div className="date-header" onClick={() => toggleDateSection(dateKey)}>
+                     <h2>{formatDate(dateKey)}</h2>
+                     <span className={`collapse-arrow ${collapsedDates.has(dateKey) ? 'collapsed' : ''}`}>
+                       ▼
+                     </span>
+                   </div>
+                    
+                   <div className={`matches-container ${collapsedDates.has(dateKey) ? 'collapsed' : ''}`}>
                     {matches.map(match => {
                       const winningTeam = getWinningTeam(match);
                        
@@ -322,12 +338,12 @@ const Schedules: React.FC = () => {
                             <div className={`gender-tag tag-${getTagColor(getPrimaryTag(match))}`}>
                               {getPrimaryTag(match)}
                             </div>
-                            <div className="match-info">
-                              <span className="match-type">
-                                {match.status === 'completed' ? 'Final' : 'Scheduled'} {match.round} #{match.id}
-                              </span>
-                              <span className="venue">TBD Venue</span>
-                            </div>
+                                                         <div className="match-info">
+                               <span className="match-type">
+                                 {match.status === 'completed' ? 'Scheduled' : 'Scheduled'} {match.round} Match #{match.id}
+                               </span>
+                               <span className="venue">TBD Venue</span>
+                             </div>
                             <div className="match-status">
                               <span className={`status-badge ${match.status}`}>
                                 {match.status}
@@ -363,7 +379,7 @@ const Schedules: React.FC = () => {
                                             return (
                                               <span 
                                                 key={setIndex} 
-                                                className={`set-score ${isWinningSet ? 'winning-set' : ''}`}
+                                                className={`set-score ${isWinningSet ? 'winning-set' : 'losing-set'}`}
                                               >
                                                 {team1Score}
                                               </span>
@@ -403,7 +419,7 @@ const Schedules: React.FC = () => {
                                             return (
                                               <span 
                                                 key={setIndex} 
-                                                className={`set-score ${isWinningSet ? 'winning-set' : ''}`}
+                                                className={`set-score ${isWinningSet ? 'winning-set' : 'losing-set'}`}
                                               >
                                                 {team2Score}
                                               </span>
@@ -424,19 +440,18 @@ const Schedules: React.FC = () => {
                                 {showLocalTime ? formatTime(match.date.toString()) : 'TBD'}
                               </span>
                             </div>
-                            <div className="match-actions">
-                              <button className="action-button watch">WATCH</button>
-                              <button className="action-button tickets">TICKETS</button>
-                              <button className="action-button shop">SHOP</button>
-                            </div>
+                                                         <div className="match-actions">
+                               <button className="action-button watch">WATCH</button>
+                               <button className="action-button shop">SHOP</button>
+                             </div>
                           </div>
 
-                          <div className="ranking-section">
-                            <div className="ranking-header">
-                              <span>WORLD RANKING POINTS</span>
-                              <span className="dropdown-arrow">▼</span>
-                            </div>
-                          </div>
+                                                     <div className="ranking-section">
+                             <div className="ranking-header">
+                               <span>LEGO VOLLEYBALL RANKING POINTS (LVR)</span>
+                               <span className="dropdown-arrow">▼</span>
+                             </div>
+                           </div>
                         </div>
                       );
                     })}

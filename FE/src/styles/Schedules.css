@@ -193,6 +193,15 @@
   color: white;
   padding: 15px 20px;
   text-align: center;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background-color 0.2s;
+}
+
+.date-header:hover {
+  background: #34495e;
 }
 
 .date-header h2 {
@@ -201,12 +210,29 @@
   font-weight: 600;
 }
 
+.collapse-arrow {
+  font-size: 1rem;
+  transition: transform 0.3s ease;
+}
+
+.collapse-arrow.collapsed {
+  transform: rotate(-90deg);
+}
+
 /* Matches Container */
 .matches-container {
   padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 15px;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+  overflow: hidden;
+}
+
+.matches-container.collapsed {
+  max-height: 0;
+  padding: 0 20px;
+  opacity: 0;
 }
 
 /* Match Card */
@@ -323,6 +349,32 @@
 .winning-team .team-name {
   color: #166534;
   font-weight: 700;
+}
+
+.winning-score {
+  color: #166534 !important;
+  font-weight: 700;
+}
+
+.set-score {
+  font-size: 0.8rem;
+  color: #666;
+  margin-right: 4px;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-weight: 500;
+}
+
+.winning-set {
+  color: #166534;
+  font-weight: 600;
+  background-color: #dcfce7;
+}
+
+.losing-set {
+  color: #dc2626;
+  font-weight: 600;
+  background-color: #fef2f2;
 }
 
 .winner-badge {
@@ -733,14 +785,7 @@
   background: #b91c1c;
 }
 
-.action-button.tickets {
-  background: #059669;
-  color: white;
-}
 
-.action-button.tickets:hover {
-  background: #047857;
-}
 
 .ranking-section {
   padding: 12px 16px;
