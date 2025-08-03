@@ -450,11 +450,11 @@ const Schedules: React.FC = () => {
         <div className="stay-updated-content">
           <h2>Stay Updated with 4.2 Schedules</h2>
                      <p>
-             The Volleyball Nations League (VNL) 4.2 season brings together the most competitive teams 
-             from around the world in an exciting tournament format. Staying updated with the upcoming 
-             volleyball game schedules is essential to ensure you never miss a moment of the action. 
-             Our platform provides the most accurate and up-to-date information on match schedules, 
-             results, and comprehensive statistics for the 4.2 season.
+             The Roblox Volleyball League (RVL) 4.2 season brings together the most competitive teams 
+             from around the world in many different exciting tournament formats. Staying updated with the upcoming 
+             volleyball game schedules is essential to ensure you never miss a moment of the elite action. 
+             Our platform here provides the most accurate and up-to-date information on match schedules, 
+             results, and comprehensive statistics for the RVL/4.2 volleyball seasons.
            </p>
         </div>
       </div>

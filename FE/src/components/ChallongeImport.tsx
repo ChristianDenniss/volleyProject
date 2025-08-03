@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useSeasons } from '../hooks/allFetch';
+import { authFetch } from '../hooks/authFetch';
 import type { ImportChallongeInput } from '../types/interfaces';
 import '../styles/ChallongeImport.css';
 
@@ -45,14 +46,11 @@ const ChallongeImport: React.FC<ChallongeImportProps> = ({ onImportSuccess, onCa
       // Use the same backend URL pattern as other hooks
       const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
       
-      const response = await fetch(`${backendUrl}/api/matches/import-challonge`, {
+      // Use authFetch to automatically handle authentication
+      const response = await authFetch(`${backendUrl}/api/matches/import-challonge`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
         body: JSON.stringify(formData)
-      });
+      }, localStorage.getItem('token'));
 
       if (!response.ok) {
         const errorData = await response.json();
