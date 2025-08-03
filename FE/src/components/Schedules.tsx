@@ -13,15 +13,15 @@ const Schedules: React.FC = () => {
   const [showLocalTime, setShowLocalTime] = useState<boolean>(false);
   const [collapsedDates, setCollapsedDates] = useState<Set<string>>(new Set());
 
-  // Set default to most recent season when seasons load
-  useEffect(() => {
-    if (seasons && seasons.length > 0 && !selectedSeason) {
-      const mostRecentSeason = seasons.reduce((prev, current) => 
-        (current.seasonNumber > prev.seasonNumber) ? current : prev
-      );
-      setSelectedSeason(mostRecentSeason.id);
-    }
-  }, [seasons, selectedSeason]);
+  // Don't auto-select any season - let user choose or show all
+  // useEffect(() => {
+  //   if (seasons && seasons.length > 0 && !selectedSeason) {
+  //     const mostRecentSeason = seasons.reduce((prev, current) => 
+  //       (current.seasonNumber > prev.seasonNumber) ? current : prev
+  //     );
+  //     setSelectedSeason(mostRecentSeason.id);
+  //   }
+  // }, [seasons, selectedSeason]);
 
   const { data: matches, error, loading } = useMatches(selectedSeason);
 

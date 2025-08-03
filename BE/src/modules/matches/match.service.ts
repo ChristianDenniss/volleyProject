@@ -163,7 +163,8 @@ export class MatchService {
     // Fetch tournament data from Challonge API
     const tournamentData = await this.fetchChallongeTournament(tournamentId);
     const matchesData = await this.fetchChallongeMatches(tournamentId);
-    console.log(`Fetched ${matchesData.length} matches from Challonge`);
+    const participantsData = await this.fetchChallongeParticipants(tournamentId);
+    console.log(`Fetched ${matchesData.length} matches and ${participantsData.length} participants from Challonge`);
 
     const season = await seasonRepository.findOne({ where: { id: data.seasonId } });
     if (!season) {
@@ -180,11 +181,17 @@ export class MatchService {
         continue;
       }
 
+      // Get participant names from their IDs
+      const player1 = participantsData.find((p: any) => p.id === challongeMatch.player1_id);
+      const player2 = participantsData.find((p: any) => p.id === challongeMatch.player2_id);
+      const player1Name = player1?.name || 'TBD';
+      const player2Name = player2?.name || 'TBD';
+
       // Parse set scores from Challonge format (e.g., "25-20,20-25,25-22")
       const setScores = this.parseChallongeSetScores(challongeMatch.scores_csv);
       const overallScore = this.calculateOverallScoreFromSetScores(setScores);
       
-      console.log(`Processing match ${challongeMatch.id}: ${challongeMatch.player1_name} vs ${challongeMatch.player2_name}`);
+      console.log(`Processing match ${challongeMatch.id}: ${player1Name} vs ${player2Name}`);
       console.log(`Raw scores: ${challongeMatch.scores_csv}`);
       console.log(`Parsed set scores:`, setScores);
       console.log(`Overall score: ${overallScore.team1Sets}-${overallScore.team2Sets}`);
@@ -216,12 +223,12 @@ export class MatchService {
         challongeTournamentId: tournamentId,
         challongeRound: challongeMatch.round,
         tags: data.tags || [], // Apply tags from import data
-        team1Name: challongeMatch.player1_name,
-        team2Name: challongeMatch.player2_name,
+        team1Name: player1Name,
+        team2Name: player2Name,
         season
       };
       
-      console.log(`Creating match with team names: "${challongeMatch.player1_name}" vs "${challongeMatch.player2_name}"`);
+      console.log(`Creating match with team names: "${player1Name}" vs "${player2Name}"`);
 
       const match = matchRepository.create(matchData);
       const savedMatch = await matchRepository.save(match);
@@ -383,6 +390,39 @@ export class MatchService {
         scores_csv: match.match.scores_csv || ''
       };
     });
+  }
+
+  private async fetchChallongeParticipants(tournamentId: string) {
+    // Get Challonge API key from environment
+    const apiKey = process.env.CHALLONGE_API_KEY;
+    if (!apiKey) {
+      throw new Error('CHALLONGE_API_KEY not found in environment. Please set the API key to use Challonge import.');
+    }
+
+    const apiUrl = `https://api.challonge.com/v1/tournaments/${tournamentId}/participants.json?api_key=${apiKey}`;
+    console.log(`Fetching participants from: ${apiUrl.replace(apiKey, '[API_KEY_HIDDEN]')}`);
+
+    const response = await fetch(apiUrl, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Challonge API error response: ${errorText}`);
+      throw new Error(`Challonge API error: ${response.status} ${response.statusText} - Tournament ID: ${tournamentId}`);
+    }
+
+    const data = await response.json();
+    console.log(`Fetched ${data.length} participants from Challonge API`);
+    
+    // Transform Challonge API response to our format
+    return data.map((participant: any) => ({
+      id: participant.participant.id,
+      name: participant.participant.name || 'Unknown'
+    }));
   }
 
 } 
