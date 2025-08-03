@@ -794,7 +794,8 @@
   position: relative;
   z-index: 1;
   max-width: 800px;
-  margin-left: 40px; /* Increased from 20px to 40px for more left margin */
+  margin-left: 60px; /* Increased from 40px to 60px for more left margin */
+  margin-right: 40px; /* Added right margin to prevent text from touching the right edge */
   margin-bottom: 20px; /* Added bottom margin */
 }
 
