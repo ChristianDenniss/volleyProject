@@ -305,7 +305,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 4px 8px;
+  padding: 2px 8px;
   border-bottom: 1px solid #e5e7eb;
   transition: all 0.2s ease;
 }
@@ -343,7 +343,7 @@
 .team-name {
   font-weight: 600;
   color: #1f2937;
-  font-size: 0.8rem;
+  font-size: 1rem;
 }
 
 .winning-team .team-name {
@@ -357,7 +357,7 @@
 }
 
 .set-score {
-  font-size: 0.7rem;
+  font-size: 0.9rem;
   color: #666;
   margin-right: 3px;
   padding: 1px 3px;
@@ -400,7 +400,7 @@
 }
 
 .overall-score {
-  font-size: 1rem;
+  font-size: 1.2rem;
   font-weight: 700;
   color: #374151;
 }

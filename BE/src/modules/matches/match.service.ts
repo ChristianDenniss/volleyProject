@@ -163,8 +163,7 @@ export class MatchService {
     // Fetch tournament data from Challonge API
     const tournamentData = await this.fetchChallongeTournament(tournamentId);
     const matchesData = await this.fetchChallongeMatches(tournamentId);
-    const participantsData = await this.fetchChallongeParticipants(tournamentId);
-    console.log(`Fetched ${matchesData.length} matches and ${participantsData.length} participants from Challonge`);
+    console.log(`Fetched ${matchesData.length} matches from Challonge`);
 
     const season = await seasonRepository.findOne({ where: { id: data.seasonId } });
     if (!season) {
@@ -181,11 +180,12 @@ export class MatchService {
         continue;
       }
 
-      // Get participant names from their IDs
-      const player1 = participantsData.find((p: any) => p.id === challongeMatch.player1_id);
-      const player2 = participantsData.find((p: any) => p.id === challongeMatch.player2_id);
-      const player1Name = player1?.name || 'TBD';
-      const player2Name = player2?.name || 'TBD';
+      // Get player names directly from Challonge match data
+      if (!challongeMatch.player1_name || !challongeMatch.player2_name) {
+        throw new Error(`Missing player names for match ${challongeMatch.id}. Player1: ${challongeMatch.player1_name}, Player2: ${challongeMatch.player2_name}`);
+      }
+      const player1Name = challongeMatch.player1_name;
+      const player2Name = challongeMatch.player2_name;
 
       // Parse set scores from Challonge format (e.g., "25-20,20-25,25-22")
       const setScores = this.parseChallongeSetScores(challongeMatch.scores_csv);
@@ -374,55 +374,17 @@ export class MatchService {
     return data.map((match: any) => {
       console.log('Raw Challonge match data:', JSON.stringify(match, null, 2));
       
-      // According to Challonge API docs, player names are directly in player1_name and player2_name
-      const player1Name = match.match.player1_name || 'TBD';
-      const player2Name = match.match.player2_name || 'TBD';
-      
-      console.log(`Mapped player names: ${player1Name} vs ${player2Name}`);
-      
-      return {
-        id: match.match.id,
-        number: match.match.match_number,
-        round: match.match.round,
-        state: match.match.state,
-        player1_name: player1Name,
-        player2_name: player2Name,
-        scores_csv: match.match.scores_csv || ''
-      };
+             // Return the raw match data with player names directly from Challonge API
+       return {
+         id: match.match.id,
+         number: match.match.match_number,
+         round: match.match.round,
+         state: match.match.state,
+         player1_name: match.match.player1_name,
+         player2_name: match.match.player2_name,
+         scores_csv: match.match.scores_csv || ''
+       };
     });
-  }
-
-  private async fetchChallongeParticipants(tournamentId: string) {
-    // Get Challonge API key from environment
-    const apiKey = process.env.CHALLONGE_API_KEY;
-    if (!apiKey) {
-      throw new Error('CHALLONGE_API_KEY not found in environment. Please set the API key to use Challonge import.');
-    }
-
-    const apiUrl = `https://api.challonge.com/v1/tournaments/${tournamentId}/participants.json?api_key=${apiKey}`;
-    console.log(`Fetching participants from: ${apiUrl.replace(apiKey, '[API_KEY_HIDDEN]')}`);
-
-    const response = await fetch(apiUrl, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Challonge API error response: ${errorText}`);
-      throw new Error(`Challonge API error: ${response.status} ${response.statusText} - Tournament ID: ${tournamentId}`);
-    }
-
-    const data = await response.json();
-    console.log(`Fetched ${data.length} participants from Challonge API`);
-    
-    // Transform Challonge API response to our format
-    return data.map((participant: any) => ({
-      id: participant.participant.id,
-      name: participant.participant.name || 'Unknown'
-    }));
   }
 
 } 
