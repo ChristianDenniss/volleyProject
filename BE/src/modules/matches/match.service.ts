@@ -285,16 +285,25 @@ export class MatchService {
   ): Date {
     if (isCompleted) {
       // For completed matches, distribute them across the date range but only on weekends
-      const totalDays = Math.floor((roundEndDate.getTime() - roundStartDate.getTime()) / (1000 * 60 * 60 * 24));
-      const dayOffset = Math.min(matchIndex, totalDays);
-      const matchDate = new Date(roundStartDate);
-      matchDate.setDate(matchDate.getDate() + dayOffset);
-      
-      // Ensure the date falls on a weekend (Friday = 5, Saturday = 6, Sunday = 0)
       const weekendDays = [5, 6, 0]; // Friday, Saturday, Sunday
-      while (!weekendDays.includes(matchDate.getDay())) {
-        matchDate.setDate(matchDate.getDate() + 1);
+      
+      // Start from the round start date and find the first weekend
+      let startDate = new Date(roundStartDate);
+      while (!weekendDays.includes(startDate.getDay())) {
+        startDate.setDate(startDate.getDate() + 1);
       }
+      
+      // Calculate how many weekend days are available
+      const endDate = new Date(roundEndDate);
+      while (!weekendDays.includes(endDate.getDay())) {
+        endDate.setDate(endDate.getDate() - 1);
+      }
+      
+      const totalWeekendDays = Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+      const weekendOffset = Math.min(matchIndex, totalWeekendDays - 1);
+      
+      const matchDate = new Date(startDate);
+      matchDate.setDate(matchDate.getDate() + (weekendOffset * 7)); // Move by weeks, not days
       
       return matchDate;
     } else {

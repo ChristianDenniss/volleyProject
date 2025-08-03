@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useMatches, useSeasons } from '../hooks/allFetch';
 import SearchBar from './Searchbar';
-import Pagination from './Pagination';
 import '../styles/Schedules.css';
 
 const Schedules: React.FC = () => {
@@ -9,7 +8,7 @@ const Schedules: React.FC = () => {
   const [selectedSeason, setSelectedSeason] = useState<number | undefined>();
   const [selectedRound, setSelectedRound] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [currentDateRange, setCurrentDateRange] = useState<Date>(new Date());
   const [showLocalTime, setShowLocalTime] = useState<boolean>(false);
   const [collapsedDates, setCollapsedDates] = useState<Set<string>>(new Set());
 
@@ -69,23 +68,31 @@ const Schedules: React.FC = () => {
     return grouped;
   }, [filteredMatches]);
 
-  // Pagination
-  const matchesPerPage = 10;
-  const totalPages = Math.ceil(Object.keys(matchesByDate).length / matchesPerPage);
-  const paginatedDates = Object.keys(matchesByDate).slice(
-    (currentPage - 1) * matchesPerPage,
-    currentPage * matchesPerPage
-  );
+  // Date-based navigation (2-week spans)
+  const getDateRange = () => {
+    const startDate = new Date(currentDateRange);
+    startDate.setDate(startDate.getDate() - startDate.getDay()); // Start of week (Sunday)
+    const endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + 13); // 2 weeks (14 days)
+    return { startDate, endDate };
+  };
+
+  const { startDate, endDate } = getDateRange();
+  
+  // Filter dates within the 2-week range
+  const paginatedDates = Object.keys(matchesByDate).filter(dateKey => {
+    const date = new Date(dateKey);
+    return date >= startDate && date < endDate;
+  }).sort();
 
   const clearFilters = () => {
     setSearchQuery('');
     setSelectedRound('');
-    setCurrentPage(1);
+    setCurrentDateRange(new Date());
   };
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    setCurrentPage(1);
   };
 
   const toggleDateSection = (dateKey: string) => {
@@ -179,16 +186,21 @@ const Schedules: React.FC = () => {
         </div>
         
         <div className="date-navigation">
-          <button className="nav-arrow" onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}>
+          <button className="nav-arrow" onClick={() => {
+            const newDate = new Date(currentDateRange);
+            newDate.setDate(newDate.getDate() - 14); // Move back 2 weeks
+            setCurrentDateRange(newDate);
+          }}>
             ‹
           </button>
           <span className="date-range">
-            {paginatedDates.length > 0 ? 
-              `${new Date(paginatedDates[0]).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })} - ${new Date(paginatedDates[paginatedDates.length - 1]).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}` : 
-              'No matches'
-            }
+            {`${startDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short' })} - ${endDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}`}
           </span>
-          <button className="nav-arrow" onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}>
+          <button className="nav-arrow" onClick={() => {
+            const newDate = new Date(currentDateRange);
+            newDate.setDate(newDate.getDate() + 14); // Move forward 2 weeks
+            setCurrentDateRange(newDate);
+          }}>
             ›
           </button>
                      <button className="calendar-btn">
@@ -204,7 +216,6 @@ const Schedules: React.FC = () => {
             value={selectedSeason || ''}
             onChange={(e) => {
               setSelectedSeason(e.target.value ? parseInt(e.target.value) : undefined);
-              setCurrentPage(1);
             }}
           >
             <option value="">All Seasons</option>
@@ -219,7 +230,6 @@ const Schedules: React.FC = () => {
             value={selectedRound}
             onChange={(e) => {
               setSelectedRound(e.target.value);
-              setCurrentPage(1);
             }}
           >
             <option value="">All Rounds</option>
@@ -293,13 +303,6 @@ const Schedules: React.FC = () => {
             placeholder="Search matches..." 
             className="schedules-search-bar"
           />
-          <div className="pagination-wrapper">
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-            />
-          </div>
         </div>
       </div>
 

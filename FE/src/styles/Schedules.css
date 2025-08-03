@@ -340,13 +340,13 @@
   box-shadow: 0 0 8px rgba(245, 158, 11, 0.3);
 }
 
-.team-name {
+.schedules-page .team-name {
   font-weight: 600;
   color: #1f2937;
   font-size: 1rem;
 }
 
-.winning-team .team-name {
+.schedules-page .winning-team .team-name {
   color: #166534;
   font-weight: 700;
 }
