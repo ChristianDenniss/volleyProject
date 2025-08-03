@@ -199,17 +199,41 @@ const Schedules: React.FC = () => {
         </div>
 
         <div className="filter-row">
+          <select 
+            className="filter-dropdown"
+            value={selectedSeason || ''}
+            onChange={(e) => {
+              setSelectedSeason(e.target.value ? parseInt(e.target.value) : undefined);
+              setCurrentPage(1);
+            }}
+          >
+            <option value="">All Seasons</option>
+            {seasons?.map(season => (
+              <option key={season.id} value={season.id}>
+                Season {season.seasonNumber}
+              </option>
+            ))}
+          </select>
+          <select 
+            className="filter-dropdown"
+            value={selectedRound}
+            onChange={(e) => {
+              setSelectedRound(e.target.value);
+              setCurrentPage(1);
+            }}
+          >
+            <option value="">All Rounds</option>
+            {uniqueRounds.map(round => (
+              <option key={round} value={round}>
+                {round}
+              </option>
+            ))}
+          </select>
           <select className="filter-dropdown">
             <option value="" disabled>PHASE</option>
             <option selected>All</option>
             <option>Qualifiers</option>
             <option>Playoffs</option>
-          </select>
-          <select className="filter-dropdown">
-            <option>ROUND</option>
-            {uniqueRounds.map(round => (
-              <option key={round}>{round}</option>
-            ))}
           </select>
           <select className="filter-dropdown">
             <option value="" disabled>REGION</option>
@@ -218,10 +242,6 @@ const Schedules: React.FC = () => {
             <option>EU</option>
             <option>AS</option>
             <option>SA</option>
-          </select>
-          <select className="filter-dropdown">
-            <option>TEAMS</option>
-            {/* Would be populated with teams */}
           </select>
           <select className="filter-dropdown">
             <option value="" disabled>DIVISION</option>
@@ -260,47 +280,7 @@ const Schedules: React.FC = () => {
       {/* Filters */}
       <div className="schedules-filters">
         <div className="filters-row">
-          <div className="filter-group">
-            <label htmlFor="season-filter">Season:</label>
-            <select
-              id="season-filter"
-              value={selectedSeason || ''}
-              onChange={(e) => {
-                setSelectedSeason(e.target.value ? parseInt(e.target.value) : undefined);
-                setCurrentPage(1);
-              }}
-            >
-              <option value="">All Seasons</option>
-              {seasons?.map(season => (
-                <option key={season.id} value={season.id}>
-                  Season {season.seasonNumber}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="filter-group">
-            <label htmlFor="round-filter">Round:</label>
-            <select
-              id="round-filter"
-              value={selectedRound}
-              onChange={(e) => {
-                setSelectedRound(e.target.value);
-                setCurrentPage(1);
-              }}
-            >
-              <option value="">All Rounds</option>
-              {uniqueRounds.map(round => (
-                <option key={round} value={round}>
-                  {round}
-                </option>
-              ))}
-            </select>
-          </div>
-
-
-
-          {(searchQuery || selectedRound) && (
+          {(searchQuery || selectedRound || selectedSeason) && (
             <button className="clear-filters-button" onClick={clearFilters}>
               Clear Filters
             </button>
