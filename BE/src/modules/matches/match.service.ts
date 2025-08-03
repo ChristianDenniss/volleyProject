@@ -367,18 +367,9 @@ export class MatchService {
     return data.map((match: any) => {
       console.log('Raw Challonge match data:', JSON.stringify(match, null, 2));
       
-      // Handle different possible field names for player names
-      const player1Name = match.match.player1_name || 
-                         match.match.player1_name || 
-                         match.match.player1?.name ||
-                         match.match.player1 ||
-                         'TBD';
-      
-      const player2Name = match.match.player2_name || 
-                         match.match.player2_name || 
-                         match.match.player2?.name ||
-                         match.match.player2 ||
-                         'TBD';
+      // According to Challonge API docs, player names are directly in player1_name and player2_name
+      const player1Name = match.match.player1_name || 'TBD';
+      const player2Name = match.match.player2_name || 'TBD';
       
       console.log(`Mapped player names: ${player1Name} vs ${player2Name}`);
       
