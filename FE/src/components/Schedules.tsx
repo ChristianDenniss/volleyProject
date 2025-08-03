@@ -437,7 +437,7 @@ const Schedules: React.FC = () => {
                             <div className="match-time">
                               <span className="time-label">Start Time</span>
                               <span className="time-value">
-                                {showLocalTime ? formatTime(match.date.toString()) : 'TBD'}
+                                {match.date ? formatTime(match.date.toString()) : 'TBD'}
                               </span>
                             </div>
                                                          <div className="match-actions">

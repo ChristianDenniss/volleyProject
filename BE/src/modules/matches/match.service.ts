@@ -220,6 +220,8 @@ export class MatchService {
         team2Name: challongeMatch.player2_name,
         season
       };
+      
+      console.log(`Creating match with team names: "${challongeMatch.player1_name}" vs "${challongeMatch.player2_name}"`);
 
       const match = matchRepository.create(matchData);
       const savedMatch = await matchRepository.save(match);
@@ -314,21 +316,24 @@ export class MatchService {
       throw new Error('CHALLONGE_API_KEY not found in environment. Please set the API key to use Challonge import.');
     }
 
-    const response = await fetch(
-      `https://api.challonge.com/v1/tournaments/${tournamentId}.json?api_key=${apiKey}`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        }
+    const apiUrl = `https://api.challonge.com/v1/tournaments/${tournamentId}.json?api_key=${apiKey}`;
+    console.log(`Fetching tournament from: ${apiUrl.replace(apiKey, '[API_KEY_HIDDEN]')}`);
+
+    const response = await fetch(apiUrl, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
       }
-    );
+    });
 
     if (!response.ok) {
-      throw new Error(`Challonge API error: ${response.status} ${response.statusText}`);
+      const errorText = await response.text();
+      console.error(`Challonge API error response: ${errorText}`);
+      throw new Error(`Challonge API error: ${response.status} ${response.statusText} - Tournament ID: ${tournamentId}`);
     }
 
     const data = await response.json();
+    console.log(`Successfully fetched tournament: ${data.tournament?.name || 'Unknown'}`);
     return data.tournament;
   }
 
@@ -339,33 +344,54 @@ export class MatchService {
       throw new Error('CHALLONGE_API_KEY not found in environment. Please set the API key to use Challonge import.');
     }
 
-    const response = await fetch(
-      `https://api.challonge.com/v1/tournaments/${tournamentId}/matches.json?api_key=${apiKey}`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        }
+    const apiUrl = `https://api.challonge.com/v1/tournaments/${tournamentId}/matches.json?api_key=${apiKey}`;
+    console.log(`Fetching matches from: ${apiUrl.replace(apiKey, '[API_KEY_HIDDEN]')}`);
+
+    const response = await fetch(apiUrl, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
       }
-    );
+    });
 
     if (!response.ok) {
-      throw new Error(`Challonge API error: ${response.status} ${response.statusText}`);
+      const errorText = await response.text();
+      console.error(`Challonge API error response: ${errorText}`);
+      throw new Error(`Challonge API error: ${response.status} ${response.statusText} - Tournament ID: ${tournamentId}`);
     }
 
     const data = await response.json();
     console.log(`Fetched ${data.length} matches from Challonge API`);
     
     // Transform Challonge API response to our format
-    return data.map((match: any) => ({
-      id: match.match.id,
-      number: match.match.match_number,
-      round: match.match.round,
-      state: match.match.state,
-      player1_name: match.match.player1_name || 'TBD',
-      player2_name: match.match.player2_name || 'TBD',
-      scores_csv: match.match.scores_csv || ''
-    }));
+    return data.map((match: any) => {
+      console.log('Raw Challonge match data:', JSON.stringify(match, null, 2));
+      
+      // Handle different possible field names for player names
+      const player1Name = match.match.player1_name || 
+                         match.match.player1_name || 
+                         match.match.player1?.name ||
+                         match.match.player1 ||
+                         'TBD';
+      
+      const player2Name = match.match.player2_name || 
+                         match.match.player2_name || 
+                         match.match.player2?.name ||
+                         match.match.player2 ||
+                         'TBD';
+      
+      console.log(`Mapped player names: ${player1Name} vs ${player2Name}`);
+      
+      return {
+        id: match.match.id,
+        number: match.match.match_number,
+        round: match.match.round,
+        state: match.match.state,
+        player1_name: player1Name,
+        player2_name: player2Name,
+        scores_csv: match.match.scores_csv || ''
+      };
+    });
   }
 
 } 
