@@ -59,11 +59,6 @@ const CalendarModal: React.FC<CalendarModalProps> = ({
     return date >= rangeStart && date <= rangeEnd;
   };
 
-  const isWeekend = (date: Date) => {
-    const day = date.getDay();
-    return day === 0 || day === 5 || day === 6; // Sunday, Friday, Saturday
-  };
-
   const isWeekday = (date: Date) => {
     const day = date.getDay();
     return day >= 1 && day <= 4; // Monday, Tuesday, Wednesday, Thursday
