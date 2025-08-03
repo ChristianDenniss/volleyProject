@@ -25,6 +25,9 @@ const Navbar: React.FC = () =>
                         </a>
                     </li>
                     <li>
+                        <Link to="/schedules">Schedules</Link>
+                    </li>
+                    <li>
                         <Link to="/stats">Stats</Link>
                     </li>
                     <li>
@@ -39,9 +42,7 @@ const Navbar: React.FC = () =>
                     <li>
                         <Link to="/seasons">Seasons</Link>
                     </li>
-                    <li>
-                        <Link to="/schedules">Schedules</Link>
-                    </li>
+            
                     <li>
                         <Link to="/articles">Articles</Link>
                     </li>
