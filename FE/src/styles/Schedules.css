@@ -221,10 +221,10 @@
 
 /* Matches Container */
 .matches-container {
-  padding: 20px;
+  padding: 10px;
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 8px;
   transition: max-height 0.3s ease, opacity 0.3s ease;
   overflow: hidden;
 }
@@ -238,8 +238,8 @@
 /* Match Card */
 .match-card {
   background: #f8f9fa;
-  border-radius: 8px;
-  padding: 10px;
+  border-radius: 6px;
+  padding: 6px;
   border: 1px solid #e1e5e9;
   transition: transform 0.2s, box-shadow 0.2s;
 }
@@ -253,8 +253,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
-  padding-bottom: 8px;
+  margin-bottom: 6px;
+  padding-bottom: 4px;
   border-bottom: 1px solid #e1e5e9;
 }
 
@@ -267,7 +267,7 @@
 .match-number {
   font-weight: 700;
   color: #2c3e50;
-  font-size: 1.1rem;
+  font-size: 0.9rem;
 }
 
 .match-round {
@@ -297,15 +297,15 @@
 .match-teams {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-bottom: 10px;
+  gap: 4px;
+  margin-bottom: 6px;
 }
 
 .team-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 12px;
+  padding: 4px 8px;
   border-bottom: 1px solid #e5e7eb;
   transition: all 0.2s ease;
 }
@@ -323,7 +323,7 @@
 .team-info {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex: 1;
 }
 
@@ -343,7 +343,7 @@
 .team-name {
   font-weight: 600;
   color: #1f2937;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
 }
 
 .winning-team .team-name {
@@ -357,11 +357,11 @@
 }
 
 .set-score {
-  font-size: 0.8rem;
+  font-size: 0.7rem;
   color: #666;
-  margin-right: 4px;
-  padding: 2px 4px;
-  border-radius: 3px;
+  margin-right: 3px;
+  padding: 1px 3px;
+  border-radius: 2px;
   font-weight: 500;
 }
 
@@ -380,7 +380,7 @@
 .winner-badge {
   display: inline-flex;
   align-items: center;
-  margin-left: 8px;
+  margin-left: 4px;
   animation: pulse 2s infinite;
 }
 
@@ -400,7 +400,7 @@
 }
 
 .overall-score {
-  font-size: 1.2rem;
+  font-size: 1rem;
   font-weight: 700;
   color: #374151;
 }
@@ -415,25 +415,25 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: 10px;
+  padding-top: 6px;
   border-top: 1px solid #e1e5e9;
 }
 
 .match-time {
   color: #666;
-  font-size: 0.8rem;
+  font-size: 0.7rem;
 }
 
 .match-actions {
   display: flex;
-  gap: 10px;
+  gap: 6px;
 }
 
 .action-button {
-  padding: 4px 8px;
+  padding: 3px 6px;
   border: none;
-  border-radius: 4px;
-  font-size: 0.7rem;
+  border-radius: 3px;
+  font-size: 0.6rem;
   font-weight: 600;
   cursor: pointer;
   transition: background-color 0.2s;
