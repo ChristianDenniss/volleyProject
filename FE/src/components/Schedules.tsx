@@ -269,18 +269,7 @@ const Schedules: React.FC = () => {
         </div>
       </div>
 
-      {/* Settings Row */}
-      <div className="settings-row">
-        <label className="local-time-toggle">
-          <span>Show local match time</span>
-          <input
-            type="checkbox"
-            checked={showLocalTime}
-            onChange={(e) => setShowLocalTime(e.target.checked)}
-          />
-          <span className="toggle-slider"></span>
-        </label>
-      </div>
+
 
              {/* Header */}
        <div className="schedules-header">
@@ -303,6 +292,15 @@ const Schedules: React.FC = () => {
             placeholder="Search matches..." 
             className="schedules-search-bar"
           />
+          <label className="local-time-toggle">
+            <span>Show local match time</span>
+            <input
+              type="checkbox"
+              checked={showLocalTime}
+              onChange={(e) => setShowLocalTime(e.target.checked)}
+            />
+            <span className="toggle-slider"></span>
+          </label>
         </div>
       </div>
 
