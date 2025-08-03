@@ -50,7 +50,7 @@ const ChallongeImport: React.FC<ChallongeImportProps> = ({ onImportSuccess, onCa
       const response = await authFetch(`${backendUrl}/api/matches/import-challonge`, {
         method: 'POST',
         body: JSON.stringify(formData)
-      }, localStorage.getItem('token'));
+      }, localStorage.getItem('authToken_v2'));
 
       if (!response.ok) {
         const errorData = await response.json();
