@@ -182,6 +182,8 @@
 .score {
   font-weight: 600;
   color: #1f2937;
+  padding-right: 12px;
+  font-size: 1.1rem;
 }
 
 .set-scores {
@@ -301,6 +303,11 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* Actions column padding */
+.data-table td:last-child {
+  padding-right: 12px;
 }
 
 /* Stay Updated Section */
