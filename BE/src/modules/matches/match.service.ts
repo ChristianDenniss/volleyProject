@@ -308,145 +308,64 @@ export class MatchService {
   }
 
   private async fetchChallongeTournament(tournamentId: string) {
-    try {
-      // Get Challonge API key from environment
-      const apiKey = process.env.CHALLONGE_API_KEY;
-      if (!apiKey) {
-        console.warn('CHALLONGE_API_KEY not found in environment, using mock data');
-        return {
-          id: tournamentId,
-          name: 'Tournament Name'
-        };
-      }
-
-      const response = await fetch(
-        `https://api.challonge.com/v1/tournaments/${tournamentId}.json?api_key=${apiKey}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`Challonge API error: ${response.status} ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      return data.tournament;
-    } catch (error) {
-      console.error('Error fetching tournament from Challonge:', error);
-      // Fallback to mock data
-      return {
-        id: tournamentId,
-        name: 'Tournament Name'
-      };
+    // Get Challonge API key from environment
+    const apiKey = process.env.CHALLONGE_API_KEY;
+    if (!apiKey) {
+      throw new Error('CHALLONGE_API_KEY not found in environment. Please set the API key to use Challonge import.');
     }
+
+    const response = await fetch(
+      `https://api.challonge.com/v1/tournaments/${tournamentId}.json?api_key=${apiKey}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Challonge API error: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.tournament;
   }
 
   private async fetchChallongeMatches(tournamentId: string) {
-    try {
-      // Get Challonge API key from environment
-      const apiKey = process.env.CHALLONGE_API_KEY;
-      if (!apiKey) {
-        console.warn('CHALLONGE_API_KEY not found in environment, using mock data');
-        return this.getMockMatches();
-      }
-
-      const response = await fetch(
-        `https://api.challonge.com/v1/tournaments/${tournamentId}/matches.json?api_key=${apiKey}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`Challonge API error: ${response.status} ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      console.log(`Fetched ${data.length} matches from Challonge API`);
-      
-      // Transform Challonge API response to our format
-      return data.map((match: any) => ({
-        id: match.match.id,
-        number: match.match.match_number,
-        round: match.match.round,
-        state: match.match.state,
-        player1_name: match.match.player1_name || 'TBD',
-        player2_name: match.match.player2_name || 'TBD',
-        scores_csv: match.match.scores_csv || ''
-      }));
-    } catch (error) {
-      console.error('Error fetching matches from Challonge:', error);
-      // Fallback to mock data
-      return this.getMockMatches();
+    // Get Challonge API key from environment
+    const apiKey = process.env.CHALLONGE_API_KEY;
+    if (!apiKey) {
+      throw new Error('CHALLONGE_API_KEY not found in environment. Please set the API key to use Challonge import.');
     }
-  }
 
-  private getMockMatches() {
-    // Fallback mock data when API is not available
-    return [
+    const response = await fetch(
+      `https://api.challonge.com/v1/tournaments/${tournamentId}/matches.json?api_key=${apiKey}`,
       {
-        id: 1,
-        number: 1,
-        round: 1,
-        state: 'complete',
-        player1_name: 'AS Roma',
-        player2_name: 'Inter Milan',
-        scores_csv: '25-20,20-25,25-22'
-      },
-      {
-        id: 2,
-        number: 2,
-        round: 1,
-        state: 'complete',
-        player1_name: 'Benfica',
-        player2_name: 'Real Madrid',
-        scores_csv: '22-25,25-23,25-20'
-      },
-      {
-        id: 3,
-        number: 3,
-        round: 1,
-        state: 'complete',
-        player1_name: 'Barcelona',
-        player2_name: 'Manchester United',
-        scores_csv: '25-18,25-22'
-      },
-      {
-        id: 4,
-        number: 4,
-        round: 1,
-        state: 'complete',
-        player1_name: 'Bayern Munich',
-        player2_name: 'PSG',
-        scores_csv: '23-25,25-20,25-23'
-      },
-      {
-        id: 5,
-        number: 5,
-        round: 2,
-        state: 'complete',
-        player1_name: 'AS Roma',
-        player2_name: 'Barcelona',
-        scores_csv: '25-22,25-20'
-      },
-      {
-        id: 6,
-        number: 6,
-        round: 2,
-        state: 'complete',
-        player1_name: 'Benfica',
-        player2_name: 'Bayern Munich',
-        scores_csv: '20-25,25-23,25-22'
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
       }
-    ];
-  }
+    );
 
+    if (!response.ok) {
+      throw new Error(`Challonge API error: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    console.log(`Fetched ${data.length} matches from Challonge API`);
+    
+    // Transform Challonge API response to our format
+    return data.map((match: any) => ({
+      id: match.match.id,
+      number: match.match.match_number,
+      round: match.match.round,
+      state: match.match.state,
+      player1_name: match.match.player1_name || 'TBD',
+      player2_name: match.match.player2_name || 'TBD',
+      scores_csv: match.match.scores_csv || ''
+    }));
+  }
 
 } 
