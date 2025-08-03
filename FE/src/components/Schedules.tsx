@@ -85,7 +85,7 @@ const Schedules: React.FC = () => {
   const paginatedDates = Object.keys(matchesByDate).filter(dateKey => {
     const date = new Date(dateKey);
     return date >= startDate && date < endDate;
-  }).sort();
+  }).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
 
   const clearFilters = () => {
     setSearchQuery('');
