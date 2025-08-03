@@ -284,11 +284,18 @@ export class MatchService {
     roundNumber: number
   ): Date {
     if (isCompleted) {
-      // For completed matches, distribute them across the date range
+      // For completed matches, distribute them across the date range but only on weekends
       const totalDays = Math.floor((roundEndDate.getTime() - roundStartDate.getTime()) / (1000 * 60 * 60 * 24));
       const dayOffset = Math.min(matchIndex, totalDays);
       const matchDate = new Date(roundStartDate);
       matchDate.setDate(matchDate.getDate() + dayOffset);
+      
+      // Ensure the date falls on a weekend (Friday = 5, Saturday = 6, Sunday = 0)
+      const weekendDays = [5, 6, 0]; // Friday, Saturday, Sunday
+      while (!weekendDays.includes(matchDate.getDay())) {
+        matchDate.setDate(matchDate.getDate() + 1);
+      }
+      
       return matchDate;
     } else {
       // For scheduled matches, ensure different rounds are in different weeks
