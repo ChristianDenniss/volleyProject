@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useMatches, useSeasons } from '../hooks/allFetch';
 import SearchBar from './Searchbar';
 import Pagination from './Pagination';
@@ -114,10 +114,16 @@ const Schedules: React.FC = () => {
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleTimeString('en-US', {
+    const time = date.toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit'
     });
+    const dateStr = date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+    return `${time} • ${dateStr}`;
   };
 
   const getWinningTeam = (match: any) => {
