@@ -57,6 +57,7 @@ interface TeamStatsData {
   totalStats: Record<StatCategory, number>;
   gamesPlayed: number;
   totalSets: number;
+  logoUrl?: string; // Add logo URL field
 }
 
 type DisplayData = Player | TeamStatsData;
@@ -439,6 +440,7 @@ const StatsLeaderboard: React.FC = () => {
       totalStats: Record<StatCategory, number>;
       gamesPlayed: Set<number>;
       totalSets: number;
+      logoUrl?: string; // Add logo URL field
     }>();
     
     players.forEach(player => {
@@ -482,7 +484,8 @@ const StatsLeaderboard: React.FC = () => {
               plusMinus: 0,
             },
             gamesPlayed: new Set(),
-            totalSets: 0
+            totalSets: 0,
+            logoUrl: team.logoUrl
           });
         }
         
@@ -981,22 +984,22 @@ const StatsLeaderboard: React.FC = () => {
                           ? <Link className="stats-pill-link" to={`/players/${item.id}`}>{item.name}</Link>
                           : (() => {
                               const teamData = item as TeamStatsData;
-                              const team = teamData.players?.[0]?.teams?.find(t => t.name === teamData.name);
-                                         return (
-             <Link className="stats-pill-link" to={`/teams/${encodeURIComponent(item.name)}`}>
-               {team?.logoUrl ? (
-                 <div className="team-logo-container">
-                   <img 
-                     src={team.logoUrl} 
-                     alt={`${item.name} logo`}
-                     className="team-logo"
-                   />
-                 </div>
-               ) : (
-                 item.name
-               )}
-             </Link>
-           );
+                              return (
+                                <Link className="stats-pill-link" to={`/teams/${encodeURIComponent(item.name)}`}>
+                                  {teamData.logoUrl ? (
+                                    <div className="team-logo-container">
+                                      <img 
+                                        src={teamData.logoUrl} 
+                                        alt={`${item.name} logo`}
+                                        className="team-logo"
+                                      />
+                                      <span className="team-name-text">{item.name}</span>
+                                    </div>
+                                  ) : (
+                                    item.name
+                                  )}
+                                </Link>
+                              );
                             })()
                       }</td>
                       {selectedSeason !== null && isPlayer && viewType === 'player' && (
@@ -1012,6 +1015,7 @@ const StatsLeaderboard: React.FC = () => {
                                       alt={`${team.name} logo`}
                                       className="team-logo"
                                     />
+                                    <span className="team-name-text">{team.name}</span>
                                   </div>
                                 ) : (
                                   team.name
