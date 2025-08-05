@@ -6,7 +6,7 @@ import { useTeamMutations } from "../../hooks/allPatch";
 import { useCreateTeams } from "../../hooks/allCreate";
 import { useDeleteTeams } from "../../hooks/allDelete";
 import { useAuth } from "../../context/authContext";
-import type { Team, Season } from "../../types/interfaces";
+import type { Team } from "../../types/interfaces";
 import "../../styles/UsersPage.css";
 import "../../styles/PlayersPage.css";
 import "../../styles/PortalPlayersPage.css";
@@ -27,7 +27,7 @@ interface EditingState {
 
 const TeamsPage: React.FC = () => {
   const { data: teams, loading, error } = useSkinnyTeams();
-  const { data: seasons, loading: seasonsLoading } = useSkinnySeasons();
+  const { data: seasons } = useSkinnySeasons();
   const { patchTeam } = useTeamMutations();
   const { createTeam, loading: creating, error: createError } = useCreateTeams();
   const { deleteItem: deleteTeam, loading: deleting, error: deleteError } = useDeleteTeams();
