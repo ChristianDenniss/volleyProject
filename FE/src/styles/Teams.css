@@ -192,14 +192,15 @@
     position: absolute;
     top: 0;
     right: 0;
-    width: 60px;
-    height: 60px;
+    width: 200px;
+    height: 200px;
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center right;
-    opacity: 0.3;
+    opacity: 0.25;
     pointer-events: none;
     z-index: 0;
+    transform: translateX(30%);
 }
 
 /* ----- Hover / active effect ----------------------------------------- */
