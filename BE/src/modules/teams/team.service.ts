@@ -28,34 +28,34 @@ export class TeamService {
      * Create a new team with validation
      */
     async createTeam(teamData: CreateTeamDto): Promise<Teams> {
-        const { name, seasonId, placement, playerIds, gameIds, logoUrl } = teamData;
+        const { name, seasonNumber, placement, playerIds, gameIds, logoUrl } = teamData;
 
         // Validation for missing name
         if (!name) {
             throw new MissingFieldError("Team name");
         }
 
-        // Validation for missing seasonId
-        if (!seasonId) {
-            throw new MissingFieldError("season ID");
+        // Validation for missing seasonNumber
+        if (!seasonNumber) {
+            throw new MissingFieldError("season number");
         }
 
         // Fetch the season to associate with the team
         const season = await this.seasonRepository.findOne({
-            where: { id: seasonId },
+            where: { seasonNumber },
             relations: ["teams"]
         });
         if (!season) {
-            throw new NotFoundError(`Season with ID:${seasonId} not found`);
+            throw new NotFoundError(`Season with number:${seasonNumber} not found`);
         }
 
-        // Check for existing team with the same name and seasonId
+        // Check for existing team with the same name and seasonNumber
         const existingTeam = await this.teamRepository.findOne({
-            where: { name, season: { id: seasonId } }
+            where: { name, season: { seasonNumber } }
         });
 
         if (existingTeam) {
-            throw new DuplicateError(`A team with the name "${name}" already exists in season ID: ${seasonId}.`);
+            throw new DuplicateError(`A team with the name "${name}" already exists in season number: ${seasonNumber}.`);
         }
 
         // Create a new team
@@ -285,19 +285,19 @@ export class TeamService {
             throw new NotFoundError(`Team with ID ${id} not found`);
         }
 
-        const { name, seasonId, placement, playerIds, gameIds, logoUrl } = teamData;
+        const { name, seasonNumber, placement, playerIds, gameIds, logoUrl } = teamData;
 
         if (name) team.name = name;
         if (placement !== undefined) team.placement = placement.trim();
         if (logoUrl !== undefined) team.logoUrl = logoUrl;
 
-        if (seasonId) {
+        if (seasonNumber) {
             const season = await this.seasonRepository.findOne({
-                where: { id: seasonId },
+                where: { seasonNumber },
                 relations: ["teams"]
             });
             if (!season) {
-                throw new NotFoundError(`Season with ID ${seasonId} not found`);
+                throw new NotFoundError(`Season with number ${seasonNumber} not found`);
             }
             team.season = season;
         }

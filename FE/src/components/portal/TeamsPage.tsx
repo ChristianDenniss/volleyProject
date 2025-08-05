@@ -1,12 +1,12 @@
 // src/components/portal/TeamsPage.tsx
 
 import React, { useState, useEffect } from "react";
-import { useSkinnyTeams } from "../../hooks/allFetch";
+import { useSkinnyTeams, useSkinnySeasons } from "../../hooks/allFetch";
 import { useTeamMutations } from "../../hooks/allPatch";
 import { useCreateTeams } from "../../hooks/allCreate";
 import { useDeleteTeams } from "../../hooks/allDelete";
 import { useAuth } from "../../context/authContext";
-import type { Team } from "../../types/interfaces";
+import type { Team, Season } from "../../types/interfaces";
 import "../../styles/UsersPage.css";
 import "../../styles/PlayersPage.css";
 import "../../styles/PortalPlayersPage.css";
@@ -15,7 +15,7 @@ import Pagination from "../Pagination";
 
 type EditField =
   | "name"
-  | "seasonId"
+  | "seasonNumber"
   | "placement"
   | "logoUrl";
 
@@ -27,6 +27,7 @@ interface EditingState {
 
 const TeamsPage: React.FC = () => {
   const { data: teams, loading, error } = useSkinnyTeams();
+  const { data: seasons, loading: seasonsLoading } = useSkinnySeasons();
   const { patchTeam } = useTeamMutations();
   const { createTeam, loading: creating, error: createError } = useCreateTeams();
   const { deleteItem: deleteTeam, loading: deleting, error: deleteError } = useDeleteTeams();
@@ -44,7 +45,7 @@ const TeamsPage: React.FC = () => {
   // Modal state for creating a new team
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [newName, setNewName] = useState<string>("");
-  const [newSeasonId, setNewSeasonId] = useState<number>(0);
+  const [newSeasonNumber, setNewSeasonNumber] = useState<number>(0);
   const [newPlacement, setNewPlacement] = useState<string>("Didn't make playoffs");
   const [newLogoUrl, setNewLogoUrl] = useState<string>("");
   const [formError, setFormError] = useState<string>("");
@@ -103,7 +104,7 @@ const TeamsPage: React.FC = () => {
     let origValue: string;
     switch (field) {
       case "name": origValue = orig.name; break;
-      case "seasonId": origValue = orig.season.id.toString(); break;
+      case "seasonNumber": origValue = orig.season.seasonNumber.toString(); break;
       case "placement": origValue = orig.placement; break;
       case "logoUrl": origValue = orig.logoUrl || ""; break;
       default: origValue = "";
@@ -115,7 +116,7 @@ const TeamsPage: React.FC = () => {
 
     const labelMap: Record<EditField, string> = {
       name: "Name",
-      seasonId: "Season ID",
+      seasonNumber: "Season Number",
       placement: "Placement",
       logoUrl: "Logo URL",
     };
@@ -132,7 +133,7 @@ const TeamsPage: React.FC = () => {
     const payload: Partial<Team> & Record<string, any> = {};
     switch (field) {
       case "name": payload.name = value; break;
-      case "seasonId": payload.seasonId = Number(value); break;
+      case "seasonNumber": payload.seasonNumber = Number(value); break;
       case "placement": payload.placement = value; break;
       case "logoUrl": payload.logoUrl = value || undefined; break;
     }
@@ -166,7 +167,7 @@ const TeamsPage: React.FC = () => {
     setIsModalOpen(true);
     setFormError("");
     setNewName("");
-    setNewSeasonId(0);
+    setNewSeasonNumber(0);
     setNewPlacement("Didn't make playoffs");
     setNewLogoUrl("");
   };
@@ -180,14 +181,14 @@ const TeamsPage: React.FC = () => {
   // Create new team handler
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (newName.trim() === "" || newSeasonId <= 0) {
-      setFormError("Name and Season ID are required.");
+    if (newName.trim() === "" || newSeasonNumber <= 0) {
+      setFormError("Name and Season Number are required.");
       return;
     }
 
     const payload = {
       name: newName,
-      seasonId: newSeasonId,
+      seasonNumber: newSeasonNumber,
       placement: newPlacement,
       logoUrl: newLogoUrl.trim() || undefined, // Only include if not empty
     };
@@ -330,16 +331,22 @@ const TeamsPage: React.FC = () => {
                 />
               </label>
 
-              {/* Season ID */}
+              {/* Season Number */}
               <label>
-                Season ID*
-                <input
-                  type="number"
-                  value={newSeasonId}
-                  onChange={(e) => setNewSeasonId(Number(e.target.value))}
+                Season*
+                <select
+                  value={newSeasonNumber || ""}
+                  onChange={(e) => setNewSeasonNumber(Number(e.target.value))}
                   required
                   style={{ width: "100%", marginBottom: "0.75rem" }}
-                />
+                >
+                  <option value="">Select a Season</option>
+                  {seasons?.map((season) => (
+                    <option key={season.id} value={season.seasonNumber}>
+                      Season {season.seasonNumber}
+                    </option>
+                  ))}
+                </select>
               </label>
 
               {/* Placement */}
@@ -397,7 +404,7 @@ const TeamsPage: React.FC = () => {
           <tr>
             <th>ID</th>
             <th>Name</th>
-            <th className="small-column">Season ID</th>
+            <th className="small-column">Season</th>
             <th>Placement</th>
             <th>Logo URL</th>
             <th>Actions</th>
@@ -435,10 +442,10 @@ const TeamsPage: React.FC = () => {
                 className="small-column"
                 style={{ cursor: "pointer" }}
                 onClick={() =>
-                  setEditing({ id: t.id, field: "seasonId", value: t.season.id.toString() })
+                  setEditing({ id: t.id, field: "seasonNumber", value: t.season.seasonNumber.toString() })
                 }
               >
-                {editing?.id === t.id && editing.field === "seasonId" ? (
+                {editing?.id === t.id && editing.field === "seasonNumber" ? (
                   <input
                     type="number"
                     min="1"
@@ -452,7 +459,7 @@ const TeamsPage: React.FC = () => {
                     autoFocus
                   />
                 ) : (
-                  t.season.id
+                  t.season.seasonNumber
                 )}
               </td>
 

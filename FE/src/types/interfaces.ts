@@ -225,7 +225,7 @@ export type CreateStatsInput = {
 export type CreateTeamInput = {
   placement: string;
   name:      string;
-  seasonId:  number;
+  seasonNumber: number; // Changed from seasonId to seasonNumber
   logoUrl?:  string; // Optional logo URL for team
   playerIds?: number[];
 };
