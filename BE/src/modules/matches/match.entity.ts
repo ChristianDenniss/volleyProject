@@ -105,9 +105,9 @@ export class Matches {
     team2Name!: string;
 
     // Team logo URLs (auto-filled from team lookup during Challonge import)
-    @Column({ nullable: true, default: null })
+    @Column({ nullable: true, default: null, type: 'varchar' })
     team1LogoUrl!: string | null;
 
-    @Column({ nullable: true, default: null })
+    @Column({ nullable: true, default: null, type: 'varchar' })
     team2LogoUrl!: string | null;
 } 
