@@ -173,6 +173,13 @@ const SingleTeam: React.FC = () =>
                     />
                 )}
                 <h1 className="team-title">{team.name}</h1>
+                {team.logoUrl && (
+                    <img
+                        src={team.logoUrl}
+                        alt={`${team.name} logo`}
+                        className="team-logo-inline team-logo-mirrored"
+                    />
+                )}
             </div>
             <p>Season: {team.season.seasonNumber ?? 'N/A'}</p>
             <p>Playoff Games Played: {team.games?.length ?? 0}</p>
