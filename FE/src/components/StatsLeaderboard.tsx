@@ -1004,7 +1004,19 @@ const StatsLeaderboard: React.FC = () => {
                           {(() => {
                             const team = (item as Player).teams?.find(team => team?.season?.seasonNumber === selectedSeason);
                             return team ? (
-                              <Link className="stats-pill-link" to={`/teams/${encodeURIComponent(team.name)}`}>{team.name}</Link>
+                              <Link className="stats-pill-link" to={`/teams/${encodeURIComponent(team.name)}`}>
+                                {team.logoUrl ? (
+                                  <div className="team-logo-container">
+                                    <img 
+                                      src={team.logoUrl} 
+                                      alt={`${team.name} logo`}
+                                      className="team-logo"
+                                    />
+                                  </div>
+                                ) : (
+                                  team.name
+                                )}
+                              </Link>
                             ) : 'N/A';
                           })()}
                         </td>

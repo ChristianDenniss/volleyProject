@@ -181,6 +181,25 @@
     contain: layout style; /* Optimize card rendering */
     transform: translateZ(0); /* Force hardware acceleration */
     backface-visibility: hidden; /* Prevent flickering */
+    
+    /* Position relative for background logo */
+    position: relative;
+    overflow: hidden;
+}
+
+/* Team logo background element */
+.team-card-logo-bg {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 60px;
+    height: 60px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center right;
+    opacity: 0.3;
+    pointer-events: none;
+    z-index: 0;
 }
 
 /* ----- Hover / active effect ----------------------------------------- */

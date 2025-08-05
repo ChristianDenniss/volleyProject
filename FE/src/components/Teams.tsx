@@ -243,6 +243,15 @@ const Teams: React.FC = () =>
                                 className={`team-card ${activeTeam === team.name ? "active" : ""}`}
                                 onClick={() => handleCardClick(team.name)}
                             >
+                                {team.logoUrl && (
+                                    <div 
+                                        className="team-card-logo-bg"
+                                        style={{
+                                            backgroundImage: `url(${team.logoUrl})`
+                                        }}
+                                    />
+                                )}
+                                
                                 <div className="team-name">
                                     <strong>{team.name}</strong>
                                 </div>
