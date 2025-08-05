@@ -164,10 +164,23 @@ const SingleTeam: React.FC = () =>
             )}
 
             {/* Team Header */}
-            <h1 className="team-title">{team.name}</h1>
-            <p>Season: {team.season.seasonNumber ?? 'N/A'}</p>
-            <p>Playoff Games Played: {team.games?.length ?? 0}</p>
-            <p>Placement: {team.placement}</p>
+            <div className="team-header">
+                {team.logoUrl && (
+                    <div className="team-logo-container">
+                        <img
+                            src={team.logoUrl}
+                            alt={`${team.name} logo`}
+                            className="team-logo"
+                        />
+                    </div>
+                )}
+                <div className="team-info">
+                    <h1 className="team-title">{team.name}</h1>
+                    <p>Season: {team.season.seasonNumber ?? 'N/A'}</p>
+                    <p>Playoff Games Played: {team.games?.length ?? 0}</p>
+                    <p>Placement: {team.placement}</p>
+                </div>
+            </div>
 
             {/* Players Section */}
             <div className="players-list">
