@@ -28,7 +28,7 @@ export class TeamService {
      * Create a new team with validation
      */
     async createTeam(teamData: CreateTeamDto): Promise<Teams> {
-        const { name, seasonId, placement, playerIds, gameIds } = teamData;
+        const { name, seasonId, placement, playerIds, gameIds, logoUrl } = teamData;
 
         // Validation for missing name
         if (!name) {
@@ -66,6 +66,11 @@ export class TeamService {
         // Only override placement if one was provided
         if (placement !== undefined) {
             newTeam.placement = placement.trim();
+        }
+
+        // Set logo URL if provided
+        if (logoUrl !== undefined) {
+            newTeam.logoUrl = logoUrl;
         }
 
         // Add players relationships
@@ -280,10 +285,11 @@ export class TeamService {
             throw new NotFoundError(`Team with ID ${id} not found`);
         }
 
-        const { name, seasonId, placement, playerIds, gameIds } = teamData;
+        const { name, seasonId, placement, playerIds, gameIds, logoUrl } = teamData;
 
         if (name) team.name = name;
         if (placement !== undefined) team.placement = placement.trim();
+        if (logoUrl !== undefined) team.logoUrl = logoUrl;
 
         if (seasonId) {
             const season = await this.seasonRepository.findOne({

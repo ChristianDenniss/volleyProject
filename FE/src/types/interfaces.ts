@@ -34,6 +34,8 @@ interface Match
   season: Season;
   team1Name?: string; // Team name as string (from Challonge)
   team2Name?: string; // Team name as string (from Challonge)
+  team1LogoUrl?: string | null; // Team logo URL (from team lookup during Challonge import)
+  team2LogoUrl?: string | null; // Team logo URL (from team lookup during Challonge import)
 }
 
 interface Award
@@ -224,6 +226,7 @@ export type CreateTeamInput = {
   placement: string;
   name:      string;
   seasonId:  number;
+  logoUrl?:  string; // Optional logo URL for team
   playerIds?: number[];
 };
 

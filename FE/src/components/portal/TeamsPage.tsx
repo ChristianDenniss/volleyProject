@@ -16,7 +16,8 @@ import Pagination from "../Pagination";
 type EditField =
   | "name"
   | "seasonId"
-  | "placement";
+  | "placement"
+  | "logoUrl";
 
 interface EditingState {
   id: number;
@@ -45,6 +46,7 @@ const TeamsPage: React.FC = () => {
   const [newName, setNewName] = useState<string>("");
   const [newSeasonId, setNewSeasonId] = useState<number>(0);
   const [newPlacement, setNewPlacement] = useState<string>("Didn't make playoffs");
+  const [newLogoUrl, setNewLogoUrl] = useState<string>("");
   const [formError, setFormError] = useState<string>("");
 
   useEffect(() => {
@@ -103,6 +105,7 @@ const TeamsPage: React.FC = () => {
       case "name": origValue = orig.name; break;
       case "seasonId": origValue = orig.season.id.toString(); break;
       case "placement": origValue = orig.placement; break;
+      case "logoUrl": origValue = orig.logoUrl || ""; break;
       default: origValue = "";
     }
     if (value === origValue) {
@@ -114,6 +117,7 @@ const TeamsPage: React.FC = () => {
       name: "Name",
       seasonId: "Season ID",
       placement: "Placement",
+      logoUrl: "Logo URL",
     };
     if (
       !window.confirm(
@@ -130,6 +134,7 @@ const TeamsPage: React.FC = () => {
       case "name": payload.name = value; break;
       case "seasonId": payload.seasonId = Number(value); break;
       case "placement": payload.placement = value; break;
+      case "logoUrl": payload.logoUrl = value || undefined; break;
     }
 
     try {
@@ -163,6 +168,7 @@ const TeamsPage: React.FC = () => {
     setNewName("");
     setNewSeasonId(0);
     setNewPlacement("Didn't make playoffs");
+    setNewLogoUrl("");
   };
 
   // Close modal
@@ -183,6 +189,7 @@ const TeamsPage: React.FC = () => {
       name: newName,
       seasonId: newSeasonId,
       placement: newPlacement,
+      logoUrl: newLogoUrl.trim() || undefined, // Only include if not empty
     };
 
     try {
@@ -342,6 +349,18 @@ const TeamsPage: React.FC = () => {
                   type="text"
                   value={newPlacement}
                   onChange={(e) => setNewPlacement(e.target.value)}
+                  style={{ width: "100%", marginBottom: "0.75rem" }}
+                />
+              </label>
+
+              {/* Logo URL */}
+              <label>
+                Logo URL (Optional)
+                <input
+                  type="url"
+                  value={newLogoUrl}
+                  onChange={(e) => setNewLogoUrl(e.target.value)}
+                  placeholder="https://example.com/logo.png"
                   style={{ width: "100%", marginBottom: "1rem" }}
                 />
               </label>
@@ -380,6 +399,7 @@ const TeamsPage: React.FC = () => {
             <th>Name</th>
             <th className="small-column">Season ID</th>
             <th>Placement</th>
+            <th>Logo URL</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -455,6 +475,28 @@ const TeamsPage: React.FC = () => {
                   />
                 ) : (
                   t.placement
+                )}
+              </td>
+
+              {/* Logo URL (editable) */}
+              <td
+                style={{ cursor: "pointer" }}
+                onClick={() => setEditing({ id: t.id, field: "logoUrl", value: t.logoUrl || "" })}
+              >
+                {editing?.id === t.id && editing.field === "logoUrl" ? (
+                  <input
+                    type="url"
+                    value={editing.value}
+                    onChange={(e) => setEditing({ ...editing, value: e.target.value })}
+                    onBlur={commitEdit}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") e.currentTarget.blur();
+                      if (e.key === "Escape") setEditing(null);
+                    }}
+                    autoFocus
+                  />
+                ) : (
+                  t.logoUrl || "N/A"
                 )}
               </td>
 

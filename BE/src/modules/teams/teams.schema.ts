@@ -20,6 +20,8 @@ export const createTeamSchema = z.object({
     .refine(s => s.trim() !== "", { message: "Placement cannot be empty" }),
 
     games: z.array(z.number().int().positive()).optional(),
+
+    logoUrl: z.string().url().optional(), // Optional logo URL for team
 });
 
 //we are using a partial extend to make the fields we want to update optional
@@ -33,6 +35,7 @@ export interface CreateTeamDto {
     placement?: string;
     playerIds?: number[];
     gameIds?: number[];
+    logoUrl?: string; // Optional logo URL for team
 }
 
 export interface UpdateTeamDto {
@@ -41,6 +44,7 @@ export interface UpdateTeamDto {
     placement?: string;
     playerIds?: number[];
     gameIds?: number[];
+    logoUrl?: string; // Optional logo URL for team
 }
 
 export type CreateMultipleTeamsDto = CreateTeamDto[];

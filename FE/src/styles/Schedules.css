@@ -351,6 +351,12 @@
   font-weight: 700;
 }
 
+.team-logo-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .winning-score {
   color: #166534 !important;
   font-weight: 700;

@@ -356,9 +356,19 @@ const Schedules: React.FC = () => {
                            
                           <div className="match-teams">
                             {/* Team 1 */}
-                            <div className={`team-row ${winningTeam === 0 ? 'winning-team' : ''}`}>
-                                                            <div className="team-info">
-                                <span className="team-name">{match.team1Name || 'TBD'}</span>
+                                                        <div className={`team-row ${winningTeam === 0 ? 'winning-team' : ''}`}>
+                              <div className="team-info">
+                                {match.team1LogoUrl ? (
+                                  <div className="team-logo-container">
+                                    <img 
+                                      src={match.team1LogoUrl} 
+                                      alt={`${match.team1Name} logo`}
+                                      className="team-logo"
+                                    />
+                                  </div>
+                                ) : (
+                                  <span className="team-name">{match.team1Name || 'TBD'}</span>
+                                )}
                               </div>
                               <div className="team-score">
                                 {match.status === 'completed' && (
@@ -393,7 +403,17 @@ const Schedules: React.FC = () => {
                             {/* Team 2 */}
                             <div className={`team-row ${winningTeam === 1 ? 'winning-team' : ''}`}>
                               <div className="team-info">
-                                <span className="team-name">{match.team2Name || 'TBD'}</span>
+                                {match.team2LogoUrl ? (
+                                  <div className="team-logo-container">
+                                    <img 
+                                      src={match.team2LogoUrl} 
+                                      alt={`${match.team2Name} logo`}
+                                      className="team-logo"
+                                    />
+                                  </div>
+                                ) : (
+                                  <span className="team-name">{match.team2Name || 'TBD'}</span>
+                                )}
                               </div>
                               <div className="team-score">
                                 {match.status === 'completed' && (

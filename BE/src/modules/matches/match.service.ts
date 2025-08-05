@@ -228,6 +228,12 @@ export class MatchService {
       console.log(`Parsed set scores:`, setScores);
       console.log(`Overall score: ${overallScore.team1Sets}-${overallScore.team2Sets}`);
 
+      // Find team logos by name (case-insensitive search)
+      const team1Logo = await this.findTeamLogo(player1Name);
+      const team2Logo = await this.findTeamLogo(player2Name);
+      
+      console.log(`Team logos found: ${player1Name} -> ${team1Logo || 'none'}, ${player2Name} -> ${team2Logo || 'none'}`);
+
       // Determine match date based on completion status
       const matchDate = this.calculateMatchDate(
         challongeMatch.state === 'complete',
@@ -259,6 +265,8 @@ export class MatchService {
         tags: data.tags || [], // Apply tags from import data
         team1Name: player1Name,
         team2Name: player2Name,
+        team1LogoUrl: team1Logo,
+        team2LogoUrl: team2Logo,
         season
       };
       
@@ -484,6 +492,35 @@ export class MatchService {
          username: participant.participant.username
        };
      });
+   }
+
+   // Function to find team logo by team name (case-insensitive search)
+   private async findTeamLogo(teamName: string): Promise<string | null> {
+     if (!teamName) return null;
+     
+     try {
+       // Import the team entity and get repository
+       const { Teams } = await import('../teams/team.entity.js');
+       const teamRepository = AppDataSource.getRepository(Teams);
+       
+       // Search for team by name (case-insensitive)
+       const team = await teamRepository.findOne({
+         where: {
+           name: teamName.toLowerCase() // This assumes the database stores names in lowercase
+         }
+       });
+       
+       if (team && team.logoUrl) {
+         console.log(`Found logo for team "${teamName}": ${team.logoUrl}`);
+         return team.logoUrl;
+       } else {
+         console.log(`No logo found for team "${teamName}"`);
+         return null;
+       }
+     } catch (error) {
+       console.error(`Error finding logo for team "${teamName}":`, error);
+       return null;
+     }
    }
 
 } 
