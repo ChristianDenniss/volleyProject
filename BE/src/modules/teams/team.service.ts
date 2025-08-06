@@ -328,7 +328,13 @@ export class TeamService {
             team.games = games;
         }
 
-        return this.teamRepository.save(team);
+        const savedTeam = await this.teamRepository.save(team);
+        
+        // Return the team with full relations to ensure all fields are included
+        return await this.teamRepository.findOne({
+            where: { id: savedTeam.id },
+            relations: ["season", "players", "games"]
+        }) || savedTeam;
     }
 
     /**

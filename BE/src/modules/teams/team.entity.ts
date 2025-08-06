@@ -13,7 +13,7 @@ export class Teams
     name!: string;
 
     @Column({ nullable: true })
-    logoUrl!: string; // URL for team logo/flag
+    logoUrl!: string | null; // URL for team logo/flag
 
     @CreateDateColumn({ type: 'timestamp' })
     createdAt!: Date;
