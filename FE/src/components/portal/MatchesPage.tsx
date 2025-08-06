@@ -144,7 +144,7 @@ const MatchesPage: React.FC = () => {
 
       // Handle special field types
       if (field === "date") {
-        updateData[field] = new Date(value);
+        updateData[field] = value; // Send as string, backend will transform to Date
       } else if (field === "team1Score" || field === "team2Score") {
         updateData[field] = value === "" ? undefined : parseInt(value);
       } else if (field.startsWith("set") && field.endsWith("Score")) {
