@@ -7,7 +7,7 @@ import { useAuth } from "../../context/authContext";
 import { useMatchMutations } from "../../hooks/allPatch";
 import { useCreateMatches } from "../../hooks/allCreate";
 import { useDeleteMatches } from "../../hooks/allDelete";
-import type { CreateMatchInput } from "../../types/interfaces";
+
 import type { Match } from "../../types/interfaces";
 import SearchBar from "../Searchbar";
 import Pagination from "../Pagination";
@@ -217,11 +217,11 @@ const MatchesPage: React.FC = () => {
     }
 
     try {
-      const matchData: CreateMatchInput = {
+      const matchData: any = {
         matchNumber: newMatchNumber,
         status: newStatus as "scheduled" | "completed",
         round: newRound,
-        scheduledDate: newDate,
+        date: newDate, // Backend expects 'date', not 'scheduledDate'
         team1Score: newTeam1Score,
         team2Score: newTeam2Score,
         seasonId: newSeasonId,
@@ -692,31 +692,33 @@ const MatchesPage: React.FC = () => {
               <button onClick={closeModal} className="close-button">&times;</button>
             </div>
             <form onSubmit={handleCreate} className="modal-form">
-              {/* Basic Information Row */}
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="matchNumber">Match Number *</label>
-                  <input
-                    type="text"
-                    id="matchNumber"
-                    value={newMatchNumber}
-                    onChange={(e) => setNewMatchNumber(e.target.value)}
-                    required
-                  />
+              <div className="modal-body">
+                {/* Basic Information Row */}
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="matchNumber">Match Number *</label>
+                    <input
+                      type="text"
+                      id="matchNumber"
+                      value={newMatchNumber}
+                      onChange={(e) => setNewMatchNumber(e.target.value)}
+                      required
+                      placeholder="e.g., Round 1 - Match 1"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="status">Status *</label>
+                    <select
+                      id="status"
+                      value={newStatus}
+                      onChange={(e) => setNewStatus(e.target.value)}
+                      required
+                    >
+                      <option value="scheduled">Scheduled</option>
+                      <option value="completed">Completed</option>
+                    </select>
+                  </div>
                 </div>
-                <div className="form-group">
-                  <label htmlFor="status">Status *</label>
-                  <select
-                    id="status"
-                    value={newStatus}
-                    onChange={(e) => setNewStatus(e.target.value)}
-                    required
-                  >
-                    <option value="scheduled">Scheduled</option>
-                    <option value="completed">Completed</option>
-                  </select>
-                </div>
-              </div>
 
                              {/* Round and Date Row */}
                <div className="form-row">
@@ -824,11 +826,12 @@ const MatchesPage: React.FC = () => {
 
               
 
-              {formError && (
-                <div className="error-message">
-                  {formError}
-                </div>
-              )}
+                {formError && (
+                  <div className="error-message">
+                    {formError}
+                  </div>
+                )}
+              </div>
 
               <div className="modal-actions">
                 <button type="button" onClick={closeModal} className="cancel-button">

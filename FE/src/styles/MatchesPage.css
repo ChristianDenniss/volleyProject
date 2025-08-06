@@ -63,7 +63,13 @@
 }
 
 .modal-form {
-  padding: 0 24px 24px 24px;
+  padding: 0;
+}
+
+.modal-body {
+  padding: 24px;
+  max-height: 60vh;
+  overflow-y: auto;
 }
 
 .form-row {
