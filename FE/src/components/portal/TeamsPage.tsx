@@ -135,7 +135,7 @@ const TeamsPage: React.FC = () => {
       case "name": payload.name = value; break;
       case "seasonNumber": payload.seasonNumber = Number(value); break;
       case "placement": payload.placement = value; break;
-      case "logoUrl": payload.logoUrl = value || undefined; break;
+      case "logoUrl": payload.logoUrl = value.trim() === "" ? undefined : value.trim(); break;
     }
 
     try {
