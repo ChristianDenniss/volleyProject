@@ -21,7 +21,7 @@ export const createTeamSchema = z.object({
 
     games: z.array(z.number().int().positive()).optional(),
 
-    logoUrl: z.string().optional().nullable(), // Optional logo URL for team (relaxed validation)
+    logoUrl: z.string().optional(), // Optional logo URL for team
 });
 
 //we are using a partial extend to make the fields we want to update optional
@@ -35,7 +35,7 @@ export interface CreateTeamDto {
     placement?: string;
     playerIds?: number[];
     gameIds?: number[];
-    logoUrl?: string | null; // Optional logo URL for team
+    logoUrl?: string; // Optional logo URL for team
 }
 
 export interface UpdateTeamDto {
@@ -44,7 +44,7 @@ export interface UpdateTeamDto {
     placement?: string;
     playerIds?: number[];
     gameIds?: number[];
-    logoUrl?: string | null; // Optional logo URL for team
+    logoUrl?: string; // Optional logo URL for team
 }
 
 export type CreateMultipleTeamsDto = CreateTeamDto[];
