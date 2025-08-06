@@ -17,6 +17,11 @@ export const createMatchSchema = z.object({
   team1Score: z.number().optional(),
   team2Score: z.number().optional(),
   setScores: z.array(z.string()).max(5).optional(), // Array of strings like ["25-20", "20-25", "25-22"]
+  set1Score: z.string().optional(), // Individual set scores for direct editing
+  set2Score: z.string().optional(),
+  set3Score: z.string().optional(),
+  set4Score: z.string().optional(),
+  set5Score: z.string().optional(),
   challongeMatchId: z.string().optional(),
   challongeTournamentId: z.string().optional(),
   challongeRound: z.number().optional(),

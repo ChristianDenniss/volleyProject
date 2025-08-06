@@ -200,6 +200,59 @@
   color: #374151;
 }
 
+/* Score container styling */
+.score-container {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.score-separator {
+  color: #6b7280;
+  font-weight: 500;
+}
+
+/* Editable score styling */
+.score-container span {
+  padding: 4px 6px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.score-container span:hover {
+  background-color: #f9fafb;
+}
+
+/* Input styling for score editing */
+.score-container input[type="number"] {
+  border: 2px solid #3b82f6;
+  border-radius: 4px;
+  padding: 4px 6px;
+  font-size: 0.875rem;
+  text-align: center;
+  outline: none;
+}
+
+/* Set score editable styling */
+.set-scores span {
+  display: inline-block;
+  transition: background-color 0.2s ease;
+}
+
+.set-scores span:hover {
+  background-color: #e5e7eb;
+}
+
+.set-scores input[type="text"] {
+  border: 2px solid #3b82f6;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 0.75rem;
+  text-align: center;
+  outline: none;
+  background: white;
+}
+
 .status-badge {
   padding: 4px 8px;
   border-radius: 12px;

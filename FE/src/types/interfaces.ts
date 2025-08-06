@@ -31,7 +31,8 @@ interface Match
   challongeTournamentId?: string;
   challongeRound?: number;
   tags?: string[]; // Array of tags like ["RVL", "Invitational", "D-League"]
-  season: Season;
+  seasonId: number; // Foreign key to seasons table
+  season: Season; // Full season object (loaded with relations when needed)
   team1Name?: string; // Team name as string (from Challonge)
   team2Name?: string; // Team name as string (from Challonge)
   team1LogoUrl?: string | null; // Team logo URL (from team lookup during Challonge import)

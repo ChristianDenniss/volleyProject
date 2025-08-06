@@ -18,7 +18,7 @@ export class MatchService {
 
   async getMatchesBySeason(seasonId: number) {
     return await matchRepository.find({
-      where: { season: { id: seasonId } },
+      where: { seasonId: seasonId },
       relations: ['season'],
       order: {
         date: 'ASC'
@@ -29,7 +29,7 @@ export class MatchService {
   async getMatchesByRound(seasonId: number, round: string) {
     return await matchRepository.find({
       where: { 
-        season: { id: seasonId },
+        seasonId: seasonId,
         round: round
       },
       relations: ['season'],
@@ -75,6 +75,7 @@ export class MatchService {
       challongeRound: data.challongeRound,
       team1Name: data.team1Name,
       team2Name: data.team2Name,
+      seasonId: data.seasonId,
       season
     });
 
@@ -82,7 +83,10 @@ export class MatchService {
   }
 
   async updateMatch(id: number, data: UpdateMatchInput) {
-    const match = await matchRepository.findOne({ where: { id } });
+    const match = await matchRepository.findOne({ 
+      where: { id }, 
+      relations: ['season'] 
+    });
     if (!match) {
       throw new Error('Match not found');
     }
@@ -92,6 +96,7 @@ export class MatchService {
       if (!season) {
         throw new Error('Season not found');
       }
+      match.seasonId = data.seasonId;
       match.season = season;
     }
 
@@ -111,7 +116,13 @@ export class MatchService {
     }
 
     Object.assign(match, data);
-    return await matchRepository.save(match);
+    const savedMatch = await matchRepository.save(match);
+    
+    // Return the match with full relations
+    return await matchRepository.findOne({
+      where: { id: savedMatch.id },
+      relations: ['season']
+    });
   }
 
   async deleteMatch(id: number) {

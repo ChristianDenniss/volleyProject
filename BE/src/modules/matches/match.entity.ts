@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 import type { Seasons } from '../seasons/season.entity.js';
 
 export enum MatchStatus {
@@ -87,6 +87,9 @@ export class Matches {
     @Column({ nullable: true, type: 'simple-array' })
     tags!: string[]; // Array of tags like ["RVL", "Invitational", "D-League"]
 
+    @Column()
+    seasonId!: number; // Foreign key to seasons table
+
     @CreateDateColumn({ type: 'timestamp' })
     createdAt!: Date;
 
@@ -95,6 +98,7 @@ export class Matches {
 
     // Many-to-one relationship with seasons
     @ManyToOne('Seasons', 'matches')
+    @JoinColumn()
     season!: Seasons;
 
     // Team names as strings (auto-filled from Challonge)

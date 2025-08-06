@@ -76,14 +76,14 @@ const MatchesPage: React.FC = () => {
   }, [matches]);
 
   // Get unique seasons, statuses, and rounds for filter options
-  const uniqueSeasons = Array.from(new Set(localMatches.map(match => match.season.id))).sort((a, b) => a - b);
+  const uniqueSeasons = Array.from(new Set(localMatches.map(match => match.seasonId))).sort((a, b) => a - b);
   const uniqueStatuses = Array.from(new Set(localMatches.map(match => match.status)));
   const uniqueRounds = Array.from(new Set(localMatches.map(match => match.round))).sort();
 
   // Filter matches based on search query and filters
   const filteredMatches = localMatches.filter(match => {
     const matchesSearch = match?.matchNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false;
-    const matchesSeason = !seasonFilter || match.season.id.toString() === seasonFilter;
+    const matchesSeason = !seasonFilter || match.seasonId.toString() === seasonFilter;
     const matchesStatus = !statusFilter || match.status === statusFilter;
     const matchesRound = !roundFilter || match.round === roundFilter;
     
@@ -147,11 +147,14 @@ const MatchesPage: React.FC = () => {
         updateData[field] = new Date(value);
       } else if (field === "team1Score" || field === "team2Score") {
         updateData[field] = value === "" ? undefined : parseInt(value);
+      } else if (field.startsWith("set") && field.endsWith("Score")) {
+        // Handle set scores - they should be strings like "25-20" or null if empty
+        updateData[field] = value.trim() === "" ? null : value.trim();
       }
 
       const updatedMatch = await patchMatch(id, updateData);
       setLocalMatches(prev =>
-        prev.map(m => (m.id === id ? updatedMatch : m))
+        prev.map(m => (m.id === id ? { ...m, ...updatedMatch, season: updatedMatch.season || m.season } : m))
       );
       setEditing(null);
     } catch (error) {
@@ -506,28 +509,127 @@ const MatchesPage: React.FC = () => {
 
                 {/* Score */}
                 <td>
-                  {match.status === "completed" && match.team1Score !== undefined && match.team2Score !== undefined ? (
-                    <span className="score">
-                      {match.team1Score} - {match.team2Score}
+                  <div className="score-container">
+                    {/* Team 1 Score */}
+                    <span
+                      style={{ cursor: "pointer" }}
+                      onClick={() =>
+                        setEditing({
+                          id: match.id,
+                          field: "team1Score",
+                          value: toStr("team1Score", match),
+                        })
+                      }
+                    >
+                      {editing?.id === match.id && editing?.field === "team1Score" ? (
+                        <input
+                          type="number"
+                          value={editing.value}
+                          onChange={(e) =>
+                            setEditing({ ...editing, value: e.target.value })
+                          }
+                          onBlur={commitEdit}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.currentTarget.blur();
+                            }
+                            if (e.key === "Escape") {
+                              setEditing(null);
+                            }
+                          }}
+                          autoFocus
+                          style={{ width: "50px" }}
+                        />
+                      ) : (
+                        match.team1Score ?? "-"
+                      )}
                     </span>
-                  ) : (
-                    <span className="text-muted">TBD</span>
-                  )}
+                    <span className="score-separator"> - </span>
+                    {/* Team 2 Score */}
+                    <span
+                      style={{ cursor: "pointer" }}
+                      onClick={() =>
+                        setEditing({
+                          id: match.id,
+                          field: "team2Score",
+                          value: toStr("team2Score", match),
+                        })
+                      }
+                    >
+                      {editing?.id === match.id && editing?.field === "team2Score" ? (
+                        <input
+                          type="number"
+                          value={editing.value}
+                          onChange={(e) =>
+                            setEditing({ ...editing, value: e.target.value })
+                          }
+                          onBlur={commitEdit}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.currentTarget.blur();
+                            }
+                            if (e.key === "Escape") {
+                              setEditing(null);
+                            }
+                          }}
+                          autoFocus
+                          style={{ width: "50px" }}
+                        />
+                      ) : (
+                        match.team2Score ?? "-"
+                      )}
+                    </span>
+                  </div>
                 </td>
 
                 {/* Set Scores */}
                 <td>
-                  {match.status === "completed" && (
-                    <div className="set-scores">
-                      {[match.set1Score, match.set2Score, match.set3Score, match.set4Score, match.set5Score]
-                        .filter(score => score !== null && score !== undefined)
-                        .map((setScore, index) => (
-                          <span key={index} className="set-score">
-                            {setScore}
-                          </span>
-                        ))}
-                    </div>
-                  )}
+                  <div className="set-scores">
+                    {(["set1Score", "set2Score", "set3Score", "set4Score", "set5Score"] as const).map((setField, index) => {
+                      const setScore = match[setField];
+                      const setNumber = index + 1;
+                      
+                      return (
+                        <span
+                          key={setField}
+                          style={{ cursor: "pointer", marginRight: "8px" }}
+                          onClick={() =>
+                            setEditing({
+                              id: match.id,
+                              field: setField,
+                              value: toStr(setField, match),
+                            })
+                          }
+                        >
+                          {editing?.id === match.id && editing?.field === setField ? (
+                            <input
+                              type="text"
+                              value={editing.value}
+                              onChange={(e) =>
+                                setEditing({ ...editing, value: e.target.value })
+                              }
+                              onBlur={commitEdit}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  e.currentTarget.blur();
+                                }
+                                if (e.key === "Escape") {
+                                  setEditing(null);
+                                }
+                              }}
+                              autoFocus
+                              placeholder={`Set ${setNumber}`}
+                              style={{ width: "60px" }}
+                            />
+                          ) : (
+                            <span className="set-score">
+                              {setScore || `S${setNumber}`}
+                            </span>
+                          )}
+                        </span>
+                      );
+                    })}
+                  </div>
                 </td>
 
                 {/* Tags */}
