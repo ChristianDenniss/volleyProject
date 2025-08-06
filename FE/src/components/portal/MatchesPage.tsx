@@ -412,10 +412,27 @@ const MatchesPage: React.FC = () => {
                   {editing?.id === match.id && editing?.field === "status" ? (
                     <select
                       value={editing.value}
-                      onChange={(e) =>
-                        setEditing({ ...editing, value: e.target.value })
-                      }
-                      onBlur={commitEdit}
+                      onChange={async (e) => {
+                        setEditing({ ...editing, value: e.target.value });
+                        // Immediately commit the change for dropdown selections
+                        const { id, field } = editing;
+                        const orig = localMatches.find((m) => m.id === id);
+                        if (orig) {
+                          try {
+                            const updateData: any = {};
+                            updateData[field] = e.target.value;
+                            const updatedMatch = await patchMatch(id, updateData);
+                            setLocalMatches(prev =>
+                              prev.map(m => (m.id === id ? { ...m, ...updatedMatch, season: updatedMatch.season || m.season } : m))
+                            );
+                            setEditing(null);
+                          } catch (error) {
+                            console.error("Error updating match status:", error);
+                            alert("Failed to update match status");
+                          }
+                        }
+                      }}
+                      onBlur={() => setEditing(null)}
                       autoFocus
                     >
                       <option value="scheduled">scheduled</option>
