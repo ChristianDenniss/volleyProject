@@ -21,7 +21,7 @@ export const createTeamSchema = z.object({
 
     games: z.array(z.number().int().positive()).optional(),
 
-    logoUrl: z.string().optional().nullable(), // Optional logo URL for team
+    logoUrl: z.string().optional(), // Optional logo URL for team - no validation, allow any string
 });
 
 //we are using a partial extend to make the fields we want to update optional

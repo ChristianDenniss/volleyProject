@@ -161,12 +161,12 @@ export class TeamController {
             const id = parseInt(req.params.id, 10);
 
             // Destructure placement alongside the other fields
-            const { name, seasonNumber, placement, playerIds, gameIds } = req.body;
+            const { name, seasonNumber, placement, playerIds, gameIds, logoUrl } = req.body;
 
             // Call service with a single data object
             const updatedTeam = await this.teamService.updateTeam(
                 id,
-                { name, seasonNumber, placement, playerIds, gameIds }
+                { name, seasonNumber, placement, playerIds, gameIds, logoUrl }
             );
 
             // Return the updated team
