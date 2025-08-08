@@ -7,7 +7,7 @@ import { useCreateSeasons }            from "../../hooks/allCreate";
 import { useDeleteSeasons }            from "../../hooks/allDelete";
 import { useAuth }                     from "../../context/authContext";
 import type { Season }                 from "../../types/interfaces";
-import "../../styles/UsersPage.css";
+import "../../styles/SeasonsPage.css";
 
 type EditField = "theme" | "image" | "startDate" | "endDate";
 interface EditingState {

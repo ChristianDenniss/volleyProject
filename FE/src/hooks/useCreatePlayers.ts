@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { authFetch } from "./authFetch";  
+import { useAuth } from "../context/authContext";
 import type { Player } from "../types/interfaces";
 
 /**
@@ -33,12 +34,18 @@ export type BatchPlayerByNameInput = Array<{
 export function useBatchPlayersByTeamName() {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError]     = useState<string | null>(null);
+  const { token } = useAuth();
 
   async function createBatch(
     payload: BatchPlayerByNameInput
   ): Promise<Player[] | null> {
     setLoading(true);
     setError(null);
+
+    if (!token) {
+      setError("You must be logged in to create players");
+      return null;
+    }
 
     const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
     try {
@@ -48,7 +55,8 @@ export function useBatchPlayersByTeamName() {
           method:  "POST",
           headers: { "Content-Type": "application/json" },
           body:    JSON.stringify(payload),
-        }
+        },
+        token
       );
 
       if (!response.ok) {

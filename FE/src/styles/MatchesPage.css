@@ -6,6 +6,12 @@
   --primary-blue-hover: #2a4a7d;
 }
 
+/* Text muted style for permission notices */
+.text-muted {
+  color: #6b7280;
+  font-style: italic;
+}
+
 /* Modal Styles */
 .modal-overlay {
   position: fixed;

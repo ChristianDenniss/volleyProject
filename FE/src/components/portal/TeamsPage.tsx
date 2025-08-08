@@ -7,7 +7,6 @@ import { useCreateTeams } from "../../hooks/allCreate";
 import { useDeleteTeams } from "../../hooks/allDelete";
 import { useAuth } from "../../context/authContext";
 import type { Team } from "../../types/interfaces";
-import "../../styles/UsersPage.css";
 import "../../styles/PlayersPage.css";
 import "../../styles/PortalPlayersPage.css";
 import SearchBar from "../Searchbar";

@@ -12,6 +12,12 @@
     z-index: 1000;
 }
 
+/* Text muted style for permission notices */
+.text-muted {
+    color: #6b7280;
+    font-style: italic;
+}
+
 .modal {
     background-color: white;
     padding: 2rem;

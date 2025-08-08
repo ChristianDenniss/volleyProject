@@ -12,7 +12,6 @@ import type { Match } from "../../types/interfaces";
 import SearchBar from "../Searchbar";
 import Pagination from "../Pagination";
 import ChallongeImport from "../ChallongeImport";
-import "../../styles/UsersPage.css";
 import "../../styles/PlayersPage.css";
 import "../../styles/PortalPlayersPage.css";
 import "../../styles/MatchesPage.css";

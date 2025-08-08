@@ -7,7 +7,7 @@ import { useCreateGames } from "../../hooks/allCreate";
 import { useDeleteGames } from "../../hooks/allDelete";
 import { useAuth } from "../../context/authContext";
 import type { Game } from "../../types/interfaces";
-import "../../styles/UsersPage.css";       // table & button styling
+import "../../styles/GamesPage.css";       // table & button styling
 import "../../styles/PlayersPage.css";     // custom modal styling
 import "../../styles/PortalPlayersPage.css"; // portal-specific styles
 import SearchBar from "../Searchbar";
