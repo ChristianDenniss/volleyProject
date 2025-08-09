@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useMatches } from "../../hooks/allFetch";
-import { useSeasons } from "../../hooks/allFetch";
+import { useSkinnySeasons } from "../../hooks/allFetch";
 import { useAuth } from "../../context/authContext";
 import { useMatchMutations } from "../../hooks/allPatch";
 import { useCreateMatches } from "../../hooks/allCreate";
@@ -37,7 +37,7 @@ interface EditingState {
 
 const MatchesPage: React.FC = () => {
   const { data: matches, loading, error } = useMatches();
-  const { data: seasons } = useSeasons();
+  const { data: seasons } = useSkinnySeasons();
   const { user } = useAuth();
   const { patchMatch } = useMatchMutations();
   const { createMatch } = useCreateMatches();
