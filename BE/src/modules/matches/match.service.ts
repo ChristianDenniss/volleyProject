@@ -191,6 +191,12 @@ export class MatchService {
         continue;
       }
 
+      // Skip matches without both participants assigned (future/incomplete matches)
+      if (!challongeMatch.player1_id || !challongeMatch.player2_id) {
+        console.log(`Skipping match ${challongeMatch.id} - missing participants (player1_id: ${challongeMatch.player1_id}, player2_id: ${challongeMatch.player2_id})`);
+        continue;
+      }
+
              // Get player names from Challonge match data
        let player1Name = challongeMatch.player1_name;
        let player2Name = challongeMatch.player2_name;
@@ -204,23 +210,43 @@ export class MatchService {
          console.log(`Fetched ${participants.length} participants`);
          console.log(`First few participants:`, participants.slice(0, 3));
          
-         // Find participant names by ID
-         const player1Participant = participants.find((p: any) => p.id === challongeMatch.player1_id);
-         const player2Participant = participants.find((p: any) => p.id === challongeMatch.player2_id);
-         
-         console.log(`Found player1 participant:`, player1Participant);
-         console.log(`Found player2 participant:`, player2Participant);
-         
-         if (player1Participant) {
-           player1Name = player1Participant.name || player1Participant.username || `Player ${challongeMatch.player1_id}`;
-         } else {
-           player1Name = `Player ${challongeMatch.player1_id}`;
-         }
-         if (player2Participant) {
-           player2Name = player2Participant.name || player2Participant.username || `Player ${challongeMatch.player2_id}`;
-         } else {
-           player2Name = `Player ${challongeMatch.player2_id}`;
-         }
+                 // Find participant names by ID - try multiple approaches
+        let player1Participant = participants.find((p: any) => p.id === challongeMatch.player1_id);
+        let player2Participant = participants.find((p: any) => p.id === challongeMatch.player2_id);
+        
+        // If direct ID match fails, try to map by position/seed
+        if (!player1Participant && challongeMatch.player1_id) {
+          // Try to find by seed/position (Challonge sometimes uses 1-based indexing)
+          const player1Index = challongeMatch.player1_id - 1;
+          if (player1Index >= 0 && player1Index < participants.length) {
+            player1Participant = participants[player1Index];
+            console.log(`Mapped player1_id ${challongeMatch.player1_id} to participant by index:`, player1Participant);
+          }
+        }
+        
+        if (!player2Participant && challongeMatch.player2_id) {
+          const player2Index = challongeMatch.player2_id - 1;
+          if (player2Index >= 0 && player2Index < participants.length) {
+            player2Participant = participants[player2Index];
+            console.log(`Mapped player2_id ${challongeMatch.player2_id} to participant by index:`, player2Participant);
+          }
+        }
+        
+        console.log(`Found player1 participant:`, player1Participant);
+        console.log(`Found player2 participant:`, player2Participant);
+        
+        if (player1Participant) {
+          player1Name = player1Participant.name || player1Participant.display_name || player1Participant.username || `Player ${challongeMatch.player1_id}`;
+        } else {
+          player1Name = `Player ${challongeMatch.player1_id}`;
+          console.warn(`Could not resolve name for player1_id: ${challongeMatch.player1_id}`);
+        }
+        if (player2Participant) {
+          player2Name = player2Participant.name || player2Participant.display_name || player2Participant.username || `Player ${challongeMatch.player2_id}`;
+        } else {
+          player2Name = `Player ${challongeMatch.player2_id}`;
+          console.warn(`Could not resolve name for player2_id: ${challongeMatch.player2_id}`);
+        }
          
          console.log(`Resolved names: ${player1Name} vs ${player2Name}`);
        } catch (error) {
