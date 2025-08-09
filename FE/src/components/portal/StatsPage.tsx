@@ -779,33 +779,33 @@ const StatsPage: React.FC = () =>
 
             {/* CSV Upload Modal */}
             {isCSVModalOpen && (
-                <div className="modal-overlay">
-                    <div className="modal" style={{ maxWidth: '800px', maxHeight: '80vh', overflow: 'auto' }}>
+                <div className="csv-modal-overlay">
+                    <div className="csv-modal" style={{ maxWidth: '800px', maxHeight: '80vh', overflow: 'auto' }}>
                         {/* Close button */}
                         <button
                             onClick={closeCSVModal}
-                            className="modal-close"
+                            className="csv-modal-close"
                         >
                             ×
                         </button>
 
-                        <h2 className="modal-title">Upload CSV</h2>
+                        <h2 className="csv-modal-title">Upload CSV</h2>
 
                         {/* Display CSV upload errors */}
                         {csvParseError && (
-                            <p className="modal-error">
+                            <p className="csv-modal-error">
                                 {csvParseError}
                             </p>
                         )}
 
                         {csvUploadError && (
-                            <p className="modal-error">
+                            <p className="csv-modal-error">
                                 CSV Upload Error: {csvUploadError}
                             </p>
                         )}
 
                         {addStatsError && (
-                            <p className="modal-error">
+                            <p className="csv-modal-error">
                                 Add Stats Error: {addStatsError}
                             </p>
                         )}
