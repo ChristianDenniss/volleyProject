@@ -101,9 +101,10 @@
     flex-direction: column;
     gap: 1rem;
     height: 100%; /* Match the height of the featured article */
-    max-height: 400px; /* Constrain to not exceed featured article height */
+    min-height: 300px; /* Ensure minimum height for visibility */
+    max-height: min(50vh, 500px); /* Scale with viewport height, max 500px */
     min-width: 280px;
-    max-width: 400px;
+    max-width: min(25vw, 450px); /* Scale with viewport width */
     padding-left: 1.5rem;
     border-left: 1px solid #eee; /* subtle visual separation */
     justify-content: flex-start; /* Align articles to top */
@@ -122,7 +123,8 @@
     background-color: white;
     cursor: pointer;
     transition: all 0.3s ease;
-    height: 80px;                       /* Fixed height to fit within container */
+    min-height: max(80px, 6vh);         /* Scale with viewport height, minimum 80px */
+    height: max(80px, 8vh);             /* Responsive height that scales with zoom */
     flex-shrink: 0;                     /* Prevent articles from shrinking */
     box-sizing: border-box;
     contain: layout style; /* Optimize rendering */
@@ -138,11 +140,15 @@
 /* Article thumbnail */
 .side-articles img
 {
-    width: 100px;
-    height: 60px;
+    width: max(100px, 7vw);            /* Scale with viewport width */
+    height: max(60px, 4.5vh);          /* Scale with viewport height */
+    min-width: 80px;                   /* Minimum size for readability */
+    min-height: 50px;
+    max-width: 120px;                  /* Maximum size to prevent oversizing */
+    max-height: 80px;
     object-fit: cover;
     border-radius: 6px;
-    flex-shrink: 0;                     /* ✅ Prevent image from shrinking */
+    flex-shrink: 0;                    /* ✅ Prevent image from shrinking */
 }
 
 /* Full-Width Breakout for Video Section */
@@ -307,8 +313,13 @@
     
     .side-articles {
         min-width: 260px;
-        max-width: 350px;
+        max-width: min(28vw, 380px); /* Better scaling for zoom */
         padding-left: 1rem;
+        max-height: min(45vh, 450px); /* Adjust height scaling */
+    }
+    
+    .side-articles article {
+        height: max(75px, 7vh); /* Adjust article height for medium screens */
     }
 }
 
@@ -398,19 +409,23 @@
     
     .side-articles {
         min-width: 320px;
-        max-width: 450px;
+        max-width: min(22vw, 500px); /* Better viewport scaling */
         padding-left: 2rem;
-        max-height: 450px; /* Increase constraint for larger screens */
+        max-height: min(55vh, 600px); /* Scale with viewport height */
+        min-height: 350px; /* Ensure adequate minimum height */
     }
     
     .side-articles article {
         padding: 1rem;
-        height: 90px; /* Consistent height */
+        height: max(90px, 9vh); /* Scale with viewport height */
+        min-height: 85px; /* Ensure minimum readability */
     }
     
     .side-articles img {
-        width: 110px;
-        height: 70px;
+        width: max(110px, 8vw);
+        height: max(70px, 5vh);
+        max-width: 130px;
+        max-height: 90px;
     }
 }
 
@@ -426,6 +441,21 @@
     
     .side-articles {
         padding-left: 2.5rem;
+        max-width: min(20vw, 550px); /* Better scaling for ultra-wide screens */
+        max-height: min(60vh, 700px); /* Scale with viewport height */
+        min-height: 400px;
+    }
+    
+    .side-articles article {
+        height: max(95px, 10vh); /* Better scaling for large screens */
+        min-height: 90px;
+    }
+    
+    .side-articles img {
+        width: max(115px, 9vw);
+        height: max(75px, 6vh);
+        max-width: 140px;
+        max-height: 100px;
     }
 }
 
@@ -433,6 +463,44 @@
     .call-to-action {
         height: 700px;
         min-height: 700px;
+    }
+    
+    .side-articles {
+        max-width: min(18vw, 600px); /* Ultra-wide screen scaling */
+        max-height: min(65vh, 800px);
+        min-height: 450px;
+    }
+    
+    .side-articles article {
+        height: max(100px, 12vh); /* Better scaling for ultra-wide */
+        min-height: 95px;
+    }
+}
+
+/* Special handling for very zoomed out scenarios */
+@media screen and (min-width: 2400px) {
+    .side-articles {
+        max-width: min(16vw, 650px);
+        min-width: 350px; /* Ensure minimum usable width */
+        max-height: min(70vh, 900px);
+        min-height: 500px;
+    }
+    
+    .side-articles article {
+        height: max(110px, 14vh);
+        min-height: 100px;
+        padding: 1.25rem;
+    }
+    
+    .side-articles img {
+        width: max(120px, 10vw);
+        height: max(80px, 7vh);
+        max-width: 150px;
+        max-height: 110px;
+    }
+    
+    .side-articles article h4 {
+        font-size: max(1.1rem, 1.2vw);
     }
 }
 
