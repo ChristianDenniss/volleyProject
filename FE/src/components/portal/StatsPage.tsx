@@ -587,201 +587,191 @@ const StatsPage: React.FC = () =>
                         )}
 
                         <form onSubmit={handleCreate}>
-                            {/* Player and Game Information */}
-                            <div className="form-section">
-                                <h4>Player & Game Information</h4>
-                                <div className="form-row">
-                                    <label>
-                                        Player Name*
-                                        <select
-                                            value={newPlayerName}
-                                            onChange={(e) => setNewPlayerName(e.target.value)}
-                                            required
-                                        >
-                                            <option value="">Select a player</option>
-                                            {players?.map((player) => (
-                                                <option key={player.id} value={player.name}>
-                                                    {player.name}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </label>
-                                    <label>
-                                        Game ID*
-                                        <input
-                                            type="number"
-                                            value={newGameId}
-                                            onChange={(e) => setNewGameId(Number(e.target.value))}
-                                            min="1"
-                                            required
-                                        />
-                                    </label>
-                                </div>
-                            </div>
+                            {/* Spiking Errors */}
+                            <label>
+                                Spiking Errors
+                                <input
+                                    type="number"
+                                    value={newSpikingErrors}
+                                    onChange={(e) => setNewSpikingErrors(Number(e.target.value))}
+                                    min="0"
+                                />
+                            </label>
 
-                            {/* Attacking Statistics */}
-                            <div className="form-section">
-                                <h4>Attacking Statistics</h4>
-                                <div className="form-row">
-                                    <label>
-                                        Spike Kills
-                                        <input
-                                            type="number"
-                                            value={newSpikeKills}
-                                            onChange={(e) => setNewSpikeKills(Number(e.target.value))}
-                                            min="0"
-                                        />
-                                    </label>
-                                    <label>
-                                        Spike Attempts
-                                        <input
-                                            type="number"
-                                            value={newSpikeAttempts}
-                                            onChange={(e) => setNewSpikeAttempts(Number(e.target.value))}
-                                            min="0"
-                                        />
-                                    </label>
-                                </div>
-                                <div className="form-row">
-                                    <label>
-                                        Ape Kills
-                                        <input
-                                            type="number"
-                                            value={newApeKills}
-                                            onChange={(e) => setNewApeKills(Number(e.target.value))}
-                                            min="0"
-                                        />
-                                    </label>
-                                    <label>
-                                        Ape Attempts
-                                        <input
-                                            type="number"
-                                            value={newApeAttempts}
-                                            onChange={(e) => setNewApeAttempts(Number(e.target.value))}
-                                            min="0"
-                                        />
-                                    </label>
-                                </div>
-                                <div className="form-row">
-                                    <label>
-                                        Spiking Errors
-                                        <input
-                                            type="number"
-                                            value={newSpikingErrors}
-                                            onChange={(e) => setNewSpikingErrors(Number(e.target.value))}
-                                            min="0"
-                                        />
-                                    </label>
-                                </div>
-                            </div>
+                            {/* Ape Kills */}
+                            <label>
+                                Ape Kills
+                                <input
+                                    type="number"
+                                    value={newApeKills}
+                                    onChange={(e) => setNewApeKills(Number(e.target.value))}
+                                    min="0"
+                                />
+                            </label>
 
-                            {/* Setting & Serving Statistics */}
-                            <div className="form-section">
-                                <h4>Setting & Serving Statistics</h4>
-                                <div className="form-row">
-                                    <label>
-                                        Assists
-                                        <input
-                                            type="number"
-                                            value={newAssists}
-                                            onChange={(e) => setNewAssists(Number(e.target.value))}
-                                            min="0"
-                                        />
-                                    </label>
-                                    <label>
-                                        Setting Errors
-                                        <input
-                                            type="number"
-                                            value={newSettingErrors}
-                                            onChange={(e) => setNewSettingErrors(Number(e.target.value))}
-                                            min="0"
-                                        />
-                                    </label>
-                                </div>
-                                <div className="form-row">
-                                    <label>
-                                        Aces
-                                        <input
-                                            type="number"
-                                            value={newAces}
-                                            onChange={(e) => setNewAces(Number(e.target.value))}
-                                            min="0"
-                                        />
-                                    </label>
-                                    <label>
-                                        Serving Errors
-                                        <input
-                                            type="number"
-                                            value={newServingErrors}
-                                            onChange={(e) => setNewServingErrors(Number(e.target.value))}
-                                            min="0"
-                                        />
-                                    </label>
-                                </div>
-                            </div>
+                            {/* Ape Attempts */}
+                            <label>
+                                Ape Attempts
+                                <input
+                                    type="number"
+                                    value={newApeAttempts}
+                                    onChange={(e) => setNewApeAttempts(Number(e.target.value))}
+                                    min="0"
+                                />
+                            </label>
 
-                            {/* Defensive Statistics */}
-                            <div className="form-section">
-                                <h4>Defensive Statistics</h4>
-                                <div className="form-row">
-                                    <label>
-                                        Blocks
-                                        <input
-                                            type="number"
-                                            value={newBlocks}
-                                            onChange={(e) => setNewBlocks(Number(e.target.value))}
-                                            min="0"
-                                        />
-                                    </label>
-                                    <label>
-                                        Block Follows
-                                        <input
-                                            type="number"
-                                            value={newBlockFollows}
-                                            onChange={(e) => setNewBlockFollows(Number(e.target.value))}
-                                            min="0"
-                                        />
-                                    </label>
-                                </div>
-                                <div className="form-row">
-                                    <label>
-                                        Digs
-                                        <input
-                                            type="number"
-                                            value={newDigs}
-                                            onChange={(e) => setNewDigs(Number(e.target.value))}
-                                            min="0"
-                                        />
-                                    </label>
-                                    <label>
-                                        Misc Errors
-                                        <input
-                                            type="number"
-                                            value={newMiscErrors}
-                                            onChange={(e) => setNewMiscErrors(Number(e.target.value))}
-                                            min="0"
-                                        />
-                                    </label>
-                                </div>
-                            </div>
+                            {/* Spike Kills */}
+                            <label>
+                                Spike Kills
+                                <input
+                                    type="number"
+                                    value={newSpikeKills}
+                                    onChange={(e) => setNewSpikeKills(Number(e.target.value))}
+                                    min="0"
+                                />
+                            </label>
 
-                            {/* Error Display */}
+                            {/* Spike Attempts */}
+                            <label>
+                                Spike Attempts
+                                <input
+                                    type="number"
+                                    value={newSpikeAttempts}
+                                    onChange={(e) => setNewSpikeAttempts(Number(e.target.value))}
+                                    min="0"
+                                />
+                            </label>
+
+                            {/* Assists */}
+                            <label>
+                                Assists
+                                <input
+                                    type="number"
+                                    value={newAssists}
+                                    onChange={(e) => setNewAssists(Number(e.target.value))}
+                                    min="0"
+                                />
+                            </label>
+
+                            {/* Setting Errors */}
+                            <label>
+                                Setting Errors
+                                <input
+                                    type="number"
+                                    value={newSettingErrors}
+                                    onChange={(e) => setNewSettingErrors(Number(e.target.value))}
+                                    min="0"
+                                />
+                            </label>
+
+                            {/* Blocks */}
+                            <label>
+                                Blocks
+                                <input
+                                    type="number"
+                                    value={newBlocks}
+                                    onChange={(e) => setNewBlocks(Number(e.target.value))}
+                                    min="0"
+                                />
+                            </label>
+
+                            {/* Digs */}
+                            <label>
+                                Digs
+                                <input
+                                    type="number"
+                                    value={newDigs}
+                                    onChange={(e) => setNewDigs(Number(e.target.value))}
+                                    min="0"
+                                />
+                            </label>
+
+                            {/* Block Follows */}
+                            <label>
+                                Block Follows
+                                <input
+                                    type="number"
+                                    value={newBlockFollows}
+                                    onChange={(e) => setNewBlockFollows(Number(e.target.value))}
+                                    min="0"
+                                />
+                            </label>
+
+                            {/* Aces */}
+                            <label>
+                                Aces
+                                <input
+                                    type="number"
+                                    value={newAces}
+                                    onChange={(e) => setNewAces(Number(e.target.value))}
+                                    min="0"
+                                />
+                            </label>
+
+                            {/* Serving Errors */}
+                            <label>
+                                Serving Errors
+                                <input
+                                    type="number"
+                                    value={newServingErrors}
+                                    onChange={(e) => setNewServingErrors(Number(e.target.value))}
+                                    min="0"
+                                />
+                            </label>
+
+                            {/* Misc Errors */}
+                            <label>
+                                Misc Errors
+                                <input
+                                    type="number"
+                                    value={newMiscErrors}
+                                    onChange={(e) => setNewMiscErrors(Number(e.target.value))}
+                                    min="0"
+                                />
+                            </label>
+
+                            {/* Player Name (dropdown) */}
+                            <label>
+                                Player Name*
+                                <select
+                                    value={newPlayerName}
+                                    onChange={(e) => setNewPlayerName(e.target.value)}
+                                    required
+                                >
+                                    <option value="">Select a player</option>
+                                    {players?.map((player) => (
+                                        <option key={player.id} value={player.name}>
+                                            {player.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
+
+                            {/* Game ID */}
+                            <label>
+                                Game ID*
+                                <input
+                                    type="number"
+                                    value={newGameId}
+                                    onChange={(e) => setNewGameId(Number(e.target.value))}
+                                    min="1"
+                                    required
+                                />
+                            </label>
+
+                            {/* Submit Button */}
+                            <button
+                                type="submit"
+                                disabled={creating}
+                                className="create-button"
+                            >
+                                {creating ? "Creating…" : "Submit"}
+                            </button>
                             {createError && (
                                 <p className="modal-error">
                                     {createError}
                                 </p>
                             )}
-
-                            {/* Submit Section */}
-                            <div className="form-submit-section">
-                                <button
-                                    type="submit"
-                                    disabled={creating}
-                                    className="create-button"
-                                >
-                                    {creating ? "Creating…" : "Submit"}
-                                </button>
-                            </div>
                         </form>
                     </div>
                 </div>
@@ -828,10 +818,10 @@ const StatsPage: React.FC = () =>
                         )}
 
                         {/* Upload Mode Selection */}
-                        <div className="upload-mode-section">
+                        <div style={{ marginBottom: '20px' }}>
                             <h3>Upload Mode:</h3>
-                            <div className="radio-group">
-                                <label className="radio-label">
+                            <div style={{ display: 'flex', gap: '30px', marginBottom: '10px', alignItems: 'center' }}>
+                                <label style={{ display: 'inline-flex', flexDirection: 'row', alignItems: 'center', gap: '8px', fontWeight: 500 }}>
                                     <input
                                         type="radio"
                                         name="uploadMode"
@@ -841,7 +831,7 @@ const StatsPage: React.FC = () =>
                                     />
                                     Create New Game + Stats
                                 </label>
-                                <label className="radio-label">
+                                <label style={{ display: 'inline-flex', flexDirection: 'row', alignItems: 'center', gap: '8px', fontWeight: 500 }}>
                                     <input
                                         type="radio"
                                         name="uploadMode"
@@ -853,7 +843,7 @@ const StatsPage: React.FC = () =>
                                 </label>
                             </div>
                             {csvUploadMode === 'add' && (
-                                <div style={{ marginTop: '1rem' }}>
+                                <div style={{ marginTop: '10px' }}>
                                     <label>
                                         Existing Game ID*
                                         <input
@@ -861,6 +851,7 @@ const StatsPage: React.FC = () =>
                                             value={existingGameId}
                                             onChange={(e) => setExistingGameId(e.target.value)}
                                             placeholder="Enter game ID"
+                                            style={{ width: '100%', marginTop: '5px', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
                                         />
                                     </label>
                                 </div>
@@ -868,53 +859,55 @@ const StatsPage: React.FC = () =>
                         </div>
 
                         {/* File upload section */}
-                        <div className="file-upload-section">
+                        <div style={{ marginBottom: '20px' }}>
                             <label>
-                                <strong>Select CSV File</strong>
+                                Select CSV File
                                 <input
                                     type="file"
                                     accept=".csv"
                                     onChange={(e) => handleFileUploadWrapper(e, setCsvPreview, setCsvParseError)}
-                                    style={{ marginTop: '0.5rem' }}
+                                    style={{ marginTop: '5px' }}
                                 />
                             </label>
                         </div>
 
                         {/* CSV Preview */}
                         {csvPreview && (
-                            <div className="csv-preview-section">
+                            <div style={{ marginBottom: '20px' }}>
                                 <h3>Preview:</h3>
-                                {csvUploadMode === 'create' ? (
-                                    <>
-                                        <h4>Game Data</h4>
-                                        <p><strong>Date:</strong> {new Date().toLocaleDateString()}</p>
-                                        <p><strong>Season ID:</strong> {csvPreview.gameData.seasonId}</p>
-                                        <p><strong>Teams:</strong> {csvPreview.gameData.teamNames.join(' vs ')}</p>
-                                        <p><strong>Team 1 Score:</strong> {csvPreview.gameData.team1Score}</p>
-                                        <p><strong>Team 2 Score:</strong> {csvPreview.gameData.team2Score}</p>
-                                    </>
-                                ) : (
-                                    <>
-                                        <h4>Adding to Game ID: {existingGameId}</h4>
-                                        <p><strong>Season ID:</strong> {csvPreview.gameData.seasonId}</p>
-                                        <p><strong>Teams:</strong> {csvPreview.gameData.teamNames.join(' vs ')}</p>
-                                    </>
-                                )}
-                                
-                                <h4>Stats Data ({csvPreview.statsData.length} players)</h4>
-                                <div className="preview-stats">
-                                    {csvPreview.statsData.map((stat: any, index: number) => (
-                                        <div key={index} className="stat-item">
-                                            <strong>{stat.playerName}</strong><br/>
-                                            Spiking Errors: {stat.spikingErrors} | Ape Kills: {stat.apeKills} | Ape Attempts: {stat.apeAttempts} | Spike Kills: {stat.spikeKills} | Spike Attempts: {stat.spikeAttempts} | Assists: {stat.assists} | Setting Errors: {stat.settingErrors} | Blocks: {stat.blocks} | Digs: {stat.digs} | Block Follows: {stat.blockFollows} | Aces: {stat.aces} | Serving Errors: {stat.servingErrors} | Misc Errors: {stat.miscErrors}
-                                        </div>
-                                    ))}
+                                <div style={{ background: '#f5f5f5', padding: '10px', borderRadius: '5px' }}>
+                                    {csvUploadMode === 'create' ? (
+                                        <>
+                                            <h4>Game Data</h4>
+                                            <p><strong>Date:</strong> {new Date().toLocaleDateString()}</p>
+                                            <p><strong>Season ID:</strong> {csvPreview.gameData.seasonId}</p>
+                                            <p><strong>Teams:</strong> {csvPreview.gameData.teamNames.join(' vs ')}</p>
+                                            <p><strong>Team 1 Score:</strong> {csvPreview.gameData.team1Score}</p>
+                                            <p><strong>Team 2 Score:</strong> {csvPreview.gameData.team2Score}</p>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <h4>Adding to Game ID: {existingGameId}</h4>
+                                            <p><strong>Season ID:</strong> {csvPreview.gameData.seasonId}</p>
+                                            <p><strong>Teams:</strong> {csvPreview.gameData.teamNames.join(' vs ')}</p>
+                                        </>
+                                    )}
+                                    
+                                    <h4>Stats Data ({csvPreview.statsData.length} players)</h4>
+                                    <div style={{ maxHeight: '300px', overflow: 'auto' }}>
+                                        {csvPreview.statsData.map((stat: any, index: number) => (
+                                            <div key={index} style={{ marginBottom: '10px', padding: '5px', background: 'white', borderRadius: '3px' }}>
+                                                <strong>{stat.playerName}</strong><br/>
+                                                Spiking Errors: {stat.spikingErrors} | Ape Kills: {stat.apeKills} | Ape Attempts: {stat.apeAttempts} | Spike Kills: {stat.spikeKills} | Spike Attempts: {stat.spikeAttempts} | Assists: {stat.assists} | Setting Errors: {stat.settingErrors} | Blocks: {stat.blocks} | Digs: {stat.digs} | Block Follows: {stat.blockFollows} | Aces: {stat.aces} | Serving Errors: {stat.servingErrors} | Misc Errors: {stat.miscErrors}
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
                         )}
 
                         {/* Action buttons */}
-                        <div className="modal-actions">
+                        <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
                             <button
                                 onClick={closeCSVModal}
                                 className="create-button"
@@ -953,26 +946,25 @@ const StatsPage: React.FC = () =>
             {/* Stage Modal */}
             {isStageModalOpen && csvUploadMode === 'create' && (
                 <div className="modal-overlay">
-                    <div className="modal" style={{ maxWidth: '450px' }}>
+                    <div className="modal" style={{ maxWidth: '400px' }}>
                         <h2 className="modal-title">Select Match Stage</h2>
-                        <div className="form-section">
-                            <label>
-                                Stage*
-                                <select
-                                    value={stageInput}
-                                    onChange={e => setStageInput(e.target.value)}
-                                    required
-                                >
-                                    <option value="">Select a stage</option>
-                                    {STAGE_OPTIONS.map(stage => (
-                                        <option key={stage} value={stage}>
-                                            {stage}
-                                        </option>
-                                    ))}
-                                </select>
-                            </label>
-                        </div>
-                        <div className="modal-actions">
+                        <label>
+                            Stage*
+                            <select
+                                value={stageInput}
+                                onChange={e => setStageInput(e.target.value)}
+                                style={{ width: '100%', marginBottom: '1rem', padding: '8px', borderRadius: '4px', border: '1px solid #ccc', maxHeight: '160px' }}
+                                required
+                            >
+                                <option value="">Select a stage</option>
+                                {STAGE_OPTIONS.map(stage => (
+                                    <option key={stage} value={stage}>
+                                        {stage}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
+                        <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
                             <button 
                                 onClick={() => { 
                                     setIsStageModalOpen(false); 
@@ -1000,12 +992,10 @@ const StatsPage: React.FC = () =>
             )}
             {gameCreationError && (
                 <div className="modal-overlay">
-                    <div className="modal" style={{ maxWidth: '450px' }}>
+                    <div className="modal" style={{ maxWidth: '400px' }}>
                         <h2 className="modal-title">Error</h2>
                         <p className="modal-error">{gameCreationError}</p>
-                        <div className="modal-actions">
-                            <button onClick={() => setGameCreationError("")} className="create-button">Close</button>
-                        </div>
+                        <button onClick={() => setGameCreationError("")} className="create-button">Close</button>
                     </div>
                 </div>
             )}
@@ -1013,12 +1003,10 @@ const StatsPage: React.FC = () =>
             {/* Missing Players Error Modal */}
             {missingPlayersError && (
                 <div className="modal-overlay">
-                    <div className="modal" style={{ maxWidth: '450px' }}>
+                    <div className="modal" style={{ maxWidth: '400px' }}>
                         <h2 className="modal-title">Missing Players</h2>
                         <p className="modal-error">{missingPlayersError}</p>
-                        <div className="modal-actions">
-                            <button onClick={() => setMissingPlayersError(null)} className="create-button">Close</button>
-                        </div>
+                        <button onClick={() => setMissingPlayersError(null)} className="create-button">Close</button>
                     </div>
                 </div>
             )}
@@ -1026,12 +1014,10 @@ const StatsPage: React.FC = () =>
             {/* Generic Failure Modal */}
             {failureModal && (
                 <div className="modal-overlay">
-                    <div className="modal" style={{ maxWidth: '450px' }}>
+                    <div className="modal" style={{ maxWidth: '400px' }}>
                         <h2 className="modal-title">Upload Failed</h2>
                         <p className="modal-error">{failureModal}</p>
-                        <div className="modal-actions">
-                            <button onClick={() => setFailureModal(null)} className="create-button">Close</button>
-                        </div>
+                        <button onClick={() => setFailureModal(null)} className="create-button">Close</button>
                     </div>
                 </div>
             )}
