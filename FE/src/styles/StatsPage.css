@@ -20,20 +20,19 @@
 
 .modal {
     background-color: white;
-    padding: 2rem;
+    padding: 2.5rem;
     border-radius: 8px;
     max-width: 90%;
     max-height: 90vh;
     overflow-y: auto;
     position: relative;
-    margin: 1rem;
     box-sizing: border-box;
 }
 
 .modal-close {
     position: absolute;
-    top: 1rem;
-    right: 1rem;
+    top: 1.5rem;
+    right: 1.5rem;
     background: none;
     border: none;
     font-size: 1.5rem;
@@ -141,14 +140,18 @@
 /* Modal responsive improvements */
 @media screen and (max-width: 768px) {
     .modal {
-        margin: 0.5rem;
-        padding: 1.5rem;
+        padding: 2rem;
         max-width: 95%;
     }
     
     .modal form {
         grid-template-columns: 1fr;
         gap: 1rem;
+    }
+    
+    .modal-close {
+        top: 1rem;
+        right: 1rem;
     }
 }
 
