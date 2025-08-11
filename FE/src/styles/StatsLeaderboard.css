@@ -314,13 +314,13 @@
     .stats-table th,
     .stats-table td
     {
-        padding: 8px 4px;
-        font-size: 12px;
+        padding: 6px 3px;
+        font-size: 11px;
     }
 
     .filter-menu-dropdown
     {
-        min-width: 300px;
+        min-width: 280px;
         grid-template-columns: repeat(2, 1fr);
     }
 
@@ -334,6 +334,22 @@
     
     .stats-table {
         min-height: 400px;
+    }
+    
+    /* Improve mobile table readability */
+    .stats-table {
+        font-size: 11px;
+    }
+    
+    .stats-table th {
+        font-size: 11px;
+        padding: 8px 3px;
+    }
+    
+    /* Make table scrollable on mobile */
+    .stats-table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
 }
 
@@ -745,11 +761,12 @@
   flex-wrap: wrap;
   gap: 32px;
   margin-bottom: 24px;
+  width: 100%;
 }
 
 .visualization-chart {
   flex: 1 1 320px;
-  min-width: 320px;
+  min-width: 280px;
   max-width: 480px;
   background: #fff;
   border-radius: 12px;
@@ -811,6 +828,61 @@
   .visualization-chart {
     min-width: 0;
     max-width: 100%;
+  }
+}
+
+/* Mobile-specific chart sizing */
+@media (max-width: 768px) {
+  .visualization-chart {
+    min-width: 0;
+    max-width: 100%;
+    padding: 12px 6px 6px 6px;
+    border-radius: 8px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .visualization-grid {
+    gap: 16px;
+    width: 100%;
+  }
+  
+  /* Ensure charts don't overflow on mobile */
+  .player-visualization {
+    width: 100%;
+    overflow: hidden;
+  }
+}
+
+/* Small mobile devices */
+@media (max-width: 480px) {
+  .visualization-chart {
+    padding: 8px 4px 4px 4px;
+    border-radius: 6px;
+  }
+  
+  .visualization-grid {
+    gap: 12px;
+  }
+  
+  /* Ultra-small mobile optimization */
+  .stats-leaderboard-page {
+    padding: 12px;
+  }
+  
+  .stats-leaderboard-page h1 {
+    font-size: 1.5rem;
+  }
+  
+  .stats-table th,
+  .stats-table td {
+    padding: 4px 2px;
+    font-size: 10px;
+  }
+  
+  .stats-filters-row,
+  .stats-search-row {
+    gap: 8px;
   }
 }
 
