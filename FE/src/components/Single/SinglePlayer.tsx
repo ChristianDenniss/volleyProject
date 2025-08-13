@@ -18,6 +18,7 @@ import {
     faShield,
     faLock,
     faStar,
+    faRing,
 } from '@fortawesome/free-solid-svg-icons'
 import "../../styles/SinglePlayer.css"
 import SEO from "../SEO"
@@ -35,7 +36,24 @@ const awardIcons: { [key: string]: any } = {
     "FMVP": faCrown,
     "MIP": faMedal,
     "LuvLate Award": faAward,
+    "Rings": faRing,
 }
+
+const calculateChampionships = (player: any): number => {
+    if (!player.teams) return 0;
+    
+    return player.teams.reduce((total: number, team: any) => {
+        if (team.placement && (
+            team.placement === '1st Place' ||
+            team.placement === '1st Place (D1)' ||
+            team.placement === '1st Place (D2)' ||
+            team.placement === '1st Place (D3)'
+        )) {
+            return total + 1;
+        }
+        return total;
+    }, 0);
+};
 
 const calculateHOFScore = (player: any, awards: any[], careerTotals: any): number => {
     let score = 0;
@@ -187,6 +205,8 @@ const calculateHOFScore = (player: any, awards: any[], careerTotals: any): numbe
             }
         });
     }
+
+
 
     // Teams played for points
     const teamsPlayed = player.teams?.length || 0;
@@ -594,25 +614,55 @@ const PlayerProfiles: React.FC = () =>
                     <p>Loading awards...</p>
                 ) : awardsError ? (
                     <p>Error loading awards</p>
-                ) : awards && awards.length > 0 ? (
-                    <ul className="player-profile-awards-list">
-                        {awards.map((award) => (
-                            <li key={award.id} className="player-profile-award-item">
-                                <a href={`/awards/${award.id}`} className="player-profile-award-link">
-                                    <div className="player-profile-award-content">
-                                        <FontAwesomeIcon 
-                                            icon={awardIcons[award.type] || faTrophy} 
-                                            className="player-profile-award-icon"
-                                        />
-                                        <span className="player-profile-award-type">{award.type}</span>
-                                        <span className="player-profile-award-season">Season {award.season.seasonNumber}</span>
-                                    </div>
-                                </a>
-                            </li>
-                        ))}
-                    </ul>
                 ) : (
-                    <p>No awards yet.</p>
+                    <>
+                        {/* Display Rings award first if player has championships */}
+                        {(() => {
+                            const championships = calculateChampionships(player);
+                            if (championships > 0) {
+                                return (
+                                    <ul className="player-profile-awards-list">
+                                        <li className="player-profile-award-item">
+                                            <div className="player-profile-award-content">
+                                                <FontAwesomeIcon 
+                                                    icon={faRing} 
+                                                    className="player-profile-award-icon"
+                                                />
+                                                <span className="player-profile-award-type">Rings</span>
+                                                <span className="player-profile-award-season">{championships} Championship{championships > 1 ? 's' : ''}</span>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                );
+                            }
+                            return null;
+                        })()}
+                        
+                        {/* Display existing awards */}
+                        {awards && awards.length > 0 && (
+                            <ul className="player-profile-awards-list">
+                                {awards.map((award) => (
+                                    <li key={award.id} className="player-profile-award-item">
+                                        <a href={`/awards/${award.id}`} className="player-profile-award-link">
+                                            <div className="player-profile-award-content">
+                                                <FontAwesomeIcon 
+                                                    icon={awardIcons[award.type] || faTrophy} 
+                                                    className="player-profile-award-icon"
+                                                />
+                                                <span className="player-profile-award-type">{award.type}</span>
+                                                <span className="player-profile-award-season">Season {award.season.seasonNumber}</span>
+                                            </div>
+                                        </a>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                        
+                        {/* Show "No awards yet" only if no awards and no rings */}
+                        {(!awards || awards.length === 0) && calculateChampionships(player) === 0 && (
+                            <p>No awards yet.</p>
+                        )}
+                    </>
                 )}
             </div>
 
