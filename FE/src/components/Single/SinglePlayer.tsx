@@ -18,7 +18,8 @@ import {
     faShield,
     faLock,
     faStar,
-    faRing,
+    faCircle,
+    faGem,
 } from '@fortawesome/free-solid-svg-icons'
 import "../../styles/SinglePlayer.css"
 import SEO from "../SEO"
@@ -36,7 +37,7 @@ const awardIcons: { [key: string]: any } = {
     "FMVP": faCrown,
     "MIP": faMedal,
     "LuvLate Award": faAward,
-    "Rings": faRing,
+    "Rings": faGem,
 }
 
 const calculateChampionships = (player: any): number => {
@@ -616,32 +617,99 @@ const PlayerProfiles: React.FC = () =>
                     <p>Error loading awards</p>
                 ) : (
                     <>
-                        {/* Display Rings award first if player has championships */}
-                        {(() => {
-                            const championships = calculateChampionships(player);
-                            if (championships > 0) {
-                                return (
-                                    <ul className="player-profile-awards-list">
-                                        <li className="player-profile-award-item">
-                                            <div className="player-profile-award-content">
-                                                <FontAwesomeIcon 
-                                                    icon={faRing} 
-                                                    className="player-profile-award-icon"
-                                                />
-                                                <span className="player-profile-award-type">Rings</span>
-                                                <span className="player-profile-award-season">{championships} Championship{championships > 1 ? 's' : ''}</span>
-                                            </div>
-                                        </li>
-                                    </ul>
-                                );
-                            }
-                            return null;
-                        })()}
-                        
-                        {/* Display existing awards */}
-                        {awards && awards.length > 0 && (
+                        {/* Display all awards in one list */}
+                        {(awards && awards.length > 0) || calculateChampionships(player) > 0 ? (
                             <ul className="player-profile-awards-list">
-                                {awards.map((award) => (
+                                {/* Rings award first if player has championships */}
+                                {(() => {
+                                    const championships = calculateChampionships(player);
+                                    if (championships > 0) {
+                                        return (
+                                            <li className="player-profile-award-item">
+                                                <div className="player-profile-award-content">
+                                                    <div className="rings-stack">
+                                                        {championships === 1 && (
+                                                            <div className="ring-with-diamond single-ring">
+                                                                <FontAwesomeIcon 
+                                                                    icon={faCircle} 
+                                                                    className="ring-base"
+                                                                />
+                                                                <FontAwesomeIcon 
+                                                                    icon={faGem} 
+                                                                    className="ring-diamond"
+                                                                />
+                                                            </div>
+                                                        )}
+                                                        {championships === 2 && (
+                                                            <>
+                                                                <div className="ring-with-diamond ring-left">
+                                                                    <FontAwesomeIcon 
+                                                                        icon={faCircle} 
+                                                                        className="ring-base"
+                                                                    />
+                                                                    <FontAwesomeIcon 
+                                                                        icon={faGem} 
+                                                                        className="ring-diamond"
+                                                                    />
+                                                                </div>
+                                                                <div className="ring-with-diamond ring-right">
+                                                                    <FontAwesomeIcon 
+                                                                        icon={faCircle} 
+                                                                        className="ring-base"
+                                                                    />
+                                                                    <FontAwesomeIcon 
+                                                                        icon={faGem} 
+                                                                        className="ring-diamond"
+                                                                    />
+                                                                </div>
+                                                            </>
+                                                        )}
+                                                        {championships >= 3 && (
+                                                            <>
+                                                                <div className="ring-with-diamond ring-left">
+                                                                    <FontAwesomeIcon 
+                                                                        icon={faCircle} 
+                                                                        className="ring-base"
+                                                                    />
+                                                                    <FontAwesomeIcon 
+                                                                        icon={faGem} 
+                                                                        className="ring-diamond"
+                                                                    />
+                                                                </div>
+                                                                <div className="ring-with-diamond ring-center">
+                                                                    <FontAwesomeIcon 
+                                                                        icon={faCircle} 
+                                                                        className="ring-base"
+                                                                    />
+                                                                    <FontAwesomeIcon 
+                                                                        icon={faGem} 
+                                                                        className="ring-diamond"
+                                                                    />
+                                                                </div>
+                                                                <div className="ring-with-diamond ring-right">
+                                                                    <FontAwesomeIcon 
+                                                                        icon={faCircle} 
+                                                                        className="ring-base"
+                                                                    />
+                                                                    <FontAwesomeIcon 
+                                                                        icon={faGem} 
+                                                                        className="ring-diamond"
+                                                                    />
+                                                                </div>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                    <span className="player-profile-award-type">Rings</span>
+                                                    <span className="player-profile-award-season">{championships} Championship{championships > 1 ? 's' : ''}</span>
+                                                </div>
+                                            </li>
+                                        );
+                                    }
+                                    return null;
+                                })()}
+                                
+                                {/* Existing awards */}
+                                {awards && awards.map((award) => (
                                     <li key={award.id} className="player-profile-award-item">
                                         <a href={`/awards/${award.id}`} className="player-profile-award-link">
                                             <div className="player-profile-award-content">
@@ -656,7 +724,7 @@ const PlayerProfiles: React.FC = () =>
                                     </li>
                                 ))}
                             </ul>
-                        )}
+                        ) : null}
                         
                         {/* Show "No awards yet" only if no awards and no rings */}
                         {(!awards || awards.length === 0) && calculateChampionships(player) === 0 && (

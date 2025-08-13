@@ -491,6 +491,91 @@
     min-height: 100px;
 }
 
+/* Ring with Diamond Icon Styles */
+.rings-stack {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    min-height: 2.5rem;
+    gap: 0.2rem;
+}
+
+.ring-with-diamond {
+    position: relative;
+    display: inline-block;
+    transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.ring-base {
+    font-size: 2.5rem;
+    color: #c9e4fd;
+    filter: drop-shadow(0 2px 4px rgba(201, 228, 253, 0.3));
+    transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.ring-diamond {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.2rem;
+    color: #ffd700;
+    filter: drop-shadow(0 2px 4px rgba(255, 215, 0, 0.6));
+    transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+/* Single ring positioning */
+.single-ring {
+    /* No special positioning needed for single ring */
+}
+
+/* Two rings - offset and tilted */
+.ring-left {
+    transform: translateX(-0.3rem) rotate(-15deg);
+}
+
+.ring-right {
+    transform: translateX(0.3rem) rotate(15deg);
+}
+
+/* Three rings - Cerberus style */
+.ring-center {
+    /* Center ring stays straight */
+    transform: translateY(-0.1rem);
+}
+
+.ring-left {
+    transform: translateX(-0.4rem) translateY(0.1rem) rotate(-20deg);
+}
+
+.ring-right {
+    transform: translateX(0.4rem) translateY(0.1rem) rotate(20deg);
+}
+
+.player-profile-award-item:hover .ring-base {
+    transform: scale(1.1);
+    filter: drop-shadow(0 4px 8px rgba(201, 228, 253, 0.5));
+}
+
+.player-profile-award-item:hover .ring-diamond {
+    transform: translate(-50%, -50%) scale(1.2);
+    filter: drop-shadow(0 4px 8px rgba(255, 215, 0, 0.8));
+}
+
+.player-profile-award-item:hover .ring-left {
+    transform: translateX(-0.4rem) translateY(0.1rem) rotate(-20deg) scale(1.05);
+}
+
+.player-profile-award-item:hover .ring-right {
+    transform: translateX(0.4rem) translateY(0.1rem) rotate(20deg) scale(1.05);
+}
+
+.player-profile-award-item:hover .ring-center {
+    transform: translateY(-0.1rem) scale(1.05);
+}
+
 
 
 .player-hof-section {
