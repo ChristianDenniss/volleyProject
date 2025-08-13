@@ -491,36 +491,18 @@
     min-height: 100px;
 }
 
-/* Ring with Diamond Icon Styles */
-.rings-stack {
-    position: relative;
+/* Championship Rings Display */
+.rings-display {
     display: flex;
     justify-content: center;
     align-items: center;
+    gap: 0.1rem;
     margin-bottom: 0.75rem;
     min-height: 2.5rem;
-    gap: 0.2rem;
 }
 
-.ring-with-diamond {
-    position: relative;
-    display: inline-block;
-    transition: transform 0.2s ease, filter 0.2s ease;
-}
-
-.ring-base {
+.championship-ring {
     font-size: 2.5rem;
-    color: #c9e4fd;
-    filter: drop-shadow(0 2px 4px rgba(201, 228, 253, 0.3));
-    transition: transform 0.2s ease, filter 0.2s ease;
-}
-
-.ring-diamond {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 1.2rem;
     color: #ffd700;
     filter: drop-shadow(0 2px 4px rgba(255, 215, 0, 0.6));
     transition: transform 0.2s ease, filter 0.2s ease;
@@ -554,13 +536,8 @@
     transform: translateX(0.4rem) translateY(0.1rem) rotate(20deg);
 }
 
-.player-profile-award-item:hover .ring-base {
+.player-profile-award-item:hover .championship-ring {
     transform: scale(1.1);
-    filter: drop-shadow(0 4px 8px rgba(201, 228, 253, 0.5));
-}
-
-.player-profile-award-item:hover .ring-diamond {
-    transform: translate(-50%, -50%) scale(1.2);
     filter: drop-shadow(0 4px 8px rgba(255, 215, 0, 0.8));
 }
 

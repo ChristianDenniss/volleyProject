@@ -18,8 +18,7 @@ import {
     faShield,
     faLock,
     faStar,
-    faCircle,
-    faGem,
+    faRing,
 } from '@fortawesome/free-solid-svg-icons'
 import "../../styles/SinglePlayer.css"
 import SEO from "../SEO"
@@ -37,7 +36,7 @@ const awardIcons: { [key: string]: any } = {
     "FMVP": faCrown,
     "MIP": faMedal,
     "LuvLate Award": faAward,
-    "Rings": faGem,
+    "Rings": faRing,
 }
 
 const calculateChampionships = (player: any): number => {
@@ -627,75 +626,39 @@ const PlayerProfiles: React.FC = () =>
                                         return (
                                             <li className="player-profile-award-item">
                                                 <div className="player-profile-award-content">
-                                                    <div className="rings-stack">
+                                                    <div className="rings-display">
                                                         {championships === 1 && (
-                                                            <div className="ring-with-diamond single-ring">
-                                                                <FontAwesomeIcon 
-                                                                    icon={faCircle} 
-                                                                    className="ring-base"
-                                                                />
-                                                                <FontAwesomeIcon 
-                                                                    icon={faGem} 
-                                                                    className="ring-diamond"
-                                                                />
-                                                            </div>
+                                                            <FontAwesomeIcon 
+                                                                icon={faRing} 
+                                                                className="championship-ring single-ring"
+                                                            />
                                                         )}
                                                         {championships === 2 && (
                                                             <>
-                                                                <div className="ring-with-diamond ring-left">
-                                                                    <FontAwesomeIcon 
-                                                                        icon={faCircle} 
-                                                                        className="ring-base"
-                                                                    />
-                                                                    <FontAwesomeIcon 
-                                                                        icon={faGem} 
-                                                                        className="ring-diamond"
-                                                                    />
-                                                                </div>
-                                                                <div className="ring-with-diamond ring-right">
-                                                                    <FontAwesomeIcon 
-                                                                        icon={faCircle} 
-                                                                        className="ring-base"
-                                                                    />
-                                                                    <FontAwesomeIcon 
-                                                                        icon={faGem} 
-                                                                        className="ring-diamond"
-                                                                    />
-                                                                </div>
+                                                                <FontAwesomeIcon 
+                                                                    icon={faRing} 
+                                                                    className="championship-ring ring-left"
+                                                                />
+                                                                <FontAwesomeIcon 
+                                                                    icon={faRing} 
+                                                                    className="championship-ring ring-right"
+                                                                />
                                                             </>
                                                         )}
                                                         {championships >= 3 && (
                                                             <>
-                                                                <div className="ring-with-diamond ring-left">
-                                                                    <FontAwesomeIcon 
-                                                                        icon={faCircle} 
-                                                                        className="ring-base"
-                                                                    />
-                                                                    <FontAwesomeIcon 
-                                                                        icon={faGem} 
-                                                                        className="ring-diamond"
-                                                                    />
-                                                                </div>
-                                                                <div className="ring-with-diamond ring-center">
-                                                                    <FontAwesomeIcon 
-                                                                        icon={faCircle} 
-                                                                        className="ring-base"
-                                                                    />
-                                                                    <FontAwesomeIcon 
-                                                                        icon={faGem} 
-                                                                        className="ring-diamond"
-                                                                    />
-                                                                </div>
-                                                                <div className="ring-with-diamond ring-right">
-                                                                    <FontAwesomeIcon 
-                                                                        icon={faCircle} 
-                                                                        className="ring-base"
-                                                                    />
-                                                                    <FontAwesomeIcon 
-                                                                        icon={faGem} 
-                                                                        className="ring-diamond"
-                                                                    />
-                                                                </div>
+                                                                <FontAwesomeIcon 
+                                                                    icon={faRing} 
+                                                                    className="championship-ring ring-left"
+                                                                />
+                                                                <FontAwesomeIcon 
+                                                                    icon={faRing} 
+                                                                    className="championship-ring ring-center"
+                                                                />
+                                                                <FontAwesomeIcon 
+                                                                    icon={faRing} 
+                                                                    className="championship-ring ring-right"
+                                                                />
                                                             </>
                                                         )}
                                                     </div>
