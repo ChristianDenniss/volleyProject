@@ -56,6 +56,12 @@ export class MatchService {
     const setScores = data.setScores || [];
     const overallScore = this.calculateOverallScoreFromSetScores(setScores);
 
+    // Find team logos by name (case-insensitive search) - same logic as Challonge import
+    const team1Logo = data.team1Name ? await this.findTeamLogo(data.team1Name) : null;
+    const team2Logo = data.team2Name ? await this.findTeamLogo(data.team2Name) : null;
+    
+    console.log(`Team logos found for manual match creation: ${data.team1Name || 'undefined'} -> ${team1Logo || 'none'}, ${data.team2Name || 'undefined'} -> ${team2Logo || 'none'}`);
+
     const match = matchRepository.create({
       matchNumber: data.matchNumber,
       status: data.status as MatchStatus,
@@ -75,6 +81,8 @@ export class MatchService {
       challongeRound: data.challongeRound,
       team1Name: data.team1Name,
       team2Name: data.team2Name,
+      team1LogoUrl: team1Logo,
+      team2LogoUrl: team2Logo,
       seasonId: data.seasonId,
       season
     });
@@ -113,6 +121,19 @@ export class MatchService {
       const overallScore = this.calculateOverallScoreFromSetScores(setScores);
       match.team1Score = overallScore.team1Sets;
       match.team2Score = overallScore.team2Sets;
+    }
+
+    // Update team logos if team names change
+    if (data.team1Name && data.team1Name !== match.team1Name) {
+      const team1Logo = await this.findTeamLogo(data.team1Name);
+      match.team1LogoUrl = team1Logo;
+      console.log(`Updated team1 logo for "${data.team1Name}": ${team1Logo || 'none'}`);
+    }
+    
+    if (data.team2Name && data.team2Name !== match.team2Name) {
+      const team2Logo = await this.findTeamLogo(data.team2Name);
+      match.team2LogoUrl = team2Logo;
+      console.log(`Updated team2 logo for "${data.team2Name}": ${team2Logo || 'none'}`);
     }
 
     Object.assign(match, data);
@@ -540,12 +561,11 @@ export class MatchService {
        const { Teams } = await import('../teams/team.entity.js');
        const teamRepository = AppDataSource.getRepository(Teams);
        
-       // Search for team by name (case-insensitive)
-       const team = await teamRepository.findOne({
-         where: {
-           name: teamName.toLowerCase() // This assumes the database stores names in lowercase
-         }
-       });
+       // Search for team by name (case-insensitive) using ILIKE for PostgreSQL or LIKE for other databases
+       const team = await teamRepository
+         .createQueryBuilder('team')
+         .where('LOWER(team.name) = LOWER(:teamName)', { teamName })
+         .getOne();
        
        if (team && team.logoUrl) {
          console.log(`Found logo for team "${teamName}": ${team.logoUrl}`);
