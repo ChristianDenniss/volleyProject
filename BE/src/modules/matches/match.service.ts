@@ -83,6 +83,7 @@ export class MatchService {
       team2Name: data.team2Name,
       team1LogoUrl: team1Logo,
       team2LogoUrl: team2Logo,
+      tags: data.tags || [],
       seasonId: data.seasonId,
       season
     });

@@ -220,6 +220,8 @@ const MatchesPage: React.FC = () => {
         matchNumber: newMatchNumber,
         status: newStatus as "scheduled" | "completed",
         round: newRound,
+        phase: "qualifiers", // Default phase as required by backend
+        region: "na", // Default region as required by backend
         date: newDate, // Backend expects 'date', not 'scheduledDate'
         team1Score: newTeam1Score,
         team2Score: newTeam2Score,

@@ -158,12 +158,13 @@ const Schedules: React.FC = () => {
 
   const getPrimaryTag = (match: any) => {
     if (!match.tags || match.tags.length === 0) {
-      return 'RVL'; // Default tag
+      return null; // No default tag
     }
     return match.tags[0]; // Return the first tag as primary
   };
 
-  const getTagColor = (tag: string) => {
+  const getTagColor = (tag: string | null) => {
+    if (!tag) return 'default';
     const tagLower = tag.toLowerCase();
     if (tagLower.includes('rvl')) return 'blue';
     if (tagLower.includes('invitational')) return 'purple';
@@ -338,9 +339,11 @@ const Schedules: React.FC = () => {
                       return (
                         <div key={match.id} className="match-card">
                           <div className="match-header">
-                            <div className={`gender-tag tag-${getTagColor(getPrimaryTag(match))}`}>
-                              {getPrimaryTag(match)}
-                            </div>
+                            {getPrimaryTag(match) && (
+                              <div className={`gender-tag tag-${getTagColor(getPrimaryTag(match))}`}>
+                                {getPrimaryTag(match)}
+                              </div>
+                            )}
                                                          <div className="match-info">
                                <span className="match-type">
                                  {match.status === 'completed' ? 'Scheduled' : 'Scheduled'} {match.round} Match #{match.id}
@@ -358,7 +361,7 @@ const Schedules: React.FC = () => {
                             {/* Team 1 */}
                                                         <div className={`team-row ${winningTeam === 0 ? 'winning-team' : ''}`}>
                               <div className="team-info">
-                                {match.team1LogoUrl ? (
+                                {match.team1LogoUrl && (
                                   <div className="team-logo-container">
                                     <img 
                                       src={match.team1LogoUrl} 
@@ -366,9 +369,8 @@ const Schedules: React.FC = () => {
                                       className="team-logo"
                                     />
                                   </div>
-                                ) : (
-                                  <span className="team-name">{match.team1Name || 'TBD'}</span>
                                 )}
+                                <span className="team-name">{match.team1Name || 'TBD'}</span>
                               </div>
                               <div className="team-score">
                                 {match.status === 'completed' && (
@@ -403,7 +405,7 @@ const Schedules: React.FC = () => {
                             {/* Team 2 */}
                             <div className={`team-row ${winningTeam === 1 ? 'winning-team' : ''}`}>
                               <div className="team-info">
-                                {match.team2LogoUrl ? (
+                                {match.team2LogoUrl && (
                                   <div className="team-logo-container">
                                     <img 
                                       src={match.team2LogoUrl} 
@@ -411,9 +413,8 @@ const Schedules: React.FC = () => {
                                       className="team-logo"
                                     />
                                   </div>
-                                ) : (
-                                  <span className="team-name">{match.team2Name || 'TBD'}</span>
                                 )}
+                                <span className="team-name">{match.team2Name || 'TBD'}</span>
                               </div>
                               <div className="team-score">
                                 {match.status === 'completed' && (
