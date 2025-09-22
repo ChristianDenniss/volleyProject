@@ -69,12 +69,20 @@ export class UserService {
         });
     }
 
+
+    async getPublicUsers(): Promise<User[]> {
+        return await this.userRepository.find({
+            select: ['id', 'username', 'role', 'createdAt']
+        });
+    }
+
     /**
      * Get user by ID
      */
     async getUserById(id: number): Promise<User> {
         const user = await this.userRepository.findOne({
-            where: { id }
+            where: { id },
+            select: ["id", "username", "role", "createdAt"]
         });
 
         if (!user) {
@@ -89,7 +97,8 @@ export class UserService {
      */
     async getUserByUsername(username: string): Promise<User> {
         const user = await this.userRepository.findOne({
-            where: { username }
+            where: { username },
+            select: ["id", "username", "role", "createdAt"]
         });
 
         if (!user) {
@@ -98,6 +107,19 @@ export class UserService {
 
         return user;
     }
+    async selectPasswordByUserId(username: string): Promise<User> {
+        const user = await this.userRepository.findOne({
+            where: { username },
+            select: ["password"]
+        });
+
+        if (!user) {
+            throw new NotFoundError("User not found");
+        }
+
+        return user;
+    }
+
 
     /**
      * Update user
@@ -119,9 +141,10 @@ export class UserService {
             }
             user.password = await this.hashPassword(password);
         }
+        // NEVER 
         if (role) {
-            if (!['admin', 'user', 'superadmin'].includes(role)) {
-                throw new Error("Invalid role. Role must be admin, user, or superadmin");
+            if (!['admin', 'user'].includes(role)) {
+                throw new Error("Invalid role. Role must be admin or user");
             }
             user.role = role;
         }
@@ -141,7 +164,7 @@ export class UserService {
      * Authenticate user and return JWT token
      */
     async authenticateUser(username: string, password: string): Promise<{ user: User, token: string }> {
-        const user = await this.getUserByUsername(username);
+        const user = await this.selectPasswordByUserId(username);
 
         const isValidPassword = await this.verifyPassword(password, user.password);
         if (!isValidPassword) {
