@@ -28,7 +28,7 @@ export class Records {
     @Column({
         type: 'enum',
         enum: ['game', 'season'],
-        default: "'game'"
+        default: "game"
     })
     type!: string; // 'game' for single game records, 'season' for season aggregate records
 

@@ -80,15 +80,16 @@ export class UserController {
     // Get all users (admin only)
     getUsers = async (req: Request, res: Response): Promise<void> => {
         try {
-            const users = await this.userService.getAllUsers();
-            
-            // Remove passwords from response
-            const usersWithoutPasswords = users.map(user => {
-                const { password, ...userWithoutPassword } = user;
-                return userWithoutPassword;
-            });
-            
-            res.json(usersWithoutPasswords);
+            res.json( await this.userService.getAllUsers());
+        } catch (error) {
+            console.error("Error fetching users:", error);
+            res.status(500).json({ error: "Failed to fetch users" });
+        }
+    };
+
+    getPublicUsers = async (req: Request, res: Response): Promise<void> => {
+        try {
+            res.json( await this.userService.getPublicUsers());
         } catch (error) {
             console.error("Error fetching users:", error);
             res.status(500).json({ error: "Failed to fetch users" });
@@ -98,13 +99,7 @@ export class UserController {
     // Get user by ID
     getUserById = async (req: Request, res: Response): Promise<void> => {
         try {
-            const { id } = req.params;
-            const user = await this.userService.getUserById(parseInt(id));
-
-            // Remove password from response
-            const { password, ...userWithoutPassword } = user;
-            
-            res.json(userWithoutPassword);
+            res.json(await this.userService.getUserById(parseInt(req.params.id)));
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : "Failed to fetch user";
             
@@ -175,7 +170,7 @@ export class UserController {
             try
             {
                 //  ID supplied by authenticateToken middleware
-                const authUser = (req as any).user as { id?: number } | undefined;
+                const authUser = req.user 
     
                 if (!authUser?.id)
                 {

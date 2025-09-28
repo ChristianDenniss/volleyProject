@@ -8,3 +8,12 @@ export class UnauthorizedError extends CustomError
         this.name = 'UnauthorizedError';
     }
 }
+
+export class ServerError extends CustomError
+{
+    constructor(message: string)
+    {
+        super(message, 500);
+        this.name = 'Server error';
+    }
+}

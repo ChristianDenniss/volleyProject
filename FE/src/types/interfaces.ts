@@ -144,13 +144,23 @@ interface Article
   approved: boolean | null;
 }
 
+type Role = "user" | "admin" | "superadmin"
+
 interface User 
 {
   id: number;
   username: string;
   email: string;
   articles?: Article[]; 
-  role: "user" | "admin" | "superadmin"; 
+  role: Role; 
+}
+
+interface PublicInterface 
+{
+  id: number,
+  username: string,
+  articles?: Article[];
+  role: Role
 }
 
 interface Records 
@@ -179,7 +189,7 @@ interface Records
   loading: boolean;
 }
 
-export type { Game, Player, Stats, Team, Season, Article, User, Award, Records, AuthContextType, Match };
+export type { Game, Player, Stats, Team, Season, Article, User, Award, Records, AuthContextType, Match, PublicInterface, Role };
 
 
 // When creating a Game, we send primitive fields + foreign IDs.

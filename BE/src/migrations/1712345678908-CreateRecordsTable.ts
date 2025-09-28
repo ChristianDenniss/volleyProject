@@ -54,7 +54,7 @@ export class CreateRecordsTable1712345678908 implements MigrationInterface {
                         name: "type",
                         type: "public.records_type_enum",
                         isNullable: false,
-                        default: "'game'",
+                        default: "game",
                     },
                     {
                         name: "rank",
