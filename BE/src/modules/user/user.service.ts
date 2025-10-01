@@ -164,12 +164,16 @@ export class UserService {
      * Authenticate user and return JWT token
      */
     async authenticateUser(username: string, password: string): Promise<{ user: User, token: string }> {
-        const user = await this.selectPasswordByUserId(username);
-
-        const isValidPassword = await this.verifyPassword(password, user.password);
+        // First verify the password using the secure method
+        const passwordUser = await this.selectPasswordByUserId(username);
+        
+        const isValidPassword = await this.verifyPassword(password, passwordUser.password);
         if (!isValidPassword) {
             throw new UnauthorizedError("Invalid credentials");
         }
+
+        // Now get the full user data for the response (without password)
+        const user = await this.getUserByUsername(username);
 
         // Generate JWT token with longer expiration
         const token = jwt.sign(
