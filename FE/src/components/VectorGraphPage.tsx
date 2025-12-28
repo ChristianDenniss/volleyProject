@@ -79,45 +79,56 @@ function VectorGraph3D({
   onPlayerHover?: (player: PlayerSeasonVectorRow | null) => void;
   selectedPlayerId?: string | null;
 }) {
+  // ALL HOOKS MUST BE CALLED FIRST - before any conditional returns
   const [hoveredPlayer, setHoveredPlayer] = useState<PlayerSeasonVectorRow | null>(null);
   const controlsRef = useRef<any>(null);
   // Track hovered points with their distances (using object instead of Map for React state)
   const [hoveredPoints, setHoveredPoints] = useState<Record<string, number>>({});
 
-  if (vectorRows.length === 0) {
-    return (
-      <div className="vector-graph-empty">
-        <p>No players match the selected criteria.</p>
-        <p>Try adjusting the minimum sets threshold or selecting a different season.</p>
-      </div>
-    );
-  }
-
   // Compute PCA on all vectors and project to 3D (uses all 12 dimensions)
   const zVectors = vectorRows.map(row => row.zVector);
-  const { projections, model } = computePCA3D(zVectors);
+  const { projections, model } = useMemo(() => {
+    if (vectorRows.length === 0) {
+      return { projections: [], model: null };
+    }
+    return computePCA3D(zVectors);
+  }, [vectorRows, zVectors]);
   
-  const points = vectorRows.map((row, idx) => {
-    const coords = projections[idx] || { x: 0, y: 0, z: 0 };
-    return {
-      row,
-      position: [coords.x, coords.y, coords.z] as [number, number, number]
-    };
-  });
+  const points = useMemo(() => {
+    if (vectorRows.length === 0) return [];
+    return vectorRows.map((row, idx) => {
+      const coords = projections[idx] || { x: 0, y: 0, z: 0 };
+      return {
+        row,
+        position: [coords.x, coords.y, coords.z] as [number, number, number]
+      };
+    });
+  }, [vectorRows, projections]);
 
   // Calculate bounds for camera positioning
-  const allX = points.map((p) => p.position[0]);
-  const allY = points.map((p) => p.position[1]);
-  const allZ = points.map((p) => p.position[2]);
-  const centerX = (Math.max(...allX) + Math.min(...allX)) / 2;
-  const centerY = (Math.max(...allY) + Math.min(...allY)) / 2;
-  const centerZ = (Math.max(...allZ) + Math.min(...allZ)) / 2;
-  const maxRange = Math.max(
-    Math.max(...allX) - Math.min(...allX),
-    Math.max(...allY) - Math.min(...allY),
-    Math.max(...allZ) - Math.min(...allZ)
-  );
-  const cameraDistance = maxRange > 0 ? maxRange * 2 : 10;
+  const { centerX, centerY, centerZ, maxRange, cameraDistance } = useMemo(() => {
+    if (points.length === 0) {
+      return { centerX: 0, centerY: 0, centerZ: 0, maxRange: 10, cameraDistance: 10 };
+    }
+    const allX = points.map((p) => p.position[0]);
+    const allY = points.map((p) => p.position[1]);
+    const allZ = points.map((p) => p.position[2]);
+    const cx = (Math.max(...allX) + Math.min(...allX)) / 2;
+    const cy = (Math.max(...allY) + Math.min(...allY)) / 2;
+    const cz = (Math.max(...allZ) + Math.min(...allZ)) / 2;
+    const mr = Math.max(
+      Math.max(...allX) - Math.min(...allX),
+      Math.max(...allY) - Math.min(...allY),
+      Math.max(...allZ) - Math.min(...allZ)
+    );
+    return {
+      centerX: cx,
+      centerY: cy,
+      centerZ: cz,
+      maxRange: mr,
+      cameraDistance: mr > 0 ? mr * 2 : 10
+    };
+  }, [points]);
 
   const handlePlayerHover = (row: PlayerSeasonVectorRow | null, distance: number, isEntering: boolean) => {
     // Update the hovered points object
@@ -190,6 +201,16 @@ function VectorGraph3D({
       window.removeEventListener('keydown', handleKeyPress);
     };
   }, []);
+
+  // Early return AFTER all hooks
+  if (vectorRows.length === 0) {
+    return (
+      <div className="vector-graph-empty">
+        <p>No players match the selected criteria.</p>
+        <p>Try adjusting the minimum sets threshold or selecting a different season.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="vector-graph-3d-container">
