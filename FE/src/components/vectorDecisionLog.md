@@ -115,9 +115,131 @@ This document tracks all implementation decisions made during the development of
 
 ---
 
+## Data Flow Architecture
+
+### Overview
+The vector graph system follows a clear separation of concerns with three main layers:
+
+```
+API (Backend)
+    ↓
+useVectorGraphData.ts (React Hook - Data Fetching)
+    ↓ Fetches raw data
+    ↓
+VectorGraphPage.tsx (Component - Orchestration)
+    ↓ Calls buildSeasonVectors()
+    ↓
+statsVectorization.ts (Pure Analytics - Data Processing)
+    ↓ Processes & transforms data
+    ↓ Returns vectors
+    ↓
+VectorGraphPage.tsx (Component - Display)
+    ↓ Displays in 3D visualization
+```
+
+### File Responsibilities
+
+#### `useVectorGraphData.ts` - Data Fetching Layer
+**Purpose:** Fetches raw data from the API
+
+**Functions:**
+- `useFetchPlayersWithStats()` - Fetches all players with their stats (includes game and season relations)
+- `useFetchSeasons()` - Fetches all seasons for the dropdown selector
+
+**Responsibilities:**
+- API communication
+- Loading/error state management
+- Returns raw `Player[]` and `Season[]` objects
+
+**Why Separate:**
+- Reusable hook pattern
+- Can be used by other components
+- No business logic, just data fetching
+
+---
+
+#### `statsVectorization.ts` - Analytics/Processing Layer
+**Purpose:** Transforms raw player data into mathematical vectors
+
+**Functions:**
+- `buildSeasonVectors()` - Takes raw players, computes per-set stats, normalizes to z-scores
+- `projectZVectorTo3D()` - Projects 12D vectors to 3D for visualization
+- Internal helpers for aggregation and normalization
+
+**Responsibilities:**
+- Pure mathematical transformations
+- No React dependencies
+- No API calls
+- Stateless functions
+
+**Why Separate:**
+- Reusable analytics logic
+- Testable without React
+- Can be used in other contexts (similarity calculations, clustering, etc.)
+- Follows single responsibility principle
+
+---
+
+#### `VectorGraphPage.tsx` - Presentation Layer
+**Purpose:** Orchestrates data flow and displays visualization
+
+**Responsibilities:**
+- Uses hooks to fetch data
+- Calls vectorization functions
+- Manages UI state (season selection, min sets threshold)
+- Renders 3D visualization
+- Handles user interactions
+
+**Why Separate:**
+- Clear separation of concerns
+- Easy to modify UI without touching data/analytics logic
+
+---
+
+### Data Flow Example
+
+```typescript
+// 1. FETCH DATA (useVectorGraphData.ts)
+const { data: players } = useFetchPlayersWithStats();  // ← Gets raw players
+const { data: seasons } = useFetchSeasons();           // ← Gets seasons
+
+// 2. PROCESS DATA (statsVectorization.ts)
+const vectorRows = useMemo(() => {
+  if (!players || !selectedSeasonNumber) return [];
+  
+  return buildSeasonVectors(players, selectedSeasonNumber, minSetsPlayed);
+  // ↑ Takes raw players → Returns processed vectors
+}, [players, selectedSeasonNumber, minSetsPlayed]);
+
+// 3. DISPLAY DATA
+<VectorGraph3D vectorRows={vectorRows} />  // ← Shows in 3D
+```
+
+### Benefits of This Architecture
+
+1. **Reusability**
+   - Hook can fetch data for other components
+   - Vectorization can be used in other contexts (similarity calculations, clustering)
+
+2. **Testability**
+   - Hook can be tested independently
+   - Vectorization is pure functions (easy to unit test)
+
+3. **Maintainability**
+   - Change API endpoint? Only touch the hook
+   - Change vectorization logic? Only touch analytics file
+   - Change UI? Only touch the component
+
+4. **Single Responsibility Principle**
+   - Each file has one clear job
+   - Easy to understand and modify
+
+---
+
 ## Notes
 
 - All decisions align with the design principles outlined in `vector.md`
 - Decisions prioritize clarity, correctness, and extensibility
 - v1 focuses on establishing foundation; advanced features deferred to v2+
+- Architecture follows separation of concerns: fetching → processing → display
 

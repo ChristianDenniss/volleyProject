@@ -44,6 +44,7 @@ import FAQ from "./components/FAQ";
 import RecordsPage from "./components/RecordsPage";
 import TriviaPage from "./components/TriviaPage"; 
 import Schedules from "./components/Schedules";
+import VectorGraphPage from "./components/VectorGraphPage";
 
 const App: React.FC = () => (
   <AuthProvider>
@@ -78,6 +79,7 @@ const App: React.FC = () => (
           <Route path="/faq" element={<FAQ />} />
           <Route path="/records" element={<RecordsPage />} />
           <Route path="/trivia" element={<TriviaPage />} />
+          <Route path="/vector-graph" element={<VectorGraphPage />} />
 
           {/* auth & profile */}
           <Route path="/profile" element={<UserProfile />} />
