@@ -316,7 +316,7 @@ function VectorGraph3D({
               onClick={() => setPlayerInfoCollapsed(!playerInfoCollapsed)}
             >
               <h4>Player Info</h4>
-              <span className="collapse-icon">{playerInfoCollapsed ? '▼' : '▲'}</span>
+              <span className="collapse-icon">{playerInfoCollapsed ? '▶' : '▼'}</span>
             </div>
             {!playerInfoCollapsed && (() => {
               // Prioritize clicked player over hovered player
@@ -342,7 +342,7 @@ function VectorGraph3D({
               onClick={() => setControlsCollapsed(!controlsCollapsed)}
             >
               <h4>Controls</h4>
-              <span className="collapse-icon">{controlsCollapsed ? '▼' : '▲'}</span>
+              <span className="collapse-icon">{controlsCollapsed ? '▶' : '▼'}</span>
             </div>
             {!controlsCollapsed && (
               <ul>
@@ -361,7 +361,7 @@ function VectorGraph3D({
               onClick={() => setAxesCollapsed(!axesCollapsed)}
             >
               <h4>Axes (PCA)</h4>
-              <span className="collapse-icon">{axesCollapsed ? '▼' : '▲'}</span>
+              <span className="collapse-icon">{axesCollapsed ? '▶' : '▼'}</span>
             </div>
             {!axesCollapsed && (
               <>

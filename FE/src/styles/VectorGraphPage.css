@@ -387,12 +387,10 @@
   align-items: center;
   cursor: pointer;
   user-select: none;
-  padding: 0.25rem 0;
+  padding: 0.5rem 0.25rem;
   transition: background-color 0.2s ease;
   border-radius: 4px;
   margin: -0.25rem -0.25rem 0.5rem -0.25rem;
-  padding-left: 0.25rem;
-  padding-right: 0.25rem;
 }
 
 .info-section-header:hover {
@@ -402,13 +400,17 @@
 .info-section-header h4 {
   margin: 0;
   flex: 1;
+  pointer-events: none;
 }
 
 .collapse-icon {
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   color: #718096;
   transition: transform 0.2s ease;
   margin-left: 0.5rem;
+  pointer-events: none;
+  display: inline-block;
+  min-width: 12px;
 }
 
 .info-section.collapsed .info-section-header {
