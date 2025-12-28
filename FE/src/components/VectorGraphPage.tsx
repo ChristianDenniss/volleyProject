@@ -1,11 +1,11 @@
 // src/components/VectorGraphPage.tsx
 
-import React, { useState, useMemo, useRef } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Html } from "@react-three/drei";
 import * as THREE from "three";
 import { useFetchPlayersWithStats, useFetchSeasons } from "../hooks/useVectorGraphData";
-import { buildSeasonVectors, projectZVectorTo3D } from "../analytics/statsVectorization";
+import { buildSeasonVectors, computePCA3D } from "../analytics/statsVectorization";
 import type { PlayerSeasonVectorRow } from "../analytics/statsVectorization";
 import "../styles/VectorGraphPage.css";
 
@@ -72,6 +72,7 @@ function VectorGraph3D({
   selectedPlayerId?: string | null;
 }) {
   const [hoveredPlayer, setHoveredPlayer] = useState<PlayerSeasonVectorRow | null>(null);
+  const controlsRef = useRef<any>(null);
 
   if (vectorRows.length === 0) {
     return (
@@ -82,9 +83,12 @@ function VectorGraph3D({
     );
   }
 
-  // Project all vectors to 3D
-  const points = vectorRows.map((row) => {
-    const coords = projectZVectorTo3D(row.zVector);
+  // Compute PCA on all vectors and project to 3D (uses all 12 dimensions)
+  const zVectors = vectorRows.map(row => row.zVector);
+  const { projections, model } = computePCA3D(zVectors);
+  
+  const points = vectorRows.map((row, idx) => {
+    const coords = projections[idx] || { x: 0, y: 0, z: 0 };
     return {
       row,
       position: [coords.x, coords.y, coords.z] as [number, number, number]
@@ -112,6 +116,34 @@ function VectorGraph3D({
     }
   };
 
+  // Keyboard zoom controls
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      // Check if user is typing in an input field
+      const target = event.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+        return;
+      }
+
+      if (event.key === '+' || event.key === '=') {
+        event.preventDefault();
+        if (controlsRef.current) {
+          controlsRef.current.dollyIn(0.5);
+        }
+      } else if (event.key === '-' || event.key === '_') {
+        event.preventDefault();
+        if (controlsRef.current) {
+          controlsRef.current.dollyOut(0.5);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => {
+      window.removeEventListener('keydown', handleKeyPress);
+    };
+  }, []);
+
   return (
     <div className="vector-graph-3d-container">
       <Canvas
@@ -135,6 +167,7 @@ function VectorGraph3D({
           />
         ))}
         <OrbitControls
+          ref={controlsRef}
           enableDamping
           dampingFactor={0.05}
           minDistance={maxRange * 0.5}
@@ -159,15 +192,23 @@ function VectorGraph3D({
             <li>Left Click + Drag: Rotate</li>
             <li>Right Click + Drag: Pan</li>
             <li>Scroll: Zoom</li>
+            <li>+ / - Keys: Zoom In / Out</li>
             <li>Hover: View player info</li>
           </ul>
         </div>
         <div className="info-section">
-          <h4>Axes (v1)</h4>
-          <p>X: First dimension (killsPerSet)</p>
-          <p>Y: Second dimension (attemptsPerSet)</p>
-          <p>Z: Third dimension (totalSpikePct)</p>
-          <p className="note">Note: v1 uses simple projection. PCA coming in v2.</p>
+          <h4>Axes (PCA)</h4>
+          <p>X: First Principal Component</p>
+          <p>Y: Second Principal Component</p>
+          <p>Z: Third Principal Component</p>
+          {model && model.explainedVariance && model.explainedVariance.length > 0 && (
+            <p className="note">
+              Variance explained: PC1: {((model.explainedVariance[0] / model.explainedVariance.reduce((a: number, b: number) => a + b, 0)) * 100).toFixed(1)}%, 
+              PC2: {((model.explainedVariance[1] / model.explainedVariance.reduce((a: number, b: number) => a + b, 0)) * 100).toFixed(1)}%, 
+              PC3: {((model.explainedVariance[2] / model.explainedVariance.reduce((a: number, b: number) => a + b, 0)) * 100).toFixed(1)}%
+            </p>
+          )}
+          <p className="note">Uses all 12 statistical dimensions via PCA.</p>
         </div>
       </div>
     </div>
@@ -280,18 +321,17 @@ const VectorGraphPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="control-group stats-display">
-          <div className="stat-item">
-            <span className="stat-label">Players in Graph:</span>
-            <span className="stat-value">{vectorRows.length}</span>
-          </div>
-          {selectedSeasonNumber && (
-            <div className="stat-item">
-              <span className="stat-label">Selected Season:</span>
-              <span className="stat-value">{selectedSeasonNumber}</span>
-            </div>
-          )}
+        <div className="control-group">
+          <label>Players in Graph:</label>
+          <div className="stat-value-large">{vectorRows.length}</div>
         </div>
+
+        {selectedSeasonNumber && (
+          <div className="control-group">
+            <label>Selected Season:</label>
+            <div className="stat-value-large">{selectedSeasonNumber}</div>
+          </div>
+        )}
       </div>
 
       <div className="vector-graph-content">

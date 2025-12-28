@@ -152,23 +152,180 @@ export function buildSeasonVectors(
 }
 
 /*
-  This is a placeholder "projection to 3D" for visualization.
-
-  IMPORTANT:
-  - For correctness, you should compute similarity using zVector (full D dims) or a higher-dim PCA space.
-  - For plotting, you can project to 3D.
-
-  v1: This just picks the first 3 dimensions from the z-vector.
-  v2: Replace with PCA-3D (recommended) and store/loadings for axis descriptions.
+  PCA-based projection to 3D for visualization.
+  
+  This function computes Principal Component Analysis on all z-vectors in a season,
+  then projects each player's 12-dimensional vector onto the first 3 principal components.
+  This preserves the maximum variance across all 12 statistical dimensions.
+  
+  Returns both the 3D coordinates and the PCA model (for axis descriptions).
 */
-export function projectZVectorTo3D(zVector: number[]): { x: number; y: number; z: number }
-{
-  // This safely reads up to three components (missing dims default to 0).
-  const x = zVector.length > 0 ? zVector[0] : 0;
-  const y = zVector.length > 1 ? zVector[1] : 0;
-  const z = zVector.length > 2 ? zVector[2] : 0;
+export interface PCAModel {
+  components: number[][]; // First 3 principal components (each is 12D)
+  explainedVariance: number[]; // Variance explained by each component
+  mean: number[]; // Mean of each feature (for centering)
+}
+
+export interface ProjectionResult {
+  x: number;
+  y: number;
+  z: number;
+  model: PCAModel;
+}
+
+/**
+ * Compute PCA on a set of z-vectors and project to 3D
+ * @param zVectors Array of z-scored vectors (12 dimensions each)
+ * @returns Projected 3D coordinates and PCA model
+ */
+export function computePCA3D(zVectors: number[][]): { projections: { x: number; y: number; z: number }[]; model: PCAModel } {
+  if (zVectors.length === 0) {
+    return { projections: [], model: { components: [], explainedVariance: [], mean: [] } };
+  }
+
+  const numFeatures = zVectors[0].length;
+  const numSamples = zVectors.length;
+
+  // Step 1: Center the data (subtract mean from each feature)
+  const mean: number[] = [];
+  for (let i = 0; i < numFeatures; i++) {
+    let sum = 0;
+    for (let j = 0; j < numSamples; j++) {
+      sum += zVectors[j][i];
+    }
+    mean[i] = sum / numSamples;
+  }
+
+  const centered: number[][] = zVectors.map(vec => 
+    vec.map((val, idx) => val - mean[idx])
+  );
+
+  // Step 2: Compute covariance matrix
+  const covariance: number[][] = [];
+  for (let i = 0; i < numFeatures; i++) {
+    covariance[i] = [];
+    for (let j = 0; j < numFeatures; j++) {
+      let sum = 0;
+      for (let k = 0; k < numSamples; k++) {
+        sum += centered[k][i] * centered[k][j];
+      }
+      covariance[i][j] = sum / (numSamples - 1);
+    }
+  }
+
+  // Step 3: Compute eigenvalues and eigenvectors (power iteration with deflation)
+  // Create a copy to avoid modifying the original
+  const covarianceCopy = covariance.map(row => [...row]);
+  const { eigenvalues, eigenvectors } = computeEigenDecomposition(covarianceCopy);
+
+  // Step 4: Sort by eigenvalue (descending) and take top 3
+  const sorted = eigenvalues.map((val, idx) => ({ val, idx }))
+    .sort((a, b) => b.val - a.val)
+    .slice(0, 3);
+
+  const components: number[][] = sorted.map(({ idx }) => {
+    const eigenvector = eigenvectors[idx];
+    // Normalize the eigenvector
+    const norm = Math.sqrt(eigenvector.reduce((sum, v) => sum + v * v, 0));
+    return eigenvector.map(v => v / norm);
+  });
+
+  const explainedVariance = sorted.map(({ val }) => val);
+
+  // Step 5: Project each vector onto the first 3 principal components
+  const projections = zVectors.map(vec => {
+    const centeredVec = vec.map((val, idx) => val - mean[idx]);
+    const x = dotProduct(centeredVec, components[0]);
+    const y = components.length > 1 ? dotProduct(centeredVec, components[1]) : 0;
+    const z = components.length > 2 ? dotProduct(centeredVec, components[2]) : 0;
+    return { x, y, z };
+  });
+
+  return {
+    projections,
+    model: { components, explainedVariance, mean }
+  };
+}
+
+/**
+ * Project a single z-vector to 3D using a pre-computed PCA model
+ */
+export function projectZVectorTo3D(zVector: number[], model: PCAModel): { x: number; y: number; z: number } {
+  if (model.components.length === 0) {
+    // Fallback to simple projection if no model
+    return {
+      x: zVector.length > 0 ? zVector[0] : 0,
+      y: zVector.length > 1 ? zVector[1] : 0,
+      z: zVector.length > 2 ? zVector[2] : 0
+    };
+  }
+
+  // Center the vector
+  const centered = zVector.map((val, idx) => val - (model.mean[idx] || 0));
+
+  // Project onto principal components
+  const x = dotProduct(centered, model.components[0]);
+  const y = model.components.length > 1 ? dotProduct(centered, model.components[1]) : 0;
+  const z = model.components.length > 2 ? dotProduct(centered, model.components[2]) : 0;
 
   return { x, y, z };
+}
+
+/* --------------------------- PCA Helper Functions -------------------------- */
+
+function dotProduct(a: number[], b: number[]): number {
+  return a.reduce((sum, val, idx) => sum + val * (b[idx] || 0), 0);
+}
+
+function computeEigenDecomposition(matrix: number[][]): { eigenvalues: number[]; eigenvectors: number[][] } {
+  const n = matrix.length;
+  const eigenvalues: number[] = [];
+  const eigenvectors: number[][] = [];
+
+  // Simplified approach: Use power iteration for top eigenvalues
+  // For a more robust implementation, consider using a library
+  for (let i = 0; i < Math.min(3, n); i++) {
+    let vector = new Array(n).fill(1 / Math.sqrt(n)); // Start with normalized vector
+    let prevVector: number[] = [];
+    let iterations = 0;
+    const maxIterations = 100;
+
+    // Power iteration
+    while (iterations < maxIterations) {
+      prevVector = [...vector];
+      vector = matrixVectorMultiply(matrix, vector);
+      const norm = Math.sqrt(vector.reduce((sum, v) => sum + v * v, 0));
+      if (norm < 1e-10) break;
+      vector = vector.map(v => v / norm);
+
+      // Check convergence
+      const diff = Math.sqrt(prevVector.reduce((sum, v, idx) => sum + Math.pow(v - vector[idx], 2), 0));
+      if (diff < 1e-6) break;
+      iterations++;
+    }
+
+    // Compute eigenvalue (Rayleigh quotient)
+    const Av = matrixVectorMultiply(matrix, vector);
+    const eigenvalue = dotProduct(vector, Av);
+
+    eigenvalues.push(eigenvalue);
+    eigenvectors.push([...vector]);
+
+    // Deflate matrix for next iteration (Gram-Schmidt)
+    if (i < 2) {
+      for (let j = 0; j < n; j++) {
+        for (let k = 0; k < n; k++) {
+          matrix[j][k] -= eigenvalue * vector[j] * vector[k];
+        }
+      }
+    }
+  }
+
+  return { eigenvalues, eigenvectors };
+}
+
+function matrixVectorMultiply(matrix: number[][], vector: number[]): number[] {
+  return matrix.map(row => dotProduct(row, vector));
 }
 
 /* --------------------------- Internal Helpers -------------------------- */

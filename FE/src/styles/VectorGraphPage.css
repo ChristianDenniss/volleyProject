@@ -32,11 +32,9 @@
 }
 
 .vector-graph-controls {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 20px;
-  align-items: flex-end;
   margin: 20px 0;
   padding: 12px 15px;
   background-color: #f7fafc;
@@ -50,6 +48,15 @@
   gap: 6px;
   min-width: 200px;
   flex: 1;
+}
+
+.stat-value-large {
+  font-size: 18px;
+  font-weight: 700;
+  color: #2D3C50;
+  line-height: 1;
+  margin: 0;
+  padding: 4px 0;
 }
 
 .control-group label {
@@ -91,12 +98,14 @@
   border-radius: 3px;
   background: #e2e8f0;
   outline: none;
+  appearance: none;
   -webkit-appearance: none;
+  -moz-appearance: none;
 }
 
 .control-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
   appearance: none;
+  -webkit-appearance: none;
   width: 18px;
   height: 18px;
   border-radius: 50%;
@@ -137,26 +146,30 @@
   gap: 20px;
   flex-wrap: wrap;
   margin: 0;
-  align-items: flex-end;
+  align-items: center;
 }
 
 .stat-item {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
 }
 
 .stat-label {
-  font-size: 12px;
-  color: #718096;
+  font-size: 13px;
+  color: #2d3748;
   font-weight: 500;
+  margin: 0;
+  white-space: nowrap;
 }
 
 .stat-value {
-  font-size: 1.25rem;
+  font-size: 14px;
   font-weight: 700;
   color: #2D3C50;
-  line-height: 1.2;
+  line-height: 1;
+  margin: 0;
 }
 
 .vector-graph-content {
@@ -392,6 +405,11 @@
 
   .vector-graph-empty {
     height: 400px;
+  }
+
+  .vector-graph-controls {
+    grid-template-columns: 1fr;
+    gap: 15px;
   }
 
   .stats-display {
