@@ -1,7 +1,7 @@
 // src/components/VectorGraphPage.tsx
 
 import React, { useState, useMemo, useRef, useEffect } from "react";
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls, Html } from "@react-three/drei";
 import * as THREE from "three";
 import { useFetchPlayersWithStats, useFetchSeasons } from "../hooks/useVectorGraphData";
@@ -16,28 +16,36 @@ function PlayerPoint({
   vectorRow,
   position,
   onHover,
-  isSelected
+  isSelected,
+  isClosestHovered
 }: {
   vectorRow: PlayerSeasonVectorRow;
   position: [number, number, number];
-  onHover: (hovered: boolean) => void;
+  onHover: (hovered: boolean, distance: number) => void;
   isSelected: boolean;
+  isClosestHovered: boolean;
 }) {
   const meshRef = useRef<THREE.Mesh>(null!);
+  const { camera } = useThree();
   const [hovered, setHovered] = useState(false);
 
   const handlePointerEnter = () => {
     setHovered(true);
-    onHover(true);
+    // Calculate distance from camera to this point
+    const pointWorld = new THREE.Vector3(...position);
+    const cameraWorld = camera.position;
+    const distance = pointWorld.distanceTo(cameraWorld);
+    onHover(true, distance);
   };
 
   const handlePointerLeave = () => {
     setHovered(false);
-    onHover(false);
+    onHover(false, Infinity);
   };
 
   const scale = isSelected ? 1.5 : hovered ? 1.2 : 1;
   const color = isSelected ? "#ff6b6b" : hovered ? "#4ecdc4" : "#95a5a6";
+  const showLabel = (hovered && isClosestHovered) || isSelected;
 
   return (
     <mesh
@@ -49,7 +57,7 @@ function PlayerPoint({
     >
       <sphereGeometry args={[0.1, 16, 16]} />
       <meshStandardMaterial color={color} />
-      {(hovered || isSelected) && (
+      {showLabel && (
         <Html distanceFactor={10} position={[0, 0.3, 0]}>
           <div className="player-label">
             <div className="player-name">{vectorRow.playerName}</div>
@@ -73,6 +81,8 @@ function VectorGraph3D({
 }) {
   const [hoveredPlayer, setHoveredPlayer] = useState<PlayerSeasonVectorRow | null>(null);
   const controlsRef = useRef<any>(null);
+  // Track hovered points with their distances
+  const [hoveredPoints, setHoveredPoints] = useState<Map<string, number>>(new Map());
 
   if (vectorRows.length === 0) {
     return (
@@ -109,12 +119,48 @@ function VectorGraph3D({
   );
   const cameraDistance = maxRange > 0 ? maxRange * 2 : 10;
 
-  const handlePlayerHover = (row: PlayerSeasonVectorRow | null) => {
-    setHoveredPlayer(row);
-    if (onPlayerHover) {
-      onPlayerHover(row);
-    }
+  const handlePlayerHover = (row: PlayerSeasonVectorRow | null, distance: number, isEntering: boolean) => {
+    // Update the hovered points map
+    setHoveredPoints(prev => {
+      const newMap = new Map(prev);
+      if (isEntering && row) {
+        newMap.set(row.playerId, distance);
+      } else if (!isEntering && row) {
+        newMap.delete(row.playerId);
+      }
+      return newMap;
+    });
   };
+
+  // Find the closest hovered point
+  const closestHoveredPlayerId = useMemo(() => {
+    if (hoveredPoints.size === 0) return null;
+    let closestId: string | null = null;
+    let closestDistance = Infinity;
+    hoveredPoints.forEach((distance, playerId) => {
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestId = playerId;
+      }
+    });
+    return closestId;
+  }, [hoveredPoints]);
+
+  // Update the displayed hovered player based on closest point
+  useEffect(() => {
+    if (closestHoveredPlayerId) {
+      const player = vectorRows.find(row => row.playerId === closestHoveredPlayerId);
+      setHoveredPlayer(player || null);
+      if (onPlayerHover) {
+        onPlayerHover(player || null);
+      }
+    } else {
+      setHoveredPlayer(null);
+      if (onPlayerHover) {
+        onPlayerHover(null);
+      }
+    }
+  }, [closestHoveredPlayerId, vectorRows, onPlayerHover]);
 
   // Keyboard zoom controls
   useEffect(() => {
@@ -162,8 +208,11 @@ function VectorGraph3D({
             key={row.playerId}
             vectorRow={row}
             position={position}
-            onHover={(hovered) => handlePlayerHover(hovered ? row : null)}
+            onHover={(hovered, distance) => {
+              handlePlayerHover(row, distance, hovered);
+            }}
             isSelected={selectedPlayerId === row.playerId}
+            isClosestHovered={closestHoveredPlayerId === row.playerId}
           />
         ))}
         <OrbitControls
