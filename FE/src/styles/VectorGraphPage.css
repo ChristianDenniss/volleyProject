@@ -315,7 +315,6 @@
   max-height: calc(100% - 2rem);
   overflow-y: auto;
   border: 1px solid #e2e8f0;
-  position: relative;
 }
 
 .info-box-toggle {
@@ -350,7 +349,7 @@
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   font-size: 1.5rem;
-  color: #4a5568;
+  color: #ff6b35;
   cursor: pointer;
   padding: 0.5rem 0.75rem;
   width: 40px;
@@ -365,7 +364,7 @@
 
 .info-box-show-button:hover {
   background: rgba(255, 255, 255, 1);
-  color: #2d3748;
+  color: #ff4500;
   box-shadow: 0 6px 8px rgba(0, 0, 0, 0.3);
 }
 
