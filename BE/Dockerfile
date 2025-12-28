@@ -8,7 +8,8 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 
 # Install all dependencies (including dev) for building
-RUN npm ci && npm cache clean --force
+# Override NODE_ENV to ensure devDependencies are installed (needed for TypeScript compilation)
+RUN NODE_ENV=development npm ci && npm cache clean --force
 
 # Copy the source code
 COPY . .
