@@ -134,11 +134,18 @@ This document tracks what has been implemented in the Stats Vectorization & 3D G
 
 ## Version History
 
+- **v2.3** - Fixed PCA component color coding and improved spacing
+  - Fixed dynamic color coding for PCA feature weights (was showing all dark for PC1/PC2)
+  - Improved weight normalization to use min-max scaling within top features (0.3-1.0 opacity range)
+  - Added proper handling for equal-weight features (medium-high opacity instead of all max)
+  - Added top and bottom margins (20px) to main content div for better spacing
+
 - **v2.2** - Added click-to-select feature with persistent popup
   - Click player point to select and show persistent popup
   - Click empty space to deselect
   - Click another player to replace selection
   - Works alongside hover functionality
+  - Fixed hover state interference with clicked state
 
 - **v2.1** - Expanded to use all 13 raw stats from Stats interface (previously used aggregated stats)
   - Changed from: aggregated stats (total kills, total attempts, total errors, receives, percentages, plus/minus)

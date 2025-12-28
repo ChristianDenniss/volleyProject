@@ -33,16 +33,23 @@ function PlayerPoint({
 
   const handlePointerEnter = () => {
     setHovered(true);
-    // Calculate distance from camera to this point
-    const pointWorld = new THREE.Vector3(...position);
-    const cameraWorld = camera.position;
-    const distance = pointWorld.distanceTo(cameraWorld);
-    onHover(true, distance);
+    // Only update hover state if this point is not selected
+    // Selected points should keep their popup visible
+    if (!isSelected) {
+      const pointWorld = new THREE.Vector3(...position);
+      const cameraWorld = camera.position;
+      const distance = pointWorld.distanceTo(cameraWorld);
+      onHover(true, distance);
+    }
   };
 
   const handlePointerLeave = () => {
     setHovered(false);
-    onHover(false, Infinity);
+    // Only update hover state if this point is not selected
+    // Selected points should keep their popup visible
+    if (!isSelected) {
+      onHover(false, Infinity);
+    }
   };
 
   const handleClick = (e: any) => {
@@ -171,6 +178,11 @@ function VectorGraph3D({
   // Update the displayed hovered player based on closest point
   // Note: This only affects hover state, not clicked/selected state
   useEffect(() => {
+    // Don't update hover state if a player is clicked (clicked state takes precedence)
+    if (clickedPlayer) {
+      return;
+    }
+    
     if (closestHoveredPlayerId) {
       const player = vectorRows.find(row => row.playerId === closestHoveredPlayerId);
       setHoveredPlayer(player || null);
@@ -178,22 +190,26 @@ function VectorGraph3D({
         onPlayerHover(player || null);
       }
     } else {
-      // Only clear hovered player if there's no clicked player
-      // (clicked player should persist even when not hovering)
-      if (!clickedPlayer) {
-        setHoveredPlayer(null);
-        if (onPlayerHover) {
-          onPlayerHover(null);
-        }
+      setHoveredPlayer(null);
+      if (onPlayerHover) {
+        onPlayerHover(null);
       }
     }
   }, [closestHoveredPlayerId, vectorRows, onPlayerHover, clickedPlayer]);
 
   // Handle player click
   const handlePlayerClick = (player: PlayerSeasonVectorRow) => {
-    setClickedPlayer(player);
-    if (onPlayerClick) {
-      onPlayerClick(player);
+    // Toggle: if clicking the same player, deselect; otherwise select the new player
+    if (clickedPlayer?.playerId === player.playerId) {
+      setClickedPlayer(null);
+      if (onPlayerClick) {
+        onPlayerClick(null);
+      }
+    } else {
+      setClickedPlayer(player);
+      if (onPlayerClick) {
+        onPlayerClick(player);
+      }
     }
   };
 
@@ -282,6 +298,7 @@ function VectorGraph3D({
       <div className="vector-graph-info">
         <div className="info-section">
           {(() => {
+            // Prioritize clicked player over hovered player
             const displayPlayer = clickedPlayer || hoveredPlayer;
             if (!displayPlayer) return null;
             
@@ -290,7 +307,9 @@ function VectorGraph3D({
                 <h4>{displayPlayer.playerName}</h4>
                 <p>Season: {displayPlayer.seasonNumber}</p>
                 <p>Sets Played: {displayPlayer.setsPlayed}</p>
-                {clickedPlayer && <p className="note">(Selected - click empty space to deselect)</p>}
+                {clickedPlayer && clickedPlayer.playerId === displayPlayer.playerId && (
+                  <p className="note">(Selected - click empty space to deselect)</p>
+                )}
               </div>
             );
           })()}
@@ -329,8 +348,6 @@ const VectorGraphPage: React.FC = () => {
   const { data: seasons, loading: seasonsLoading, error: seasonsError } = useFetchSeasons();
   const [selectedSeasonNumber, setSelectedSeasonNumber] = useState<number | null>(null);
   const [minSetsPlayed, setMinSetsPlayed] = useState<number>(DEFAULT_MIN_SETS);
-  const [hoveredPlayer, setHoveredPlayer] = useState<string | null>(null);
-  const [clickedPlayer, setClickedPlayer] = useState<string | null>(null);
 
   // Auto-select first season when seasons load
   React.useEffect(() => {
@@ -476,23 +493,44 @@ const VectorGraphPage: React.FC = () => {
 
         // Get top 4 features for each PC (by absolute value) - 12 dimensions / 3 PCs = 4 per PC
         const getTopFeatures = (component: number[], count: number = 4) => {
-          const features = VECTOR_FEATURE_ORDER.map((key, idx) => ({
+          const allFeatures = VECTOR_FEATURE_ORDER.map((key, idx) => ({
             key,
             weight: component[idx] || 0,
             absWeight: Math.abs(component[idx] || 0)
-          }))
+          }));
+          
+          // Find max weight across ALL features in this component for proper normalization
+          const maxWeight = Math.max(...allFeatures.map(f => f.absWeight));
+          
+          // Get top features sorted by absolute weight
+          const topFeatures = [...allFeatures]
             .sort((a, b) => b.absWeight - a.absWeight)
             .slice(0, count);
           
-          // Find max weight for normalization
-          const maxWeight = Math.max(...features.map(f => f.absWeight));
+          // Find min and max weights in the top features for better color distribution
+          const topWeights = topFeatures.map(f => f.absWeight);
+          const minTopWeight = Math.min(...topWeights);
+          const maxTopWeight = Math.max(...topWeights);
+          const weightRange = maxTopWeight - minTopWeight;
           
-          return features.map(f => {
+          return topFeatures.map(f => {
             const sign = f.weight >= 0 ? '+' : '-';
-            const normalizedWeight = maxWeight > 0 ? f.absWeight / maxWeight : 0;
+            // Normalize to 0-1 range within the top features, with better distribution
+            // Use the full component's max weight as reference, but scale within top features
+            let normalizedWeight = 0;
+            if (maxWeight > 0) {
+              if (weightRange > 0) {
+                // Map to 0.3-1.0 range for better visual distinction
+                normalizedWeight = 0.3 + ((f.absWeight - minTopWeight) / weightRange) * 0.7;
+              } else {
+                // All top features have same weight, give them all medium-high opacity
+                normalizedWeight = 0.7;
+              }
+            }
             return {
               text: `${sign}${formatFeatureName(f.key)}`,
-              weight: normalizedWeight
+              weight: normalizedWeight,
+              absWeight: f.absWeight
             };
           });
         };
@@ -564,8 +602,8 @@ const VectorGraphPage: React.FC = () => {
       <div className="vector-graph-content">
         <VectorGraph3D
           vectorRows={vectorRows}
-          onPlayerHover={(player) => setHoveredPlayer(player?.playerId || null)}
-          onPlayerClick={(player) => setClickedPlayer(player?.playerId || null)}
+          onPlayerHover={() => {}} // Hover state managed internally by VectorGraph3D
+          onPlayerClick={() => {}} // Click state managed internally by VectorGraph3D
         />
       </div>
 

@@ -372,6 +372,24 @@ const vectorRows = useMemo(() => {
 
 ---
 
+#### Decision: Dynamic Color Coding for PCA Feature Weights
+**Decision:** Fix PCA component feature weight color coding to be truly dynamic based on relative weights within each PC.
+**Rationale:**
+- Previous implementation normalized weights only within the top 4 features, causing all features with similar weights to appear equally dark
+- New approach uses min-max scaling within the top features, mapping to a 0.3-1.0 opacity range for better visual distinction
+- Handles edge case where all top features have equal weights (assigns medium-high opacity instead of all max)
+**Status:** ✅ Implemented (v2.3)
+
+#### Decision: Main Content Spacing
+**Decision:** Add top and bottom margins (20px) to the main content div for better visual spacing.
+**Rationale:**
+- Improves readability and visual hierarchy
+- Provides breathing room between controls and graph content
+- Matches general site spacing patterns
+**Status:** ✅ Implemented (v2.3)
+
+---
+
 ## Notes
 
 - All decisions align with the design principles outlined in `vector.md`

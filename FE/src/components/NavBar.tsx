@@ -52,9 +52,6 @@ const Navbar: React.FC = () =>
                     <li>
                         <Link to="/trivia">Trivia</Link>
                     </li>
-                    <li>
-                        <Link to="/vector-graph">Vector Graph</Link>
-                    </li>
 
                     {/* ↓↓↓ new: portal link only for admin / superadmin */}
                     {isAuthenticated &&
