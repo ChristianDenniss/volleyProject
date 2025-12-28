@@ -52,7 +52,8 @@ function PlayerPoint({
 
   const scale = isSelected ? 1.5 : hovered ? 1.2 : 1;
   const color = isSelected ? "#ff6b6b" : hovered ? "#4ecdc4" : "#95a5a6";
-  const showLabel = (hovered && isClosestHovered) || isSelected;
+  // Show label if selected (persistent) OR if hovered and closest
+  const showLabel = isSelected || (hovered && isClosestHovered);
 
   return (
     <mesh
@@ -81,13 +82,11 @@ function PlayerPoint({
 function VectorGraph3D({
   vectorRows,
   onPlayerHover,
-  onPlayerClick,
-  selectedPlayerId
+  onPlayerClick
 }: {
   vectorRows: PlayerSeasonVectorRow[];
   onPlayerHover?: (player: PlayerSeasonVectorRow | null) => void;
   onPlayerClick?: (player: PlayerSeasonVectorRow | null) => void;
-  selectedPlayerId?: string | null;
 }) {
   // ALL HOOKS MUST BE CALLED FIRST - before any conditional returns
   const [hoveredPlayer, setHoveredPlayer] = useState<PlayerSeasonVectorRow | null>(null);
@@ -170,6 +169,7 @@ function VectorGraph3D({
   }, [hoveredPoints]);
 
   // Update the displayed hovered player based on closest point
+  // Note: This only affects hover state, not clicked/selected state
   useEffect(() => {
     if (closestHoveredPlayerId) {
       const player = vectorRows.find(row => row.playerId === closestHoveredPlayerId);
@@ -178,12 +178,16 @@ function VectorGraph3D({
         onPlayerHover(player || null);
       }
     } else {
-      setHoveredPlayer(null);
-      if (onPlayerHover) {
-        onPlayerHover(null);
+      // Only clear hovered player if there's no clicked player
+      // (clicked player should persist even when not hovering)
+      if (!clickedPlayer) {
+        setHoveredPlayer(null);
+        if (onPlayerHover) {
+          onPlayerHover(null);
+        }
       }
     }
-  }, [closestHoveredPlayerId, vectorRows, onPlayerHover]);
+  }, [closestHoveredPlayerId, vectorRows, onPlayerHover, clickedPlayer]);
 
   // Handle player click
   const handlePlayerClick = (player: PlayerSeasonVectorRow) => {
@@ -263,7 +267,7 @@ function VectorGraph3D({
               handlePlayerHover(row, distance, hovered);
             }}
             onClick={() => handlePlayerClick(row)}
-            isSelected={clickedPlayer?.playerId === row.playerId || selectedPlayerId === row.playerId}
+            isSelected={clickedPlayer?.playerId === row.playerId}
             isClosestHovered={closestHoveredPlayerId === row.playerId}
           />
         ))}
@@ -277,14 +281,19 @@ function VectorGraph3D({
       </Canvas>
       <div className="vector-graph-info">
         <div className="info-section">
-          {(clickedPlayer || hoveredPlayer) && (
-            <div className="hovered-player-info">
-              <h4>{(clickedPlayer || hoveredPlayer)?.playerName}</h4>
-              <p>Season: {(clickedPlayer || hoveredPlayer)?.seasonNumber}</p>
-              <p>Sets Played: {(clickedPlayer || hoveredPlayer)?.setsPlayed}</p>
-              {clickedPlayer && <p className="note">(Selected - click empty space to deselect)</p>}
-            </div>
-          )}
+          {(() => {
+            const displayPlayer = clickedPlayer || hoveredPlayer;
+            if (!displayPlayer) return null;
+            
+            return (
+              <div className="hovered-player-info">
+                <h4>{displayPlayer.playerName}</h4>
+                <p>Season: {displayPlayer.seasonNumber}</p>
+                <p>Sets Played: {displayPlayer.setsPlayed}</p>
+                {clickedPlayer && <p className="note">(Selected - click empty space to deselect)</p>}
+              </div>
+            );
+          })()}
         </div>
         <div className="info-section">
           <h4>Controls</h4>
@@ -321,6 +330,7 @@ const VectorGraphPage: React.FC = () => {
   const [selectedSeasonNumber, setSelectedSeasonNumber] = useState<number | null>(null);
   const [minSetsPlayed, setMinSetsPlayed] = useState<number>(DEFAULT_MIN_SETS);
   const [hoveredPlayer, setHoveredPlayer] = useState<string | null>(null);
+  const [clickedPlayer, setClickedPlayer] = useState<string | null>(null);
 
   // Auto-select first season when seasons load
   React.useEffect(() => {
@@ -555,8 +565,7 @@ const VectorGraphPage: React.FC = () => {
         <VectorGraph3D
           vectorRows={vectorRows}
           onPlayerHover={(player) => setHoveredPlayer(player?.playerId || null)}
-          onPlayerClick={(player) => setHoveredPlayer(player?.playerId || null)}
-          selectedPlayerId={hoveredPlayer}
+          onPlayerClick={(player) => setClickedPlayer(player?.playerId || null)}
         />
       </div>
 
