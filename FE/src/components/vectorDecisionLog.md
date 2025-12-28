@@ -1,6 +1,8 @@
-# Vector Graph Implementation Decision Log
+# Vector Graph Decision Log
 
-This document tracks all implementation decisions made during the development of the Stats Vectorization & 3D Graphing feature.
+This document tracks all **decisions and rationale** made during the development of the Stats Vectorization & 3D Graphing feature.
+
+For implementation details and what was actually built, see `vectorImplementationLog.md`.
 
 ---
 
@@ -105,10 +107,124 @@ This document tracks all implementation decisions made during the development of
 
 ---
 
+### 2024-12-XX - PCA Implementation & UI Improvements
+
+#### Decision: PCA Projection Implementation (v2)
+**Decision:** Implement **Principal Component Analysis (PCA)** for 3D projection instead of simple first-3-dimensions
+**Rationale:**
+- Uses all 12 statistical dimensions instead of just first 3
+- Preserves maximum variance across all dimensions
+- Provides mathematically sound dimensionality reduction
+- Better represents player similarity in statistical space
+- More accurate representation of player relationships
+
+**Status:** ✅ Implemented (see `vectorImplementationLog.md` for details)
+
+---
+
+#### Decision: React Hooks Order Fix
+**Decision:** Ensure all hooks are called before any conditional returns
+**Rationale:**
+- Fixes React error #310 (hooks called conditionally)
+- Follows Rules of Hooks - hooks must be called in same order every render
+- Prevents runtime errors in production builds
+- Moved early return (`if (vectorRows.length === 0)`) to after all hooks
+
+**Status:** ✅ Implemented
+
+---
+
+#### Decision: Keyboard Zoom Controls
+**Decision:** Add keyboard controls for zooming (+/- keys) in addition to mouse scroll
+**Rationale:**
+- Accessibility - not everyone has functioning mouse
+- Improves usability for keyboard-only users
+- Follows accessibility best practices
+- Uses OrbitControls `dollyIn()` and `dollyOut()` methods
+- Ignores keypresses when typing in input fields to avoid conflicts
+
+**Status:** ✅ Implemented
+
+---
+
+#### Decision: Controls Layout - 2x2 Grid
+**Decision:** Reorganize controls into a 2x2 grid layout instead of horizontal row
+**Rationale:**
+- Better space utilization
+- More organized and compact
+- Better visual hierarchy
+- Layout: Row 1 (Season dropdown | Min Sets slider), Row 2 (Players in Graph | Selected Season)
+
+**Status:** ✅ Implemented
+
+---
+
+#### Decision: Overlapping Points Popup Fix
+**Decision:** Show only the closest point's popup when multiple points overlap
+**Rationale:**
+- Prevents multiple overlapping popups from showing simultaneously
+- Improves user experience - less visual clutter
+- Calculates distance from camera to each hovered point
+- Only displays popup for the point closest to camera
+- Uses object-based state instead of Map for React state compatibility
+
+**Status:** ✅ Implemented
+
+---
+
+#### Decision: PCA Components Display
+**Decision:** Add a row showing what each principal component (PC1, PC2, PC3) represents
+**Rationale:**
+- Makes PCA transformation transparent (not a "black box")
+- Shows top 4 contributing features per PC (12 dimensions / 3 PCs = 4 per PC)
+- Helps users understand what each axis represents
+- Educational value - users learn what drives the visualization
+- Displays as third row in controls section
+
+**Status:** ✅ Implemented
+
+---
+
+#### Decision: Color Coding for PCA Features
+**Decision:** Color code features by their weight within each PC using opacity and font weight
+**Rationale:**
+- Visual indication of feature importance
+- Quick visual scanning - users can immediately see strongest contributors
+- Opacity scales from 40% to 100% based on normalized weight
+- Font weight varies (700 for strong, 600 for medium, 500 for weak)
+- Makes it easy to see which features drive each principal component
+
+**Status:** ✅ Implemented
+
+---
+
+#### Decision: UI Cleanup - Remove Redundant Elements
+**Decision:** Remove redundant "3D Vector Graph" heading and player count from info panel
+**Rationale:**
+- "3D Vector Graph" is obvious from context and page title
+- Player count already shown in controls section
+- Reduces visual clutter
+- Follows principle of not repeating information
+- Info panel now focuses on hovered player info and controls/axes info
+
+**Status:** ✅ Implemented
+
+---
+
+#### Decision: CSS Spacing Improvements
+**Decision:** Add more top margin to main content section
+**Rationale:**
+- Better visual separation between controls and graph
+- Improved spacing and readability
+- Changed from 20px to 30px top margin
+
+**Status:** ✅ Implemented
+
+---
+
 ## Future Decisions (To Be Logged)
 
-### Planned for v2:
-- PCA projection implementation
+### Planned for v3+:
 - Color coding strategy (position vs team vs neutral)
 - Clustering/archetype features
 - Cross-season comparison features

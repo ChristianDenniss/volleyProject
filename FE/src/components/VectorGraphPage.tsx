@@ -247,8 +247,6 @@ function VectorGraph3D({
       </Canvas>
       <div className="vector-graph-info">
         <div className="info-section">
-          <h3>3D Vector Graph</h3>
-          <p>Players: {vectorRows.length}</p>
           {hoveredPlayer && (
             <div className="hovered-player-info">
               <h4>{hoveredPlayer.playerName}</h4>
@@ -418,18 +416,19 @@ const VectorGraphPage: React.FC = () => {
         // Helper to format feature names
         const formatFeatureName = (key: string): string => {
           const names: Record<string, string> = {
-            killsPerSet: "Kills/Set",
-            attemptsPerSet: "Attempts/Set",
-            totalSpikePct: "Total Spike %",
-            spikePct: "Spike %",
-            apePct: "APE %",
+            spikeKillsPerSet: "Spike Kills/Set",
+            spikeAttemptsPerSet: "Spike Attempts/Set",
+            apeKillsPerSet: "APE Kills/Set",
+            apeAttemptsPerSet: "APE Attempts/Set",
             blocksPerSet: "Blocks/Set",
             assistsPerSet: "Assists/Set",
             acesPerSet: "Aces/Set",
             digsPerSet: "Digs/Set",
-            receivesPerSet: "Receives/Set",
-            errorsPerSet: "Errors/Set",
-            plusMinusPerSet: "Plus/Minus/Set"
+            blockFollowsPerSet: "Block Follows/Set",
+            spikingErrorsPerSet: "Spiking Errors/Set",
+            settingErrorsPerSet: "Setting Errors/Set",
+            servingErrorsPerSet: "Serving Errors/Set",
+            miscErrorsPerSet: "Misc Errors/Set"
           };
           return names[key] || key;
         };
@@ -533,14 +532,15 @@ const VectorGraphPage: React.FC = () => {
         <div className="info-box">
           <h3>About This Visualization</h3>
           <p>
-            This graph represents players as vectors in a 12-dimensional statistical space, projected
+            This graph represents players as vectors in a 13-dimensional statistical space, projected
             into 3D for visualization. Each player's position is determined by their normalized (z-scored)
             performance across multiple statistical categories.
           </p>
           <p>
-            <strong>Statistical Dimensions Used (12 total):</strong> kills per set, attempts per set, 
-            total spike percentage, spike percentage, ape percentage, blocks per set, assists per set, 
-            aces per set, digs per set, receives per set, errors per set, and plus/minus per set.
+            <strong>Statistical Dimensions Used (13 total):</strong> Spike kills per set, Spike attempts per set, 
+            APE kills per set, APE attempts per set, Blocks per set, Assists per set, Aces per set, 
+            Digs per set, Block follows per set, Spiking errors per set, Setting errors per set, 
+            Serving errors per set, and Misc errors per set.
           </p>
           <p className="version-info">Vector Version: v2 | Projection: PCA (Principal Component Analysis)</p>
         </div>

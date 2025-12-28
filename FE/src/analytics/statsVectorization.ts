@@ -33,39 +33,41 @@ export interface PlayerSeasonVectorRow
 
 // Keys you will vectorize (per-set)' Keep this list stable and version it if you change it.
 export type VectorFeatureKey =
-  | "killsPerSet"
-  | "attemptsPerSet"
-  | "totalSpikePct"
-  | "spikePct"
-  | "apePct"
+  | "spikeKillsPerSet"
+  | "spikeAttemptsPerSet"
+  | "apeKillsPerSet"
+  | "apeAttemptsPerSet"
   | "blocksPerSet"
   | "assistsPerSet"
   | "acesPerSet"
   | "digsPerSet"
-  | "receivesPerSet"
-  | "errorsPerSet"
-  | "plusMinusPerSet";
+  | "blockFollowsPerSet"
+  | "spikingErrorsPerSet"
+  | "settingErrorsPerSet"
+  | "servingErrorsPerSet"
+  | "miscErrorsPerSet";
 
 // Fixed order for the vectorss.
 // If you change this order or the list, bump a `VECTOR_VERSION` constant.
 export const VECTOR_FEATURE_ORDER: VectorFeatureKey[] =
 [
-  "killsPerSet",
-  "attemptsPerSet",
-  "totalSpikePct",
-  "spikePct",
-  "apePct",
+  "spikeKillsPerSet",
+  "spikeAttemptsPerSet",
+  "apeKillsPerSet",
+  "apeAttemptsPerSet",
   "blocksPerSet",
   "assistsPerSet",
   "acesPerSet",
   "digsPerSet",
-  "receivesPerSet",
-  "errorsPerSet",
-  "plusMinusPerSet"
+  "blockFollowsPerSet",
+  "spikingErrorsPerSet",
+  "settingErrorsPerSet",
+  "servingErrorsPerSet",
+  "miscErrorsPerSet"
 ];
 
 // Optional: if you want to display a version in API/UI.
-export const VECTOR_VERSION = "v1";
+export const VECTOR_VERSION = "v2";
 
 // Build z-scored vectors for a given season with a minimum sets-played filter.
 export function buildSeasonVectors(
@@ -435,42 +437,20 @@ function computePerSetFeatures(agg: PlayerSeasonAggregate): Record<VectorFeature
   // This prevents division by zero.
   const sets = agg.setsPlayed > 0 ? agg.setsPlayed : 1;
 
-  // This computes totals used by several features.
-  const totalKills = agg.spikeKills + agg.apeKills;
-  const totalAttempts = agg.spikeAttempts + agg.apeAttempts;
-
-  // This computes error totals used by errors and plusMinus.
-  const totalErrors = agg.miscErrors + agg.spikingErrors + agg.settingErrors + agg.servingErrors;
-
-  // This mirrors your "receives" calculation from StatsLeaderboard (digs + blockFollows).
-  const totalReceives = agg.digs + agg.blockFollows;
-
-  // This computes spike-only percent.
-  const spikePct = agg.spikeAttempts > 0 ? (agg.spikeKills / agg.spikeAttempts) : 0;
-
-  // This computes ape-only percent.
-  const apePct = agg.apeAttempts > 0 ? (agg.apeKills / agg.apeAttempts) : 0;
-
-  // This computes combined (total) spike percent.
-  const totalSpikePct = totalAttempts > 0 ? (totalKills / totalAttempts) : 0;
-
-  // This mirrors your PRF / plusMinus definition (but per set).
-  const prf = totalKills + agg.aces + agg.assists;
-  const plusMinus = prf - totalErrors;
-
   return {
-    killsPerSet: totalKills / sets,
-    attemptsPerSet: totalAttempts / sets,
-    totalSpikePct,
-    spikePct,
-    apePct,
+    spikeKillsPerSet: agg.spikeKills / sets,
+    spikeAttemptsPerSet: agg.spikeAttempts / sets,
+    apeKillsPerSet: agg.apeKills / sets,
+    apeAttemptsPerSet: agg.apeAttempts / sets,
     blocksPerSet: agg.blocks / sets,
     assistsPerSet: agg.assists / sets,
     acesPerSet: agg.aces / sets,
     digsPerSet: agg.digs / sets,
-    receivesPerSet: totalReceives / sets,
-    errorsPerSet: totalErrors / sets,
-    plusMinusPerSet: plusMinus / sets
+    blockFollowsPerSet: agg.blockFollows / sets,
+    spikingErrorsPerSet: agg.spikingErrors / sets,
+    settingErrorsPerSet: agg.settingErrors / sets,
+    servingErrorsPerSet: agg.servingErrors / sets,
+    miscErrorsPerSet: agg.miscErrors / sets
   };
 }
 
