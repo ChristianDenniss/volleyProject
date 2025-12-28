@@ -81,8 +81,8 @@ function VectorGraph3D({
 }) {
   const [hoveredPlayer, setHoveredPlayer] = useState<PlayerSeasonVectorRow | null>(null);
   const controlsRef = useRef<any>(null);
-  // Track hovered points with their distances
-  const [hoveredPoints, setHoveredPoints] = useState<Map<string, number>>(new Map());
+  // Track hovered points with their distances (using object instead of Map for React state)
+  const [hoveredPoints, setHoveredPoints] = useState<Record<string, number>>({});
 
   if (vectorRows.length === 0) {
     return (
@@ -120,24 +120,25 @@ function VectorGraph3D({
   const cameraDistance = maxRange > 0 ? maxRange * 2 : 10;
 
   const handlePlayerHover = (row: PlayerSeasonVectorRow | null, distance: number, isEntering: boolean) => {
-    // Update the hovered points map
+    // Update the hovered points object
     setHoveredPoints(prev => {
-      const newMap = new Map(prev);
       if (isEntering && row) {
-        newMap.set(row.playerId, distance);
+        return { ...prev, [row.playerId]: distance };
       } else if (!isEntering && row) {
-        newMap.delete(row.playerId);
+        const { [row.playerId]: removed, ...rest } = prev;
+        return rest;
       }
-      return newMap;
+      return prev;
     });
   };
 
   // Find the closest hovered point
   const closestHoveredPlayerId = useMemo(() => {
-    if (hoveredPoints.size === 0) return null;
+    const entries = Object.entries(hoveredPoints);
+    if (entries.length === 0) return null;
     let closestId: string | null = null;
     let closestDistance = Infinity;
-    hoveredPoints.forEach((distance, playerId) => {
+    entries.forEach(([playerId, distance]) => {
       if (distance < closestDistance) {
         closestDistance = distance;
         closestId = playerId;
