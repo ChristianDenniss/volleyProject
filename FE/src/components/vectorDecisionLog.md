@@ -222,6 +222,26 @@ For implementation details and what was actually built, see `vectorImplementatio
 
 ---
 
+#### Decision: Click-to-Select with Persistent Popup
+**Decision:** Implement click-to-select functionality where clicking a player point shows a persistent popup until deselected
+**Rationale:**
+- Improves user experience - allows users to "lock in" a player selection
+- Persistent popup remains visible while exploring the graph
+- Clicking empty space deselects (intuitive interaction)
+- Clicking another player replaces the selection (standard UI pattern)
+- Works alongside hover functionality (hover shows temporary info, click shows persistent)
+
+**Implementation Details:**
+- Added `onClick` handler to PlayerPoint component
+- Added `clickedPlayer` state in VectorGraph3D
+- Canvas onClick handler for deselection (player clicks stop propagation)
+- Selected player popup persists until deselected or another player is clicked
+- Visual indication: selected player shows red color and larger scale
+
+**Status:** ✅ Implemented
+
+---
+
 ## Future Decisions (To Be Logged)
 
 ### Planned for v3+:

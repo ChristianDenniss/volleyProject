@@ -16,12 +16,14 @@ function PlayerPoint({
   vectorRow,
   position,
   onHover,
+  onClick,
   isSelected,
   isClosestHovered
 }: {
   vectorRow: PlayerSeasonVectorRow;
   position: [number, number, number];
   onHover: (hovered: boolean, distance: number) => void;
+  onClick: () => void;
   isSelected: boolean;
   isClosestHovered: boolean;
 }) {
@@ -43,6 +45,11 @@ function PlayerPoint({
     onHover(false, Infinity);
   };
 
+  const handleClick = (e: any) => {
+    e.stopPropagation(); // Prevent canvas click from firing
+    onClick();
+  };
+
   const scale = isSelected ? 1.5 : hovered ? 1.2 : 1;
   const color = isSelected ? "#ff6b6b" : hovered ? "#4ecdc4" : "#95a5a6";
   const showLabel = (hovered && isClosestHovered) || isSelected;
@@ -53,6 +60,7 @@ function PlayerPoint({
       position={position}
       onPointerEnter={handlePointerEnter}
       onPointerLeave={handlePointerLeave}
+      onClick={handleClick}
       scale={scale}
     >
       <sphereGeometry args={[0.1, 16, 16]} />
@@ -73,14 +81,17 @@ function PlayerPoint({
 function VectorGraph3D({
   vectorRows,
   onPlayerHover,
+  onPlayerClick,
   selectedPlayerId
 }: {
   vectorRows: PlayerSeasonVectorRow[];
   onPlayerHover?: (player: PlayerSeasonVectorRow | null) => void;
+  onPlayerClick?: (player: PlayerSeasonVectorRow | null) => void;
   selectedPlayerId?: string | null;
 }) {
   // ALL HOOKS MUST BE CALLED FIRST - before any conditional returns
   const [hoveredPlayer, setHoveredPlayer] = useState<PlayerSeasonVectorRow | null>(null);
+  const [clickedPlayer, setClickedPlayer] = useState<PlayerSeasonVectorRow | null>(null);
   const controlsRef = useRef<any>(null);
   // Track hovered points with their distances (using object instead of Map for React state)
   const [hoveredPoints, setHoveredPoints] = useState<Record<string, number>>({});
@@ -174,6 +185,23 @@ function VectorGraph3D({
     }
   }, [closestHoveredPlayerId, vectorRows, onPlayerHover]);
 
+  // Handle player click
+  const handlePlayerClick = (player: PlayerSeasonVectorRow) => {
+    setClickedPlayer(player);
+    if (onPlayerClick) {
+      onPlayerClick(player);
+    }
+  };
+
+  // Handle canvas click to deselect (fires when clicking empty space)
+  // Player clicks stop propagation, so this only fires for background clicks
+  const handleCanvasClick = () => {
+    setClickedPlayer(null);
+    if (onPlayerClick) {
+      onPlayerClick(null);
+    }
+  };
+
   // Keyboard zoom controls
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
@@ -219,6 +247,7 @@ function VectorGraph3D({
           position: [centerX + cameraDistance, centerY + cameraDistance, centerZ + cameraDistance],
           fov: 50
         }}
+        onClick={handleCanvasClick}
       >
         <ambientLight intensity={0.5} />
         <pointLight position={[10, 10, 10]} intensity={1} />
@@ -233,7 +262,8 @@ function VectorGraph3D({
             onHover={(hovered, distance) => {
               handlePlayerHover(row, distance, hovered);
             }}
-            isSelected={selectedPlayerId === row.playerId}
+            onClick={() => handlePlayerClick(row)}
+            isSelected={clickedPlayer?.playerId === row.playerId || selectedPlayerId === row.playerId}
             isClosestHovered={closestHoveredPlayerId === row.playerId}
           />
         ))}
@@ -247,11 +277,12 @@ function VectorGraph3D({
       </Canvas>
       <div className="vector-graph-info">
         <div className="info-section">
-          {hoveredPlayer && (
+          {(clickedPlayer || hoveredPlayer) && (
             <div className="hovered-player-info">
-              <h4>{hoveredPlayer.playerName}</h4>
-              <p>Season: {hoveredPlayer.seasonNumber}</p>
-              <p>Sets Played: {hoveredPlayer.setsPlayed}</p>
+              <h4>{(clickedPlayer || hoveredPlayer)?.playerName}</h4>
+              <p>Season: {(clickedPlayer || hoveredPlayer)?.seasonNumber}</p>
+              <p>Sets Played: {(clickedPlayer || hoveredPlayer)?.setsPlayed}</p>
+              {clickedPlayer && <p className="note">(Selected - click empty space to deselect)</p>}
             </div>
           )}
         </div>
@@ -524,6 +555,7 @@ const VectorGraphPage: React.FC = () => {
         <VectorGraph3D
           vectorRows={vectorRows}
           onPlayerHover={(player) => setHoveredPlayer(player?.playerId || null)}
+          onPlayerClick={(player) => setHoveredPlayer(player?.playerId || null)}
           selectedPlayerId={hoveredPlayer}
         />
       </div>

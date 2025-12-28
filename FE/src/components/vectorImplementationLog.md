@@ -38,6 +38,8 @@ This document tracks what has been implemented in the Stats Vectorization & 3D G
   - 2x2 grid layout for controls
   - Keyboard zoom controls (+/- keys)
   - Hover state management for overlapping points
+  - Click-to-select with persistent popup
+  - Click empty space to deselect
 - **Status:** ✅ Complete
 
 #### 3D Visualization
@@ -48,6 +50,7 @@ This document tracks what has been implemented in the Stats Vectorization & 3D G
   - Player points as 3D spheres
   - Hover highlighting (color change + scale)
   - Player info popups on hover
+  - Click-to-select with persistent popup
   - Closest point detection for overlapping points
   - Grid and axes helpers
   - Ambient and point lighting
@@ -130,6 +133,12 @@ This document tracks what has been implemented in the Stats Vectorization & 3D G
 ---
 
 ## Version History
+
+- **v2.2** - Added click-to-select feature with persistent popup
+  - Click player point to select and show persistent popup
+  - Click empty space to deselect
+  - Click another player to replace selection
+  - Works alongside hover functionality
 
 - **v2.1** - Expanded to use all 13 raw stats from Stats interface (previously used aggregated stats)
   - Changed from: aggregated stats (total kills, total attempts, total errors, receives, percentages, plus/minus)
