@@ -1,82 +1,95 @@
-/* VectorGraphPage.css - Consolidated styles */
+/* VectorGraphPage.css - Matching site theme */
 
 .vector-graph-page {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
   min-height: 100vh;
-  padding: 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: #333;
+  box-sizing: border-box;
+  background-color: white;
 }
 
 .vector-graph-header {
-  text-align: center;
-  margin-bottom: 2rem;
-  color: white;
+  margin: 0 0 20px 0;
+  padding: 0;
+  border: none;
 }
 
 .vector-graph-header h1 {
-  font-size: 2.5rem;
-  margin-bottom: 0.5rem;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  margin: 0 0 10px 0;
+  padding: 0;
+  border: none;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2d3748;
 }
 
 .vector-graph-header .subtitle {
-  font-size: 1.1rem;
-  opacity: 0.9;
-  max-width: 800px;
-  margin: 0 auto;
+  font-size: 1rem;
+  color: #4a5568;
+  line-height: 1.5;
+  margin: 0;
 }
 
 .vector-graph-controls {
-  background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  margin-bottom: 2rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   display: flex;
+  flex-direction: row;
   flex-wrap: wrap;
-  gap: 2rem;
+  gap: 20px;
   align-items: flex-end;
+  margin: 20px 0;
+  padding: 12px 15px;
+  background-color: #f7fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
 }
 
 .control-group {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 6px;
   min-width: 200px;
   flex: 1;
 }
 
 .control-group label {
-  font-weight: 600;
-  color: #333;
-  font-size: 0.95rem;
+  font-weight: 500;
+  color: #2d3748;
+  font-size: 13px;
+  margin: 0;
 }
 
 .control-select {
-  padding: 0.75rem;
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
-  font-size: 1rem;
-  background: white;
+  font-size: 14px;
+  padding: 6px 12px;
+  padding-right: 32px;
+  border: 1px solid #2D3C50;
+  border-radius: 4px;
+  background: #2D3C50 url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e") no-repeat right 8px center / 20px;
+  color: #ffffff;
   cursor: pointer;
-  transition: border-color 0.2s;
+  transition: background-color 0.2s ease;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  box-shadow: none;
+  height: auto;
 }
 
-.control-select:hover {
-  border-color: #667eea;
-}
-
+.control-select:hover,
 .control-select:focus {
+  background-color: #5b7dab;
+  border-color: #5b7dab;
+  background: #5b7dab url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e") no-repeat right 8px center / 20px;
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  box-shadow: 0 0 0 2px rgba(45, 60, 80, 0.2);
 }
 
 .control-slider {
   width: 100%;
-  height: 8px;
-  border-radius: 4px;
-  background: #e0e0e0;
+  height: 6px;
+  border-radius: 3px;
+  background: #e2e8f0;
   outline: none;
   -webkit-appearance: none;
 }
@@ -84,94 +97,101 @@
 .control-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
-  background: #667eea;
+  background: #2D3C50;
   cursor: pointer;
   transition: background 0.2s;
 }
 
 .control-slider::-webkit-slider-thumb:hover {
-  background: #5568d3;
+  background: #5b7dab;
 }
 
 .control-slider::-moz-range-thumb {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
-  background: #667eea;
+  background: #2D3C50;
   cursor: pointer;
   border: none;
   transition: background 0.2s;
 }
 
 .control-slider::-moz-range-thumb:hover {
-  background: #5568d3;
+  background: #5b7dab;
 }
 
 .slider-labels {
   display: flex;
   justify-content: space-between;
-  font-size: 0.85rem;
-  color: #666;
-  margin-top: 0.25rem;
+  font-size: 12px;
+  color: #718096;
+  margin-top: 4px;
 }
 
 .stats-display {
+  display: flex;
   flex-direction: row;
-  gap: 1.5rem;
+  gap: 20px;
   flex-wrap: wrap;
+  margin: 0;
+  align-items: flex-end;
 }
 
 .stat-item {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 2px;
 }
 
 .stat-label {
-  font-size: 0.85rem;
-  color: #666;
+  font-size: 12px;
+  color: #718096;
+  font-weight: 500;
 }
 
 .stat-value {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 700;
-  color: #667eea;
+  color: #2D3C50;
+  line-height: 1.2;
 }
 
 .vector-graph-content {
-  background: white;
-  border-radius: 12px;
+  margin: 20px 0;
+  background-color: #f7fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
   padding: 1rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   min-height: 600px;
-  margin-bottom: 2rem;
 }
 
 .vector-graph-footer {
-  background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin: 20px 0;
+  padding: 20px;
+  background-color: #f7fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
 }
 
 .info-box h3 {
-  margin-top: 0;
-  color: #333;
-  font-size: 1.3rem;
+  margin: 0 0 15px 0;
+  color: #2d3748;
+  font-size: 1.25rem;
+  font-weight: 700;
 }
 
 .info-box p {
   line-height: 1.6;
-  color: #555;
-  margin-bottom: 1rem;
+  color: #4a5568;
+  margin-bottom: 10px;
 }
 
 .info-box .version-info {
-  font-size: 0.9rem;
-  color: #888;
+  font-size: 0.875rem;
+  color: #718096;
   font-style: italic;
   margin-bottom: 0;
 }
@@ -180,19 +200,21 @@
 .error-container {
   text-align: center;
   padding: 4rem 2rem;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  background-color: #f7fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
 }
 
 .loading-container h2,
 .error-container h2 {
-  color: #333;
+  color: #2d3748;
   margin-bottom: 1rem;
+  font-size: 1.5rem;
+  font-weight: 700;
 }
 
 .error-container p {
-  color: #d32f2f;
+  color: #e53e3e;
   margin: 0.5rem 0;
 }
 
@@ -212,18 +234,19 @@
   align-items: center;
   justify-content: center;
   height: 600px;
-  color: #666;
+  color: #718096;
   text-align: center;
   padding: 2rem;
 }
 
 .vector-graph-empty p {
   margin: 0.5rem 0;
-  font-size: 1.1rem;
+  font-size: 1rem;
+  color: #4a5568;
 }
 
 .player-label {
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.85);
   color: white;
   padding: 0.5rem 0.75rem;
   border-radius: 6px;
@@ -255,12 +278,13 @@
   z-index: 10;
   max-height: calc(100% - 2rem);
   overflow-y: auto;
+  border: 1px solid #e2e8f0;
 }
 
 .info-section {
   margin-bottom: 1rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .info-section:last-child {
@@ -272,19 +296,21 @@
 .info-section h3 {
   margin: 0 0 0.5rem 0;
   font-size: 1.1rem;
-  color: #333;
+  color: #2d3748;
+  font-weight: 700;
 }
 
 .info-section h4 {
   margin: 0 0 0.5rem 0;
   font-size: 0.95rem;
-  color: #555;
+  color: #4a5568;
+  font-weight: 600;
 }
 
 .info-section p {
   margin: 0.25rem 0;
   font-size: 0.85rem;
-  color: #666;
+  color: #4a5568;
   line-height: 1.4;
 }
 
@@ -292,7 +318,7 @@
   margin: 0.5rem 0;
   padding-left: 1.25rem;
   font-size: 0.85rem;
-  color: #666;
+  color: #4a5568;
 }
 
 .info-section li {
@@ -301,26 +327,29 @@
 }
 
 .hovered-player-info {
-  background: #f5f5f5;
+  background: #e6f2ff;
   padding: 0.75rem;
   border-radius: 6px;
   margin-top: 0.5rem;
+  border: 1px solid #CFFFFF;
 }
 
 .hovered-player-info h4 {
   margin: 0 0 0.5rem 0;
-  color: #667eea;
+  color: #2D3C50;
   font-size: 1rem;
+  font-weight: 700;
 }
 
 .hovered-player-info p {
   margin: 0.25rem 0;
   font-size: 0.85rem;
+  color: #4a5568;
 }
 
 .note {
   font-style: italic;
-  color: #888;
+  color: #718096;
   font-size: 0.8rem !important;
 }
 
@@ -331,16 +360,17 @@
   }
 
   .vector-graph-header h1 {
-    font-size: 2rem;
+    font-size: 1.75rem;
   }
 
   .vector-graph-controls {
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 12px;
+    padding: 10px 12px;
   }
 
   .control-group {
-    min-width: 100%;
+    width: 100%;
   }
 
   .vector-graph-content {
@@ -362,5 +392,10 @@
 
   .vector-graph-empty {
     height: 400px;
+  }
+
+  .stats-display {
+    flex-direction: column;
+    gap: 15px;
   }
 }
