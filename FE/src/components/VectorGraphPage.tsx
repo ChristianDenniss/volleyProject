@@ -98,6 +98,10 @@ function VectorGraph3D({
   // ALL HOOKS MUST BE CALLED FIRST - before any conditional returns
   const [hoveredPlayer, setHoveredPlayer] = useState<PlayerSeasonVectorRow | null>(null);
   const [clickedPlayer, setClickedPlayer] = useState<PlayerSeasonVectorRow | null>(null);
+  const [infoBoxHidden, setInfoBoxHidden] = useState<boolean>(false);
+  const [playerInfoCollapsed, setPlayerInfoCollapsed] = useState<boolean>(false);
+  const [controlsCollapsed, setControlsCollapsed] = useState<boolean>(false);
+  const [axesCollapsed, setAxesCollapsed] = useState<boolean>(false);
   const controlsRef = useRef<any>(null);
   // Track hovered points with their distances (using object instead of Map for React state)
   const [hoveredPoints, setHoveredPoints] = useState<Record<string, number>>({});
@@ -295,50 +299,98 @@ function VectorGraph3D({
           maxDistance={maxRange * 5}
         />
       </Canvas>
-      <div className="vector-graph-info">
-        <div className="info-section">
-          {(() => {
-            // Prioritize clicked player over hovered player
-            const displayPlayer = clickedPlayer || hoveredPlayer;
-            if (!displayPlayer) return null;
-            
-            return (
-              <div className="hovered-player-info">
-                <h4>{displayPlayer.playerName}</h4>
-                <p>Season: {displayPlayer.seasonNumber}</p>
-                <p>Sets Played: {displayPlayer.setsPlayed}</p>
-                {clickedPlayer && clickedPlayer.playerId === displayPlayer.playerId && (
-                  <p className="note">(Selected - click empty space to deselect)</p>
+      {!infoBoxHidden && (
+        <div className="vector-graph-info">
+          <button 
+            className="info-box-toggle"
+            onClick={() => setInfoBoxHidden(true)}
+            title="Hide info panel"
+            aria-label="Hide info panel"
+          >
+            ×
+          </button>
+          
+          <div className={`info-section ${playerInfoCollapsed ? 'collapsed' : ''}`}>
+            <div 
+              className="info-section-header"
+              onClick={() => setPlayerInfoCollapsed(!playerInfoCollapsed)}
+            >
+              <h4>Player Info</h4>
+              <span className="collapse-icon">{playerInfoCollapsed ? '▼' : '▲'}</span>
+            </div>
+            {!playerInfoCollapsed && (() => {
+              // Prioritize clicked player over hovered player
+              const displayPlayer = clickedPlayer || hoveredPlayer;
+              if (!displayPlayer) return <p className="note">Hover or click a player to see info</p>;
+              
+              return (
+                <div className="hovered-player-info">
+                  <h4>{displayPlayer.playerName}</h4>
+                  <p>Season: {displayPlayer.seasonNumber}</p>
+                  <p>Sets Played: {displayPlayer.setsPlayed}</p>
+                  {clickedPlayer && clickedPlayer.playerId === displayPlayer.playerId && (
+                    <p className="note">(Selected - click empty space to deselect)</p>
+                  )}
+                </div>
+              );
+            })()}
+          </div>
+          
+          <div className={`info-section ${controlsCollapsed ? 'collapsed' : ''}`}>
+            <div 
+              className="info-section-header"
+              onClick={() => setControlsCollapsed(!controlsCollapsed)}
+            >
+              <h4>Controls</h4>
+              <span className="collapse-icon">{controlsCollapsed ? '▼' : '▲'}</span>
+            </div>
+            {!controlsCollapsed && (
+              <ul>
+                <li>Left Click + Drag: Rotate</li>
+                <li>Right Click + Drag: Pan</li>
+                <li>Scroll: Zoom</li>
+                <li>+ / - Keys: Zoom In / Out</li>
+                <li>Hover: View player info</li>
+              </ul>
+            )}
+          </div>
+          
+          <div className={`info-section ${axesCollapsed ? 'collapsed' : ''}`}>
+            <div 
+              className="info-section-header"
+              onClick={() => setAxesCollapsed(!axesCollapsed)}
+            >
+              <h4>Axes (PCA)</h4>
+              <span className="collapse-icon">{axesCollapsed ? '▼' : '▲'}</span>
+            </div>
+            {!axesCollapsed && (
+              <>
+                <p>X: First Principal Component</p>
+                <p>Y: Second Principal Component</p>
+                <p>Z: Third Principal Component</p>
+                {model && model.explainedVariance && model.explainedVariance.length > 0 && (
+                  <p className="note">
+                    Variance explained: PC1: {((model.explainedVariance[0] / model.explainedVariance.reduce((a: number, b: number) => a + b, 0)) * 100).toFixed(1)}%, 
+                    PC2: {((model.explainedVariance[1] / model.explainedVariance.reduce((a: number, b: number) => a + b, 0)) * 100).toFixed(1)}%, 
+                    PC3: {((model.explainedVariance[2] / model.explainedVariance.reduce((a: number, b: number) => a + b, 0)) * 100).toFixed(1)}%
+                  </p>
                 )}
-              </div>
-            );
-          })()}
+                <p className="note">Uses all 12 statistical dimensions via PCA.</p>
+              </>
+            )}
+          </div>
         </div>
-        <div className="info-section">
-          <h4>Controls</h4>
-          <ul>
-            <li>Left Click + Drag: Rotate</li>
-            <li>Right Click + Drag: Pan</li>
-            <li>Scroll: Zoom</li>
-            <li>+ / - Keys: Zoom In / Out</li>
-            <li>Hover: View player info</li>
-          </ul>
-        </div>
-        <div className="info-section">
-          <h4>Axes (PCA)</h4>
-          <p>X: First Principal Component</p>
-          <p>Y: Second Principal Component</p>
-          <p>Z: Third Principal Component</p>
-          {model && model.explainedVariance && model.explainedVariance.length > 0 && (
-            <p className="note">
-              Variance explained: PC1: {((model.explainedVariance[0] / model.explainedVariance.reduce((a: number, b: number) => a + b, 0)) * 100).toFixed(1)}%, 
-              PC2: {((model.explainedVariance[1] / model.explainedVariance.reduce((a: number, b: number) => a + b, 0)) * 100).toFixed(1)}%, 
-              PC3: {((model.explainedVariance[2] / model.explainedVariance.reduce((a: number, b: number) => a + b, 0)) * 100).toFixed(1)}%
-            </p>
-          )}
-          <p className="note">Uses all 12 statistical dimensions via PCA.</p>
-        </div>
-      </div>
+      )}
+      {infoBoxHidden && (
+        <button 
+          className="info-box-show-button"
+          onClick={() => setInfoBoxHidden(false)}
+          title="Show info panel"
+          aria-label="Show info panel"
+        >
+          ℹ
+        </button>
+      )}
     </div>
   );
 }

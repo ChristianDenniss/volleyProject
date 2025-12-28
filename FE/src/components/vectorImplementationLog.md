@@ -134,6 +134,13 @@ This document tracks what has been implemented in the Stats Vectorization & 3D G
 
 ## Version History
 
+- **v2.4** - Added collapsible sections to info panel
+  - Each section (Player Info, Controls, Axes) can be individually collapsed/expanded
+  - Added clickable headers with collapse icons (▲/▼) for each section
+  - Added hide/show button (×) to minimize the entire info panel
+  - When hidden, shows a small info button (ℹ) to restore the panel
+  - Improved UX by allowing users to customize which information is visible
+
 - **v2.3** - Fixed PCA component color coding and improved spacing
   - Fixed dynamic color coding for PCA feature weights (was showing all dark for PC1/PC2)
   - Improved weight normalization to use min-max scaling within top features (0.3-1.0 opacity range)

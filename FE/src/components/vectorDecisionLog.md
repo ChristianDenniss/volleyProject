@@ -388,6 +388,19 @@ const vectorRows = useMemo(() => {
 - Matches general site spacing patterns
 **Status:** ✅ Implemented (v2.3)
 
+#### Decision: Collapsible Info Panel Sections
+**Decision:** Make each section of the info panel (Player Info, Controls, Axes) individually collapsible, and add ability to hide/show the entire panel.
+**Rationale:**
+- Allows users to customize which information is visible based on their needs
+- Reduces visual clutter when certain sections aren't needed
+- Provides flexibility for different use cases (some users may only need controls, others may want all info)
+- Hide/show entire panel gives maximum screen real estate when needed
+**Implementation:**
+- Clickable headers with collapse icons (▲/▼) for each section
+- Close button (×) in top-right to hide entire panel
+- Small info button (ℹ) appears when panel is hidden to restore it
+**Status:** ✅ Implemented (v2.4)
+
 ---
 
 ## Notes
