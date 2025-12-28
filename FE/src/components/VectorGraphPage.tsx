@@ -5,7 +5,7 @@ import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls, Html } from "@react-three/drei";
 import * as THREE from "three";
 import { useFetchPlayersWithStats, useFetchSeasons } from "../hooks/useVectorGraphData";
-import { buildSeasonVectors, computePCA3D } from "../analytics/statsVectorization";
+import { buildSeasonVectors, computePCA3D, VECTOR_FEATURE_ORDER } from "../analytics/statsVectorization";
 import type { PlayerSeasonVectorRow } from "../analytics/statsVectorization";
 import "../styles/VectorGraphPage.css";
 
@@ -405,6 +405,122 @@ const VectorGraphPage: React.FC = () => {
         )}
       </div>
 
+      {/* PCA Components Row */}
+      {(() => {
+        // Compute PCA to get the model
+        const zVectors = vectorRows.map(row => row.zVector);
+        const { model } = vectorRows.length > 0 ? computePCA3D(zVectors) : { model: null };
+        
+        if (!model || !model.components || model.components.length === 0) {
+          return null;
+        }
+
+        // Helper to format feature names
+        const formatFeatureName = (key: string): string => {
+          const names: Record<string, string> = {
+            killsPerSet: "Kills/Set",
+            attemptsPerSet: "Attempts/Set",
+            totalSpikePct: "Total Spike %",
+            spikePct: "Spike %",
+            apePct: "APE %",
+            blocksPerSet: "Blocks/Set",
+            assistsPerSet: "Assists/Set",
+            acesPerSet: "Aces/Set",
+            digsPerSet: "Digs/Set",
+            receivesPerSet: "Receives/Set",
+            errorsPerSet: "Errors/Set",
+            plusMinusPerSet: "Plus/Minus/Set"
+          };
+          return names[key] || key;
+        };
+
+        // Get top 4 features for each PC (by absolute value) - 12 dimensions / 3 PCs = 4 per PC
+        const getTopFeatures = (component: number[], count: number = 4) => {
+          const features = VECTOR_FEATURE_ORDER.map((key, idx) => ({
+            key,
+            weight: component[idx] || 0,
+            absWeight: Math.abs(component[idx] || 0)
+          }))
+            .sort((a, b) => b.absWeight - a.absWeight)
+            .slice(0, count);
+          
+          // Find max weight for normalization
+          const maxWeight = Math.max(...features.map(f => f.absWeight));
+          
+          return features.map(f => {
+            const sign = f.weight >= 0 ? '+' : '-';
+            const normalizedWeight = maxWeight > 0 ? f.absWeight / maxWeight : 0;
+            return {
+              text: `${sign}${formatFeatureName(f.key)}`,
+              weight: normalizedWeight
+            };
+          });
+        };
+
+        const pc1Features = getTopFeatures(model.components[0]);
+        const pc2Features = getTopFeatures(model.components[1]);
+        const pc3Features = getTopFeatures(model.components[2]);
+
+        return (
+          <div className="vector-graph-controls pca-components-row">
+            <div className="control-group pca-component">
+              <label>PC1:</label>
+              <div className="pca-description">
+                {pc1Features.map((feature, idx) => (
+                  <span
+                    key={idx}
+                    className="pca-feature"
+                    style={{
+                      opacity: 0.4 + (feature.weight * 0.6), // Range from 0.4 to 1.0
+                      fontWeight: feature.weight > 0.7 ? 700 : feature.weight > 0.4 ? 600 : 500
+                    }}
+                  >
+                    {feature.text}
+                    {idx < pc1Features.length - 1 && ', '}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="control-group pca-component">
+              <label>PC2:</label>
+              <div className="pca-description">
+                {pc2Features.map((feature, idx) => (
+                  <span
+                    key={idx}
+                    className="pca-feature"
+                    style={{
+                      opacity: 0.4 + (feature.weight * 0.6), // Range from 0.4 to 1.0
+                      fontWeight: feature.weight > 0.7 ? 700 : feature.weight > 0.4 ? 600 : 500
+                    }}
+                  >
+                    {feature.text}
+                    {idx < pc2Features.length - 1 && ', '}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="control-group pca-component">
+              <label>PC3:</label>
+              <div className="pca-description">
+                {pc3Features.map((feature, idx) => (
+                  <span
+                    key={idx}
+                    className="pca-feature"
+                    style={{
+                      opacity: 0.4 + (feature.weight * 0.6), // Range from 0.4 to 1.0
+                      fontWeight: feature.weight > 0.7 ? 700 : feature.weight > 0.4 ? 600 : 500
+                    }}
+                  >
+                    {feature.text}
+                    {idx < pc3Features.length - 1 && ', '}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       <div className="vector-graph-content">
         <VectorGraph3D
           vectorRows={vectorRows}
@@ -422,10 +538,11 @@ const VectorGraphPage: React.FC = () => {
             performance across multiple statistical categories.
           </p>
           <p>
-            <strong>Features:</strong> kills per set, attempts per set, spike percentages, blocks,
-            assists, aces, digs, receives, errors, and plus/minus.
+            <strong>Statistical Dimensions Used (12 total):</strong> kills per set, attempts per set, 
+            total spike percentage, spike percentage, ape percentage, blocks per set, assists per set, 
+            aces per set, digs per set, receives per set, errors per set, and plus/minus per set.
           </p>
-          <p className="version-info">Vector Version: v1 | Projection: Simple (first 3 dimensions)</p>
+          <p className="version-info">Vector Version: v2 | Projection: PCA (Principal Component Analysis)</p>
         </div>
       </div>
     </div>
