@@ -158,6 +158,17 @@ This document tracks what has been implemented in the Stats Vectorization & 3D G
   - Added minimum width (250px) and minimum height (200px) to prevent constant resizing
   - Improved spacing between close button (×) and section headers to prevent accidental clicks
 
+- **v2.8** - Refactored archetype system to prefix-suffix combination model and separated into own module
+  - Replaced flat list of 20 archetypes with a combination system
+  - Primary traits (prefixes): Error Prone, Efficient, High Volume, Low Volume, Conservative
+  - Secondary traits (suffixes): Offensive, Defender, Setter, Scorer, Blocker, Server, Balanced, All-Around, Utility
+  - Standalone archetypes: Conservative, High Flyer, Risk Taker
+  - Archetypes now combine as "Primary - Secondary" (e.g., "Error Prone - Defender", "Efficient - Offensive")
+  - Color comes from secondary trait for combinations, or standalone archetype for unique types
+  - More scalable and flexible system that reduces redundancy
+  - Extracted archetype system into `FE/src/analytics/playerArchetypes.ts` for better separation of concerns
+  - Added JSDoc documentation to classification function
+
 - **v2.3** - Fixed PCA component color coding and improved spacing
   - Fixed dynamic color coding for PCA feature weights (was showing all dark for PC1/PC2)
   - Improved weight normalization to use min-max scaling within top features (0.3-1.0 opacity range)

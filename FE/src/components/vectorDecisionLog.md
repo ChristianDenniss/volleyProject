@@ -452,6 +452,35 @@ const vectorRows = useMemo(() => {
 - Better readability and user experience
 **Status:** ✅ Implemented (v2.6)
 
+#### Decision: Prefix-Suffix Archetype Combination System
+**Decision:** Refactor archetype system from flat list to a combination system with prefixes (e.g., "Error Prone", "Efficient", "High Volume") and suffixes/roles (e.g., "Defender", "Offensive", "Setter"), plus standalone archetypes (e.g., "Conservative", "High Flyer", "Risk Taker").
+**Rationale:**
+- Allows for more flexible and descriptive player classifications (e.g., "Error Prone - Defender", "Efficient - Offensive")
+- Reduces redundancy by combining traits instead of creating separate archetypes for every combination
+- Standalone archetypes capture unique player types that don't fit the prefix-suffix pattern
+- More scalable - can add new prefixes/suffixes without creating exponential combinations
+**Implementation:**
+- `PRIMARY_TRAITS`: Prefix traits describing error/consistency patterns (Error Prone, Efficient, High Volume, Low Volume, Conservative)
+- `SECONDARY_TRAITS`: Suffix traits describing role/play style (Offensive, Defender, Setter, Scorer, Blocker, Server, Balanced, All-Around, Utility)
+- `STANDALONE_ARCHETYPES`: Unique archetypes that don't combine (Conservative, High Flyer, Risk Taker)
+- Classification logic: First checks standalone, then combines primary + secondary if both match, otherwise uses whichever matches
+- Color comes from secondary trait (for combinations) or standalone archetype
+**Status:** ✅ Implemented (v2.8)
+
+#### Decision: Separate Archetype System into Own Module
+**Decision:** Extract archetype classification system into a separate file (`FE/src/analytics/playerArchetypes.ts`) for better separation of concerns.
+**Rationale:**
+- Improves code organization and maintainability
+- Makes archetype logic reusable across different components
+- Reduces clutter in the main component file
+- Follows single responsibility principle
+**Implementation:**
+- Created `FE/src/analytics/playerArchetypes.ts` with all archetype types, constants, and classification logic
+- Exported `PlayerArchetype` type and `classifyPlayerArchetype` function
+- Updated `VectorGraphPage.tsx` to import from the new module
+- Added JSDoc documentation to the classification function
+**Status:** ✅ Implemented (v2.8)
+
 ---
 
 ## Notes
