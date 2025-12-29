@@ -396,9 +396,12 @@ const vectorRows = useMemo(() => {
 - Provides flexibility for different use cases (some users may only need controls, others may want all info)
 - Hide/show entire panel gives maximum screen real estate when needed
 **Implementation:**
-- Clickable headers with collapse icons (▲/▼) for each section
+- Clickable headers with collapse icons (▶/▼) for each section
 - Close button (×) in top-right to hide entire panel
 - Small info button (ℹ) appears when panel is hidden to restore it
+- Fixed CSS positioning issue that was preventing panel from displaying
+- Added minimum dimensions (250px width, 200px height) to prevent constant resizing
+- Improved spacing between close button and section headers for better UX
 **Status:** ✅ Implemented (v2.4)
 
 ---

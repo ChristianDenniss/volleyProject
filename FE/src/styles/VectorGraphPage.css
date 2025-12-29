@@ -388,11 +388,11 @@
   align-items: center;
   cursor: pointer;
   user-select: none;
-  padding: 0.5rem 0.25rem;
+  padding: 0.5rem 0;
   padding-right: 2rem;
   transition: background-color 0.2s ease;
   border-radius: 4px;
-  margin: -0.25rem -0.25rem 0.5rem -0.25rem;
+  margin: 0 0 0.5rem 0;
 }
 
 .info-section-header:hover {
@@ -427,7 +427,7 @@
 }
 
 .info-section h4 {
-  margin: 0 0 0.5rem 0;
+  margin: 0;
   font-size: 0.95rem;
   color: #4a5568;
   font-weight: 600;

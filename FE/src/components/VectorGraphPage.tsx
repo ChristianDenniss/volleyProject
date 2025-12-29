@@ -53,7 +53,15 @@ function PlayerPoint({
   };
 
   const handleClick = (e: any) => {
-    e.stopPropagation(); // Prevent canvas click from firing
+    // Stop propagation to prevent OrbitControls from handling the event
+    e.stopPropagation();
+    // Also stop on the original event if it exists
+    if (e.nativeEvent) {
+      e.nativeEvent.stopPropagation();
+    }
+    if (e.stopImmediatePropagation) {
+      e.stopImmediatePropagation();
+    }
     onClick();
   };
 
@@ -68,7 +76,10 @@ function PlayerPoint({
       position={position}
       onPointerEnter={handlePointerEnter}
       onPointerLeave={handlePointerLeave}
-      onClick={handleClick}
+      onPointerDown={(e) => {
+        e.stopPropagation();
+        handleClick(e);
+      }}
       scale={scale}
     >
       <sphereGeometry args={[0.1, 16, 16]} />
@@ -297,6 +308,9 @@ function VectorGraph3D({
           dampingFactor={0.05}
           minDistance={maxRange * 0.5}
           maxDistance={maxRange * 5}
+          enablePan={true}
+          enableZoom={true}
+          enableRotate={true}
         />
       </Canvas>
       {!infoBoxHidden && (
@@ -365,9 +379,9 @@ function VectorGraph3D({
             </div>
             {!axesCollapsed && (
               <>
-                <p>X: First Principal Component</p>
-                <p>Y: Second Principal Component</p>
-                <p>Z: Third Principal Component</p>
+                <p>X: First Principal Component (PC1)</p>
+                <p>Y: Second Principal Component (PC2)</p>
+                <p>Z: Third Principal Component (PC3)</p>
                 {model && model.explainedVariance && model.explainedVariance.length > 0 && (
                   <p className="note">
                     Variance explained: PC1: {((model.explainedVariance[0] / model.explainedVariance.reduce((a: number, b: number) => a + b, 0)) * 100).toFixed(1)}%, 

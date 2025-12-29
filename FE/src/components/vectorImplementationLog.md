@@ -136,10 +136,13 @@ This document tracks what has been implemented in the Stats Vectorization & 3D G
 
 - **v2.4** - Added collapsible sections to info panel
   - Each section (Player Info, Controls, Axes) can be individually collapsed/expanded
-  - Added clickable headers with collapse icons (▲/▼) for each section
+  - Added clickable headers with collapse icons (▶/▼) for each section
   - Added hide/show button (×) to minimize the entire info panel
   - When hidden, shows a small info button (ℹ) to restore the panel
   - Improved UX by allowing users to customize which information is visible
+  - Fixed CSS positioning issue (removed duplicate `position: relative` that was overriding `position: absolute`)
+  - Added minimum width (250px) and minimum height (200px) to prevent constant resizing
+  - Improved spacing between close button (×) and section headers to prevent accidental clicks
 
 - **v2.3** - Fixed PCA component color coding and improved spacing
   - Fixed dynamic color coding for PCA feature weights (was showing all dark for PC1/PC2)
