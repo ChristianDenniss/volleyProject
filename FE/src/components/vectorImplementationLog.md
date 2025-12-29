@@ -168,6 +168,18 @@ This document tracks what has been implemented in the Stats Vectorization & 3D G
   - More scalable and flexible system that reduces redundancy
   - Extracted archetype system into `FE/src/analytics/playerArchetypes.ts` for better separation of concerns
   - Added JSDoc documentation to classification function
+  - Adjusted all thresholds to work with raw per-set values (not z-scores)
+  - Made "Risk Taker" much more restrictive (>6 attempts, >3 kills, >1.2 errors) to improve diversity
+  - Recalibrated all primary/secondary trait thresholds based on realistic volleyball stat ranges
+  - Changed default collapsible section states: Controls and Axes default to collapsed, Player Info defaults to expanded
+
+- **v2.9** - Creative archetype naming system
+  - Renamed primary traits: "Maverick" (error-prone), "Precise" (efficient), "Workhorse" (high volume), "Selective" (low volume), "Steady" (conservative)
+  - Renamed secondary traits: "Striker" (offensive), "Guardian" (defender), "Playmaker" (setter), "Finisher" (scorer), "Intimidator" (blocker), "Bomber" (server), "Versatile" (all-around), "Jack of All Trades" (utility)
+  - New standalone archetypes: "Perfectly Balanced" (exceptionally balanced stats), "Unicorn" (elite in 3+ categories), "Sniper" (high kill rate, low errors), "Gunslinger" (high volume/risk/reward), "Anchor" (steady, low risk)
+  - Special combination handling: "Intimidating Playmaker" (block-heavy + assist-heavy), "Playmaking Intimidator" (assist-heavy + block-heavy), "Maverick Playmaker" (risk-taking setter)
+  - Updated all descriptions to be more evocative and less literal
+  - Removed hyphen from combination names (e.g., "Maverick Striker" instead of "Maverick - Striker")
 
 - **v2.3** - Fixed PCA component color coding and improved spacing
   - Fixed dynamic color coding for PCA feature weights (was showing all dark for PC1/PC2)

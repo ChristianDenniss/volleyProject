@@ -31,113 +31,106 @@ type StandaloneArchetype = {
 // Primary traits (prefixes) - describe error/consistency patterns
 const PRIMARY_TRAITS: PrimaryTrait[] = [
   {
-    id: "error-prone",
-    name: "Error Prone",
-    condition: (f) => 
-      (f.spikingErrorsPerSet > 0.5 || f.settingErrorsPerSet > 0.5 || f.servingErrorsPerSet > 0.5 || f.miscErrorsPerSet > 0.5)
+    id: "maverick",
+    name: "Maverick",
+    condition: (f) => {
+      const totalErrors = f.spikingErrorsPerSet + f.settingErrorsPerSet + f.servingErrorsPerSet + f.miscErrorsPerSet;
+      return totalErrors > 1.5 || f.spikingErrorsPerSet > 1.0 || f.settingErrorsPerSet > 0.8;
+    }
   },
   {
-    id: "efficient",
-    name: "Efficient",
-    condition: (f) => 
-      (f.spikingErrorsPerSet < 0.2 && f.settingErrorsPerSet < 0.2 && f.servingErrorsPerSet < 0.2 && f.miscErrorsPerSet < 0.2)
+    id: "precise",
+    name: "Precise",
+    condition: (f) => {
+      const totalErrors = f.spikingErrorsPerSet + f.settingErrorsPerSet + f.servingErrorsPerSet + f.miscErrorsPerSet;
+      return totalErrors < 0.5 && f.spikingErrorsPerSet < 0.3 && f.settingErrorsPerSet < 0.2;
+    }
   },
   {
-    id: "high-volume",
-    name: "High Volume",
+    id: "workhorse",
+    name: "Workhorse",
     condition: (f) => 
-      (f.spikeAttemptsPerSet > 0.5 || f.apeAttemptsPerSet > 0.5)
+      (f.spikeAttemptsPerSet > 5.0 || f.apeAttemptsPerSet > 2.0 || f.assistsPerSet > 8.0)
   },
   {
-    id: "low-volume",
-    name: "Low Volume",
+    id: "selective",
+    name: "Selective",
     condition: (f) => 
-      (f.spikeAttemptsPerSet < 0.2 && f.apeAttemptsPerSet < 0.2 && f.assistsPerSet < 0.2)
+      (f.spikeAttemptsPerSet < 1.5 && f.apeAttemptsPerSet < 0.5 && f.assistsPerSet < 2.0 && f.digsPerSet < 2.0)
   },
   {
-    id: "conservative",
-    name: "Conservative",
+    id: "steady",
+    name: "Steady",
     condition: (f) => 
-      (f.spikeAttemptsPerSet < 0.2 && f.apeAttemptsPerSet < 0.2) && 
-      (f.spikingErrorsPerSet < 0.2 && f.settingErrorsPerSet < 0.2 && f.servingErrorsPerSet < 0.2)
+      (f.spikeAttemptsPerSet < 2.0 && f.apeAttemptsPerSet < 0.5) && 
+      (f.spikingErrorsPerSet < 0.3 && f.settingErrorsPerSet < 0.2 && f.servingErrorsPerSet < 0.2)
   }
 ];
 
 // Secondary traits (suffixes) - describe role/play style
 const SECONDARY_TRAITS: SecondaryTrait[] = [
   {
-    id: "offensive",
-    name: "Offensive",
+    id: "striker",
+    name: "Striker",
     color: "#FF6B6B",
     condition: (f) => 
-      (f.spikeKillsPerSet > 0.5 || f.apeKillsPerSet > 0.5) && 
-      (f.spikeAttemptsPerSet > 0.3 || f.apeAttemptsPerSet > 0.3)
+      (f.spikeKillsPerSet > 2.5 || f.apeKillsPerSet > 1.0) && 
+      (f.spikeAttemptsPerSet > 4.0 || f.apeAttemptsPerSet > 1.5)
   },
   {
-    id: "defender",
-    name: "Defender",
+    id: "guardian",
+    name: "Guardian",
     color: "#4ECDC4",
     condition: (f) => 
-      (f.digsPerSet > 0.5 || f.blocksPerSet > 0.5)
+      (f.digsPerSet > 3.0 || f.blocksPerSet > 1.0)
   },
   {
-    id: "setter",
-    name: "Setter",
+    id: "playmaker",
+    name: "Playmaker",
     color: "#C7CEEA",
-    condition: (f) => f.assistsPerSet > 0.5
+    condition: (f) => f.assistsPerSet > 6.0
   },
   {
-    id: "scorer",
-    name: "Scorer",
+    id: "finisher",
+    name: "Finisher",
     color: "#A8E6CF",
     condition: (f) => 
-      (f.spikeKillsPerSet > 0.5 || f.apeKillsPerSet > 0.5)
+      (f.spikeKillsPerSet > 2.5 || f.apeKillsPerSet > 1.0)
   },
   {
-    id: "blocker",
-    name: "Blocker",
+    id: "intimidator",
+    name: "Intimidator",
     color: "#FCBAD3",
     condition: (f) => 
-      (f.blocksPerSet > 0.5 || f.blockFollowsPerSet > 0.5)
+      (f.blocksPerSet > 1.0 || f.blockFollowsPerSet > 1.5)
   },
   {
-    id: "server",
-    name: "Server",
+    id: "bomber",
+    name: "Bomber",
     color: "#FFD3A5",
-    condition: (f) => f.acesPerSet > 0.5
+    condition: (f) => f.acesPerSet > 0.8
   },
   {
-    id: "balanced",
-    name: "Balanced",
-    color: "#95E1D3",
-    condition: (f) => {
-      const offensive = Math.abs(f.spikeKillsPerSet) + Math.abs(f.apeKillsPerSet);
-      const defensive = Math.abs(f.digsPerSet) + Math.abs(f.blocksPerSet);
-      const errors = Math.abs(f.spikingErrorsPerSet) + Math.abs(f.settingErrorsPerSet) + Math.abs(f.servingErrorsPerSet);
-      return offensive < 1 && defensive < 1 && errors < 1 && f.assistsPerSet < 0.5;
-    }
-  },
-  {
-    id: "all-around",
-    name: "All-Around",
+    id: "versatile",
+    name: "Versatile",
     color: "#FFFFD2",
     condition: (f) => {
-      const hasOffense = (f.spikeKillsPerSet > 0.3 || f.apeKillsPerSet > 0.3);
-      const hasDefense = (f.digsPerSet > 0.3 || f.blocksPerSet > 0.3);
-      const hasSetting = f.assistsPerSet > 0.3;
+      const hasOffense = (f.spikeKillsPerSet > 1.5 || f.apeKillsPerSet > 0.8);
+      const hasDefense = (f.digsPerSet > 2.0 || f.blocksPerSet > 0.8);
+      const hasSetting = f.assistsPerSet > 3.0;
       return (hasOffense && hasDefense) || (hasOffense && hasSetting) || (hasDefense && hasSetting);
     }
   },
   {
-    id: "utility",
-    name: "Utility",
+    id: "jack-of-all-trades",
+    name: "Jack of All Trades",
     color: "#D4A5FF",
     condition: (f) => {
       const allStats = [
         f.spikeKillsPerSet, f.apeKillsPerSet, f.assistsPerSet, f.digsPerSet, 
         f.blocksPerSet, f.acesPerSet
       ];
-      return allStats.filter(s => Math.abs(s) > 0.2 && Math.abs(s) < 0.6).length >= 3;
+      return allStats.filter(s => s > 0.5 && s < 3.0).length >= 3;
     }
   }
 ];
@@ -145,35 +138,80 @@ const SECONDARY_TRAITS: SecondaryTrait[] = [
 // Standalone archetypes (unique, don't combine)
 const STANDALONE_ARCHETYPES: StandaloneArchetype[] = [
   {
-    id: "conservative",
-    name: "Conservative",
-    color: "#C8E6C9",
-    description: "Low attempts, low errors",
-    condition: (f) => 
-      (f.spikeAttemptsPerSet < 0.2 && f.apeAttemptsPerSet < 0.2) && 
-      (f.spikingErrorsPerSet < 0.2 && f.settingErrorsPerSet < 0.2 && f.servingErrorsPerSet < 0.2)
-  },
-  {
-    id: "high-flyer",
-    name: "High Flyer",
-    color: "#FFB74D",
-    description: "High kills relative to attempts, low errors",
+    id: "perfectly-balanced",
+    name: "Perfectly Balanced",
+    color: "#95E1D3",
+    description: "Exceptionally balanced across all statistical categories",
     condition: (f) => {
-      const killRate = (f.spikeKillsPerSet + f.apeKillsPerSet) / Math.max(1, f.spikeAttemptsPerSet + f.apeAttemptsPerSet);
-      return killRate > 0.6 && 
-             (f.spikeKillsPerSet > 0.4 || f.apeKillsPerSet > 0.4) &&
-             (f.spikingErrorsPerSet < 0.25 && f.settingErrorsPerSet < 0.25);
+      const offensive = f.spikeKillsPerSet + f.apeKillsPerSet;
+      const defensive = f.digsPerSet + f.blocksPerSet;
+      const totalErrors = f.spikingErrorsPerSet + f.settingErrorsPerSet + f.servingErrorsPerSet;
+      const setting = f.assistsPerSet;
+      // Check if all categories are within a tight range (balanced)
+      const stats = [offensive, defensive, setting];
+      const min = Math.min(...stats);
+      const max = Math.max(...stats);
+      return offensive >= 1.5 && offensive <= 4.0 && 
+             defensive >= 1.5 && defensive <= 4.0 && 
+             setting >= 1.5 && setting <= 4.0 &&
+             totalErrors < 1.0 &&
+             (max - min) < 1.5; // All stats within 1.5 of each other
     }
   },
   {
-    id: "risk-taker",
-    name: "Risk Taker",
+    id: "unicorn",
+    name: "Unicorn",
+    color: "#9B59B6",
+    description: "Elite performance across multiple categories simultaneously",
+    condition: (f) => {
+      // Must be elite in at least 3 different categories
+      const eliteCategories = [
+        f.spikeKillsPerSet > 3.5 || f.apeKillsPerSet > 1.5, // Elite offense
+        f.assistsPerSet > 8.0, // Elite setting
+        f.digsPerSet > 4.5 || f.blocksPerSet > 1.5, // Elite defense
+        f.acesPerSet > 1.2, // Elite serving
+        (f.spikeKillsPerSet + f.apeKillsPerSet) / Math.max(1, f.spikeAttemptsPerSet + f.apeAttemptsPerSet) > 0.6 && (f.spikeKillsPerSet + f.apeKillsPerSet) > 3.0 // Elite efficiency
+      ];
+      return eliteCategories.filter(Boolean).length >= 3;
+    }
+  },
+  {
+    id: "sniper",
+    name: "Sniper",
+    color: "#FFB74D",
+    description: "Exceptional kill rate with minimal errors",
+    condition: (f) => {
+      const totalAttempts = f.spikeAttemptsPerSet + f.apeAttemptsPerSet;
+      const totalKills = f.spikeKillsPerSet + f.apeKillsPerSet;
+      if (totalAttempts < 3.0) return false; // Need meaningful volume
+      const killRate = totalKills / totalAttempts;
+      return killRate > 0.55 && 
+             totalKills > 2.5 &&
+             (f.spikingErrorsPerSet < 0.8 && f.settingErrorsPerSet < 0.3);
+    }
+  },
+  {
+    id: "gunslinger",
+    name: "Gunslinger",
     color: "#FF8C94",
-    description: "High attempts, high errors, high kills",
+    description: "High volume, high risk, high reward",
+    condition: (f) => {
+      const totalAttempts = f.spikeAttemptsPerSet + f.apeAttemptsPerSet;
+      const totalKills = f.spikeKillsPerSet + f.apeKillsPerSet;
+      const totalErrors = f.spikingErrorsPerSet + f.settingErrorsPerSet;
+      return totalAttempts > 6.0 && 
+             totalKills > 3.0 &&
+             totalErrors > 1.2;
+    }
+  },
+  {
+    id: "anchor",
+    name: "Anchor",
+    color: "#C8E6C9",
+    description: "Steady and reliable, low risk approach",
     condition: (f) => 
-      (f.spikeAttemptsPerSet > 0.5 || f.apeAttemptsPerSet > 0.5) && 
-      (f.spikeKillsPerSet > 0.4 || f.apeKillsPerSet > 0.4) &&
-      (f.spikingErrorsPerSet > 0.4 || f.settingErrorsPerSet > 0.4)
+      (f.spikeAttemptsPerSet < 2.0 && f.apeAttemptsPerSet < 0.5) && 
+      (f.spikingErrorsPerSet < 0.3 && f.settingErrorsPerSet < 0.2 && f.servingErrorsPerSet < 0.2)
   }
 ];
 
@@ -204,13 +242,49 @@ export function classifyPlayerArchetype(features: Record<string, number>): Playe
   // Find matching secondary trait
   const secondaryTrait = SECONDARY_TRAITS.find(trait => trait.condition(features));
   
-  // If we have both, combine them
+  // Special combinations: Check for dual-secondary traits first (playmaker + intimidator)
+  const isPlaymaker = features.assistsPerSet > 6.0;
+  const isIntimidator = (features.blocksPerSet > 1.0 || features.blockFollowsPerSet > 1.5);
+  
+  if (isPlaymaker && isIntimidator) {
+    // Determine which is more dominant
+    if (features.assistsPerSet > features.blocksPerSet * 3) {
+      // Assist heavy = Playmaking Intimidator
+      return {
+        id: "playmaking-intimidator",
+        name: "Playmaking Intimidator",
+        color: "#C7CEEA",
+        description: "Elite setter with commanding presence at the net"
+      };
+    } else {
+      // Block heavy = Intimidating Playmaker
+      return {
+        id: "intimidating-playmaker",
+        name: "Intimidating Playmaker",
+        color: "#FCBAD3",
+        description: "Dominant blocker who orchestrates the offense"
+      };
+    }
+  }
+  
+  // If we have both primary and secondary, combine them with creative naming
   if (primaryTrait && secondaryTrait) {
+    // Special combinations with unique names
+    if (primaryTrait.id === "maverick" && secondaryTrait.id === "playmaker") {
+      return {
+        id: "maverick-playmaker",
+        name: "Maverick Playmaker",
+        color: secondaryTrait.color,
+        description: "Bold playmaker who takes risks to create opportunities"
+      };
+    }
+    
+    // Default combination
     return {
       id: `${primaryTrait.id}-${secondaryTrait.id}`,
-      name: `${primaryTrait.name} - ${secondaryTrait.name}`,
+      name: `${primaryTrait.name} ${secondaryTrait.name}`,
       color: secondaryTrait.color,
-      description: `${primaryTrait.name.toLowerCase()} player with ${secondaryTrait.name.toLowerCase()} focus`
+      description: `${primaryTrait.name.toLowerCase()} ${secondaryTrait.name.toLowerCase()}`
     };
   }
   
@@ -220,7 +294,7 @@ export function classifyPlayerArchetype(features: Record<string, number>): Playe
       id: secondaryTrait.id,
       name: secondaryTrait.name,
       color: secondaryTrait.color,
-      description: `Player with ${secondaryTrait.name.toLowerCase()} focus`
+      description: `Specialized ${secondaryTrait.name.toLowerCase()}`
     };
   }
   

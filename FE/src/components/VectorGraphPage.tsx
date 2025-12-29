@@ -124,8 +124,8 @@ function VectorGraph3D({
   }>({ closest: null, farthest: null });
   const [infoBoxHidden, setInfoBoxHidden] = useState<boolean>(false);
   const [playerInfoCollapsed, setPlayerInfoCollapsed] = useState<boolean>(false);
-  const [controlsCollapsed, setControlsCollapsed] = useState<boolean>(false);
-  const [axesCollapsed, setAxesCollapsed] = useState<boolean>(false);
+  const [controlsCollapsed, setControlsCollapsed] = useState<boolean>(true);
+  const [axesCollapsed, setAxesCollapsed] = useState<boolean>(true);
   const controlsRef = useRef<any>(null);
   // Track hovered points with their distances (using object instead of Map for React state)
   const [hoveredPoints, setHoveredPoints] = useState<Record<string, number>>({});

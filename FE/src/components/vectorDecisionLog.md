@@ -481,6 +481,47 @@ const vectorRows = useMemo(() => {
 - Added JSDoc documentation to the classification function
 **Status:** ✅ Implemented (v2.8)
 
+#### Decision: Adjust Archetype Thresholds for Raw Per-Set Values
+**Decision:** Recalibrate all archetype classification thresholds to work with raw per-set statistics instead of z-scores, and make "Risk Taker" more restrictive to improve diversity.
+**Rationale:**
+- Initial thresholds (0.2-0.5) were too low for raw per-set volleyball statistics
+- Almost all players were being classified as "Risk Taker" due to overly broad conditions
+- Need realistic thresholds based on actual volleyball stat ranges (e.g., 2-8 spike attempts per set, 1-5 kills per set, 0.2-1.5 errors per set)
+- Better diversity requires more specific and restrictive conditions
+**Implementation:**
+- **Risk Taker**: Now requires >6 total attempts, >3 total kills, and >1.2 total errors per set (much more restrictive)
+- **High Flyer**: Requires >3 attempts, >2.5 kills, kill rate >55%, and low errors
+- **Primary Traits**: Error Prone (>1.5 total errors or >1.0 spiking errors), Efficient (<0.5 total errors), High Volume (>5 spike attempts or >8 assists), Low Volume (<1.5 attempts and <2 assists)
+- **Secondary Traits**: Offensive (>2.5 kills and >4 attempts), Defender (>3 digs or >1 block), Setter (>6 assists), Scorer (>2.5 kills), Blocker (>1 block), Server (>0.8 aces), Balanced (1-4 offensive/defensive stats, <1 errors), All-Around (multiple roles), Utility (3+ stats in 0.5-3.0 range)
+**Status:** ✅ Implemented (v2.8)
+
+#### Decision: Default Collapsible Section States
+**Decision:** Set default states for collapsible sections in the info panel: Controls and Axes default to collapsed (closed), Player Info defaults to expanded (open).
+**Rationale:**
+- Player Info is the most frequently accessed section, so it should be visible by default
+- Controls and Axes are reference information that users can expand when needed
+- Reduces visual clutter on initial load while keeping essential player information visible
+**Implementation:**
+- Changed `controlsCollapsed` default from `false` to `true`
+- Changed `axesCollapsed` default from `false` to `true`
+- Kept `playerInfoCollapsed` default as `false` (open)
+**Status:** ✅ Implemented (v2.8)
+
+#### Decision: Creative Archetype Naming System
+**Decision:** Replace literal archetype names with more creative, evocative names that better capture player identity and play style.
+**Rationale:**
+- Literal names like "Error Prone - Defender" are too descriptive and lack personality
+- Creative names like "Maverick", "Intimidating Playmaker", "Unicorn" are more memorable and engaging
+- Better reflects the unique character of different player types
+- Makes the system more interesting and fun to use
+**Implementation:**
+- **Primary Traits (Prefixes)**: "Maverick" (error-prone), "Precise" (efficient), "Workhorse" (high volume), "Selective" (low volume), "Steady" (conservative)
+- **Secondary Traits (Suffixes)**: "Striker" (offensive), "Guardian" (defender), "Playmaker" (setter), "Finisher" (scorer), "Intimidator" (blocker), "Bomber" (server), "Versatile" (all-around), "Jack of All Trades" (utility)
+- **Standalone Archetypes**: "Perfectly Balanced" (exceptionally balanced stats), "Unicorn" (elite in 3+ categories), "Sniper" (high kill rate, low errors), "Gunslinger" (high volume/risk/reward), "Anchor" (steady, low risk)
+- **Special Combinations**: "Intimidating Playmaker" (block-heavy + assist-heavy), "Playmaking Intimidator" (assist-heavy + block-heavy), "Maverick Playmaker" (risk-taking setter)
+- Updated descriptions to be more evocative and less literal
+**Status:** ✅ Implemented (v2.9)
+
 ---
 
 ## Notes
