@@ -182,6 +182,7 @@ This document tracks what has been implemented in the Stats Vectorization & 3D G
   - Descriptions now explain statistical profiles, play style characteristics, and specific thresholds (e.g., "55%+ kill rate", "6+ assists/set")
   - Combination descriptions explain both primary trait behavior and secondary trait specialization
   - Removed hyphen from combination names (e.g., "Maverick Striker" instead of "Maverick - Striker")
+  - Created comprehensive README documentation (`VectorGraphREADME.md`) covering overview, features, architecture, usage, and design principles
 
 - **v2.3** - Fixed PCA component color coding and improved spacing
   - Fixed dynamic color coding for PCA feature weights (was showing all dark for PC1/PC2)
