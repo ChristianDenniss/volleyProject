@@ -459,6 +459,29 @@
   border: 1px solid #CFFFFF;
 }
 
+.player-info-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.player-info-header h4 {
+  margin: 0;
+  flex: 1;
+}
+
+.selected-badge {
+  background: #4ecdc4;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
 .hovered-player-info h4 {
   margin: 0 0 0.5rem 0;
   color: #2D3C50;

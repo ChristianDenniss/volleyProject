@@ -399,12 +399,16 @@ function VectorGraph3D({
               
               return (
                 <div className="hovered-player-info">
-                  <h4>{displayPlayer.playerName}</h4>
+                  <div className="player-info-header">
+                    <h4>{displayPlayer.playerName}</h4>
+                    {clickedPlayer && clickedPlayer.playerId === displayPlayer.playerId && (
+                      <span className="selected-badge">Selected</span>
+                    )}
+                  </div>
                   <p>Season: {displayPlayer.seasonNumber}</p>
                   <p>Sets Played: {displayPlayer.setsPlayed}</p>
                   {clickedPlayer && clickedPlayer.playerId === displayPlayer.playerId && (
                     <>
-                      <p className="note">(Selected - click empty space to deselect)</p>
                       {similarPlayers.closest && (
                         <div className="similarity-info">
                           <p><strong>Most Similar:</strong> {similarPlayers.closest.playerName}</p>
