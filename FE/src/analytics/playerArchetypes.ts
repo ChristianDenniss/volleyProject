@@ -64,10 +64,38 @@ const PRIMARY_TRAITS: PrimaryTrait[] = [
     }
   },
   {
+    id: "tireless",
+    name: "Tireless",
+    condition: (f) => {
+      // Elite volume - better version of Workhorse
+      return (f.spikeAttemptsPerSet > 6.5 || f.apeAttemptsPerSet > 2.8 || f.assistsPerSet > 9.5);
+    }
+  },
+  {
     id: "workhorse",
     name: "Workhorse",
-    condition: (f) => 
-      (f.spikeAttemptsPerSet > 5.0 || f.apeAttemptsPerSet > 2.0 || f.assistsPerSet > 8.0)
+    condition: (f) => {
+      // High volume but not elite - exclude those who qualify for Tireless
+      const isTireless = (f.spikeAttemptsPerSet > 6.5 || f.apeAttemptsPerSet > 2.8 || f.assistsPerSet > 9.5);
+      return !isTireless && (f.spikeAttemptsPerSet > 5.0 || f.apeAttemptsPerSet > 2.0 || f.assistsPerSet > 8.0);
+    }
+  },
+  {
+    id: "tireless",
+    name: "Tireless",
+    condition: (f) => {
+      // Elite volume - better version of Workhorse
+      return (f.spikeAttemptsPerSet > 6.5 || f.apeAttemptsPerSet > 2.8 || f.assistsPerSet > 9.5);
+    }
+  },
+  {
+    id: "workhorse",
+    name: "Workhorse",
+    condition: (f) => {
+      // High volume but not elite - exclude those who qualify for Tireless
+      const isTireless = (f.spikeAttemptsPerSet > 6.5 || f.apeAttemptsPerSet > 2.8 || f.assistsPerSet > 9.5);
+      return !isTireless && (f.spikeAttemptsPerSet > 5.0 || f.apeAttemptsPerSet > 2.0 || f.assistsPerSet > 8.0);
+    }
   },
   {
     id: "stalwart",
@@ -343,6 +371,7 @@ export function classifyPlayerArchetype(features: Record<string, number>): Playe
         "maverick": "Takes risks and makes significant errors (2.0+ total errors or very high in specific categories) in pursuit of aggressive plays",
         "inconsistent": "Moderate error player (0.8-2.0 total errors) with variable performance",
         "precise": "Minimizes errors and maintains high consistency",
+        "tireless": "Elite high-volume player who handles an exceptional share of team actions, operating at the highest activity levels",
         "workhorse": "High volume player who handles a large share of team actions",
         "stalwart": "High volume player who maintains low errors despite heavy workload, reliable at high activity levels",
         "opportunistic": "Low volume player who makes high-impact plays when they do act, prioritizing quality opportunities",
@@ -402,6 +431,7 @@ export function classifyPlayerArchetype(features: Record<string, number>): Playe
       "maverick": "High-risk player who makes significant errors (2.0+ total errors or very high in specific categories) but takes aggressive chances",
       "inconsistent": "Moderate error player (0.8-2.0 total errors) with variable performance and reliability",
       "precise": "Low-error player who prioritizes consistency and efficiency over volume",
+      "tireless": "Elite high-volume player who handles an exceptional share of team actions and touches, operating at the highest activity levels",
       "workhorse": "High-volume player who handles a large share of team actions and touches",
       "stalwart": "High-volume player who maintains low errors despite heavy workload, reliable and consistent at high activity levels",
       "opportunistic": "Low volume player who makes high-impact plays when they do act, prioritizing quality opportunities over quantity",
