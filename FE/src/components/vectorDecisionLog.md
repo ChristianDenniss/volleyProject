@@ -537,6 +537,22 @@ const vectorRows = useMemo(() => {
 - Special combinations include specific statistical thresholds in their descriptions
 **Status:** ✅ Implemented (v2.9)
 
+#### Decision: Add "Tireless" Primary Trait to Diversify High-Volume Players
+**Decision:** Split the overused "Workhorse" category by adding a new "Tireless" prefix for elite high-volume players, making "Workhorse" more restrictive.
+**Rationale:**
+- "Workhorse" was being assigned to too many players, reducing archetype diversity
+- Need to distinguish between elite high-volume players and standard high-volume players
+- Better classification granularity improves the analytical value of the archetype system
+- Creates a clearer hierarchy: "Tireless" (elite) > "Workhorse" (high) > standard players
+**Implementation:**
+- Added "Tireless" primary trait with elite thresholds: >6.5 spike attempts/set OR >2.8 ape attempts/set OR >9.5 assists/set
+- Modified "Workhorse" condition to explicitly exclude players who qualify for "Tireless"
+- "Tireless" represents the top tier of high-volume players (exceptional activity levels)
+- "Workhorse" now covers the next tier (high but not elite volume)
+- Updated all description dictionaries to include "Tireless" explanations
+- "Tireless" is checked before "Workhorse" in the PRIMARY_TRAITS array to ensure proper classification
+**Status:** ✅ Implemented (v2.13)
+
 ---
 
 ## Notes

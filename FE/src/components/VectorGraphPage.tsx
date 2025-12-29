@@ -127,8 +127,12 @@ function VectorGraph3D({
   const [controlsCollapsed, setControlsCollapsed] = useState<boolean>(true);
   const [axesCollapsed, setAxesCollapsed] = useState<boolean>(true);
   const controlsRef = useRef<any>(null);
+  const cameraRef = useRef<THREE.Camera | null>(null);
   // Track hovered points with their distances (using object instead of Map for React state)
   const [hoveredPoints, setHoveredPoints] = useState<Record<string, number>>({});
+  // Search functionality
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [searchResults, setSearchResults] = useState<PlayerSeasonVectorRow[]>([]);
 
   // Compute PCA on all vectors and project to 3D (uses all 12 dimensions)
   const zVectors = vectorRows.map(row => row.zVector);
@@ -319,6 +323,69 @@ function VectorGraph3D({
     }
   };
 
+  // Search functionality
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    const query = searchQuery.toLowerCase().trim();
+    const matches = vectorRows.filter(row => 
+      row.playerName.toLowerCase().includes(query)
+    );
+    setSearchResults(matches);
+  }, [searchQuery, vectorRows]);
+
+  // Handle search result selection
+  const handleSearchSelect = (player: PlayerSeasonVectorRow) => {
+    // Find the player's position
+    const playerPoint = points.find(p => p.row.playerId === player.playerId);
+    if (!playerPoint || !controlsRef.current || !cameraRef.current) return;
+
+    // Select the player
+    handlePlayerClick(player);
+
+    // Move camera to focus on the player
+    const [px, py, pz] = playerPoint.position;
+    const target = new THREE.Vector3(px, py, pz);
+    
+    // Calculate a good camera position (offset from the player)
+    const offsetDistance = maxRange * 0.8;
+    const offset = new THREE.Vector3(offsetDistance, offsetDistance, offsetDistance);
+    const newCameraPos = target.clone().add(offset);
+    
+    // Animate camera to the new position
+    if (controlsRef.current && cameraRef.current) {
+      // Set the target (what the camera looks at)
+      controlsRef.current.target.copy(target);
+      
+      // Animate camera position
+      const startPos = cameraRef.current.position.clone();
+      const duration = 1000; // 1 second
+      const startTime = Date.now();
+      
+      const animate = () => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        // Easing function (ease-out)
+        const eased = 1 - Math.pow(1 - progress, 3);
+        
+        cameraRef.current!.position.lerpVectors(startPos, newCameraPos, eased);
+        controlsRef.current!.update();
+        
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        }
+      };
+      
+      animate();
+    }
+    
+    // Clear search after selection
+    setSearchQuery("");
+  };
+
   // Keyboard zoom controls
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
@@ -359,12 +426,43 @@ function VectorGraph3D({
 
   return (
     <div className="vector-graph-3d-container">
+      {/* Search Bar */}
+      <div className="player-search-container">
+        <input
+          type="text"
+          className="player-search-input"
+          placeholder="Search players..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        {searchResults.length > 0 && (
+          <div className="player-search-results">
+            {searchResults.slice(0, 5).map((player) => (
+              <div
+                key={player.playerId}
+                className="player-search-result-item"
+                onClick={() => handleSearchSelect(player)}
+              >
+                {player.playerName}
+              </div>
+            ))}
+            {searchResults.length > 5 && (
+              <div className="player-search-result-more">
+                +{searchResults.length - 5} more
+              </div>
+            )}
+          </div>
+        )}
+      </div>
       <Canvas
         camera={{
           position: [centerX + cameraDistance, centerY + cameraDistance, centerZ + cameraDistance],
           fov: 50
         }}
         onClick={handleCanvasClick}
+        onCreated={({ camera }) => {
+          cameraRef.current = camera;
+        }}
       >
         <ambientLight intensity={0.5} />
         <pointLight position={[10, 10, 10]} intensity={1} />

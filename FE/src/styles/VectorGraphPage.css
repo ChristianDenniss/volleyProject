@@ -264,6 +264,73 @@
   background: #1a1a1a;
 }
 
+/* Player Search Bar */
+.player-search-container {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  z-index: 10;
+  width: 280px;
+}
+
+.player-search-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  font-size: 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background-color: white;
+  color: #2d3748;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.player-search-input:focus {
+  outline: none;
+  border-color: #4a5568;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.player-search-input::placeholder {
+  color: #a0aec0;
+}
+
+.player-search-results {
+  margin-top: 0.5rem;
+  background-color: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.player-search-result-item {
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  color: #2d3748;
+  font-size: 14px;
+  transition: background-color 0.15s;
+  border-bottom: 1px solid #f7fafc;
+}
+
+.player-search-result-item:last-child {
+  border-bottom: none;
+}
+
+.player-search-result-item:hover {
+  background-color: #f7fafc;
+}
+
+.player-search-result-more {
+  padding: 0.5rem 0.75rem;
+  color: #718096;
+  font-size: 12px;
+  font-style: italic;
+  text-align: center;
+  border-top: 1px solid #e2e8f0;
+}
+
 .vector-graph-empty {
   display: flex;
   flex-direction: column;
