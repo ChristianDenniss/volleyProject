@@ -30,7 +30,6 @@ function PlayerPoint({
   const meshRef = useRef<THREE.Mesh>(null!);
   const { camera } = useThree();
   const [hovered, setHovered] = useState(false);
-  const pointerDownRef = useRef<{ x: number; y: number; time: number } | null>(null);
 
   const handlePointerEnter = () => {
     setHovered(true);
@@ -53,55 +52,19 @@ function PlayerPoint({
     }
   };
 
-  const handlePointerDown = (e: any) => {
-    // Only handle left mouse button (button 0)
-    if (e.button !== undefined && e.button !== 0) {
-      return;
-    }
-    
-    // Track pointer down position and time to detect if it's a click vs drag
-    const pointer = e.pointer || {};
-    pointerDownRef.current = {
-      x: pointer.x || e.offsetX || 0,
-      y: pointer.y || e.offsetY || 0,
-      time: Date.now()
-    };
-    // Stop propagation immediately to prevent OrbitControls from starting rotation
-    e.stopPropagation();
-    e.stopImmediatePropagation?.();
-  };
-
   const handleClick = (e: any) => {
-    // Only handle left mouse button (button 0)
-    if (e.button !== undefined && e.button !== 0) {
-      return;
-    }
-    
-    if (!pointerDownRef.current) return;
-
-    // Only treat as click if it wasn't a drag (mouse moved less than 5px)
-    const pointer = e.pointer || {};
-    const currentX = pointer.x || e.offsetX || 0;
-    const currentY = pointer.y || e.offsetY || 0;
-    
-    const wasDrag = (
-      Math.abs(currentX - pointerDownRef.current.x) > 5 ||
-      Math.abs(currentY - pointerDownRef.current.y) > 5 ||
-      Date.now() - pointerDownRef.current.time > 300
-    );
-
-    if (wasDrag) {
-      pointerDownRef.current = null;
-      return;
-    }
-
     // Stop propagation to prevent OrbitControls from handling the event
     e.stopPropagation();
-    e.stopImmediatePropagation?.();
+    // Also stop on the original event if it exists
+    if (e.nativeEvent) {
+      e.nativeEvent.stopPropagation();
+    }
+    if (e.stopImmediatePropagation) {
+      e.stopImmediatePropagation();
+    }
     // Prevent default to avoid any default behaviors
     e.preventDefault?.();
     onClick();
-    pointerDownRef.current = null;
   };
 
   const scale = isSelected ? 1.5 : hovered ? 1.2 : 1;
@@ -115,7 +78,6 @@ function PlayerPoint({
       position={position}
       onPointerEnter={handlePointerEnter}
       onPointerLeave={handlePointerLeave}
-      onPointerDown={handlePointerDown}
       onClick={handleClick}
       scale={scale}
     >
@@ -319,7 +281,7 @@ function VectorGraph3D({
           position: [centerX + cameraDistance, centerY + cameraDistance, centerZ + cameraDistance],
           fov: 50
         }}
-        onPointerMissed={handleCanvasClick}
+        onClick={handleCanvasClick}
       >
         <ambientLight intensity={0.5} />
         <pointLight position={[10, 10, 10]} intensity={1} />
