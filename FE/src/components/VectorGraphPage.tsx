@@ -231,8 +231,12 @@ function VectorGraph3D({
   // Player clicks stop propagation, so this only fires for background clicks
   const handleCanvasClick = () => {
     setClickedPlayer(null);
+    setHoveredPlayer(null); // Also clear hovered player when deselecting
     if (onPlayerClick) {
       onPlayerClick(null);
+    }
+    if (onPlayerHover) {
+      onPlayerHover(null);
     }
   };
 
