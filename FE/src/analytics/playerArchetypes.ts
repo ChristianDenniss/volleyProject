@@ -78,6 +78,21 @@ const SECONDARY_TRAITS: SecondaryTrait[] = [
       (f.spikeAttemptsPerSet > 4.0 || f.apeAttemptsPerSet > 1.5)
   },
   {
+    id: "piercer",
+    name: "Piercer",
+    color: "#FF8787",
+    condition: (f) => {
+      const totalAttempts = f.spikeAttemptsPerSet + f.apeAttemptsPerSet;
+      const totalKills = f.spikeKillsPerSet + f.apeKillsPerSet;
+      if (totalAttempts < 3.0) return false; // Need meaningful volume
+      const killRate = totalKills / totalAttempts;
+      // High kills with exceptional efficiency - rarer than Striker
+      return (f.spikeKillsPerSet > 3.0 || f.apeKillsPerSet > 1.5) &&
+             killRate > 0.55 && // Better than 55% kill rate (more restrictive)
+             totalKills > 3.0; // Higher kill totals required
+    }
+  },
+  {
     id: "guardian",
     name: "Guardian",
     color: "#4ECDC4",
@@ -194,14 +209,16 @@ const STANDALONE_ARCHETYPES: StandaloneArchetype[] = [
     id: "gunslinger",
     name: "Gunslinger",
     color: "#FF8C94",
-    description: "High-volume attacker who takes many attempts, generates high kills, but also commits significant errors in pursuit of aggressive plays",
+    description: "Extreme high-volume attacker with exceptional kill totals and significant errors - the ultimate risk-taker",
     condition: (f) => {
       const totalAttempts = f.spikeAttemptsPerSet + f.apeAttemptsPerSet;
       const totalKills = f.spikeKillsPerSet + f.apeKillsPerSet;
       const totalErrors = f.spikingErrorsPerSet + f.settingErrorsPerSet;
-      return totalAttempts > 6.0 && 
-             totalKills > 3.0 &&
-             totalErrors > 1.2;
+      // Extremely rare: need exceptional volume AND exceptional kills AND high errors
+      // This should be rarer than Unicorn - truly exceptional in all three simultaneously
+      return totalAttempts > 9.0 && 
+             totalKills > 5.0 &&
+             totalErrors > 2.0;
     }
   },
   {
@@ -289,16 +306,17 @@ export function classifyPlayerArchetype(features: Record<string, number>): Playe
         "steady": "Conservative approach with low attempts and minimal errors"
       };
       
-      const secondaryDesc: Record<string, string> = {
-        "striker": "Primary offensive threat with high kill and attempt rates",
-        "guardian": "Defensive specialist excelling in digs and blocks",
-        "playmaker": "Elite setter who orchestrates the offense with high assist totals",
-        "finisher": "Efficient scorer who converts attacks into kills at a high rate",
-        "intimidator": "Dominant blocker who controls the net with blocks and block follows",
-        "bomber": "Powerful server who generates aces and service pressure",
-        "versatile": "Well-rounded player contributing in multiple areas (offense, defense, or setting)",
-        "jack-of-all-trades": "Utility player with moderate contributions across multiple statistical categories"
-      };
+    const secondaryDesc: Record<string, string> = {
+      "striker": "Primary offensive threat with high kill and attempt rates",
+      "piercer": "Efficient offensive threat with high kills and superior kill rate (50%+), prioritizing precision over volume",
+      "guardian": "Defensive specialist excelling in digs and blocks",
+      "playmaker": "Elite setter who orchestrates the offense with high assist totals",
+      "finisher": "Efficient scorer who converts attacks into kills at a high rate",
+      "intimidator": "Dominant blocker who controls the net with blocks and block follows",
+      "bomber": "Powerful server who generates aces and service pressure",
+      "versatile": "Well-rounded player contributing in multiple areas (offense, defense, or setting)",
+      "jack-of-all-trades": "Utility player with moderate contributions across multiple statistical categories"
+    };
       
       return `${primaryDesc[primary.id] || primary.name.toLowerCase()}, specializing as a ${secondaryDesc[secondary.id] || secondary.name.toLowerCase()}`;
     };
@@ -316,6 +334,7 @@ export function classifyPlayerArchetype(features: Record<string, number>): Playe
   if (secondaryTrait) {
     const secondaryDesc: Record<string, string> = {
       "striker": "Primary offensive threat focused on generating kills through high-volume attacking",
+      "piercer": "Efficient offensive threat with high kills and superior kill rate (50%+), prioritizing precision and accuracy over volume",
       "guardian": "Defensive specialist who excels at digs and blocks to prevent opponent scoring",
       "playmaker": "Elite setter who orchestrates the offense, creating opportunities for teammates with high assist totals",
       "finisher": "Efficient scorer who converts attacks into kills at a high rate, focusing on quality over quantity",
