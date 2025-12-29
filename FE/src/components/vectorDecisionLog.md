@@ -424,6 +424,34 @@ const vectorRows = useMemo(() => {
 - Adding PC1/PC2/PC3 to axes labels provides clearer context for users
 **Status:** ✅ Implemented (v2.5)
 
+#### Decision: Player Similarity Analytics
+**Decision:** Calculate and display most similar (closest) and least similar (farthest) players when a player is selected.
+**Rationale:**
+- Provides valuable insights into player statistical profiles
+- Helps identify players with similar or contrasting play styles
+- Uses Euclidean distance on z-vectors (normalized stats) for accurate comparisons within season context
+**Implementation:**
+- `calculateDistance()` function computes Euclidean distance between two z-vectors
+- `findSimilarPlayers()` function finds closest and farthest players by comparing all players in the season
+- Results displayed in player info panel when a player is selected
+- Similarity data cleared when player is deselected
+**Status:** ✅ Implemented (v2.6)
+
+#### Decision: Hover State Management Fix
+**Decision:** Clear `hoveredPoints` object when clicking empty space to properly reset hover state.
+**Rationale:**
+- Fixed bug where hover state wasn't clearing properly after clicking empty space
+- `hoveredPoints` object was retaining entries, causing hover state to persist incorrectly
+- Now properly clears both `hoveredPlayer` and `hoveredPoints` when deselecting
+**Status:** ✅ Implemented (v2.6)
+
+#### Decision: Controls List Reordering
+**Decision:** Reorder controls list to show action first, then input method (e.g., "Rotate: Left Click + Drag" instead of "Left Click + Drag: Rotate").
+**Rationale:**
+- More intuitive - users think about what they want to do first, then how to do it
+- Better readability and user experience
+**Status:** ✅ Implemented (v2.6)
+
 ---
 
 ## Notes

@@ -287,6 +287,7 @@ function VectorGraph3D({
   const handleCanvasClick = () => {
     setClickedPlayer(null);
     setHoveredPlayer(null); // Also clear hovered player when deselecting
+    setHoveredPoints({}); // Clear all hovered points
     setSimilarPlayers({ closest: null, farthest: null }); // Clear similarity data
     if (onPlayerClick) {
       onPlayerClick(null);
@@ -431,11 +432,11 @@ function VectorGraph3D({
             </div>
             {!controlsCollapsed && (
               <ul>
-                <li>Left Click + Drag: Rotate</li>
-                <li>Right Click + Drag: Pan</li>
-                <li>Scroll: Zoom</li>
-                <li>+ / - Keys: Zoom In / Out</li>
-                <li>Hover: View player info</li>
+                <li>Rotate: Left Click + Drag</li>
+                <li>Pan: Right Click + Drag</li>
+                <li>Zoom: Scroll</li>
+                <li>Zoom In / Out: + / - Keys</li>
+                <li>View player info: Hover</li>
               </ul>
             )}
           </div>

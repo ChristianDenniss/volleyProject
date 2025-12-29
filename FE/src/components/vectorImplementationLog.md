@@ -134,6 +134,13 @@ This document tracks what has been implemented in the Stats Vectorization & 3D G
 
 ## Version History
 
+- **v2.6** - Added player similarity analytics and fixed hover state issues
+  - Added similarity calculations: When clicking a player, calculates most similar (closest) and least similar (farthest) players
+  - Uses Euclidean distance on z-vectors (normalized stats) to find similar players
+  - Displays similarity results in player info panel when a player is selected
+  - Fixed hover state clearing: Added `setHoveredPoints({})` to properly clear hover state when clicking empty space
+  - Reordered controls list: Action first, then input method (e.g., "Rotate: Left Click + Drag")
+
 - **v2.5** - Fixed click-to-select functionality and improved info panel styling
   - Fixed click-to-select: Changed from `onClick` to `onPointerDown`/`onPointerUp` to properly handle mouse release
   - Added drag detection: Distinguishes between clicks and drags (ignores if mouse moved >5px or took >300ms)
