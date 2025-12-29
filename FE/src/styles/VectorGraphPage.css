@@ -309,7 +309,9 @@
   background: rgba(255, 255, 255, 0.95);
   border-radius: 8px;
   padding: 1rem;
+  min-width: 250px;
   max-width: 300px;
+  min-height: 200px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
   z-index: 10;
   max-height: calc(100% - 2rem);
@@ -319,8 +321,8 @@
 
 .info-box-toggle {
   position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
+  top: 0.75rem;
+  right: 0.75rem;
   background: transparent;
   border: none;
   font-size: 1.5rem;
@@ -349,7 +351,7 @@
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   font-size: 1.5rem;
-  color: #ff6b35;
+  color: #4a5568;
   cursor: pointer;
   padding: 0.5rem 0.75rem;
   width: 40px;
@@ -364,7 +366,7 @@
 
 .info-box-show-button:hover {
   background: rgba(255, 255, 255, 1);
-  color: #ff4500;
+  color: #2d3748;
   box-shadow: 0 6px 8px rgba(0, 0, 0, 0.3);
 }
 
@@ -387,6 +389,7 @@
   cursor: pointer;
   user-select: none;
   padding: 0.5rem 0.25rem;
+  padding-right: 2rem;
   transition: background-color 0.2s ease;
   border-radius: 4px;
   margin: -0.25rem -0.25rem 0.5rem -0.25rem;
