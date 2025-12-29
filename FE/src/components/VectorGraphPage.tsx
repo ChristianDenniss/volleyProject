@@ -30,6 +30,7 @@ function PlayerPoint({
   const meshRef = useRef<THREE.Mesh>(null!);
   const { camera } = useThree();
   const [hovered, setHovered] = useState(false);
+  const pointerDownRef = useRef<{ x: number; y: number; time: number } | null>(null);
 
   const handlePointerEnter = () => {
     setHovered(true);
@@ -52,17 +53,45 @@ function PlayerPoint({
     }
   };
 
-  const handleClick = (e: any) => {
+  const handlePointerDown = (e: any) => {
+    // Track pointer down position and time to detect if it's a click vs drag
+    const pointer = e.pointer || {};
+    pointerDownRef.current = {
+      x: pointer.x || e.offsetX || 0,
+      y: pointer.y || e.offsetY || 0,
+      time: Date.now()
+    };
+    e.stopPropagation();
+  };
+
+  const handlePointerUp = (e: any) => {
+    if (!pointerDownRef.current) return;
+
+    // Only treat as click if it wasn't a drag (mouse moved less than 5px)
+    const pointer = e.pointer || {};
+    const currentX = pointer.x || e.offsetX || 0;
+    const currentY = pointer.y || e.offsetY || 0;
+    
+    const wasDrag = (
+      Math.abs(currentX - pointerDownRef.current.x) > 5 ||
+      Math.abs(currentY - pointerDownRef.current.y) > 5 ||
+      Date.now() - pointerDownRef.current.time > 300
+    );
+
+    if (wasDrag) {
+      pointerDownRef.current = null;
+      return;
+    }
+
     // Stop propagation to prevent OrbitControls from handling the event
     e.stopPropagation();
-    // Also stop on the original event if it exists
-    if (e.nativeEvent) {
-      e.nativeEvent.stopPropagation();
-    }
     if (e.stopImmediatePropagation) {
       e.stopImmediatePropagation();
     }
+    // Prevent default to avoid any default behaviors
+    e.preventDefault?.();
     onClick();
+    pointerDownRef.current = null;
   };
 
   const scale = isSelected ? 1.5 : hovered ? 1.2 : 1;
@@ -76,10 +105,8 @@ function PlayerPoint({
       position={position}
       onPointerEnter={handlePointerEnter}
       onPointerLeave={handlePointerLeave}
-      onPointerDown={(e) => {
-        e.stopPropagation();
-        handleClick(e);
-      }}
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
       scale={scale}
     >
       <sphereGeometry args={[0.1, 16, 16]} />

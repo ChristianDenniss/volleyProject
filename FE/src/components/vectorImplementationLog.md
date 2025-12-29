@@ -134,6 +134,13 @@ This document tracks what has been implemented in the Stats Vectorization & 3D G
 
 ## Version History
 
+- **v2.5** - Fixed click-to-select functionality and improved info panel styling
+  - Fixed click-to-select: Changed from `onClick` to `onPointerDown`/`onPointerUp` to properly handle mouse release
+  - Added drag detection: Distinguishes between clicks and drags (ignores if mouse moved >5px or took >300ms)
+  - Selection now persists after mouse release (not just while holding button)
+  - Removed margins from info section headers and h4 elements for tighter spacing
+  - Updated axes labels to include PC1/PC2/PC3 designations
+
 - **v2.4** - Added collapsible sections to info panel
   - Each section (Player Info, Controls, Axes) can be individually collapsed/expanded
   - Added clickable headers with collapse icons (▶/▼) for each section

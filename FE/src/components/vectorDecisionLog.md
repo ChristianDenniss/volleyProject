@@ -404,6 +404,26 @@ const vectorRows = useMemo(() => {
 - Improved spacing between close button and section headers for better UX
 **Status:** ✅ Implemented (v2.4)
 
+#### Decision: Click-to-Select Event Handling Fix
+**Decision:** Change click event handling from `onClick` to `onPointerDown`/`onPointerUp` with drag detection to ensure selection persists after mouse release.
+**Rationale:**
+- `onClick` in React Three Fiber wasn't reliably firing or was being interfered with by OrbitControls
+- Selection was only working while holding mouse button down, not persisting after release
+- Need to distinguish between clicks (for selection) and drags (for camera rotation)
+**Implementation:**
+- Track pointer down position and time on `onPointerDown`
+- On `onPointerUp`, check if movement was <5px and duration <300ms to treat as click
+- If it's a click, call selection handler; if it's a drag, ignore it
+- This ensures selection persists after mouse release and doesn't interfere with camera controls
+**Status:** ✅ Implemented (v2.5)
+
+#### Decision: Info Panel Styling Refinements
+**Decision:** Remove margins from info section headers and h4 elements, and update axes labels to include PC designations.
+**Rationale:**
+- Tighter spacing improves visual hierarchy and reduces unnecessary whitespace
+- Adding PC1/PC2/PC3 to axes labels provides clearer context for users
+**Status:** ✅ Implemented (v2.5)
+
 ---
 
 ## Notes
