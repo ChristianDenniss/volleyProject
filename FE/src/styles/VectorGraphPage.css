@@ -482,6 +482,33 @@
   letter-spacing: 0.5px;
 }
 
+.cluster-info {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.cluster-color-indicator {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-left: 0.5rem;
+  vertical-align: middle;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.similarity-info {
+  margin-top: 0.5rem;
+}
+
+.archetype-description {
+  font-size: 0.8rem;
+  color: #718096;
+  font-style: italic;
+  margin: 0.25rem 0 0 0;
+}
+
 .hovered-player-info h4 {
   margin: 0 0 0.5rem 0;
   color: #2D3C50;

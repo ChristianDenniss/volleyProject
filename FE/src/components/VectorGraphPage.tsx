@@ -11,6 +11,233 @@ import "../styles/VectorGraphPage.css";
 
 const DEFAULT_MIN_SETS = 5;
 
+// Player archetype/cluster definitions based on statistical profiles
+type PlayerArchetype = {
+  id: string;
+  name: string;
+  color: string;
+  description: string;
+  // Thresholds for classification (using z-scores, so >0 means above average, <0 means below average)
+  conditions: (features: Record<string, number>) => boolean;
+};
+
+const PLAYER_ARCHETYPES: PlayerArchetype[] = [
+  {
+    id: "offensive-heavy",
+    name: "Offensive Heavy",
+    color: "#FF6B6B",
+    description: "High scoring, high attempts",
+    conditions: (f) => 
+      (f.spikeKillsPerSet > 0.5 || f.apeKillsPerSet > 0.5) && 
+      (f.spikeAttemptsPerSet > 0.3 || f.apeAttemptsPerSet > 0.3)
+  },
+  {
+    id: "defensive-specialist",
+    name: "Defensive Specialist",
+    color: "#4ECDC4",
+    description: "High digs, blocks, low errors",
+    conditions: (f) => 
+      (f.digsPerSet > 0.5 || f.blocksPerSet > 0.5) && 
+      (f.spikingErrorsPerSet < 0.3 && f.settingErrorsPerSet < 0.3 && f.servingErrorsPerSet < 0.3)
+  },
+  {
+    id: "error-prone",
+    name: "Error Prone",
+    color: "#F38181",
+    description: "High error rates across categories",
+    conditions: (f) => 
+      (f.spikingErrorsPerSet > 0.5 || f.settingErrorsPerSet > 0.5 || f.servingErrorsPerSet > 0.5 || f.miscErrorsPerSet > 0.5)
+  },
+  {
+    id: "balanced",
+    name: "Balanced",
+    color: "#95E1D3",
+    description: "Moderate stats across all categories",
+    conditions: (f) => {
+      const offensive = Math.abs(f.spikeKillsPerSet) + Math.abs(f.apeKillsPerSet);
+      const defensive = Math.abs(f.digsPerSet) + Math.abs(f.blocksPerSet);
+      const errors = Math.abs(f.spikingErrorsPerSet) + Math.abs(f.settingErrorsPerSet) + Math.abs(f.servingErrorsPerSet);
+      return offensive < 1 && defensive < 1 && errors < 1;
+    }
+  },
+  {
+    id: "error-prone-scoring",
+    name: "Error Prone Scoring Machine",
+    color: "#AA96DA",
+    description: "High scoring but also high errors",
+    conditions: (f) => 
+      (f.spikeKillsPerSet > 0.5 || f.apeKillsPerSet > 0.5) && 
+      (f.spikingErrorsPerSet > 0.5 || f.settingErrorsPerSet > 0.5 || f.servingErrorsPerSet > 0.5)
+  },
+  {
+    id: "efficient-scorer",
+    name: "Efficient Scorer",
+    color: "#A8E6CF",
+    description: "High kill rate, low errors",
+    conditions: (f) => 
+      (f.spikeKillsPerSet > 0.5 || f.apeKillsPerSet > 0.5) && 
+      (f.spikingErrorsPerSet < 0.2 && f.settingErrorsPerSet < 0.2 && f.servingErrorsPerSet < 0.2)
+  },
+  {
+    id: "setter-playmaker",
+    name: "Setter/Playmaker",
+    color: "#C7CEEA",
+    description: "High assists, orchestrates offense",
+    conditions: (f) => f.assistsPerSet > 0.5
+  },
+  {
+    id: "ace-server",
+    name: "Ace Server",
+    color: "#FFD3A5",
+    description: "High aces, strong serving",
+    conditions: (f) => f.acesPerSet > 0.5
+  },
+  {
+    id: "block-specialist",
+    name: "Block Specialist",
+    color: "#FCBAD3",
+    description: "High blocks and block follows",
+    conditions: (f) => 
+      (f.blocksPerSet > 0.5 || f.blockFollowsPerSet > 0.5) && 
+      f.blocksPerSet > 0.3
+  },
+  {
+    id: "all-around",
+    name: "All-Around Player",
+    color: "#FFFFD2",
+    description: "Strong across multiple categories",
+    conditions: (f) => {
+      const hasOffense = (f.spikeKillsPerSet > 0.3 || f.apeKillsPerSet > 0.3);
+      const hasDefense = (f.digsPerSet > 0.3 || f.blocksPerSet > 0.3);
+      const hasSetting = f.assistsPerSet > 0.3;
+      const lowErrors = (f.spikingErrorsPerSet < 0.3 && f.settingErrorsPerSet < 0.3);
+      return (hasOffense && hasDefense) || (hasOffense && hasSetting) || (hasDefense && hasSetting && lowErrors);
+    }
+  },
+  {
+    id: "low-volume-scorer",
+    name: "Low Volume Scorer",
+    color: "#B4E4FF",
+    description: "Efficient but low attempts",
+    conditions: (f) => 
+      (f.spikeKillsPerSet > 0.3 || f.apeKillsPerSet > 0.3) && 
+      (f.spikeAttemptsPerSet < 0.2 && f.apeAttemptsPerSet < 0.2) &&
+      (f.spikingErrorsPerSet < 0.3)
+  },
+  {
+    id: "high-volume-scorer",
+    name: "High Volume Scorer",
+    color: "#FF9A9E",
+    description: "Lots of attempts, moderate efficiency",
+    conditions: (f) => 
+      (f.spikeAttemptsPerSet > 0.5 || f.apeAttemptsPerSet > 0.5) && 
+      (f.spikeKillsPerSet > 0.2 || f.apeKillsPerSet > 0.2) &&
+      (f.spikingErrorsPerSet < 0.5)
+  },
+  {
+    id: "defensive-anchor",
+    name: "Defensive Anchor",
+    color: "#6BCB77",
+    description: "Very high digs, defensive leader",
+    conditions: (f) => 
+      f.digsPerSet > 0.7 && 
+      (f.spikingErrorsPerSet < 0.4 && f.settingErrorsPerSet < 0.4)
+  },
+  {
+    id: "net-presence",
+    name: "Net Presence",
+    color: "#4D96FF",
+    description: "High blocks, strong at net",
+    conditions: (f) => 
+      (f.blocksPerSet > 0.5 && f.blockFollowsPerSet > 0.3) ||
+      (f.blocksPerSet > 0.7)
+  },
+  {
+    id: "service-specialist",
+    name: "Service Specialist",
+    color: "#FFE66D",
+    description: "High aces, focused on serving",
+    conditions: (f) => 
+      f.acesPerSet > 0.5 && 
+      (f.spikeKillsPerSet < 0.3 && f.apeKillsPerSet < 0.3 && f.assistsPerSet < 0.3)
+  },
+  {
+    id: "utility-player",
+    name: "Utility Player",
+    color: "#D4A5FF",
+    description: "Moderate everything, versatile",
+    conditions: (f) => {
+      const allStats = [
+        f.spikeKillsPerSet, f.apeKillsPerSet, f.assistsPerSet, f.digsPerSet, 
+        f.blocksPerSet, f.acesPerSet
+      ];
+      const hasMultiple = allStats.filter(s => Math.abs(s) > 0.2 && Math.abs(s) < 0.6).length >= 3;
+      const lowErrors = (f.spikingErrorsPerSet < 0.4 && f.settingErrorsPerSet < 0.4);
+      return hasMultiple && lowErrors;
+    }
+  },
+  {
+    id: "power-hitter",
+    name: "Power Hitter",
+    color: "#FF6B9D",
+    description: "High spike kills and attempts",
+    conditions: (f) => 
+      f.spikeKillsPerSet > 0.5 && 
+      f.spikeAttemptsPerSet > 0.5
+  },
+  {
+    id: "finesse-player",
+    name: "Finesse Player",
+    color: "#95E1D3",
+    description: "Moderate kills, very low errors",
+    conditions: (f) => 
+      (f.spikeKillsPerSet > 0.2 || f.apeKillsPerSet > 0.2) && 
+      (f.spikingErrorsPerSet < 0.1 && f.settingErrorsPerSet < 0.1 && f.servingErrorsPerSet < 0.1)
+  },
+  {
+    id: "risk-taker",
+    name: "Risk Taker",
+    color: "#FF8C94",
+    description: "High attempts, high errors, high kills",
+    conditions: (f) => 
+      (f.spikeAttemptsPerSet > 0.5 || f.apeAttemptsPerSet > 0.5) && 
+      (f.spikeKillsPerSet > 0.4 || f.apeKillsPerSet > 0.4) &&
+      (f.spikingErrorsPerSet > 0.4 || f.settingErrorsPerSet > 0.4)
+  },
+  {
+    id: "conservative-player",
+    name: "Conservative Player",
+    color: "#C8E6C9",
+    description: "Low attempts, low errors",
+    conditions: (f) => 
+      (f.spikeAttemptsPerSet < 0.2 && f.apeAttemptsPerSet < 0.2) && 
+      (f.spikingErrorsPerSet < 0.2 && f.settingErrorsPerSet < 0.2 && f.servingErrorsPerSet < 0.2)
+  },
+  {
+    id: "clutch-performer",
+    name: "Clutch Performer",
+    color: "#FFB74D",
+    description: "High kills relative to attempts, low errors",
+    conditions: (f) => {
+      const killRate = (f.spikeKillsPerSet + f.apeKillsPerSet) / Math.max(1, f.spikeAttemptsPerSet + f.apeAttemptsPerSet);
+      return killRate > 0.6 && 
+             (f.spikeKillsPerSet > 0.4 || f.apeKillsPerSet > 0.4) &&
+             (f.spikingErrorsPerSet < 0.25 && f.settingErrorsPerSet < 0.25);
+    }
+  }
+];
+
+// Classify a player into an archetype based on their raw per-set features
+function classifyPlayerArchetype(features: Record<string, number>): PlayerArchetype | null {
+  // Check archetypes in order (more specific first)
+  for (const archetype of PLAYER_ARCHETYPES) {
+    if (archetype.conditions(features)) {
+      return archetype;
+    }
+  }
+  return null; // No archetype matched
+}
+
 // Component for individual player point in 3D space
 function PlayerPoint({
   vectorRow,
@@ -18,7 +245,8 @@ function PlayerPoint({
   onHover,
   onClick,
   isSelected,
-  isClosestHovered
+  isClosestHovered,
+  archetype
 }: {
   vectorRow: PlayerSeasonVectorRow;
   position: [number, number, number];
@@ -26,6 +254,7 @@ function PlayerPoint({
   onClick: () => void;
   isSelected: boolean;
   isClosestHovered: boolean;
+  archetype?: PlayerArchetype | null;
 }) {
   const meshRef = useRef<THREE.Mesh>(null!);
   const { camera } = useThree();
@@ -68,7 +297,14 @@ function PlayerPoint({
   };
 
   const scale = isSelected ? 1.5 : hovered ? 1.2 : 1;
-  const color = isSelected ? "#ff6b6b" : hovered ? "#4ecdc4" : "#95a5a6";
+  // Color priority: selected > hovered > archetype color > default gray
+  const color = isSelected 
+    ? "#ff6b6b" 
+    : hovered 
+    ? "#4ecdc4" 
+    : archetype 
+    ? archetype.color
+    : "#95a5a6";
   // Show label if selected (persistent) OR if hovered and closest
   const showLabel = isSelected || (hovered && isClosestHovered);
 
@@ -128,6 +364,18 @@ function VectorGraph3D({
     }
     return computePCA3D(zVectors);
   }, [vectorRows, zVectors]);
+
+  // Classify players into archetypes based on their statistical profiles
+  const archetypeAssignments = useMemo(() => {
+    const archetypeMap = new Map<string, PlayerArchetype>();
+    vectorRows.forEach((row) => {
+      const archetype = classifyPlayerArchetype(row.rawPerSetFeatures);
+      if (archetype) {
+        archetypeMap.set(row.playerId, archetype);
+      }
+    });
+    return archetypeMap;
+  }, [vectorRows]);
   
   const points = useMemo(() => {
     if (vectorRows.length === 0) return [];
@@ -360,6 +608,7 @@ function VectorGraph3D({
             onClick={() => handlePlayerClick(row)}
             isSelected={clickedPlayer?.playerId === row.playerId}
             isClosestHovered={closestHoveredPlayerId === row.playerId}
+            archetype={archetypeAssignments.get(row.playerId)}
           />
         ))}
         <OrbitControls
@@ -409,6 +658,28 @@ function VectorGraph3D({
                   <p>Sets Played: {displayPlayer.setsPlayed}</p>
                   {clickedPlayer && clickedPlayer.playerId === displayPlayer.playerId && (
                     <>
+                      {(() => {
+                        const archetype = archetypeAssignments.get(displayPlayer.playerId);
+                        if (archetype) {
+                          const archetypePlayers = vectorRows.filter(
+                            row => archetypeAssignments.get(row.playerId)?.id === archetype.id
+                          );
+                          return (
+                            <div className="cluster-info">
+                              <p>
+                                <strong>Archetype:</strong> {archetype.name}
+                                <span 
+                                  className="cluster-color-indicator"
+                                  style={{ backgroundColor: archetype.color }}
+                                />
+                                ({archetypePlayers.length} players)
+                              </p>
+                              <p className="archetype-description">{archetype.description}</p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
                       {similarPlayers.closest && (
                         <div className="similarity-info">
                           <p><strong>Most Similar:</strong> {similarPlayers.closest.playerName}</p>
