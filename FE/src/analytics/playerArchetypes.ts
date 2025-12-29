@@ -35,7 +35,21 @@ const PRIMARY_TRAITS: PrimaryTrait[] = [
     name: "Maverick",
     condition: (f) => {
       const totalErrors = f.spikingErrorsPerSet + f.settingErrorsPerSet + f.servingErrorsPerSet + f.miscErrorsPerSet;
-      return totalErrors > 1.5 || f.spikingErrorsPerSet > 1.0 || f.settingErrorsPerSet > 0.8;
+      // More restrictive: require higher errors OR multiple error types
+      return (totalErrors > 2.0) || 
+             (f.spikingErrorsPerSet > 1.2 && f.settingErrorsPerSet > 0.4) || // Multiple error types
+             (f.spikingErrorsPerSet > 1.5) || // Very high spiking errors
+             (f.settingErrorsPerSet > 1.0); // Very high setting errors
+    }
+  },
+  {
+    id: "inconsistent",
+    name: "Inconsistent",
+    condition: (f) => {
+      const totalErrors = f.spikingErrorsPerSet + f.settingErrorsPerSet + f.servingErrorsPerSet + f.miscErrorsPerSet;
+      // Moderate errors - between Precise and Maverick
+      return totalErrors > 0.8 && totalErrors <= 2.0 && 
+             !(f.spikingErrorsPerSet > 1.2 || f.settingErrorsPerSet > 0.8);
     }
   },
   {
@@ -51,6 +65,30 @@ const PRIMARY_TRAITS: PrimaryTrait[] = [
     name: "Workhorse",
     condition: (f) => 
       (f.spikeAttemptsPerSet > 5.0 || f.apeAttemptsPerSet > 2.0 || f.assistsPerSet > 8.0)
+  },
+  {
+    id: "stalwart",
+    name: "Stalwart",
+    condition: (f) => {
+      const totalErrors = f.spikingErrorsPerSet + f.settingErrorsPerSet + f.servingErrorsPerSet + f.miscErrorsPerSet;
+      // High volume with low errors - reliable at high workload
+      return (f.spikeAttemptsPerSet > 5.0 || f.apeAttemptsPerSet > 2.0 || f.assistsPerSet > 8.0) &&
+             totalErrors < 0.8 && // Low errors despite high volume
+             f.spikingErrorsPerSet < 0.5 && // Low spiking errors
+             f.settingErrorsPerSet < 0.3; // Low setting errors
+    }
+  },
+  {
+    id: "opportunistic",
+    name: "Opportunistic",
+    condition: (f) => {
+      // Low volume but high impact when they do act
+      const totalAttempts = f.spikeAttemptsPerSet + f.apeAttemptsPerSet;
+      const totalKills = f.spikeKillsPerSet + f.apeKillsPerSet;
+      return totalAttempts < 3.0 && totalAttempts > 0.5 && // Low but meaningful volume
+             totalKills > 1.5 && // Still generates kills
+             (totalKills / Math.max(1, totalAttempts)) > 0.45; // Good efficiency
+    }
   },
   {
     id: "selective",
@@ -299,9 +337,12 @@ export function classifyPlayerArchetype(features: Record<string, number>): Playe
     // Generate descriptive explanations for combinations
     const getDescription = (primary: PrimaryTrait, secondary: SecondaryTrait): string => {
       const primaryDesc: Record<string, string> = {
-        "maverick": "Takes risks and makes more errors in pursuit of aggressive plays",
+        "maverick": "Takes risks and makes significant errors (2.0+ total errors or very high in specific categories) in pursuit of aggressive plays",
+        "inconsistent": "Moderate error player (0.8-2.0 total errors) with variable performance",
         "precise": "Minimizes errors and maintains high consistency",
         "workhorse": "High volume player who handles a large share of team actions",
+        "stalwart": "High volume player who maintains low errors despite heavy workload, reliable at high activity levels",
+        "opportunistic": "Low volume player who makes high-impact plays when they do act, prioritizing quality opportunities",
         "selective": "Low volume player who picks their moments carefully",
         "steady": "Conservative approach with low attempts and minimal errors"
       };
@@ -355,9 +396,12 @@ export function classifyPlayerArchetype(features: Record<string, number>): Playe
   // If only primary trait, use it alone (less common)
   if (primaryTrait) {
     const primaryDesc: Record<string, string> = {
-      "maverick": "High-risk, high-reward player who makes more errors but takes aggressive chances",
+      "maverick": "High-risk player who makes significant errors (2.0+ total errors or very high in specific categories) but takes aggressive chances",
+      "inconsistent": "Moderate error player (0.8-2.0 total errors) with variable performance and reliability",
       "precise": "Low-error player who prioritizes consistency and efficiency over volume",
       "workhorse": "High-volume player who handles a large share of team actions and touches",
+      "stalwart": "High-volume player who maintains low errors despite heavy workload, reliable and consistent at high activity levels",
+      "opportunistic": "Low volume player who makes high-impact plays when they do act, prioritizing quality opportunities over quantity",
       "selective": "Low-volume player who picks their moments carefully, avoiding unnecessary risks",
       "steady": "Conservative player with low attempts and minimal errors, prioritizing safe, reliable play"
     };
