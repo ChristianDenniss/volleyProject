@@ -47,9 +47,12 @@ const PRIMARY_TRAITS: PrimaryTrait[] = [
     name: "Inconsistent",
     condition: (f) => {
       const totalErrors = f.spikingErrorsPerSet + f.settingErrorsPerSet + f.servingErrorsPerSet + f.miscErrorsPerSet;
-      // Moderate errors - between Precise and Maverick
-      return totalErrors > 0.8 && totalErrors <= 2.0 && 
-             !(f.spikingErrorsPerSet > 1.2 || f.settingErrorsPerSet > 0.8);
+      // Moderate errors - between Precise and Maverick, but more restrictive
+      // Require at least 1.2 total errors and multiple error types OR one significant error category
+      return totalErrors > 1.2 && totalErrors <= 2.0 && 
+             ((f.spikingErrorsPerSet > 0.6 && f.settingErrorsPerSet > 0.3) || // Multiple error types
+              (f.spikingErrorsPerSet > 0.9) || // Significant spiking errors
+              (f.settingErrorsPerSet > 0.6)); // Significant setting errors
     }
   },
   {
