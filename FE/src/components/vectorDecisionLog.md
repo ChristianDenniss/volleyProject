@@ -522,6 +522,21 @@ const vectorRows = useMemo(() => {
 - Updated descriptions to be more evocative and less literal
 **Status:** ✅ Implemented (v2.9)
 
+#### Decision: Comprehensive Archetype Descriptions
+**Decision:** Provide detailed, explanatory descriptions for all archetypes that explain their statistical profile and play style characteristics.
+**Rationale:**
+- Generic descriptions like "maverick striker" don't help users understand what the archetype actually means
+- Users need to understand the statistical thresholds and play style implications
+- Better descriptions improve the analytical value of the archetype system
+- Makes the system more educational and informative
+**Implementation:**
+- Created detailed description mappings for all primary traits explaining error patterns and volume
+- Created detailed description mappings for all secondary traits explaining role and statistical focus
+- Updated standalone archetype descriptions to include specific statistical criteria (e.g., "55%+ kill rate", "6+ assists/set")
+- Combination descriptions now explain both the primary trait behavior and secondary trait specialization
+- Special combinations include specific statistical thresholds in their descriptions
+**Status:** ✅ Implemented (v2.9)
+
 ---
 
 ## Notes

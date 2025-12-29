@@ -141,7 +141,7 @@ const STANDALONE_ARCHETYPES: StandaloneArchetype[] = [
     id: "perfectly-balanced",
     name: "Perfectly Balanced",
     color: "#95E1D3",
-    description: "Exceptionally balanced across all statistical categories",
+    description: "Exceptionally balanced player with consistent contributions across offense, defense, and setting, with minimal errors",
     condition: (f) => {
       const offensive = f.spikeKillsPerSet + f.apeKillsPerSet;
       const defensive = f.digsPerSet + f.blocksPerSet;
@@ -162,7 +162,7 @@ const STANDALONE_ARCHETYPES: StandaloneArchetype[] = [
     id: "unicorn",
     name: "Unicorn",
     color: "#9B59B6",
-    description: "Elite performance across multiple categories simultaneously",
+    description: "Rare player who achieves elite-level performance in at least three different statistical categories simultaneously",
     condition: (f) => {
       // Must be elite in at least 3 different categories
       const eliteCategories = [
@@ -179,7 +179,7 @@ const STANDALONE_ARCHETYPES: StandaloneArchetype[] = [
     id: "sniper",
     name: "Sniper",
     color: "#FFB74D",
-    description: "Exceptional kill rate with minimal errors",
+    description: "Highly efficient attacker with exceptional kill rate (55%+) and minimal errors, prioritizing precision over volume",
     condition: (f) => {
       const totalAttempts = f.spikeAttemptsPerSet + f.apeAttemptsPerSet;
       const totalKills = f.spikeKillsPerSet + f.apeKillsPerSet;
@@ -194,7 +194,7 @@ const STANDALONE_ARCHETYPES: StandaloneArchetype[] = [
     id: "gunslinger",
     name: "Gunslinger",
     color: "#FF8C94",
-    description: "High volume, high risk, high reward",
+    description: "High-volume attacker who takes many attempts, generates high kills, but also commits significant errors in pursuit of aggressive plays",
     condition: (f) => {
       const totalAttempts = f.spikeAttemptsPerSet + f.apeAttemptsPerSet;
       const totalKills = f.spikeKillsPerSet + f.apeKillsPerSet;
@@ -208,7 +208,7 @@ const STANDALONE_ARCHETYPES: StandaloneArchetype[] = [
     id: "anchor",
     name: "Anchor",
     color: "#C8E6C9",
-    description: "Steady and reliable, low risk approach",
+    description: "Steady, reliable player with low attempts and minimal errors, providing stability and consistency to the team",
     condition: (f) => 
       (f.spikeAttemptsPerSet < 2.0 && f.apeAttemptsPerSet < 0.5) && 
       (f.spikingErrorsPerSet < 0.3 && f.settingErrorsPerSet < 0.2 && f.servingErrorsPerSet < 0.2)
@@ -254,7 +254,7 @@ export function classifyPlayerArchetype(features: Record<string, number>): Playe
         id: "playmaking-intimidator",
         name: "Playmaking Intimidator",
         color: "#C7CEEA",
-        description: "Elite setter with commanding presence at the net"
+        description: "Elite setter (6+ assists/set) who also commands the net with strong blocking presence, orchestrating both offense and defense"
       };
     } else {
       // Block heavy = Intimidating Playmaker
@@ -262,7 +262,7 @@ export function classifyPlayerArchetype(features: Record<string, number>): Playe
         id: "intimidating-playmaker",
         name: "Intimidating Playmaker",
         color: "#FCBAD3",
-        description: "Dominant blocker who orchestrates the offense"
+        description: "Dominant blocker (1+ blocks/set) who also orchestrates the offense with high assist totals, controlling both sides of the game"
       };
     }
   }
@@ -275,36 +275,79 @@ export function classifyPlayerArchetype(features: Record<string, number>): Playe
         id: "maverick-playmaker",
         name: "Maverick Playmaker",
         color: secondaryTrait.color,
-        description: "Bold playmaker who takes risks to create opportunities"
+        description: "Bold setter who takes risks to create scoring opportunities, often making high-error plays in pursuit of big moments"
       };
     }
+    
+    // Generate descriptive explanations for combinations
+    const getDescription = (primary: PrimaryTrait, secondary: SecondaryTrait): string => {
+      const primaryDesc: Record<string, string> = {
+        "maverick": "Takes risks and makes more errors in pursuit of aggressive plays",
+        "precise": "Minimizes errors and maintains high consistency",
+        "workhorse": "High volume player who handles a large share of team actions",
+        "selective": "Low volume player who picks their moments carefully",
+        "steady": "Conservative approach with low attempts and minimal errors"
+      };
+      
+      const secondaryDesc: Record<string, string> = {
+        "striker": "Primary offensive threat with high kill and attempt rates",
+        "guardian": "Defensive specialist excelling in digs and blocks",
+        "playmaker": "Elite setter who orchestrates the offense with high assist totals",
+        "finisher": "Efficient scorer who converts attacks into kills at a high rate",
+        "intimidator": "Dominant blocker who controls the net with blocks and block follows",
+        "bomber": "Powerful server who generates aces and service pressure",
+        "versatile": "Well-rounded player contributing in multiple areas (offense, defense, or setting)",
+        "jack-of-all-trades": "Utility player with moderate contributions across multiple statistical categories"
+      };
+      
+      return `${primaryDesc[primary.id] || primary.name.toLowerCase()}, specializing as a ${secondaryDesc[secondary.id] || secondary.name.toLowerCase()}`;
+    };
     
     // Default combination
     return {
       id: `${primaryTrait.id}-${secondaryTrait.id}`,
       name: `${primaryTrait.name} ${secondaryTrait.name}`,
       color: secondaryTrait.color,
-      description: `${primaryTrait.name.toLowerCase()} ${secondaryTrait.name.toLowerCase()}`
+      description: getDescription(primaryTrait, secondaryTrait)
     };
   }
   
   // If only secondary trait, use it alone
   if (secondaryTrait) {
+    const secondaryDesc: Record<string, string> = {
+      "striker": "Primary offensive threat focused on generating kills through high-volume attacking",
+      "guardian": "Defensive specialist who excels at digs and blocks to prevent opponent scoring",
+      "playmaker": "Elite setter who orchestrates the offense, creating opportunities for teammates with high assist totals",
+      "finisher": "Efficient scorer who converts attacks into kills at a high rate, focusing on quality over quantity",
+      "intimidator": "Dominant blocker who controls the net, generating blocks and block follows to disrupt opponent attacks",
+      "bomber": "Powerful server who generates aces and creates service pressure to score points directly",
+      "versatile": "Well-rounded player who contributes significantly in multiple areas, combining offense, defense, or setting",
+      "jack-of-all-trades": "Utility player with moderate but consistent contributions across multiple statistical categories"
+    };
+    
     return {
       id: secondaryTrait.id,
       name: secondaryTrait.name,
       color: secondaryTrait.color,
-      description: `Specialized ${secondaryTrait.name.toLowerCase()}`
+      description: secondaryDesc[secondaryTrait.id] || `Specialized ${secondaryTrait.name.toLowerCase()}`
     };
   }
   
   // If only primary trait, use it alone (less common)
   if (primaryTrait) {
+    const primaryDesc: Record<string, string> = {
+      "maverick": "High-risk, high-reward player who makes more errors but takes aggressive chances",
+      "precise": "Low-error player who prioritizes consistency and efficiency over volume",
+      "workhorse": "High-volume player who handles a large share of team actions and touches",
+      "selective": "Low-volume player who picks their moments carefully, avoiding unnecessary risks",
+      "steady": "Conservative player with low attempts and minimal errors, prioritizing safe, reliable play"
+    };
+    
     return {
       id: primaryTrait.id,
       name: primaryTrait.name,
       color: "#95a5a6",
-      description: `${primaryTrait.name.toLowerCase()} player`
+      description: primaryDesc[primaryTrait.id] || `${primaryTrait.name.toLowerCase()} player`
     };
   }
   

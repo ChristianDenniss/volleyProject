@@ -173,12 +173,14 @@ This document tracks what has been implemented in the Stats Vectorization & 3D G
   - Recalibrated all primary/secondary trait thresholds based on realistic volleyball stat ranges
   - Changed default collapsible section states: Controls and Axes default to collapsed, Player Info defaults to expanded
 
-- **v2.9** - Creative archetype naming system
+- **v2.9** - Creative archetype naming system and comprehensive descriptions
   - Renamed primary traits: "Maverick" (error-prone), "Precise" (efficient), "Workhorse" (high volume), "Selective" (low volume), "Steady" (conservative)
   - Renamed secondary traits: "Striker" (offensive), "Guardian" (defender), "Playmaker" (setter), "Finisher" (scorer), "Intimidator" (blocker), "Bomber" (server), "Versatile" (all-around), "Jack of All Trades" (utility)
   - New standalone archetypes: "Perfectly Balanced" (exceptionally balanced stats), "Unicorn" (elite in 3+ categories), "Sniper" (high kill rate, low errors), "Gunslinger" (high volume/risk/reward), "Anchor" (steady, low risk)
   - Special combination handling: "Intimidating Playmaker" (block-heavy + assist-heavy), "Playmaking Intimidator" (assist-heavy + block-heavy), "Maverick Playmaker" (risk-taking setter)
-  - Updated all descriptions to be more evocative and less literal
+  - Created comprehensive description system with detailed explanations for all archetypes
+  - Descriptions now explain statistical profiles, play style characteristics, and specific thresholds (e.g., "55%+ kill rate", "6+ assists/set")
+  - Combination descriptions explain both primary trait behavior and secondary trait specialization
   - Removed hyphen from combination names (e.g., "Maverick Striker" instead of "Maverick - Striker")
 
 - **v2.3** - Fixed PCA component color coding and improved spacing
