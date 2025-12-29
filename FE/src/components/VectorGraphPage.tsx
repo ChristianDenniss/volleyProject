@@ -54,6 +54,11 @@ function PlayerPoint({
   };
 
   const handlePointerDown = (e: any) => {
+    // Only handle left mouse button (button 0)
+    if (e.button !== undefined && e.button !== 0) {
+      return;
+    }
+    
     // Track pointer down position and time to detect if it's a click vs drag
     const pointer = e.pointer || {};
     pointerDownRef.current = {
@@ -61,10 +66,17 @@ function PlayerPoint({
       y: pointer.y || e.offsetY || 0,
       time: Date.now()
     };
+    // Stop propagation immediately to prevent OrbitControls from starting rotation
     e.stopPropagation();
+    e.stopImmediatePropagation?.();
   };
 
-  const handlePointerUp = (e: any) => {
+  const handleClick = (e: any) => {
+    // Only handle left mouse button (button 0)
+    if (e.button !== undefined && e.button !== 0) {
+      return;
+    }
+    
     if (!pointerDownRef.current) return;
 
     // Only treat as click if it wasn't a drag (mouse moved less than 5px)
@@ -85,9 +97,7 @@ function PlayerPoint({
 
     // Stop propagation to prevent OrbitControls from handling the event
     e.stopPropagation();
-    if (e.stopImmediatePropagation) {
-      e.stopImmediatePropagation();
-    }
+    e.stopImmediatePropagation?.();
     // Prevent default to avoid any default behaviors
     e.preventDefault?.();
     onClick();
@@ -106,7 +116,7 @@ function PlayerPoint({
       onPointerEnter={handlePointerEnter}
       onPointerLeave={handlePointerLeave}
       onPointerDown={handlePointerDown}
-      onPointerUp={handlePointerUp}
+      onClick={handleClick}
       scale={scale}
     >
       <sphereGeometry args={[0.1, 16, 16]} />
@@ -309,7 +319,7 @@ function VectorGraph3D({
           position: [centerX + cameraDistance, centerY + cameraDistance, centerZ + cameraDistance],
           fov: 50
         }}
-        onClick={handleCanvasClick}
+        onPointerMissed={handleCanvasClick}
       >
         <ambientLight intensity={0.5} />
         <pointLight position={[10, 10, 10]} intensity={1} />
