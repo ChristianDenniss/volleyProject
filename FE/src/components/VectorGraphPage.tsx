@@ -108,6 +108,10 @@ function VectorGraph3D({
   // ALL HOOKS MUST BE CALLED FIRST - before any conditional returns
   const [hoveredPlayer, setHoveredPlayer] = useState<PlayerSeasonVectorRow | null>(null);
   const [clickedPlayer, setClickedPlayer] = useState<PlayerSeasonVectorRow | null>(null);
+  const [similarPlayers, setSimilarPlayers] = useState<{
+    closest: PlayerSeasonVectorRow | null;
+    farthest: PlayerSeasonVectorRow | null;
+  }>({ closest: null, farthest: null });
   const [infoBoxHidden, setInfoBoxHidden] = useState<boolean>(false);
   const [playerInfoCollapsed, setPlayerInfoCollapsed] = useState<boolean>(false);
   const [controlsCollapsed, setControlsCollapsed] = useState<boolean>(false);
@@ -211,16 +215,67 @@ function VectorGraph3D({
     }
   }, [closestHoveredPlayerId, vectorRows, onPlayerHover, clickedPlayer]);
 
+  // Calculate Euclidean distance between two z-vectors
+  const calculateDistance = (vec1: number[], vec2: number[]): number => {
+    if (vec1.length !== vec2.length) return Infinity;
+    let sumSquaredDiffs = 0;
+    for (let i = 0; i < vec1.length; i++) {
+      const diff = vec1[i] - vec2[i];
+      sumSquaredDiffs += diff * diff;
+    }
+    return Math.sqrt(sumSquaredDiffs);
+  };
+
+  // Find closest and farthest players based on z-vector similarity
+  const findSimilarPlayers = (targetPlayer: PlayerSeasonVectorRow): {
+    closest: PlayerSeasonVectorRow | null;
+    farthest: PlayerSeasonVectorRow | null;
+  } => {
+    if (vectorRows.length < 2) {
+      return { closest: null, farthest: null };
+    }
+
+    let closest: PlayerSeasonVectorRow | null = null;
+    let farthest: PlayerSeasonVectorRow | null = null;
+    let minDistance = Infinity;
+    let maxDistance = -Infinity;
+
+    for (const player of vectorRows) {
+      // Skip the target player itself
+      if (player.playerId === targetPlayer.playerId) {
+        continue;
+      }
+
+      const distance = calculateDistance(targetPlayer.zVector, player.zVector);
+
+      if (distance < minDistance) {
+        minDistance = distance;
+        closest = player;
+      }
+
+      if (distance > maxDistance) {
+        maxDistance = distance;
+        farthest = player;
+      }
+    }
+
+    return { closest, farthest };
+  };
+
   // Handle player click
   const handlePlayerClick = (player: PlayerSeasonVectorRow) => {
     // Toggle: if clicking the same player, deselect; otherwise select the new player
     if (clickedPlayer?.playerId === player.playerId) {
       setClickedPlayer(null);
+      setSimilarPlayers({ closest: null, farthest: null });
       if (onPlayerClick) {
         onPlayerClick(null);
       }
     } else {
       setClickedPlayer(player);
+      // Calculate similar players when a player is selected
+      const similar = findSimilarPlayers(player);
+      setSimilarPlayers(similar);
       if (onPlayerClick) {
         onPlayerClick(player);
       }
@@ -232,6 +287,7 @@ function VectorGraph3D({
   const handleCanvasClick = () => {
     setClickedPlayer(null);
     setHoveredPlayer(null); // Also clear hovered player when deselecting
+    setSimilarPlayers({ closest: null, farthest: null }); // Clear similarity data
     if (onPlayerClick) {
       onPlayerClick(null);
     }
@@ -346,7 +402,19 @@ function VectorGraph3D({
                   <p>Season: {displayPlayer.seasonNumber}</p>
                   <p>Sets Played: {displayPlayer.setsPlayed}</p>
                   {clickedPlayer && clickedPlayer.playerId === displayPlayer.playerId && (
-                    <p className="note">(Selected - click empty space to deselect)</p>
+                    <>
+                      <p className="note">(Selected - click empty space to deselect)</p>
+                      {similarPlayers.closest && (
+                        <div className="similarity-info">
+                          <p><strong>Most Similar:</strong> {similarPlayers.closest.playerName}</p>
+                        </div>
+                      )}
+                      {similarPlayers.farthest && (
+                        <div className="similarity-info">
+                          <p><strong>Least Similar:</strong> {similarPlayers.farthest.playerName}</p>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               );
