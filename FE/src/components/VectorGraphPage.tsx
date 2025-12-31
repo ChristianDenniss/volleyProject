@@ -172,6 +172,42 @@ function VectorGraph3D({
       return a.archetype.name.localeCompare(b.archetype.name);
     });
   }, [archetypeAssignments]);
+
+  // Get statistical thresholds for archetype
+  const getArchetypeThresholds = (archetypeId: string): string => {
+    const thresholds: Record<string, string> = {
+      "maverick": "Total errors >2.0/set OR spiking errors >1.2/set + setting errors >0.4/set OR spiking errors >1.5/set OR setting errors >1.0/set",
+      "inconsistent": "Total errors 1.2-2.0/set AND (multiple error types OR spiking errors >0.9/set OR setting errors >0.6/set)",
+      "precise": "Total errors <0.5/set AND spiking errors <0.3/set AND setting errors <0.2/set",
+      "tireless": "Spike attempts >7.0/set OR ape attempts >3.2/set OR assists >10.5/set",
+      "workhorse": "Spike attempts >5.0/set OR ape attempts >2.0/set OR assists >8.0/set (but not Tireless)",
+      "stalwart": "High volume (spike attempts >5.0/set OR ape attempts >2.0/set OR assists >8.0/set) AND total errors <0.8/set AND spiking errors <0.5/set AND setting errors <0.3/set",
+      "opportunistic": "Low volume (attempts <3.0/set) but high impact (kills >1.5/set with >45% kill rate)",
+      "selective": "Very low volume: spike attempts <1.5/set AND ape attempts <0.5/set AND assists <2.0/set AND digs <2.0/set",
+      "steady": "Low attempts (spike <2.0/set, ape <0.5/set) AND low errors (spiking <0.3/set, setting <0.2/set, serving <0.2/set)",
+      "striker": "Kills >2.5 spike/set OR >1.0 ape/set AND attempts >4.0 spike/set OR >1.5 ape/set",
+      "piercer": "Kills >3.0 spike/set OR >1.5 ape/set AND kill rate >55% AND total kills >3.0/set",
+      "guardian": "Digs >3.0/set OR blocks >1.0/set",
+      "playmaker": "Assists >6.0/set",
+      "finisher": "Spike kills >2.5/set OR ape kills >1.0/set",
+      "intimidator": "Blocks >1.0/set OR block follows >1.5/set",
+      "bomber": "Aces >0.8/set",
+      "versatile": "Multiple roles: (offense + defense) OR (offense + setting) OR (defense + setting)",
+      "jack-of-all-trades": "3+ stats in 0.5-3.0 range across multiple categories",
+      "perfectly-balanced": "Offense 1.5-4.0/set AND defense 1.5-4.0/set AND setting 1.5-4.0/set AND all within 1.5 of each other AND errors <1.0/set",
+      "unicorn": "Elite in 3+ categories: offense (>3.5 kills/set), setting (>8.0 assists/set), defense (>4.5 digs/set OR >1.5 blocks/set), serving (>1.2 aces/set), or efficiency (>60% kill rate)",
+      "sniper": "Kill rate >55% AND kills >2.5/set AND spiking errors <0.8/set AND setting errors <0.3/set",
+      "gunslinger": "Total attempts >9.0/set AND total kills >5.0/set AND total errors >2.0/set",
+      "anchor": "Low attempts (spike <2.0/set, ape <0.5/set) AND low errors (spiking <0.3/set, setting <0.2/set, serving <0.2/set)",
+      "maverick-playmaker": "High errors (Maverick) AND assists >6.0/set (Playmaker)",
+      "playmaking-intimidator": "Assists >6.0/set (Playmaker) AND blocks >1.0/set OR block follows >1.5/set (Intimidator)",
+      "intimidating-playmaker": "Blocks >1.0/set OR block follows >1.5/set (Intimidator) AND assists >6.0/set (Playmaker)"
+    };
+    return thresholds[archetypeId] || "Statistical thresholds vary based on combination";
+  };
+
+  // State for clicked archetype popup
+  const [clickedArchetype, setClickedArchetype] = useState<string | null>(null);
   
   const points = useMemo(() => {
     if (vectorRows.length === 0) return [];
@@ -480,7 +516,7 @@ function VectorGraph3D({
             <div
               key={archetype.id}
               className="archetype-legend-item"
-              title={archetype.description}
+              onClick={() => setClickedArchetype(clickedArchetype === archetype.id ? null : archetype.id)}
             >
               <span
                 className="archetype-legend-color"
@@ -488,9 +524,16 @@ function VectorGraph3D({
               />
               <span className="archetype-legend-name">{archetype.name}</span>
               <span className="archetype-legend-count">({count})</span>
-              <div className="archetype-legend-tooltip">
-                {archetype.description}
-              </div>
+              {clickedArchetype === archetype.id && (
+                <div className="archetype-legend-popup">
+                  <div className="archetype-popup-header">{archetype.name}</div>
+                  <div className="archetype-popup-description">{archetype.description}</div>
+                  <div className="archetype-popup-thresholds">
+                    <strong>Statistical Thresholds:</strong>
+                    <div className="archetype-popup-thresholds-text">{getArchetypeThresholds(archetype.id)}</div>
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>
