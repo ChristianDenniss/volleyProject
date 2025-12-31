@@ -563,7 +563,73 @@ const vectorRows = useMemo(() => {
 - Increased "Tireless" thresholds: >7.0 spike attempts/set (from 6.5), >3.2 ape attempts/set (from 2.8), >10.5 assists/set (from 9.5)
 - Updated "Workhorse" exclusion check to match new "Tireless" thresholds
 - Removed duplicate "workhorse" entry that was causing classification conflicts
+- Further refined to >7.5 spike attempts/set for optimal exclusivity
 **Status:** ✅ Implemented (v2.14)
+
+#### Decision: Player Search Functionality
+**Decision:** Add search bar in top left of graph section to allow users to quickly find and focus on specific players.
+**Rationale:**
+- Large graphs with many players make it difficult to find specific individuals
+- Search provides quick access to any player in the current dataset
+- Camera animation to selected player improves discoverability
+- Enhances user experience by reducing time spent manually exploring the graph
+**Implementation:**
+- Search input positioned absolutely in top left (1rem from edges)
+- Real-time filtering as user types (case-insensitive substring matching)
+- Dropdown results show up to 5 matches with "+X more" indicator if needed
+- Clicking result triggers camera animation to player position and auto-selects player
+- Camera uses smooth easing animation (ease-out cubic) over 1 second duration
+- Search bar styled to match dark graph background for seamless integration
+- Width optimized to 224px (reduced from 280px) for better proportions
+**Status:** ✅ Implemented (v3.0)
+
+#### Decision: Archetype Legend with Click Popups
+**Decision:** Add legend below search bar showing all archetypes in current graph with click-to-view detailed information.
+**Rationale:**
+- Users need to understand what archetypes are present in the current visualization
+- Legend provides quick reference for archetype colors and distribution
+- Click popups allow detailed exploration without cluttering the UI
+- Separates high-level overview (description) from low-level details (statistical thresholds)
+**Implementation:**
+- Legend positioned below search bar, same width (224px) for visual consistency
+- Displays archetype name, color circle, and player count
+- Sorted by count (descending) then alphabetically
+- Clicking archetype shows popup with:
+  - Header: Archetype name
+  - Description: High-level explanation of what the archetype represents
+  - Thresholds: Specific statistical conditions (numbers/requirements)
+- Popup styled as formatted box with max-width (320px) and proper text wrapping
+- Legend scrollable with custom dark scrollbar (thin bar, no box, matches theme)
+- Bottom margin (2rem) prevents overlap with screen edge
+- Max-height constraint keeps legend within graph bounds
+**Status:** ✅ Implemented (v3.0)
+
+#### Decision: Use Skinny Seasons Endpoint
+**Decision:** Switch from `/api/seasons` to `/api/seasons/skinny` endpoint to avoid 500 errors.
+**Rationale:**
+- Full seasons endpoint loads relations (teams, games, awards) causing 500 errors
+- Frontend only needs basic season metadata (seasonNumber, theme, id) for dropdown
+- Skinny endpoint avoids unnecessary data transfer and improves reliability
+- Prevents deployment failures due to server resource constraints
+**Implementation:**
+- Updated `useFetchSeasons` hook to use `/api/seasons/skinny` endpoint
+- Improved error messages to include HTTP status codes for better debugging
+**Status:** ✅ Implemented (v3.0)
+
+#### Decision: Prioritize Offensive Traits for High-Volume Players
+**Decision:** When Workhorse/Tireless players qualify for multiple secondary traits, prioritize offensive traits (Striker, Piercer) over defensive (Guardian).
+**Rationale:**
+- High-volume players often qualify for both offensive and defensive secondary traits
+- Without prioritization, defensive traits were being selected first (due to array order)
+- This resulted in "Workhorse Guardian" being more common than "Workhorse Striker"
+- Offensive traits better represent the primary role of high-volume players
+- Creates more diverse and accurate archetype combinations
+**Implementation:**
+- Added logic to detect when Workhorse/Tireless players match multiple secondary traits
+- Prioritizes offensive traits: Piercer > Striker > Finisher
+- Only applies when player qualifies for both offensive and defensive traits
+- Maintains existing behavior for players who only match one category
+**Status:** ✅ Implemented (v3.1)
 
 ---
 

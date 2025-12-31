@@ -195,6 +195,31 @@ This document tracks what has been implemented in the Stats Vectorization & 3D G
   - Increased "Tireless" thresholds to be more restrictive: >7.0 spike attempts/set (was 6.5), >3.2 ape attempts/set (was 2.8), >10.5 assists/set (was 9.5)
   - This creates a more even split between "Tireless" (elite) and "Workhorse" (high volume) categories
   - Fixed duplicate "workhorse" entry that was causing classification issues
+  - Further adjusted Tireless spike attempts threshold to >7.5/set for better exclusivity
+
+- **v3.0** - Player search functionality and archetype legend
+  - Added search bar in top left of graph section for searching players by name
+  - Real-time filtering as user types with dropdown results (shows up to 5 matches)
+  - Clicking a search result animates camera to focus on the selected player and automatically selects them
+  - Camera smoothly animates to player position with easing function
+  - Search bar styled to match dark graph background (#1a1a1a) with subtle border (#3a3a3a)
+  - Search bar width set to 224px (reduced from 280px for better proportions)
+  - Added archetype legend below search bar showing all archetypes present in current graph
+  - Legend displays archetype name, color indicator, and player count
+  - Clicking an archetype in legend shows detailed popup with:
+    - High-level description (what the archetype represents)
+    - Statistical thresholds (specific numbers/conditions)
+  - Legend styled to match dark theme with custom scrollbar (thin dark bar, no box)
+  - Legend has proper bottom margin (2rem) to prevent overlap with screen edge
+  - Legend scrollable with max-height constraint to stay within graph bounds
+  - Fixed seasons endpoint to use `/api/seasons/skinny` to avoid 500 errors from loading unnecessary relations
+  - Improved error messages to include status codes for better debugging
+
+- **v3.1** - Archetype classification improvements
+  - Added prioritization logic for Workhorse/Tireless players to prefer offensive traits (Striker, Piercer) over defensive (Guardian)
+  - This ensures high-volume offensive players get "Workhorse Striker" instead of "Workhorse Guardian"
+  - Priority order: Piercer > Striker > Finisher for offensive traits
+  - Helps create more diverse archetype combinations
 
 - **v2.3** - Fixed PCA component color coding and improved spacing
   - Fixed dynamic color coding for PCA feature weights (was showing all dark for PC1/PC2)

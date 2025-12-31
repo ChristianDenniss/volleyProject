@@ -68,7 +68,7 @@ const PRIMARY_TRAITS: PrimaryTrait[] = [
     name: "Tireless",
     condition: (f) => {
       // Elite volume - top tier high-volume players (more restrictive for better split)
-      return (f.spikeAttemptsPerSet > 7.0 || f.apeAttemptsPerSet > 3.2 || f.assistsPerSet > 10.5);
+      return (f.spikeAttemptsPerSet > 7.5 || f.apeAttemptsPerSet > 3.2 || f.assistsPerSet > 10.5);
     }
   },
   {
@@ -76,7 +76,7 @@ const PRIMARY_TRAITS: PrimaryTrait[] = [
     name: "Workhorse",
     condition: (f) => {
       // High volume but not elite - exclude those who qualify for Tireless
-      const isTireless = (f.spikeAttemptsPerSet > 7.0 || f.apeAttemptsPerSet > 3.2 || f.assistsPerSet > 10.5);
+      const isTireless = (f.spikeAttemptsPerSet > 7.5 || f.apeAttemptsPerSet > 3.2 || f.assistsPerSet > 10.5);
       return !isTireless && (f.spikeAttemptsPerSet > 5.0 || f.apeAttemptsPerSet > 2.0 || f.assistsPerSet > 8.0);
     }
   },
@@ -308,8 +308,27 @@ export function classifyPlayerArchetype(features: Record<string, number>): Playe
   // Find matching primary trait
   const primaryTrait = PRIMARY_TRAITS.find(trait => trait.condition(features));
   
-  // Find matching secondary trait
-  const secondaryTrait = SECONDARY_TRAITS.find(trait => trait.condition(features));
+  // Find matching secondary trait - prioritize offensive traits for high-volume players
+  // This ensures Workhorse players who are offensive get Striker instead of Guardian
+  let secondaryTrait = SECONDARY_TRAITS.find(trait => trait.condition(features));
+  
+  // If player qualifies for multiple secondary traits, prioritize based on primary trait
+  if (primaryTrait && secondaryTrait) {
+    const allMatchingTraits = SECONDARY_TRAITS.filter(trait => trait.condition(features));
+    
+    // For Workhorse/Tireless players, prioritize offensive traits (Striker, Piercer) over defensive (Guardian)
+    if ((primaryTrait.id === "workhorse" || primaryTrait.id === "tireless") && allMatchingTraits.length > 1) {
+      const offensiveTraits = allMatchingTraits.filter(t => 
+        t.id === "striker" || t.id === "piercer" || t.id === "finisher"
+      );
+      if (offensiveTraits.length > 0) {
+        // Prioritize Piercer > Striker > Finisher
+        secondaryTrait = offensiveTraits.find(t => t.id === "piercer") || 
+                        offensiveTraits.find(t => t.id === "striker") || 
+                        offensiveTraits[0];
+      }
+    }
+  }
   
   // Special combinations: Check for dual-secondary traits first (playmaker + intimidator)
   const isPlaymaker = features.assistsPerSet > 6.0;
