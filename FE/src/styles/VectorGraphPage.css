@@ -341,7 +341,7 @@
   width: 224px; /* Match search bar width exactly */
   max-height: calc(600px - 5rem); /* Graph height minus search bar space */
   overflow-y: auto;
-  overflow-x: hidden;
+  overflow-x: visible; /* Allow popups to extend beyond legend */
   padding: 0.75rem;
   padding-bottom: 1rem; /* Extra bottom padding */
   background-color: #1a1a1a; /* Match graph background */
@@ -388,6 +388,7 @@
   position: relative;
   border-radius: 4px;
   transition: background-color 0.15s;
+  overflow: visible; /* Allow popup to extend beyond item */
 }
 
 .archetype-legend-item:hover {
@@ -417,10 +418,7 @@
 }
 
 .archetype-legend-popup {
-  position: absolute;
-  left: 100%;
-  top: 0;
-  margin-left: 0.75rem;
+  position: fixed; /* Use fixed positioning to escape overflow constraints */
   min-width: 250px;
   max-width: 320px;
   width: max-content;
@@ -431,11 +429,13 @@
   color: #e2e8f0;
   font-size: 12px;
   line-height: 1.5;
-  z-index: 1000;
+  z-index: 10000; /* Very high z-index to ensure it's above everything */
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
   pointer-events: auto;
   word-wrap: break-word;
   overflow-wrap: break-word;
+  white-space: normal;
+  transform: translateX(0.75rem); /* Offset to the right */
 }
 
 .archetype-legend-popup::before {

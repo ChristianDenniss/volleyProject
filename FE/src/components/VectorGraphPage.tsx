@@ -210,6 +210,43 @@ function VectorGraph3D({
 
   // State for clicked archetype popup
   const [clickedArchetype, setClickedArchetype] = useState<string | null>(null);
+  const [popupPosition, setPopupPosition] = useState<{ left: number; top: number } | null>(null);
+  const legendRef = useRef<HTMLDivElement>(null);
+  const itemRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  
+  // Update popup position when clicked archetype changes
+  useEffect(() => {
+    if (clickedArchetype && legendRef.current) {
+      const itemEl = itemRefs.current.get(clickedArchetype);
+      if (itemEl) {
+        const itemRect = itemEl.getBoundingClientRect();
+        const legendRect = legendRef.current.getBoundingClientRect();
+        setPopupPosition({
+          left: legendRect.right + 12,
+          top: itemRect.top
+        });
+      }
+    } else {
+      setPopupPosition(null);
+    }
+  }, [clickedArchetype]);
+  
+  // Update popup position when clicked archetype changes
+  useEffect(() => {
+    if (clickedArchetype && legendRef.current) {
+      const itemEl = itemRefs.current.get(clickedArchetype);
+      if (itemEl) {
+        const itemRect = itemEl.getBoundingClientRect();
+        const legendRect = legendRef.current.getBoundingClientRect();
+        setPopupPosition({
+          left: legendRect.right + 12,
+          top: itemRect.top
+        });
+      }
+    } else {
+      setPopupPosition(null);
+    }
+  }, [clickedArchetype]);
   
   const points = useMemo(() => {
     if (vectorRows.length === 0) return [];
@@ -513,10 +550,14 @@ function VectorGraph3D({
 
       {/* Archetype Legend */}
       {archetypeCounts.length > 0 && (
-        <div className="archetype-legend">
+        <div className="archetype-legend" ref={legendRef}>
           {archetypeCounts.map(({ archetype, count }) => (
             <div
               key={archetype.id}
+              ref={(el) => {
+                if (el) itemRefs.current.set(archetype.id, el);
+                else itemRefs.current.delete(archetype.id);
+              }}
               className="archetype-legend-item"
               onClick={() => setClickedArchetype(clickedArchetype === archetype.id ? null : archetype.id)}
             >
@@ -526,20 +567,31 @@ function VectorGraph3D({
               />
               <span className="archetype-legend-name">{archetype.name}</span>
               <span className="archetype-legend-count">({count})</span>
-              {clickedArchetype === archetype.id && (
-                <div className="archetype-legend-popup">
-                  <div className="archetype-popup-header">{archetype.name}</div>
-                  <div className="archetype-popup-description">{archetype.description}</div>
-                  <div className="archetype-popup-thresholds">
-                    <strong>Statistical Thresholds:</strong>
-                    <div className="archetype-popup-thresholds-text">{getArchetypeThresholds(archetype.id)}</div>
-                  </div>
-                </div>
-              )}
             </div>
           ))}
         </div>
       )}
+      {/* Popup rendered outside legend to escape overflow constraints */}
+      {clickedArchetype && popupPosition && (() => {
+        const archetype = archetypeCounts.find(a => a.archetype.id === clickedArchetype)?.archetype;
+        if (!archetype) return null;
+        return (
+          <div 
+            className="archetype-legend-popup"
+            style={{
+              left: `${popupPosition.left}px`,
+              top: `${popupPosition.top}px`
+            }}
+          >
+            <div className="archetype-popup-header">{archetype.name}</div>
+            <div className="archetype-popup-description">{archetype.description}</div>
+            <div className="archetype-popup-thresholds">
+              <strong>Statistical Thresholds:</strong>
+              <div className="archetype-popup-thresholds-text">{getArchetypeThresholds(archetype.id)}</div>
+            </div>
+          </div>
+        );
+      })()}
       <Canvas
         camera={{
           position: [centerX + cameraDistance, centerY + cameraDistance, centerZ + cameraDistance],
