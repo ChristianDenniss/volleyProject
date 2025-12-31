@@ -154,6 +154,24 @@ function VectorGraph3D({
     });
     return archetypeMap;
   }, [vectorRows]);
+
+  // Calculate archetype counts for legend
+  const archetypeCounts = useMemo(() => {
+    const counts = new Map<string, { archetype: PlayerArchetype; count: number }>();
+    archetypeAssignments.forEach((archetype) => {
+      const existing = counts.get(archetype.id);
+      if (existing) {
+        existing.count++;
+      } else {
+        counts.set(archetype.id, { archetype, count: 1 });
+      }
+    });
+    // Sort by count (descending), then by name
+    return Array.from(counts.values()).sort((a, b) => {
+      if (b.count !== a.count) return b.count - a.count;
+      return a.archetype.name.localeCompare(b.archetype.name);
+    });
+  }, [archetypeAssignments]);
   
   const points = useMemo(() => {
     if (vectorRows.length === 0) return [];
@@ -454,6 +472,29 @@ function VectorGraph3D({
           </div>
         )}
       </div>
+
+      {/* Archetype Legend */}
+      {archetypeCounts.length > 0 && (
+        <div className="archetype-legend">
+          {archetypeCounts.map(({ archetype, count }) => (
+            <div
+              key={archetype.id}
+              className="archetype-legend-item"
+              title={archetype.description}
+            >
+              <span
+                className="archetype-legend-color"
+                style={{ backgroundColor: archetype.color }}
+              />
+              <span className="archetype-legend-name">{archetype.name}</span>
+              <span className="archetype-legend-count">({count})</span>
+              <div className="archetype-legend-tooltip">
+                {archetype.description}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
       <Canvas
         camera={{
           position: [centerX + cameraDistance, centerY + cameraDistance, centerZ + cameraDistance],

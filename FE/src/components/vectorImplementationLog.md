@@ -191,6 +191,11 @@ This document tracks what has been implemented in the Stats Vectorization & 3D G
   - This splits the previously overused "Workhorse" category into two groups for better diversity
   - Updated all description dictionaries to include "Tireless" explanations
 
+- **v2.14** - Adjusted Tireless/Workhorse thresholds for better distribution
+  - Increased "Tireless" thresholds to be more restrictive: >7.0 spike attempts/set (was 6.5), >3.2 ape attempts/set (was 2.8), >10.5 assists/set (was 9.5)
+  - This creates a more even split between "Tireless" (elite) and "Workhorse" (high volume) categories
+  - Fixed duplicate "workhorse" entry that was causing classification issues
+
 - **v2.3** - Fixed PCA component color coding and improved spacing
   - Fixed dynamic color coding for PCA feature weights (was showing all dark for PC1/PC2)
   - Improved weight normalization to use min-max scaling within top features (0.3-1.0 opacity range)

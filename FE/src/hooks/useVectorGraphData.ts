@@ -56,12 +56,13 @@ export const useFetchSeasons = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await authFetch(`${backendUrl}/api/seasons`, {
+        // Use /skinny endpoint to avoid loading unnecessary relations
+        const response = await authFetch(`${backendUrl}/api/seasons/skinny`, {
           method: "GET"
         });
 
         if (!response.ok) {
-          throw new Error("Network response was not ok");
+          throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
         }
 
         const result: Season[] = await response.json();

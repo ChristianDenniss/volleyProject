@@ -553,6 +553,18 @@ const vectorRows = useMemo(() => {
 - "Tireless" is checked before "Workhorse" in the PRIMARY_TRAITS array to ensure proper classification
 **Status:** ✅ Implemented (v2.13)
 
+#### Decision: Adjust Tireless/Workhorse Thresholds for Better Distribution
+**Decision:** Increase "Tireless" thresholds to create a more even split between "Tireless" and "Workhorse" categories.
+**Rationale:**
+- Initial thresholds resulted in "Tireless" completely replacing "Workhorse" instead of splitting the group
+- Need a more balanced distribution where both categories are represented
+- Higher "Tireless" thresholds make it more exclusive, leaving more room for "Workhorse"
+**Implementation:**
+- Increased "Tireless" thresholds: >7.0 spike attempts/set (from 6.5), >3.2 ape attempts/set (from 2.8), >10.5 assists/set (from 9.5)
+- Updated "Workhorse" exclusion check to match new "Tireless" thresholds
+- Removed duplicate "workhorse" entry that was causing classification conflicts
+**Status:** ✅ Implemented (v2.14)
+
 ---
 
 ## Notes
