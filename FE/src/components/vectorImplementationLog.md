@@ -220,6 +220,17 @@ This document tracks what has been implemented in the Stats Vectorization & 3D G
   - This ensures high-volume offensive players get "Workhorse Striker" instead of "Workhorse Guardian"
   - Priority order: Piercer > Striker > Finisher for offensive traits
   - Helps create more diverse archetype combinations
+  - Added Playmaker prioritization for setters (assists >6.0/set) to ensure offensive setters get "Playmaking Striker" instead of just "Striker"
+  - Special combinations now include primary traits: "Tireless Playmaking Striker", "Workhorse Playmaking Piercer", etc.
+  - Renamed "Precise" primary trait to "Technician" for better naming when combined (e.g., "Technician Versatile" instead of "Precise Versatile")
+  - Updated Tireless threshold to 7.5 spike attempts/set for optimal exclusivity
+
+- **v3.2** - UI improvements and fixes
+  - Fixed archetype legend popup visibility: changed to fixed positioning to escape container overflow constraints
+  - Popup now renders outside legend container and calculates position using refs and getBoundingClientRect()
+  - Fixed search results dropdown z-index (20) to appear above legend (10) when visible
+  - Added hide/show toggle for archetype legend with × button to hide and ⓘ button to show
+  - Legend toggle styled to match dark theme and positioned consistently
 
 - **v2.3** - Fixed PCA component color coding and improved spacing
   - Fixed dynamic color coding for PCA feature weights (was showing all dark for PC1/PC2)

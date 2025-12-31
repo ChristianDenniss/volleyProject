@@ -631,6 +631,73 @@ const vectorRows = useMemo(() => {
 - Maintains existing behavior for players who only match one category
 **Status:** ✅ Implemented (v3.1)
 
+#### Decision: Prioritize Playmaker for Offensive Setters
+**Decision:** When a player qualifies for both Playmaker (assists >6.0/set) and offensive traits (Striker, Piercer), prioritize Playmaker and combine them (e.g., "Playmaking Striker").
+**Rationale:**
+- Offensive setters were being labeled as just "Striker" without acknowledging their setting role
+- Setters with high assists should be identified as Playmakers first
+- Combining Playmaker with offensive traits creates more accurate labels like "Tireless Playmaking Striker"
+- Better represents players who both set and attack effectively
+**Implementation:**
+- Added special combination checks for Playmaker + Striker/Piercer
+- These combinations include primary traits when present (e.g., "Tireless Playmaking Striker")
+- Special combinations checked before regular primary+secondary combinations
+- Ensures setters are properly identified even when they have good offensive stats
+**Status:** ✅ Implemented (v3.1)
+
+#### Decision: Rename "Precise" to "Technician"
+**Decision:** Rename the "Precise" primary trait to "Technician" to improve naming when combined with other traits.
+**Rationale:**
+- "Precise Versatile" and "Workhorse Precise" sounded awkward
+- "Technician" better describes a player who minimizes errors through technical skill
+- "Technician Versatile" and "Workhorse Technician" read more naturally
+- Maintains the same meaning (low errors, technical precision) with better naming
+**Implementation:**
+- Changed primary trait ID from "precise" to "technician"
+- Updated all references, descriptions, and threshold displays
+- No functional changes, only naming improvements
+**Status:** ✅ Implemented (v3.1)
+
+#### Decision: Fix Archetype Legend Popup Visibility
+**Decision:** Change archetype legend popup to fixed positioning to escape container overflow constraints.
+**Rationale:**
+- Popup was being clipped by parent container's `overflow: hidden`
+- Fixed positioning allows popup to render outside the container bounds
+- Better user experience when viewing archetype details
+**Implementation:**
+- Changed popup from `position: absolute` to `position: fixed`
+- Moved popup rendering outside legend container
+- Added refs and useEffect to calculate position based on clicked item's location
+- Uses getBoundingClientRect() for accurate positioning
+**Status:** ✅ Implemented (v3.2)
+
+#### Decision: Add Hide/Show Toggle for Archetype Legend
+**Decision:** Add ability to hide and show the archetype legend to reduce UI clutter when not needed.
+**Rationale:**
+- Legend takes up significant screen space
+- Users may want to focus on the graph without the legend visible
+- Consistent with info panel hide/show functionality
+- Improves flexibility of the UI
+**Implementation:**
+- Added × button in top-right of legend to hide it
+- Added ⓘ button in same position when hidden to show it again
+- State management with `legendHidden` boolean
+- Styled buttons to match dark theme and existing UI patterns
+**Status:** ✅ Implemented (v3.2)
+
+#### Decision: Fix Search Results Z-Index
+**Decision:** Increase search results dropdown z-index to appear above archetype legend.
+**Rationale:**
+- Search results were appearing behind the legend when both were visible
+- Search functionality should have visual priority when active
+- Better user experience when searching for players
+**Implementation:**
+- Increased search container z-index from 10 to 20
+- Added z-index: 20 to search results dropdown
+- Legend remains at z-index: 10
+- Ensures search results always appear on top
+**Status:** ✅ Implemented (v3.2)
+
 ---
 
 ## Notes

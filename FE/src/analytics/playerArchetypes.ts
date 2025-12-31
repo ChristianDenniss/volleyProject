@@ -47,7 +47,7 @@ const PRIMARY_TRAITS: PrimaryTrait[] = [
     name: "Inconsistent",
     condition: (f) => {
       const totalErrors = f.spikingErrorsPerSet + f.settingErrorsPerSet + f.servingErrorsPerSet + f.miscErrorsPerSet;
-      // Moderate errors - between Precise and Maverick, but more restrictive
+      // Moderate errors - between Technician and Maverick, but more restrictive
       // Require at least 1.2 total errors and multiple error types OR one significant error category
       return totalErrors > 1.2 && totalErrors <= 2.0 && 
              ((f.spikingErrorsPerSet > 0.6 && f.settingErrorsPerSet > 0.3) || // Multiple error types
@@ -56,10 +56,11 @@ const PRIMARY_TRAITS: PrimaryTrait[] = [
     }
   },
   {
-    id: "precise",
-    name: "Precise",
+    id: "technician",
+    name: "Technician",
     condition: (f) => {
       const totalErrors = f.spikingErrorsPerSet + f.settingErrorsPerSet + f.servingErrorsPerSet + f.miscErrorsPerSet;
+      // Very low errors across all categories - technical precision
       return totalErrors < 0.5 && f.spikingErrorsPerSet < 0.3 && f.settingErrorsPerSet < 0.2;
     }
   },
@@ -418,7 +419,7 @@ export function classifyPlayerArchetype(features: Record<string, number>): Playe
       const primaryDesc: Record<string, string> = {
         "maverick": "Takes risks and makes significant errors (2.0+ total errors or very high in specific categories) in pursuit of aggressive plays",
         "inconsistent": "Moderate error player (0.8-2.0 total errors) with variable performance",
-        "precise": "Minimizes errors and maintains high consistency",
+        "technician": "Minimizes errors and maintains high consistency through technical precision",
         "tireless": "Elite high-volume player who handles an exceptional share of team actions, operating at the highest activity levels",
         "workhorse": "High volume player who handles a large share of team actions",
         "stalwart": "High volume player who maintains low errors despite heavy workload, reliable at high activity levels",
@@ -478,7 +479,7 @@ export function classifyPlayerArchetype(features: Record<string, number>): Playe
     const primaryDesc: Record<string, string> = {
       "maverick": "High-risk player who makes significant errors (2.0+ total errors or very high in specific categories) but takes aggressive chances",
       "inconsistent": "Moderate error player (0.8-2.0 total errors) with variable performance and reliability",
-      "precise": "Low-error player who prioritizes consistency and efficiency over volume",
+      "technician": "Low-error player who prioritizes consistency and efficiency over volume through technical precision",
       "tireless": "Elite high-volume player who handles an exceptional share of team actions and touches, operating at the highest activity levels",
       "workhorse": "High-volume player who handles a large share of team actions and touches",
       "stalwart": "High-volume player who maintains low errors despite heavy workload, reliable and consistent at high activity levels",

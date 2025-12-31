@@ -178,7 +178,7 @@ function VectorGraph3D({
     const thresholds: Record<string, string> = {
       "maverick": "Total errors >2.0/set OR spiking errors >1.2/set + setting errors >0.4/set OR spiking errors >1.5/set OR setting errors >1.0/set",
       "inconsistent": "Total errors 1.2-2.0/set AND (multiple error types OR spiking errors >0.9/set OR setting errors >0.6/set)",
-      "precise": "Total errors <0.5/set AND spiking errors <0.3/set AND setting errors <0.2/set",
+      "technician": "Total errors <0.5/set AND spiking errors <0.3/set AND setting errors <0.2/set",
       "tireless": "Spike attempts >7.5/set OR ape attempts >3.2/set OR assists >10.5/set",
       "workhorse": "Spike attempts >5.0/set OR ape attempts >2.0/set OR assists >8.0/set (but not Tireless)",
       "stalwart": "High volume (spike attempts >5.0/set OR ape attempts >2.0/set OR assists >8.0/set) AND total errors <0.8/set AND spiking errors <0.5/set AND setting errors <0.3/set",
@@ -211,6 +211,7 @@ function VectorGraph3D({
   // State for clicked archetype popup
   const [clickedArchetype, setClickedArchetype] = useState<string | null>(null);
   const [popupPosition, setPopupPosition] = useState<{ left: number; top: number } | null>(null);
+  const [legendHidden, setLegendHidden] = useState<boolean>(false);
   const legendRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   
@@ -550,26 +551,46 @@ function VectorGraph3D({
 
       {/* Archetype Legend */}
       {archetypeCounts.length > 0 && (
-        <div className="archetype-legend" ref={legendRef}>
-          {archetypeCounts.map(({ archetype, count }) => (
-            <div
-              key={archetype.id}
-              ref={(el) => {
-                if (el) itemRefs.current.set(archetype.id, el);
-                else itemRefs.current.delete(archetype.id);
-              }}
-              className="archetype-legend-item"
-              onClick={() => setClickedArchetype(clickedArchetype === archetype.id ? null : archetype.id)}
-            >
-              <span
-                className="archetype-legend-color"
-                style={{ backgroundColor: archetype.color }}
-              />
-              <span className="archetype-legend-name">{archetype.name}</span>
-              <span className="archetype-legend-count">({count})</span>
+        <>
+          {!legendHidden && (
+            <div className="archetype-legend" ref={legendRef}>
+              <button
+                className="archetype-legend-toggle"
+                onClick={() => setLegendHidden(true)}
+                title="Hide legend"
+              >
+                ×
+              </button>
+              {archetypeCounts.map(({ archetype, count }) => (
+                <div
+                  key={archetype.id}
+                  ref={(el) => {
+                    if (el) itemRefs.current.set(archetype.id, el);
+                    else itemRefs.current.delete(archetype.id);
+                  }}
+                  className="archetype-legend-item"
+                  onClick={() => setClickedArchetype(clickedArchetype === archetype.id ? null : archetype.id)}
+                >
+                  <span
+                    className="archetype-legend-color"
+                    style={{ backgroundColor: archetype.color }}
+                  />
+                  <span className="archetype-legend-name">{archetype.name}</span>
+                  <span className="archetype-legend-count">({count})</span>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          )}
+          {legendHidden && (
+            <button
+              className="archetype-legend-show-button"
+              onClick={() => setLegendHidden(false)}
+              title="Show legend"
+            >
+              ⓘ
+            </button>
+          )}
+        </>
       )}
       {/* Popup rendered outside legend to escape overflow constraints */}
       {clickedArchetype && popupPosition && (() => {
