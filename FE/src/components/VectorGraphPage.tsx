@@ -552,44 +552,37 @@ function VectorGraph3D({
       {/* Archetype Legend */}
       {archetypeCounts.length > 0 && (
         <>
-          {!legendHidden && (
-            <div className="archetype-legend" ref={legendRef}>
-              <button
-                className="archetype-legend-toggle"
-                onClick={() => setLegendHidden(true)}
-                title="Hide legend"
-              >
-                ×
-              </button>
-              {archetypeCounts.map(({ archetype, count }) => (
-                <div
-                  key={archetype.id}
-                  ref={(el) => {
-                    if (el) itemRefs.current.set(archetype.id, el);
-                    else itemRefs.current.delete(archetype.id);
-                  }}
-                  className="archetype-legend-item"
-                  onClick={() => setClickedArchetype(clickedArchetype === archetype.id ? null : archetype.id)}
-                >
-                  <span
-                    className="archetype-legend-color"
-                    style={{ backgroundColor: archetype.color }}
-                  />
-                  <span className="archetype-legend-name">{archetype.name}</span>
-                  <span className="archetype-legend-count">({count})</span>
-                </div>
-              ))}
-            </div>
-          )}
-          {legendHidden && (
+          <div className={`archetype-legend ${legendHidden ? 'legend-hidden' : ''}`} ref={legendRef}>
             <button
-              className="archetype-legend-show-button"
-              onClick={() => setLegendHidden(false)}
-              title="Show legend"
+              className="archetype-legend-toggle"
+              onClick={() => setLegendHidden(!legendHidden)}
+              title={legendHidden ? "Show legend" : "Hide legend"}
             >
-              ⓘ
+              {legendHidden ? '>' : '<'}
             </button>
-          )}
+            {!legendHidden && (
+              <>
+                {archetypeCounts.map(({ archetype, count }) => (
+                  <div
+                    key={archetype.id}
+                    ref={(el) => {
+                      if (el) itemRefs.current.set(archetype.id, el);
+                      else itemRefs.current.delete(archetype.id);
+                    }}
+                    className="archetype-legend-item"
+                    onClick={() => setClickedArchetype(clickedArchetype === archetype.id ? null : archetype.id)}
+                  >
+                    <span
+                      className="archetype-legend-color"
+                      style={{ backgroundColor: archetype.color }}
+                    />
+                    <span className="archetype-legend-name">{archetype.name}</span>
+                    <span className="archetype-legend-count">({count})</span>
+                  </div>
+                ))}
+              </>
+            )}
+          </div>
         </>
       )}
       {/* Popup rendered outside legend to escape overflow constraints */}

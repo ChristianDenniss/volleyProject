@@ -269,7 +269,7 @@
   position: absolute;
   top: 1rem;
   left: 1rem;
-  z-index: 10;
+  z-index: 25; /* Much higher than legend (z-index: 10) so search results appear above */
   width: 224px; /* Reduced from 280px by ~20% */
 }
 
@@ -296,15 +296,18 @@
 }
 
 .player-search-results {
-  margin-top: 0.5rem;
+  margin-top: 0.5rem; /* Space between input and dropdown */
   background-color: #1a1a1a; /* Match graph background */
   border: 1px solid #3a3a3a; /* Lighter version of dark gray */
   border-radius: 6px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
   max-height: 200px;
   overflow-y: auto;
-  z-index: 20; /* Higher than legend (z-index: 10) to appear above it */
-  position: relative;
+  z-index: 25; /* Much higher than legend (z-index: 10) to ensure it appears above */
+  position: absolute; /* Absolute positioning for proper stacking above legend */
+  width: 100%; /* Match parent width */
+  top: calc(100% + 0.5rem); /* Position below the input with spacing */
+  left: 0;
 }
 
 .player-search-result-item {
@@ -345,7 +348,6 @@
   overflow-y: auto;
   overflow-x: visible; /* Allow popups to extend beyond legend */
   padding: 0.75rem;
-  padding-top: 2.5rem; /* Space for close button */
   padding-bottom: 1rem; /* Extra bottom padding */
   background-color: #1a1a1a; /* Match graph background */
   border: 1px solid #3a3a3a; /* Lighter version of dark gray */
@@ -354,57 +356,39 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  transition: transform 0.3s ease-in-out;
+  transform: translateX(0); /* Default: visible */
+}
+
+.archetype-legend.legend-hidden {
+  transform: translateX(calc(-100% + 40px)); /* Slide left, leaving only arrow button visible */
 }
 
 .archetype-legend-toggle {
   position: absolute;
   top: 0.75rem;
   right: 0.75rem;
-  background: transparent;
-  border: none;
-  font-size: 1.5rem;
-  color: #8a8a8a;
+  background: #2a2a2a;
+  border: 1px solid #3a3a3a;
+  border-radius: 4px;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #e2e8f0;
   cursor: pointer;
-  padding: 0;
-  width: 24px;
-  height: 24px;
+  padding: 0.25rem 0.5rem;
+  min-width: 32px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
   line-height: 1;
-  transition: color 0.2s ease;
+  transition: all 0.2s ease;
   z-index: 11;
 }
 
 .archetype-legend-toggle:hover {
-  color: #e2e8f0;
-}
-
-.archetype-legend-show-button {
-  position: absolute;
-  top: 4rem; /* Same position as legend top */
-  left: 1rem;
-  background: #1a1a1a;
-  border: 1px solid #3a3a3a;
-  border-radius: 6px;
-  font-size: 1.5rem;
-  color: #8a8a8a;
-  cursor: pointer;
-  padding: 0.5rem 0.75rem;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  transition: all 0.2s ease;
-  z-index: 10;
-}
-
-.archetype-legend-show-button:hover {
-  background: #2a2a2a;
-  color: #e2e8f0;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  background: #3a3a3a;
+  color: #ffffff;
 }
 
 /* Custom scrollbar styling */
