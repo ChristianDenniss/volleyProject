@@ -200,6 +200,8 @@ function VectorGraph3D({
       "gunslinger": "Total attempts >9.0/set AND total kills >5.0/set AND total errors >2.0/set",
       "anchor": "Low attempts (spike <2.0/set, ape <0.5/set) AND low errors (spiking <0.3/set, setting <0.2/set, serving <0.2/set)",
       "maverick-playmaker": "High errors (Maverick) AND assists >6.0/set (Playmaker)",
+      "playmaking-striker": "Assists >6.0/set (Playmaker) AND (kills >2.5 spike/set OR >1.0 ape/set) AND (attempts >4.0 spike/set OR >1.5 ape/set) (Striker)",
+      "playmaking-piercer": "Assists >6.0/set (Playmaker) AND (kills >3.0 spike/set OR >1.5 ape/set) AND kill rate >55% AND total kills >3.0/set (Piercer)",
       "playmaking-intimidator": "Assists >6.0/set (Playmaker) AND blocks >1.0/set OR block follows >1.5/set (Intimidator)",
       "intimidating-playmaker": "Blocks >1.0/set OR block follows >1.5/set (Intimidator) AND assists >6.0/set (Playmaker)"
     };

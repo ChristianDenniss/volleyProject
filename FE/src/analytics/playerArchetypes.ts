@@ -308,32 +308,78 @@ export function classifyPlayerArchetype(features: Record<string, number>): Playe
   // Find matching primary trait
   const primaryTrait = PRIMARY_TRAITS.find(trait => trait.condition(features));
   
-  // Find matching secondary trait - prioritize offensive traits for high-volume players
-  // This ensures Workhorse players who are offensive get Striker instead of Guardian
+  // Find matching secondary trait - prioritize based on player role and primary trait
   let secondaryTrait = SECONDARY_TRAITS.find(trait => trait.condition(features));
   
-  // If player qualifies for multiple secondary traits, prioritize based on primary trait
+  // If player qualifies for multiple secondary traits, prioritize based on primary trait and role
   if (primaryTrait && secondaryTrait) {
     const allMatchingTraits = SECONDARY_TRAITS.filter(trait => trait.condition(features));
     
-    // For Workhorse/Tireless players, prioritize offensive traits (Striker, Piercer) over defensive (Guardian)
+    // For Workhorse/Tireless players, prioritize based on role
     if ((primaryTrait.id === "workhorse" || primaryTrait.id === "tireless") && allMatchingTraits.length > 1) {
-      const offensiveTraits = allMatchingTraits.filter(t => 
-        t.id === "striker" || t.id === "piercer" || t.id === "finisher"
-      );
-      if (offensiveTraits.length > 0) {
-        // Prioritize Piercer > Striker > Finisher
-        secondaryTrait = offensiveTraits.find(t => t.id === "piercer") || 
-                        offensiveTraits.find(t => t.id === "striker") || 
-                        offensiveTraits[0];
+      const isPlaymaker = features.assistsPerSet > 6.0;
+      
+      // If player is a setter (high assists), prioritize Playmaker
+      if (isPlaymaker) {
+        const playmakerTrait = allMatchingTraits.find(t => t.id === "playmaker");
+        if (playmakerTrait) {
+          secondaryTrait = playmakerTrait;
+        }
+      } else {
+        // If not a setter, prioritize offensive traits (Striker, Piercer) over defensive (Guardian)
+        const offensiveTraits = allMatchingTraits.filter(t => 
+          t.id === "striker" || t.id === "piercer" || t.id === "finisher"
+        );
+        if (offensiveTraits.length > 0) {
+          // Prioritize Piercer > Striker > Finisher
+          secondaryTrait = offensiveTraits.find(t => t.id === "piercer") || 
+                          offensiveTraits.find(t => t.id === "striker") || 
+                          offensiveTraits[0];
+        }
       }
     }
   }
   
-  // Special combinations: Check for dual-secondary traits first (playmaker + intimidator)
+  // Special combinations: Check for dual-secondary traits first
   const isPlaymaker = features.assistsPerSet > 6.0;
   const isIntimidator = (features.blocksPerSet > 1.0 || features.blockFollowsPerSet > 1.5);
+  const isStriker = (features.spikeKillsPerSet > 2.5 || features.apeKillsPerSet > 1.0) && 
+                    (features.spikeAttemptsPerSet > 4.0 || features.apeAttemptsPerSet > 1.5);
+  const isPiercer = (() => {
+    const totalAttempts = features.spikeAttemptsPerSet + features.apeAttemptsPerSet;
+    const totalKills = features.spikeKillsPerSet + features.apeKillsPerSet;
+    if (totalAttempts < 3.0) return false;
+    const killRate = totalKills / totalAttempts;
+    return (features.spikeKillsPerSet > 3.0 || features.apeKillsPerSet > 1.5) &&
+           killRate > 0.55 && totalKills > 3.0;
+  })();
   
+  // Playmaker + Offensive traits (combine with primary trait if present)
+  if (isPlaymaker && (isStriker || isPiercer)) {
+    const primaryPrefix = primaryTrait ? `${primaryTrait.name} ` : "";
+    
+    if (isPiercer) {
+      return {
+        id: primaryTrait ? `${primaryTrait.id}-playmaking-piercer` : "playmaking-piercer",
+        name: `${primaryPrefix}Playmaking Piercer`,
+        color: "#FF8787",
+        description: primaryTrait 
+          ? `${primaryTrait.name.toLowerCase()} elite setter (6+ assists/set) who also excels as an efficient offensive threat with high kills and superior kill rate (55%+), orchestrating both setting and scoring`
+          : "Elite setter (6+ assists/set) who also excels as an efficient offensive threat with high kills and superior kill rate (55%+), orchestrating both setting and scoring"
+      };
+    } else if (isStriker) {
+      return {
+        id: primaryTrait ? `${primaryTrait.id}-playmaking-striker` : "playmaking-striker",
+        name: `${primaryPrefix}Playmaking Striker`,
+        color: "#FF6B6B",
+        description: primaryTrait
+          ? `${primaryTrait.name.toLowerCase()} elite setter (6+ assists/set) who also serves as a primary offensive threat with high kill and attempt rates, orchestrating both setting and attacking`
+          : "Elite setter (6+ assists/set) who also serves as a primary offensive threat with high kill and attempt rates, orchestrating both setting and attacking"
+      };
+    }
+  }
+  
+  // Playmaker + Intimidator
   if (isPlaymaker && isIntimidator) {
     // Determine which is more dominant
     if (features.assistsPerSet > features.blocksPerSet * 3) {
