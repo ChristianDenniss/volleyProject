@@ -368,31 +368,28 @@
   position: absolute;
   top: 4rem; /* Same as legend top */
   right: calc(1rem + 224px + 0.5rem); /* Right edge of legend + spacing */
-  background: rgba(42, 42, 42, 0.6); /* Muted, semi-transparent */
-  border: 1px solid rgba(58, 58, 58, 0.5);
-  border-radius: 4px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: rgba(226, 232, 240, 0.5); /* Muted color */
+  background: transparent; /* No background box */
+  border: none; /* No border */
+  border-radius: 0;
+  font-size: 1.1rem; /* Larger text */
+  font-weight: 600;
+  color: rgba(226, 232, 240, 0.5); /* Muted color but visible */
   cursor: pointer;
-  padding: 0.15rem 0.35rem;
-  min-width: 22px;
-  height: 20px;
+  padding: 0.25rem 0.5rem;
+  min-width: auto;
+  height: auto;
   display: flex;
   align-items: center;
   justify-content: center;
   line-height: 1;
   transition: all 0.2s ease;
-  z-index: 9; /* Below popups (10000) but above legend (10) */
+  z-index: 15; /* Higher z-index to ensure visibility */
   opacity: 0.6; /* Subtle by default */
 }
 
 .archetype-legend-toggle:hover {
-  background: rgba(58, 58, 58, 0.9);
-  color: rgba(226, 232, 240, 0.95);
-  border-color: rgba(58, 58, 58, 0.8);
+  color: rgba(226, 232, 240, 1); /* Fully visible on hover */
   opacity: 1; /* Fully visible on hover */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
 /* Custom scrollbar styling */

@@ -68,8 +68,8 @@ const PRIMARY_TRAITS: PrimaryTrait[] = [
     id: "tireless",
     name: "Tireless",
     condition: (f) => {
-      // Elite volume - top tier high-volume players (more restrictive for better split)
-      return (f.spikeAttemptsPerSet > 7.5 || f.apeAttemptsPerSet > 3.2 || f.assistsPerSet > 10.5);
+      // Elite volume - top tier high-volume players (very restrictive)
+      return (f.spikeAttemptsPerSet > 8.0 || f.apeAttemptsPerSet > 3.5 || f.assistsPerSet > 11.0);
     }
   },
   {
@@ -77,7 +77,7 @@ const PRIMARY_TRAITS: PrimaryTrait[] = [
     name: "Workhorse",
     condition: (f) => {
       // High volume but not elite - exclude those who qualify for Tireless
-      const isTireless = (f.spikeAttemptsPerSet > 7.5 || f.apeAttemptsPerSet > 3.2 || f.assistsPerSet > 10.5);
+      const isTireless = (f.spikeAttemptsPerSet > 8.0 || f.apeAttemptsPerSet > 3.5 || f.assistsPerSet > 11.0);
       return !isTireless && (f.spikeAttemptsPerSet > 5.0 || f.apeAttemptsPerSet > 2.0 || f.assistsPerSet > 8.0);
     }
   },
