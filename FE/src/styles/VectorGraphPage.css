@@ -348,6 +348,7 @@
   overflow-y: auto;
   overflow-x: visible; /* Allow popups to extend beyond legend */
   padding: 0.75rem;
+  padding-top: 2.75rem; /* Space for toggle button at top */
   padding-bottom: 1rem; /* Extra bottom padding */
   background-color: #1a1a1a; /* Match graph background */
   border: 1px solid #3a3a3a; /* Lighter version of dark gray */
@@ -371,13 +372,13 @@
   background: #2a2a2a;
   border: 1px solid #3a3a3a;
   border-radius: 4px;
-  font-size: 1.25rem;
+  font-size: 1rem;
   font-weight: 600;
   color: #e2e8f0;
   cursor: pointer;
-  padding: 0.25rem 0.5rem;
-  min-width: 32px;
-  height: 28px;
+  padding: 0.2rem 0.4rem;
+  min-width: 26px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;

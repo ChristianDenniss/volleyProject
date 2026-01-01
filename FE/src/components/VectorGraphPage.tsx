@@ -178,7 +178,7 @@ function VectorGraph3D({
     const thresholds: Record<string, string> = {
       "maverick": "Total errors >2.0/set OR spiking errors >1.2/set + setting errors >0.4/set OR spiking errors >1.5/set OR setting errors >1.0/set",
       "inconsistent": "Total errors 1.2-2.0/set AND (multiple error types OR spiking errors >0.9/set OR setting errors >0.6/set)",
-      "technician": "Total errors <0.5/set AND spiking errors <0.3/set AND setting errors <0.2/set",
+      "precise": "Total errors <0.5/set AND spiking errors <0.3/set AND setting errors <0.2/set",
       "tireless": "Spike attempts >7.5/set OR ape attempts >3.2/set OR assists >10.5/set",
       "workhorse": "Spike attempts >5.0/set OR ape attempts >2.0/set OR assists >8.0/set (but not Tireless)",
       "stalwart": "High volume (spike attempts >5.0/set OR ape attempts >2.0/set OR assists >8.0/set) AND total errors <0.8/set AND spiking errors <0.5/set AND setting errors <0.3/set",
@@ -199,6 +199,7 @@ function VectorGraph3D({
       "sniper": "Kill rate >55% AND kills >2.5/set AND spiking errors <0.8/set AND setting errors <0.3/set",
       "gunslinger": "Total attempts >9.0/set AND total kills >5.0/set AND total errors >2.0/set",
       "anchor": "Low attempts (spike <2.0/set, ape <0.5/set) AND low errors (spiking <0.3/set, setting <0.2/set, serving <0.2/set)",
+      "technician": "Total errors <0.4/set AND spiking errors <0.25/set AND setting errors <0.15/set AND attempts ≥3.0/set AND kill rate >50% AND kills ≥2.0/set",
       "maverick-playmaker": "High errors (Maverick) AND assists >6.0/set (Playmaker)",
       "playmaking-striker": "Assists >6.0/set (Playmaker) AND (kills >2.5 spike/set OR >1.0 ape/set) AND (attempts >4.0 spike/set OR >1.5 ape/set) (Striker)",
       "playmaking-piercer": "Assists >6.0/set (Playmaker) AND (kills >3.0 spike/set OR >1.5 ape/set) AND kill rate >55% AND total kills >3.0/set (Piercer)",

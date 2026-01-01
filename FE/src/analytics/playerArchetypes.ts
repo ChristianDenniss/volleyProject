@@ -47,7 +47,7 @@ const PRIMARY_TRAITS: PrimaryTrait[] = [
     name: "Inconsistent",
     condition: (f) => {
       const totalErrors = f.spikingErrorsPerSet + f.settingErrorsPerSet + f.servingErrorsPerSet + f.miscErrorsPerSet;
-      // Moderate errors - between Technician and Maverick, but more restrictive
+      // Moderate errors - between Precise and Maverick, but more restrictive
       // Require at least 1.2 total errors and multiple error types OR one significant error category
       return totalErrors > 1.2 && totalErrors <= 2.0 && 
              ((f.spikingErrorsPerSet > 0.6 && f.settingErrorsPerSet > 0.3) || // Multiple error types
@@ -56,11 +56,11 @@ const PRIMARY_TRAITS: PrimaryTrait[] = [
     }
   },
   {
-    id: "technician",
-    name: "Technician",
+    id: "precise",
+    name: "Precise",
     condition: (f) => {
       const totalErrors = f.spikingErrorsPerSet + f.settingErrorsPerSet + f.servingErrorsPerSet + f.miscErrorsPerSet;
-      // Very low errors across all categories - technical precision
+      // Very low errors across all categories
       return totalErrors < 0.5 && f.spikingErrorsPerSet < 0.3 && f.settingErrorsPerSet < 0.2;
     }
   },
@@ -282,6 +282,26 @@ const STANDALONE_ARCHETYPES: StandaloneArchetype[] = [
     condition: (f) => 
       (f.spikeAttemptsPerSet < 2.0 && f.apeAttemptsPerSet < 0.5) && 
       (f.spikingErrorsPerSet < 0.3 && f.settingErrorsPerSet < 0.2 && f.servingErrorsPerSet < 0.2)
+  },
+  {
+    id: "technician",
+    name: "Technician",
+    color: "#64B5F6",
+    description: "Technical precision specialist who excels through flawless execution, maintaining exceptional efficiency with minimal errors across all aspects of play",
+    condition: (f) => {
+      const totalErrors = f.spikingErrorsPerSet + f.settingErrorsPerSet + f.servingErrorsPerSet + f.miscErrorsPerSet;
+      const totalAttempts = f.spikeAttemptsPerSet + f.apeAttemptsPerSet;
+      const totalKills = f.spikeKillsPerSet + f.apeKillsPerSet;
+      const killRate = totalAttempts > 0 ? totalKills / totalAttempts : 0;
+      
+      // Technical precision: very low errors, good efficiency, meaningful volume
+      return totalErrors < 0.4 && // Extremely low errors
+             f.spikingErrorsPerSet < 0.25 && // Minimal spiking errors
+             f.settingErrorsPerSet < 0.15 && // Minimal setting errors
+             totalAttempts >= 3.0 && // Meaningful volume
+             killRate > 0.50 && // Good efficiency (50%+)
+             totalKills >= 2.0; // Meaningful impact
+    }
   }
 ];
 
@@ -419,7 +439,7 @@ export function classifyPlayerArchetype(features: Record<string, number>): Playe
       const primaryDesc: Record<string, string> = {
         "maverick": "Takes risks and makes significant errors (2.0+ total errors or very high in specific categories) in pursuit of aggressive plays",
         "inconsistent": "Moderate error player (0.8-2.0 total errors) with variable performance",
-        "technician": "Minimizes errors and maintains high consistency through technical precision",
+        "precise": "Minimizes errors and maintains high consistency",
         "tireless": "Elite high-volume player who handles an exceptional share of team actions, operating at the highest activity levels",
         "workhorse": "High volume player who handles a large share of team actions",
         "stalwart": "High volume player who maintains low errors despite heavy workload, reliable at high activity levels",
@@ -479,7 +499,7 @@ export function classifyPlayerArchetype(features: Record<string, number>): Playe
     const primaryDesc: Record<string, string> = {
       "maverick": "High-risk player who makes significant errors (2.0+ total errors or very high in specific categories) but takes aggressive chances",
       "inconsistent": "Moderate error player (0.8-2.0 total errors) with variable performance and reliability",
-      "technician": "Low-error player who prioritizes consistency and efficiency over volume through technical precision",
+      "precise": "Low-error player who prioritizes consistency and efficiency over volume",
       "tireless": "Elite high-volume player who handles an exceptional share of team actions and touches, operating at the highest activity levels",
       "workhorse": "High-volume player who handles a large share of team actions and touches",
       "stalwart": "High-volume player who maintains low errors despite heavy workload, reliable and consistent at high activity levels",
