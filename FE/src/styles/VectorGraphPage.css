@@ -367,7 +367,7 @@
 .archetype-legend-toggle {
   position: absolute;
   top: 4rem; /* Same as legend top */
-  right: calc(1rem + 224px + 0.5rem); /* Right edge of legend + spacing */
+  left: calc(1rem + 224px + 0.5rem); /* Right side of legend when visible */
   background: transparent; /* No background box */
   border: none; /* No border */
   border-radius: 0;
@@ -385,6 +385,11 @@
   transition: all 0.2s ease;
   z-index: 15; /* Higher z-index to ensure visibility */
   opacity: 0.6; /* Subtle by default */
+}
+
+/* When legend is hidden, move button to left edge */
+.archetype-legend-toggle.legend-hidden-toggle {
+  left: 0.75rem !important; /* Left edge with gap */
 }
 
 .archetype-legend-toggle:hover {

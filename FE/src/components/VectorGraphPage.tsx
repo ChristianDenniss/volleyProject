@@ -554,13 +554,6 @@ function VectorGraph3D({
       {archetypeCounts.length > 0 && (
         <>
           <div className={`archetype-legend ${legendHidden ? 'legend-hidden' : ''}`} ref={legendRef}>
-            <button
-              className="archetype-legend-toggle"
-              onClick={() => setLegendHidden(!legendHidden)}
-              title={legendHidden ? "Show legend" : "Hide legend"}
-            >
-              {legendHidden ? '>' : '<'}
-            </button>
             {!legendHidden && (
               <>
                 {archetypeCounts.map(({ archetype, count }) => (
@@ -584,6 +577,13 @@ function VectorGraph3D({
               </>
             )}
           </div>
+          <button
+            className={`archetype-legend-toggle ${legendHidden ? 'legend-hidden-toggle' : ''}`}
+            onClick={() => setLegendHidden(!legendHidden)}
+            title={legendHidden ? "Show legend" : "Hide legend"}
+          >
+            {legendHidden ? '>' : '<'}
+          </button>
         </>
       )}
       {/* Popup rendered outside legend to escape overflow constraints */}
