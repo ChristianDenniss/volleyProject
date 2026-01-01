@@ -348,7 +348,6 @@
   overflow-y: auto;
   overflow-x: visible; /* Allow popups to extend beyond legend */
   padding: 0.75rem;
-  padding-top: 2.75rem; /* Space for toggle button at top */
   padding-bottom: 1rem; /* Extra bottom padding */
   background-color: #1a1a1a; /* Match graph background */
   border: 1px solid #3a3a3a; /* Lighter version of dark gray */
@@ -367,29 +366,33 @@
 
 .archetype-legend-toggle {
   position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
-  background: #2a2a2a;
-  border: 1px solid #3a3a3a;
+  top: 4rem; /* Same as legend top */
+  right: calc(1rem + 224px + 0.5rem); /* Right edge of legend + spacing */
+  background: rgba(42, 42, 42, 0.6); /* Muted, semi-transparent */
+  border: 1px solid rgba(58, 58, 58, 0.5);
   border-radius: 4px;
-  font-size: 1rem;
-  font-weight: 600;
-  color: #e2e8f0;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: rgba(226, 232, 240, 0.5); /* Muted color */
   cursor: pointer;
-  padding: 0.2rem 0.4rem;
-  min-width: 26px;
-  height: 24px;
+  padding: 0.15rem 0.35rem;
+  min-width: 22px;
+  height: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
   line-height: 1;
   transition: all 0.2s ease;
-  z-index: 11;
+  z-index: 9; /* Below popups (10000) but above legend (10) */
+  opacity: 0.6; /* Subtle by default */
 }
 
 .archetype-legend-toggle:hover {
-  background: #3a3a3a;
-  color: #ffffff;
+  background: rgba(58, 58, 58, 0.9);
+  color: rgba(226, 232, 240, 0.95);
+  border-color: rgba(58, 58, 58, 0.8);
+  opacity: 1; /* Fully visible on hover */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
 /* Custom scrollbar styling */
