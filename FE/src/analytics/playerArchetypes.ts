@@ -60,16 +60,16 @@ const PRIMARY_TRAITS: PrimaryTrait[] = [
     name: "Precise",
     condition: (f) => {
       const totalErrors = f.spikingErrorsPerSet + f.settingErrorsPerSet + f.servingErrorsPerSet + f.miscErrorsPerSet;
-      // Very low errors across all categories - more restrictive
-      return totalErrors < 0.35 && f.spikingErrorsPerSet < 0.2 && f.settingErrorsPerSet < 0.15 && f.servingErrorsPerSet < 0.1;
+      // Very low errors across all categories - slightly relaxed to make it more common
+      return totalErrors < 0.6 && f.spikingErrorsPerSet < 0.35 && f.settingErrorsPerSet < 0.25;
     }
   },
   {
     id: "tireless",
     name: "Tireless",
     condition: (f) => {
-      // Elite volume - top tier high-volume players (very restrictive)
-      return (f.spikeAttemptsPerSet > 8.0 || f.apeAttemptsPerSet > 3.5 || f.assistsPerSet > 11.0);
+      // Elite volume - top tier high-volume players (very restrictive to reduce overuse)
+      return (f.spikeAttemptsPerSet > 8.5 || f.apeAttemptsPerSet > 3.8 || f.assistsPerSet > 11.5);
     }
   },
   {
@@ -77,8 +77,9 @@ const PRIMARY_TRAITS: PrimaryTrait[] = [
     name: "Workhorse",
     condition: (f) => {
       // High volume but not elite - exclude those who qualify for Tireless
-      const isTireless = (f.spikeAttemptsPerSet > 8.0 || f.apeAttemptsPerSet > 3.5 || f.assistsPerSet > 11.0);
-      return !isTireless && (f.spikeAttemptsPerSet > 5.0 || f.apeAttemptsPerSet > 2.0 || f.assistsPerSet > 8.0);
+      // Lowered threshold slightly to make it more common
+      const isTireless = (f.spikeAttemptsPerSet > 8.5 || f.apeAttemptsPerSet > 3.8 || f.assistsPerSet > 11.5);
+      return !isTireless && (f.spikeAttemptsPerSet > 4.5 || f.apeAttemptsPerSet > 1.8 || f.assistsPerSet > 7.5);
     }
   },
   {
@@ -137,12 +138,12 @@ const SECONDARY_TRAITS: SecondaryTrait[] = [
     condition: (f) => {
       const totalAttempts = f.spikeAttemptsPerSet + f.apeAttemptsPerSet;
       const totalKills = f.spikeKillsPerSet + f.apeKillsPerSet;
-      if (totalAttempts < 3.0) return false; // Need meaningful volume
+      if (totalAttempts < 2.5) return false; // Lowered from 3.0
       const killRate = totalKills / totalAttempts;
-      // High kills with exceptional efficiency - rarer than Striker
-      return (f.spikeKillsPerSet > 3.0 || f.apeKillsPerSet > 1.5) &&
-             killRate > 0.55 && // Better than 55% kill rate (more restrictive)
-             totalKills > 3.0; // Higher kill totals required
+      // Relaxed slightly: still rare but should occur sometimes
+      return (f.spikeKillsPerSet > 2.5 || f.apeKillsPerSet > 1.2) && // Lowered from 3.0/1.5
+             killRate > 0.52 && // Lowered from 0.55
+             totalKills > 2.5; // Lowered from 3.0
     }
   },
   {
