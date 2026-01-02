@@ -60,8 +60,8 @@ const PRIMARY_TRAITS: PrimaryTrait[] = [
     name: "Precise",
     condition: (f) => {
       const totalErrors = f.spikingErrorsPerSet + f.settingErrorsPerSet + f.servingErrorsPerSet + f.miscErrorsPerSet;
-      // Very low errors across all categories
-      return totalErrors < 0.5 && f.spikingErrorsPerSet < 0.3 && f.settingErrorsPerSet < 0.2;
+      // Very low errors across all categories - more restrictive
+      return totalErrors < 0.35 && f.spikingErrorsPerSet < 0.2 && f.settingErrorsPerSet < 0.15 && f.servingErrorsPerSet < 0.1;
     }
   },
   {

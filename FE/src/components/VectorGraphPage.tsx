@@ -178,7 +178,7 @@ function VectorGraph3D({
     const thresholds: Record<string, string> = {
       "maverick": "Total errors >2.0/set OR spiking errors >1.2/set + setting errors >0.4/set OR spiking errors >1.5/set OR setting errors >1.0/set",
       "inconsistent": "Total errors 1.2-2.0/set AND (multiple error types OR spiking errors >0.9/set OR setting errors >0.6/set)",
-      "precise": "Total errors <0.5/set AND spiking errors <0.3/set AND setting errors <0.2/set",
+      "precise": "Total errors <0.35/set AND spiking errors <0.2/set AND setting errors <0.15/set AND serving errors <0.1/set",
       "tireless": "Spike attempts >8.0/set OR ape attempts >3.5/set OR assists >11.0/set",
       "workhorse": "Spike attempts >5.0/set OR ape attempts >2.0/set OR assists >8.0/set (but not Tireless)",
       "stalwart": "High volume (spike attempts >5.0/set OR ape attempts >2.0/set OR assists >8.0/set) AND total errors <0.8/set AND spiking errors <0.5/set AND setting errors <0.3/set",
