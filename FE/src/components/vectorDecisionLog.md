@@ -692,10 +692,66 @@ const vectorRows = useMemo(() => {
 - Search functionality should have visual priority when active
 - Better user experience when searching for players
 **Implementation:**
-- Increased search container z-index from 10 to 20
-- Added z-index: 20 to search results dropdown
+- Increased search container z-index from 10 to 25
+- Changed search results to absolute positioning with proper top calculation
 - Legend remains at z-index: 10
 - Ensures search results always appear on top
+**Status:** ✅ Implemented (v3.2)
+
+#### Decision: Sliding Legend Toggle with Arrow Buttons
+**Decision:** Replace ×/ⓘ buttons with < and > arrows that slide the legend horizontally, with button repositioning.
+**Rationale:**
+- × and ⓘ buttons were taking up space inside the legend
+- Sliding animation provides better visual feedback
+- Arrow buttons (< and >) are more intuitive for hide/show actions
+- Moving button outside legend prevents it from blocking content
+- Button on left edge when hidden makes it easy to find and restore legend
+**Implementation:**
+- Changed toggle buttons from ×/ⓘ to < and > arrows
+- Added CSS transform animation for smooth sliding (translateX)
+- Button positioned outside legend: right side when visible, left edge when hidden
+- Button styled as text-only (no background/border) for subtle appearance
+- Muted opacity (0.6) by default, fully visible on hover
+- Removed top padding from legend since button is outside
+**Status:** ✅ Implemented (v3.2)
+
+#### Decision: Prioritize Error-Based Traits Over Volume-Based Traits
+**Decision:** When a player qualifies for both error-based (Maverick, Inconsistent, Precise) and volume-based (Tireless, Workhorse) primary traits, prioritize error-based traits.
+**Rationale:**
+- Volume-based traits were dominating because they appear earlier in the array
+- Error-based traits provide more meaningful differentiation
+- Creates more diverse archetype combinations (e.g., "Inconsistent Striker" vs just "Tireless")
+- Better represents player characteristics beyond just volume
+**Implementation:**
+- Modified primary trait selection to check all matching traits first
+- Prioritize error-based traits: Maverick, Inconsistent, Precise, Opportunistic, Selective, Steady, Stalwart
+- Fall back to volume-based traits only if no error-based trait matches
+- This ensures combinations like "Inconsistent Striker", "Maverick Striker", "Workhorse Striker" appear more frequently
+**Status:** ✅ Implemented (v3.2)
+
+#### Decision: Make Tireless More Restrictive
+**Decision:** Increase Tireless thresholds to reduce overuse and create better distribution with Workhorse.
+**Rationale:**
+- Tireless was appearing too frequently, overshadowing other archetypes
+- Need better balance between Tireless (elite) and Workhorse (high volume)
+- More restrictive thresholds make Tireless truly elite
+**Implementation:**
+- Increased thresholds: spike attempts >8.0/set (from 7.5), ape attempts >3.5/set (from 3.2), assists >11.0/set (from 10.5)
+- Updated Workhorse exclusion check to match new Tireless thresholds
+- Updated threshold description in popup
+**Status:** ✅ Implemented (v3.2)
+
+#### Decision: Add "Technician" as Standalone Archetype
+**Decision:** Add "Technician" as a standalone archetype (not a prefix) for players with exceptional technical precision.
+**Rationale:**
+- Need a standalone archetype for technical precision specialists
+- Different from "Precise" prefix which can combine with other traits
+- Represents players who excel through flawless execution rather than volume
+**Implementation:**
+- Added to STANDALONE_ARCHETYPES array
+- Conditions: total errors <0.4/set, spiking errors <0.25/set, setting errors <0.15/set, attempts ≥3.0/set, kill rate >50%, kills ≥2.0/set
+- Distinct from "Sniper" (higher kill rate requirement) and "Anchor" (lower volume)
+- Appears as just "Technician" (not combined with other traits)
 **Status:** ✅ Implemented (v3.2)
 
 ---

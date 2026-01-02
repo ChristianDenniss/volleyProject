@@ -367,7 +367,7 @@
 .archetype-legend-toggle {
   position: absolute;
   top: 4rem; /* Same as legend top */
-  left: calc(1rem + 224px + 0.5rem); /* Right side of legend when visible */
+  left: calc(1rem + 224px + 0.75rem); /* Right side of legend + more spacing */
   background: transparent; /* No background box */
   border: none; /* No border */
   border-radius: 0;

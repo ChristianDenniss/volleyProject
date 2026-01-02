@@ -228,9 +228,18 @@ This document tracks what has been implemented in the Stats Vectorization & 3D G
 - **v3.2** - UI improvements and fixes
   - Fixed archetype legend popup visibility: changed to fixed positioning to escape container overflow constraints
   - Popup now renders outside legend container and calculates position using refs and getBoundingClientRect()
-  - Fixed search results dropdown z-index (20) to appear above legend (10) when visible
-  - Added hide/show toggle for archetype legend with × button to hide and ⓘ button to show
-  - Legend toggle styled to match dark theme and positioned consistently
+  - Fixed search results dropdown z-index (25) to appear above legend (10) when visible
+  - Changed search results to absolute positioning with proper top calculation
+  - Added hide/show toggle for archetype legend with sliding animation
+  - Toggle uses < and > arrows instead of × and ⓘ buttons
+  - Button positioned outside legend: on right side when visible, moves to left edge when hidden
+  - Button styled as text-only (no background/border) with muted opacity (0.6) that becomes fully visible on hover
+  - Removed top padding from legend since button is now outside
+  - Made Tireless thresholds more restrictive (8.0/3.5/11.0 instead of 7.5/3.2/10.5) to reduce overuse
+  - Added prioritization logic: error-based primary traits (Maverick, Inconsistent, Precise) now take priority over volume-based traits (Tireless, Workhorse) when player qualifies for both
+  - This creates more diverse combinations like "Inconsistent Striker", "Maverick Striker", "Workhorse Striker" instead of mostly "Tireless"
+  - Added "Technician" as standalone archetype (not a prefix) for players with exceptional technical precision
+  - Reverted "Precise" back to being a prefix (primary trait) - only renamed standalone version to "Technician"
 
 - **v2.3** - Fixed PCA component color coding and improved spacing
   - Fixed dynamic color coding for PCA feature weights (was showing all dark for PC1/PC2)
