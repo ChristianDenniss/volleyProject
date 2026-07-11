@@ -1,19 +1,19 @@
-/* General Team Details Styling */
+/* Single Team page — colors from src/styles/tokens.css */
+
 .team-details {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin: 40px auto;
     padding: 20px;
-    color: #333;
+    color: var(--color-text);
     text-transform: capitalize;
     max-width: 1600px;
     width: 90%;
     box-sizing: border-box;
-    min-height: 100vh; /* Prevent layout shift by setting minimum height */
-    contain: layout style paint; /* Improve performance */
-    content-visibility: auto; /* Optimize rendering */
+    min-height: 100vh;
+    contain: layout style paint;
+    content-visibility: auto;
 }
 
-/* Simple team title with inline logo */
 .team-title-container {
     display: flex;
     align-items: center;
@@ -32,7 +32,6 @@
     transform: scaleX(-1);
 }
 
-/* Responsive design for inline logo */
 @media (max-width: 768px) {
     .team-logo-inline {
         width: 60px;
@@ -40,133 +39,127 @@
     }
 }
 
-/* Centered and Stylized Team Name */
-.team-details h1 {
+.team-details h1,
+.team-title {
     text-align: center;
     font-size: 3rem;
     font-weight: 800;
-    color: #1a1a1a;
+    color: var(--color-brand-primary);
     margin-bottom: 30px;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.15);
-    min-height: 4rem; /* Reserve space for title */
+    min-height: 4rem;
 }
 
-/* Season placement and Games Info */
 .team-details p {
     font-size: 1.4rem;
     text-align: center;
     margin-bottom: 10px;
-    min-height: 2rem; /* Reserve space for info text */
+    min-height: 2rem;
+    color: var(--color-text-muted);
 }
 
-/* Section Title Styling */
 .players-list h2,
 .games-section h2,
 .team-totals h2 {
     font-size: 2rem;
     margin: 30px 0 15px;
-    color: #1e3d59;
-    border-bottom: 3px solid var(--color-accent-pale);
+    color: var(--color-brand-primary);
+    border-bottom: 3px solid var(--color-brand-primary);
     padding-bottom: 8px;
     letter-spacing: 1px;
-    min-height: 3rem; /* Reserve space for section titles */
+    min-height: 3rem;
 }
 
-/* Collapse Button */
 .toggle-button {
-    background-color: var(--color-accent-pale);
-    border: none;
+    background-color: var(--color-brand-primary);
+    color: var(--color-text-on-brand);
+    border: 1px solid var(--color-brand-primary);
     font-size: 1rem;
     padding: 10px 15px;
     margin-bottom: 20px;
     cursor: pointer;
-    border-radius: 6px;
-    transition: background-color 0.3s ease;
-    min-height: 2.5rem; /* Reserve space for buttons */
-    min-width: 120px; /* Reserve minimum width */
+    border-radius: var(--radius-sm);
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+    min-height: 2.5rem;
+    min-width: 120px;
 }
 
 .toggle-button:hover {
-    background-color: #c1e0ff;
+    background-color: var(--color-brand-primary-hover);
+    border-color: var(--color-brand-primary-hover);
 }
 
-/* Games Section */
 .games-section {
     margin-top: 40px;
-    min-height: 200px; /* Reserve space for games section */
+    min-height: 200px;
 }
 
-/* Game Cards */
 .games-scroll-container {
     display: flex;
     overflow-x: auto;
     gap: 16px;
     padding: 12px 0;
-    min-height: 300px; /* Reserve space for game cards */
-    contain: layout style; /* Optimize rendering */
+    min-height: 300px;
+    contain: layout style;
 }
 
 .game-card-single-team {
     min-width: 270px;
     max-width: 270px;
     min-height: 250px;
-    background-color: var(--color-accent-pale);
+    background-color: var(--color-bg);
+    border: 1px solid var(--color-accent-border);
     padding: 14px 12px;
-    border-radius: 16px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
-    transition: transform 0.2s ease-in-out;
+    transition: transform 0.2s ease-in-out, border-color 0.2s ease, box-shadow 0.2s ease;
     text-align: left;
     text-decoration: none;
     color: inherit;
     box-sizing: border-box;
     justify-content: flex-start;
-    will-change: transform; /* Optimize animations */
-    transform: translateZ(0); /* Force hardware acceleration */
-    backface-visibility: hidden; /* Prevent flickering */
-    contain: layout style; /* Optimize card rendering */
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    contain: layout style;
 }
 
 .game-card-single-team:hover {
-    transform: scale(1.04);
+    transform: translateY(-3px);
+    border-color: var(--color-brand-primary);
+    box-shadow: var(--shadow-md);
 }
 
 .game-card-single-team p {
     margin: 6px 0;
     font-size: 18px;
-    color: #000;
+    color: var(--color-text);
     text-align: left;
     white-space: normal;
     word-wrap: break-word;
     display: block;
     width: 100%;
-    min-height: 1.5rem; /* Reserve space for text */
+    min-height: 1.5rem;
 }
 
 .game-card-single-team p:first-child {
     font-size: 1.1em;
     margin-bottom: 30px;
-    color: #1e3d59;
-    min-height: 2rem; /* Reserve space for title */
+    color: var(--color-brand-primary);
+    min-height: 2rem;
 }
 
-/* Toggle Button overrides */
 .team-totals .toggle-button {
     margin: 10px 0 20px 0;
     padding: 10px 15px;
     font-size: 1rem;
 }
 
-.team-totals .toggle-button:hover {
-    background-color: #c1e0ff;
-}
-
-/* Team Totals Section */
 .team-totals {
     margin-top: 40px;
-    min-height: 200px; /* Reserve space for totals section */
+    min-height: 200px;
 }
 
 .team-totals .totals-columns {
@@ -176,19 +169,20 @@
     flex-wrap: wrap;
     width: 100%;
     justify-content: flex-start;
-    min-height: 200px; /* Reserve space for totals content */
+    min-height: 200px;
 }
 
 .team-totals .totals-column {
     flex: 1;
     min-width: 45%;
-    background-color: #f7f7f7;
+    background-color: var(--color-bg);
+    border: 1px solid var(--color-accent-border);
     padding: 25px;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
     margin-bottom: 1rem;
     box-sizing: border-box;
-    min-height: 150px; /* Reserve space for column content */
+    min-height: 150px;
 }
 
 .team-totals .totals-column .totals-item {
@@ -196,8 +190,9 @@
     justify-content: space-between;
     align-items: center;
     padding: 12px 0;
-    border-bottom: 1px dashed #a8c9e3;
-    min-height: 2rem; /* Reserve space for items */
+    border-bottom: 1px dashed var(--color-border);
+    min-height: 2rem;
+    color: var(--color-text);
 }
 
 .team-totals .totals-column .totals-item:last-child {
@@ -207,7 +202,7 @@
 .team-totals .totals-column .totals-item strong {
     font-weight: bold;
     font-size: 1.2rem;
-    color: #333;
+    color: var(--color-text);
     margin-right: 1rem;
     white-space: nowrap;
 }
@@ -215,53 +210,52 @@
 .team-totals .totals-column .totals-item .stat-value {
     font-weight: bold;
     font-size: 1.5rem;
-    color: #1e3d59;
+    color: var(--color-brand-primary);
     text-align: right;
     margin-left: auto;
     padding-left: 10px;
 }
 
-/* No Data Available Message */
 .team-totals .no-data {
     font-size: 1.2rem;
-    color: #777;
+    color: var(--color-text-muted);
     text-align: center;
     margin-top: 20px;
     width: 100%;
 }
 
-/* ── Accordion: full-box clickable & flush expansion ── */
-
-/* Wrap each player in a "card" */
 .players-list li {
     list-style: none;
     margin: 0 0 20px;
-    min-height: 40px; /* Reserve space for player items */
+    min-height: 40px;
 }
 
-/* Detail wrapper styled as the card container */
 .players-list li details {
-    background-color: #f7f7f7;
-    border-left: 6px solid var(--color-accent-pale);
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    background-color: var(--color-bg);
+    border: 1px solid var(--color-accent-border);
+    border-left: 6px solid var(--color-brand-primary);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
     overflow: hidden;
-    min-height: 40px; /* Reserve minimum height */
-    contain: layout style; /* Optimize rendering */
+    min-height: 40px;
+    contain: layout style;
 }
 
-/* Summary header: fill the box, make clickable */
 .team-player-summary {
-    all: unset;            /* reset default */
+    all: unset;
     display: flex;
     align-items: center;
     cursor: pointer;
     padding: 15px 25px;
     font-size: 1.1rem;
-    min-height: 40px; /* Reserve space for summary */
+    color: var(--color-text);
+    min-height: 40px;
 }
 
-/* Custom arrow: hide native, inject our own */
+.team-player-summary strong {
+    color: var(--color-brand-primary);
+}
+
 .players-list li details > summary::-webkit-details-marker,
 .players-list li details > summary::marker {
     display: none;
@@ -270,73 +264,82 @@
 .players-list li details > summary::before {
     content: '▶';
     margin-right: 2rem;
+    color: var(--color-brand-primary);
     transition: transform 0.2s ease;
 }
 
-/* Arrow flips on open */
 .players-list li details[open] > summary::before {
     content: '▼';
 }
 
-/* Stats panel: full width, flush to card edges */
 .players-list li details .player-stats {
-    background-color: var(--color-accent-pale);
+    background-color: var(--color-bg-light);
     padding: 15px;
-    border-bottom-left-radius: 8px;
-    border-bottom-right-radius: 8px;
-    margin: 0; 
+    border-top: 1px solid var(--color-accent-border);
+    border-bottom-left-radius: var(--radius-md);
+    border-bottom-right-radius: var(--radius-md);
+    margin: 0;
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    min-height: 200px; /* Reserve space for stats */
+    min-height: 200px;
 }
 
-/* Stat Rows: fixed 3-column grid, full-width dashed border */
 .stat-row {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     column-gap: 2rem;
     align-items: center;
-    border-bottom: 1px dashed #a8c9e3;
+    border-bottom: 1px dashed var(--color-border);
     padding: 6px 0;
     width: 100%;
-    min-height: 2rem; /* Reserve space for stat rows */
+    min-height: 2rem;
 }
 
-/* Remove border on last row */
 .stat-row:last-child {
     border-bottom: none;
 }
 
-/* Label/value pair stretched to fill each grid cell */
 .stat-item {
     display: flex;
     justify-content: space-between;
     width: 100%;
-    min-height: 1.5rem; /* Reserve space for items */
+    min-height: 1.5rem;
 }
 
 .stat-item span {
     font-size: 1.2rem;
-    color: #333;
+    color: var(--color-text);
 }
 
-/* Loading state to prevent layout shift */
+.stat-item span:last-child {
+    font-weight: 700;
+    color: var(--color-brand-primary);
+}
+
 .team-details.loading {
     opacity: 0.8;
     pointer-events: none;
 }
 
-/* Skeleton loader styles */
 .team-skeleton {
     margin-bottom: 40px;
 }
 
-.skeleton-title {
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+.skeleton-title,
+.skeleton-info,
+.skeleton-section-title,
+.skeleton-button,
+.skeleton-player-item,
+.skeleton-game-card,
+.skeleton-totals {
+    background: var(--skeleton-shimmer);
     background-size: 200% 100%;
-    animation: loading 1.5s infinite;
-    border-radius: 8px;
+    animation: single-team-loading 1.5s infinite;
+}
+
+.skeleton-title {
+    border-radius: var(--radius-md);
     height: 4rem;
     margin-bottom: 20px;
     width: 60%;
@@ -345,10 +348,7 @@
 }
 
 .skeleton-info {
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-    background-size: 200% 100%;
-    animation: loading 1.5s infinite;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     height: 2rem;
     margin-bottom: 10px;
     width: 40%;
@@ -357,20 +357,14 @@
 }
 
 .skeleton-section-title {
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-    background-size: 200% 100%;
-    animation: loading 1.5s infinite;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     height: 3rem;
     margin-bottom: 15px;
     width: 30%;
 }
 
 .skeleton-button {
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-    background-size: 200% 100%;
-    animation: loading 1.5s infinite;
-    border-radius: 6px;
+    border-radius: var(--radius-sm);
     height: 2.5rem;
     margin-bottom: 20px;
     width: 120px;
@@ -383,10 +377,7 @@
 }
 
 .skeleton-player-item {
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-    background-size: 200% 100%;
-    animation: loading 1.5s infinite;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     height: 60px;
     width: 100%;
 }
@@ -399,25 +390,19 @@
 }
 
 .skeleton-game-card {
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-    background-size: 200% 100%;
-    animation: loading 1.5s infinite;
-    border-radius: 16px;
+    border-radius: var(--radius-lg);
     height: 250px;
     width: 270px;
     flex-shrink: 0;
 }
 
 .skeleton-totals {
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-    background-size: 200% 100%;
-    animation: loading 1.5s infinite;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     height: 200px;
     width: 100%;
 }
 
-@keyframes loading {
+@keyframes single-team-loading {
     0% {
         background-position: 200% 0;
     }
@@ -426,41 +411,39 @@
     }
 }
 
-/* Optimize for Core Web Vitals */
 .team-details {
-    contain: layout style; /* Optimize rendering */
+    contain: layout style;
 }
 
 .players-list {
-    min-height: 200px; /* Reserve space for players section */
+    min-height: 200px;
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
     .team-details {
         min-height: 80vh;
     }
-    
+
     .skeleton-title {
         width: 80%;
     }
-    
+
     .skeleton-info {
         width: 60%;
     }
-    
+
     .skeleton-section-title {
         width: 50%;
     }
-    
+
     .games-scroll-container {
         min-height: 250px;
     }
-    
+
     .players-list {
         min-height: 300px;
     }
-    
+
     .team-totals {
         min-height: 250px;
     }

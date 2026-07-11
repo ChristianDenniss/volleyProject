@@ -109,7 +109,7 @@
 
 .team-column.team-loser .team-score,
 .team-column.team-loser .single-game-team-name {
-    color: #94a3b8;
+    color: var(--color-text-subtle);
 }
 
 .single-game-team-name {
@@ -138,7 +138,7 @@
     background: var(--color-accent-pale);
     padding: 0.4rem 0.9rem;
     border-radius: 999px;
-    box-shadow: 0 0 0 3px #fff, 0 0 0 6px var(--color-accent-pale);
+    box-shadow: 0 0 0 3px var(--color-bg), 0 0 0 6px var(--color-accent-pale);
     align-self: center;
 }
 
@@ -147,14 +147,14 @@
     margin: 0 auto;
     padding: 2rem 1.5rem;
     border-radius: 16px;
-    border: 1px solid #dbeafe;
-    background: linear-gradient(180deg, #eff6ff 0%, #f8fafc 100%);
+    border: 1px solid var(--color-accent-border);
+    background: linear-gradient(180deg, var(--color-accent-pale) 0%, var(--color-bg-light) 100%);
     text-align: center;
 }
 
 .upcoming-notice-icon {
     font-size: 2rem;
-    color: #4338ca;
+    color: var(--color-brand-primary);
     margin-bottom: 0.75rem;
 }
 
@@ -248,7 +248,7 @@
     position: sticky;
     top: 0;
     background: var(--color-brand-primary);
-    color: #fff;
+    color: var(--color-text-on-brand);
     font-weight: 600;
     padding: 0.9rem 1.1rem;
     text-align: center;
@@ -261,29 +261,29 @@
 }
 
 .stats-table tbody tr:hover {
-    background: rgba(214, 235, 255, 0.45);
+    background: var(--color-row-hover);
 }
 
 .stats-table td {
     padding: 0.8rem 1.1rem;
     text-align: center;
     white-space: nowrap;
-    border-bottom: 1px solid #eef3f8;
+    border-bottom: 1px solid var(--color-table-border);
 }
 
 .stats-table tbody tr:nth-child(even) {
-    background: #f7fbff;
+    background: var(--color-row-stripe);
 }
 
 /* ===== Team 2 custom striping ===== */
 .stats-table tbody tr.team2-row:nth-child(even) {
-    background: #ffecec;
+    background: var(--color-row-opponent-stripe);
 }
 .stats-table tbody tr.team2-row:nth-child(odd) {
-    background: #fff;
+    background: var(--color-bg);
 }
 .stats-table tbody tr.team2-row:hover {
-    background: rgba(255, 0, 0, 0.1);
+    background: var(--color-row-opponent-hover);
 }
 
 /* ===== Separator styling ===== */
@@ -330,10 +330,18 @@
 }
 
 /* Skeleton loader for better UX */
-.sg-skeleton-title {
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+.sg-skeleton-title,
+.sg-skeleton-stage,
+.sg-skeleton-meta,
+.sg-skeleton-scoreboard,
+.sg-skeleton-stats-title,
+.sg-skeleton-stats-table {
+    background: var(--skeleton-shimmer);
     background-size: 200% 100%;
     animation: loading 1.5s infinite;
+}
+
+.sg-skeleton-title {
     height: 80px;
     width: 80%;
     margin: 0 auto 1.5rem;
@@ -341,9 +349,6 @@
 }
 
 .sg-skeleton-stage {
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-    background-size: 200% 100%;
-    animation: loading 1.5s infinite;
     height: 40px;
     width: 200px;
     margin: 0 auto 1.5rem;
@@ -351,18 +356,12 @@
 }
 
 .sg-skeleton-meta {
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-    background-size: 200% 100%;
-    animation: loading 1.5s infinite;
     height: 20px;
     width: 120px;
     border-radius: 4px;
 }
 
 .sg-skeleton-scoreboard {
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-    background-size: 200% 100%;
-    animation: loading 1.5s infinite;
     height: 150px;
     width: 100%;
     max-width: 600px;
@@ -371,9 +370,6 @@
 }
 
 .sg-skeleton-stats-title {
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-    background-size: 200% 100%;
-    animation: loading 1.5s infinite;
     height: 50px;
     width: 300px;
     margin: 0 auto 1.5rem;
@@ -381,9 +377,6 @@
 }
 
 .sg-skeleton-stats-table {
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-    background-size: 200% 100%;
-    animation: loading 1.5s infinite;
     height: 300px;
     width: 100%;
     border-radius: 8px;

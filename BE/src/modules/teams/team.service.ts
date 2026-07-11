@@ -135,18 +135,19 @@ export class TeamService {
             throw new MissingFieldError("Team name");
         }
 
-        const teams = await this.teamRepository.find({
-            where: { name },
-            relations: [
-                "season",
-                "players",
-                "players.stats",
-                "players.stats.game",
-                "games",
-                "games.stats",
-                "games.season"
-            ]
-        });
+        const lookupName = decodeURIComponent(name).replace(/-/g, " ").trim();
+
+        const teams = await this.teamRepository
+            .createQueryBuilder("team")
+            .leftJoinAndSelect("team.season", "season")
+            .leftJoinAndSelect("team.players", "players")
+            .leftJoinAndSelect("players.stats", "playerStats")
+            .leftJoinAndSelect("playerStats.game", "playerStatsGame")
+            .leftJoinAndSelect("team.games", "games")
+            .leftJoinAndSelect("games.stats", "gameStats")
+            .leftJoinAndSelect("games.season", "gameSeason")
+            .where("LOWER(team.name) = LOWER(:name)", { name: lookupName })
+            .getMany();
 
         if (teams.length === 0) {
             throw new NotFoundError(`No teams found with name: ${name}`);

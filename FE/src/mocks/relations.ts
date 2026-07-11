@@ -49,9 +49,18 @@ export function enrichTeam(team: Team): Team {
   };
 }
 
+export function normalizeTeamNameKey(name: string): string {
+  return decodeURIComponent(name)
+    .replace(/-/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
 export function getTeamsByName(name: string): Team[] {
+  const lookupKey = normalizeTeamNameKey(name);
+
   return db.teams
-    .filter((team) => team.name === name)
+    .filter((team) => normalizeTeamNameKey(team.name) === lookupKey)
     .map((team) => enrichTeam(team));
 }
 

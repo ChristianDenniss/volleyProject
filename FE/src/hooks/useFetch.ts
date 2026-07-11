@@ -58,7 +58,7 @@ export const useFetch = <T>(endpoint: string) =>
 // Specific hook to fetch a team by name
 export const useFetchTeamByName = <T>(teamName: string) =>
 {
-    return useFetch<T>(`teams/name/${teamName}`);  // Always treats result as an array
+    return useFetch<T>(`teams/name/${encodeURIComponent(teamName)}`);  // Always treats result as an array
 };
 
 export const useFetchGameById = <T>(gameId: string) =>

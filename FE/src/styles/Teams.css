@@ -142,7 +142,7 @@
     transform: translateY(-4px);
 
     /* blue NBA-style glow */
-    box-shadow: 0 8px 22px rgba(0,122,255,0.25);
+    box-shadow: 0 8px 22px rgba(var(--color-brand-primary-rgb), 0.25);
 }
 
 /* ----- Typography hierarchy ------------------------------------------ */
@@ -208,7 +208,7 @@
 
 /* Skeleton loader for better UX */
 .teams-skeleton {
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background: var(--skeleton-shimmer);
     background-size: 200% 100%;
     animation: loading 1.5s infinite;
     border-radius: 0.85rem;

@@ -28,6 +28,27 @@
   --color-overlay: rgba(0, 0, 0, 0.5);
   --color-scroll-thumb: rgba(0, 0, 0, 0.2);
 
+  /* ── Text on brand / de-emphasized ── */
+  --color-text-on-brand: #ffffff;
+  --color-text-subtle: #94a3b8;
+
+  /* ── Table & list surfaces ── */
+  --color-row-stripe: var(--color-accent-hover-bg);
+  --color-row-opponent-stripe: #ffecec;
+  --color-row-hover: rgba(214, 235, 255, 0.45);
+  --color-row-opponent-hover: rgba(220, 38, 38, 0.1);
+  --color-table-border: var(--color-accent-border);
+
+  /* ── Skeleton shimmer ── */
+  --color-skeleton-base: var(--color-bg-muted);
+  --color-skeleton-highlight: var(--color-accent-border);
+  --skeleton-shimmer: linear-gradient(
+    90deg,
+    var(--color-skeleton-base) 25%,
+    var(--color-skeleton-highlight) 50%,
+    var(--color-skeleton-base) 75%
+  );
+
   /* ── Semantic ── */
   --color-gold: #ffbf00;
   --color-success: #27ae60;
