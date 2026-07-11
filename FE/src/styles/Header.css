@@ -4,14 +4,14 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0 40px;
+    padding: 0 2.5rem;
     height: 50px;
-    background-color: white; /* White background */
+    background-color: white;
     font-family: 'Inter', sans-serif;
-    color: #333; /* Dark text for contrast */
+    color: #333;
     width: 100%;
     box-sizing: border-box;
-    border-bottom: 1px solid #ddd; /* Light border for separation */
+    border-bottom: 1px solid #ddd;
     margin: 0;
 }
 
@@ -20,7 +20,7 @@
 {
     display: flex;
     align-items: center;
-    gap: 40px;
+    gap: 2.5rem;
 }
 
 .logo 
@@ -31,9 +31,9 @@
 
 .site-name 
 {
-    font-size: 16px;
+    font-size: 1rem;
     font-weight: 600;
-    color: #262626; /* Dark text for contrast */
+    color: #262626;
     white-space: nowrap;
 }
 
@@ -60,21 +60,21 @@
 /* Text for Guest or Username */
 .auth-text 
 {
-    font-size: 18px;
+    font-size: 1.125rem;
     font-weight: 1000;
-    color: #262626; /* Dark color for text */
+    color: #262626;
     white-space: nowrap;
 }
 
 /* Button that triggers dropdown */
 .dropdown-btn 
 {
-    background-color: #262626; /* Bright button color */
+    background-color: #262626;
     color: white;
-    padding: 8px 12px;
+    padding: 0.5rem 0.75rem;
     border: none;
     border-radius: 6px;
-    font-size: 16px;
+    font-size: 1rem;
     cursor: pointer;
     transition: background 0.3s ease;
 }
@@ -142,23 +142,23 @@
     height: 35px;
     background-color: #262626;
     border-radius: 50%;
-    cursor: pointer; /* Ensures it shows a pointer on hover */
-    z-index: 1; /* Ensure it's on top */
+    cursor: pointer;
+    z-index: 1;
 }
 
 /* Ensure the link takes up space */
 .profile-info a {
     display: block;
-    width: 35px;  /* Match the avatar size */
-    height: 35px; /* Match the avatar size */
+    width: 35px;
+    height: 35px;
 }
 
 /* Username styling */
 .username 
 {
-    font-size: 18px;
+    font-size: 1.125rem;
     font-weight: 500;
-    color: #262626; /* Dark text for contrast */
+    color: #262626;
 }
 
 /* Adjust the spacing between the username/guest and the login button */
@@ -172,20 +172,135 @@
 /* Logout button matches the dropdown-btn style */
 .logout-btn
 {
-    background-color: #262626;    /* same dark background */
-    color: white;                 /* white text */
-    padding: 8px 12px;            /* same padding */
-    border: none;                 /* no border */
-    border-radius: 6px;           /* same rounding */
-    font-size: 16px;              /* same font size */
-    cursor: pointer;              /* pointer on hover */
+    background-color: #262626;
+    color: white;
+    padding: 0.5rem 0.75rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    cursor: pointer;
     transition: background 0.3s ease;
-    margin-left: 25px;            /* align with profile gap */
+    margin-left: 1.5625rem;
 }
 
 /* Hover effect like dropdown-btn */
 .logout-btn:hover
 {
-    background-color: #dddddd;    /* same hover background */
-    color: #262626;               /* invert text for contrast */
+    background-color: #dddddd;
+    color: #262626;
+}
+
+@media (max-width: 768px) {
+    .site-header {
+        height: auto;
+        min-height: 50px;
+        padding: 0.5rem 1rem;
+    }
+
+    .left-section {
+        gap: 0.75rem;
+    }
+
+    .logo {
+        width: 2.5rem;
+        height: 2.5rem;
+    }
+
+    .site-name {
+        font-size: 0.875rem;
+    }
+
+    .username,
+    .auth-text {
+        font-size: 0.875rem;
+    }
+
+    .dropdown-btn,
+    .logout-btn {
+        font-size: 0.875rem;
+        padding: 0.45rem 0.65rem;
+        margin-left: 0.75rem;
+    }
+
+    .avatar,
+    .profile-info a {
+        width: 2rem;
+        height: 2rem;
+    }
+
+    .profile-info {
+        gap: 0.75rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .site-name {
+        display: none;
+    }
+}
+
+html[data-viewport="wide"] .site-header {
+    padding: 0 clamp(1.5rem, 1rem + 1.5vw, 2.5rem);
+    height: var(--header-height);
+}
+
+html[data-viewport="wide"] .left-section {
+    gap: clamp(1.5rem, 1rem + 1.5vw, 2.5rem);
+}
+
+html[data-viewport="wide"] .logo {
+    width: var(--header-logo-size);
+    height: var(--header-logo-size);
+}
+
+html[data-viewport="wide"] .site-name,
+html[data-viewport="wide"] .username,
+html[data-viewport="wide"] .auth-text {
+    font-size: var(--header-font-size);
+}
+
+html[data-viewport="wide"] .dropdown-btn,
+html[data-viewport="wide"] .logout-btn {
+    font-size: var(--header-font-size);
+    padding: var(--nav-link-padding-y) var(--nav-link-padding-x);
+}
+
+html[data-viewport="wide"] .avatar,
+html[data-viewport="wide"] .profile-info a {
+    width: clamp(2.1875rem, 1.75rem + 0.65vw, 2.75rem);
+    height: clamp(2.1875rem, 1.75rem + 0.65vw, 2.75rem);
+}
+
+@media (min-width: 1800px) {
+    html:not([data-viewport]) .site-header {
+        padding: 0 clamp(1.5rem, 1rem + 1.5vw, 2.5rem);
+        height: var(--header-height);
+    }
+
+    html:not([data-viewport]) .left-section {
+        gap: clamp(1.5rem, 1rem + 1.5vw, 2.5rem);
+    }
+
+    html:not([data-viewport]) .logo {
+        width: var(--header-logo-size);
+        height: var(--header-logo-size);
+    }
+
+    html:not([data-viewport]) .site-name,
+    html:not([data-viewport]) .username,
+    html:not([data-viewport]) .auth-text {
+        font-size: var(--header-font-size);
+    }
+
+    html:not([data-viewport]) .dropdown-btn,
+    html:not([data-viewport]) .logout-btn {
+        font-size: var(--header-font-size);
+        padding: var(--nav-link-padding-y) var(--nav-link-padding-x);
+    }
+
+    html:not([data-viewport]) .avatar,
+    html:not([data-viewport]) .profile-info a {
+        width: clamp(2.1875rem, 1.75rem + 0.65vw, 2.75rem);
+        height: clamp(2.1875rem, 1.75rem + 0.65vw, 2.75rem);
+    }
 }

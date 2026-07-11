@@ -4,19 +4,25 @@ import "../styles/Home.css";
 import promoImg from "../images/callToAction.png";
 import { useArticles } from "../hooks/allFetch";
 import SEO from "./SEO";
+import {
+    getVisualViewportWidth,
+    subscribeVisualViewport,
+    VIEWPORT_COMPACT_MAX,
+    VIEWPORT_HOME_LARGE_MIN,
+} from "../utils/visualViewport";
 
 const MAX_SIDE_ARTICLES = 5;
 const DEFAULT_SIDE_ARTICLE_COUNT = 4;
 const LARGE_SIDE_ARTICLE_COUNT = 5;
 const SIDE_ARTICLE_MIN_HEIGHT = 80;
 const SIDE_ARTICLE_GAP = 16;
-const STACKED_LAYOUT_BREAKPOINT = 1024;
-const LARGE_SCREEN_BREAKPOINT = 1400;
 
 const Home: React.FC = () => {
     const playerRef = useRef<any>(null);
     const videoContainerRef = useRef<HTMLDivElement>(null);
     const featuredRef = useRef<HTMLDivElement>(null);
+    const headlineSectionRef = useRef<HTMLElement>(null);
+    const sideArticlesRef = useRef<HTMLElement>(null);
     const [isPlayerReady, setIsPlayerReady] = useState(false);
     const [visibleSideCount, setVisibleSideCount] = useState(4);
 
@@ -46,32 +52,48 @@ const Home: React.FC = () => {
     }, [allSideArticles, visibleSideCount]);
 
     useEffect(() => {
-        const featured = featuredRef.current;
-        if (!featured) {
+        const featuredColumn = featuredRef.current;
+        const headlineSection = headlineSectionRef.current;
+        const sideArticlesEl = sideArticlesRef.current;
+        if (!featuredColumn || !headlineSection) {
             return;
         }
 
         const updateVisibleSideCount = () => {
-            const isStacked = window.matchMedia(
-                `(max-width: ${STACKED_LAYOUT_BREAKPOINT}px)`
-            ).matches;
+            const viewportWidth = getVisualViewportWidth();
+            const isStacked = viewportWidth <= VIEWPORT_COMPACT_MAX;
+
+            const featuredCard = featuredColumn.querySelector<HTMLElement>(
+                ".featured-article"
+            );
+            const featuredHeight = featuredCard?.getBoundingClientRect().height ?? 0;
+
+            if (sideArticlesEl) {
+                sideArticlesEl.style.height = isStacked || featuredHeight <= 0
+                    ? ""
+                    : `${featuredHeight}px`;
+            }
 
             if (isStacked) {
-                setVisibleSideCount(Math.min(allSideArticles.length, DEFAULT_SIDE_ARTICLE_COUNT));
+                setVisibleSideCount(
+                    Math.min(allSideArticles.length, DEFAULT_SIDE_ARTICLE_COUNT)
+                );
                 return;
             }
 
-            const height = featured.getBoundingClientRect().height;
-            if (height <= 0) {
+            if (featuredHeight <= 0) {
                 return;
             }
 
             const maxByHeight = Math.floor(
-                (height + SIDE_ARTICLE_GAP) /
+                (featuredHeight + SIDE_ARTICLE_GAP) /
                     (SIDE_ARTICLE_MIN_HEIGHT + SIDE_ARTICLE_GAP)
             );
-            const isLargeScreen = window.innerWidth >= LARGE_SCREEN_BREAKPOINT;
-            const targetCount = isLargeScreen
+            const isLargeScreen = viewportWidth >= VIEWPORT_HOME_LARGE_MIN;
+            const wantsFive =
+                isLargeScreen &&
+                maxByHeight >= LARGE_SIDE_ARTICLE_COUNT;
+            const targetCount = wantsFive
                 ? LARGE_SIDE_ARTICLE_COUNT
                 : DEFAULT_SIDE_ARTICLE_COUNT;
             const clamped = Math.max(
@@ -82,13 +104,17 @@ const Home: React.FC = () => {
         };
 
         const observer = new ResizeObserver(updateVisibleSideCount);
-        observer.observe(featured);
-        window.addEventListener("resize", updateVisibleSideCount);
+        observer.observe(featuredColumn);
+        observer.observe(headlineSection);
+        const unsubscribeViewport = subscribeVisualViewport(updateVisibleSideCount);
         updateVisibleSideCount();
 
         return () => {
             observer.disconnect();
-            window.removeEventListener("resize", updateVisibleSideCount);
+            unsubscribeViewport();
+            if (sideArticlesEl) {
+                sideArticlesEl.style.height = "";
+            }
         };
     }, [allSideArticles.length, loading, featuredArticle?.id]);
 
@@ -194,7 +220,7 @@ const Home: React.FC = () => {
             />
 
             <main className={`home ${loading ? 'loading' : ''}`}>
-                <section className="headline-section">
+                <section className="headline-section" ref={headlineSectionRef}>
                     <div className="headline-featured" ref={featuredRef}>
                         {loading ? (
                             <div className="featured-article">
@@ -237,7 +263,7 @@ const Home: React.FC = () => {
                         )}
                     </div>
 
-                    <aside className="side-articles">
+                    <aside className="side-articles" ref={sideArticlesRef}>
                         {loading ? (
                             // Skeleton loaders for side articles
                             Array.from({ length: visibleSideCount }).map((_, index) => (

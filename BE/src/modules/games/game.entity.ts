@@ -50,10 +50,10 @@ export class Games {
     })
     status!: GameStatus;
 
-    @Column({ nullable: true })
+    @Column({ nullable: true, type: 'varchar' })
     matchNumber!: string | null;
 
-    @Column({ nullable: true })
+    @Column({ nullable: true, type: 'varchar' })
     round!: string | null;
 
     @Column({
@@ -85,10 +85,10 @@ export class Games {
     @Column({ nullable: true, type: 'varchar' })
     set5Score!: string | null;
 
-    @Column({ nullable: true })
+    @Column({ nullable: true, type: 'varchar' })
     challongeMatchId!: string | null;
 
-    @Column({ nullable: true })
+    @Column({ nullable: true, type: 'varchar' })
     challongeTournamentId!: string | null;
 
     @Column({ nullable: true, type: 'int' })

@@ -107,6 +107,17 @@
   --space-section: clamp(0.75rem, 0.5rem + 1.2vw, 1.5rem);
   --font-size-page-title: clamp(1.75rem, 1.4rem + 1.75vw, 2.5rem);
 
+  /* Shared site shell — keep header/nav proportional to wide content areas */
+  --layout-max-width: 2400px;
+  --header-height: clamp(3.125rem, 2.25rem + 0.85vw, 4.5rem);
+  --header-font-size: clamp(1rem, 0.85rem + 0.35vw, 1.25rem);
+  --header-logo-size: clamp(3.125rem, 2.25rem + 0.85vw, 4.375rem);
+  --nav-height: clamp(4.375rem, 3rem + 1.1vw, 6rem);
+  --nav-font-size: clamp(1rem, 0.75rem + 0.55vw, 1.375rem);
+  --nav-link-gap: clamp(1.125rem, 0.65rem + 1vw, 2.25rem);
+  --nav-link-padding-y: clamp(0.5rem, 0.35rem + 0.25vw, 0.75rem);
+  --nav-link-padding-x: clamp(0.75rem, 0.5rem + 0.35vw, 1rem);
+
   /* Breakpoint scale (documentation — @media can't consume custom properties) */
   --bp-xs: 480px;
   --bp-sm: 600px;

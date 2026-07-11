@@ -1,5 +1,8 @@
 // src/hooks/useMutations.ts
+import { useCallback } from "react";
 import { usePatch } from "./usePatch";
+import { authFetch } from "./authFetch";
+import { useAuth } from "../context/authContext";
 
 import type {
   Season,
@@ -9,8 +12,12 @@ import type {
   Article,
   Game,
   Stats,
-  Award
+  Award,
+  ApplicationForm,
 } from "../types/interfaces";
+
+const backendUrl =
+  import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
 /**
  * Hook returning a `patchSeason` fn for updating seasons.
@@ -72,5 +79,40 @@ export function useStatsMutations() {
 export function useAwardsMutations() {
   const { patch: patchAward } = usePatch<Award>("awards");
   return { patchAward };
+}
+
+export function useApplicationFormMutations() {
+  const { token } = useAuth();
+
+  const patchApplicationForm = useCallback(
+    async (
+      slug: string,
+      data: Pick<ApplicationForm, "url" | "status">
+    ): Promise<ApplicationForm> => {
+      if (!token) {
+        throw new Error("You must be logged in to update application forms");
+      }
+
+      const res = await authFetch(
+        `${backendUrl}/api/application-forms/${slug}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        },
+        token
+      );
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.message || "Failed to update application form");
+      }
+
+      return res.json() as Promise<ApplicationForm>;
+    },
+    [token]
+  );
+
+  return { patchApplicationForm };
 }
 

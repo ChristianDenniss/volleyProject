@@ -1,6 +1,6 @@
-import { useFetchTeamByName, useFetchGameById, useFetchSeasonById, useFetchArticleById, useFetchPlayerById, useObjectFetch, useTriviaPlayer, useTriviaTeam, useTriviaSeason, useSubmitTriviaGuess } from "./useFetch";
+import { useFetchTeamByName, useFetchGameById, useFetchSeasonById, useFetchArticleById, useFetchPlayerById, useObjectFetch, useTriviaPlayer, useTriviaTeam, useTriviaSeason, useSubmitTriviaGuess, useFetch } from "./useFetch";
 import { usePaginatedFetch, PaginationParams, DEFAULT_PAGINATION } from "./usePaginatedFetch";
-import { Player, Team, Season, Game, Article, Stats, Award, Records } from "../types/interfaces";
+import { Player, Team, Season, Game, Article, Stats, Award, Records, ApplicationForm } from "../types/interfaces";
 import { useState } from "react";
 
 interface PlayerListParams extends PaginationParams { search?: string; }
@@ -38,6 +38,8 @@ export const useRecords = (params: PaginationParams = DEFAULT_PAGINATION) => {
 
     return { ...result, refetch };
 };
+
+export const useApplicationForms = () => useFetch<ApplicationForm>("application-forms");
 
 
 // Skinny hooks for faster loading without relations

@@ -21,6 +21,7 @@ const PortalLayout: React.FC = () => {
               <li><NavLink to="games">Games</NavLink></li>
               <li><NavLink to="stats">Stats</NavLink></li>
               <li><NavLink to="articles">Articles</NavLink></li>
+              <li><NavLink to="applications">Applications</NavLink></li>
               <li><NavLink to="awards">Awards</NavLink></li>
             </ul>
           </nav>

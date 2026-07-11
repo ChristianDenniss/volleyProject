@@ -177,7 +177,21 @@ interface Records
   loading: boolean;
 }
 
-export type { Game, Player, Stats, Team, Season, Article, User, Award, Records, AuthContextType, PublicInterface, Role };
+interface ApplicationForm {
+  id: number;
+  slug: string;
+  name: string;
+  type: string;
+  description: string;
+  url: string | null;
+  status: "open" | "closed";
+  category: "staff" | "media" | "game-officials" | "management";
+  sortOrder: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export type { Game, Player, Stats, Team, Season, Article, User, Award, Records, AuthContextType, PublicInterface, Role, ApplicationForm };
 
 export interface PaginatedResponse<T> {
   data: T[];

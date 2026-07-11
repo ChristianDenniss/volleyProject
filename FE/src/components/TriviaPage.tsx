@@ -638,7 +638,7 @@ const TriviaPage: React.FC = () => {
 
     const renderSelectionScreen = () => (
         <div className="trivia-selection">
-            <p>Test your knowledge of RVL players, teams, and seasons!</p>
+            <p>Test your knowledge of RVL players, teams, and seasons...</p>
             <div className="selection-section">
                 <h2>What would you like to guess?</h2>
                 <div className="type-buttons">
@@ -872,25 +872,27 @@ const TriviaPage: React.FC = () => {
     };
     
     return (
-        <div className={`trivia-page ${isLoading ? 'loading' : ''}`}>
-            {hasError && (
-                <div className="error-message">
-                    <h3>Error</h3>
-                    <p>{hasError}</p>
-                    <button onClick={dismissError}>Dismiss</button>
-                </div>
-            )}
-            
-            {isLoading && gameState === 'playing' && (
-                <div className="loading-message">
-                    <h3>Loading trivia...</h3>
-                    <p>Please wait while we fetch your trivia question.</p>
-                </div>
-            )}
-            
-            {gameState === 'selection' && renderSelectionScreen()}
-            {gameState === 'playing' && !isLoading && renderGameScreen()}
-            {gameState === 'result' && renderResultScreen()}
+        <div className="trivia-page-shell">
+            <div className={`trivia-page ${isLoading ? 'loading' : ''}`}>
+                {hasError && (
+                    <div className="error-message">
+                        <h3>Error</h3>
+                        <p>{hasError}</p>
+                        <button onClick={dismissError}>Dismiss</button>
+                    </div>
+                )}
+                
+                {isLoading && gameState === 'playing' && (
+                    <div className="loading-message">
+                        <h3>Loading trivia...</h3>
+                        <p>Please wait while we fetch your trivia question.</p>
+                    </div>
+                )}
+                
+                {gameState === 'selection' && renderSelectionScreen()}
+                {gameState === 'playing' && !isLoading && renderGameScreen()}
+                {gameState === 'result' && renderResultScreen()}
+            </div>
         </div>
     );
 };

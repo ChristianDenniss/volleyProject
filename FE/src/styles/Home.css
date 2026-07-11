@@ -32,6 +32,7 @@
     min-width: 0;
     display: flex;
     flex-direction: column;
+    align-self: flex-start;
 }
 
 .headline-featured > a
@@ -324,6 +325,92 @@
         max-width: 350px;
         padding-left: 1rem;
     }
+}
+
+/* Compact headline layout — mirrors max-width: 1024px for browser zoom */
+html[data-viewport="compact"] .headline-section,
+html[data-viewport="mobile"] .headline-section {
+    flex-direction: column;
+    gap: 2rem;
+    align-items: stretch;
+}
+
+html[data-viewport="compact"] .featured-article,
+html[data-viewport="mobile"] .featured-article {
+    aspect-ratio: 16/9;
+}
+
+html[data-viewport="compact"] .featured-text h2,
+html[data-viewport="mobile"] .featured-text h2 {
+    font-size: 2rem;
+}
+
+html[data-viewport="compact"] .side-articles,
+html[data-viewport="mobile"] .side-articles {
+    padding-left: 0;
+    border-left: none;
+    border-top: 1px solid #eee;
+    padding-top: 1.5rem;
+    min-width: auto;
+    max-width: none;
+    overflow: visible;
+}
+
+html[data-viewport="compact"] .side-articles > a,
+html[data-viewport="mobile"] .side-articles > a {
+    flex: none;
+}
+
+html[data-viewport="compact"] .side-articles article,
+html[data-viewport="mobile"] .side-articles article {
+    flex: none;
+    height: 90px;
+    min-height: 90px;
+}
+
+html[data-viewport="compact"] .side-articles img,
+html[data-viewport="mobile"] .side-articles img {
+    width: 100px;
+    height: 70px;
+}
+
+html[data-viewport="mobile"] .home {
+    padding: 0.5rem;
+}
+
+html[data-viewport="mobile"] .headline-section {
+    margin-top: 1rem;
+    margin-bottom: 2rem;
+}
+
+html[data-viewport="mobile"] .featured-text {
+    padding: 0.75rem 1rem;
+}
+
+html[data-viewport="mobile"] .featured-text h2 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+html[data-viewport="mobile"] .featured-text p {
+    font-size: 0.9rem;
+}
+
+html[data-viewport="mobile"] .side-articles article {
+    padding: 0.75rem;
+}
+
+html[data-viewport="mobile"] .side-articles article h4 {
+    font-size: 1rem;
+}
+
+html[data-viewport="mobile"] .call-to-action {
+    height: 300px;
+}
+
+html[data-viewport="mobile"] .join-button {
+    font-size: 1rem;
+    padding: 0.5rem 1.2rem;
 }
 
 /* Mobile Responsive Styles */

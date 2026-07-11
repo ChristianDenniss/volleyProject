@@ -72,18 +72,18 @@
     justify-content: center;
     width: 50px;
     height: 50px;
-    background: var(--color-accent);
+    background: var(--color-brand-primary);
     border-radius: var(--radius-md);
     margin-right: 1rem;
     font-size: 1.25rem;
-    color: var(--color-brand-primary);
+    color: var(--color-text-on-brand);
     flex-shrink: 0;
     transition: all 0.3s ease;
 }
 
 .faq-link-card:hover .link-icon {
-    background: var(--color-brand-primary);
-    color: var(--color-text-on-brand);
+    background: var(--color-accent);
+    color: var(--color-brand-primary);
     transform: scale(1.05);
 }
 

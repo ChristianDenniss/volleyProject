@@ -1,4 +1,5 @@
 import {
+  mockApplicationForms,
   mockArticles,
   mockAwards,
   mockAuthUser,
@@ -44,6 +45,7 @@ export const db = {
   awards: clone(mockAwards),
   matches: clone(mockMatches),
   records: clone(mockRecords),
+  applicationForms: clone(mockApplicationForms),
   ids: {
     articles: nextId(mockArticles),
     awards: nextId(mockAwards),

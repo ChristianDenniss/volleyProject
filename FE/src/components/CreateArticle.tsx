@@ -134,11 +134,6 @@ const CreateArticle: React.FC = () => {
 
     return (
         <div className="create-article-container">
-            <h1>Create New Article</h1>
-            <div className="approval-notice">
-                Note: Your article will be reviewed by an administrator before being published.
-            </div>
-
             {showValidationModal && (
                 <div className="validation-modal">
                     <div className="validation-modal-content">
@@ -161,6 +156,10 @@ const CreateArticle: React.FC = () => {
             )}
 
             <form onSubmit={handleSubmit} className="create-article-form">
+                <div className="approval-notice">
+                    Note: Your article will be reviewed by an administrator before being published.
+                </div>
+
                 {error && <div className="error-message">{error}</div>}
                 {validationErrors.length > 0 && (
                     <div className="error-message">

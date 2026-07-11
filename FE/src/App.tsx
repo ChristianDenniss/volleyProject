@@ -2,6 +2,7 @@
 import React from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./context/authContext";
+import ViewportLayoutSync from "./components/ViewportLayoutSync";
 import Applications from "./components/Applications";
 import Header         from "./components/Header";
 import Navbar         from "./components/NavBar";
@@ -38,6 +39,7 @@ import PrivateRoute   from "./components/portal/PrivateRoute";      // ← NEW i
 import AwardsPage   from "./components/portal/AwardsPage";  
 import CreateArticle from "./components/CreateArticle";
 import ArticlesPage from "./components/portal/ArticlesPage";
+import ApplicationsPage from "./components/portal/ApplicationsPage";
 import StatsLeaderboard from "./components/StatsLeaderboard";
 import FAQ from "./components/FAQ";
 import RecordsPage from "./components/RecordsPage";
@@ -47,6 +49,7 @@ import VectorGraphPage from "./components/VectorGraphPage";
 
 const App: React.FC = () => (
   <AuthProvider>
+    <ViewportLayoutSync />
     <Router>
       <Header />
       <Navbar />
@@ -105,6 +108,7 @@ const App: React.FC = () => (
             <Route path="stats" element={<StatsPage />} />
             <Route path="awards" element={<AwardsPage />} />
             <Route path="articles" element={<ArticlesPage />} />
+            <Route path="applications" element={<ApplicationsPage />} />
           </Route>
         </Routes>
       </div>

@@ -1,48 +1,45 @@
 /* Navbar container */
 .navbar {
     display: flex;
-    justify-content: center; /* Center the navbar items */
-    align-items: center; /* Vertically center the nav content */
+    justify-content: center;
+    align-items: center;
     background-color: #262626;
-    padding: 0 20px; /* Adjust padding to ensure it doesn't cause overflow */
-    height: 70px;
+    padding: 0.625rem 1.25rem;
+    min-height: 70px;
+    height: auto;
     width: 100%;
     z-index: 1000;
     margin: 0;
-    box-sizing: border-box; /* Ensure padding and borders are within the width */
+    box-sizing: border-box;
     font-family: 'Inter', sans-serif;
-    border-left: 0;  /* Remove optional border */
-    border-right: 0; /* Remove optional border */
-    overflow-x: hidden; /* Prevent horizontal scrolling */
 }
 
-/* Centered link list with proper item alignment */
 .navbar-links {
     display: flex;
-    align-items: center; /* Ensure vertical alignment */
+    align-items: center;
     justify-content: center;
+    flex-wrap: wrap;
     list-style: none;
+    width: min(100%, var(--layout-max-width));
     padding: 0;
     margin: 0;
-    gap: 30px; /* Adjust gap to ensure items aren't too far apart */
+    gap: 0.5rem 1.5rem;
 }
 
-/* Ensure each list item doesn't stack text */
 .navbar-links li {
     display: flex;
     align-items: center;
 }
 
-/* Link styles */
 .navbar-links a {
     color: white;
     text-decoration: none;
-    font-size: 18px;
+    font-size: 1.125rem;
     font-weight: 500;
-    padding: 8px 12px;
+    padding: 0.5rem 0.75rem;
     border-radius: 6px;
     transition: all 0.2s ease;
-    white-space: nowrap; /* Prevents text from wrapping */
+    white-space: nowrap;
 }
 
 .navbar-links a:hover {
@@ -50,25 +47,69 @@
     color: #333;
     font-weight: 600;
     text-decoration: none;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); /* deeper shadow */
-    transform: translateY(-2px); /* more lift */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    transform: translateY(-2px);
 }
 
-/* Mobile adjustments */
+/* Very wide screens — scale up and keep links on one row when there is room */
+html[data-viewport="wide"] .navbar {
+    padding: 0 clamp(1.25rem, 0.75rem + 1.25vw, 3rem);
+    min-height: var(--nav-height);
+}
+
+html[data-viewport="wide"] .navbar-links {
+    flex-wrap: nowrap;
+    gap: var(--nav-link-gap);
+}
+
+html[data-viewport="wide"] .navbar-links a {
+    font-size: var(--nav-font-size);
+    padding: var(--nav-link-padding-y) var(--nav-link-padding-x);
+}
+
+html[data-viewport="mobile"] .navbar,
+html[data-viewport="compact"] .navbar {
+    padding: 0.625rem 1rem;
+}
+
+html[data-viewport="mobile"] .navbar-links,
+html[data-viewport="compact"] .navbar-links {
+    gap: 0.5rem 0.875rem;
+}
+
+html[data-viewport="mobile"] .navbar-links a {
+    font-size: 1rem;
+    padding: 0.45rem 0.65rem;
+}
+
+@media (min-width: 1800px) {
+    html:not([data-viewport]) .navbar {
+        padding: 0 clamp(1.25rem, 0.75rem + 1.25vw, 3rem);
+        min-height: var(--nav-height);
+    }
+
+    html:not([data-viewport]) .navbar-links {
+        flex-wrap: nowrap;
+        gap: var(--nav-link-gap);
+    }
+
+    html:not([data-viewport]) .navbar-links a {
+        font-size: var(--nav-font-size);
+        padding: var(--nav-link-padding-y) var(--nav-link-padding-x);
+    }
+}
+
 @media (max-width: 768px) {
     .navbar {
-        padding: 10px 20px;
-        height: auto; /* Let it expand if needed on smaller screens */
+        padding: 0.625rem 1rem;
     }
 
     .navbar-links {
-        flex-wrap: wrap; /* Allow wrapping on mobile */
-        gap: 20px;
-        justify-content: center;
+        gap: 0.5rem 0.875rem;
     }
 
-    /* Ensure navbar doesn’t cause horizontal scrolling on mobile */
-    body {
-        overflow-x: hidden;
+    .navbar-links a {
+        font-size: 1rem;
+        padding: 0.45rem 0.65rem;
     }
 }
