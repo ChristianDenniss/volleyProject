@@ -6,6 +6,11 @@
     grid-template-columns: 180px 1fr; /* allow sidebar to shrink a bit */
     min-height: 100vh;                    /* full viewport height */
     padding-bottom: 0 !important;         /* remove bottom gap to footer */
+    transition: grid-template-columns 0.25s ease;
+  }
+
+  .portal-wrapper.sidebar-collapsed {
+    grid-template-columns: 0 1fr;
   }
   
   /* ensure the next element (e.g. footer) doesn't add extra top margin */
@@ -20,10 +25,69 @@
     padding: 1.5rem 1rem;
     display: flex;
     flex-direction: column;
+    position: relative;
     min-width: 120px;
     max-width: 220px;
     width: 100%;
     box-sizing: border-box;
+    transition: padding 0.25s ease, min-width 0.25s ease;
+    z-index: 2;
+  }
+
+  .portal-sidebar-content {
+    min-width: 148px;
+    opacity: 1;
+    transform: translateX(0);
+    visibility: visible;
+    transition:
+      opacity 0.15s ease,
+      transform 0.25s ease,
+      visibility 0s linear;
+  }
+
+  .sidebar-collapsed .portal-sidebar {
+    min-width: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .sidebar-collapsed .portal-sidebar-content {
+    opacity: 0;
+    transform: translateX(-100%);
+    visibility: hidden;
+    transition:
+      opacity 0.15s ease,
+      transform 0.25s ease,
+      visibility 0s linear 0.25s;
+  }
+
+  .portal-sidebar-toggle {
+    position: absolute;
+    top: 1.35rem;
+    right: -0.9rem;
+    width: 1.8rem;
+    height: 1.8rem;
+    padding: 0;
+    border: 1px solid #475569;
+    border-radius: 50%;
+    background: #1f2937;
+    color: #f9fafb;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgb(15 23 42 / 25%);
+    transition: background 0.15s ease, color 0.15s ease;
+    z-index: 3;
+  }
+
+  .portal-sidebar-toggle:hover {
+    background: #334155;
+    color: var(--color-accent);
+  }
+
+  .portal-sidebar-toggle:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
   }
   
   .portal-sidebar h2 {
@@ -62,6 +126,7 @@
     padding: 2rem 2.5rem;
     background: #f8fafc;           /* slate-50 */
     overflow-y: auto;
+    min-width: 0;
   }
   
   /*— responsive tweak —*/
@@ -69,11 +134,16 @@
     .portal-wrapper {
       grid-template-columns: 1fr;
     }
+
+    .portal-wrapper.sidebar-collapsed {
+      grid-template-columns: 0 1fr;
+    }
   
     .portal-sidebar {
       flex-direction: row;
       align-items: center;
       justify-content: space-between;
+      max-width: none;
     }
   
     .portal-sidebar ul {

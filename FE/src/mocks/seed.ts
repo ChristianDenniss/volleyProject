@@ -397,17 +397,24 @@ function buildArticles(users: User[]): Article[] {
     "Hall of Fame: Legacy Squad Honored",
   ];
 
-  return titles.map((title, index) => ({
-    id: index + 1,
-    title,
-    content: `${title}. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.`,
-    summary: title.length > 64 ? `${title.slice(0, 61)}...` : title,
-    imageUrl: `https://placehold.co/800x450/${(300 + index * 11).toString(16).slice(0, 3)}/f8fafc?text=Article+${index + 1}`,
-    likes: pseudoRandom(index + 20, 3, 120),
-    approved: index % 4 !== 3,
-    createdAt: isoDate(2025, 1 + (index % 6), 1 + index, 12),
-    author: users[index % users.length],
-  }));
+  return titles.map((title, index) => {
+    const approvalStatus: boolean | null =
+      index % 3 === 0 ? true :
+      index % 3 === 1 ? null :
+      false;
+
+    return {
+      id: index + 1,
+      title,
+      content: `${title}. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.`,
+      summary: title.length > 64 ? `${title.slice(0, 61)}...` : title,
+      imageUrl: `https://placehold.co/800x450/${(300 + index * 11).toString(16).slice(0, 3)}/f8fafc?text=Article+${index + 1}`,
+      likes: pseudoRandom(index + 20, 3, 120),
+      approved: approvalStatus,
+      createdAt: isoDate(2025, 1 + (index % 6), 1 + index, 12),
+      author: users[index % users.length],
+    };
+  });
 }
 
 function buildAwards(seasons: Season[], players: Player[]): Award[] {

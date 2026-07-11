@@ -277,7 +277,7 @@ export const handlers = [
     const article = {
       id: bumpId("articles"),
       likes: 0,
-      approved: false,
+      approved: null,
       author: getAuthUser(),
       createdAt: new Date().toISOString(),
       ...body,
