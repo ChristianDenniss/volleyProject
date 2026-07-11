@@ -485,8 +485,6 @@ const AwardsPage: React.FC = () => {
 
   return (
     <div className="portal-main">
-      <h1 className="users-title">Awards</h1>
-
       {/* Search and Controls */}
       <div className="players-controls">
         <button

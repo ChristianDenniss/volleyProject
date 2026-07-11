@@ -280,8 +280,6 @@ const PlayersPage: React.FC = () => {
 
   return (
     <div className="portal-main">
-      <h1 className="users-title">Players</h1>
-
       {/* Search and Controls */}
       <div className="players-controls">
         <button className="create-button" onClick={() => setIsModalOpen(true)}>

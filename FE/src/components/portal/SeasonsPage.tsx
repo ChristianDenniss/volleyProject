@@ -454,8 +454,6 @@ const SeasonsPage: React.FC = () =>
 
     return (
         <div className="portal-main">
-            <h1 className="users-title">Seasons</h1>
-
             {/* Create Season Button */}
             <button
                 onClick={openModal}

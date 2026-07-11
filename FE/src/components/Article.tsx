@@ -119,8 +119,6 @@ const Articles: React.FC = () =>
 
     return (
         <div className="article-list-container">
-            <h1>Articles</h1>
-
             {showAuthMessage && (
                 <div className="article-list-auth-message">
                     {!isAuthenticated 

@@ -144,8 +144,6 @@ const UsersPage: React.FC = () => {
 
   return (
     <div className="portal-main">
-      <h1 className="users-title">Users</h1>
-
       {/* Search and Controls */}
       <div className="players-controls">
         <div className="players-controls-right">

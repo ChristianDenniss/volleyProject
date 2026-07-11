@@ -132,8 +132,6 @@ const Players: React.FC = () => {
 
   return (
     <div className={`players-page ${!data ? "loading" : ""}`}>
-      <h1>All Players</h1>
-
       <div className="players-controls-wrapper">
         <div className="players-controls-container">
           <FilterBar onReset={clearFilters}>

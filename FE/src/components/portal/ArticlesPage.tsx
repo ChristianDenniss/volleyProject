@@ -118,7 +118,6 @@ const ArticlesPage: React.FC = () => {
     return (
         <div className="articles-page">
             <div className="page-header">
-                <h1>Article Management</h1>
                 <div className="filter-controls">
                     <button 
                         className={`filter-btn ${filter === 'all' ? 'active' : ''}`}

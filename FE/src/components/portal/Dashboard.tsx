@@ -92,8 +92,6 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="dashboard-container">
-      <h1>Welcome, Admin!</h1>
-      
       {/* Quick Stats Cards */}
       <div className="stats-grid">
         <div className="stat-card">

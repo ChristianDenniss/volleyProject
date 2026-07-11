@@ -903,8 +903,6 @@ const StatsLeaderboard: React.FC = () => {
 
   return (
     <div className={`stats-leaderboard-page ${!players ? 'loading' : ''}`}>
-      <h1>Statistics Leaderboard</h1>
-
       {/* Records Navigation */}
       <div style={{ textAlign: 'right', margin: 0 }}>
         <button 

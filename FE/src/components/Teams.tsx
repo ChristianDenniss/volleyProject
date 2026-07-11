@@ -151,9 +151,6 @@ const Teams: React.FC = () =>
 
     return (
         <div className={`teams-page ${!data ? 'loading' : ''}`}>
-            <h1>Teams Info</h1>
-
-            {/* Controls */}
             <div className="teams-controls-wrapper">
                 <div className="teams-controls-container">
                     {/* Filters Row */}

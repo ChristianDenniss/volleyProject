@@ -6,8 +6,9 @@
 ----------------------------------------------------------- */
 .stats-leaderboard-page
 {
-    padding: 20px;
-    max-width: 1200px;
+    padding: 20px clamp(1rem, 2.5vw, 2.5rem);
+    width: min(100%, 1600px);
+    max-width: 1600px;
     margin: 0 auto;
     min-height: 100vh; /* Prevent layout shift by setting minimum height */
     box-sizing: border-box;
@@ -224,6 +225,7 @@
 ----------------------------------------------------------- */
 .stats-table-wrapper
 {
+    width: 100%;
     overflow-x: auto;
     scrollbar-width: thin;
     scrollbar-color: #b0b0b0 #f0f0f0;
@@ -407,7 +409,7 @@
 /* Skeleton loader for better UX */
 .stats-skeleton-table {
     width: 100%;
-    min-width: 1200px;
+    min-width: 100%;
     border-collapse: collapse;
     border: 1px solid #e2e8f0;
     border-radius: 4px;

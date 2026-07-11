@@ -81,7 +81,6 @@ const Seasons: React.FC = () =>
     
     return (
         <div className={`seasons-page ${!data ? 'loading' : ''}`}>
-            <h1 className="page-title">All Seasons</h1>
             <div className="seasons-grid">
                 {!data ? (
                     // Skeleton loaders

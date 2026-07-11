@@ -35,7 +35,6 @@ const Awards: React.FC = () => {
 
   return (
     <div className={`volley-awards-container ${loading ? 'loading' : ''}`}>
-      <h1 className="volley-awards-header">All Awards</h1>
       <div className="volley-awards-controls">
         <SeasonFilter selectedSeason={selectedSeason} onSeasonChange={setSelectedSeason} />
         <label htmlFor="award-type-select" style={{ marginRight: 8 }}>Award Type:</label>

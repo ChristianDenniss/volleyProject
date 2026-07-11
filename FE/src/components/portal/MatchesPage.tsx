@@ -618,7 +618,6 @@ const MatchesPage: React.FC = () => {
   return (
     <div className="portal-page">
       <div className="page-header">
-        <h1>Matches Management</h1>
         <div className="header-actions">
           <button onClick={openImportModal} className="import-button">
             Import from Challonge

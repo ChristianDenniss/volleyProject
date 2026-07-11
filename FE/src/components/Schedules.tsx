@@ -281,11 +281,6 @@ const Schedules: React.FC = () => {
 
 
 
-             {/* Header */}
-       <div className="schedules-header">
-         <h1>Schedules & Results</h1>
-       </div>
-
       {/* Filters */}
       <div className="schedules-filters">
         <div className="search-row">

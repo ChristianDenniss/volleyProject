@@ -92,8 +92,6 @@ const Games: React.FC = () => {
 
   return (
     <div className={`games-page ${!data ? "loading" : ""}`}>
-      <h1>Games Info</h1>
-
       <div className="games-controls-wrapper">
         <div className="games-controls-container">
           <FilterBar onReset={(searchQuery || seasonFilter || stageFilter) ? clearFilters : undefined}>

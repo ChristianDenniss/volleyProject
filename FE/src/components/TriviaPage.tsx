@@ -638,7 +638,6 @@ const TriviaPage: React.FC = () => {
 
     const renderSelectionScreen = () => (
         <div className="trivia-selection">
-            <h1>Volleyball 4.2 Trivia</h1>
             <p>Test your knowledge of RVL players, teams, and seasons!</p>
             <div className="selection-section">
                 <h2>What would you like to guess?</h2>

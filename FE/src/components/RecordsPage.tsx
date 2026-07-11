@@ -304,9 +304,6 @@ const RecordsPage: React.FC = () => {
 
     return (
         <div className="records-container">
-            {/* Header */}
-            <h1 className="records-header">Records</h1>
-
             {/* Calculate button for admins */}
             {user && (user.role === 'admin' || user.role === 'superadmin') && (
                 <div style={{ textAlign: 'center' }}>

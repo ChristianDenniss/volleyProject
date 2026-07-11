@@ -642,8 +642,6 @@ const StatsPage: React.FC = () =>
 
     return (
         <div className="portal-main">
-            <h1 className="users-title">Stats</h1>
-
             {/* Search and Controls */}
             <div className="players-controls">
                 <div style={{ display: 'flex', gap: '10px' }}>
