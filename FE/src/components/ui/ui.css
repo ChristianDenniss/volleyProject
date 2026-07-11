@@ -147,24 +147,10 @@
 .ui-filter-bar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: var(--space-4);
   flex-wrap: wrap;
   margin-bottom: var(--space-section);
-}
-
-.ui-filter-bar-fields {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  flex-wrap: wrap;
-}
-
-@media (max-width: 768px) {
-  .ui-filter-bar {
-    flex-direction: column;
-    align-items: stretch;
-  }
 }
 
 /* Table */

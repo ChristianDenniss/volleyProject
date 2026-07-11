@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useGames, useSeasons } from '../hooks/allFetch';
 import type { Game } from '../types/interfaces';
 import SearchBar from './Searchbar';
@@ -8,6 +8,7 @@ import FilterBar from './ui/FilterBar';
 import '../styles/Schedules.css';
 
 const Schedules: React.FC = () => {
+  const navigate = useNavigate();
   const { data: seasons } = useSeasons();
   const [selectedSeason, setSelectedSeason] = useState<number | undefined>();
   const [selectedRound, setSelectedRound] = useState<string>('');
@@ -105,17 +106,23 @@ const Schedules: React.FC = () => {
     return date >= startDate && date < endDate;
   }).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
 
-  const clearFilters = () => {
-    setSearchQuery('');
-    setSelectedRound('');
-    setSelectedPhase('');
-    setSelectedRegion('');
-    setSelectedTag('');
-    setCurrentDateRange(new Date());
-  };
-
   const handleSearch = (query: string) => {
     setSearchQuery(query);
+  };
+
+  const handleGameClick = (gameId: number) => {
+    navigate(`/games/${gameId}`);
+  };
+
+  const handleGameKeyDown = (event: React.KeyboardEvent, gameId: number) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      handleGameClick(gameId);
+    }
+  };
+
+  const stopCardNavigation = (event: React.MouseEvent | React.KeyboardEvent) => {
+    event.stopPropagation();
   };
 
   const toggleDateSection = (dateKey: string) => {
@@ -174,19 +181,14 @@ const Schedules: React.FC = () => {
     return null;
   };
 
-  const getPrimaryTag = (game: Game) => {
-    if (!game.tags || game.tags.length === 0) {
-      return null;
-    }
-    return game.tags[0];
-  };
-
-  const getTagColor = (tag: string | null) => {
-    if (!tag) return 'default';
+  const getTagColor = (tag: string) => {
     const tagLower = tag.toLowerCase();
     if (tagLower.includes('rvl')) return 'blue';
-    if (tagLower.includes('invitational')) return 'purple';
+    if (tagLower.includes('playoff') || tagLower.includes('winner')) return 'purple';
     if (tagLower.includes('d-league') || tagLower.includes('dleague')) return 'green';
+    if (tagLower.includes('qualifier')) return 'green';
+    if (tagLower.includes('loser')) return 'red';
+    if (tagLower.includes('exhibition') || tagLower.includes('pre-season')) return 'orange';
     return 'default'; // Default dark gray
   };
 
@@ -231,7 +233,7 @@ const Schedules: React.FC = () => {
            </button>
         </div>
 
-        <FilterBar onReset={clearFilters}>
+        <FilterBar>
           <select
             className="filter-dropdown"
             value={selectedSeason || ''}
@@ -341,11 +343,23 @@ const Schedules: React.FC = () => {
                       const team2 = game.teams?.[1];
                        
                       return (
-                        <div key={game.id} className="match-card">
+                        <div
+                          key={game.id}
+                          className="match-card match-card-clickable"
+                          role="link"
+                          tabIndex={0}
+                          onClick={() => handleGameClick(game.id)}
+                          onKeyDown={(event) => handleGameKeyDown(event, game.id)}
+                          aria-label={`View game: ${game.name ?? `${team1?.name ?? 'TBD'} vs ${team2?.name ?? 'TBD'}`}`}
+                        >
                           <div className="match-header">
-                            {getPrimaryTag(game) && (
-                              <div className={`gender-tag tag-${getTagColor(getPrimaryTag(game))}`}>
-                                {getPrimaryTag(game)}
+                            {game.tags && game.tags.length > 0 && (
+                              <div className="match-tags" aria-label="Game tags">
+                                {game.tags.map((tag) => (
+                                  <span key={tag} className={`gender-tag tag-${getTagColor(tag)}`}>
+                                    {tag}
+                                  </span>
+                                ))}
                               </div>
                             )}
                             <div className="match-info">
@@ -373,7 +387,17 @@ const Schedules: React.FC = () => {
                                     />
                                   </div>
                                 )}
-                                <span className="team-name">{team1?.name || 'TBD'}</span>
+                                {team1?.name ? (
+                                  <Link
+                                    to={`/teams/${encodeURIComponent(team1.name)}`}
+                                    className="team-name team-name-link"
+                                    onClick={stopCardNavigation}
+                                  >
+                                    {team1.name}
+                                  </Link>
+                                ) : (
+                                  <span className="team-name">TBD</span>
+                                )}
                               </div>
                               <div className="team-score">
                                 {game.status === 'completed' && game.team1Score != null && (
@@ -413,7 +437,17 @@ const Schedules: React.FC = () => {
                                     />
                                   </div>
                                 )}
-                                <span className="team-name">{team2?.name || 'TBD'}</span>
+                                {team2?.name ? (
+                                  <Link
+                                    to={`/teams/${encodeURIComponent(team2.name)}`}
+                                    className="team-name team-name-link"
+                                    onClick={stopCardNavigation}
+                                  >
+                                    {team2.name}
+                                  </Link>
+                                ) : (
+                                  <span className="team-name">TBD</span>
+                                )}
                               </div>
                               <div className="team-score">
                                 {game.status === 'completed' && game.team2Score != null && (
@@ -450,11 +484,11 @@ const Schedules: React.FC = () => {
                                 {game.date ? formatTime(game.date.toString()) : 'TBD'}
                               </span>
                             </div>
-                            <div className="match-actions">
+                            <div className="match-actions" onClick={stopCardNavigation}>
                               {game.videoUrl ? (
                                 <a href={game.videoUrl} className="action-button watch" target="_blank" rel="noreferrer">WATCH</a>
                               ) : (
-                                <button className="action-button watch" disabled>WATCH</button>
+                                <button type="button" className="action-button watch" disabled>WATCH</button>
                               )}
                               {game.status === 'completed' && (
                                 <Link to={`/games/${game.id}`} className="action-button shop">STATS</Link>

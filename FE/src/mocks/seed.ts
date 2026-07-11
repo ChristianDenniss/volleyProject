@@ -165,13 +165,35 @@ const MATCH_ROUNDS = [
   "Round 1",
   "Round 2",
   "Round 3",
+  "Round of 16",
   "Quarterfinals",
   "Semifinals",
   "Finals",
   "Grand Finals",
 ] as const;
 
-const TAGS = ["RVL", "Playoffs", "Invitational", "D-League", "Showcase"] as const;
+function buildGameTags(round: string, slotIndex: number, gameId: number): string[] {
+  const bracket = (slotIndex + gameId) % 3 === 0
+    ? "Losers Bracket"
+    : "Winners Bracket";
+  const region = pick(["NA", "EU", "AS", "SA"] as const, gameId);
+  const division = pick(["Invitational", "D-League", "Showcase"] as const, slotIndex);
+
+  switch (gameId % 6) {
+    case 0:
+      return ["RVL", "Playoffs", round, bracket, region, division];
+    case 1:
+      return ["RVL", "Qualifiers", "Round of 16", round, region, "Exhibition"];
+    case 2:
+      return ["RVL", "Pre-Season", "Exhibition", round, region];
+    case 3:
+      return ["RVL", "Playoffs", "Round of 16", bracket, division];
+    case 4:
+      return ["RVL", "Qualifiers", round];
+    default:
+      return ["RVL", "Playoffs", round, bracket];
+  }
+}
 
 const SEASON_THEMES = [
   "Neon Nights",
@@ -466,15 +488,28 @@ function buildScheduleGameEntry(
   slotIndex: number
 ): Game {
   const round = pick(MATCH_ROUNDS, slotIndex + gameId);
+  const tags = buildGameTags(round, slotIndex, gameId);
+  const isExhibition = tags.includes("Exhibition");
+  const phase: Game["phase"] = isExhibition
+    ? undefined
+    : tags.includes("Qualifiers")
+      ? "qualifiers"
+      : "playoffs";
+  const stage = isExhibition
+    ? "Pre-Season; Exhibition"
+    : tags.includes("Qualifiers")
+      ? `Qualifiers; ${round}`
+      : `${tags[tags.length - 1]}; ${round}`;
+
   return {
     id: gameId,
     name: `${team1.name} vs ${team2.name}`,
     matchNumber: `${round} - Match ${(slotIndex % 4) + 1}`,
     status: completed ? "completed" : "scheduled",
     round,
-    phase: 'qualifiers',
+    phase,
     region: 'na',
-    stage: `Qualifiers; ${round}`,
+    stage,
     date,
     team1Score: completed ? pseudoRandom(gameId, 1, 3) : null,
     team2Score: completed ? pseudoRandom(gameId + 2, 0, 2) : null,
@@ -486,9 +521,7 @@ function buildScheduleGameEntry(
     season,
     teams: [team1, team2],
     videoUrl: null,
-    tags: [pick(TAGS, slotIndex), pick(TAGS, slotIndex + 1)].filter(
-      (tag, idx, arr) => arr.indexOf(tag) === idx
-    ),
+    tags,
   };
 }
 

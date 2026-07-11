@@ -13,6 +13,7 @@ import { handleFileUpload } from "../../utils/csvUploadUtils";
 import SearchBar from "../Searchbar";
 import Pagination from "../Pagination";
 import Table, { type TableColumn } from "../ui/Table";
+import "../ui/ui.css";
 import "../../styles/GamesPage.css"; // reuse table & text-muted styles
 import "../../styles/PortalPlayersPage.css"; // portal-specific styles
 import "../../styles/StatsPage.css"; // import new styles
@@ -654,6 +655,15 @@ const StatsPage: React.FC = () =>
                 </div>
                 <div className="players-controls-right">
                     <SearchBar onSearch={handleSearch} placeholder="Search stats..." />
+                    {searchQuery && (
+                        <button
+                            type="button"
+                            className="ui-btn ui-btn-secondary"
+                            onClick={clearFilters}
+                        >
+                            Reset
+                        </button>
+                    )}
                     <Pagination
                         currentPage={currentPage}
                         totalPages={totalPages}
@@ -1119,31 +1129,12 @@ const StatsPage: React.FC = () =>
                 </div>
             )}
 
-            {/* Results Counter and Clear Filters */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                <div className="results-counter">
-                    {total > 0 ? (
-                        `Showing ${((currentPage - 1) * STATS_PER_PAGE) + 1}-${Math.min(currentPage * STATS_PER_PAGE, total)} of ${total} stats`
-                    ) : (
-                        'No stats found'
-                    )}
-                </div>
-                {searchQuery && (
-                    <button
-                        className="clear-filters-button"
-                        onClick={clearFilters}
-                        style={{
-                            background: 'transparent',
-                            border: '1px solid #e5e7eb',
-                            borderRadius: '0.375rem',
-                            padding: '0.5rem 1rem',
-                            fontSize: '0.875rem',
-                            cursor: 'pointer',
-                            color: '#6b7280'
-                        }}
-                    >
-                        Clear Filters
-                    </button>
+            {/* Results Counter */}
+            <div className="results-counter" style={{ marginBottom: '1rem' }}>
+                {total > 0 ? (
+                    `Showing ${((currentPage - 1) * STATS_PER_PAGE) + 1}-${Math.min(currentPage * STATS_PER_PAGE, total)} of ${total} stats`
+                ) : (
+                    'No stats found'
                 )}
             </div>
 

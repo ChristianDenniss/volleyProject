@@ -322,6 +322,20 @@
   font-weight: 700;
 }
 
+.schedules-page .team-name-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.schedules-page .team-name-link:hover {
+  color: var(--primary-blue);
+  text-decoration: underline;
+}
+
+.schedules-page .winning-team .team-name-link:hover {
+  color: #15803d;
+}
+
 .team-logo-container {
   display: flex;
   align-items: center;
@@ -628,13 +642,37 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
+.match-card-clickable {
+  cursor: pointer;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.match-card-clickable:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  transform: translateY(-1px);
+}
+
+.match-card-clickable:focus-visible {
+  outline: 2px solid var(--primary-blue);
+  outline-offset: 2px;
+}
+
 .match-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   padding: 16px;
   background: #f9fafb;
   border-bottom: 1px solid #e5e7eb;
   gap: 12px;
+}
+
+.match-tags {
+  display: grid;
+  grid-template-rows: repeat(2, auto);
+  grid-auto-flow: column;
+  gap: 6px;
+  max-width: 45%;
+  align-content: start;
 }
 
 .gender-tag {
@@ -667,11 +705,20 @@
   background: #059669;
 }
 
+.gender-tag.tag-red {
+  background: #dc2626;
+}
+
+.gender-tag.tag-orange {
+  background: #d97706;
+}
+
 .match-info {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 4px;
+  align-self: center;
 }
 
 .match-type {

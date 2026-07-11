@@ -8,7 +8,7 @@ interface FilterBarProps {
 
 const FilterBar: React.FC<FilterBarProps> = ({ children, onReset }) => (
   <div className="ui-filter-bar">
-    <div className="ui-filter-bar-fields">{children}</div>
+    {children}
     {onReset && (
       <button type="button" className="ui-btn ui-btn-secondary" onClick={onReset}>
         Reset
