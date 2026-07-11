@@ -223,7 +223,9 @@ const AdvancedFilter: React.FC<{
 };
 
 const StatsLeaderboard: React.FC = () => {
-  const { data: players, error } = usePlayers();
+  // The leaderboard needs the full roster in one page to search/sort/filter client-side;
+  // the default 100-player limit was silently truncating rosters once they grew past it.
+  const { data: players, error } = usePlayers({ limit: 1000 });
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedSeason, setSelectedSeason] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);

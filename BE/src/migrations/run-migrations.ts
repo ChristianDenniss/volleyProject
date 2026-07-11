@@ -55,6 +55,7 @@ const AppDataSource = new DataSource({
     ssl: false, // Disable SSL by default, let the connection URL handle SSL settings
     entities: [join(__dirname, "..", "modules", "**", "*.entity.{js,ts}")],
     migrations: [join(__dirname, "*.{js,ts}")],
+    migrationsTransactionMode: "each",
     synchronize: false,
     logging: true,
 });

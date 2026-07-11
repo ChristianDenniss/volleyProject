@@ -234,6 +234,11 @@ export class TeamService {
                 "games.stats",
                 "games.season"
             ],
+            // Nested to-many relations (players.stats, games.stats) would otherwise be loaded via
+            // a single mega-JOIN, so skip/take applies to the joined row count instead of distinct
+            // teams and can silently return fewer/duplicated teams per page. Loading relations via
+            // separate queries avoids the row-multiplication and fixes pagination correctness.
+            relationLoadStrategy: 'query',
             skip: pagination.skip,
             take: pagination.take
         });
@@ -261,6 +266,7 @@ export class TeamService {
             relations: [
                 "season", "players"
             ],
+            relationLoadStrategy: 'query',
             skip: pagination.skip,
             take: pagination.take
         });
@@ -281,7 +287,8 @@ export class TeamService {
                 "games",
                 "games.stats",
                 "games.season"
-            ]
+            ],
+            relationLoadStrategy: 'query'
         });
 
         if (!team) {
@@ -319,7 +326,8 @@ export class TeamService {
                 "games",
                 "games.stats",
                 "games.season"
-            ]
+            ],
+            relationLoadStrategy: 'query'
         });
     }
 

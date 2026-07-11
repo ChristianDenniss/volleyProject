@@ -193,7 +193,10 @@ export class PlayerController {
     // Get all players
     getPlayers = async (req: Request, res: Response): Promise<void> => {
         try {
-            const pagination = parsePagination(req.query, PLAYERS_DEFAULT_LIMIT);
+            // Higher max than the general default: the stats leaderboard needs the full roster
+            // in one page to search/sort/filter client-side, and player counts are naturally
+            // bounded (rosters), unlike games/stats which grow unboundedly.
+            const pagination = parsePagination(req.query, PLAYERS_DEFAULT_LIMIT, 1000);
             const filters = await this.parseFilters(req);
             const [data, total] = await this.playerService.getAllPlayers(pagination, filters);
             res.json(toPaginatedResult(data, total, pagination));

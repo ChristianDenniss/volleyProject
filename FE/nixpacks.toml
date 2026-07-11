@@ -1,0 +1,17 @@
+# Fallback if Coolify still uses Nixpacks instead of FE/Dockerfile.
+# Prefer Dockerfile — it uses far less disk during builds.
+
+[variables]
+NIXPACKS_NODE_VERSION = "22"
+
+[phases.setup]
+nixPkgs = ["nodejs_22"]
+
+[phases.install]
+cmds = ["npm ci"]
+
+[phases.build]
+cmds = ["npm run build"]
+
+[start]
+cmd = "caddy file-server --root dist --listen :3000 --browse"

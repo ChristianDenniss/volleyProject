@@ -262,13 +262,12 @@ export class RecordService {
         // Calculate single game records
         for (const recordType of recordTypes) {
             const top10Stats = this.calculateTop10ForRecordType(stats, recordType);
-            
+
             // Clear existing records for this type and game type
             await this.recordRepository.delete({ record: recordType, type: 'game' });
 
-            // Create new records
-            for (let i = 0; i < top10Stats.length; i++) {
-                const stat = top10Stats[i];
+            // Build and batch-save new records
+            const newRecords = top10Stats.map((stat, i) => {
                 const newRecord = new Records();
                 newRecord.record = recordType;
                 newRecord.type = 'game';
@@ -278,9 +277,12 @@ export class RecordService {
                 newRecord.season = stat.game.season;
                 newRecord.player = stat.player;
                 newRecord.gameId = stat.game.id; // Set the game ID
+                return newRecord;
+            });
 
-                await this.recordRepository.save(newRecord);
-                recordsCreated++;
+            if (newRecords.length > 0) {
+                await this.recordRepository.save(newRecords);
+                recordsCreated += newRecords.length;
             }
         }
 
@@ -291,13 +293,11 @@ export class RecordService {
 
         for (const recordType of aggregatedRecordTypes) {
             const top10Stats = this.calculateTop10ForAggregatedRecordType(stats, recordType);
-            
+
             // Clear existing records for this type and game type
             await this.recordRepository.delete({ record: recordType, type: 'game' });
 
-            // Create new records
-            for (let i = 0; i < top10Stats.length; i++) {
-                const stat = top10Stats[i];
+            const newRecords = top10Stats.map((stat, i) => {
                 const newRecord = new Records();
                 newRecord.record = recordType;
                 newRecord.type = 'game';
@@ -307,22 +307,23 @@ export class RecordService {
                 newRecord.season = stat.game.season;
                 newRecord.player = stat.player;
                 newRecord.gameId = stat.game.id; // Set the game ID
+                return newRecord;
+            });
 
-                await this.recordRepository.save(newRecord);
-                recordsCreated++;
+            if (newRecords.length > 0) {
+                await this.recordRepository.save(newRecords);
+                recordsCreated += newRecords.length;
             }
         }
 
         // Calculate season aggregate records (same record types but season type)
         for (const recordType of recordTypes) {
             const top10SeasonStats = this.calculateTop10SeasonStats(stats, recordType);
-            
+
             // Clear existing records for this type and season type
             await this.recordRepository.delete({ record: recordType, type: 'season' });
 
-            // Create new records
-            for (let i = 0; i < top10SeasonStats.length; i++) {
-                const seasonStat = top10SeasonStats[i];
+            const newRecords = top10SeasonStats.map((seasonStat, i) => {
                 const newRecord = new Records();
                 newRecord.record = recordType;
                 newRecord.type = 'season';
@@ -331,22 +332,23 @@ export class RecordService {
                 newRecord.date = seasonStat.season.startDate;
                 newRecord.season = seasonStat.season;
                 newRecord.player = seasonStat.player;
+                return newRecord;
+            });
 
-                await this.recordRepository.save(newRecord);
-                recordsCreated++;
+            if (newRecords.length > 0) {
+                await this.recordRepository.save(newRecords);
+                recordsCreated += newRecords.length;
             }
         }
 
         // Calculate season aggregated records (total kills, attempts, errors) - season type
         for (const recordType of aggregatedRecordTypes) {
             const top10SeasonStats = this.calculateTop10SeasonAggregatedStats(stats, recordType);
-            
+
             // Clear existing records for this type and season type
             await this.recordRepository.delete({ record: recordType, type: 'season' });
 
-            // Create new records
-            for (let i = 0; i < top10SeasonStats.length; i++) {
-                const seasonStat = top10SeasonStats[i];
+            const newRecords = top10SeasonStats.map((seasonStat, i) => {
                 const newRecord = new Records();
                 newRecord.record = recordType;
                 newRecord.type = 'season';
@@ -355,9 +357,12 @@ export class RecordService {
                 newRecord.date = seasonStat.season.startDate;
                 newRecord.season = seasonStat.season;
                 newRecord.player = seasonStat.player;
+                return newRecord;
+            });
 
-                await this.recordRepository.save(newRecord);
-                recordsCreated++;
+            if (newRecords.length > 0) {
+                await this.recordRepository.save(newRecords);
+                recordsCreated += newRecords.length;
             }
         }
 
@@ -375,13 +380,11 @@ export class RecordService {
             
             if (eligibleStats.length > 0) {
                 const top10Stats = this.calculateTop10TotalSpikingPercentage(eligibleStats, recordType);
-                
+
                 // Clear existing records for this type and game type
                 await this.recordRepository.delete({ record: recordType, type: 'game' });
 
-                // Create new records
-                for (let i = 0; i < top10Stats.length; i++) {
-                    const stat = top10Stats[i];
+                const newRecords = top10Stats.map((stat, i) => {
                     const newRecord = new Records();
                     newRecord.record = recordType;
                     newRecord.type = 'game';
@@ -391,9 +394,12 @@ export class RecordService {
                     newRecord.season = stat.game.season;
                     newRecord.player = stat.player;
                     newRecord.gameId = stat.game.id; // Set the game ID
+                    return newRecord;
+                });
 
-                    await this.recordRepository.save(newRecord);
-                    recordsCreated++;
+                if (newRecords.length > 0) {
+                    await this.recordRepository.save(newRecords);
+                    recordsCreated += newRecords.length;
                 }
             }
         }
@@ -416,13 +422,11 @@ export class RecordService {
             
             if (eligibleSeasonStats.length > 0) {
                 const top10SeasonStats = this.calculateTop10SeasonSpikingPercentage(eligibleSeasonStats, recordType);
-                
+
                 // Clear existing records for this type and season type
                 await this.recordRepository.delete({ record: recordType, type: 'season' });
 
-                // Create new records
-                for (let i = 0; i < top10SeasonStats.length; i++) {
-                    const seasonStat = top10SeasonStats[i];
+                const newRecords = top10SeasonStats.map((seasonStat, i) => {
                     const newRecord = new Records();
                     newRecord.record = recordType;
                     newRecord.type = 'season';
@@ -431,9 +435,12 @@ export class RecordService {
                     newRecord.date = seasonStat.season.startDate;
                     newRecord.season = seasonStat.season;
                     newRecord.player = seasonStat.player;
+                    return newRecord;
+                });
 
-                    await this.recordRepository.save(newRecord);
-                    recordsCreated++;
+                if (newRecords.length > 0) {
+                    await this.recordRepository.save(newRecords);
+                    recordsCreated += newRecords.length;
                 }
             }
         }

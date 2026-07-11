@@ -59,6 +59,7 @@ export const AppDataSource = new DataSource({
     entities: entities,
     migrations: [join(__dirname, "..", "..", "migrations", "*.{js,ts}")], // Point to dist/migrations in production
     migrationsTableName: "migrations", // Explicitly set migrations table name
+    migrationsTransactionMode: "each",
     subscribers: [],
     ssl: false, // Disable SSL by default, let the connection URL handle SSL settings
 });

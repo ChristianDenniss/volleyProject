@@ -138,6 +138,10 @@ export class PlayerService extends CacheableService
             this.playerRepository.findAndCount({
                 where: this.buildWhere(filters),
                 relations: ["teams", "teams.season", "teams.region", "stats", "stats.game", "stats.game.season", "stats.game.teams"],
+                // Nested to-many relations (teams, stats.game.teams) loaded via a single mega-JOIN
+                // would apply skip/take to the joined row count instead of distinct players, so
+                // load relations via separate queries to keep pagination correct.
+                relationLoadStrategy: 'query',
                 skip: pagination.skip,
                 take: pagination.take
             })
@@ -153,6 +157,7 @@ export class PlayerService extends CacheableService
             this.playerRepository.findAndCount({
                 where: this.buildWhere(filters),
                 relations: ["teams", "teams.season", "teams.region"],
+                relationLoadStrategy: 'query',
                 skip: pagination.skip,
                 take: pagination.take
             })
@@ -170,6 +175,7 @@ export class PlayerService extends CacheableService
             const player = await this.playerRepository.findOne({
                 where: { id },
                 relations: ["teams", "teams.season", "teams.region", "stats", "stats.game", "stats.game.season", "teams.games", "teams.games.season"],
+                relationLoadStrategy: 'query',
             });
 
             return player;

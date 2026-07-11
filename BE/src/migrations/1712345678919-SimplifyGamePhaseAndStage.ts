@@ -1,6 +1,9 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
 export class SimplifyGamePhaseAndStage1712345678919 implements MigrationInterface {
+    // PostgreSQL requires new enum values to be committed before use (error 55P04).
+    public transaction = false;
+
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`
             DO $$ BEGIN

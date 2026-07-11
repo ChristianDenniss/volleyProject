@@ -1,52 +1,55 @@
 // src/App.tsx
-import React from "react";
+import React, { Suspense, lazy } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./context/authContext";
 import { RegionProvider } from "./context/regionContext";
 import ViewportLayoutSync from "./components/ViewportLayoutSync";
-import Applications from "./components/Applications";
 import Header         from "./components/Header";
 import Navbar         from "./components/NavBar";
 import Footer         from "./components/Footer";
-import UserProfile    from "./components/UserProfile";
-import SignUp         from "./components/SignUp";
-import Home           from "./components/Home";
-import About          from "./components/About";
-import Players        from "./components/Players";
-import Awards         from "./components/Awards";
-import Teams          from "./components/Teams";
-import SingleTeam     from "./components/Single/SingleTeam";
-import Games          from "./components/Games";
-import SingleGame     from "./components/Single/SingleGame";
-import Seasons        from "./components/Seasons";
-import SingleSeason   from "./components/Single/SingleSeason";
-import Articles       from "./components/Article";
-import SingleArticle  from "./components/Single/SingleArticle";
-import Contact        from "./components/ContactUs";
-import PrivacyPolicy  from "./components/PrivacyPolicy";
-import Credits        from "./components/Credits";
-import SinglePlayer from "./components/Single/SinglePlayer";
-import PortalLayout   from "./components/portal/PortalLayout";
-import Dashboard      from "./components/portal/Dashboard";
-import UsersPage      from "./components/portal/UsersPage";
-import PlayersPage      from "./components/portal/PlayersPage";
-import TeamsPage      from "./components/portal/TeamsPage";
-import SeasonsPage      from "./components/portal/SeasonsPage";
-import GamesPage from "./components/portal/GamesPage";
-import StatsPage from "./components/portal/StatsPage";
-import SingleAward from "./components/Single/SingleAward";
-import LoginPage      from "./components/Login";
 import PrivateRoute   from "./components/portal/PrivateRoute";      // ← NEW import
-import AwardsPage   from "./components/portal/AwardsPage";  
-import CreateArticle from "./components/CreateArticle";
-import ArticlesPage from "./components/portal/ArticlesPage";
-import ApplicationsPage from "./components/portal/ApplicationsPage";
-import StatsLeaderboard from "./components/StatsLeaderboard";
-import FAQ from "./components/FAQ";
-import RecordsPage from "./components/RecordsPage";
-import TriviaPage from "./components/TriviaPage"; 
-import Schedules from "./components/Schedules";
-import VectorGraphPage from "./components/VectorGraphPage";
+
+// Route-level code splitting: each page (and its exclusive dependencies, e.g. three.js
+// for VectorGraphPage) only downloads when a visitor actually navigates to it.
+const Applications      = lazy(() => import("./components/Applications"));
+const UserProfile       = lazy(() => import("./components/UserProfile"));
+const SignUp            = lazy(() => import("./components/SignUp"));
+const Home              = lazy(() => import("./components/Home"));
+const About             = lazy(() => import("./components/About"));
+const Players           = lazy(() => import("./components/Players"));
+const Awards            = lazy(() => import("./components/Awards"));
+const Teams             = lazy(() => import("./components/Teams"));
+const SingleTeam        = lazy(() => import("./components/Single/SingleTeam"));
+const Games             = lazy(() => import("./components/Games"));
+const SingleGame        = lazy(() => import("./components/Single/SingleGame"));
+const Seasons           = lazy(() => import("./components/Seasons"));
+const SingleSeason      = lazy(() => import("./components/Single/SingleSeason"));
+const Articles          = lazy(() => import("./components/Article"));
+const SingleArticle     = lazy(() => import("./components/Single/SingleArticle"));
+const Contact           = lazy(() => import("./components/ContactUs"));
+const PrivacyPolicy     = lazy(() => import("./components/PrivacyPolicy"));
+const Credits           = lazy(() => import("./components/Credits"));
+const SinglePlayer      = lazy(() => import("./components/Single/SinglePlayer"));
+const PortalLayout      = lazy(() => import("./components/portal/PortalLayout"));
+const Dashboard         = lazy(() => import("./components/portal/Dashboard"));
+const UsersPage         = lazy(() => import("./components/portal/UsersPage"));
+const PlayersPage       = lazy(() => import("./components/portal/PlayersPage"));
+const TeamsPage         = lazy(() => import("./components/portal/TeamsPage"));
+const SeasonsPage       = lazy(() => import("./components/portal/SeasonsPage"));
+const GamesPage         = lazy(() => import("./components/portal/GamesPage"));
+const StatsPage         = lazy(() => import("./components/portal/StatsPage"));
+const SingleAward       = lazy(() => import("./components/Single/SingleAward"));
+const LoginPage         = lazy(() => import("./components/Login"));
+const AwardsPage        = lazy(() => import("./components/portal/AwardsPage"));
+const CreateArticle     = lazy(() => import("./components/CreateArticle"));
+const ArticlesPage      = lazy(() => import("./components/portal/ArticlesPage"));
+const ApplicationsPage  = lazy(() => import("./components/portal/ApplicationsPage"));
+const StatsLeaderboard  = lazy(() => import("./components/StatsLeaderboard"));
+const FAQ               = lazy(() => import("./components/FAQ"));
+const RecordsPage       = lazy(() => import("./components/RecordsPage"));
+const TriviaPage        = lazy(() => import("./components/TriviaPage"));
+const Schedules         = lazy(() => import("./components/Schedules"));
+const VectorGraphPage   = lazy(() => import("./components/VectorGraphPage"));
 
 const App: React.FC = () => (
   <AuthProvider>
@@ -57,6 +60,7 @@ const App: React.FC = () => (
       <Navbar />
 
       <div className="main-content">
+        <Suspense fallback={<div className="page-loading" />}>
         <Routes>
           {/* public site */}
           <Route path="/" element={<Home />} />
@@ -113,6 +117,7 @@ const App: React.FC = () => (
             <Route path="applications" element={<ApplicationsPage />} />
           </Route>
         </Routes>
+        </Suspense>
       </div>
 
       <Footer />
