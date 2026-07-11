@@ -35,7 +35,7 @@ const Applications: React.FC = () => {
     const { data: forms, loading, error } = useApplicationForms();
 
     const groupedApplications = useMemo(() => {
-        return (forms ?? []).reduce((acc, app) => {
+        return (forms ?? []).reduce((acc: Record<string, ApplicationForm[]>, app: ApplicationForm) => {
             if (!acc[app.category]) {
                 acc[app.category] = [];
             }
@@ -74,7 +74,7 @@ const Applications: React.FC = () => {
                                 {categories[category]}
                             </h2>
                             <div className="category-apps">
-                                {apps.map((app) => (
+                                {apps.map((app: ApplicationForm) => (
                                     <div
                                         key={app.slug}
                                         className={`application-card ${app.status}`}

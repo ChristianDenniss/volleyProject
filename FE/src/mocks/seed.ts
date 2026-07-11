@@ -1,4 +1,5 @@
 import type {
+  ApplicationForm,
   Article,
   Award,
   Game,
@@ -728,8 +729,6 @@ function buildRecords(
   return records;
 }
 
-import type { ApplicationForm } from "../types/interfaces";
-
 function buildApplicationForms(): ApplicationForm[] {
   return [
     {
@@ -752,8 +751,8 @@ function buildApplicationForms(): ApplicationForm[] {
       description:
         "Join our media team to create content, stream RVL matches, manage social media, and help promote the league through various platforms.",
       url: "https://forms.gle/L6QFsuztCaJMRQyp8",
-      status: "closed" as const,
-      category: "media" as const,
+      status: "closed",
+      category: "media",
       sortOrder: 2,
     },
     {
@@ -764,8 +763,8 @@ function buildApplicationForms(): ApplicationForm[] {
       description:
         "Apply to become a RVL referee and help officiate volleyball matches. Ensure fair play and maintain game rules.",
       url: null,
-      status: "closed" as const,
-      category: "game-officials" as const,
+      status: "closed",
+      category: "game-officials",
       sortOrder: 3,
     },
     {
@@ -776,8 +775,8 @@ function buildApplicationForms(): ApplicationForm[] {
       description:
         "Help moderate our Discords community spaces, enforce rules, and maintain a positive environment for all members.",
       url: null,
-      status: "closed" as const,
-      category: "management" as const,
+      status: "closed",
+      category: "management",
       sortOrder: 4,
     },
     {
@@ -788,8 +787,8 @@ function buildApplicationForms(): ApplicationForm[] {
       description:
         "Help moderate Volleyball 4.2s ranked games, police rule violations, and fair play enforcement for the playerbase.",
       url: null,
-      status: "closed" as const,
-      category: "game-officials" as const,
+      status: "closed",
+      category: "game-officials",
       sortOrder: 5,
     },
     {
@@ -800,8 +799,8 @@ function buildApplicationForms(): ApplicationForm[] {
       description:
         "Join our stats team to help track player statistics, game data, and maintain accurate records for RVLs playoffs.",
       url: null,
-      status: "closed" as const,
-      category: "management" as const,
+      status: "closed",
+      category: "management",
       sortOrder: 6,
     },
     {
@@ -812,8 +811,8 @@ function buildApplicationForms(): ApplicationForm[] {
       description:
         "Apply to become a host and help organize events in games outside of 4.2, and keep the community engaged by hosting casual pickup matches.",
       url: null,
-      status: "closed" as const,
-      category: "management" as const,
+      status: "closed",
+      category: "management",
       sortOrder: 7,
     },
   ];

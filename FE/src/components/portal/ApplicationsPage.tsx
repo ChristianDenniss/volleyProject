@@ -27,7 +27,7 @@ const PortalApplicationsPage: React.FC = () => {
 
         setDrafts(
             Object.fromEntries(
-                forms.map((form) => [
+                forms.map((form: ApplicationForm) => [
                     form.slug,
                     {
                         url: form.url ?? "",
