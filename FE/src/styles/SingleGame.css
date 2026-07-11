@@ -81,141 +81,65 @@
 
 /* ===== Scoreboard ===== */
 .scoreboard {
-    display: flex;
-    justify-content: center;
-    align-items: center; /* ← aligns items vertically centered */
-    gap: 4rem;
-    margin-bottom: 3rem;
-    flex-wrap: wrap;
-    min-height: 150px; /* Reserve minimum height for scoreboard */
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    justify-items: center;
+    column-gap: 3rem;
+    row-gap: 1rem;
+    max-width: 760px;
+    margin: 0 auto 3rem;
+    min-height: 150px;
 }
-
 
 .team-column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    width: 100%;
     text-align: center;
-    flex: 1 1 0;
-    max-width: 260px;
-    min-width: 120px;
-    position: relative;
-    padding: 1.25rem 1rem;
-    border-radius: 12px;
-    border: 2px solid transparent;
-    transition: border-color 0.2s ease, background 0.2s ease, opacity 0.2s ease;
 }
 
-.team-column.team-winner {
-    border-color: #f59e0b;
-    background: linear-gradient(180deg, rgba(245, 158, 11, 0.12) 0%, rgba(245, 158, 11, 0.03) 100%);
-    box-shadow: 0 8px 24px rgba(245, 158, 11, 0.15);
+.team-column.team-winner .team-score,
+.team-column.team-winner .single-game-team-name {
+    color: var(--color-brand-primary);
 }
 
-.team-column.team-loser {
-    opacity: 0.72;
-    background: #f8fafc;
-    border-color: #e5e7eb;
-}
-
-.winner-badge {
-    display: inline-block;
-    margin-bottom: 0.65rem;
-    padding: 0.25rem 0.75rem;
-    border-radius: 999px;
-    background: #f59e0b;
-    color: #fff;
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+.team-column.team-loser .team-score,
+.team-column.team-loser .single-game-team-name {
+    color: #94a3b8;
 }
 
 .single-game-team-name {
-    display: inline-block;
     font-size: 1.5rem;
     font-weight: 700;
-    margin-bottom: 0.4rem;
-    text-transform: capitalize;
-    color: inherit;
-    text-decoration: none;
-}
-
-.single-game-team-name:hover {
-    color: var(--color-brand-primary);
-    text-decoration: underline;
-}
-
-.team-column.team-winner .team-score {
-    color: #b45309;
-}
-
-.team-column.team-loser .team-score {
-    color: #64748b;
-}
-
-.upcoming-score {
-    color: #94a3b8 !important;
-}
-
-.scoreboard-upcoming .vs {
-    background: #eef2ff;
-    color: #4338ca;
-    box-shadow: 0 0 0 3px #fff, 0 0 0 6px #eef2ff;
-}
-
-.game-status-badge {
     margin: 0;
-    padding: 0.35rem 0.85rem;
-    border-radius: 999px;
-    font-size: 0.875rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
+    text-transform: capitalize;
+    line-height: 1.2;
+    max-width: 100%;
+    word-break: break-word;
 }
 
-.game-status-badge.upcoming {
-    background: #eef2ff;
-    color: #4338ca;
+.team-score {
+    font-size: 4.2rem;
+    font-weight: 800;
+    color: var(--color-text);
+    line-height: 1;
+    margin: 0;
+    font-variant-numeric: tabular-nums;
 }
 
-.game-status-badge.completed {
-    background: #ecfdf5;
-    color: #047857;
-}
-
-.set-scores-panel {
-    max-width: 720px;
-    margin: -1.5rem auto 3rem;
-    padding: 1rem 1.25rem;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    background: #f8fafc;
-    text-align: center;
-}
-
-.set-scores-title {
-    margin: 0 0 0.75rem;
-    font-size: 0.95rem;
+.vs {
+    font-size: 1.2rem;
     font-weight: 700;
     color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-}
-
-.set-scores-list {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 0.5rem;
-}
-
-.set-score-chip {
-    display: inline-block;
-    padding: 0.35rem 0.75rem;
+    background: var(--color-accent-pale);
+    padding: 0.4rem 0.9rem;
     border-radius: 999px;
-    background: #fff;
-    border: 1px solid #dbeafe;
-    color: #1e3a8a;
-    font-size: 0.875rem;
-    font-weight: 600;
+    box-shadow: 0 0 0 3px #fff, 0 0 0 6px var(--color-accent-pale);
+    align-self: center;
 }
 
 .upcoming-notice {
@@ -250,24 +174,6 @@
 .stats-section-upcoming {
     margin-top: 3rem;
     min-height: auto;
-}
-
-.team-score {
-    font-size: 4.2rem;
-    font-weight: 800;
-    color: var(--color-brand-primary);
-    line-height: 1;
-    margin-bottom: 0.3rem;
-}
-
-.vs {
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: var(--text-muted);
-    background: var(--color-accent-pale);
-    padding: 0.4rem 0.9rem;
-    border-radius: 999px;
-    box-shadow: 0 0 0 3px #fff, 0 0 0 6px var(--color-accent-pale);
 }
 
 /* ===== Season & Total Sets ===== */

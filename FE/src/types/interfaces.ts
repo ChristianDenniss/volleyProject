@@ -23,8 +23,10 @@ interface Game
   challongeTournamentId?: string | null;
   challongeRound?: number | null;
   tags?: string[];
-  teams?: Team[]; 
-  stats?: Stats[]; 
+  teams?: Team[];
+  winnerTeamId?: number | null;
+  winner?: Team | null;
+  stats?: Stats[];
 }
 
 interface Award

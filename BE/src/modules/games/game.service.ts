@@ -9,6 +9,7 @@ import { ConflictError } from '../../errors/ConflictError.js';
 import { DuplicateError } from '../../errors/DuplicateError.js';
 import { InvalidFormatError } from '../../errors/InvalidFormatError.js';
 import { PaginationParams } from '../../utils/pagination.js';
+import { orderTeamsByIds, applyWinnerToGame } from './gameWinner.js';
 
 export interface GameFilters {
     search?: string;
@@ -63,12 +64,14 @@ export class GameService {
             const season = await this.seasonRepository.findOneBy({ id: seasonId });
             if (!season) throw new NotFoundError(`Season with ID ${seasonId} not found`);
 
-            // Fetch teams
-            const teams = await this.teamRepository.findByIds(teamIds);
-            if (teams.length !== teamIds.length) {
-                const missingTeams = teamIds.filter(id => !teams.some(team => team.id === id));
+            // Fetch teams in request order so scores map to team1/team2 consistently
+            const fetchedTeams = await this.teamRepository.findBy({ id: In(teamIds) });
+            if (fetchedTeams.length !== teamIds.length) {
+                const missingTeams = teamIds.filter(id => !fetchedTeams.some(team => team.id === id));
                 throw new NotFoundError(`Teams with IDs ${missingTeams.join(', ')} not found`);
             }
+
+            const teams = orderTeamsByIds(teamIds, fetchedTeams);
             
             // Ensure we have at least 2 teams for a game
             if (teams.length < 2) {
@@ -101,6 +104,7 @@ export class GameService {
             newGame.set3Score = setScores[2] ?? null;
             newGame.set4Score = setScores[3] ?? null;
             newGame.set5Score = setScores[4] ?? null;
+            applyWinnerToGame(newGame);
 
             return this.gameRepository.save(newGame);
         } catch (error) {
@@ -139,8 +143,10 @@ export class GameService {
                 const season = seasons.find(season => season.id === data.seasonId);
                 if (!season) throw new NotFoundError(`Season with ID ${data.seasonId} not found`);
 
-                // Find the teams by their IDs
-                const teamsInGame = teams.filter(team => data.teamIds.includes(team.id));
+                const teamsInGame = orderTeamsByIds(
+                    data.teamIds,
+                    teams.filter(team => data.teamIds.includes(team.id))
+                );
                 if (teamsInGame.length !== 2) {
                     throw new NotFoundError(`Both teams with IDs ${data.teamIds} must be valid`);
                 }
@@ -197,7 +203,7 @@ export class GameService {
     async getAllGames(pagination: PaginationParams, filters: GameFilters = {}): Promise<[Games[], number]> {
         return this.gameRepository.findAndCount({
             where: this.buildWhere(filters),
-            relations: ["season", "teams", "stats"],
+            relations: ["season", "teams", "winner", "stats"],
             order: { date: "DESC" }, // Most recent games first
             skip: pagination.skip,
             take: pagination.take
@@ -262,8 +268,14 @@ export class GameService {
                 throw new NotFoundError(`Season with ID ${seasonId} not found`);
             }
     
-            // Call the original createGame method with team IDs and the provided scores
-            const teamIds = teams.map(team => team.id);
+            const teamIds = teamNames.map(teamName => {
+                const team = teams.find(entry => entry.name === teamName);
+                if (!team) {
+                    throw new NotFoundError(`Team with name ${teamName} not found`);
+                }
+
+                return team.id;
+            });
             console.log("Creating game with team IDs:", teamIds);
             return this.createGame(date, seasonId, teamIds, team1Score, team2Score, stage, videoUrl, {
                 ...options,
@@ -284,13 +296,7 @@ export class GameService {
     
         const game = await this.gameRepository.findOne({
             where: { id },
-            relations: [
-                "season",
-                "teams",
-                "teams.players",  // ← remove the []
-                "stats",
-                "stats.player"
-            ],
+            relations: ["season", "teams", "teams.players", "winner", "stats", "stats.player"],
         });
     
         if (!game) throw new NotFoundError(`Game with ID ${id} not found`);
@@ -307,7 +313,7 @@ export class GameService {
 
         const game = await this.gameRepository.findOne({
             where: { id },
-            relations: ["season", "teams", "stats"],
+            relations: ["season", "teams", "winner", "stats"],
         });
 
         if (!game) throw new NotFoundError(`Game with ID ${id} not found`);
@@ -343,7 +349,7 @@ export class GameService {
 
         const game = await this.gameRepository.findOne({
             where: { id },
-            relations: ["season", "teams", "stats"],
+            relations: ["season", "teams", "winner", "stats"],
         });
 
         if (!game) throw new NotFoundError(`Game with ID ${id} not found`);
@@ -373,13 +379,13 @@ export class GameService {
                 throw new MissingFieldError("At least two teams are required for a game");
             }
             
-            const teams = await this.teamRepository.findByIds(teamIds);
-            if (teams.length !== teamIds.length) {
-                const missingTeams = teamIds.filter(id => !teams.some(team => team.id === id));
+            const fetchedTeams = await this.teamRepository.findBy({ id: In(teamIds) });
+            if (fetchedTeams.length !== teamIds.length) {
+                const missingTeams = teamIds.filter(id => !fetchedTeams.some(team => team.id === id));
                 throw new NotFoundError(`Teams with IDs ${missingTeams.join(', ')} not found`);
             }
-            
-            game.teams = teams;
+
+            game.teams = orderTeamsByIds(teamIds, fetchedTeams);
         }
 
         if (team1Score !== undefined) {
@@ -389,6 +395,8 @@ export class GameService {
         if (team2Score !== undefined) {
             game.team2Score = team2Score;
         }
+
+        applyWinnerToGame(game);
 
         if (videoUrl) {
             game.videoUrl = videoUrl;   
@@ -483,7 +491,7 @@ export class GameService {
         // Fetch full game data with relations using TypeORM's In()
         return this.gameRepository.find({
             where: { id: In(gameIds) },
-            relations: ["season", "teams", "stats"],
+            relations: ["season", "teams", "winner", "stats"],
             order: { date: "DESC" }
         });
     }

@@ -500,6 +500,12 @@ function buildScheduleGameEntry(
     : tags.includes("Qualifiers")
       ? `Qualifiers; ${round}`
       : `${tags[tags.length - 1]}; ${round}`;
+  const team1Score = completed ? pseudoRandom(gameId, 1, 3) : null;
+  const team2Score = completed ? pseudoRandom(gameId + 2, 0, 2) : null;
+  const winnerTeamId =
+    team1Score != null && team2Score != null && team1Score !== team2Score
+      ? (team1Score > team2Score ? team1.id : team2.id)
+      : null;
 
   return {
     id: gameId,
@@ -511,8 +517,9 @@ function buildScheduleGameEntry(
     region: 'na',
     stage,
     date,
-    team1Score: completed ? pseudoRandom(gameId, 1, 3) : null,
-    team2Score: completed ? pseudoRandom(gameId + 2, 0, 2) : null,
+    team1Score,
+    team2Score,
+    winnerTeamId,
     set1Score: completed ? "25-20" : null,
     set2Score: completed ? "23-25" : null,
     set3Score: completed ? "25-22" : null,

@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, ManyToMany, JoinTable, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, ManyToMany, JoinTable, OneToMany, JoinColumn } from 'typeorm';
 import type { Seasons } from '../seasons/season.entity.js';
 import type { Teams } from '../teams/team.entity.js';
 import type { Stats } from '../stats/stat.entity.js';
@@ -96,6 +96,13 @@ export class Games {
 
     @Column({ nullable: true, type: 'simple-array' })
     tags!: string[] | null;
+
+    @Column({ nullable: true, type: 'int' })
+    winnerTeamId!: number | null;
+
+    @ManyToOne('Teams', { nullable: true, onDelete: 'SET NULL' })
+    @JoinColumn({ name: 'winnerTeamId' })
+    winner!: Teams | null;
 
     @CreateDateColumn({ type: 'timestamp' })
     createdAt!: Date;

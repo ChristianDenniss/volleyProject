@@ -3,6 +3,7 @@ import { AppDataSource } from '../../db/data-source.js';
 import { Stats } from './stat.entity.js';
 import { Players } from '../players/player.entity.js';
 import { Games, GameStatus } from '../games/game.entity.js';
+import { resolveWinnerTeamId, applyWinnerToGame } from '../games/gameWinner.js';
 import { MissingFieldError } from '../../errors/MissingFieldError.js';
 import { NegativeStatError } from '../../errors/NegativeStatError.js';
 import { NotFoundError } from '../../errors/NotFoundError.js';
@@ -685,7 +686,9 @@ export class StatService extends CacheableService
                 newGame.team2Score = gameData.team2Score;
                 newGame.stage = gameData.stage;
                 newGame.videoUrl = gameData.videoUrl || '';
+                newGame.status = GameStatus.COMPLETED;
                 newGame.name = gameData.name || `${teams[0].name} vs. ${teams[1].name} S${gameData.seasonId}`;
+                applyWinnerToGame(newGame);
 
                 const savedGame = await queryRunner.manager.save(newGame);
 
@@ -894,7 +897,15 @@ export class StatService extends CacheableService
                 // Save all stats
                 const savedStats = await queryRunner.manager.save(statsToCreate);
 
-                await queryRunner.manager.update(Games, gameId, { status: GameStatus.COMPLETED });
+                await queryRunner.manager.update(Games, gameId, {
+                    status: GameStatus.COMPLETED,
+                    winnerTeamId: resolveWinnerTeamId(
+                        game.team1Score,
+                        game.team2Score,
+                        game.teams[0]?.id,
+                        game.teams[1]?.id
+                    ),
+                });
 
                 // Commit transaction
                 await queryRunner.commitTransaction();

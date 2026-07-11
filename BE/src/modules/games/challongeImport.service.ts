@@ -1,5 +1,6 @@
 import { AppDataSource } from '../../db/data-source.js';
 import { Games, GameStatus, GamePhase, GameRegion } from './game.entity.js';
+import { resolveWinnerTeamId } from './gameWinner.js';
 import { Teams } from '../teams/team.entity.js';
 import { Seasons } from '../seasons/season.entity.js';
 import { mapChallongeToStage, parseRegionFromTournamentName } from './challongeStageMapper.js';
@@ -177,6 +178,12 @@ export class ChallongeImportService {
                 challongeRound: challongeMatch.round,
                 tags: input.tags ?? [],
                 name: `${team1Name} vs ${team2Name}`,
+                winnerTeamId: resolveWinnerTeamId(
+                    overallScore.team1Sets || null,
+                    overallScore.team2Sets || null,
+                    team1.id,
+                    team2.id
+                ),
             };
 
             const existingByChallonge = await AppDataSource.getRepository(Games).findOne({
@@ -377,6 +384,7 @@ export class ChallongeImportService {
         const fields: string[] = [];
         const compare: Array<keyof Games> = [
             'status', 'team1Score', 'team2Score', 'round', 'stage', 'phase', 'region',
+            'winnerTeamId',
             'set1Score', 'set2Score', 'set3Score', 'set4Score', 'set5Score', 'date', 'matchNumber',
         ];
 
