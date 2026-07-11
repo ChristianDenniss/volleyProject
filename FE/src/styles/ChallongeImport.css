@@ -18,14 +18,14 @@
   background: white;
   border-radius: 12px;
   padding: 0;
-  max-width: 600px;
-  width: 90%;
+  width: min(1100px, 94vw);
+  max-width: 1100px;
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
 }
 
-.modal-header {
+.challonge-import-modal .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -34,14 +34,14 @@
   margin-bottom: 24px;
 }
 
-.modal-header h2 {
+.challonge-import-modal .modal-header h2 {
   margin: 0;
   color: #1f2937;
   font-size: 1.5rem;
   font-weight: 600;
 }
 
-.close-button {
+.challonge-import-modal .close-button {
   background: none;
   border: none;
   font-size: 24px;
@@ -52,7 +52,7 @@
   transition: color 0.2s;
 }
 
-.close-button:hover {
+.challonge-import-modal .close-button:hover {
   color: #1f2937;
 }
 
@@ -60,14 +60,25 @@
   padding: 0 24px 24px 24px;
 }
 
-.form-group {
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
   margin-bottom: 20px;
 }
 
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
+.form-row-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.form-row .form-group {
+  margin-bottom: 0;
+  min-width: 0;
+}
+
+.form-group {
+  margin-bottom: 20px;
+  min-width: 0;
 }
 
 .form-group label {
@@ -81,11 +92,18 @@
 .form-group input,
 .form-group select {
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   padding: 10px 12px;
   border: 1px solid #d1d5db;
   border-radius: 6px;
   font-size: 0.875rem;
   transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.challonge-import-modal #tags {
+  max-width: 520px;
 }
 
 .form-group input:focus,
@@ -189,6 +207,12 @@
 }
 
 /* Responsive design */
+@media (max-width: 900px) {
+  .form-row-3 {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 640px) {
   .challonge-import-modal {
     width: 95%;

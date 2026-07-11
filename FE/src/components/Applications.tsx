@@ -61,6 +61,29 @@ const Applications: React.FC = () => {
 
     return (
         <div className="applications-page">
+            <div className="applications-header">
+                <div className="applications-header-body">
+                    <h3>Application Information</h3>
+                    <p>
+                        All applications are carefully reviewed by our administration team.
+                        Open positions accept submissions through their linked forms; closed
+                        positions are not currently hiring. We'll reach out if your application
+                        is accepted. Please provide detailed, honest responses about your
+                        experience, availability, and interest in the role.
+                    </p>
+                </div>
+                <div className="status-legend">
+                    <div className="legend-item">
+                        <FaCheckCircle className="legend-icon open" />
+                        <span>Applications Open</span>
+                    </div>
+                    <div className="legend-item">
+                        <FaLock className="legend-icon closed" />
+                        <span>Applications Closed</span>
+                    </div>
+                </div>
+            </div>
+
             <div className="applications-grid">
                 {categoryOrder.map((category) => {
                     const apps = groupedApplications[category];
@@ -134,26 +157,6 @@ const Applications: React.FC = () => {
                         </div>
                     );
                 })}
-            </div>
-
-            <div className="applications-footer">
-                <h3>Application Information</h3>
-                <p>
-                    All applications are carefully reviewed by our
-                    administration team. We'll contact you if your application
-                    is accepted. Make sure to provide detailed and honest
-                    responses in your application.
-                </p>
-                <div className="status-legend">
-                    <div className="legend-item">
-                        <FaCheckCircle className="legend-icon open" />
-                        <span>Applications Open</span>
-                    </div>
-                    <div className="legend-item">
-                        <FaLock className="legend-icon closed" />
-                        <span>Applications Closed</span>
-                    </div>
-                </div>
             </div>
         </div>
     );

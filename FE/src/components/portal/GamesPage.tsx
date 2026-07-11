@@ -482,8 +482,10 @@ const GamesPage: React.FC = () => {
     <div className="portal-main">
       {/* Search and Controls */}
       <div className="players-controls">
-        <button className="create-button" onClick={openModal}>Create Game</button>
-        <button className="create-button" onClick={() => setIsImportModalOpen(true)}>Import from Challonge</button>
+        <div className="players-controls-left">
+          <button className="create-button" onClick={openModal}>Create Game</button>
+          <button className="create-button" onClick={() => setIsImportModalOpen(true)}>Import from Challonge</button>
+        </div>
         <div className="players-controls-right">
           <SearchBar onSearch={handleSearch} placeholder="Search games..." />
           <Pagination

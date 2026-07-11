@@ -475,7 +475,7 @@ const SeasonsPage: React.FC = () =>
                 )}
 
                 {/* Create Form */}
-                <form onSubmit={handleCreate}>
+                <form onSubmit={handleCreate} className="season-create-form">
                     {/* Season Number */}
                     <label>
                         Season Number*
@@ -540,16 +540,7 @@ const SeasonsPage: React.FC = () =>
                     <button
                         type="submit"
                         disabled={creating}
-                        style={{
-                            gridColumn:   "1 / -1",
-                            justifySelf:  "stretch",
-                            padding:      "0.5rem",
-                            borderRadius: "0.25rem",
-                            background:   "var(--color-brand-primary)",
-                            color:        "#fff",
-                            border:       "none",
-                            cursor:       "pointer",
-                        }}
+                        className="modal-submit-button"
                     >
                         {creating ? "Creating…" : "Submit"}
                     </button>

@@ -33,6 +33,125 @@
 }
 
 /* Modal form styling */
+.ui-modal.award-create-modal {
+  width: min(900px, 94vw);
+  max-width: 900px;
+}
+
+.ui-modal.award-create-modal .award-create-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.award-form-row {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.award-form-row-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ui-modal.award-create-modal .form-group {
+  margin-bottom: 0;
+  min-width: 0;
+}
+
+.ui-modal.award-create-modal .form-group label {
+  display: block;
+  margin-bottom: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.ui-modal.award-create-modal .form-group input,
+.ui-modal.award-create-modal .form-group select,
+.ui-modal.award-create-modal .form-group textarea {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 0.75rem 0.875rem;
+  min-height: 2.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 1rem;
+  line-height: 1.25;
+  color: #1f2937;
+  background: #fff;
+}
+
+.ui-modal.award-create-modal .form-group textarea {
+  min-height: 7rem;
+  resize: vertical;
+}
+
+.ui-modal.award-create-modal .form-group input:focus,
+.ui-modal.award-create-modal .form-group select:focus,
+.ui-modal.award-create-modal .form-group textarea:focus {
+  outline: none;
+  border-color: var(--color-brand-primary);
+  box-shadow: 0 0 0 2px rgba(45, 60, 80, 0.12);
+}
+
+.award-modal-error {
+  color: #ef4444;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.award-form-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.award-btn-submit,
+.award-btn-cancel {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  height: auto;
+  width: auto;
+}
+
+.award-btn-submit {
+  background-color: var(--color-brand-primary);
+  color: white;
+}
+
+.award-btn-submit:hover:not(:disabled) {
+  background-color: var(--color-brand-primary-hover);
+}
+
+.award-btn-submit:disabled {
+  background-color: #63686f;
+  cursor: not-allowed;
+}
+
+.award-btn-cancel {
+  background-color: #e2e8f0;
+  color: #374151;
+}
+
+.award-btn-cancel:hover {
+  background-color: #cbd5e1;
+}
+
+@media (max-width: 768px) {
+  .award-form-row-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
 .form-group {
   margin-bottom: 1rem;
 }

@@ -31,6 +31,29 @@ interface TeamTableColumn extends TableColumn<Team> {}
 
 const TEAMS_PER_PAGE = 10;
 
+const TEAM_PLACEMENT_OPTIONS = [
+  "Didnt make playoffs",
+  "TBD",
+  "1st Place",
+  "1st Place (D1)",
+  "1st Place (D2)",
+  "1st Place (D3)",
+  "2nd Place",
+  "2nd Place (D1)",
+  "2nd Place (D2)",
+  "2nd Place (D3)",
+  "3rd Place",
+  "3rd Place (D1)",
+  "3rd Place (D2)",
+  "3rd Place (D3)",
+  "Top 4",
+  "Top 6",
+  "Top 8",
+  "Top 12",
+  "Top 16",
+  "G.O.A.T.",
+] as const;
+
 const TeamsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -57,7 +80,7 @@ const TeamsPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [newName, setNewName] = useState<string>("");
   const [newSeasonNumber, setNewSeasonNumber] = useState<number>(0);
-  const [newPlacement, setNewPlacement] = useState<string>("Didn't make playoffs");
+  const [newPlacement, setNewPlacement] = useState<string>("Didnt make playoffs");
   const [newLogoUrl, setNewLogoUrl] = useState<string>("");
   const [formError, setFormError] = useState<string>("");
 
@@ -168,7 +191,7 @@ const TeamsPage: React.FC = () => {
     setFormError("");
     setNewName("");
     setNewSeasonNumber(0);
-    setNewPlacement("Didn't make playoffs");
+    setNewPlacement("Didnt make playoffs");
     setNewLogoUrl("");
   };
 
@@ -396,16 +419,14 @@ const TeamsPage: React.FC = () => {
       </FilterBar>
 
       {/* Modal for Creating a New Team */}
-      <Modal isOpen={isModalOpen} onClose={closeModal} title="New Team">
+      <Modal isOpen={isModalOpen} onClose={closeModal} title="New Team" className="team-create-modal">
         {formError && (
           <p className="error" style={{ color: "red", marginBottom: "0.5rem" }}>
             {formError}
           </p>
         )}
 
-        {/* Create Team Form */}
-        <form onSubmit={handleCreate}>
-          {/* Name */}
+        <form onSubmit={handleCreate} className="team-create-form">
           <label>
             Name*
             <input
@@ -413,18 +434,15 @@ const TeamsPage: React.FC = () => {
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               required
-              style={{ width: "100%", marginBottom: "0.75rem" }}
             />
           </label>
 
-          {/* Season Number */}
           <label>
             Season*
             <select
               value={newSeasonNumber || ""}
               onChange={(e) => setNewSeasonNumber(Number(e.target.value))}
               required
-              style={{ width: "100%", marginBottom: "0.75rem" }}
             >
               <option value="">Select a Season</option>
               {seasons?.map((season) => (
@@ -435,18 +453,20 @@ const TeamsPage: React.FC = () => {
             </select>
           </label>
 
-          {/* Placement */}
           <label>
             Placement
-            <input
-              type="text"
+            <select
               value={newPlacement}
               onChange={(e) => setNewPlacement(e.target.value)}
-              style={{ width: "100%", marginBottom: "0.75rem" }}
-            />
+            >
+              {TEAM_PLACEMENT_OPTIONS.map((placement) => (
+                <option key={placement} value={placement}>
+                  {placement}
+                </option>
+              ))}
+            </select>
           </label>
 
-          {/* Logo URL */}
           <label>
             Logo URL (Optional)
             <input
@@ -454,23 +474,13 @@ const TeamsPage: React.FC = () => {
               value={newLogoUrl}
               onChange={(e) => setNewLogoUrl(e.target.value)}
               placeholder="https://example.com/logo.png"
-              style={{ width: "100%", marginBottom: "1rem" }}
             />
           </label>
 
-          {/* Submit Button */}
           <button
             type="submit"
             disabled={creating}
-            style={{
-              width: "100%",
-              padding: "0.5rem",
-              borderRadius: "0.25rem",
-              background: "var(--color-brand-primary)",
-              color: "#fff",
-              border: "none",
-              cursor: "pointer",
-            }}
+            className="player-btn-submit"
           >
             {creating ? "Creating…" : "Submit"}
           </button>

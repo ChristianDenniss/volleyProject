@@ -645,7 +645,7 @@ const StatsPage: React.FC = () =>
         <div className="portal-main">
             {/* Search and Controls */}
             <div className="players-controls">
-                <div style={{ display: 'flex', gap: '10px' }}>
+                <div className="players-controls-left">
                     <button className="create-button" onClick={openModal}>
                         Create Stat
                     </button>
@@ -675,7 +675,7 @@ const StatsPage: React.FC = () =>
             {/* Create Modal */}
             {isModalOpen && (
                 <div className="modal-overlay">
-                    <div className="modal">
+                    <div className="modal stat-create-modal">
                         {/* Close button */}
                         <button
                             onClick={closeModal}

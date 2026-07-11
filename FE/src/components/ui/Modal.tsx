@@ -6,14 +6,18 @@ interface ModalProps {
   onClose: () => void;
   title: string;
   children: React.ReactNode;
+  className?: string;
 }
 
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
+const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, className }) => {
   if (!isOpen) return null;
 
   return (
     <div className="ui-modal-overlay" onClick={onClose}>
-      <div className="ui-modal" onClick={(e) => e.stopPropagation()}>
+      <div
+        className={className ? `ui-modal ${className}` : "ui-modal"}
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="ui-modal-header">
           <h2>{title}</h2>
           <button

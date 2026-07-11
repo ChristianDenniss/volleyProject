@@ -6,23 +6,28 @@
   font-style: italic;
 }
 
-/* Form Styles (rendered inside the shared ui-modal-body) */
-.ui-modal-body form {
+/* Form Styles (season create modal only — do not use bare .ui-modal-body selectors) */
+.season-create-form {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1rem;
 }
 
-.ui-modal-body label {
+.season-create-form label {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
 
-.ui-modal-body input {
+.season-create-form input {
   padding: 0.5rem;
   border-radius: 4px;
   border: 1px solid #ccc;
+}
+
+.season-create-form .modal-submit-button {
+  grid-column: 1 / -1;
+  align-self: start;
 }
 
 /* Create Button */

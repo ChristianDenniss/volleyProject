@@ -99,7 +99,7 @@ const ChallongeImport: React.FC<ChallongeImportProps> = ({ onImportSuccess, onCa
             />
           </div>
 
-          <div className="form-row">
+          <div className="form-row form-row-3">
             <div className="form-group">
               <label htmlFor="seasonId">Season *</label>
               <select
@@ -146,16 +146,30 @@ const ChallongeImport: React.FC<ChallongeImportProps> = ({ onImportSuccess, onCa
             </div>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="round">Round (Optional)</label>
-            <input
-              type="text"
-              id="round"
-              value={formData.round || ''}
-              onChange={(e) => handleInputChange('round', e.target.value)}
-              placeholder="e.g., 1 or Round 1"
-            />
-            <small>Leave empty to import all rounds</small>
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="round">Round (Optional)</label>
+              <input
+                type="text"
+                id="round"
+                value={formData.round || ''}
+                onChange={(e) => handleInputChange('round', e.target.value)}
+                placeholder="e.g., 1 or Round 1"
+              />
+              <small>Leave empty to import all rounds</small>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="matchSpacingMinutes">Minutes Between Games</label>
+              <input
+                type="number"
+                id="matchSpacingMinutes"
+                min="15"
+                max="120"
+                value={formData.matchSpacingMinutes || 30}
+                onChange={(e) => handleInputChange('matchSpacingMinutes', parseInt(e.target.value))}
+              />
+            </div>
           </div>
 
           <div className="form-row">
@@ -180,18 +194,6 @@ const ChallongeImport: React.FC<ChallongeImportProps> = ({ onImportSuccess, onCa
                 required
               />
             </div>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="matchSpacingMinutes">Minutes Between Games</label>
-            <input
-              type="number"
-              id="matchSpacingMinutes"
-              min="15"
-              max="120"
-              value={formData.matchSpacingMinutes || 30}
-              onChange={(e) => handleInputChange('matchSpacingMinutes', parseInt(e.target.value))}
-            />
           </div>
 
           <div className="form-group">

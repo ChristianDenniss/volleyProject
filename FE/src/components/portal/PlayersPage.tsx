@@ -307,6 +307,7 @@ const PlayersPage: React.FC = () => {
       {/* Modal for Submitting Players */}
       <Modal
         isOpen={isModalOpen}
+        className="player-batch-modal"
         onClose={() => {
           setIsModalOpen(false);
           setBatchRows([{ name: "", position: "", teamNamesCSV: "" }]);
@@ -322,75 +323,86 @@ const PlayersPage: React.FC = () => {
         )}
 
         <form onSubmit={handleBatchCreate} className="player-form">
-          {batchRows.map((row, idx) => (
-            <div key={idx} className="player-form-row">
-              {/* Name Input */}
-              <input
-                type="text"
-                placeholder="Name*"
-                className="player-input"
-                value={row.name}
-                onChange={(e) => {
-                  const updated = [...batchRows];
-                  updated[idx].name = e.target.value;
-                  setBatchRows(updated);
-                }}
-                required
-              />
+          <div className="player-form-header" aria-hidden="true">
+            <span>Name*</span>
+            <span>Position*</span>
+            <span>Teams</span>
+            <span />
+          </div>
 
-              {/* Position Input */}
-              <input
-                type="text"
-                placeholder="Position*"
-                className="player-input"
-                value={row.position}
-                onChange={(e) => {
-                  const updated = [...batchRows];
-                  updated[idx].position = e.target.value;
-                  setBatchRows(updated);
-                }}
-                required
-              />
+          <div className="player-form-rows">
+            {batchRows.map((row, idx) => (
+              <div key={idx} className="player-form-row">
+                <input
+                  type="text"
+                  placeholder="Player name"
+                  className="player-input"
+                  value={row.name}
+                  onChange={(e) => {
+                    const updated = [...batchRows];
+                    updated[idx].name = e.target.value;
+                    setBatchRows(updated);
+                  }}
+                  required
+                />
 
-              {/* Team Names CSV Input */}
-              <input
-                type="text"
-                placeholder="Team names (comma-separated)"
-                className="player-input player-input-teams"
-                value={row.teamNamesCSV}
-                onChange={(e) => {
-                  const updated = [...batchRows];
-                  updated[idx].teamNamesCSV = e.target.value;
-                  setBatchRows(updated);
-                }}
-              />
+                <input
+                  type="text"
+                  placeholder="e.g. OH, S, MB"
+                  className="player-input"
+                  value={row.position}
+                  onChange={(e) => {
+                    const updated = [...batchRows];
+                    updated[idx].position = e.target.value;
+                    setBatchRows(updated);
+                  }}
+                  required
+                />
 
-              {/* Remove Row Button */}
-              <button
-                type="button"
-                className="player-btn-remove"
-                onClick={() => removeRow(idx)}
-              >
-                Remove
-              </button>
-            </div>
-          ))}
+                <input
+                  type="text"
+                  placeholder="Team names (comma-separated)"
+                  className="player-input player-input-teams"
+                  value={row.teamNamesCSV}
+                  onChange={(e) => {
+                    const updated = [...batchRows];
+                    updated[idx].teamNamesCSV = e.target.value;
+                    setBatchRows(updated);
+                  }}
+                />
 
-          <button
-            type="button"
-            className="player-btn-add"
-            onClick={addRow}
-          >
-            + Add Another
-          </button>
+                {batchRows.length > 1 ? (
+                  <button
+                    type="button"
+                    className="player-btn-remove"
+                    onClick={() => removeRow(idx)}
+                  >
+                    Remove
+                  </button>
+                ) : (
+                  <span className="player-form-row-spacer" />
+                )}
+              </div>
+            ))}
+          </div>
 
-          <button
-            type="submit"
-            className="player-btn-submit"
-            disabled={batchLoading}
-          >
-            {batchLoading ? "Creating…" : "Submit All"}
-          </button>
+          <div className="player-form-actions">
+            <button
+              type="button"
+              className="player-btn-add"
+              onClick={addRow}
+            >
+              + Add Another
+            </button>
+
+            <button
+              type="submit"
+              className="player-btn-submit"
+              disabled={batchLoading}
+            >
+              {batchLoading ? "Creating…" : "Submit All"}
+            </button>
+          </div>
         </form>
       </Modal>
 

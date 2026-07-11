@@ -61,6 +61,30 @@
   padding: 0 var(--space-6) var(--space-6) var(--space-6);
 }
 
+.ui-modal .modal-submit-button {
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-brand-primary);
+  color: white;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  width: auto;
+  height: auto;
+  display: inline-block;
+  align-self: start;
+  transition: background-color 0.2s;
+}
+
+.ui-modal .modal-submit-button:hover:not(:disabled) {
+  background: var(--color-brand-primary-hover);
+}
+
+.ui-modal .modal-submit-button:disabled {
+  background-color: #63686f;
+  cursor: not-allowed;
+}
+
 @media (max-width: 768px) {
   .ui-modal-body {
     max-height: 70vh;

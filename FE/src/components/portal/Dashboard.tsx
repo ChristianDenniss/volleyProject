@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaVolleyballBall, FaUserAlt, FaChartBar, FaNewspaper, FaUsers, FaCalendarAlt, FaTrophy, FaClock } from 'react-icons/fa';
+import LuvLateAvatar from '../../images/LuvLate.png';
 import '../../styles/Dashboard.css';
 
 const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
@@ -118,81 +119,101 @@ const Dashboard: React.FC = () => {
   return (
     <div className="dashboard-container">
       {/* Quick Stats Cards */}
-      <div className="stats-grid">
-        <div className="stat-card">
-          <FaVolleyballBall className="stat-icon" />
+      <div className="dashboard-stats-grid">
+        <div className="dashboard-stat-card">
+          <div className="stat-icon-wrap">
+            <FaVolleyballBall className="stat-icon" />
+          </div>
           <div className="stat-content">
             <h3>Total Teams</h3>
             <p className="stat-value">{totalTeams}</p>
           </div>
         </div>
 
-        <div className="stat-card">
-          <FaUserAlt  className="stat-icon" />
+        <div className="dashboard-stat-card">
+          <div className="stat-icon-wrap">
+            <FaUserAlt className="stat-icon" />
+          </div>
           <div className="stat-content">
             <h3>Total Users</h3>
             <p className="stat-value">{totalUsers}</p>
           </div>
         </div>
 
-        <div className="stat-card">
-          <FaChartBar className="stat-icon" />
+        <div className="dashboard-stat-card">
+          <div className="stat-icon-wrap">
+            <FaChartBar className="stat-icon" />
+          </div>
           <div className="stat-content">
             <h3>Total Stat Entries</h3>
             <p className="stat-value">{totalStats}</p>
           </div>
         </div>
 
-        <div className="stat-card">
-          <FaNewspaper className="stat-icon" />
+        <div className="dashboard-stat-card">
+          <div className="stat-icon-wrap">
+            <FaNewspaper className="stat-icon" />
+          </div>
           <div className="stat-content">
             <h3>Total Articles</h3>
             <p className="stat-value">{totalArticles}</p>
           </div>
         </div>
 
-        <div className="stat-card">
-          <FaUsers className="stat-icon" />
+        <div className="dashboard-stat-card">
+          <div className="stat-icon-wrap">
+            <FaUsers className="stat-icon" />
+          </div>
           <div className="stat-content">
             <h3>Total Players</h3>
             <p className="stat-value">{totalPlayers}</p>
           </div>
         </div>
 
-        <div className="stat-card">
-          <FaCalendarAlt className="stat-icon" />
+        <div className="dashboard-stat-card">
+          <div className="stat-icon-wrap">
+            <FaCalendarAlt className="stat-icon" />
+          </div>
           <div className="stat-content">
             <h3>Total Seasons</h3>
             <p className="stat-value">{totalSeasons}</p>
           </div>
         </div>
 
-        <div className="stat-card">
-          <FaTrophy className="stat-icon" />
+        <div className="dashboard-stat-card">
+          <div className="stat-icon-wrap">
+            <FaTrophy className="stat-icon" />
+          </div>
           <div className="stat-content">
             <h3>Total Awards</h3>
             <p className="stat-value">{totalAwards}</p>
           </div>
         </div>
 
-        <div className="stat-card">
-          <FaVolleyballBall className="stat-icon" />
+        <div className="dashboard-stat-card">
+          <div className="stat-icon-wrap">
+            <FaVolleyballBall className="stat-icon" />
+          </div>
           <div className="stat-content">
             <h3>Total Games</h3>
             <p className="stat-value">{totalGames}</p>
           </div>
         </div>
 
-        <div className="stat-card">
-          <FaClock className="stat-icon" />
+        <div className="dashboard-stat-card">
+          <div className="stat-icon-wrap">
+            <FaClock className="stat-icon" />
+          </div>
           <div className="stat-content">
             <h3>Scheduled Games</h3>
             <p className="stat-value">{scheduledGames}</p>
           </div>
         </div>
 
-        <div className="stat-card">
-          <FaTrophy className="stat-icon" />
+        <div className="dashboard-stat-card">
+          <div className="stat-icon-wrap">
+            <FaTrophy className="stat-icon" />
+          </div>
           <div className="stat-content">
             <h3>Completed Games</h3>
             <p className="stat-value">{completedGames}</p>
@@ -228,7 +249,21 @@ const Dashboard: React.FC = () => {
           <button className="dashboard-action-button" onClick={() => window.location.href = '/portal/awards'}>
             Manage Awards
           </button>
+          <button className="dashboard-action-button" onClick={() => window.location.href = '/portal/applications'}>
+            Manage Applications
+          </button>
         </div>
+      </div>
+
+      <div className="dashboard-quote">
+        <img
+          src={LuvLateAvatar}
+          alt="LuvLate"
+          className="dashboard-quote-avatar"
+        />
+        <blockquote className="dashboard-quote-text">
+          &ldquo;Every great season starts with the people behind the scenes.&rdquo;
+        </blockquote>
       </div>
     </div>
   );

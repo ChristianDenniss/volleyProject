@@ -209,7 +209,7 @@ const AwardsPage: React.FC = () => {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newType.trim() === "" || newSeasonId <= 0 || newPlayerName.trim() === "" || newDescription.trim() === "") {
-      setFormError("Type, Description, Season ID, and Player Name are required.");
+      setFormError("Type, Description, Season, and Player Name are required.");
       return;
     }
 
@@ -551,66 +551,93 @@ const AwardsPage: React.FC = () => {
         />
       </div>
 
-      {/* Modal for Creating a New Award */}
-      <Modal isOpen={isModalOpen} onClose={closeModal} title="Create New Award">
-        <form onSubmit={handleCreate}>
-          <div className="form-group">
-            <label>Type:</label>
-            <select
-              value={newType}
-              onChange={(e) => setNewType(e.target.value)}
-              required
-            >
-              <option value="">Select an award type</option>
-              {AWARD_TYPES.map((type) => (
-                <option key={type} value={type}>
-                  {type}
-                </option>
-              ))}
-            </select>
+      <Modal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        title="Create New Award"
+        className="award-create-modal"
+      >
+        {formError && <p className="award-modal-error">{formError}</p>}
+
+        <form onSubmit={handleCreate} className="award-create-form">
+          <div className="award-form-row award-form-row-2">
+            <div className="form-group">
+              <label htmlFor="awardType">Type*</label>
+              <select
+                id="awardType"
+                value={newType}
+                onChange={(e) => setNewType(e.target.value)}
+                required
+              >
+                <option value="">Select an award type</option>
+                {AWARD_TYPES.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="awardSeason">Season*</label>
+              <select
+                id="awardSeason"
+                value={newSeasonId || ""}
+                onChange={(e) => setNewSeasonId(Number(e.target.value))}
+                required
+              >
+                <option value="">Select a season</option>
+                {seasons?.map((season) => (
+                  <option key={season.id} value={season.id}>
+                    Season {season.seasonNumber}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
+
+          <div className="award-form-row award-form-row-2">
+            <div className="form-group">
+              <label htmlFor="awardPlayerName">Player Name*</label>
+              <input
+                id="awardPlayerName"
+                type="text"
+                value={newPlayerName}
+                onChange={(e) => setNewPlayerName(e.target.value.toLowerCase())}
+                placeholder="player name"
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="awardImageUrl">Image URL</label>
+              <input
+                id="awardImageUrl"
+                type="url"
+                value={newImageUrl}
+                onChange={(e) => setNewImageUrl(e.target.value)}
+                placeholder="https://example.com/image.jpg"
+              />
+            </div>
+          </div>
+
           <div className="form-group">
-            <label>Description:</label>
+            <label htmlFor="awardDescription">Description*</label>
             <textarea
+              id="awardDescription"
               value={newDescription}
               onChange={(e) => setNewDescription(e.target.value)}
+              placeholder="Award description"
               required
             />
           </div>
-          <div className="form-group">
-            <label>Season ID:</label>
-            <input
-              type="number"
-              value={newSeasonId}
-              onChange={(e) => setNewSeasonId(Number(e.target.value))}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label>Player Name:</label>
-            <input
-              type="text"
-              value={newPlayerName}
-              onChange={(e) => setNewPlayerName(e.target.value.toLowerCase())}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label>Image URL:</label>
-            <input
-              type="url"
-              value={newImageUrl}
-              onChange={(e) => setNewImageUrl(e.target.value)}
-              placeholder="https://example.com/image.jpg"
-            />
-          </div>
-          {formError && <p className="error-message">{formError}</p>}
-          <div className="modal-buttons">
-            <button type="submit" disabled={creating}>
-              {creating ? "Creating..." : "Create"}
-            </button>
-            <button type="button" onClick={closeModal}>
+
+          <div className="award-form-actions">
+            <button type="button" onClick={closeModal} className="award-btn-cancel">
               Cancel
+            </button>
+            <button type="submit" disabled={creating} className="award-btn-submit">
+              {creating ? "Creating..." : "Create"}
             </button>
           </div>
         </form>
