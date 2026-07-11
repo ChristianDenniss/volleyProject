@@ -79,12 +79,32 @@
 
 .portal-application-fields input,
 .portal-application-fields select {
-    width: 100%;
     padding: 0.65rem 0.75rem;
     border: 1px solid var(--color-border);
     border-radius: 6px;
     font: inherit;
     box-sizing: border-box;
+}
+
+.portal-application-fields input {
+    width: 100%;
+}
+
+.portal-application-status-select {
+    width: fit-content;
+    min-width: 8rem;
+    max-width: 100%;
+    justify-self: start;
+    padding-right: 2.25rem;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-color: #fff;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23475569'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.65rem center;
+    background-size: 1.25rem;
+    cursor: pointer;
 }
 
 .status-pill {

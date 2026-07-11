@@ -2,6 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { FaVolleyballBall, FaUserAlt, FaChartBar, FaNewspaper, FaUsers, FaCalendarAlt, FaTrophy, FaClock } from 'react-icons/fa';
 import '../../styles/Dashboard.css';
 
+const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+
+const parseJson = async (response: Response) => {
+  const contentType = response.headers.get('content-type') ?? '';
+  if (!response.ok || !contentType.includes('application/json')) {
+    return null;
+  }
+  return response.json();
+};
+
 const Dashboard: React.FC = () => {
   const [stats, setStats] = useState<any>(null);
   const [teams, setTeams] = useState<any[]>([]);
@@ -37,27 +47,44 @@ const Dashboard: React.FC = () => {
         usersResponse,
         awardsResponse
       ] = await Promise.all([
-        fetch('/api/stats'),
-        fetch('/api/teams'),
-        fetch('/api/articles'),
-        fetch('/api/players'),
-        fetch('/api/seasons'),
-        fetch('/api/games'),
-        fetch('/api/users'),
-        fetch('/api/awards')
+        fetch(`${backendUrl}/api/stats`),
+        fetch(`${backendUrl}/api/teams`),
+        fetch(`${backendUrl}/api/articles`),
+        fetch(`${backendUrl}/api/players`),
+        fetch(`${backendUrl}/api/seasons`),
+        fetch(`${backendUrl}/api/games`),
+        fetch(`${backendUrl}/api/users`),
+        fetch(`${backendUrl}/api/awards`)
       ]);
 
-      if (statsResponse.ok) setStats(await statsResponse.json());
-      if (teamsResponse.ok) setTeams(await teamsResponse.json());
-      if (articlesResponse.ok) setArticles(await articlesResponse.json());
-      if (playersResponse.ok) setPlayers(await playersResponse.json());
-      if (seasonsResponse.ok) setSeasons(await seasonsResponse.json());
-      if (gamesResponse.ok) {
-        const gamesJson = await gamesResponse.json();
-        setGames(gamesJson.data ?? gamesJson);
-      }
-      if (usersResponse.ok) setUsers(await usersResponse.json());
-      if (awardsResponse.ok) setAwards(await awardsResponse.json());
+      const [
+        statsJson,
+        teamsJson,
+        articlesJson,
+        playersJson,
+        seasonsJson,
+        gamesJson,
+        usersJson,
+        awardsJson
+      ] = await Promise.all([
+        parseJson(statsResponse),
+        parseJson(teamsResponse),
+        parseJson(articlesResponse),
+        parseJson(playersResponse),
+        parseJson(seasonsResponse),
+        parseJson(gamesResponse),
+        parseJson(usersResponse),
+        parseJson(awardsResponse)
+      ]);
+
+      if (statsJson) setStats(statsJson.data ?? statsJson);
+      if (teamsJson) setTeams(teamsJson.data ?? teamsJson);
+      if (articlesJson) setArticles(articlesJson.data ?? articlesJson);
+      if (playersJson) setPlayers(playersJson.data ?? playersJson);
+      if (seasonsJson) setSeasons(seasonsJson.data ?? seasonsJson);
+      if (gamesJson) setGames(gamesJson.data ?? gamesJson);
+      if (usersJson) setUsers(usersJson.data ?? usersJson);
+      if (awardsJson) setAwards(awardsJson.data ?? awardsJson);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {

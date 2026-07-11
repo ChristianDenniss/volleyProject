@@ -150,6 +150,7 @@ const PortalApplicationsPage: React.FC = () => {
                                 </label>
                                 <select
                                     id={`status-${application.slug}`}
+                                    className="portal-application-status-select"
                                     value={draft.status}
                                     onChange={(event) =>
                                         updateDraft(application.slug, {

@@ -49,7 +49,7 @@ const Games: React.FC = () => {
   const [seasonFilter, setSeasonFilter] = useState<string>("")
   const [stageFilter, setStageFilter] = useState<string>("")
   const [currentPage, setCurrentPage] = useState<number>(1)
-  const gamesPerPage = 10
+  const gamesPerPage = 20
 
   const uniqueSeasons = useMemo(() => {
     return Array.from(new Set(data?.map((game) => game.season.seasonNumber) ?? []))
@@ -152,7 +152,7 @@ const Games: React.FC = () => {
       ) : !data ? (
         <div className="listing-table-wrapper">
           <div className="listing-skeleton-table">
-            {Array.from({ length: 10 }).map((_, index) => (
+            {Array.from({ length: 20 }).map((_, index) => (
               <div key={index} className="listing-skeleton-row" />
             ))}
           </div>
