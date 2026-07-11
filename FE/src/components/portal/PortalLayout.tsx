@@ -14,7 +14,6 @@ const PortalLayout: React.FC = () => (
           <li><NavLink to="teams">Teams</NavLink></li>
           <li><NavLink to="players">Players</NavLink></li>
           <li><NavLink to="games">Games</NavLink></li>
-          <li><NavLink to="matches">Matches</NavLink></li>
           <li><NavLink to="stats">Stats</NavLink></li>
           <li><NavLink to="articles">Articles</NavLink></li>
           <li><NavLink to="awards">Awards</NavLink></li>

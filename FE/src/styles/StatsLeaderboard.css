@@ -23,41 +23,47 @@
     font-weight: 700;
 }
 
-.stats-controls-wrapper { 
-    margin: 0; 
-    min-height: 140px; /* Increased space for controls to prevent shift */
+.stats-controls-wrapper {
+    margin: 0 0 0.75rem;
 }
 
-.stats-controls-container
-{
+.stats-controls-container {
     display: flex;
     flex-direction: column;
-    gap: 15px;
-    min-height: 120px; /* Increased space for container */
+    gap: 0;
 }
 
-.stats-filters-row
-{
+.stats-filters-row {
     display: flex;
     flex-direction: row;
-    gap: 15px;
+    gap: 0.75rem;
     align-items: center;
     flex-wrap: wrap;
-    min-height: 40px; /* Reserve space for filters */
     width: 100%;
-    justify-content: space-between;
+    justify-content: flex-start;
 }
 
-.stats-search-row
-{
+.stats-search-controls {
     display: flex;
-    flex-direction: row;
-    gap: 15px;
     align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    min-height: 50px; /* Reserve space for search and pagination */
+    gap: 0.75rem;
+    flex: 1 1 16rem;
+    margin-left: auto;
+    max-width: 100%;
+    min-width: 0;
 }
+
+.stats-search-controls .search-bar {
+    flex: 1 1 12rem;
+    min-width: 0;
+}
+
+.stats-search-controls .search-bar input {
+    width: 100%;
+    max-width: none;
+}
+
+.stats-pagination-wrapper { white-space: nowrap; }
 
 .stats-season-filter { margin: 0; white-space: nowrap; }
 .stats-stage-filter { margin: 0; white-space: nowrap; }
@@ -289,11 +295,12 @@
 @media (max-width: 768px)
 {
     .stats-filters-row,
-    .stats-search-row
+    .stats-search-controls
     {
         flex-direction: column;
         align-items: stretch;
         gap: 10px;
+        margin-left: 0;
     }
 
     .stats-pagination-wrapper,
@@ -305,6 +312,7 @@
 
     .search-bar input {
         width: 100%;
+        max-width: none;
     }
 
     .stats-table th,
@@ -318,10 +326,6 @@
     {
         min-width: 280px;
         grid-template-columns: repeat(2, 1fr);
-    }
-
-    .stats-controls-wrapper {
-        min-height: 150px;
     }
     
     .stats-table-wrapper {
@@ -349,37 +353,9 @@
     }
 }
 
-.stats-stage-filter label {
-    margin-right: 8px;
-    color: var(--color-text);
-    font-weight: 500;
-}
-
 .stats-stage-filter select {
     width: 90px;
 }
-
-.stats-type-filter label {
-    margin-right: 8px;
-    color: var(--color-text);
-    font-weight: 500;
-}
-
-.stats-view-filter label {
-    margin-right: 8px;
-    color: var(--color-text);
-    font-weight: 500;
-}
-
-.stats-search-row .search-bar {
-    flex-grow: 1;
-}
-
-.stats-search-row .search-bar input {
-    width: 100%;
-}
-
-.stats-pagination-wrapper { white-space: nowrap; }
 
 /* Loading state to prevent layout shift */
 .stats-leaderboard-page.loading {
@@ -881,7 +857,7 @@
   }
   
   .stats-filters-row,
-  .stats-search-row {
+  .stats-search-controls {
     gap: 8px;
   }
 }

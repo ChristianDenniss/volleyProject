@@ -14,6 +14,7 @@ import SearchBar                          from "../Searchbar";
 import Pagination                         from "../Pagination";
 import Modal                              from "../ui/Modal";
 import Table, { type TableColumn }        from "../ui/Table";
+import OverflowListCell                   from "../ui/OverflowListCell";
 
 type EditField = "name" | "position";
 interface EditingState {
@@ -236,10 +237,14 @@ const PlayersPage: React.FC = () => {
     {
       key: "teams",
       header: "Teams",
-      render: (p) =>
-        p.teams && p.teams.length > 0
-          ? p.teams.map((team) => team.name).join(", ")
-          : <span className="text-muted">No teams</span>,
+      render: (p) => (
+        <OverflowListCell
+          items={p.teams?.map((team) => team.name) ?? []}
+          maxVisible={2}
+          emptyLabel={<span className="text-muted">No teams</span>}
+          popoverTitle="Teams"
+        />
+      ),
     },
     {
       key: "actions",

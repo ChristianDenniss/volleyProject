@@ -32,7 +32,6 @@ import TeamsPage      from "./components/portal/TeamsPage";
 import SeasonsPage      from "./components/portal/SeasonsPage";
 import GamesPage from "./components/portal/GamesPage";
 import StatsPage from "./components/portal/StatsPage";
-import MatchesPage from "./components/portal/MatchesPage";
 import SingleAward from "./components/Single/SingleAward";
 import LoginPage      from "./components/Login";
 import PrivateRoute   from "./components/portal/PrivateRoute";      // ← NEW import
@@ -106,7 +105,6 @@ const App: React.FC = () => (
             <Route path="stats" element={<StatsPage />} />
             <Route path="awards" element={<AwardsPage />} />
             <Route path="articles" element={<ArticlesPage />} />
-            <Route path="matches" element={<MatchesPage />} />
           </Route>
         </Routes>
       </div>

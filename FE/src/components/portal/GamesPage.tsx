@@ -1,12 +1,14 @@
 // src/pages/GamesPage.tsx
 
 import React, { useState, useEffect } from "react";
-import { useSkinnyGames, useSkinnySeasons } from "../../hooks/allFetch";
+import { useGames, useSkinnySeasons } from "../../hooks/allFetch";
 import { useGameMutations } from "../../hooks/allPatch";
 import { useCreateGames } from "../../hooks/allCreate";
 import { useDeleteGames } from "../../hooks/allDelete";
 import { useAuth } from "../../context/authContext";
-import type { Game } from "../../types/interfaces";
+import type { Game, CreateGameInput, ChallongeImportResult } from "../../types/interfaces";
+import ChallongeImport from "../ChallongeImport";
+import GameStatUploadModal from "./GameStatUploadModal";
 import "../../styles/GamesPage.css";       // table & button styling
 import "../../styles/PlayersPage.css";     // custom modal styling
 import "../../styles/PortalPlayersPage.css"; // portal-specific styles
@@ -16,7 +18,7 @@ import Modal from "../ui/Modal";
 import FilterBar from "../ui/FilterBar";
 import Table, { type TableColumn } from "../ui/Table";
 
-type EditField = "name" | "seasonId" | "stage" | "team1Score" | "team2Score" | "date" | "videoUrl";
+type EditField = "name" | "seasonId" | "stage" | "team1Score" | "team2Score" | "date" | "videoUrl" | "status" | "round" | "matchNumber";
 
 interface EditingState {
   id: number;
@@ -26,17 +28,6 @@ interface EditingState {
 
 interface GameColumn extends TableColumn<Game> {}
 
-interface CreateGameInput {
-  name: string;
-  seasonId: number;
-  teamNames: string[];
-  team1Score: number;
-  team2Score: number;
-  videoUrl: string | null;
-  date: Date;
-  stage: string;
-}
-
 const GAMES_PER_PAGE = 10;
 
 const GamesPage: React.FC = () => {
@@ -44,16 +35,20 @@ const GamesPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [seasonFilter, setSeasonFilter] = useState<string>("");
   const [stageFilter, setStageFilter] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [roundFilter, setRoundFilter] = useState<string>("");
 
-  const { data: games, total, totalPages, loading, error, refetch } = useSkinnyGames({
+  const { data: games, total, totalPages, loading, error, refetch } = useGames({
     page: currentPage,
     limit: GAMES_PER_PAGE,
     search: searchQuery || undefined,
     seasonId: seasonFilter || undefined,
     stage: stageFilter || undefined,
+    status: statusFilter || undefined,
+    round: roundFilter || undefined,
   });
   const { data: seasons } = useSkinnySeasons({ page: 1, limit: 100 });
-  const { data: gamesSample } = useSkinnyGames({ page: 1, limit: 100 });
+  const { data: gamesSample } = useGames({ page: 1, limit: 100 });
   const { patchGame } = useGameMutations();
   const { createGame, loading: creating, error: createError } = useCreateGames();
   const { deleteItem: deleteGame, loading: deleting } = useDeleteGames();
@@ -64,9 +59,14 @@ const GamesPage: React.FC = () => {
 
   // Modal state for creating a new game
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState<boolean>(false);
+  const [importResult, setImportResult] = useState<ChallongeImportResult | null>(null);
+  const [statUploadGame, setStatUploadGame] = useState<Game | null>(null);
   const [newName, setNewName] = useState<string>("");
   const [newSeasonNumber, setNewSeasonNumber] = useState<string>("");
-  const [newStage, setNewStage] = useState<string>("");
+  const [newStage, setNewStage] = useState<string>("Qualifiers; Round 1");
+  const [newStatus, setNewStatus] = useState<string>("scheduled");
+  const [newRound, setNewRound] = useState<string>("Round 1");
   const [newTeam1Score, setNewTeam1Score] = useState<string>("");
   const [newTeam2Score, setNewTeam2Score] = useState<string>("");
   const [newDate, setNewDate] = useState<string>("");
@@ -85,6 +85,9 @@ const GamesPage: React.FC = () => {
   const uniqueStages = Array.from(
     new Set((gamesSample ?? []).map((game) => game.stage).filter((stage) => stage))
   ).sort();
+  const uniqueRounds = Array.from(
+    new Set((gamesSample ?? []).map((game) => game.round).filter(Boolean) as string[])
+  ).sort();
 
   // Commit inline edits
   const commitEdit = async () => {
@@ -101,6 +104,9 @@ const GamesPage: React.FC = () => {
       case "team2Score": payload.team2Score = Number(value); break;
       case "date": payload.date = new Date(value); break;
       case "videoUrl": payload.videoUrl = value === "" ? null : value; break;
+      case "status": payload.status = value; break;
+      case "round": payload.round = value; break;
+      case "matchNumber": payload.matchNumber = value; break;
     }
 
     try {
@@ -162,12 +168,14 @@ const GamesPage: React.FC = () => {
         name: newName,
         seasonId: Number(newSeasonNumber),
         teamNames: [newTeam1Name, newTeam2Name],
-        team1Score: Number(newTeam1Score),
-        team2Score: Number(newTeam2Score),
+        team1Score: newTeam1Score === "" ? null : Number(newTeam1Score),
+        team2Score: newTeam2Score === "" ? null : Number(newTeam2Score),
         videoUrl: newVideoUrl === "" ? null : newVideoUrl,
         date: new Date(newDate),
-        stage: newStage
-      } as CreateGameInput);
+        stage: newStage,
+        status: newStatus as 'scheduled' | 'completed',
+        round: newRound,
+      } satisfies CreateGameInput);
       setIsModalOpen(false);
       setNewName("");
       setNewSeasonNumber("");
@@ -216,6 +224,9 @@ const GamesPage: React.FC = () => {
         origValue = dateObj.toISOString().split('T')[0]; 
         break;
       case "videoUrl": origValue = orig.videoUrl || ''; break;
+      case "status": origValue = orig.status; break;
+      case "round": origValue = orig.round || ''; break;
+      case "matchNumber": origValue = orig.matchNumber || ''; break;
     }
     setEditing({ id, field, value: origValue });
   };
@@ -234,7 +245,17 @@ const GamesPage: React.FC = () => {
 
   const handleStageFilterChange = (value: string) => {
     setStageFilter(value);
-    setCurrentPage(1); // Reset to first page when filtering
+    setCurrentPage(1);
+  };
+
+  const handleStatusFilterChange = (value: string) => {
+    setStatusFilter(value);
+    setCurrentPage(1);
+  };
+
+  const handleRoundFilterChange = (value: string) => {
+    setRoundFilter(value);
+    setCurrentPage(1);
   };
 
   // Clear all filters
@@ -242,16 +263,23 @@ const GamesPage: React.FC = () => {
     setSearchQuery("");
     setSeasonFilter("");
     setStageFilter("");
+    setStatusFilter("");
+    setRoundFilter("");
     setCurrentPage(1);
   };
 
-  // Column definitions for the shared Table component
+  const handleImportSuccess = (result: ChallongeImportResult) => {
+    setIsImportModalOpen(false);
+    setImportResult(result);
+    refetch();
+  };
+
   const columns: GameColumn[] = [
     {
-      key: "name",
-      header: "Name",
+      key: "matchNumber",
+      header: "Match #",
       render: (g) =>
-        editing?.id === g.id && editing?.field === "name" ? (
+        editing?.id === g.id && editing?.field === "matchNumber" ? (
           <input
             type="text"
             value={editing.value}
@@ -261,7 +289,25 @@ const GamesPage: React.FC = () => {
             autoFocus
           />
         ) : (
-          <span onClick={() => startEdit(g.id, "name")}>{g.name || 'No Given Name'}</span>
+          <span onClick={() => startEdit(g.id, "matchNumber")}>{g.matchNumber || g.name || `#${g.id}`}</span>
+        ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (g) =>
+        editing?.id === g.id && editing?.field === "status" ? (
+          <select
+            value={editing.value}
+            onChange={e => setEditing({ ...editing, value: e.target.value })}
+            onBlur={commitEdit}
+            autoFocus
+          >
+            <option value="scheduled">scheduled</option>
+            <option value="completed">completed</option>
+          </select>
+        ) : (
+          <span onClick={() => startEdit(g.id, "status")}>{g.status}</span>
         ),
     },
     {
@@ -297,6 +343,28 @@ const GamesPage: React.FC = () => {
         ) : (
           <span onClick={() => startEdit(g.id, "stage")}>{g.stage}</span>
         ),
+    },
+    {
+      key: "round",
+      header: "Round",
+      render: (g) =>
+        editing?.id === g.id && editing?.field === "round" ? (
+          <input
+            type="text"
+            value={editing.value}
+            onChange={e => setEditing({ ...editing, value: e.target.value })}
+            onBlur={commitEdit}
+            onKeyDown={e => e.key === 'Enter' && commitEdit()}
+            autoFocus
+          />
+        ) : (
+          <span onClick={() => startEdit(g.id, "round")}>{g.round || '—'}</span>
+        ),
+    },
+    {
+      key: "stats",
+      header: "Stats",
+      render: (g) => (g.stats?.length ? '✓' : '—'),
     },
     {
       key: "team1",
@@ -388,18 +456,22 @@ const GamesPage: React.FC = () => {
     {
       key: "actions",
       header: "Actions",
-      render: (g) =>
-        user?.role === "superadmin" ? (
-          <button
-            onClick={() => handleDelete(g.id)}
-            disabled={deleting}
-            className="game-btn-remove"
-          >
-            Delete
+      render: (g) => (
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <button onClick={() => setStatUploadGame(g)} className="create-button" style={{ padding: '0.25rem 0.5rem' }}>
+            Upload Stats
           </button>
-        ) : (
-          <span style={{ color: "#666", fontStyle: "italic" }}>No permissions</span>
-        ),
+          {user?.role === "superadmin" && (
+            <button
+              onClick={() => handleDelete(g.id)}
+              disabled={deleting}
+              className="game-btn-remove"
+            >
+              Delete
+            </button>
+          )}
+        </div>
+      ),
     },
   ];
 
@@ -410,9 +482,8 @@ const GamesPage: React.FC = () => {
     <div className="portal-main">
       {/* Search and Controls */}
       <div className="players-controls">
-        <button className="create-button" onClick={openModal}>
-          Create Game
-        </button>
+        <button className="create-button" onClick={openModal}>Create Game</button>
+        <button className="create-button" onClick={() => setIsImportModalOpen(true)}>Import from Challonge</button>
         <div className="players-controls-right">
           <SearchBar onSearch={handleSearch} placeholder="Search games..." />
           <Pagination
@@ -424,11 +495,11 @@ const GamesPage: React.FC = () => {
       </div>
 
       {/* Filters */}
-      <FilterBar onReset={(searchQuery || seasonFilter || stageFilter) ? clearFilters : undefined}>
+      <FilterBar onReset={(searchQuery || seasonFilter || stageFilter || statusFilter || roundFilter) ? clearFilters : undefined}>
         <div className="filter-group">
-          <label className="filter-label">Season:</label>
           <select
             className="filter-select"
+            aria-label="Season"
             value={seasonFilter}
             onChange={(e) => handleSeasonFilterChange(e.target.value)}
           >
@@ -442,9 +513,9 @@ const GamesPage: React.FC = () => {
         </div>
 
         <div className="filter-group">
-          <label className="filter-label">Stage:</label>
           <select
             className="filter-select"
+            aria-label="Stage"
             value={stageFilter}
             onChange={(e) => handleStageFilterChange(e.target.value)}
           >
@@ -453,6 +524,23 @@ const GamesPage: React.FC = () => {
               <option key={stage} value={stage}>
                 {stage}
               </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="filter-group">
+          <select className="filter-select" aria-label="Status" value={statusFilter} onChange={(e) => handleStatusFilterChange(e.target.value)}>
+            <option value="">All Statuses</option>
+            <option value="scheduled">Scheduled</option>
+            <option value="completed">Completed</option>
+          </select>
+        </div>
+
+        <div className="filter-group">
+          <select className="filter-select" aria-label="Round" value={roundFilter} onChange={(e) => handleRoundFilterChange(e.target.value)}>
+            <option value="">All Rounds</option>
+            {uniqueRounds.map(round => (
+              <option key={round} value={round}>{round}</option>
             ))}
           </select>
         </div>
@@ -494,6 +582,19 @@ const GamesPage: React.FC = () => {
               required
               style={{ width: "100%", marginBottom: "0.75rem" }}
             />
+          </label>
+
+          <label>
+            Status
+            <select value={newStatus} onChange={(e) => setNewStatus(e.target.value)} style={{ width: "100%", marginBottom: "0.75rem" }}>
+              <option value="scheduled">Scheduled</option>
+              <option value="completed">Completed</option>
+            </select>
+          </label>
+
+          <label>
+            Round
+            <input type="text" value={newRound} onChange={(e) => setNewRound(e.target.value)} style={{ width: "100%", marginBottom: "0.75rem" }} />
           </label>
 
           {/* Stage */}
@@ -591,6 +692,30 @@ const GamesPage: React.FC = () => {
           )}
         </form>
       </Modal>
+
+      {isImportModalOpen && (
+        <ChallongeImport
+          onImportSuccess={handleImportSuccess}
+          onCancel={() => setIsImportModalOpen(false)}
+        />
+      )}
+
+      <Modal isOpen={!!importResult} onClose={() => setImportResult(null)} title="Challonge Import Results">
+        {importResult && (
+          <div>
+            <p>Created: {importResult.summary.created}</p>
+            <p>Updated: {importResult.summary.updated}</p>
+            <p>Skipped: {importResult.summary.skipped}</p>
+          </div>
+        )}
+      </Modal>
+
+      <GameStatUploadModal
+        game={statUploadGame}
+        isOpen={!!statUploadGame}
+        onClose={() => setStatUploadGame(null)}
+        onSuccess={refetch}
+      />
 
       {/* Games Table */}
       <div className="users-table" style={{ marginTop: "1.5rem" }}>

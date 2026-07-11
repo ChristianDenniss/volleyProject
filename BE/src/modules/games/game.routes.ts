@@ -3,7 +3,7 @@ import { GameController } from './game.controller.js';
 import { validate } from '../../middleware/validate.js';
 import { authenticateCombined } from '../../middleware/combinedAuth.js';
 import { authorizeRoles } from '../../middleware/authorizeRoles.js';
-import { createGameSchema, updateGameSchema } from './games.schema.js';
+import { createGameSchema, updateGameSchema, importChallongeSchema } from './games.schema.js';
 
 export function registerGameRoutes(app: Application): void {
     const router = Router();
@@ -13,6 +13,8 @@ export function registerGameRoutes(app: Application): void {
     router.post('/', authenticateCombined, authorizeRoles("admin", "superadmin"), validate(createGameSchema), gameController.createGame); // Create a new game (include score in body)
     router.post('/batch', authenticateCombined, authorizeRoles("admin", "superadmin"), validate(createGameSchema), gameController.createMultipleGames); // Create multiple games in batch (new route)
     
+    router.post('/import-challonge', authenticateCombined, authorizeRoles("admin", "superadmin"), validate(importChallongeSchema), gameController.importFromChallonge);
+
     // GET routes - PUBLIC (for website display)
     router.get('/', gameController.getGames); // Get all games
     router.get('/skinny', gameController.getSkinnyGames); // Get all games without relations / minimal data

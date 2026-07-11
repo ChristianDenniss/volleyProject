@@ -9,8 +9,7 @@ import type {
   Article,
   Game,
   Stats,
-  Award,
-  Match
+  Award
 } from "../types/interfaces";
 
 /**
@@ -73,13 +72,5 @@ export function useStatsMutations() {
 export function useAwardsMutations() {
   const { patch: patchAward } = usePatch<Award>("awards");
   return { patchAward };
-}
-
-/**
- * Hook returning a `patchMatch` fn for updating matches.
- */
-export function useMatchMutations() {
-  const { patch: patchMatch } = usePatch<Match>("matches");
-  return { patchMatch };
 }
 

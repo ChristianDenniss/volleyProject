@@ -2,7 +2,6 @@ import type {
   Article,
   Award,
   Game,
-  Match,
   Player,
   Records,
   Role,
@@ -309,6 +308,7 @@ function buildGames(seasons: Season[], teams: Team[]): Game[] {
         videoUrl: i % 3 === 0 ? "https://www.youtube.com/watch?v=jUYJKjPvPoQ" : null,
         date: new Date(isoDate(2025, month, day, 18 + (i % 3))),
         stage: pick(STAGES, i + season.id),
+        status: 'completed',
         teams: [team1, team2],
       });
     }
@@ -370,12 +370,11 @@ function attachPlayerRelations(players: Player[], teams: Team[], stats: Stats[])
   }));
 }
 
-function attachSeasonRelations(seasons: Season[], teams: Team[], games: Game[], matches: Match[]): Season[] {
+function attachSeasonRelations(seasons: Season[], teams: Team[], games: Game[]): Season[] {
   return seasons.map((season) => ({
     ...season,
     teams: teams.filter((team) => team.season.id === season.id),
     games: games.filter((game) => game.season.id === season.id),
-    matches: matches.filter((match) => match.seasonId === season.id),
   }));
 }
 
@@ -450,35 +449,36 @@ function pickTeamPair(
   return [a, b];
 }
 
-function buildMatchEntry(
-  matchId: number,
+function buildScheduleGameEntry(
+  gameId: number,
   season: Season,
   team1: Team,
   team2: Team,
   date: Date,
   completed: boolean,
   slotIndex: number
-): Match {
-  const round = pick(MATCH_ROUNDS, slotIndex + matchId);
+): Game {
+  const round = pick(MATCH_ROUNDS, slotIndex + gameId);
   return {
-    id: matchId,
+    id: gameId,
+    name: `${team1.name} vs ${team2.name}`,
     matchNumber: `${round} - Match ${(slotIndex % 4) + 1}`,
     status: completed ? "completed" : "scheduled",
     round,
+    phase: 'qualifiers',
+    region: 'na',
+    stage: `Qualifiers; ${round}`,
     date,
-    team1Score: completed ? pseudoRandom(matchId, 1, 3) : undefined,
-    team2Score: completed ? pseudoRandom(matchId + 2, 0, 2) : undefined,
-    set1Score: completed ? "25-20" : undefined,
-    set2Score: completed ? "23-25" : undefined,
-    set3Score: completed ? "25-22" : undefined,
-    set4Score: completed && pseudoRandom(matchId, 0, 1) === 1 ? "25-18" : undefined,
-    set5Score: completed && pseudoRandom(matchId + 1, 0, 1) === 1 ? "15-13" : undefined,
-    seasonId: season.id,
+    team1Score: completed ? pseudoRandom(gameId, 1, 3) : null,
+    team2Score: completed ? pseudoRandom(gameId + 2, 0, 2) : null,
+    set1Score: completed ? "25-20" : null,
+    set2Score: completed ? "23-25" : null,
+    set3Score: completed ? "25-22" : null,
+    set4Score: completed && pseudoRandom(gameId, 0, 1) === 1 ? "25-18" : null,
+    set5Score: completed && pseudoRandom(gameId + 1, 0, 1) === 1 ? "15-13" : null,
     season,
-    team1Name: team1.name,
-    team2Name: team2.name,
-    team1LogoUrl: team1.logoUrl,
-    team2LogoUrl: team2.logoUrl,
+    teams: [team1, team2],
+    videoUrl: null,
     tags: [pick(TAGS, slotIndex), pick(TAGS, slotIndex + 1)].filter(
       (tag, idx, arr) => arr.indexOf(tag) === idx
     ),
@@ -488,10 +488,10 @@ function buildMatchEntry(
 function buildLatestSeasonSchedule(
   season: Season,
   seasonTeams: Team[],
-  startMatchId: number
-): Match[] {
-  const matches: Match[] = [];
-  let matchId = startMatchId;
+  startGameId: number
+): Game[] {
+  const scheduledGames: Game[] = [];
+  let gameId = startGameId;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -512,27 +512,27 @@ function buildLatestSeasonSchedule(
       const isFuture = dayOffset > 0;
       const completed = isPast || (!isFuture && slot % 2 === 0);
 
-      matches.push(
-        buildMatchEntry(matchId++, season, team1, team2, matchDate, completed, slot + dayIndex)
+      scheduledGames.push(
+        buildScheduleGameEntry(gameId++, season, team1, team2, matchDate, completed, slot + dayIndex)
       );
     }
   }
 
-  return matches;
+  return scheduledGames;
 }
 
-function buildMatches(seasons: Season[], teams: Team[]): Match[] {
-  const matches: Match[] = [];
-  let matchId = 1;
+function buildScheduledGames(seasons: Season[], teams: Team[], startGameId: number): Game[] {
+  const scheduledGames: Game[] = [];
+  let gameId = startGameId;
 
   seasons.forEach((season, seasonIndex) => {
     const seasonTeams = teams.filter((team) => team.season.id === season.id);
     if (seasonTeams.length < 2) return;
 
     if (seasonIndex === 0) {
-      const schedule = buildLatestSeasonSchedule(season, seasonTeams, matchId);
-      matches.push(...schedule);
-      matchId += schedule.length;
+      const schedule = buildLatestSeasonSchedule(season, seasonTeams, gameId);
+      scheduledGames.push(...schedule);
+      gameId += schedule.length;
       return;
     }
 
@@ -545,13 +545,13 @@ function buildMatches(seasons: Season[], teams: Team[]): Match[] {
         isoDate(2024 + (seasonIndex % 2), 1 + (i % 10), 1 + ((i * 3) % 26), 17 + (i % 4))
       );
 
-      matches.push(
-        buildMatchEntry(matchId++, season, team1, team2, matchDate, completed, i)
+      scheduledGames.push(
+        buildScheduleGameEntry(gameId++, season, team1, team2, matchDate, completed, i)
       );
     }
   });
 
-  return matches;
+  return scheduledGames;
 }
 
 function buildRecords(
@@ -610,10 +610,11 @@ export function buildMockDataset() {
   const playersBase = buildPlayers();
   const teams = buildTeams(seasons, playersBase);
   const games = buildGames(seasons, teams);
+  const scheduledGames = buildScheduledGames(seasons, teams, games.length + 1);
+  const allGames = [...games, ...scheduledGames];
   const stats = buildStats(games, playersBase);
   const players = attachPlayerRelations(playersBase, teams, stats);
-  const matches = buildMatches(seasons, teams);
-  const seasonsWithRelations = attachSeasonRelations(seasons, teams, games, matches);
+  const seasonsWithRelations = attachSeasonRelations(seasons, teams, allGames);
   const articles = buildArticles(users);
   const awards = buildAwards(seasons, playersBase);
   const records = buildRecords(seasons, playersBase, games);
@@ -623,11 +624,11 @@ export function buildMockDataset() {
     seasons: seasonsWithRelations,
     players,
     teams,
-    games,
+    games: allGames,
     stats,
     articles,
     awards,
-    matches,
+    matches: [],
     records,
   };
 }
@@ -642,5 +643,5 @@ export const mockGames = dataset.games;
 export const mockStats = dataset.stats;
 export const mockArticles = dataset.articles;
 export const mockAwards = dataset.awards;
-export const mockMatches = dataset.matches;
+export const mockMatches: never[] = [];
 export const mockRecords = dataset.records;

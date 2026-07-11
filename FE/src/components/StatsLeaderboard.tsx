@@ -920,13 +920,13 @@ const StatsLeaderboard: React.FC = () => {
               <SeasonFilter selectedSeason={selectedSeason} onSeasonChange={handleSeasonChange} />
             </div>
             <div className="stats-stage-filter">
-              <label htmlFor="stage-round">Round:</label>
               <select
                 id="stage-round"
+                aria-label="Round"
                 value={selectedStageRound}
                 onChange={(e) => handleStageRoundChange(e.target.value as StageRound)}
               >
-                <option value="all">All</option>
+                <option value="all">All Rounds</option>
                 <option value="R1">R1 - Winners Round of 16</option>
                 <option value="R2">R2 - Winners QF + Losers R1</option>
                 <option value="R3">R3 - Winners SF + Losers R2</option>
@@ -936,21 +936,21 @@ const StatsLeaderboard: React.FC = () => {
               </select>
             </div>
             <div className="stats-type-filter">
-              <label htmlFor="stat-type">Stat-Type:</label>
               <select
                 id="stat-type"
+                aria-label="Stat type"
                 value={statType}
                 onChange={(e) => setStatType(e.target.value as StatType)}
               >
-                <option value="total">Total</option>
+                <option value="total">Totals</option>
                 <option value="perGame">Per Game</option>
                 <option value="perSet">Per Set</option>
               </select>
             </div>
             <div className="stats-view-filter">
-              <label htmlFor="view-type">View:</label>
               <select
                 id="view-type"
+                aria-label="View"
                 value={viewType}
                 onChange={(e) => setViewType(e.target.value as ViewType)}
               >
@@ -975,15 +975,15 @@ const StatsLeaderboard: React.FC = () => {
                 Advanced Filters {filterConditions.length > 0 && `(${filterConditions.length})`}
               </button>
             </div>
-          </div>
-          <div className="stats-search-row">
-            <SearchBar onSearch={handleSearch} placeholder={viewType === 'team' ? "Search Teams..." : "Search Players..."} />
-            <div className="stats-pagination-wrapper">
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-              />
+            <div className="stats-search-controls">
+              <SearchBar onSearch={handleSearch} placeholder={viewType === 'team' ? "Search Teams..." : "Search Players..."} />
+              <div className="stats-pagination-wrapper">
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
+                />
+              </div>
             </div>
           </div>
         </div>

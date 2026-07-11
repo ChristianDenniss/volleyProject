@@ -18,39 +18,10 @@
     font-weight: 700;
 }
 
-.games-controls-wrapper {
-    margin: 20px 0;
-    min-height: 120px;
-}
-
-.games-controls-container {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    min-height: 100px;
-}
-
-.games-search-row {
-    display: flex;
-    flex-direction: row;
-    gap: 15px;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    min-height: 50px;
-}
-
 .games-season-filter,
 .games-stage-filter {
     margin: 0;
     white-space: nowrap;
-}
-
-.games-season-filter label,
-.games-stage-filter label {
-    margin-right: 8px;
-    color: var(--color-text);
-    font-weight: 500;
 }
 
 .games-season-filter select,
@@ -81,41 +52,7 @@
     box-shadow: 0 0 0 2px var(--color-focus-ring);
 }
 
-.games-search-row .search-bar {
-    flex-grow: 1;
-}
-
-.games-search-row .search-bar input {
-    width: 100%;
-}
-
-.games-pagination-wrapper {
-    white-space: nowrap;
-}
-
 .games-page.loading {
     opacity: 0.8;
     pointer-events: none;
-}
-
-@media (max-width: 768px) {
-    .games-search-row {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 10px;
-    }
-
-    .games-pagination-wrapper,
-    .search-bar {
-        width: 100%;
-        margin: 0;
-    }
-
-    .search-bar input {
-        width: 100%;
-    }
-
-    .games-controls-wrapper {
-        min-height: 150px;
-    }
 }

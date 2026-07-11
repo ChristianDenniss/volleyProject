@@ -18,7 +18,6 @@ import { User } from "../modules/user/user.entity.js";
 import { Article } from "../modules/articles/article.entity.js";
 import { Awards } from "../modules/awards/award.entity.js";
 import { Records } from "../modules/records/records.entity.js";
-import { Matches } from "../modules/matches/match.entity.js";
 
 dotenv.config();
 
@@ -32,8 +31,7 @@ const entities = [
     User,
     Article,
     Awards,
-    Records,
-    Matches
+    Records
 ];
 
 // Configure AppDataSource

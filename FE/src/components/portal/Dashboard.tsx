@@ -9,7 +9,6 @@ const Dashboard: React.FC = () => {
   const [players, setPlayers] = useState<any[]>([]);
   const [seasons, setSeasons] = useState<any[]>([]);
   const [games, setGames] = useState<any[]>([]);
-  const [matches, setMatches] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [awards, setAwards] = useState<any[]>([]);
   const [statsLoading, setStatsLoading] = useState(true);
@@ -18,7 +17,6 @@ const Dashboard: React.FC = () => {
   const [playersLoading, setPlayersLoading] = useState(true);
   const [seasonsLoading, setSeasonsLoading] = useState(true);
   const [gamesLoading, setGamesLoading] = useState(true);
-  const [matchesLoading, setMatchesLoading] = useState(true);
   const [usersLoading, setUsersLoading] = useState(true);
   const [awardsLoading, setAwardsLoading] = useState(true);
 
@@ -36,7 +34,6 @@ const Dashboard: React.FC = () => {
         playersResponse,
         seasonsResponse,
         gamesResponse,
-        matchesResponse,
         usersResponse,
         awardsResponse
       ] = await Promise.all([
@@ -46,7 +43,6 @@ const Dashboard: React.FC = () => {
         fetch('/api/players'),
         fetch('/api/seasons'),
         fetch('/api/games'),
-        fetch('/api/matches'),
         fetch('/api/users'),
         fetch('/api/awards')
       ]);
@@ -56,8 +52,10 @@ const Dashboard: React.FC = () => {
       if (articlesResponse.ok) setArticles(await articlesResponse.json());
       if (playersResponse.ok) setPlayers(await playersResponse.json());
       if (seasonsResponse.ok) setSeasons(await seasonsResponse.json());
-      if (gamesResponse.ok) setGames(await gamesResponse.json());
-      if (matchesResponse.ok) setMatches(await matchesResponse.json());
+      if (gamesResponse.ok) {
+        const gamesJson = await gamesResponse.json();
+        setGames(gamesJson.data ?? gamesJson);
+      }
       if (usersResponse.ok) setUsers(await usersResponse.json());
       if (awardsResponse.ok) setAwards(await awardsResponse.json());
     } catch (error) {
@@ -69,7 +67,6 @@ const Dashboard: React.FC = () => {
       setPlayersLoading(false);
       setSeasonsLoading(false);
       setGamesLoading(false);
-      setMatchesLoading(false);
       setUsersLoading(false);
       setAwardsLoading(false);
     }
@@ -78,13 +75,14 @@ const Dashboard: React.FC = () => {
   const totalTeams = teams?.length ?? 0;
   const totalSeasons = seasons?.length ?? 0;
   const totalGames = games?.length ?? 0;
-  const totalMatches = matches?.length ?? 0;
+  const scheduledGames = games?.filter((g: any) => g.status === 'scheduled').length ?? 0;
+  const completedGames = games?.filter((g: any) => g.status === 'completed').length ?? 0;
   const totalUsers = users?.length ?? 0;
   const totalAwards = awards?.length ?? 0;
   const totalStats = stats?.length ?? 0;
   const totalArticles = articles?.length ?? 0;
   const totalPlayers = players?.length ?? 0;
-  const isLoading = statsLoading || teamsLoading || articlesLoading || playersLoading || seasonsLoading || gamesLoading || matchesLoading || usersLoading || awardsLoading;
+  const isLoading = statsLoading || teamsLoading || articlesLoading || playersLoading || seasonsLoading || gamesLoading || usersLoading || awardsLoading;
 
   if (isLoading) {
     return <div className="dashboard-container"><p>Loading dashboard data...</p></div>;
@@ -161,8 +159,16 @@ const Dashboard: React.FC = () => {
         <div className="stat-card">
           <FaClock className="stat-icon" />
           <div className="stat-content">
-            <h3>Total Matches</h3>
-            <p className="stat-value">{totalMatches}</p>
+            <h3>Scheduled Games</h3>
+            <p className="stat-value">{scheduledGames}</p>
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <FaTrophy className="stat-icon" />
+          <div className="stat-content">
+            <h3>Completed Games</h3>
+            <p className="stat-value">{completedGames}</p>
           </div>
         </div>
       </div>
@@ -182,9 +188,6 @@ const Dashboard: React.FC = () => {
           </button>
           <button className="dashboard-action-button" onClick={() => window.location.href = '/portal/games'}>
             Manage Games
-          </button>
-          <button className="dashboard-action-button" onClick={() => window.location.href = '/portal/matches'}>
-            Manage Matches
           </button>
           <button className="dashboard-action-button" onClick={() => window.location.href = '/portal/stats'}>
             Manage Stats

@@ -1,7 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
 import type { Games } from '../games/game.entity.js';
 import type { Teams } from '../teams/team.entity.js';
-import type { Matches } from '../matches/match.entity.js';
 import type { Awards } from '../awards/award.entity.js';
 import type { Records } from '../records/records.entity.js';
 
@@ -37,9 +36,6 @@ export class Seasons {
 
     @OneToMany('Teams', 'season')
     teams!: Teams[];
-
-    @OneToMany('Matches', 'season')
-    matches!: Matches[];
 
     @OneToMany('Awards', 'season')
     awards!: Awards[];

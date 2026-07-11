@@ -18,41 +18,11 @@
     font-weight: 700;
 }
 
-/* Controls layout - following Games/Teams pattern */
-.players-controls-wrapper { 
-    margin: 20px 0; 
-    min-height: 120px; /* Reserve space for controls to prevent shift */
-}
-
-.players-controls-container {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    min-height: 100px; /* Reserve space for container */
-}
-
-.players-search-row {
-    display: flex;
-    flex-direction: row;
-    gap: 15px;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    min-height: 50px; /* Reserve space for search and pagination */
-}
-
-/* Filter styling */
+/* Controls layout - filter selects only; toolbar in ListingPage.css */
 .players-season-filter, 
 .players-position-filter { 
     margin: 0; 
     white-space: nowrap; 
-}
-
-.players-season-filter label,
-.players-position-filter label {
-    margin-right: 8px;
-    color: var(--color-text);
-    font-weight: 500;
 }
 
 .players-season-filter select,
@@ -83,21 +53,8 @@
     box-shadow: 0 0 0 2px rgba(45, 60, 80, 0.2);
 }
 
-/* Search and pagination */
-.players-search-row .search-bar {
-    flex-grow: 1;
-}
-
-.players-search-row .search-bar input {
-    width: 100%;
-}
-
-.players-pagination-wrapper { 
-    white-space: nowrap; 
-}
-
 /* Pagination button styling */
-.players-pagination-wrapper button {
+.players-page .listing-search-row button {
     height: 30px;
     padding: 0 8px;
     border: 1px solid var(--color-brand-primary);
@@ -110,42 +67,18 @@
     transition: background 0.18s, border 0.18s;
 }
 
-.players-pagination-wrapper button:hover:not(:disabled),
-.players-pagination-wrapper button.active {
+.players-page .listing-search-row button:hover:not(:disabled),
+.players-page .listing-search-row button.active {
     background: var(--color-brand-primary-hover);
     border-color: var(--color-brand-primary-hover);
     color: #ffffff;
 }
 
-.players-pagination-wrapper button:disabled {
+.players-page .listing-search-row button:disabled {
     background: #e5e7eb;
     border-color: #e5e7eb;
     color: #9ca3af;
     cursor: not-allowed;
-}
-
-/* Responsive design */
-@media (max-width: 768px) {
-    .players-search-row {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 10px;
-    }
-
-    .players-pagination-wrapper,
-    .search-bar {
-        width: 100%;
-        margin: 0;
-    }
-
-    .search-bar input {
-        width: 100%;
-    }
-    
-    /* Adjust minimum heights for mobile */
-    .players-controls-wrapper {
-        min-height: 150px;
-    }
 }
 
 /* Loading state to prevent layout shift */

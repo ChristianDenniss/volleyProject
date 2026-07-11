@@ -51,11 +51,8 @@
 
 /* Filters Section */
 .schedules-filters {
-  background: #f8f9fa;
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 30px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 0 0 0.75rem;
+  margin-bottom: 0.75rem;
 }
 
 .filter-group {
@@ -92,7 +89,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 20px;
+  gap: 0.75rem;
 }
 
 .schedules-search-bar {

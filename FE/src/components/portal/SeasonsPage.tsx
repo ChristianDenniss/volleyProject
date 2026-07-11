@@ -541,7 +541,8 @@ const SeasonsPage: React.FC = () =>
                         type="submit"
                         disabled={creating}
                         style={{
-                            width:        "100%",
+                            gridColumn:   "1 / -1",
+                            justifySelf:  "stretch",
                             padding:      "0.5rem",
                             borderRadius: "0.25rem",
                             background:   "var(--color-brand-primary)",

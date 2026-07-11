@@ -2,7 +2,7 @@ import { Repository } from 'typeorm';
 import { AppDataSource } from '../../db/data-source.js';
 import { Stats } from './stat.entity.js';
 import { Players } from '../players/player.entity.js';
-import { Games } from '../games/game.entity.js';
+import { Games, GameStatus } from '../games/game.entity.js';
 import { MissingFieldError } from '../../errors/MissingFieldError.js';
 import { NegativeStatError } from '../../errors/NegativeStatError.js';
 import { NotFoundError } from '../../errors/NotFoundError.js';
@@ -893,6 +893,8 @@ export class StatService extends CacheableService
 
                 // Save all stats
                 const savedStats = await queryRunner.manager.save(statsToCreate);
+
+                await queryRunner.manager.update(Games, gameId, { status: GameStatus.COMPLETED });
 
                 // Commit transaction
                 await queryRunner.commitTransaction();

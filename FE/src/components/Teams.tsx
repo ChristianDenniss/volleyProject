@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate }                          from "react-router-dom";
 import { useMediumTeams }                             from "../hooks/allFetch";
 import "../styles/Teams.css";
+import "../styles/ListingPage.css";
 import SearchBar                                from "./Searchbar";
 import Pagination                               from "./Pagination";
 import FilterBar                                from "./ui/FilterBar";
@@ -151,14 +152,12 @@ const Teams: React.FC = () =>
 
     return (
         <div className={`teams-page ${!data ? 'loading' : ''}`}>
-            <div className="teams-controls-wrapper">
-                <div className="teams-controls-container">
-                    {/* Filters Row */}
+            <div className="listing-controls-toolbar">
                     <FilterBar onReset={(searchQuery || seasonFilter || placementFilter) ? clearFilters : undefined}>
                         <div className="teams-season-filter">
-                            <label htmlFor="season-filter">Season:</label>
                             <select
                                 id="season-filter"
+                                aria-label="Season"
                                 value={seasonFilter}
                                 onChange={(e) => {
                                     setSeasonFilter(e.target.value)
@@ -175,9 +174,9 @@ const Teams: React.FC = () =>
                         </div>
 
                         <div className="teams-placement-filter">
-                            <label htmlFor="placement-filter">Placement:</label>
                             <select
                                 id="placement-filter"
+                                aria-label="Placement"
                                 value={placementFilter}
                                 onChange={(e) => {
                                     setPlacementFilter(e.target.value)
@@ -194,22 +193,17 @@ const Teams: React.FC = () =>
                         </div>
                     </FilterBar>
 
-                    {/* Search and Pagination Row */}
-                    <div className="teams-search-row">
+                    <div className="listing-search-row">
                         <SearchBar 
                             onSearch={handleSearch} 
                             placeholder="Search teams..." 
-                            className="teams-search-bar"
                         />
-                        <div className="teams-pagination-wrapper">
-                            <Pagination
-                                currentPage={currentPage}
-                                totalPages={totalPages}
-                                onPageChange={setCurrentPage}
-                            />
-                        </div>
+                        <Pagination
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            onPageChange={setCurrentPage}
+                        />
                     </div>
-                </div>
             </div>
 
             {error ? (

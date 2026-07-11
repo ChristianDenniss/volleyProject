@@ -1,5 +1,38 @@
 /* Shared table layout for public list pages (Games, Players, etc.) */
 
+.listing-controls-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.listing-controls-toolbar .ui-filter-bar {
+  margin-bottom: 0;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.listing-search-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1 1 16rem;
+  max-width: 100%;
+  margin-left: auto;
+}
+
+.listing-search-row .search-bar {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.listing-search-row .search-bar input {
+  width: 100%;
+  max-width: none;
+}
+
 .listing-table-wrapper {
   width: 100%;
   overflow-x: auto;
@@ -56,12 +89,7 @@
   text-decoration: underline;
 }
 
-.listing-table-teams {
-  display: block;
-  max-width: none;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.listing-table-muted {
   color: var(--color-text-muted);
   font-size: 0.875rem;
 }
@@ -97,13 +125,22 @@
 }
 
 @media (max-width: 768px) {
+  .listing-controls-toolbar,
+  .listing-search-row {
+    flex-direction: column;
+    align-items: stretch;
+    margin-left: 0;
+  }
+
+  .listing-search-row .search-bar,
+  .listing-search-row .search-bar input {
+    max-width: none;
+    width: 100%;
+  }
+
   .listing-table thead th,
   .listing-table td {
     padding: 0.625rem 0.75rem;
     font-size: 0.875rem;
-  }
-
-  .listing-table-teams {
-    max-width: 180px;
   }
 }

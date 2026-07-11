@@ -101,7 +101,7 @@ const SingleGame: React.FC = () =>
                         const game      = games.find(g => g.id === numericId) ?? games[0]
 
                         // Compute total sets
-                        const totalSets = game.team1Score + game.team2Score
+                        const totalSets = (game.team1Score ?? 0) + (game.team2Score ?? 0)
 
                         // Format date
                         const formattedDate = new Date(game.date).toLocaleDateString(

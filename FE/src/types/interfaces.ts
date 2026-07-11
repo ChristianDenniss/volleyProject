@@ -4,39 +4,27 @@ interface Game
   id: number;
   name: string;
   season: Season;
-  team1Score: number;
-  team2Score: number;
+  team1Score: number | null;
+  team2Score: number | null;
   videoUrl: string | null;
   date: Date;
   stage: string;
+  status: 'scheduled' | 'completed';
+  matchNumber?: string | null;
+  round?: string | null;
+  phase?: 'qualifiers' | 'playoffs';
+  region?: 'na' | 'eu' | 'as' | 'sa';
+  set1Score?: string | null;
+  set2Score?: string | null;
+  set3Score?: string | null;
+  set4Score?: string | null;
+  set5Score?: string | null;
+  challongeMatchId?: string | null;
+  challongeTournamentId?: string | null;
+  challongeRound?: number | null;
+  tags?: string[];
   teams?: Team[]; 
   stats?: Stats[]; 
-}
-
-interface Match 
-{
-  id: number;
-  matchNumber: string; // e.g., "Round 1 - Match 1"
-  status: 'scheduled' | 'completed';
-  round: string; // e.g., "Round 1"
-  date: Date; // Single date field that can be updated
-  team1Score?: number; // Overall sets won by team1
-  team2Score?: number; // Overall sets won by team2
-  set1Score?: string | null; // e.g., "25-20"
-  set2Score?: string | null; // e.g., "20-25"
-  set3Score?: string | null; // e.g., "25-22"
-  set4Score?: string | null; // e.g., "25-20"
-  set5Score?: string | null; // e.g., "15-13"
-  challongeMatchId?: string;
-  challongeTournamentId?: string;
-  challongeRound?: number;
-  tags?: string[]; // Array of tags like ["RVL", "Invitational", "D-League"]
-  seasonId: number; // Foreign key to seasons table
-  season: Season; // Full season object (loaded with relations when needed)
-  team1Name?: string; // Team name as string (from Challonge)
-  team2Name?: string; // Team name as string (from Challonge)
-  team1LogoUrl?: string | null; // Team logo URL (from team lookup during Challonge import)
-  team2LogoUrl?: string | null; // Team logo URL (from team lookup during Challonge import)
 }
 
 interface Award
@@ -115,7 +103,6 @@ interface Team
   season: Season;
   games?: Game[]; 
   players?: Player[]; 
-  matches?: Match[];
 }
 
 interface Season 
@@ -124,7 +111,6 @@ interface Season
   seasonNumber: number;
   games?: Game[]; 
   teams?: Team[]; 
-  matches?: Match[];
   startDate: Date; 
   endDate?: Date; 
   image?: string;
@@ -189,7 +175,7 @@ interface Records
   loading: boolean;
 }
 
-export type { Game, Player, Stats, Team, Season, Article, User, Award, Records, AuthContextType, Match, PublicInterface, Role };
+export type { Game, Player, Stats, Team, Season, Article, User, Award, Records, AuthContextType, PublicInterface, Role };
 
 export interface PaginatedResponse<T> {
   data: T[];
@@ -205,12 +191,18 @@ export interface PaginatedResponse<T> {
 export type CreateGameInput = {
   name: string;
   seasonId: number;
-  team1Score: number;
-  team2Score: number;
+  team1Score: number | null;
+  team2Score: number | null;
   videoUrl?: string | null;
   date: Date;
   stage: string;
   teamNames: string[];
+  status?: 'scheduled' | 'completed';
+  matchNumber?: string;
+  round?: string;
+  phase?: 'qualifiers' | 'playoffs';
+  region?: 'na' | 'eu' | 'as' | 'sa';
+  tags?: string[];
 };
 
 // When creating a Player, omit "id" and nested arrays.
@@ -366,33 +358,32 @@ export interface GuessResult {
 
 export type TriviaData = TriviaPlayer | TriviaTeam | TriviaSeason;
 
-// New types for Matches
-export type CreateMatchInput = {
-  matchNumber: string;
-  status?: 'scheduled' | 'completed';
-  round: string;
-  scheduledDate: string;
-  actualDate?: string;
-  team1Score?: number;
-  team2Score?: number;
-  challongeMatchId?: string;
-  challongeTournamentId?: string;
-  challongeRound?: number;
-  tags?: string[]; // Array of tags like ["RVL", "Invitational", "D-League"]
-  seasonId: number;
-  team1Name?: string; // Team name as string (from Challonge)
-  team2Name?: string; // Team name as string (from Challonge)
-};
-
-export type UpdateMatchInput = Partial<CreateMatchInput>;
-
 export type ImportChallongeInput = {
   challongeUrl: string;
   seasonId: number;
   round?: string;
-  roundStartDate: string; // ISO date string
-  roundEndDate: string; // ISO date string
-  matchSpacingMinutes?: number; // Default 30 minutes
-  region?: 'na' | 'eu' | 'as' | 'sa'; // Region for imported matches
-  tags?: string[]; // Array of tags to apply to imported matches
+  roundStartDate: string;
+  roundEndDate: string;
+  matchSpacingMinutes?: number;
+  phase?: 'qualifiers' | 'playoffs';
+  region?: 'na' | 'eu' | 'as' | 'sa';
+  tags?: string[];
+  dryRun?: boolean;
+};
+
+export type ChallongeImportResult = {
+  success: boolean;
+  summary: {
+    created: number;
+    updated: number;
+    skipped: number;
+    failed: number;
+  };
+  details?: {
+    created: Array<{ gameId: number; matchNumber: string; team1: string; team2: string }>;
+    updated: Array<{ gameId: number; challongeMatchId: string; changedFields: string[] }>;
+    skipped: Array<{ challongeMatchId: string; reason: string }>;
+  };
+  error?: string;
+  unmatchedTeams?: Array<{ challongeMatchId: number; participantName: string; reason: string }>;
 };

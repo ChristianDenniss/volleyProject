@@ -9,6 +9,59 @@
   font-style: italic;
 }
 
+.matches-controls-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.matches-controls-toolbar .ui-filter-bar {
+  margin-bottom: 0;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.matches-search-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1 1 16rem;
+  margin-left: auto;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.matches-search-row .search-bar {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.matches-search-row .search-bar input {
+  width: 100%;
+  max-width: none;
+}
+
+.filters-section .results-counter {
+  margin-bottom: 0.75rem;
+}
+
+@media (max-width: 768px) {
+  .matches-controls-toolbar,
+  .matches-search-row {
+    flex-direction: column;
+    align-items: stretch;
+    margin-left: 0;
+  }
+
+  .matches-search-row .search-bar,
+  .matches-search-row .search-bar input {
+    width: 100%;
+    max-width: none;
+  }
+}
+
 /* Modal Styles */
 .modal-form {
   padding: 0;

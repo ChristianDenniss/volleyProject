@@ -34,7 +34,6 @@ export function getSeasonDetail(id: number): Season | undefined {
       .filter((team) => team.season.id === id)
       .map((team) => enrichTeam(team)),
     games: db.games.filter((game) => game.season.id === id),
-    matches: db.matches.filter((match) => match.seasonId === id),
   };
 }
 
@@ -42,15 +41,11 @@ export function enrichTeam(team: Team): Team {
   const games = db.games.filter((game) =>
     game.teams?.some((t) => t.id === team.id)
   );
-  const matches = db.matches.filter(
-    (match) => match.team1Name === team.name || match.team2Name === team.name
-  );
 
   return {
     ...team,
     players: team.players ?? [],
     games,
-    matches,
   };
 }
 

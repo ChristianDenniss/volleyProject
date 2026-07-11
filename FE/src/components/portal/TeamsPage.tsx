@@ -374,10 +374,10 @@ const TeamsPage: React.FC = () => {
 
       {/* Filters */}
       <FilterBar onReset={clearFilters}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <label style={{ fontWeight: "bold", minWidth: "80px" }}>Season:</label>
+        <div className="filter-group">
           <select
             className="filter-select"
+            aria-label="Season"
             value={seasonFilter}
             onChange={(e) => handleSeasonFilterChange(e.target.value)}
           >

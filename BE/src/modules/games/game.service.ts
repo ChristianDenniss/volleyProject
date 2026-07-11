@@ -1,6 +1,6 @@
-import { Not, Repository, In, ILike, FindOptionsWhere } from 'typeorm';
+import { Repository, In, ILike, FindOptionsWhere } from 'typeorm';
 import { AppDataSource } from '../../db/data-source.js';
-import { Games } from './game.entity.js';
+import { Games, GameStatus, GamePhase, GameRegion } from './game.entity.js';
 import { Teams } from '../teams/team.entity.js';
 import { Seasons } from '../seasons/season.entity.js';
 import { MissingFieldError } from '../../errors/MissingFieldError.js';
@@ -14,6 +14,10 @@ export interface GameFilters {
     search?: string;
     seasonId?: number;
     stage?: string;
+    status?: string;
+    round?: string;
+    phase?: string;
+    region?: string;
 }
 
 export class GameService {
@@ -34,18 +38,26 @@ export class GameService {
         date: Date, 
         seasonId: number, 
         teamIds: number[], 
-        team1Score: number,  // Added team1Score
-        team2Score: number,   // Added team2Score
+        team1Score: number | null,
+        team2Score: number | null,
         stage: string,
-        videoUrl?: string
-
+        videoUrl?: string,
+        options?: {
+            status?: GameStatus;
+            matchNumber?: string;
+            round?: string;
+            phase?: GamePhase;
+            region?: GameRegion;
+            setScores?: string[];
+            tags?: string[];
+            name?: string;
+        }
     ): Promise<Games> {
         try {
-            // Validation
             if (!seasonId) throw new MissingFieldError("Season ID");
             if (!stage) throw new MissingFieldError("Game Stage/Round");
             if (!teamIds || !teamIds.length) throw new MissingFieldError("Team IDs");
-            if (team1Score < 0 || team2Score < 0) throw new InvalidFormatError("Scores cannot be negative");
+            if ((team1Score ?? 0) < 0 || (team2Score ?? 0) < 0) throw new InvalidFormatError("Scores cannot be negative");
 
             // Fetch the season
             const season = await this.seasonRepository.findOneBy({ id: seasonId });
@@ -71,10 +83,24 @@ export class GameService {
             newGame.date = date; // No date validation
             newGame.season = season;
             newGame.teams = teams;
-            newGame.team1Score = team1Score;  // Set team1Score
-            newGame.team2Score = team2Score;  // Set team2Score
+            newGame.team1Score = team1Score;
+            newGame.team2Score = team2Score;
             newGame.videoUrl = videoUrl ?? '';
             newGame.stage = stage;
+            newGame.status = options?.status ?? (team1Score != null && team2Score != null ? GameStatus.COMPLETED : GameStatus.SCHEDULED);
+            newGame.matchNumber = options?.matchNumber ?? null;
+            newGame.round = options?.round ?? null;
+            newGame.phase = options?.phase ?? GamePhase.QUALIFIERS;
+            newGame.region = options?.region ?? GameRegion.NA;
+            newGame.tags = options?.tags ?? null;
+            newGame.name = options?.name ?? null;
+
+            const setScores = options?.setScores ?? [];
+            newGame.set1Score = setScores[0] ?? null;
+            newGame.set2Score = setScores[1] ?? null;
+            newGame.set3Score = setScores[2] ?? null;
+            newGame.set4Score = setScores[3] ?? null;
+            newGame.set5Score = setScores[4] ?? null;
 
             return this.gameRepository.save(newGame);
         } catch (error) {
@@ -158,6 +184,10 @@ export class GameService {
         if (filters.search) where.name = ILike(`%${filters.search}%`);
         if (filters.seasonId) where.season = { id: filters.seasonId } as any;
         if (filters.stage) where.stage = filters.stage;
+        if (filters.status) where.status = filters.status as GameStatus;
+        if (filters.round) where.round = filters.round;
+        if (filters.phase) where.phase = filters.phase as GamePhase;
+        if (filters.region) where.region = filters.region as GameRegion;
         return where;
     }
 
@@ -192,16 +222,26 @@ export class GameService {
         date: Date, 
         seasonId: number, 
         teamNames: string[], 
-        team1Score: number,  // Added team1Score
-        team2Score: number,   // Added team2Score
+        team1Score: number | null,
+        team2Score: number | null,
         stage: string,
-        videoUrl?: string
+        videoUrl?: string,
+        options?: {
+            status?: GameStatus;
+            matchNumber?: string;
+            round?: string;
+            phase?: GamePhase;
+            region?: GameRegion;
+            setScores?: string[];
+            tags?: string[];
+            name?: string;
+        }
     ): Promise<Games> {
         console.log("Received createGameByNames parameters:", { date, seasonId, teamNames, team1Score, team2Score, videoUrl, stage });
     
         try {
             // Validate that scores are not negative
-            if (team1Score < 0 || team2Score < 0) {
+            if ((team1Score ?? 0) < 0 || (team2Score ?? 0) < 0) {
                 throw new InvalidFormatError("Scores cannot be negative.");
             }
     
@@ -225,7 +265,10 @@ export class GameService {
             // Call the original createGame method with team IDs and the provided scores
             const teamIds = teams.map(team => team.id);
             console.log("Creating game with team IDs:", teamIds);
-            return this.createGame(date, seasonId, teamIds, team1Score, team2Score, stage, videoUrl); // Pass the scores to createGame
+            return this.createGame(date, seasonId, teamIds, team1Score, team2Score, stage, videoUrl, {
+                ...options,
+                name: options?.name ?? `${teamNames[0]} vs ${teamNames[1]}`,
+            });
         } catch (error) {
             console.error("Error occurred in createGameByNames service:", error);
             throw error; // Re-throw the error to be handled by the controller
@@ -281,10 +324,20 @@ export class GameService {
         date?: Date, 
         seasonId?: number, 
         teamIds?: number[], 
-        team1Score?: number, 
-        team2Score?: number,
+        team1Score?: number | null, 
+        team2Score?: number | null,
         stage?: string,
-        videoUrl?: string
+        videoUrl?: string,
+        options?: {
+            status?: GameStatus;
+            matchNumber?: string;
+            round?: string;
+            phase?: GamePhase;
+            region?: GameRegion;
+            setScores?: string[];
+            tags?: string[];
+            name?: string;
+        }
     ): Promise<Games> {
         if (!id) throw new MissingFieldError("Game ID");
 
@@ -343,6 +396,23 @@ export class GameService {
 
         if (stage) {
             game.stage = stage;   
+        }
+
+        if (options?.status) game.status = options.status;
+        if (options?.matchNumber !== undefined) game.matchNumber = options.matchNumber;
+        if (options?.round !== undefined) game.round = options.round;
+        if (options?.phase) game.phase = options.phase;
+        if (options?.region) game.region = options.region;
+        if (options?.tags !== undefined) game.tags = options.tags;
+        if (options?.name !== undefined) game.name = options.name;
+
+        if (options?.setScores) {
+            const setScores = options.setScores;
+            game.set1Score = setScores[0] ?? null;
+            game.set2Score = setScores[1] ?? null;
+            game.set3Score = setScores[2] ?? null;
+            game.set4Score = setScores[3] ?? null;
+            game.set5Score = setScores[4] ?? null;
         }
 
         return this.gameRepository.save(game);

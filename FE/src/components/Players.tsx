@@ -8,27 +8,25 @@ import "../styles/ListingPage.css";
 import SearchBar from "./Searchbar";
 import Pagination from "./Pagination";
 import FilterBar from "./ui/FilterBar";
+import OverflowListCell from "./ui/OverflowListCell";
 
-function formatPlayerTeams(player: Player): string {
-  if (!player.teams?.length) return "—";
+function getPlayerTeamLabels(player: Player): string[] {
+  if (!player.teams?.length) return [];
   return [...player.teams]
     .sort((a, b) => (a?.season?.seasonNumber ?? 0) - (b?.season?.seasonNumber ?? 0))
-    .map((team) => `${team.name} (S${team?.season?.seasonNumber ?? "?"})`)
-    .join(", ");
+    .map((team) => `${team.name} (S${team?.season?.seasonNumber ?? "?"})`);
 }
 
-function formatPlayerSeasons(player: Player): string {
+function getPlayerSeasonLabels(player: Player): string[] {
   const seasons = new Set<number>();
   player.teams?.forEach((team) => {
     if (team?.season?.seasonNumber != null) {
       seasons.add(team.season.seasonNumber);
     }
   });
-  if (seasons.size === 0) return "—";
   return Array.from(seasons)
     .sort((a, b) => a - b)
-    .map((n) => `S${n}`)
-    .join(", ");
+    .map((n) => `S${n}`);
 }
 
 const playerColumns: TableColumn<Player>[] = [
@@ -54,15 +52,24 @@ const playerColumns: TableColumn<Player>[] = [
   {
     key: "seasons",
     header: "Seasons",
-    render: (player) => formatPlayerSeasons(player),
+    render: (player) => (
+      <OverflowListCell
+        items={getPlayerSeasonLabels(player)}
+        maxVisible={3}
+        className="listing-table-muted"
+      />
+    ),
   },
   {
     key: "teamList",
     header: "Team History",
     render: (player) => (
-      <span className="listing-table-teams" title={formatPlayerTeams(player)}>
-        {formatPlayerTeams(player)}
-      </span>
+      <OverflowListCell
+        items={getPlayerTeamLabels(player)}
+        maxVisible={2}
+        className="listing-table-muted"
+        popoverTitle="Team history"
+      />
     ),
   },
 ];
@@ -132,13 +139,12 @@ const Players: React.FC = () => {
 
   return (
     <div className={`players-page ${!data ? "loading" : ""}`}>
-      <div className="players-controls-wrapper">
-        <div className="players-controls-container">
+      <div className="listing-controls-toolbar">
           <FilterBar onReset={clearFilters}>
             <div className="players-season-filter">
-              <label htmlFor="season-filter">Season:</label>
               <select
                 id="season-filter"
+                aria-label="Season"
                 value={seasonFilter}
                 onChange={(e) => {
                   setSeasonFilter(e.target.value);
@@ -155,9 +161,9 @@ const Players: React.FC = () => {
             </div>
 
             <div className="players-position-filter">
-              <label htmlFor="position-filter">Position:</label>
               <select
                 id="position-filter"
+                aria-label="Position"
                 value={positionFilter}
                 onChange={(e) => {
                   setPositionFilter(e.target.value);
@@ -174,21 +180,17 @@ const Players: React.FC = () => {
             </div>
           </FilterBar>
 
-          <div className="players-search-row">
+          <div className="listing-search-row">
             <SearchBar
               onSearch={handleSearch}
               placeholder="Search players..."
-              className="players-search-bar"
             />
-            <div className="players-pagination-wrapper">
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-              />
-            </div>
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
           </div>
-        </div>
       </div>
 
       {error ? (

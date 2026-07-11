@@ -1,4 +1,4 @@
-import type { Match } from "../types/interfaces";
+import type { Game } from "../types/interfaces";
 import { http, HttpResponse, type JsonBodyType } from "msw";
 import { bumpId, db, getAuthUser } from "./db";
 import { MOCK_AUTH_TOKEN } from "./data";
@@ -50,19 +50,29 @@ function paginated<T>(
   return toPaginatedResult(items, new URL(request.url).searchParams, filter);
 }
 
-function matchListFilter(match: Match, params: URLSearchParams): boolean {
+function gameListFilter(game: Game, params: URLSearchParams): boolean {
   const search = params.get("search")?.toLowerCase();
   const round = params.get("round");
   const status = params.get("status");
+  const stage = params.get("stage");
+  const seasonId = params.get("seasonId");
+  const phase = params.get("phase");
+  const region = params.get("region");
 
-  if (round && match.round !== round) return false;
-  if (status && match.status !== status) return false;
+  if (seasonId && game.season.id !== Number(seasonId)) return false;
+  if (round && game.round !== round) return false;
+  if (status && game.status !== status) return false;
+  if (stage && game.stage !== stage) return false;
+  if (phase && game.phase !== phase) return false;
+  if (region && game.region !== region) return false;
   if (search) {
     const haystack = [
-      match.matchNumber,
-      match.team1Name,
-      match.team2Name,
-      match.round,
+      game.name,
+      game.matchNumber,
+      game.round,
+      game.stage,
+      game.teams?.[0]?.name,
+      game.teams?.[1]?.name,
     ]
       .filter(Boolean)
       .join(" ")
@@ -197,12 +207,19 @@ export const handlers = [
   }),
 
   // Games
-  http.get(api("games/skinny"), ({ request }) => json(paginated(db.games, request))),
+  http.get(api("games/skinny"), ({ request }) => json(paginated(db.games, request, gameListFilter))),
   http.get(api("games/:id"), ({ params }) => {
     const game = findById(db.games, Number(params.id));
     return game ? json([game]) : json([], 404);
   }),
-  http.get(api("games"), ({ request }) => json(paginated(db.games, request))),
+  http.get(api("games"), ({ request }) => json(paginated(db.games, request, gameListFilter))),
+  http.post(api("games/import-challonge"), () =>
+    json({
+      success: true,
+      summary: { created: 2, updated: 0, skipped: 0, failed: 0 },
+      details: { created: [], updated: [], skipped: [] },
+    })
+  ),
   http.post(api("games"), async ({ request }) => {
     const body = (await request.json()) as Record<string, unknown>;
     const game = { id: bumpId("games"), ...body };
@@ -315,46 +332,6 @@ export const handlers = [
   }),
   http.delete(api("awards/:id"), ({ params }) => {
     const ok = removeById(db.awards, Number(params.id));
-    return ok ? new HttpResponse(null, { status: 204 }) : json({ message: "Not found" }, 404);
-  }),
-
-  // Matches
-  http.get(api("matches/season/:seasonId/round/:round"), ({ params, request }) => {
-    const seasonId = Number(params.seasonId);
-    const round = String(params.round);
-    const matches = db.matches.filter(
-      (match) => match.seasonId === seasonId && match.round === round
-    );
-    return json(paginated(matches, request, matchListFilter));
-  }),
-  http.get(api("matches/season/:seasonId"), ({ params, request }) => {
-    const seasonId = Number(params.seasonId);
-    const filtered = db.matches.filter((match) => match.seasonId === seasonId);
-    return json(paginated(filtered, request, matchListFilter));
-  }),
-  http.get(api("matches/:id"), ({ params }) => {
-    const match = findById(db.matches, Number(params.id));
-    return match ? json(match) : json({ message: "Not found" }, 404);
-  }),
-  http.get(api("matches"), ({ request }) =>
-    json(paginated(db.matches, request, matchListFilter))
-  ),
-  http.post(api("matches/import-challonge"), () =>
-    json({ imported: 2, matches: db.matches })
-  ),
-  http.post(api("matches"), async ({ request }) => {
-    const body = (await request.json()) as Record<string, unknown>;
-    const match = { id: bumpId("matches"), status: "scheduled", ...body };
-    db.matches.push(match as (typeof db.matches)[number]);
-    return json(match, 201);
-  }),
-  http.patch(api("matches/:id"), async ({ params, request }) => {
-    const body = (await request.json()) as Record<string, unknown>;
-    const match = patchById(db.matches, Number(params.id), body);
-    return match ? json(match) : json({ message: "Not found" }, 404);
-  }),
-  http.delete(api("matches/:id"), ({ params }) => {
-    const ok = removeById(db.matches, Number(params.id));
     return ok ? new HttpResponse(null, { status: 204 }) : json({ message: "Not found" }, 404);
   }),
 

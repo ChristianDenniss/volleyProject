@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useSeasons } from '../hooks/allFetch';
 import { authFetch } from '../hooks/authFetch';
-import type { ImportChallongeInput } from '../types/interfaces';
+import type { ImportChallongeInput, ChallongeImportResult } from '../types/interfaces';
 import '../styles/ChallongeImport.css';
 
 interface ChallongeImportProps {
-  onImportSuccess: () => void;
+  onImportSuccess: (result: ChallongeImportResult) => void;
   onCancel: () => void;
 }
 
@@ -18,48 +18,50 @@ const ChallongeImport: React.FC<ChallongeImportProps> = ({ onImportSuccess, onCa
     roundStartDate: '',
     roundEndDate: '',
     matchSpacingMinutes: 30,
-    region: 'na', // Add default region
-    tags: [] // Array of tags to apply to imported matches
+    phase: 'qualifiers',
+    region: 'na',
+    tags: [],
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<Array<{ participantName: string; reason: string }>>([]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setValidationErrors([]);
 
     try {
-      // Validate required fields
       if (!formData.challongeUrl || !formData.seasonId || !formData.roundStartDate || !formData.roundEndDate) {
         throw new Error('Please fill in all required fields');
       }
 
-      // Validate date range
       const startDate = new Date(formData.roundStartDate);
       const endDate = new Date(formData.roundEndDate);
-      
       if (startDate >= endDate) {
         throw new Error('Round start date must be before round end date');
       }
 
-      // Use the same backend URL pattern as other hooks
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
-      
-      // Use authFetch to automatically handle authentication
-      const response = await authFetch(`${backendUrl}/api/matches/import-challonge`, {
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+      const response = await authFetch(`${backendUrl}/api/games/import-challonge`, {
         method: 'POST',
-        body: JSON.stringify(formData)
+        body: JSON.stringify(formData),
       }, localStorage.getItem('authToken_v2'));
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to import matches');
+      const result: ChallongeImportResult = await response.json();
+
+      if (!response.ok || !result.success) {
+        if (result.unmatchedTeams?.length) {
+          setValidationErrors(result.unmatchedTeams.map(t => ({
+            participantName: t.participantName,
+            reason: t.reason,
+          })));
+        }
+        throw new Error(result.error || 'Failed to import games from Challonge');
       }
 
-      const result = await response.json();
-      alert(`Successfully imported ${result.matches.length} matches from Challonge!`);
-      onImportSuccess();
+      onImportSuccess(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -68,25 +70,19 @@ const ChallongeImport: React.FC<ChallongeImportProps> = ({ onImportSuccess, onCa
   };
 
   const handleInputChange = (field: keyof ImportChallongeInput, value: string | number) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   const handleTagsChange = (tagsString: string) => {
     const tags = tagsString.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
-    setFormData(prev => ({
-      ...prev,
-      tags
-    }));
+    setFormData(prev => ({ ...prev, tags }));
   };
 
   return (
     <div className="challonge-import-overlay">
       <div className="challonge-import-modal">
         <div className="modal-header">
-          <h2>Import Matches from Challonge</h2>
+          <h2>Import Games from Challonge</h2>
           <button className="close-button" onClick={onCancel}>&times;</button>
         </div>
 
@@ -98,7 +94,7 @@ const ChallongeImport: React.FC<ChallongeImportProps> = ({ onImportSuccess, onCa
               id="challongeUrl"
               value={formData.challongeUrl}
               onChange={(e) => handleInputChange('challongeUrl', e.target.value)}
-              placeholder="https://challonge.com/tournament_name"
+              placeholder="https://challonge.com/ch2s2na"
               required
             />
           </div>
@@ -118,6 +114,19 @@ const ChallongeImport: React.FC<ChallongeImportProps> = ({ onImportSuccess, onCa
                     Season {season.seasonNumber}
                   </option>
                 ))}
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="phase">Phase *</label>
+              <select
+                id="phase"
+                value={formData.phase || 'qualifiers'}
+                onChange={(e) => handleInputChange('phase', e.target.value)}
+                required
+              >
+                <option value="qualifiers">Qualifiers</option>
+                <option value="playoffs">Playoffs</option>
               </select>
             </div>
 
@@ -144,7 +153,7 @@ const ChallongeImport: React.FC<ChallongeImportProps> = ({ onImportSuccess, onCa
               id="round"
               value={formData.round || ''}
               onChange={(e) => handleInputChange('round', e.target.value)}
-              placeholder="e.g., 1, 2, Semi-Finals"
+              placeholder="e.g., 1 or Round 1"
             />
             <small>Leave empty to import all rounds</small>
           </div>
@@ -174,7 +183,7 @@ const ChallongeImport: React.FC<ChallongeImportProps> = ({ onImportSuccess, onCa
           </div>
 
           <div className="form-group">
-            <label htmlFor="matchSpacingMinutes">Minutes Between Matches</label>
+            <label htmlFor="matchSpacingMinutes">Minutes Between Games</label>
             <input
               type="number"
               id="matchSpacingMinutes"
@@ -183,7 +192,6 @@ const ChallongeImport: React.FC<ChallongeImportProps> = ({ onImportSuccess, onCa
               value={formData.matchSpacingMinutes || 30}
               onChange={(e) => handleInputChange('matchSpacingMinutes', parseInt(e.target.value))}
             />
-            <small>For scheduling future matches (15-120 minutes)</small>
           </div>
 
           <div className="form-group">
@@ -193,23 +201,27 @@ const ChallongeImport: React.FC<ChallongeImportProps> = ({ onImportSuccess, onCa
               id="tags"
               value={formData.tags?.join(', ') || ''}
               onChange={(e) => handleTagsChange(e.target.value)}
-              placeholder="e.g., RVL, Invitational, D-League"
+              placeholder="e.g., RVL, Invitational"
             />
-            <small>Tags to apply to all imported matches</small>
           </div>
 
-          {error && (
+          {error && <div className="error-message">{error}</div>}
+
+          {validationErrors.length > 0 && (
             <div className="error-message">
-              {error}
+              <strong>Unmatched teams:</strong>
+              <ul>
+                {validationErrors.map((item, idx) => (
+                  <li key={idx}>{item.participantName}: {item.reason}</li>
+                ))}
+              </ul>
             </div>
           )}
 
           <div className="form-actions">
-            <button type="button" onClick={onCancel} className="cancel-button">
-              Cancel
-            </button>
+            <button type="button" onClick={onCancel} className="cancel-button">Cancel</button>
             <button type="submit" disabled={loading} className="import-button">
-              {loading ? 'Importing...' : 'Import Matches'}
+              {loading ? 'Importing...' : 'Import Games'}
             </button>
           </div>
         </form>
@@ -217,11 +229,10 @@ const ChallongeImport: React.FC<ChallongeImportProps> = ({ onImportSuccess, onCa
         <div className="import-info">
           <h3>How it works:</h3>
           <ul>
-            <li><strong>Completed matches:</strong> Will be scheduled at the round start time</li>
-            <li><strong>Scheduled matches:</strong> Will be spaced out within the round time window</li>
-            <li><strong>Set scores:</strong> Will be imported if available from Challonge</li>
-            <li><strong>Teams:</strong> Will be created automatically if they don't exist</li>
-            <li><strong>Tags:</strong> Will be applied to all imported matches</li>
+            <li><strong>Teams must exist</strong> in the selected season before import — none are created automatically</li>
+            <li><strong>All-or-nothing:</strong> if any team cannot be matched, the entire import is aborted</li>
+            <li><strong>Re-import:</strong> existing games update only when teams match; identical games are skipped</li>
+            <li><strong>Stages:</strong> Swiss/qualifier rounds map to &quot;Qualifiers; Round N&quot;</li>
           </ul>
         </div>
       </div>
@@ -229,4 +240,4 @@ const ChallongeImport: React.FC<ChallongeImportProps> = ({ onImportSuccess, onCa
   );
 };
 
-export default ChallongeImport; 
+export default ChallongeImport;

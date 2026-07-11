@@ -32,7 +32,7 @@ const gameColumns: TableColumn<Game>[] = [
   {
     key: "score",
     header: "Score",
-    render: (game) => `${game.team1Score} – ${game.team2Score}`,
+    render: (game) => game.team1Score != null && game.team2Score != null ? `${game.team1Score} – ${game.team2Score}` : '—',
   },
   {
     key: "date",
@@ -42,7 +42,7 @@ const gameColumns: TableColumn<Game>[] = [
 ]
 
 const Games: React.FC = () => {
-  const { data, error } = useSkinnyGames()
+  const { data, error } = useSkinnyGames({ status: 'completed', limit: 500, page: 1 })
   const navigate = useNavigate()
 
   const [searchQuery, setSearchQuery] = useState<string>("")
@@ -64,10 +64,11 @@ const Games: React.FC = () => {
   const filteredGames = useMemo(() => {
     return (
       data?.filter((g) => {
+        const isCompleted = g.status === 'completed' || g.status === undefined
         const matchesSearch = g.name.toLowerCase().includes(searchQuery.toLowerCase())
         const matchesSeason = !seasonFilter || g.season.seasonNumber.toString() === seasonFilter
         const matchesStage = !stageFilter || g.stage === stageFilter
-        return matchesSearch && matchesSeason && matchesStage
+        return isCompleted && matchesSearch && matchesSeason && matchesStage
       }) ?? []
     )
   }, [data, searchQuery, seasonFilter, stageFilter])
@@ -92,13 +93,12 @@ const Games: React.FC = () => {
 
   return (
     <div className={`games-page ${!data ? "loading" : ""}`}>
-      <div className="games-controls-wrapper">
-        <div className="games-controls-container">
+      <div className="listing-controls-toolbar">
           <FilterBar onReset={(searchQuery || seasonFilter || stageFilter) ? clearFilters : undefined}>
             <div className="games-season-filter">
-              <label htmlFor="season-filter">Season:</label>
               <select
                 id="season-filter"
+                aria-label="Season"
                 value={seasonFilter}
                 onChange={(e) => {
                   setSeasonFilter(e.target.value)
@@ -115,9 +115,9 @@ const Games: React.FC = () => {
             </div>
 
             <div className="games-stage-filter">
-              <label htmlFor="stage-filter">Stage:</label>
               <select
                 id="stage-filter"
+                aria-label="Stage"
                 value={stageFilter}
                 onChange={(e) => {
                   setStageFilter(e.target.value)
@@ -134,21 +134,17 @@ const Games: React.FC = () => {
             </div>
           </FilterBar>
 
-          <div className="games-search-row">
+          <div className="listing-search-row">
             <SearchBar
               onSearch={handleSearch}
               placeholder="Search games..."
-              className="games-search-bar"
             />
-            <div className="games-pagination-wrapper">
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-              />
-            </div>
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
           </div>
-        </div>
       </div>
 
       {error ? (

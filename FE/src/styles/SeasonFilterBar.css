@@ -3,15 +3,8 @@
 .season-filter-bar {
     display: flex;
     align-items: center;
-    gap: 10px;
 }
 
-.season-filter-bar label {
-    margin-right: 6px;
-    font-weight: 500;
-}
-
-/* Default styling - will be overridden by StatsLeaderboard.css when used there */
 .season-filter-bar select {
     padding: 6px 12px;
     font-size: 15px;

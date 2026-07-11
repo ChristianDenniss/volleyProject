@@ -1,5 +1,7 @@
 import React, { useState, useMemo } from 'react';
-import { useMatches, useSeasons } from '../hooks/allFetch';
+import { Link } from 'react-router-dom';
+import { useGames, useSeasons } from '../hooks/allFetch';
+import type { Game } from '../types/interfaces';
 import SearchBar from './Searchbar';
 import CalendarModal from './CalendarModal';
 import FilterBar from './ui/FilterBar';
@@ -25,18 +27,25 @@ const Schedules: React.FC = () => {
   //   }
   // }, [seasons, selectedSeason]);
 
-  const { data: matches, error, loading } = useMatches({
+  const [selectedPhase, setSelectedPhase] = useState<string>('');
+  const [selectedRegion, setSelectedRegion] = useState<string>('');
+  const [selectedTag, setSelectedTag] = useState<string>('');
+
+  const { data: games, error, loading } = useGames({
     page: 1,
     limit: 500,
     seasonId: selectedSeason,
     search: searchQuery || undefined,
     round: selectedRound || undefined,
+    status: 'scheduled',
+    phase: selectedPhase || undefined,
+    region: selectedRegion || undefined,
   });
 
   // Get unique rounds from matches
   const uniqueRounds = useMemo(() => {
-    if (!matches) return [];
-    return Array.from(new Set(matches.map(match => match.round)))
+    if (!games) return [];
+    return Array.from(new Set(games.map(game => game.round).filter(Boolean) as string[]))
       .sort((a, b) => {
         // Sort rounds numerically if possible
         const aNum = parseInt(a.replace(/\D/g, ''));
@@ -46,36 +55,38 @@ const Schedules: React.FC = () => {
         }
         return a.localeCompare(b);
       });
-  }, [matches]);
+  }, [games]);
 
-  // Filter matches by round and search
-  const filteredMatches = useMemo(() => {
-    if (!matches) return [];
+  const filteredGames = useMemo(() => {
+    if (!games) return [];
     
-         return matches.filter(match => {
-       const matchesRound = !selectedRound || match.round === selectedRound;
-       const matchesSearch = match.matchNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           (match.team1Name?.toLowerCase().includes(searchQuery.toLowerCase()) || false) ||
-                           (match.team2Name?.toLowerCase().includes(searchQuery.toLowerCase()) || false);
+    return games.filter(game => {
+      const matchesRound = !selectedRound || game.round === selectedRound;
+      const team1Name = game.teams?.[0]?.name ?? '';
+      const team2Name = game.teams?.[1]?.name ?? '';
+      const label = game.matchNumber ?? game.name ?? '';
+      const matchesSearch = label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          team1Name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          team2Name.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesTag = !selectedTag || (game.tags ?? []).some(t => t.toLowerCase().includes(selectedTag.toLowerCase()));
        
-       return matchesRound && matchesSearch;
-     });
-  }, [matches, selectedRound, searchQuery]);
+      return matchesRound && matchesSearch && matchesTag;
+    });
+  }, [games, selectedRound, searchQuery, selectedTag]);
 
-  // Group matches by date
-  const matchesByDate = useMemo(() => {
-    const grouped: { [key: string]: typeof filteredMatches } = {};
+  const gamesByDate = useMemo(() => {
+    const grouped: { [key: string]: Game[] } = {};
     
-    filteredMatches.forEach(match => {
-      const dateKey = new Date(match.date).toDateString();
+    filteredGames.forEach(game => {
+      const dateKey = new Date(game.date).toDateString();
       if (!grouped[dateKey]) {
         grouped[dateKey] = [];
       }
-      grouped[dateKey].push(match);
+      grouped[dateKey].push(game);
     });
     
     return grouped;
-  }, [filteredMatches]);
+  }, [filteredGames]);
 
   // Date-based navigation (2-week spans)
   const getDateRange = () => {
@@ -89,7 +100,7 @@ const Schedules: React.FC = () => {
   const { startDate, endDate } = getDateRange();
   
   // Filter dates within the 2-week range
-  const paginatedDates = Object.keys(matchesByDate).filter(dateKey => {
+  const paginatedDates = Object.keys(gamesByDate).filter(dateKey => {
     const date = new Date(dateKey);
     return date >= startDate && date < endDate;
   }).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
@@ -97,6 +108,9 @@ const Schedules: React.FC = () => {
   const clearFilters = () => {
     setSearchQuery('');
     setSelectedRound('');
+    setSelectedPhase('');
+    setSelectedRegion('');
+    setSelectedTag('');
     setCurrentDateRange(new Date());
   };
 
@@ -142,32 +156,29 @@ const Schedules: React.FC = () => {
     return `${time} • ${dateStr}`;
   };
 
-  const getWinningTeam = (match: any) => {
-    if (match.status !== 'completed') {
-      return null;
-    }
+  const getWinningTeam = (game: Game) => {
+    if (game.status !== 'completed') return null;
     
     // Handle cases where one team has a valid score and the other is null (e.g., 2-0)
-    if (match.team1Score !== null && match.team1Score !== undefined && (match.team2Score === null || match.team2Score === undefined)) {
-      return 0; // Team 1 wins
+    if (game.team1Score !== null && game.team1Score !== undefined && (game.team2Score === null || game.team2Score === undefined)) {
+      return 0;
     }
-    if (match.team2Score !== null && match.team2Score !== undefined && (match.team1Score === null || match.team1Score === undefined)) {
-      return 1; // Team 2 wins
+    if (game.team2Score !== null && game.team2Score !== undefined && (game.team1Score === null || game.team1Score === undefined)) {
+      return 1;
     }
     
-    // Both scores exist, compare them
-    if (match.team1Score !== null && match.team1Score !== undefined && match.team2Score !== null && match.team2Score !== undefined) {
-      return match.team1Score > match.team2Score ? 0 : 1;
+    if (game.team1Score !== null && game.team1Score !== undefined && game.team2Score !== null && game.team2Score !== undefined) {
+      return game.team1Score > game.team2Score ? 0 : 1;
     }
     
     return null;
   };
 
-  const getPrimaryTag = (match: any) => {
-    if (!match.tags || match.tags.length === 0) {
-      return null; // No default tag
+  const getPrimaryTag = (game: Game) => {
+    if (!game.tags || game.tags.length === 0) {
+      return null;
     }
-    return match.tags[0]; // Return the first tag as primary
+    return game.tags[0];
   };
 
   const getTagColor = (tag: string | null) => {
@@ -249,26 +260,23 @@ const Schedules: React.FC = () => {
               </option>
             ))}
           </select>
-          <select className="filter-dropdown">
-            <option value="" disabled>PHASE</option>
-            <option selected>All</option>
-            <option>Qualifiers</option>
-            <option>Playoffs</option>
+          <select className="filter-dropdown" value={selectedPhase} onChange={(e) => setSelectedPhase(e.target.value)}>
+            <option value="">All Phases</option>
+            <option value="qualifiers">Qualifiers</option>
+            <option value="playoffs">Playoffs</option>
           </select>
-          <select className="filter-dropdown">
-            <option value="" disabled>REGION</option>
-            <option selected>All</option>
-            <option>NA</option>
-            <option>EU</option>
-            <option>AS</option>
-            <option>SA</option>
+          <select className="filter-dropdown" value={selectedRegion} onChange={(e) => setSelectedRegion(e.target.value)}>
+            <option value="">All Regions</option>
+            <option value="na">NA</option>
+            <option value="eu">EU</option>
+            <option value="as">AS</option>
+            <option value="sa">SA</option>
           </select>
-          <select className="filter-dropdown">
-            <option value="" disabled>DIVISION</option>
-            <option selected>All</option>
-            <option>Invitational</option>
-            <option>RVL</option>
-            <option>D-League</option>
+          <select className="filter-dropdown" value={selectedTag} onChange={(e) => setSelectedTag(e.target.value)}>
+            <option value="">All Divisions</option>
+            <option value="Invitational">Invitational</option>
+            <option value="RVL">RVL</option>
+            <option value="D-League">D-League</option>
           </select>
           <button className="sync-calendar">
             SYNC TO CALENDAR
@@ -286,7 +294,7 @@ const Schedules: React.FC = () => {
         <div className="search-row">
           <SearchBar 
             onSearch={handleSearch} 
-            placeholder="Search matches..." 
+            placeholder="Search upcoming games..." 
             className="schedules-search-bar"
           />
           <label className="local-time-toggle">
@@ -305,19 +313,19 @@ const Schedules: React.FC = () => {
       {loading ? (
         <div className="schedules-loading">
           <div className="loading-spinner"></div>
-          <p>Loading matches...</p>
+          <p>Loading upcoming games...</p>
         </div>
       ) : (
         <div className="schedules-content">
           {paginatedDates.length === 0 ? (
             <div className="no-matches">
-              <p>No matches found for the selected criteria.</p>
+              <p>No upcoming games found for the selected criteria.</p>
             </div>
           ) : (
             paginatedDates.map(dateKey => {
-              const matches = matchesByDate[dateKey];
+              const dayGames = gamesByDate[dateKey];
                
-                             return (
+              return (
                  <div key={dateKey} className="date-section">
                    <div className="date-header" onClick={() => toggleDateSection(dateKey)}>
                      <h2>{formatDate(dateKey)}</h2>
@@ -327,65 +335,63 @@ const Schedules: React.FC = () => {
                    </div>
                     
                    <div className={`matches-container ${collapsedDates.has(dateKey) ? 'collapsed' : ''}`}>
-                    {matches.map(match => {
-                      const winningTeam = getWinningTeam(match);
+                    {dayGames.map(game => {
+                      const winningTeam = getWinningTeam(game);
+                      const team1 = game.teams?.[0];
+                      const team2 = game.teams?.[1];
                        
                       return (
-                        <div key={match.id} className="match-card">
+                        <div key={game.id} className="match-card">
                           <div className="match-header">
-                            {getPrimaryTag(match) && (
-                              <div className={`gender-tag tag-${getTagColor(getPrimaryTag(match))}`}>
-                                {getPrimaryTag(match)}
+                            {getPrimaryTag(game) && (
+                              <div className={`gender-tag tag-${getTagColor(getPrimaryTag(game))}`}>
+                                {getPrimaryTag(game)}
                               </div>
                             )}
-                                                         <div className="match-info">
-                               <span className="match-type">
-                                 {match.status === 'completed' ? 'Scheduled' : 'Scheduled'} {match.round} Match #{match.id}
-                               </span>
-                               <span className="venue">TBD Venue</span>
-                             </div>
+                            <div className="match-info">
+                              <span className="match-type">
+                                Upcoming {game.round ?? game.stage} · {game.matchNumber ?? game.name}
+                              </span>
+                              <span className="venue">TBD Venue</span>
+                            </div>
                             <div className="match-status">
-                              <span className={`status-badge ${match.status}`}>
-                                {match.status}
+                              <span className={`status-badge ${game.status}`}>
+                                {game.status}
                               </span>
                             </div>
                           </div>
                            
                           <div className="match-teams">
-                            {/* Team 1 */}
-                                                        <div className={`team-row ${winningTeam === 0 ? 'winning-team' : ''}`}>
+                            <div className={`team-row ${winningTeam === 0 ? 'winning-team' : ''}`}>
                               <div className="team-info">
-                                {match.team1LogoUrl && (
+                                {team1?.logoUrl && (
                                   <div className="team-logo-container">
                                     <img 
-                                      src={match.team1LogoUrl} 
-                                      alt={`${match.team1Name} logo`}
+                                      src={team1.logoUrl} 
+                                      alt={`${team1.name} logo`}
                                       className="team-logo"
                                     />
                                   </div>
                                 )}
-                                <span className="team-name">{match.team1Name || 'TBD'}</span>
+                                <span className="team-name">{team1?.name || 'TBD'}</span>
                               </div>
                               <div className="team-score">
-                                {match.status === 'completed' && (
+                                {game.status === 'completed' && game.team1Score != null && (
                                   <div className="score-container">
                                     <span className={`overall-score ${winningTeam === 0 ? 'winning-score' : ''}`}>
-                                      {match.team1Score}
+                                      {game.team1Score}
                                     </span>
-                                    {(match.set1Score || match.set2Score || match.set3Score || match.set4Score || match.set5Score) && (
+                                    {(game.set1Score || game.set2Score || game.set3Score || game.set4Score || game.set5Score) && (
                                       <div className="set-scores">
-                                        {[match.set1Score, match.set2Score, match.set3Score, match.set4Score, match.set5Score]
+                                        {[game.set1Score, game.set2Score, game.set3Score, game.set4Score, game.set5Score]
                                           .filter(score => score !== null && score !== undefined)
-                                          .map((setScore: string | null | undefined, setIndex: number) => {
+                                          .map((setScore, setIndex) => {
                                             if (!setScore) return null;
-                                            const [team1Score, team2Score] = setScore.split('-').map(Number);
-                                            const isWinningSet = team1Score > team2Score;
+                                            const [s1, s2] = setScore.split('-').map(Number);
+                                            const isWinningSet = s1 > s2;
                                             return (
-                                              <span 
-                                                key={setIndex} 
-                                                className={`set-score ${isWinningSet ? 'winning-set' : 'losing-set'}`}
-                                              >
-                                                {team1Score}
+                                              <span key={setIndex} className={`set-score ${isWinningSet ? 'winning-set' : 'losing-set'}`}>
+                                                {s1}
                                               </span>
                                             );
                                           })}
@@ -396,40 +402,36 @@ const Schedules: React.FC = () => {
                               </div>
                             </div>
                             
-                            {/* Team 2 */}
                             <div className={`team-row ${winningTeam === 1 ? 'winning-team' : ''}`}>
                               <div className="team-info">
-                                {match.team2LogoUrl && (
+                                {team2?.logoUrl && (
                                   <div className="team-logo-container">
                                     <img 
-                                      src={match.team2LogoUrl} 
-                                      alt={`${match.team2Name} logo`}
+                                      src={team2.logoUrl} 
+                                      alt={`${team2.name} logo`}
                                       className="team-logo"
                                     />
                                   </div>
                                 )}
-                                <span className="team-name">{match.team2Name || 'TBD'}</span>
+                                <span className="team-name">{team2?.name || 'TBD'}</span>
                               </div>
                               <div className="team-score">
-                                {match.status === 'completed' && (
+                                {game.status === 'completed' && game.team2Score != null && (
                                   <div className="score-container">
                                     <span className={`overall-score ${winningTeam === 1 ? 'winning-score' : ''}`}>
-                                      {match.team2Score}
+                                      {game.team2Score}
                                     </span>
-                                    {(match.set1Score || match.set2Score || match.set3Score || match.set4Score || match.set5Score) && (
+                                    {(game.set1Score || game.set2Score || game.set3Score || game.set4Score || game.set5Score) && (
                                       <div className="set-scores">
-                                        {[match.set1Score, match.set2Score, match.set3Score, match.set4Score, match.set5Score]
+                                        {[game.set1Score, game.set2Score, game.set3Score, game.set4Score, game.set5Score]
                                           .filter(score => score !== null && score !== undefined)
-                                          .map((setScore: string | null | undefined, setIndex: number) => {
+                                          .map((setScore, setIndex) => {
                                             if (!setScore) return null;
-                                            const [team1Score, team2Score] = setScore.split('-').map(Number);
-                                            const isWinningSet = team2Score > team1Score;
+                                            const [s1, s2] = setScore.split('-').map(Number);
+                                            const isWinningSet = s2 > s1;
                                             return (
-                                              <span 
-                                                key={setIndex} 
-                                                className={`set-score ${isWinningSet ? 'winning-set' : 'losing-set'}`}
-                                              >
-                                                {team2Score}
+                                              <span key={setIndex} className={`set-score ${isWinningSet ? 'winning-set' : 'losing-set'}`}>
+                                                {s2}
                                               </span>
                                             );
                                           })}
@@ -445,21 +447,20 @@ const Schedules: React.FC = () => {
                             <div className="match-time">
                               <span className="time-label">Start Time</span>
                               <span className="time-value">
-                                {match.date ? formatTime(match.date.toString()) : 'TBD'}
+                                {game.date ? formatTime(game.date.toString()) : 'TBD'}
                               </span>
                             </div>
-                                                         <div className="match-actions">
-                               <button className="action-button watch">WATCH</button>
-                               <button className="action-button shop">SHOP</button>
-                             </div>
+                            <div className="match-actions">
+                              {game.videoUrl ? (
+                                <a href={game.videoUrl} className="action-button watch" target="_blank" rel="noreferrer">WATCH</a>
+                              ) : (
+                                <button className="action-button watch" disabled>WATCH</button>
+                              )}
+                              {game.status === 'completed' && (
+                                <Link to={`/games/${game.id}`} className="action-button shop">STATS</Link>
+                              )}
+                            </div>
                           </div>
-
-                                                     <div className="ranking-section">
-                             <div className="ranking-header">
-                               <span>LEGO VOLLEYBALL RANKING POINTS (LVR)</span>
-                               <span className="dropdown-arrow">▼</span>
-                             </div>
-                           </div>
                         </div>
                       );
                     })}

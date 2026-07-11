@@ -5,7 +5,7 @@ import { useState } from "react";
 
 interface PlayerListParams extends PaginationParams { search?: string; }
 interface TeamListParams extends PaginationParams { search?: string; seasonId?: number | string; }
-interface GameListParams extends PaginationParams { search?: string; seasonId?: number | string; stage?: string; }
+interface GameListParams extends PaginationParams { search?: string; seasonId?: number | string; stage?: string; status?: string; round?: string; phase?: string; region?: string; }
 interface StatListParams extends PaginationParams { search?: string; }
 interface AwardListParams extends PaginationParams { search?: string; seasonNumber?: number | string; type?: string; }
 
@@ -39,10 +39,6 @@ export const useRecords = (params: PaginationParams = DEFAULT_PAGINATION) => {
     return { ...result, refetch };
 };
 
-import { useMatches } from "./useMatches";
-
-// Hook to fetch matches
-export { useMatches };
 
 // Skinny hooks for faster loading without relations
 export const useSkinnyTeams = (params: TeamListParams = DEFAULT_PAGINATION) => usePaginatedFetch<Team>("teams/skinny", params);
