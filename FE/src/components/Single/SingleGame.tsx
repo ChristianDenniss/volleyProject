@@ -11,13 +11,50 @@ import Table, { type TableColumn } from "../ui/Table"
 import { useSingleGames } from "../../hooks/allFetch"
 
 // Import React-Router helper
-import { useParams } from "react-router-dom"
+import { Link, useParams } from "react-router-dom"
 
 // Import styles
 import "../../styles/SingleGame.css"
 
 // Import SEO component
 import SEO from "../SEO"
+
+function getWinningTeamIndex(game: Game): 0 | 1 | null {
+    if (game.status !== "completed") {
+        return null
+    }
+
+    if (game.team1Score != null && game.team2Score == null) {
+        return 0
+    }
+
+    if (game.team2Score != null && game.team1Score == null) {
+        return 1
+    }
+
+    if (game.team1Score != null && game.team2Score != null) {
+        if (game.team1Score === game.team2Score) {
+            return null
+        }
+
+        return game.team1Score > game.team2Score ? 0 : 1
+    }
+
+    return null
+}
+
+function getSetScores(game: Game): string[] {
+    return [game.set1Score, game.set2Score, game.set3Score, game.set4Score, game.set5Score]
+        .filter((score): score is string => score != null && score !== "")
+}
+
+function getTeamColumnClass(index: 0 | 1, winningTeam: 0 | 1 | null, isUpcoming: boolean): string {
+    if (isUpcoming || winningTeam === null) {
+        return "team-column"
+    }
+
+    return winningTeam === index ? "team-column team-winner" : "team-column team-loser"
+}
 
 // Declare component
 const SingleGame: React.FC = () =>
@@ -99,14 +136,23 @@ const SingleGame: React.FC = () =>
                         // Pick the matching game
                         const numericId = Number(id)
                         const game      = games.find(g => g.id === numericId) ?? games[0]
+                        const isUpcoming = game.status === "scheduled"
+                        const winningTeam = getWinningTeamIndex(game)
+                        const setScores = getSetScores(game)
 
                         // Compute total sets
-                        const totalSets = (game.team1Score ?? 0) + (game.team2Score ?? 0)
+                        const totalSets = isUpcoming
+                            ? null
+                            : (game.team1Score ?? 0) + (game.team2Score ?? 0)
 
                         // Format date
                         const formattedDate = new Date(game.date).toLocaleDateString(
                             undefined,
                             { year: "numeric", month: "long", day: "numeric" }
+                        )
+                        const formattedTime = new Date(game.date).toLocaleTimeString(
+                            undefined,
+                            { hour: "numeric", minute: "2-digit" }
                         )
 
                         // Stats exists?
@@ -147,8 +193,12 @@ const SingleGame: React.FC = () =>
                             <>
                                 {/* SEO Meta Tags for Social Media Embedding */}
                                 <SEO
-                                    title={`${game.name} - Game Results`}
-                                    description={`${team1.name} vs ${team2.name} - Final Score: ${game.team1Score}-${game.team2Score}. ${game.stage} match from Season ${game.season.seasonNumber} of the Roblox Volleyball League.`}
+                                    title={isUpcoming
+                                        ? `${game.name} - Upcoming Match`
+                                        : `${game.name} - Game Results`}
+                                    description={isUpcoming
+                                        ? `${team1.name} vs ${team2.name} - Upcoming ${game.stage} match from Season ${game.season.seasonNumber} of the Roblox Volleyball League.`
+                                        : `${team1.name} vs ${team2.name} - Final Score: ${game.team1Score}-${game.team2Score}. ${game.stage} match from Season ${game.season.seasonNumber} of the Roblox Volleyball League.`}
                                     image="https://volleyball4-2.com/rvlLogo.png"
                                     url={`https://volleyball4-2.com/games/${game.id}`}
                                     type="sports_event"
@@ -200,12 +250,18 @@ const SingleGame: React.FC = () =>
 
                                 {/* Metadata */}
                                 <div className="meta-block">
+                                    <p className={`game-status-badge ${isUpcoming ? "upcoming" : "completed"}`}>
+                                        <i className={`fas ${isUpcoming ? "fa-clock" : "fa-check-circle"}`}></i>
+                                        {isUpcoming ? "Upcoming Match" : "Completed"}
+                                    </p>
                                     <p className="season-info">
                                         <i className="fas fa-layer-group"></i> Season {game.season.seasonNumber}
                                     </p>
-                                    <p className="sets-played">
-                                        <i className="fas fa-volleyball-ball"></i> Total Sets Played {totalSets}
-                                    </p>
+                                    {!isUpcoming && totalSets != null && (
+                                        <p className="sets-played">
+                                            <i className="fas fa-volleyball-ball"></i> Total Sets Played {totalSets}
+                                        </p>
+                                    )}
                                     {
                                         game.videoUrl
                                         ? <p className="game-video">
@@ -217,6 +273,7 @@ const SingleGame: React.FC = () =>
                                     }
                                     <p className="game-date">
                                         <i className="fas fa-calendar-alt"></i> {formattedDate}
+                                        {isUpcoming && <> at {formattedTime}</>}
                                     </p>
                                 </div>
 
@@ -225,22 +282,68 @@ const SingleGame: React.FC = () =>
                                 <hr className="meta-divider" />
 
                                 {/* Scoreboard */}
-                                <div className="scoreboard">
-                                    <div className="team-column">
-                                        <div className="team-score">{game.team1Score}</div>
-                                        <div className="single-game-team-name">{team1.name}</div>
+                                <div className={`scoreboard ${isUpcoming ? "scoreboard-upcoming" : ""}`}>
+                                    <div className={getTeamColumnClass(0, winningTeam, isUpcoming)}>
+                                        {winningTeam === 0 && (
+                                            <span className="winner-badge">Winner</span>
+                                        )}
+                                        <div className={`team-score ${isUpcoming ? "upcoming-score" : ""}`}>
+                                            {isUpcoming ? "—" : (game.team1Score ?? "—")}
+                                        </div>
+                                        <Link
+                                            to={`/teams/${encodeURIComponent(team1.name)}`}
+                                            className="single-game-team-name"
+                                        >
+                                            {team1.name}
+                                        </Link>
                                     </div>
-                                    <div className="vs">vs</div>
-                                    <div className="team-column">
-                                        <div className="team-score">{game.team2Score}</div>
-                                        <div className="single-game-team-name">{team2.name}</div>
+                                    <div className="vs">{isUpcoming ? "vs" : "final"}</div>
+                                    <div className={getTeamColumnClass(1, winningTeam, isUpcoming)}>
+                                        {winningTeam === 1 && (
+                                            <span className="winner-badge">Winner</span>
+                                        )}
+                                        <div className={`team-score ${isUpcoming ? "upcoming-score" : ""}`}>
+                                            {isUpcoming ? "—" : (game.team2Score ?? "—")}
+                                        </div>
+                                        <Link
+                                            to={`/teams/${encodeURIComponent(team2.name)}`}
+                                            className="single-game-team-name"
+                                        >
+                                            {team2.name}
+                                        </Link>
                                     </div>
                                 </div>
+
+                                {!isUpcoming && setScores.length > 0 && (
+                                    <div className="set-scores-panel">
+                                        <h3 className="set-scores-title">Set Scores</h3>
+                                        <div className="set-scores-list">
+                                            {setScores.map((setScore, index) => (
+                                                <span key={`${setScore}-${index}`} className="set-score-chip">
+                                                    Set {index + 1}: {setScore}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
 
 
                                 {/* Player statistics */}
                                 {
-                                    hasStats
+                                    isUpcoming
+                                        ? (
+                                            <section className="stats-section stats-section-upcoming">
+                                                <div className="upcoming-notice">
+                                                    <i className="fas fa-calendar-day upcoming-notice-icon"></i>
+                                                    <h2 className="upcoming-notice-title">Match Not Yet Played</h2>
+                                                    <p className="upcoming-notice-text">
+                                                        This game is scheduled for {formattedDate} at {formattedTime}.
+                                                        Player statistics will be available here after the match is completed.
+                                                    </p>
+                                                </div>
+                                            </section>
+                                        )
+                                        : hasStats
                                         ? (
                                             <section className="stats-section">
                                                 {/* Section title */}

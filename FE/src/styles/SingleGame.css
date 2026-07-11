@@ -94,15 +94,162 @@
 .team-column {
     text-align: center;
     flex: 1 1 0;
-    max-width: 220px; /* ensures they don't grow too wide */
+    max-width: 260px;
     min-width: 120px;
+    position: relative;
+    padding: 1.25rem 1rem;
+    border-radius: 12px;
+    border: 2px solid transparent;
+    transition: border-color 0.2s ease, background 0.2s ease, opacity 0.2s ease;
+}
+
+.team-column.team-winner {
+    border-color: #f59e0b;
+    background: linear-gradient(180deg, rgba(245, 158, 11, 0.12) 0%, rgba(245, 158, 11, 0.03) 100%);
+    box-shadow: 0 8px 24px rgba(245, 158, 11, 0.15);
+}
+
+.team-column.team-loser {
+    opacity: 0.72;
+    background: #f8fafc;
+    border-color: #e5e7eb;
+}
+
+.winner-badge {
+    display: inline-block;
+    margin-bottom: 0.65rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    background: #f59e0b;
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
 }
 
 .single-game-team-name {
+    display: inline-block;
     font-size: 1.5rem;
     font-weight: 700;
     margin-bottom: 0.4rem;
     text-transform: capitalize;
+    color: inherit;
+    text-decoration: none;
+}
+
+.single-game-team-name:hover {
+    color: var(--color-brand-primary);
+    text-decoration: underline;
+}
+
+.team-column.team-winner .team-score {
+    color: #b45309;
+}
+
+.team-column.team-loser .team-score {
+    color: #64748b;
+}
+
+.upcoming-score {
+    color: #94a3b8 !important;
+}
+
+.scoreboard-upcoming .vs {
+    background: #eef2ff;
+    color: #4338ca;
+    box-shadow: 0 0 0 3px #fff, 0 0 0 6px #eef2ff;
+}
+
+.game-status-badge {
+    margin: 0;
+    padding: 0.35rem 0.85rem;
+    border-radius: 999px;
+    font-size: 0.875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.game-status-badge.upcoming {
+    background: #eef2ff;
+    color: #4338ca;
+}
+
+.game-status-badge.completed {
+    background: #ecfdf5;
+    color: #047857;
+}
+
+.set-scores-panel {
+    max-width: 720px;
+    margin: -1.5rem auto 3rem;
+    padding: 1rem 1.25rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background: #f8fafc;
+    text-align: center;
+}
+
+.set-scores-title {
+    margin: 0 0 0.75rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.set-scores-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.set-score-chip {
+    display: inline-block;
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    background: #fff;
+    border: 1px solid #dbeafe;
+    color: #1e3a8a;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.upcoming-notice {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+    border-radius: 16px;
+    border: 1px solid #dbeafe;
+    background: linear-gradient(180deg, #eff6ff 0%, #f8fafc 100%);
+    text-align: center;
+}
+
+.upcoming-notice-icon {
+    font-size: 2rem;
+    color: #4338ca;
+    margin-bottom: 0.75rem;
+}
+
+.upcoming-notice-title {
+    margin: 0 0 0.75rem;
+    font-size: 1.75rem;
+    color: var(--color-brand-primary);
+}
+
+.upcoming-notice-text {
+    margin: 0;
+    font-size: 1.05rem;
+    line-height: 1.6;
+    color: var(--text-muted);
+}
+
+.stats-section-upcoming {
+    margin-top: 3rem;
+    min-height: auto;
 }
 
 .team-score {
