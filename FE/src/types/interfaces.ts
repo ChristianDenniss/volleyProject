@@ -177,7 +177,7 @@ interface Records
   loading: boolean;
 }
 
-interface ApplicationForm {
+interface Application {
   id: number;
   slug: string;
   name: string;
@@ -191,7 +191,7 @@ interface ApplicationForm {
   updatedAt?: string;
 }
 
-export type { Game, Player, Stats, Team, Season, Article, User, Award, Records, AuthContextType, PublicInterface, Role, ApplicationForm };
+export type { Game, Player, Stats, Team, Season, Article, User, Award, Records, AuthContextType, PublicInterface, Role, Application };
 
 export interface PaginatedResponse<T> {
   data: T[];

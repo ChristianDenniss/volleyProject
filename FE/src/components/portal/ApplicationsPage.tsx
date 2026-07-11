@@ -1,48 +1,48 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useApplicationForms } from "../../hooks/allFetch";
-import { useApplicationFormMutations } from "../../hooks/allPatch";
-import type { ApplicationForm } from "../../types/interfaces";
+import { useApplications } from "../../hooks/allFetch";
+import { useApplicationMutations } from "../../hooks/allPatch";
+import type { Application } from "../../types/interfaces";
 import "../../styles/PortalApplicationsPage.css";
 
 type DraftState = Record<
     string,
     {
         url: string;
-        status: ApplicationForm["status"];
+        status: Application["status"];
     }
 >;
 
 const PortalApplicationsPage: React.FC = () => {
-    const { data: forms, loading, error } = useApplicationForms();
-    const { patchApplicationForm } = useApplicationFormMutations();
+    const { data: applications, loading, error } = useApplications();
+    const { patchApplication } = useApplicationMutations();
     const [drafts, setDrafts] = useState<DraftState>({});
     const [savingSlug, setSavingSlug] = useState<string | null>(null);
     const [savedSlug, setSavedSlug] = useState<string | null>(null);
     const [saveError, setSaveError] = useState<string | null>(null);
 
     useEffect(() => {
-        if (!forms) {
+        if (!applications) {
             return;
         }
 
         setDrafts(
             Object.fromEntries(
-                forms.map((form: ApplicationForm) => [
-                    form.slug,
+                applications.map((application: Application) => [
+                    application.slug,
                     {
-                        url: form.url ?? "",
-                        status: form.status,
+                        url: application.url ?? "",
+                        status: application.status,
                     },
                 ])
             )
         );
-    }, [forms]);
+    }, [applications]);
 
-    const sortedForms = useMemo(() => {
-        return [...(forms ?? [])].sort(
+    const sortedApplications = useMemo(() => {
+        return [...(applications ?? [])].sort(
             (a, b) => a.sortOrder - b.sortOrder || a.id - b.id
         );
-    }, [forms]);
+    }, [applications]);
 
     const updateDraft = (
         slug: string,
@@ -58,26 +58,26 @@ const PortalApplicationsPage: React.FC = () => {
         setSavedSlug(null);
     };
 
-    const handleSave = async (form: ApplicationForm) => {
-        const draft = drafts[form.slug];
+    const handleSave = async (application: Application) => {
+        const draft = drafts[application.slug];
         if (!draft) {
             return;
         }
 
-        setSavingSlug(form.slug);
+        setSavingSlug(application.slug);
         setSaveError(null);
 
         try {
-            await patchApplicationForm(form.slug, {
+            await patchApplication(application.slug, {
                 url: draft.url.trim() === "" ? null : draft.url.trim(),
                 status: draft.status,
             });
-            setSavedSlug(form.slug);
+            setSavedSlug(application.slug);
         } catch (err) {
             setSaveError(
                 err instanceof Error
                     ? err.message
-                    : "Failed to save application form"
+                    : "Failed to save application"
             );
         } finally {
             setSavingSlug(null);
@@ -107,18 +107,18 @@ const PortalApplicationsPage: React.FC = () => {
             {saveError && <div className="portal-applications-error">{saveError}</div>}
 
             <div className="portal-applications-list">
-                {sortedForms.map((form) => {
-                    const draft = drafts[form.slug];
+                {sortedApplications.map((application) => {
+                    const draft = drafts[application.slug];
                     if (!draft) {
                         return null;
                     }
 
                     return (
-                        <section key={form.slug} className="portal-application-card">
+                        <section key={application.slug} className="portal-application-card">
                             <div className="portal-application-card-header">
                                 <div>
-                                    <h2>{form.name}</h2>
-                                    <p>{form.type}</p>
+                                    <h2>{application.name}</h2>
+                                    <p>{application.type}</p>
                                 </div>
                                 <span className={`status-pill ${draft.status}`}>
                                     {draft.status === "open" ? "Open" : "Closed"}
@@ -126,34 +126,34 @@ const PortalApplicationsPage: React.FC = () => {
                             </div>
 
                             <p className="portal-application-description">
-                                {form.description}
+                                {application.description}
                             </p>
 
                             <div className="portal-application-fields">
-                                <label htmlFor={`url-${form.slug}`}>
+                                <label htmlFor={`url-${application.slug}`}>
                                     Application URL
                                 </label>
                                 <input
-                                    id={`url-${form.slug}`}
+                                    id={`url-${application.slug}`}
                                     type="url"
                                     value={draft.url}
                                     onChange={(event) =>
-                                        updateDraft(form.slug, {
+                                        updateDraft(application.slug, {
                                             url: event.target.value,
                                         })
                                     }
                                     placeholder="https://forms.gle/..."
                                 />
 
-                                <label htmlFor={`status-${form.slug}`}>
+                                <label htmlFor={`status-${application.slug}`}>
                                     Status
                                 </label>
                                 <select
-                                    id={`status-${form.slug}`}
+                                    id={`status-${application.slug}`}
                                     value={draft.status}
                                     onChange={(event) =>
-                                        updateDraft(form.slug, {
-                                            status: event.target.value as ApplicationForm["status"],
+                                        updateDraft(application.slug, {
+                                            status: event.target.value as Application["status"],
                                         })
                                     }
                                 >
@@ -166,12 +166,12 @@ const PortalApplicationsPage: React.FC = () => {
                                 <button
                                     type="button"
                                     className="save-btn"
-                                    onClick={() => handleSave(form)}
-                                    disabled={savingSlug === form.slug}
+                                    onClick={() => handleSave(application)}
+                                    disabled={savingSlug === application.slug}
                                 >
-                                    {savingSlug === form.slug ? "Saving..." : "Save"}
+                                    {savingSlug === application.slug ? "Saving..." : "Save"}
                                 </button>
-                                {savedSlug === form.slug && (
+                                {savedSlug === application.slug && (
                                     <span className="save-success">Saved</span>
                                 )}
                             </div>

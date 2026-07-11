@@ -340,24 +340,24 @@ export const handlers = [
   http.get(api("records"), ({ request }) => json(paginated(db.records, request))),
   http.post(api("records/calculate"), () => json({ updated: db.records.length, records: db.records })),
 
-  // Application forms
-  http.get(api("application-forms"), () => json(db.applicationForms)),
-  http.patch(api("application-forms/:slug"), async ({ params, request }) => {
+  // Applications
+  http.get(api("applications"), () => json(db.applications)),
+  http.patch(api("applications/:slug"), async ({ params, request }) => {
     const body = (await request.json()) as {
       url?: string | null;
       status?: "open" | "closed";
     };
-    const form = db.applicationForms.find((item) => item.slug === params.slug);
-    if (!form) {
+    const application = db.applications.find((item) => item.slug === params.slug);
+    if (!application) {
       return json({ message: "Not found" }, 404);
     }
     if (body.url !== undefined) {
-      form.url = body.url === "" ? null : body.url;
+      application.url = body.url === "" ? null : body.url;
     }
     if (body.status !== undefined) {
-      form.status = body.status;
+      application.status = body.status;
     }
-    return json(form);
+    return json(application);
   }),
 
   // Trivia

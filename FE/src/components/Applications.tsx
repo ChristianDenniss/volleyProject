@@ -11,8 +11,8 @@ import {
     FaLock,
     FaCheckCircle,
 } from "react-icons/fa";
-import { useApplicationForms } from "../hooks/allFetch";
-import type { ApplicationForm } from "../types/interfaces";
+import { useApplications } from "../hooks/allFetch";
+import type { Application } from "../types/interfaces";
 
 const APPLICATION_ICONS: Record<string, React.ReactNode> = {
     staff: <FaUsers />,
@@ -32,19 +32,19 @@ const categories = {
 };
 
 const Applications: React.FC = () => {
-    const { data: forms, loading, error } = useApplicationForms();
+    const { data: applications, loading, error } = useApplications();
 
     const groupedApplications = useMemo(() => {
-        return (forms ?? []).reduce((acc: Record<string, ApplicationForm[]>, app: ApplicationForm) => {
+        return (applications ?? []).reduce((acc: Record<string, Application[]>, app: Application) => {
             if (!acc[app.category]) {
                 acc[app.category] = [];
             }
             acc[app.category].push(app);
             return acc;
-        }, {} as Record<string, ApplicationForm[]>);
-    }, [forms]);
+        }, {} as Record<string, Application[]>);
+    }, [applications]);
 
-    const categoryOrder: ApplicationForm["category"][] = [
+    const categoryOrder: Application["category"][] = [
         "staff",
         "media",
         "game-officials",
@@ -74,7 +74,7 @@ const Applications: React.FC = () => {
                                 {categories[category]}
                             </h2>
                             <div className="category-apps">
-                                {apps.map((app: ApplicationForm) => (
+                                {apps.map((app: Application) => (
                                     <div
                                         key={app.slug}
                                         className={`application-card ${app.status}`}

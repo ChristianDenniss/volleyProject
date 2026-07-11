@@ -11,5 +11,5 @@ export {
   mockAwards,
   mockMatches,
   mockRecords,
-  mockApplicationForms,
+  mockApplications,
 } from "./seed";

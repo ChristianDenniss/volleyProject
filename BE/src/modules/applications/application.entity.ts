@@ -6,15 +6,15 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
-export type ApplicationFormStatus = "open" | "closed";
-export type ApplicationFormCategory =
+export type ApplicationStatus = "open" | "closed";
+export type ApplicationCategory =
     | "staff"
     | "media"
     | "game-officials"
     | "management";
 
 @Entity()
-export class ApplicationForm {
+export class Application {
     @PrimaryGeneratedColumn()
     id!: number;
 
@@ -34,10 +34,10 @@ export class ApplicationForm {
     url!: string | null;
 
     @Column({ type: "varchar", default: "closed" })
-    status!: ApplicationFormStatus;
+    status!: ApplicationStatus;
 
     @Column()
-    category!: ApplicationFormCategory;
+    category!: ApplicationCategory;
 
     @Column({ default: 0 })
     sortOrder!: number;

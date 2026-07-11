@@ -10,7 +10,7 @@ import { registerRobloxRoutes } from './roblox/roblox.routes.js'
 import { registerAwardRoutes } from './awards/award.routes.js';
 import { registerRecordRoutes } from './records/records.routes.js';
 import { registerTriviaRoutes } from './trivia/trivia.routes.js';
-import { registerApplicationFormRoutes } from './application-forms/application-form.routes.js';
+import { registerApplicationRoutes } from './applications/application.routes.js';
 import { cacheHealthCheck } from '../middleware/cache.js';
 
 /**
@@ -30,7 +30,7 @@ export function registerModules(app: Application): void
     registerAwardRoutes(app);
     registerRecordRoutes(app);
     registerTriviaRoutes(app);
-    registerApplicationFormRoutes(app);
+    registerApplicationRoutes(app);
 
     // Cache health check route
     app.get('/api/cache/health', cacheHealthCheck);

@@ -1,5 +1,5 @@
 import type {
-  ApplicationForm,
+  Application,
   Article,
   Award,
   Game,
@@ -12,7 +12,14 @@ import type {
   User,
 } from "../types/interfaces";
 
-const POSITIONS = ["OH", "OPP", "MB", "S", "L"] as const;
+const POSITIONS = [
+  "Setter",
+  "Spiker",
+  "Libero",
+  "Defensive Specialist",
+  "Pinch Server",
+  "N/A",
+] as const;
 
 const STAGES = [
   "Regular Season",
@@ -150,23 +157,17 @@ const AWARD_TYPES = [
   "LuvLate Award",
 ] as const;
 
-const GAME_RECORD_TYPES = [
-  "Most Kills in a Game",
-  "Most Assists in a Game",
-  "Most Digs in a Game",
-  "Most Blocks in a Game",
-  "Most Aces in a Game",
-  "Most Errors in a Game",
+/** Record types aligned with BE records.entity.ts — values derived from stat rows. */
+const RECORD_TYPES = [
+  "most spike kills",
+  "most assists",
+  "most digs",
+  "most blocks",
+  "most aces",
+  "most total kills",
 ] as const;
 
-const SEASON_RECORD_TYPES = [
-  "Most Kills in a Season",
-  "Most Assists in a Season",
-  "Most Digs in a Season",
-  "Most Blocks in a Season",
-  "Most Aces in a Season",
-  "Highest Spike % in a Season",
-] as const;
+const RECORDS_TOP_N = 3;
 
 const SCHEDULE_START_OFFSET_DAYS = -31;
 const SCHEDULE_SPAN_DAYS = 62;
@@ -399,6 +400,15 @@ function buildGames(seasons: Season[], teams: Team[]): Game[] {
           date: new Date(isoDate(2025, month, day, 18 + (matchIndex % 3))),
           stage: pick(STAGES, matchIndex + season.id),
           status: 'completed',
+          phase: pick(STAGES, matchIndex + season.id).includes("Bracket") ? "playoffs" : "qualifiers",
+          region: pick(["na", "eu", "as", "sa"] as const, gameId),
+          round: pick(MATCH_ROUNDS, matchIndex),
+          matchNumber: `Match ${matchIndex + 1}`,
+          set1Score: "25-20",
+          set2Score: team1Score + team2Score >= 4 ? "23-25" : "25-18",
+          set3Score: "25-22",
+          set4Score: team1Score + team2Score >= 4 ? "25-18" : null,
+          set5Score: team1Score + team2Score >= 5 ? "15-13" : null,
           teams: [team1, team2],
         });
 
@@ -424,9 +434,18 @@ function buildStats(games: Game[], _players: Player[]): Stats[] {
       const seed = statId + player.id + index;
       const spikeAttempts = pseudoRandom(seed, 12, 40);
       const spikeKills = pseudoRandom(seed + 1, 4, Math.max(5, spikeAttempts - 6));
-      const assists = player.position === "S" ? pseudoRandom(seed + 2, 12, 38) : pseudoRandom(seed + 2, 0, 4);
-      const digs = player.position === "L" ? pseudoRandom(seed + 3, 10, 24) : pseudoRandom(seed + 3, 2, 12);
-      const blocks = player.position === "MB" ? pseudoRandom(seed + 4, 3, 10) : pseudoRandom(seed + 4, 0, 4);
+      const assists =
+        player.position === "Setter"
+          ? pseudoRandom(seed + 2, 12, 38)
+          : pseudoRandom(seed + 2, 0, 4);
+      const digs =
+        player.position === "Libero" || player.position === "Defensive Specialist"
+          ? pseudoRandom(seed + 3, 10, 24)
+          : pseudoRandom(seed + 3, 2, 12);
+      const blocks =
+        player.position === "Spiker"
+          ? pseudoRandom(seed + 4, 2, 10)
+          : pseudoRandom(seed + 4, 0, 4);
 
       stats.push({
         id: statId++,
@@ -436,7 +455,7 @@ function buildStats(games: Game[], _players: Player[]): Stats[] {
         spikeKills,
         spikeAttempts,
         assists,
-        settingErrors: player.position === "S" ? pseudoRandom(seed + 8, 0, 2) : 0,
+        settingErrors: player.position === "Setter" ? pseudoRandom(seed + 8, 0, 2) : 0,
         blocks,
         digs,
         blockFollows: pseudoRandom(seed + 9, 0, 3),
@@ -679,57 +698,169 @@ function buildScheduledGames(seasons: Season[], teams: Team[], startGameId: numb
   return scheduledGames;
 }
 
-function buildRecords(
-  seasons: Season[],
-  players: Player[],
-  games: Game[]
-): Records[] {
+function getStatValueForRecord(stat: Stats, recordType: string): number {
+  switch (recordType) {
+    case "most spike kills":
+      return stat.spikeKills;
+    case "most assists":
+      return stat.assists;
+    case "most digs":
+      return stat.digs;
+    case "most blocks":
+      return stat.blocks;
+    case "most aces":
+      return stat.aces;
+    case "most total kills":
+      return stat.spikeKills + stat.apeKills;
+    default:
+      return 0;
+  }
+}
+
+function topGameStatsForRecordType(
+  stats: Stats[],
+  recordType: string,
+  limit: number
+): Stats[] {
+  return stats
+    .filter((stat) => getStatValueForRecord(stat, recordType) > 0)
+    .sort(
+      (a, b) =>
+        getStatValueForRecord(b, recordType) - getStatValueForRecord(a, recordType)
+    )
+    .slice(0, limit);
+}
+
+type SeasonAggregate = {
+  player: Player;
+  season: Season;
+  totalSpikeKills: number;
+  totalApeKills: number;
+  totalAssists: number;
+  totalDigs: number;
+  totalBlocks: number;
+  totalAces: number;
+};
+
+function aggregateStatsBySeason(stats: Stats[]): SeasonAggregate[] {
+  const aggregates = new Map<string, SeasonAggregate>();
+
+  stats.forEach((stat) => {
+    if (!stat.player || !stat.game?.season) return;
+
+    const key = `${stat.player.id}-${stat.game.season.id}`;
+    const existing = aggregates.get(key) ?? {
+      player: stat.player,
+      season: stat.game.season,
+      totalSpikeKills: 0,
+      totalApeKills: 0,
+      totalAssists: 0,
+      totalDigs: 0,
+      totalBlocks: 0,
+      totalAces: 0,
+    };
+
+    existing.totalSpikeKills += stat.spikeKills;
+    existing.totalApeKills += stat.apeKills;
+    existing.totalAssists += stat.assists;
+    existing.totalDigs += stat.digs;
+    existing.totalBlocks += stat.blocks;
+    existing.totalAces += stat.aces;
+
+    aggregates.set(key, existing);
+  });
+
+  return Array.from(aggregates.values());
+}
+
+function getSeasonAggregateValue(
+  aggregate: SeasonAggregate,
+  recordType: string
+): number {
+  switch (recordType) {
+    case "most spike kills":
+      return aggregate.totalSpikeKills;
+    case "most assists":
+      return aggregate.totalAssists;
+    case "most digs":
+      return aggregate.totalDigs;
+    case "most blocks":
+      return aggregate.totalBlocks;
+    case "most aces":
+      return aggregate.totalAces;
+    case "most total kills":
+      return aggregate.totalSpikeKills + aggregate.totalApeKills;
+    default:
+      return 0;
+  }
+}
+
+function topSeasonAggregatesForRecordType(
+  stats: Stats[],
+  recordType: string,
+  limit: number
+): SeasonAggregate[] {
+  return aggregateStatsBySeason(stats)
+    .filter((aggregate) => getSeasonAggregateValue(aggregate, recordType) > 0)
+    .sort(
+      (a, b) =>
+        getSeasonAggregateValue(b, recordType) -
+        getSeasonAggregateValue(a, recordType)
+    )
+    .slice(0, limit);
+}
+
+function buildRecords(stats: Stats[]): Records[] {
   const records: Records[] = [];
   let recordId = 1;
 
-  GAME_RECORD_TYPES.forEach((recordType, typeIndex) => {
-    for (let rank = 1; rank <= 3; rank++) {
-      const player = players[(typeIndex * 2 + rank) % players.length];
-      const game = games[(typeIndex + rank) % games.length];
-      records.push({
-        id: recordId++,
-        record: recordType,
-        type: "game",
-        rank,
-        value: pseudoRandom(recordId, 10, 30) + rank,
-        date: new Date(game.date).toISOString().slice(0, 10),
-        createdAt: isoDate(2025, 2, 1),
-        updatedAt: isoDate(2025, 2, 1),
-        season: game.season,
-        player,
-        gameId: game.id,
-      });
-    }
+  RECORD_TYPES.forEach((recordType) => {
+    topGameStatsForRecordType(stats, recordType, RECORDS_TOP_N).forEach(
+      (stat, index) => {
+        if (!stat.player || !stat.game?.season) return;
+
+        records.push({
+          id: recordId++,
+          record: recordType,
+          type: "game",
+          rank: index + 1,
+          value: getStatValueForRecord(stat, recordType),
+          date: new Date(stat.game.date).toISOString().slice(0, 10),
+          createdAt: isoDate(2025, 2, 1),
+          updatedAt: isoDate(2025, 2, 1),
+          season: stat.game.season,
+          player: stat.player,
+          gameId: stat.game.id,
+        });
+      }
+    );
   });
 
-  SEASON_RECORD_TYPES.forEach((recordType, typeIndex) => {
-    for (let rank = 1; rank <= 3; rank++) {
-      const season = seasons[typeIndex % seasons.length];
-      const player = players[(typeIndex + rank * 3) % players.length];
-      records.push({
-        id: recordId++,
-        record: recordType,
-        type: "season",
-        rank,
-        value: pseudoRandom(recordId, 100, 500) + rank * 10,
-        date: new Date(season.endDate ?? season.startDate).toISOString().slice(0, 10),
-        createdAt: isoDate(2025, 4, 1),
-        updatedAt: isoDate(2025, 4, 1),
-        season,
-        player,
-      });
-    }
+  RECORD_TYPES.forEach((recordType) => {
+    topSeasonAggregatesForRecordType(stats, recordType, RECORDS_TOP_N).forEach(
+      (aggregate, index) => {
+        records.push({
+          id: recordId++,
+          record: recordType,
+          type: "season",
+          rank: index + 1,
+          value: getSeasonAggregateValue(aggregate, recordType),
+          date: new Date(
+            aggregate.season.endDate ?? aggregate.season.startDate
+          ).toISOString().slice(0, 10),
+          createdAt: isoDate(2025, 4, 1),
+          updatedAt: isoDate(2025, 4, 1),
+          season: aggregate.season,
+          player: aggregate.player,
+        });
+      }
+    );
   });
 
   return records;
 }
 
-function buildApplicationForms(): ApplicationForm[] {
+function buildApplications(): Application[] {
   return [
     {
       id: 1,
@@ -834,8 +965,8 @@ export function buildMockDataset() {
   const seasonsWithRelations = attachSeasonRelations(seasons, teams, allGames);
   const articles = buildArticles(users);
   const awards = buildAwards(seasons, playersBase);
-  const records = buildRecords(seasons, playersBase, games);
-  const applicationForms = buildApplicationForms();
+  const records = buildRecords(stats);
+  const applications = buildApplications();
 
   return {
     users,
@@ -848,7 +979,7 @@ export function buildMockDataset() {
     awards,
     matches: [],
     records,
-    applicationForms,
+    applications,
   };
 }
 
@@ -864,4 +995,4 @@ export const mockArticles = dataset.articles;
 export const mockAwards = dataset.awards;
 export const mockMatches: never[] = [];
 export const mockRecords = dataset.records;
-export const mockApplicationForms = dataset.applicationForms;
+export const mockApplications = dataset.applications;

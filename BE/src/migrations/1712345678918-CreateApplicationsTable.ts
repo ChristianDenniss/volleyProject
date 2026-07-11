@@ -1,11 +1,11 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
-export class CreateApplicationFormsTable1712345678918 implements MigrationInterface {
-    name = "CreateApplicationFormsTable1712345678918";
+export class CreateApplicationsTable1712345678918 implements MigrationInterface {
+    name = "CreateApplicationsTable1712345678918";
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`
-            CREATE TABLE "application_form" (
+            CREATE TABLE "application" (
                 "id" SERIAL NOT NULL,
                 "slug" character varying NOT NULL,
                 "name" character varying NOT NULL,
@@ -17,13 +17,13 @@ export class CreateApplicationFormsTable1712345678918 implements MigrationInterf
                 "sortOrder" integer NOT NULL DEFAULT 0,
                 "createdAt" TIMESTAMP NOT NULL DEFAULT now(),
                 "updatedAt" TIMESTAMP NOT NULL DEFAULT now(),
-                CONSTRAINT "UQ_application_form_slug" UNIQUE ("slug"),
-                CONSTRAINT "PK_application_form_id" PRIMARY KEY ("id")
+                CONSTRAINT "UQ_application_slug" UNIQUE ("slug"),
+                CONSTRAINT "PK_application_id" PRIMARY KEY ("id")
             )
         `);
 
         await queryRunner.query(`
-            INSERT INTO "application_form"
+            INSERT INTO "application"
                 ("slug", "name", "type", "description", "url", "status", "category", "sortOrder")
             VALUES
                 ('staff', 'Staff Application', 'General Staff Position', 'Apply to become a staff member of the Roblox Volleyball League. Help manage the community and ensure smooth operations for each season.', 'https://forms.gle/TgpFMdP8zVmyqKjk6', 'closed', 'staff', 1),
@@ -37,6 +37,6 @@ export class CreateApplicationFormsTable1712345678918 implements MigrationInterf
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`DROP TABLE "application_form"`);
+        await queryRunner.query(`DROP TABLE "application"`);
     }
 }

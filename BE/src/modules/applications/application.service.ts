@@ -1,13 +1,13 @@
 import { AppDataSource } from "../../db/data-source.js";
 import { NotFoundError } from "../../errors/NotFoundError.js";
 import {
-    ApplicationForm,
-    ApplicationFormStatus,
-} from "./application-form.entity.js";
+    Application,
+    ApplicationStatus,
+} from "./application.entity.js";
 
-const DEFAULT_FORMS: Array<
+const DEFAULT_APPLICATIONS: Array<
     Pick<
-        ApplicationForm,
+        Application,
         "slug" | "name" | "type" | "description" | "url" | "status" | "category" | "sortOrder"
     >
 > = [
@@ -90,8 +90,8 @@ const DEFAULT_FORMS: Array<
     },
 ];
 
-export class ApplicationFormService {
-    private repository = AppDataSource.getRepository(ApplicationForm);
+export class ApplicationService {
+    private repository = AppDataSource.getRepository(Application);
 
     async ensureSeeded(): Promise<void> {
         const count = await this.repository.count();
@@ -99,10 +99,10 @@ export class ApplicationFormService {
             return;
         }
 
-        await this.repository.save(DEFAULT_FORMS);
+        await this.repository.save(DEFAULT_APPLICATIONS);
     }
 
-    async getAll(): Promise<ApplicationForm[]> {
+    async getAll(): Promise<Application[]> {
         await this.ensureSeeded();
         return this.repository.find({
             order: { sortOrder: "ASC", id: "ASC" },
@@ -111,21 +111,21 @@ export class ApplicationFormService {
 
     async updateBySlug(
         slug: string,
-        updates: { url?: string | null; status?: ApplicationFormStatus }
-    ): Promise<ApplicationForm> {
+        updates: { url?: string | null; status?: ApplicationStatus }
+    ): Promise<Application> {
         await this.ensureSeeded();
-        const form = await this.repository.findOne({ where: { slug } });
-        if (!form) {
-            throw new NotFoundError(`Application form "${slug}" not found`);
+        const application = await this.repository.findOne({ where: { slug } });
+        if (!application) {
+            throw new NotFoundError(`Application "${slug}" not found`);
         }
 
         if (updates.url !== undefined) {
-            form.url = updates.url === "" ? null : updates.url;
+            application.url = updates.url === "" ? null : updates.url;
         }
         if (updates.status !== undefined) {
-            form.status = updates.status;
+            application.status = updates.status;
         }
 
-        return this.repository.save(form);
+        return this.repository.save(application);
     }
 }

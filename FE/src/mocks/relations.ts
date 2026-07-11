@@ -25,10 +25,16 @@ export function getPlayerById(id: number): Player | undefined {
   return db.players.find((player) => player.id === id);
 }
 
+function teamsForPlayer(playerId: number): Team[] {
+  return db.teams
+    .filter((team) => team.players?.some((p) => p.id === playerId))
+    .map((team) => enrichTeam(team));
+}
+
 export function getPlayersWithRelations(): Player[] {
   return db.players.map((player) => ({
     ...player,
-    teams: db.teams.filter((team) => team.players?.some((p) => p.id === player.id)),
+    teams: teamsForPlayer(player.id),
     stats: db.stats.filter((stat) => stat.playerId === player.id),
   }));
 }
@@ -39,7 +45,7 @@ export function getPlayerDetail(id: number): Player | undefined {
 
   return {
     ...player,
-    teams: db.teams.filter((team) => team.players?.some((p) => p.id === player.id)),
+    teams: teamsForPlayer(player.id),
     stats: db.stats.filter((stat) => stat.playerId === player.id),
   };
 }

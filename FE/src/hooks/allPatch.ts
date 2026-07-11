@@ -13,7 +13,7 @@ import type {
   Game,
   Stats,
   Award,
-  ApplicationForm,
+  Application,
 } from "../types/interfaces";
 
 const backendUrl =
@@ -81,20 +81,20 @@ export function useAwardsMutations() {
   return { patchAward };
 }
 
-export function useApplicationFormMutations() {
+export function useApplicationMutations() {
   const { token } = useAuth();
 
-  const patchApplicationForm = useCallback(
+  const patchApplication = useCallback(
     async (
       slug: string,
-      data: Pick<ApplicationForm, "url" | "status">
-    ): Promise<ApplicationForm> => {
+      data: Pick<Application, "url" | "status">
+    ): Promise<Application> => {
       if (!token) {
-        throw new Error("You must be logged in to update application forms");
+        throw new Error("You must be logged in to update applications");
       }
 
       const res = await authFetch(
-        `${backendUrl}/api/application-forms/${slug}`,
+        `${backendUrl}/api/applications/${slug}`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -105,14 +105,14 @@ export function useApplicationFormMutations() {
 
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        throw new Error(body.message || "Failed to update application form");
+        throw new Error(body.message || "Failed to update application");
       }
 
-      return res.json() as Promise<ApplicationForm>;
+      return res.json() as Promise<Application>;
     },
     [token]
   );
 
-  return { patchApplicationForm };
+  return { patchApplication };
 }
 
