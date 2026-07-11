@@ -1,8 +1,5 @@
-/* Color variables to match StatsLeaderboard */
-:root {
-  --primary-blue: #2D3C50;
-  --primary-blue-hover: #2a4a7d;
-}
+/* --primary-blue / --primary-blue-hover now come from src/styles/tokens.css
+   (identical values), previously duplicated across several page CSS files. */
 
 .challonge-import-overlay {
   position: fixed;

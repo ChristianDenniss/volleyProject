@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { authFetch } from "./authFetch";
 import { useAuth } from "../context/authContext";
 import type { PaginatedResponse } from "../types/interfaces";
@@ -25,44 +25,47 @@ export const usePaginatedFetch = <T>(endpoint: string, params: PaginationParams)
 
     // Stable key so the effect only re-runs when a param value actually changes
     const paramsKey = JSON.stringify(params);
+    const [refreshCount, setRefreshCount] = useState(0);
+
+    const fetchData = useCallback(async () => {
+        try {
+            setLoading(true);
+
+            const query = new URLSearchParams();
+            Object.entries(params).forEach(([key, value]) => {
+                if (value !== undefined && value !== null && value !== "") {
+                    query.set(key, String(value));
+                }
+            });
+
+            const response = await authFetch(
+                `${backendUrl}/api/${endpoint}?${query.toString()}`,
+                { method: "GET" },
+                token
+            );
+
+            if (!response.ok) {
+                throw new Error("Network response was not ok");
+            }
+
+            const result: PaginatedResponse<T> = await response.json();
+            setData(result.data);
+            setTotal(result.total);
+            setTotalPages(result.totalPages);
+        } catch (err: any) {
+            console.error(`Paginated fetch error [${endpoint}]:`, err);
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [endpoint, paramsKey, token]);
 
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                setLoading(true);
-
-                const query = new URLSearchParams();
-                Object.entries(params).forEach(([key, value]) => {
-                    if (value !== undefined && value !== null && value !== "") {
-                        query.set(key, String(value));
-                    }
-                });
-
-                const response = await authFetch(
-                    `${backendUrl}/api/${endpoint}?${query.toString()}`,
-                    { method: "GET" },
-                    token
-                );
-
-                if (!response.ok) {
-                    throw new Error("Network response was not ok");
-                }
-
-                const result: PaginatedResponse<T> = await response.json();
-                setData(result.data);
-                setTotal(result.total);
-                setTotalPages(result.totalPages);
-            } catch (err: any) {
-                console.error(`Paginated fetch error [${endpoint}]:`, err);
-                setError(err.message);
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchData();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [endpoint, paramsKey]);
+    }, [fetchData, refreshCount]);
 
-    return { data, total, totalPages, page: params.page, limit: params.limit, loading, error };
+    const refetch = useCallback(() => setRefreshCount((c) => c + 1), []);
+
+    return { data, total, totalPages, page: params.page, limit: params.limit, loading, error, refetch };
 };

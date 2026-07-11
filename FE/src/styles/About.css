@@ -1,16 +1,7 @@
 /* About.css */
-
-:root {
-    --primary: #a1d2ff;
-    --primary-dark: #85c4ff;
-    --bg-light: #F5F7FA;
-    --text-dark: #333333;
-    --text-muted: #5d6673;
-    --border-color: #e2e8f0;
-    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
-    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
-    --radius: 8px;
-}
+/* Color tokens (--primary, --bg-light, --text-dark, etc.) now come from
+   src/styles/tokens.css, which defines identical values under these same
+   names so no usage sites below needed to change. */
 
 .about-page-container {
     padding: 2rem;

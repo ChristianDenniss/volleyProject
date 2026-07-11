@@ -69,35 +69,6 @@
     border: 1px solid #ccc;
 }
 
-/* Table Styles */
-.stats-table {
-    margin-top: 1.5rem;
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.stats-table th,
-.stats-table td {
-    padding: 0.75rem;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
-}
-
-.stats-table th {
-    background-color: #22304a;
-    color: #fff;
-    font-weight: 600;
-    padding: 1rem 0.75rem;
-}
-
-.stats-table tr:hover {
-    background-color: #f5f5f5;
-}
-
-.stats-table thead th {
-    background-color: #2d3c50 !important;
-}
-
 /* Create Button */
 .create-button {
     padding: 0.5rem 1rem;

@@ -1,58 +1,29 @@
 // src/hooks/useUsers.ts
-import { useState, useEffect, useCallback } from "react";
-import { authFetch }                        from "./authFetch";
-import type { User }                        from "../types/interfaces";
+import { useState, useCallback, useEffect } from "react";
+import { authFetch }             from "./authFetch";
+import type { User } from "../types/interfaces";
 import { useAuth } from "../context/authContext";
+import { usePaginatedFetch, PaginationParams } from "./usePaginatedFetch";
 
-// Custom hook to fetch all users and handle role changes
-export const useUsers = () =>
+export interface UserListParams extends PaginationParams {
+    search?: string;
+    role?: string;
+}
+
+// Custom hook to fetch a page of users and handle role changes
+export const useUsers = (params: UserListParams) =>
 {
-    // Store the list of users
-    const [ users, setUsers ] = useState<User[] | null>(null);
-
-    // Track loading & error states
-    const [ loading, setLoading ] = useState<boolean>(true);
-    const [ error,   setError   ] = useState<string | null>(null);
     const { token } = useAuth();
-
-    // Base URL for your backend
     const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
-    // Load users on mount
-    useEffect(() =>
-    {
-        const fetchUsers = async () =>
-        {
-            try
-            {
-                if (!token) {
-                    setError("You must be logged in to fetch users");
-                    setLoading(false);
-                    return;
-                }
+    const { data, total, totalPages, page, limit, loading, error } =
+        usePaginatedFetch<User>("users", params);
 
-                // GET /api/admin/users
-                const res = await authFetch(`${backendUrl}/api/users`, {}, token);
-                if ( !res.ok )
-                {
-                    throw new Error(`Error ${res.status}`);
-                }
+    // Local overrides so a role change is reflected instantly without a refetch
+    const [overrides, setOverrides] = useState<Record<number, User>>({});
+    useEffect(() => { setOverrides({}); }, [data]);
 
-                const data: User[] = await res.json();
-                setUsers(data);
-            }
-            catch (err: any)
-            {
-                setError(err.message);
-            }
-            finally
-            {
-                setLoading(false);
-            }
-        };
-
-        fetchUsers();
-    }, []);
+    const users = data.map((u) => overrides[u.id] ?? u);
 
     // Function to patch a user's role and update local state
     const changeRole = useCallback
@@ -83,16 +54,11 @@ export const useUsers = () =>
             }
 
             const updated: User = await res.json();
-
-            // replace in list
-            setUsers((prev) =>
-                prev
-                ? prev.map((u) => (u.id === updated.id ? updated : u))
-                : prev
-            );
+            setOverrides((prev) => ({ ...prev, [updated.id]: updated }));
+            return updated;
         },
-        []
+        [token, backendUrl]
     );
 
-    return { users, loading, error, changeRole };
+    return { users, total, totalPages, page, limit, loading, error, changeRole };
 };

@@ -1,9 +1,11 @@
 /* -----------------------------------------------------------
-   Shared colour palette (if not already defined)
+   Colour palette — --season-filter-primary is intentionally a
+   distinct navy from the shared --primary-blue brand token
+   (tokens.css); --primary-blue-hover matches the shared value
+   exactly so it comes from tokens.css instead of being redeclared.
 ----------------------------------------------------------- */
 :root {
-    --primary-blue: #1a365d;        /* brand blue – default */
-    --primary-blue-hover: #2a4a7d;  /* darker hover/focus  */
+    --season-filter-primary: #1a365d;
 }
 
 /* -----------------------------------------------------------
@@ -25,8 +27,8 @@
     padding: 6px 12px;
     font-size: 15px;
     border-radius: 4px;
-    border: 1px solid var(--primary-blue);
-    background: var(--primary-blue);
+    border: 1px solid var(--season-filter-primary);
+    background: var(--season-filter-primary);
     color: white;
     cursor: pointer;
     transition: background-color 0.2s ease;
@@ -63,7 +65,7 @@
 }
 
 .season-filter-bar select::-webkit-scrollbar-thumb {
-    background: var(--primary-blue);
+    background: var(--season-filter-primary);
     border-radius: 4px;
 }
 

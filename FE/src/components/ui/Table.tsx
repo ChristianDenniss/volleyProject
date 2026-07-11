@@ -3,7 +3,7 @@ import "./ui.css";
 
 export interface TableColumn<T> {
   key: string;
-  header: string;
+  header: React.ReactNode;
   render?: (row: T) => React.ReactNode;
 }
 

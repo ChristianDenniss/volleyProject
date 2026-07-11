@@ -12,8 +12,11 @@ export class UserController {
     }
 
     private parseFilters(req: Request): UserFilters {
-        const { search } = req.query;
-        return { search: typeof search === 'string' && search.length > 0 ? search : undefined };
+        const { search, role } = req.query;
+        return {
+            search: typeof search === 'string' && search.length > 0 ? search : undefined,
+            role: typeof role === 'string' && role.length > 0 ? role : undefined,
+        };
     }
 
     // Register a new user

@@ -8,6 +8,7 @@ import Pagination from "./Pagination";
 import SeasonFilter from "./SeasonFilterBar";
 import { Link } from 'react-router-dom';
 import PlayerStatsVisualization from "./PlayerStatsVisualization";
+import Table, { type TableColumn } from "./ui/Table";
 
 type StatCategory = 
   | 'spikeKills' 

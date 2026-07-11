@@ -1,11 +1,5 @@
-/* -----------------------------------------------------------
-   Shared colour palette
------------------------------------------------------------ */
-:root
-{
-    --primary-blue: #2D3C50;        /* brand blue – default */
-    --primary-blue-hover: #2a4a7d;  /* darker hover/focus  */
-}
+/* --primary-blue / --primary-blue-hover now come from src/styles/tokens.css
+   (identical values), previously duplicated across several page CSS files. */
 
 /* -----------------------------------------------------------
    Page wrapper

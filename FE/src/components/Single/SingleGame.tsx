@@ -2,7 +2,10 @@
 import React from "react"
 
 // Import shared interfaces
-import { Game } from "../../types/interfaces"
+import { Game, Stats } from "../../types/interfaces"
+
+// Import shared Table component
+import Table, { type TableColumn } from "../ui/Table"
 
 // Import custom fetch hook
 import { useSingleGames } from "../../hooks/allFetch"
@@ -119,6 +122,27 @@ const SingleGame: React.FC = () =>
                             team2.players?.some(p => p.id === s.player.id)
                         )
 
+                        // Combined stats rows (team 1 followed by team 2) for the shared Table
+                        const allStats: Stats[] = [...team1Stats, ...team2Stats]
+
+                        // Column definitions for the player statistics table
+                        const statsColumns: TableColumn<Stats>[] = [
+                            { key: "player", header: "Player", render: (row) => row.player.name },
+                            { key: "spikeKills", header: "Spike Kills", render: (row) => row.spikeKills },
+                            { key: "spikeAttempts", header: "Spike Attempts", render: (row) => row.spikeAttempts },
+                            { key: "apeKills", header: "Ape Kills", render: (row) => row.apeKills },
+                            { key: "apeAttempts", header: "Ape Attempts", render: (row) => row.apeAttempts },
+                            { key: "spikingErrors", header: "Spiking Errors", render: (row) => row.spikingErrors },
+                            { key: "digs", header: "Digs", render: (row) => row.digs },
+                            { key: "blockFollows", header: "Block Follows", render: (row) => row.blockFollows },
+                            { key: "blocks", header: "Blocks", render: (row) => row.blocks },
+                            { key: "assists", header: "Assists", render: (row) => row.assists },
+                            { key: "settingErrors", header: "Setting Errors", render: (row) => row.settingErrors },
+                            { key: "aces", header: "Aces", render: (row) => row.aces },
+                            { key: "servingErrors", header: "Serve Errors", render: (row) => row.servingErrors },
+                            { key: "miscErrors", header: "Misc Errors", render: (row) => row.miscErrors },
+                        ]
+
                         return (
                             <>
                                 {/* SEO Meta Tags for Social Media Embedding */}
@@ -222,72 +246,11 @@ const SingleGame: React.FC = () =>
                                                 {/* Section title */}
                                                 <h2 className="stats-title">Player Statistics</h2>
                                                 <div className="stats-scroll">
-                                                    <table className="stats-table">
-                                                        <thead>
-                                                            <tr>
-                                                                <th>Player</th>
-                                                                <th>Spike Kills</th>
-                                                                <th>Spike Attempts</th>
-                                                                <th>Ape Kills</th>
-                                                                <th>Ape Attempts</th>
-                                                                <th>Spiking Errors</th>
-                                                                <th>Digs</th>
-                                                                <th>Block Follows</th>
-                                                                <th>Blocks</th>
-                                                                <th>Assists</th>
-                                                                <th>Setting Errors</th>
-                                                                <th>Aces</th>
-                                                                <th>Serve Errors</th>
-                                                                <th>Misc Errors</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            {/* Team 1 rows */}
-                                                            {team1Stats.map(s =>
-                                                                <tr key={`t1-${s.id}`}>
-                                                                    <td>{s.player.name}</td>
-                                                                    <td>{s.spikeKills}</td>
-                                                                    <td>{s.spikeAttempts}</td>
-                                                                    <td>{s.apeKills}</td>
-                                                                    <td>{s.apeAttempts}</td>
-                                                                    <td>{s.spikingErrors}</td>
-                                                                    <td>{s.digs}</td>
-                                                                    <td>{s.blockFollows}</td>
-                                                                    <td>{s.blocks}</td>
-                                                                    <td>{s.assists}</td>
-                                                                    <td>{s.settingErrors}</td>
-                                                                    <td>{s.aces}</td>
-                                                                    <td>{s.servingErrors}</td>
-                                                                    <td>{s.miscErrors}</td>
-                                                                </tr>
-                                                            )}
-
-                                                            {/* Separator for Team 2 */}
-                                                            <tr className="team-separator">
-                                                                <td colSpan={14}></td>
-                                                            </tr>
-
-                                                            {/* Team 2 rows */}
-                                                            {team2Stats.map(s =>
-                                                                <tr key={`t2-${s.id}`} className="team2-row">
-                                                                    <td>{s.player.name}</td>
-                                                                    <td>{s.spikeKills}</td>
-                                                                    <td>{s.spikeAttempts}</td>
-                                                                    <td>{s.apeKills}</td>
-                                                                    <td>{s.apeAttempts}</td>
-                                                                    <td>{s.spikingErrors}</td>
-                                                                    <td>{s.digs}</td>
-                                                                    <td>{s.blockFollows}</td>
-                                                                    <td>{s.blocks}</td>
-                                                                    <td>{s.assists}</td>
-                                                                    <td>{s.settingErrors}</td>
-                                                                    <td>{s.aces}</td>
-                                                                    <td>{s.servingErrors}</td>
-                                                                    <td>{s.miscErrors}</td>
-                                                                </tr>
-                                                            )}
-                                                        </tbody>
-                                                    </table>
+                                                    <Table
+                                                        columns={statsColumns}
+                                                        rows={allStats}
+                                                        rowKey={(row) => row.id}
+                                                    />
                                                 </div>
                                             </section>
                                         )

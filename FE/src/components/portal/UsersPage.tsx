@@ -9,41 +9,27 @@ import FilterBar from "../ui/FilterBar";
 import Table from "../ui/Table";
 import "../../styles/UsersPage.css";
 
+const USERS_PER_PAGE = 10;
+const ALL_ROLES: User["role"][] = ["user", "admin", "superadmin"];
+
 const UsersPage: React.FC = () => {
   const { user: me } = useAuth();
-  const { users, loading, error, changeRole } = useUsers();
-
-  // Local state for search and pagination
-  const [localUsers, setLocalUsers] = useState<User[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const usersPerPage = 10;
-
-  // Filter state
   const [roleFilter, setRoleFilter] = useState<string>("");
 
-  // Update local state when users data changes
-  useEffect(() => {
-    if (users) setLocalUsers(users);
-  }, [users]);
-
-  // Get unique roles for filter options
-  const uniqueRoles = Array.from(new Set(localUsers.map(user => user.role))).sort();
-
-  // Filter users based on search query (username) and role
-  const filteredUsers = localUsers.filter(user => {
-    const matchesSearch = user?.username?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false;
-    const matchesRole = !roleFilter || user.role === roleFilter;
-    
-    return matchesSearch && matchesRole;
+  const { users, total, totalPages, loading, error, changeRole } = useUsers({
+    page: currentPage,
+    limit: USERS_PER_PAGE,
+    search: searchQuery || undefined,
+    role: roleFilter || undefined,
   });
 
-  // Calculate pagination
-  const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
-  const paginatedUsers = filteredUsers.slice(
-    (currentPage - 1) * usersPerPage,
-    currentPage * usersPerPage
-  );
+  const [localUsers, setLocalUsers] = useState<User[]>([]);
+
+  useEffect(() => {
+    setLocalUsers(users);
+  }, [users]);
 
   // Handle search
   const handleSearch = (query: string) => {
@@ -75,8 +61,6 @@ const UsersPage: React.FC = () => {
     }
     return false;
   };
-
-  const ALL_ROLES: User["role"][] = ["user", "admin", "superadmin"];
 
   // Table requires rows to satisfy Record<string, unknown>; User has no index
   // signature, so widen locally for the shared Table component's generic.
@@ -184,7 +168,7 @@ const UsersPage: React.FC = () => {
             onChange={(e) => handleRoleFilterChange(e.target.value)}
           >
             <option value="">All Roles</option>
-            {uniqueRoles.map(role => (
+            {ALL_ROLES.map(role => (
               <option key={role} value={role}>
                 {role.charAt(0).toUpperCase() + role.slice(1)}
               </option>
@@ -194,10 +178,10 @@ const UsersPage: React.FC = () => {
       </FilterBar>
 
       <div className="results-counter">
-        Showing {((currentPage - 1) * usersPerPage) + 1}-{Math.min(currentPage * usersPerPage, filteredUsers.length)} of {filteredUsers.length} users
+        Showing {total === 0 ? 0 : ((currentPage - 1) * USERS_PER_PAGE) + 1}-{Math.min(currentPage * USERS_PER_PAGE, total)} of {total} users
       </div>
 
-      <Table columns={columns} rows={paginatedUsers as UserRow[]} rowKey={(row) => row.id} />
+      <Table columns={columns} rows={localUsers as UserRow[]} rowKey={(row) => row.id} />
     </div>
   );
 };

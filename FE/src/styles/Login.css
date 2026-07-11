@@ -1,13 +1,7 @@
 /* src/styles/Login.css */
-
-/* Color palette */
-:root {
-    --primary: #a1d2ff;
-    --primary-dark: #85c4ff;
-    --bg-light: #F5F7FA;
-    --text-dark: #333333;
-    --error-bg: #E74C3C;
-}
+/* Color tokens (--primary, --bg-light, --text-dark, --error-bg) now come
+   from src/styles/tokens.css, which defines identical values under these
+   same names so no usage sites below needed to change. */
 
 /* Page background & base font */
 body {

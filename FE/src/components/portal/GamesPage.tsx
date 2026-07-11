@@ -1,7 +1,7 @@
 // src/pages/GamesPage.tsx
 
 import React, { useState, useEffect } from "react";
-import { useSkinnyGames } from "../../hooks/allFetch";
+import { useSkinnyGames, useSkinnySeasons } from "../../hooks/allFetch";
 import { useGameMutations } from "../../hooks/allPatch";
 import { useCreateGames } from "../../hooks/allCreate";
 import { useDeleteGames } from "../../hooks/allDelete";
@@ -41,8 +41,23 @@ interface CreateGameInput {
   stage: string;
 }
 
+const GAMES_PER_PAGE = 10;
+
 const GamesPage: React.FC = () => {
-  const { data: games, loading, error } = useSkinnyGames();
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [seasonFilter, setSeasonFilter] = useState<string>("");
+  const [stageFilter, setStageFilter] = useState<string>("");
+
+  const { data: games, total, totalPages, loading, error, refetch } = useSkinnyGames({
+    page: currentPage,
+    limit: GAMES_PER_PAGE,
+    search: searchQuery || undefined,
+    seasonId: seasonFilter || undefined,
+    stage: stageFilter || undefined,
+  });
+  const { data: seasons } = useSkinnySeasons({ page: 1, limit: 100 });
+  const { data: gamesSample } = useSkinnyGames({ page: 1, limit: 100 });
   const { patchGame } = useGameMutations();
   const { createGame, loading: creating, error: createError } = useCreateGames();
   const { deleteItem: deleteGame, loading: deleting } = useDeleteGames();
@@ -50,13 +65,6 @@ const GamesPage: React.FC = () => {
 
   const [localGames, setLocalGames] = useState<Game[]>([]);
   const [editing, setEditing] = useState<EditingState | null>(null);
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const gamesPerPage = 10;
-
-  // Filter states
-  const [seasonFilter, setSeasonFilter] = useState<string>("");
-  const [stageFilter, setStageFilter] = useState<string>("");
 
   // Modal state for creating a new game
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -72,12 +80,15 @@ const GamesPage: React.FC = () => {
   const [formError, setFormError] = useState<string>("");
 
   useEffect(() => {
-    if (games) setLocalGames(games);
+    setLocalGames(games);
   }, [games]);
 
-  // Get unique seasons and stages for filter options
-  const uniqueSeasons = Array.from(new Set(localGames.map(game => game.season.seasonNumber))).sort((a, b) => a - b);
-  const uniqueStages = Array.from(new Set(localGames.map(game => game.stage).filter(stage => stage))).sort();
+  const uniqueSeasons = (seasons ?? [])
+    .map((season) => season.id)
+    .sort((a, b) => a - b);
+  const uniqueStages = Array.from(
+    new Set((gamesSample ?? []).map((game) => game.stage).filter((stage) => stage))
+  ).sort();
 
   // Commit inline edits
   const commitEdit = async () => {
@@ -101,6 +112,7 @@ const GamesPage: React.FC = () => {
       setLocalGames((prev) =>
         prev.map((g) => (g.id === editing.id ? updatedGame : g))
       );
+      refetch();
     } catch (error) {
       console.error("Error updating game:", error);
       alert("Failed to update game");
@@ -117,6 +129,7 @@ const GamesPage: React.FC = () => {
     const wasDeleted = await deleteGame(id.toString());
     if (wasDeleted) {
       setLocalGames((prev) => prev.filter((g) => g.id !== id));
+      refetch();
     }
   };
 
@@ -169,6 +182,7 @@ const GamesPage: React.FC = () => {
       setNewVideoUrl("");
       setNewDate("");
       setNewStage("");
+      refetch();
     } catch (error) {
       console.error("Error creating game:", error);
       alert("Failed to create game");
@@ -209,23 +223,6 @@ const GamesPage: React.FC = () => {
     }
     setEditing({ id, field, value: origValue });
   };
-
-  // Filter games based on search query, season, and stage
-  const filteredGames = localGames.filter(game => {
-    const gameName = game?.name || 'No Given Name';
-    const matchesSearch = gameName.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesSeason = !seasonFilter || game.season.seasonNumber.toString() === seasonFilter;
-    const matchesStage = !stageFilter || game.stage === stageFilter;
-    
-    return matchesSearch && matchesSeason && matchesStage;
-  });
-
-  // Calculate pagination
-  const totalPages = Math.ceil(filteredGames.length / gamesPerPage);
-  const paginatedGames = filteredGames.slice(
-    (currentPage - 1) * gamesPerPage,
-    currentPage * gamesPerPage
-  );
 
   // Handle search
   const handleSearch = (query: string) => {
@@ -468,7 +465,7 @@ const GamesPage: React.FC = () => {
       </FilterBar>
 
       <div className="results-counter">
-        Showing {((currentPage - 1) * gamesPerPage) + 1}-{Math.min(currentPage * gamesPerPage, filteredGames.length)} of {filteredGames.length} games
+        Showing {total === 0 ? 0 : ((currentPage - 1) * GAMES_PER_PAGE) + 1}-{Math.min(currentPage * GAMES_PER_PAGE, total)} of {total} games
       </div>
 
       {/* Modal for Creating a New Game */}
@@ -605,7 +602,7 @@ const GamesPage: React.FC = () => {
       <div className="users-table" style={{ marginTop: "1.5rem" }}>
         <Table
           columns={columns as any}
-          rows={paginatedGames as unknown as Record<string, unknown>[]}
+          rows={localGames as unknown as Record<string, unknown>[]}
           rowKey={(row) => (row as unknown as Game).id}
         />
       </div>

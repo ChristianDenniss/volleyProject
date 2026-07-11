@@ -2,13 +2,14 @@
    Trivia Page – Clean, Modern Style
    ========================================================= */
 
-/* ===== Color tokens ===== */
+/* ===== Color tokens =====
+   --primary-blue/--primary-blue-hover now come from tokens.css (identical
+   values). --trivia-text-dark is intentionally distinct from the shared
+   --text-dark token (a different shade), so it keeps its own name. */
 :root {
-    --primary-blue: #2D3C50;
-    --primary-blue-hover: #2a4a7d;
     --dark-bg: #262626;
     --light-bg: #f8f9fa;
-    --text-dark: #2c3e50;
+    --trivia-text-dark: #2c3e50;
     --text-light: #7f8c8d;
     --white: #ffffff;
     --success: #27ae60;
@@ -25,7 +26,7 @@
     margin: 0 auto;
     padding: 5.5rem 2rem 2rem;
     font-family: 'Inter', sans-serif;
-    color: var(--text-dark);
+    color: var(--trivia-text-dark);
     min-height: 80vh;
     box-sizing: border-box;
     contain: layout style paint;
@@ -61,7 +62,7 @@
 
 .selection-section h2 {
     font-size: 1.5rem;
-    color: var(--text-dark);
+    color: var(--trivia-text-dark);
     margin-bottom: 2rem;
     font-weight: 600;
 }
@@ -210,7 +211,7 @@
     border-radius: 50%;
     background: var(--light-bg);
     border: 2px solid var(--border);
-    color: var(--text-dark);
+    color: var(--trivia-text-dark);
 }
 
 .type-btn:hover .type-icon {
@@ -368,7 +369,7 @@
 
 .game-header h2 {
     font-size: 2rem;
-    color: var(--text-dark);
+    color: var(--trivia-text-dark);
     margin: 0;
     font-weight: 700;
 }
@@ -459,7 +460,7 @@
 
 .hints-section h3 {
     font-size: 1.3rem;
-    color: var(--text-dark);
+    color: var(--trivia-text-dark);
     margin-bottom: 1.5rem;
     font-weight: 600;
 }
@@ -624,7 +625,7 @@
 
 .trivia-result h2 {
     font-size: 2.5rem;
-    color: var(--text-dark);
+    color: var(--trivia-text-dark);
     margin-bottom: 2rem;
     font-weight: 700;
 }
@@ -682,7 +683,7 @@
 .correct-answer {
     font-size: 1.5rem;
     font-weight: 600;
-    color: var(--text-dark);
+    color: var(--trivia-text-dark);
     background: var(--light-bg);
     padding: 1rem 1.5rem;
     border-radius: 8px;
@@ -727,7 +728,7 @@
 .score-breakdown p {
     margin: 0.5rem 0;
     font-size: 1rem;
-    color: var(--text-dark);
+    color: var(--trivia-text-dark);
     display: flex;
     justify-content: space-between;
     align-items: center;

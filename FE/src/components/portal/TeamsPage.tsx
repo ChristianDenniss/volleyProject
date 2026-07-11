@@ -33,9 +33,22 @@ interface TeamTableColumn {
   render?: (row: Team) => React.ReactNode;
 }
 
+const TEAMS_PER_PAGE = 10;
+
 const TeamsPage: React.FC = () => {
-  const { data: teams, loading, error } = useSkinnyTeams();
-  const { data: seasons } = useSkinnySeasons();
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [currentPage, setCurrentPage] = useState<number>(1);
+
+  // Filter state
+  const [seasonFilter, setSeasonFilter] = useState<string>("");
+
+  const { data: teams, total, totalPages, loading, error, refetch } = useSkinnyTeams({
+    page: currentPage,
+    limit: TEAMS_PER_PAGE,
+    search: searchQuery || undefined,
+    seasonId: seasonFilter || undefined,
+  });
+  const { data: seasons } = useSkinnySeasons({ page: 1, limit: 100 });
   const { patchTeam } = useTeamMutations();
   const { createTeam, loading: creating, error: createError } = useCreateTeams();
   const { deleteItem: deleteTeam, loading: deleting, error: deleteError } = useDeleteTeams();
@@ -43,12 +56,6 @@ const TeamsPage: React.FC = () => {
 
   const [localTeams, setLocalTeams] = useState<Team[]>([]);
   const [editing, setEditing] = useState<EditingState | null>(null);
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const teamsPerPage = 10;
-
-  // Filter state
-  const [seasonFilter, setSeasonFilter] = useState<string>("");
 
   // Modal state for creating a new team
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -59,26 +66,13 @@ const TeamsPage: React.FC = () => {
   const [formError, setFormError] = useState<string>("");
 
   useEffect(() => {
-    if (teams) setLocalTeams(teams);
+    setLocalTeams(teams);
   }, [teams]);
 
-  // Get unique seasons for filter options
-  const uniqueSeasons = Array.from(new Set(localTeams.map(team => team.season.id))).sort((a, b) => a - b);
-
-  // Filter teams based on search query and season
-  const filteredTeams = localTeams.filter(team => {
-    const matchesSearch = team?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false;
-    const matchesSeason = !seasonFilter || team.season.id.toString() === seasonFilter;
-    
-    return matchesSearch && matchesSeason;
-  });
-
-  // Calculate pagination
-  const totalPages = Math.ceil(filteredTeams.length / teamsPerPage);
-  const paginatedTeams = filteredTeams.slice(
-    (currentPage - 1) * teamsPerPage,
-    currentPage * teamsPerPage
-  );
+  // Season filter options come from the full seasons list, not just this page's teams
+  const uniqueSeasons = (seasons ?? [])
+    .map(season => season.id)
+    .sort((a, b) => a - b);
 
   // Handle search
   const handleSearch = (query: string) => {
@@ -151,6 +145,7 @@ const TeamsPage: React.FC = () => {
       setLocalTeams((prev) =>
         prev.map((t) => (t.id === id ? { ...t, ...updated } : t))
       );
+      refetch();
     } catch (err: any) {
       console.error(err);
       alert("Failed to save changes:\n" + err.message);
@@ -167,6 +162,7 @@ const TeamsPage: React.FC = () => {
     const wasDeleted = await deleteTeam(id.toString());
     if (wasDeleted) {
       setLocalTeams((prev) => prev.filter((t) => t.id !== id));
+      refetch();
     }
   };
 
@@ -205,6 +201,7 @@ const TeamsPage: React.FC = () => {
       const created = await createTeam(payload);
       if (created) {
         setLocalTeams((prev) => [created, ...prev]);
+        refetch();
         closeModal();
       }
     } catch {
@@ -400,7 +397,7 @@ const TeamsPage: React.FC = () => {
         </div>
 
         <div className="results-counter">
-          Showing {((currentPage - 1) * teamsPerPage) + 1}-{Math.min(currentPage * teamsPerPage, filteredTeams.length)} of {filteredTeams.length} teams
+          Showing {total === 0 ? 0 : ((currentPage - 1) * TEAMS_PER_PAGE) + 1}-{Math.min(currentPage * TEAMS_PER_PAGE, total)} of {total} teams
         </div>
       </FilterBar>
 
@@ -498,7 +495,7 @@ const TeamsPage: React.FC = () => {
             props are cast here. This does not change runtime behavior. */}
         <Table
           columns={columns as any}
-          rows={paginatedTeams as any}
+          rows={localTeams as any}
           rowKey={(row: any) => (row as Team).id}
         />
       </div>

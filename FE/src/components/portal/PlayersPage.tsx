@@ -28,18 +28,24 @@ interface BatchFormRow {
   teamNamesCSV: string; // comma-separated team names (all lowercase)
 }
 
+const PLAYERS_PER_PAGE = 10;
+
 const PlayersPage: React.FC = () => {
-  const { data: players, loading, error } = usePlayers();
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [currentPage, setCurrentPage] = useState<number>(1);
+
+  const { data: players, total, totalPages, loading, error, refetch } = usePlayers({
+    page: currentPage,
+    limit: PLAYERS_PER_PAGE,
+    search: searchQuery || undefined,
+  });
   const { patchPlayer } = usePlayerMutations();
   const { createBatch, loading: batchLoading, error: batchError } = useBatchPlayersByTeamName();
   const { deleteItem: deletePlayer, loading: deleting, error: deleteError } = useDeletePlayers();
   const { user } = useAuth();
 
-  const [ localPlayers, setLocalPlayers ] = useState<Player[]>([]);
-  const [ editing, setEditing ]           = useState<EditingState | null>(null);
-  const [ searchQuery, setSearchQuery ]   = useState<string>("");
-  const [ currentPage, setCurrentPage ]   = useState<number>(1);
-  const playersPerPage = 10;
+  const [localPlayers, setLocalPlayers] = useState<Player[]>([]);
+  const [editing, setEditing] = useState<EditingState | null>(null);
 
   // Modal state for "Submit Players"
   const [ isModalOpen, setIsModalOpen ]   = useState<boolean>(false);
@@ -49,22 +55,8 @@ const PlayersPage: React.FC = () => {
   const [ formError, setFormError ]       = useState<string>("");
 
   useEffect(() => {
-    if (players) {
-      setLocalPlayers(players);
-    }
+    setLocalPlayers(players);
   }, [players]);
-
-  // Filter players based on search query
-  const filteredPlayers = localPlayers.filter(player =>
-    player?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false
-  );
-
-  // Calculate pagination
-  const totalPages = Math.ceil(filteredPlayers.length / playersPerPage);
-  const paginatedPlayers = filteredPlayers.slice(
-    (currentPage - 1) * playersPerPage,
-    currentPage * playersPerPage
-  );
 
   // Handle search
   const handleSearch = (query: string) => {
@@ -103,6 +95,7 @@ const PlayersPage: React.FC = () => {
       setLocalPlayers((prev) =>
         prev.map((p) => (p.id === id ? { ...p, ...updated } : p))
       );
+      refetch();
     } catch (err: any) {
       console.error(err);
       alert("Failed to save changes:\n" + err.message);
@@ -119,6 +112,7 @@ const PlayersPage: React.FC = () => {
     const wasDeleted = await deletePlayer(id.toString());
     if (wasDeleted) {
       setLocalPlayers((prev) => prev.filter((p) => p.id !== id));
+      refetch();
     }
   };
 
@@ -169,6 +163,7 @@ const PlayersPage: React.FC = () => {
         // Ensure created is an array before spreading
         const newPlayers = Array.isArray(created) ? created : [created];
         setLocalPlayers((prev) => [...newPlayers, ...prev]);
+        refetch();
         setIsModalOpen(false);
         setBatchRows([{ name: "", position: "", teamNamesCSV: "" }]);
       } else {
@@ -302,6 +297,10 @@ const PlayersPage: React.FC = () => {
         </div>
       </div>
 
+      <div className="results-counter">
+        Showing {total === 0 ? 0 : ((currentPage - 1) * PLAYERS_PER_PAGE) + 1}-{Math.min(currentPage * PLAYERS_PER_PAGE, total)} of {total} players
+      </div>
+
       {/* Modal for Submitting Players */}
       <Modal
         isOpen={isModalOpen}
@@ -396,7 +395,7 @@ const PlayersPage: React.FC = () => {
       <div style={{ marginTop: "1.5rem" }}>
         <Table<Player>
           columns={columns}
-          rows={paginatedPlayers}
+          rows={localPlayers}
           rowKey={(row) => row.id}
         />
       </div>

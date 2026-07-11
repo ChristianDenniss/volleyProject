@@ -143,50 +143,6 @@
     padding: 1rem;
 }
 
-.records-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 0;
-    font-size: 0.85rem;
-}
-
-.records-table thead {
-    background: #2D3C50;
-    color: #fff;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-}
-
-.records-table th {
-    padding: 0.5rem 0.25rem;
-    text-align: left;
-    font-weight: 700;
-    text-transform: uppercase;
-    font-size: 0.75rem;
-    border-bottom: 2px solid #1a1a1a;
-}
-
-.records-table tbody tr {
-    background: #1a1a1a;
-    color: #fff;
-    transition: background-color 0.2s ease;
-}
-
-.records-table tbody tr:nth-child(even) {
-    background: #2a2a2a;
-}
-
-.records-table tbody tr:hover {
-    background: #333;
-}
-
-.records-table td {
-    padding: 0.4rem 0.25rem;
-    border-bottom: 1px solid #333;
-    vertical-align: middle;
-}
-
 /* Rank styling */
 .record-rank {
     text-align: center;
@@ -386,16 +342,7 @@
         overflow-x: auto;
         max-height: 300px;
     }
-    
-    .records-table {
-        font-size: 0.8em;
-    }
-    
-    .records-table th,
-    .records-table td {
-        padding: 0.3rem 0.2rem;
-    }
-    
+
     .calculate-button {
         min-width: 150px;
         font-size: 0.9em;

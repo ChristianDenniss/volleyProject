@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useSkinnyAwards } from "../../hooks/allFetch";
+import { useSkinnyAwards, useSkinnySeasons } from "../../hooks/allFetch";
 import { useAwardsMutations } from "../../hooks/allPatch";
 import { useCreateAwards } from "../../hooks/allCreate";
 import { useDeleteAwards } from "../../hooks/allDelete";
@@ -36,23 +36,22 @@ interface EditingState {
   value: string;
 }
 
-const AwardsPage: React.FC = () => {
-  const { data: awards, loading, error } = useSkinnyAwards();
-  const { patchAward } = useAwardsMutations();
-  const { createAwards, loading: creating } = useCreateAwards();
-  const { deleteItem: deleteAward, loading: deleting } = useDeleteAwards();
-  const { user } = useAuth();
+const AWARDS_PER_PAGE = 10;
 
-  const [localAwards, setLocalAwards] = useState<Award[]>([]);
-  const [editing, setEditing] = useState<EditingState | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+const AwardsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const awardsPerPage = 10;
-
-  // Filter states
   const [seasonFilter, setSeasonFilter] = useState<string>("");
   const [awardTypeFilter, setAwardTypeFilter] = useState<string>("");
+
+  const { data: awards, total, totalPages, loading, error, refetch } = useSkinnyAwards({
+    page: currentPage,
+    limit: AWARDS_PER_PAGE,
+    search: searchQuery || undefined,
+    seasonNumber: seasonFilter || undefined,
+    type: awardTypeFilter || undefined,
+  });
+  const { data: seasons } = useSkinnySeasons({ page: 1, limit: 100 });
 
   // Modal state for creating a new award
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);

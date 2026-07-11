@@ -48,23 +48,6 @@
     overflow: hidden;
 }
 
-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-th, td {
-    padding: 1rem;
-    text-align: left;
-    border-bottom: 1px solid #eee;
-}
-
-th {
-    background: #f8f9fa;
-    font-weight: 600;
-    color: #495057;
-}
-
 .status-badge {
     padding: 0.25rem 0.75rem;
     border-radius: 20px;

@@ -1,38 +1,42 @@
-import { useFetch, useFetchTeamByName, useFetchGameById, useFetchSeasonById, useFetchArticleById, useFetchPlayerById, useObjectFetch, useTriviaPlayer, useTriviaTeam, useTriviaSeason, useSubmitTriviaGuess } from "./useFetch";
-import { Player, Team, Season, Game, Article, Stats, User, Award, Records } from "../types/interfaces";
+import { useFetchTeamByName, useFetchGameById, useFetchSeasonById, useFetchArticleById, useFetchPlayerById, useObjectFetch, useTriviaPlayer, useTriviaTeam, useTriviaSeason, useSubmitTriviaGuess } from "./useFetch";
+import { usePaginatedFetch, PaginationParams } from "./usePaginatedFetch";
+import { Player, Team, Season, Game, Article, Stats, Award, Records } from "../types/interfaces";
 import { useState } from "react";
 
+interface PlayerListParams extends PaginationParams { search?: string; }
+interface TeamListParams extends PaginationParams { search?: string; seasonId?: number | string; }
+interface GameListParams extends PaginationParams { search?: string; seasonId?: number | string; stage?: string; }
+interface StatListParams extends PaginationParams { search?: string; }
+interface AwardListParams extends PaginationParams { search?: string; seasonNumber?: number | string; type?: string; }
+
 // Hook to fetch players
-export const usePlayers = () => useFetch<Player>("players");
+export const usePlayers = (params: PlayerListParams) => usePaginatedFetch<Player>("players", params);
 
 // Hook to fetch teams
-export const useTeams = () => useFetch<Team>("teams");
+export const useTeams = (params: TeamListParams) => usePaginatedFetch<Team>("teams", params);
 
 // Hook to fetch seasons
-export const useSeasons = () => useFetch<Season>("seasons");
-
-// Hook to fetch users
-export const useUsers = () => useFetch<User>("users");
+export const useSeasons = (params: PaginationParams) => usePaginatedFetch<Season>("seasons", params);
 
 // Hook to fetch games
-export const useGames = () => useFetch<Game>("games");
+export const useGames = (params: GameListParams) => usePaginatedFetch<Game>("games", params);
 
 // Hook to fetch stats
-export const useStats = () => useFetch<Stats>("stats");
+export const useStats = (params: StatListParams) => usePaginatedFetch<Stats>("stats", params);
 
 // Hook to fetch articles
-export const useArticles = () => useFetch<Article>("articles");
+export const useArticles = (params: PaginationParams) => usePaginatedFetch<Article>("articles", params);
 
-export const useAwards = () => useFetch<Award>("awards");
+export const useAwards = (params: AwardListParams) => usePaginatedFetch<Award>("awards", params);
 
 // Hook to fetch records
-export const useRecords = () => {
+export const useRecords = (params: PaginationParams) => {
     const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
-    const { data, loading, error } = useFetch<Records>(`records?refresh=${refreshTrigger}`);
-    
+    const result = usePaginatedFetch<Records>("records", { ...params, refresh: refreshTrigger });
+
     const refetch = () => setRefreshTrigger((prev: number) => prev + 1);
-    
-    return { data, loading, error, refetch };
+
+    return { ...result, refetch };
 };
 
 import { useMatches } from "./useMatches";
@@ -41,13 +45,13 @@ import { useMatches } from "./useMatches";
 export { useMatches };
 
 // Skinny hooks for faster loading without relations
-export const useSkinnyTeams = () => useFetch<Team>("teams/skinny");
-export const useMediumTeams = () => useFetch<Team>("teams/medium");
-export const useSkinnySeasons = () => useFetch<Season>("seasons/skinny");
-export const useMediumSeasons = () => useFetch<Season>("seasons/medium");
-export const useSkinnyGames = () => useFetch<Game>("games/skinny");
-export const useSkinnyAwards = () => useFetch<Award>("awards/skinny");
-export const useMediumPlayers = () => useFetch<Player>("players/medium");
+export const useSkinnyTeams = (params: TeamListParams) => usePaginatedFetch<Team>("teams/skinny", params);
+export const useMediumTeams = (params: TeamListParams) => usePaginatedFetch<Team>("teams/medium", params);
+export const useSkinnySeasons = (params: PaginationParams) => usePaginatedFetch<Season>("seasons/skinny", params);
+export const useMediumSeasons = (params: PaginationParams) => usePaginatedFetch<Season>("seasons/medium", params);
+export const useSkinnyGames = (params: GameListParams) => usePaginatedFetch<Game>("games/skinny", params);
+export const useSkinnyAwards = (params: AwardListParams) => usePaginatedFetch<Award>("awards/skinny", params);
+export const useMediumPlayers = (params: PlayerListParams) => usePaginatedFetch<Player>("players/medium", params);
 
 export const useSingleArticles = (articleId: string) => useFetchArticleById<Article>(`${articleId}`);
 
@@ -61,7 +65,9 @@ export const useSinglePlayer = (playedId: string) => useFetchPlayerById<Player>(
 
 export const useSingleAward = (awardId: string) => useObjectFetch<Award>(`awards/${awardId}`);
 
-export const useAwardsByPlayerID = (playerId: string) => useFetch<Award>(`awards/player/${playerId}`);
+// Not paginated in the UI - fetch a generous single page since a player's awards are always a short list
+export const useAwardsByPlayerID = (playerId: string) =>
+    usePaginatedFetch<Award>(`awards/player/${playerId}`, { page: 1, limit: 100 });
 
 // Trivia hooks
 export { useTriviaPlayer, useTriviaTeam, useTriviaSeason, useSubmitTriviaGuess };

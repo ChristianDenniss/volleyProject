@@ -21,6 +21,7 @@
   --color-error: #dc2626;
   --color-error-bg: #fef2f2;
   --color-error-border: #fecaca;
+  --error-bg: #E74C3C; /* solid error banner red, distinct from --color-error-bg's light tint (Login.css) */
 
   /* Radius */
   --radius-sm: 4px;
@@ -31,6 +32,19 @@
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
   --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
   --shadow-modal: 0 20px 60px rgba(0, 0, 0, 0.3);
+  --radius: var(--radius-md);
+
+  /* Aliases matching each page's original variable names, so per-page :root
+     blocks that duplicated these exact values can be deleted without having
+     to rewrite every var() usage site within those files. */
+  --primary-blue: var(--color-brand-primary);
+  --primary-blue-hover: var(--color-brand-primary-hover);
+  --primary: var(--color-accent);
+  --primary-dark: var(--color-accent-dark);
+  --bg-light: var(--color-bg-light);
+  --text-dark: var(--color-text);
+  --text-muted: var(--color-text-muted);
+  --border-color: var(--color-border);
 
   /* Fixed spacing / type scale */
   --space-1: 0.25rem;

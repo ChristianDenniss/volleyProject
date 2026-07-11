@@ -1,10 +1,7 @@
 /* MatchesPage specific styles */
-
-/* Color variables to match StatsLeaderboard */
-:root {
-  --primary-blue: #2D3C50;
-  --primary-blue-hover: #2a4a7d;
-}
+/* --primary-blue / --primary-blue-hover now come from src/styles/tokens.css
+   (identical values), which previously duplicated here and in
+   StatsLeaderboard.css/TriviaPage.css/ChallongeImport.css/Schedules.css. */
 
 /* Text muted style for permission notices */
 .text-muted {

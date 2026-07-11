@@ -11,6 +11,7 @@ import { PaginationParams } from "../../utils/pagination.js";
 
 export interface UserFilters {
     search?: string;
+    role?: string;
 }
 
 export class UserService {
@@ -68,6 +69,7 @@ export class UserService {
     private buildWhere(filters: UserFilters): FindOptionsWhere<User> {
         const where: FindOptionsWhere<User> = {};
         if (filters.search) where.username = ILike(`%${filters.search}%`);
+        if (filters.role) where.role = filters.role as User['role'];
         return where;
     }
 
