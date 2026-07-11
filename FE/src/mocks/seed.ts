@@ -182,6 +182,14 @@ function isoDate(year: number, month: number, day: number, hour = 18): string {
   return new Date(Date.UTC(year, month - 1, day, hour, 0, 0)).toISOString();
 }
 
+/** Offset days from a base date at a given local hour/minute (for schedule mock data). */
+function addDays(base: Date, days: number, hour: number, minute = 0): Date {
+  const d = new Date(base);
+  d.setDate(d.getDate() + days);
+  d.setHours(hour, minute, 0, 0);
+  return d;
+}
+
 function buildUsers(): User[] {
   const roles: Role[] = ["superadmin", "admin", "admin", "user", "user", "user", "user", "user"];
   const names = [
@@ -286,7 +294,7 @@ function buildGames(seasons: Season[], teams: Team[]): Game[] {
   return games;
 }
 
-function buildStats(games: Game[], players: Player[]): Stats[] {
+function buildStats(games: Game[], _players: Player[]): Stats[] {
   const stats: Stats[] = [];
   let statId = 1;
 
@@ -406,29 +414,40 @@ function buildAwards(seasons: Season[], players: Player[]): Award[] {
 function buildMatches(seasons: Season[], teams: Team[]): Match[] {
   const matches: Match[] = [];
   let matchId = 1;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-  seasons.forEach((season) => {
+  seasons.forEach((season, seasonIndex) => {
     const seasonTeams = teams.filter((team) => team.season.id === season.id);
-    const matchesPerSeason = season.seasonNumber >= 11 ? 14 : 8;
+    if (seasonTeams.length < 2) return;
+
+    // Latest season gets a full schedule spread around today for /schedules
+    const isLatestSeason = seasonIndex === 0;
+    const matchesPerSeason = isLatestSeason ? 28 : 10;
 
     for (let i = 0; i < matchesPerSeason; i++) {
       const team1 = seasonTeams[i % seasonTeams.length];
-      const team2 = seasonTeams[(i + 2) % seasonTeams.length];
-      if (!team1 || !team2) continue;
+      const team2 = seasonTeams[(i + 1 + (i % 3)) % seasonTeams.length];
+      if (!team1 || !team2 || team1.id === team2.id) continue;
 
-      const completed = i % 3 !== 2;
+      const completed = isLatestSeason ? i % 3 !== 2 : i % 4 !== 3;
       const round = pick(MATCH_ROUNDS, i);
-      const month = 1 + (i % 5);
-      const day = 2 + i * 2;
+
+      const matchDate = isLatestSeason
+        ? addDays(today, -21 + Math.floor((i / Math.max(1, matchesPerSeason - 1)) * 42), 17 + (i % 5), (i % 2) * 30)
+        : new Date(isoDate(2024 + (seasonIndex % 2), 1 + (i % 10), 1 + ((i * 3) % 26), 17 + (i % 4)));
+
+      const team1Score = completed ? pseudoRandom(matchId, 1, 3) : undefined;
+      const team2Score = completed ? pseudoRandom(matchId + 2, 0, 2) : undefined;
 
       matches.push({
         id: matchId++,
         matchNumber: `${round} - Match ${(i % 4) + 1}`,
         status: completed ? "completed" : "scheduled",
         round,
-        date: new Date(isoDate(2025, month, day, 17 + (i % 4))),
-        team1Score: completed ? pseudoRandom(matchId, 1, 3) : undefined,
-        team2Score: completed ? pseudoRandom(matchId + 2, 0, 2) : undefined,
+        date: matchDate,
+        team1Score,
+        team2Score,
         set1Score: completed ? "25-20" : undefined,
         set2Score: completed ? "23-25" : undefined,
         set3Score: completed ? "25-22" : undefined,

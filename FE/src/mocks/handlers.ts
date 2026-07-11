@@ -1,4 +1,5 @@
-import { http, HttpResponse } from "msw";
+import type { Match } from "../types/interfaces";
+import { http, HttpResponse, type JsonBodyType } from "msw";
 import { bumpId, db, getAuthUser } from "./db";
 import { MOCK_AUTH_TOKEN } from "./data";
 import { toPaginatedResult } from "./pagination";
@@ -15,7 +16,7 @@ import {
 } from "./relations";
 const api = (path: string) => `*/api/${path}`;
 
-function json(data: unknown, status = 200) {
+function json(data: JsonBodyType, status = 200) {
   return HttpResponse.json(data, { status });
 }
 
@@ -47,6 +48,28 @@ function paginated<T>(
   filter?: (item: T, params: URLSearchParams) => boolean
 ) {
   return toPaginatedResult(items, new URL(request.url).searchParams, filter);
+}
+
+function matchListFilter(match: Match, params: URLSearchParams): boolean {
+  const search = params.get("search")?.toLowerCase();
+  const round = params.get("round");
+  const status = params.get("status");
+
+  if (round && match.round !== round) return false;
+  if (status && match.status !== status) return false;
+  if (search) {
+    const haystack = [
+      match.matchNumber,
+      match.team1Name,
+      match.team2Name,
+      match.round,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+    if (!haystack.includes(search)) return false;
+  }
+  return true;
 }
 
 export const handlers = [
@@ -302,18 +325,20 @@ export const handlers = [
     const matches = db.matches.filter(
       (match) => match.seasonId === seasonId && match.round === round
     );
-    return json(paginated(matches, request));
+    return json(paginated(matches, request, matchListFilter));
   }),
   http.get(api("matches/season/:seasonId"), ({ params, request }) => {
     const seasonId = Number(params.seasonId);
     const filtered = db.matches.filter((match) => match.seasonId === seasonId);
-    return json(paginated(filtered, request));
+    return json(paginated(filtered, request, matchListFilter));
   }),
   http.get(api("matches/:id"), ({ params }) => {
     const match = findById(db.matches, Number(params.id));
     return match ? json(match) : json({ message: "Not found" }, 404);
   }),
-  http.get(api("matches"), ({ request }) => json(paginated(db.matches, request))),
+  http.get(api("matches"), ({ request }) =>
+    json(paginated(db.matches, request, matchListFilter))
+  ),
   http.post(api("matches/import-challonge"), () =>
     json({ imported: 2, matches: db.matches })
   ),
