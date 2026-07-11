@@ -51,7 +51,7 @@
 .teams-season-filter label,
 .teams-placement-filter label {
     margin-right: 8px;
-    color: #2d3748;
+    color: var(--color-text);
     font-weight: 500;
 }
 
@@ -60,9 +60,9 @@
     font-size: 15px;
     padding: 8px 16px;
     padding-right: 32px;
-    border: 1px solid #2D3C50;
+    border: 1px solid var(--color-brand-primary);
     border-radius: 4px;
-    background: #2D3C50 url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e") no-repeat right 8px center / 20px;
+    background: var(--color-brand-primary) url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e") no-repeat right 8px center / 20px;
     color: #ffffff;
     cursor: pointer;
     transition: background-color 0.2s ease;
@@ -76,9 +76,9 @@
 .teams-placement-filter select:hover,
 .teams-season-filter select:focus,
 .teams-placement-filter select:focus {
-    background-color: #5b7dab;
-    border-color: #5b7dab;
-    background: #5b7dab url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e") no-repeat right 8px center / 20px;
+    background-color: var(--color-brand-primary-hover);
+    border-color: var(--color-brand-primary-hover);
+    background: var(--color-brand-primary-hover) url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e") no-repeat right 8px center / 20px;
     outline: none;
     box-shadow: 0 0 0 2px rgba(45, 60, 80, 0.2);
 }

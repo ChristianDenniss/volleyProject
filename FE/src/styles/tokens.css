@@ -1,52 +1,68 @@
-/* Shared design tokens — colors, spacing, type, radius, shadow.
-   Imported once in main.tsx before any page CSS. Do not redeclare these
-   names in per-page CSS files; add new tokens here instead. */
+/* Shared design tokens — single source of truth for colors, spacing, type.
+   Imported once in main.tsx before any page CSS.
+   Do NOT redeclare these names in per-page CSS files. */
+
 :root {
-  /* Brand colors */
+  /* ── Brand navy (buttons, nav, headers, primary actions) ── */
   --color-brand-primary: #2D3C50;
   --color-brand-primary-hover: #2a4a7d;
+  --color-brand-primary-rgb: 45, 60, 80;
+  --color-brand-primary-separator: rgba(45, 60, 80, 0.92);
+  --color-focus-ring: rgba(45, 60, 80, 0.25);
 
-  /* Accent (distinct from brand-primary, not a duplicate) */
+  /* ── Light blue accent (soft highlights, About/Login, badges) ── */
   --color-accent: #a1d2ff;
   --color-accent-dark: #85c4ff;
+  --color-accent-pale: #d6ebff;
+  --color-accent-border: #e6f2ff;
+  --color-accent-hover-bg: #ebf2fc;
 
-  /* Neutrals / surfaces */
+  /* ── Neutrals / surfaces ── */
   --color-bg: #ffffff;
   --color-bg-light: #F5F7FA;
+  --color-bg-muted: #f0f4f8;
   --color-text: #333333;
   --color-text-muted: #5d6673;
   --color-text-muted-alt: #6b7280;
   --color-border: #e2e8f0;
   --color-overlay: rgba(0, 0, 0, 0.5);
+  --color-scroll-thumb: rgba(0, 0, 0, 0.2);
+
+  /* ── Semantic ── */
+  --color-gold: #ffbf00;
+  --color-success: #27ae60;
+  --color-warning: #f39c12;
   --color-error: #dc2626;
   --color-error-bg: #fef2f2;
   --color-error-border: #fecaca;
-  --error-bg: #E74C3C; /* solid error banner red, distinct from --color-error-bg's light tint (Login.css) */
+  --error-bg: #E74C3C;
 
-  /* Radius */
+  /* ── Radius ── */
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 12px;
+  --radius: var(--radius-md);
 
-  /* Shadow */
+  /* ── Shadow ── */
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
   --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
   --shadow-modal: 0 20px 60px rgba(0, 0, 0, 0.3);
-  --radius: var(--radius-md);
 
-  /* Aliases matching each page's original variable names, so per-page :root
-     blocks that duplicated these exact values can be deleted without having
-     to rewrite every var() usage site within those files. */
+  /* ── Legacy aliases (keep until all call sites migrated) ── */
   --primary-blue: var(--color-brand-primary);
   --primary-blue-hover: var(--color-brand-primary-hover);
   --primary: var(--color-accent);
   --primary-dark: var(--color-accent-dark);
+  --navy: var(--color-brand-primary);
+  --pale-blue: var(--color-accent-pale);
+  --border-blue: var(--color-accent-border);
+  --hover-blue: var(--color-accent-hover-bg);
   --bg-light: var(--color-bg-light);
   --text-dark: var(--color-text);
   --text-muted: var(--color-text-muted);
   --border-color: var(--color-border);
 
-  /* Fixed spacing / type scale */
+  /* ── Spacing / type scale ── */
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
@@ -61,15 +77,11 @@
   --font-size-2xl: 2rem;
   --font-size-3xl: 2.5rem;
 
-  /* Fluid tokens — scale smoothly between ~320px and ~1440px viewports
-     instead of snapping at a single breakpoint */
   --space-page: clamp(1rem, 0.6rem + 2vw, 2rem);
   --space-section: clamp(0.75rem, 0.5rem + 1.2vw, 1.5rem);
   --font-size-page-title: clamp(1.75rem, 1.4rem + 1.75vw, 2.5rem);
 
-  /* Standardized breakpoint scale (documentation — @media can't consume
-     custom properties, so every @media in the codebase should use one of
-     these literal values rather than inventing a new one) */
+  /* Breakpoint scale (documentation — @media can't consume custom properties) */
   --bp-xs: 480px;
   --bp-sm: 600px;
   --bp-md: 768px;

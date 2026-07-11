@@ -12,7 +12,7 @@
 
 .faq-header h1 {
     font-size: 2.5rem;
-    color: #2d3c50;
+    color: var(--color-brand-primary);
     margin-bottom: 1rem;
     font-weight: 700;
 }
@@ -34,7 +34,7 @@
 /* Quick Links Section */
 .faq-links-section h2 {
     font-size: 1.75rem;
-    color: #2d3c50;
+    color: var(--color-brand-primary);
     margin-bottom: 1.5rem;
     font-weight: 600;
 }
@@ -61,7 +61,7 @@
 .faq-link-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-    border-color: #a1d2ff;
+    border-color: var(--color-accent);
 }
 
 .link-icon {
@@ -70,17 +70,17 @@
     justify-content: center;
     width: 50px;
     height: 50px;
-    background: #a1d2ff;
+    background: var(--color-accent);
     border-radius: 10px;
     margin-right: 1rem;
     font-size: 1.25rem;
-    color: #2d3c50;
+    color: var(--color-brand-primary);
     flex-shrink: 0;
     transition: all 0.3s ease;
 }
 
 .faq-link-card:hover .link-icon {
-    background: #2d3c50;
+    background: var(--color-brand-primary);
     color: #ffffff;
     transform: scale(1.05);
 }
@@ -92,7 +92,7 @@
 .link-content h3 {
     font-size: 1.1rem;
     font-weight: 600;
-    color: #2d3c50;
+    color: var(--color-brand-primary);
     margin: 0 0 0.5rem 0;
 }
 
@@ -105,7 +105,7 @@
 
 .external-link-icon {
     font-size: 0.8rem;
-    color: #a1d2ff;
+    color: var(--color-accent);
     transition: transform 0.3s ease;
 }
 
@@ -116,7 +116,7 @@
 /* FAQ Questions Section */
 .faq-questions-section h2 {
     font-size: 1.75rem;
-    color: #2d3c50;
+    color: var(--color-brand-primary);
     margin-bottom: 2rem;
     font-weight: 600;
 }
@@ -127,10 +127,10 @@
 
 .category-title {
     font-size: 1.25rem;
-    color: #2d3c50;
+    color: var(--color-brand-primary);
     margin-bottom: 1rem;
     padding-bottom: 0.5rem;
-    border-bottom: 2px solid #a1d2ff;
+    border-bottom: 2px solid var(--color-accent);
     font-weight: 600;
 }
 
@@ -149,7 +149,7 @@
 }
 
 .faq-item:hover {
-    border-color: #a1d2ff;
+    border-color: var(--color-accent);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
@@ -164,7 +164,7 @@
     text-align: left;
     font-size: 1rem;
     font-weight: 500;
-    color: #2d3c50;
+    color: var(--color-brand-primary);
     cursor: pointer;
     transition: background-color 0.3s ease;
 }

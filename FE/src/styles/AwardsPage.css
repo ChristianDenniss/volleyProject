@@ -9,7 +9,7 @@
 
 /* Create button */
 .create-button {
-  background-color: #2d3c50;
+  background-color: var(--color-brand-primary);
   color: white;
   padding: 0.5rem 1rem;
   border: none;
@@ -20,11 +20,11 @@
 }
 
 .create-button:hover {
-  background-color: #5b7dab;
+  background-color: var(--color-brand-primary-hover);
 }
 
 .create-button:active {
-  background-color: #2d3c50;
+  background-color: var(--color-brand-primary);
 }
 
 .create-button:disabled {
@@ -78,7 +78,7 @@
 }
 
 .modal-buttons button[type="submit"] {
-  background-color: #2d3c50;
+  background-color: var(--color-brand-primary);
   color: white;
 }
 

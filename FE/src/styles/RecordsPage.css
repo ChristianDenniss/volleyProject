@@ -34,7 +34,7 @@
     top: 50%;
     width: 120%;
     height: 0.25em;
-    background: #2D3C50;
+    background: var(--color-brand-primary);
     transform: translate(-50%, -50%) skewX(-25deg);
     z-index: -1;
 }
@@ -58,7 +58,7 @@
 .records-switch-button {
     background: #1a1a1a;
     color: #fff;
-    border: 2px solid #2D3C50;
+    border: 2px solid var(--color-brand-primary);
     padding: 0.75rem 1.5rem;
     margin: 0 0.5rem;
     border-radius: 4px;
@@ -69,7 +69,7 @@
 }
 
 .records-switch-button.active {
-    background: #2D3C50;
+    background: var(--color-brand-primary);
     color: #fff;
 }
 
@@ -82,7 +82,7 @@
 .calculate-button {
     background: #1a1a1a;
     color: #fff;
-    border: 2px solid #2D3C50;
+    border: 2px solid var(--color-brand-primary);
     padding: 0.75rem 1.5rem;
     border-radius: 4px;
     cursor: pointer;
@@ -94,7 +94,7 @@
 }
 
 .calculate-button:hover:not(:disabled) {
-    background: #2D3C50;
+    background: var(--color-brand-primary);
     color: #fff;
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
@@ -133,7 +133,7 @@
 /* Records table styling - compact */
 .records-table-container {
     background: #1a1a1a;
-    border: 2px solid #2D3C50;
+    border: 2px solid var(--color-brand-primary);
     border-radius: 8px;
     overflow: hidden;
     margin-bottom: 1rem;
@@ -154,7 +154,7 @@
     width: 1.5rem;
     height: 1.5rem;
     border-radius: 50%;
-    background: #2D3C50;
+    background: var(--color-brand-primary);
     color: #fff;
     text-align: center;
     line-height: 1.5rem;
@@ -194,7 +194,7 @@
 }
 
 .record-link:hover {
-    color: #2a4a7d;
+    color: var(--color-brand-primary-hover);
     text-decoration: underline;
 }
 
@@ -209,7 +209,7 @@
 }
 
 .record-type-badge.game {
-    background: #007bff;
+    background: var(--color-brand-primary);
     color: #fff;
 }
 
@@ -239,7 +239,7 @@
 }
 
 .records-loading .spinner-border {
-    color: #2D3C50;
+    color: var(--color-brand-primary);
 }
 
 /* Error state */

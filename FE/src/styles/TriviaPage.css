@@ -2,14 +2,10 @@
    Trivia Page – Clean, Modern Style
    ========================================================= */
 
-/* ===== Color tokens =====
-   --primary-blue/--primary-blue-hover now come from tokens.css (identical
-   values). --trivia-text-dark is intentionally distinct from the shared
-   --text-dark token (a different shade), so it keeps its own name. */
+/* Page-specific tokens (non-brand). Brand colors from tokens.css. */
 :root {
     --dark-bg: #262626;
     --light-bg: #f8f9fa;
-    --trivia-text-dark: #2c3e50;
     --text-light: #7f8c8d;
     --white: #ffffff;
     --success: #27ae60;
@@ -26,7 +22,7 @@
     margin: 0 auto;
     padding: 5.5rem 2rem 2rem;
     font-family: 'Inter', sans-serif;
-    color: var(--trivia-text-dark);
+    color: var(--color-text);
     min-height: 80vh;
     box-sizing: border-box;
     contain: layout style paint;
@@ -62,7 +58,7 @@
 
 .selection-section h2 {
     font-size: 1.5rem;
-    color: var(--trivia-text-dark);
+    color: var(--color-text);
     margin-bottom: 2rem;
     font-weight: 600;
 }
@@ -211,7 +207,7 @@
     border-radius: 50%;
     background: var(--light-bg);
     border: 2px solid var(--border);
-    color: var(--trivia-text-dark);
+    color: var(--color-text);
 }
 
 .type-btn:hover .type-icon {
@@ -369,7 +365,7 @@
 
 .game-header h2 {
     font-size: 2rem;
-    color: var(--trivia-text-dark);
+    color: var(--color-text);
     margin: 0;
     font-weight: 700;
 }
@@ -460,7 +456,7 @@
 
 .hints-section h3 {
     font-size: 1.3rem;
-    color: var(--trivia-text-dark);
+    color: var(--color-text);
     margin-bottom: 1.5rem;
     font-weight: 600;
 }
@@ -501,8 +497,8 @@
 
 .hint-level-4 {
     background: rgba(52, 152, 219, 0.05);
-    color: #3498db;
-    border-left-color: #3498db;
+    color: var(--color-brand-primary-hover);
+    border-left-color: var(--color-brand-primary-hover);
 }
 
 .hint-level-5 {
@@ -625,7 +621,7 @@
 
 .trivia-result h2 {
     font-size: 2.5rem;
-    color: var(--trivia-text-dark);
+    color: var(--color-text);
     margin-bottom: 2rem;
     font-weight: 700;
 }
@@ -683,7 +679,7 @@
 .correct-answer {
     font-size: 1.5rem;
     font-weight: 600;
-    color: var(--trivia-text-dark);
+    color: var(--color-text);
     background: var(--light-bg);
     padding: 1rem 1.5rem;
     border-radius: 8px;
@@ -728,7 +724,7 @@
 .score-breakdown p {
     margin: 0.5rem 0;
     font-size: 1rem;
-    color: var(--trivia-text-dark);
+    color: var(--color-text);
     display: flex;
     justify-content: space-between;
     align-items: center;

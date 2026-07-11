@@ -1,16 +1,7 @@
 /* =========================================================
    Single Game Page – Modern Sports-Style Stylesheet (v2)
    ========================================================= */
-
-/* ===== CSS Variables for easy theming ===== */
-:root {
-    --primary-dark: #0b1e35;   /* deep navy */
-    --primary-light: #d6ebff;  /* pale blue */
-    --accent: #ffbf00;         /* gold accent */
-    --text-main: #222;
-    --text-muted: #5d6673;
-    --scroll-thumb: rgba(0, 0, 0, 0.2);
-}
+/* Colors from src/styles/tokens.css */
 
 /* ===== Wrapper ===== */
 .single-game-container {
@@ -18,7 +9,7 @@
     margin: 0 auto;
     padding: .5rem 1.5rem 5rem;
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-    color: var(--text-main);
+    color: var(--color-text);
     min-height: 100vh; /* Prevent layout shift by setting minimum height */
     box-sizing: border-box;
     contain: layout style paint; /* Improve performance */
@@ -83,7 +74,7 @@
 .meta-divider {
     width: 400px;
     height: 3px;
-    background: var(--primary-light);
+    background: var(--color-accent-pale);
     border: none;
     margin: 0 auto 3rem;
 }
@@ -117,7 +108,7 @@
 .team-score {
     font-size: 4.2rem;
     font-weight: 800;
-    color: var(--primary-dark);
+    color: var(--color-brand-primary);
     line-height: 1;
     margin-bottom: 0.3rem;
 }
@@ -126,10 +117,10 @@
     font-size: 1.2rem;
     font-weight: 700;
     color: var(--text-muted);
-    background: var(--primary-light);
+    background: var(--color-accent-pale);
     padding: 0.4rem 0.9rem;
     border-radius: 999px;
-    box-shadow: 0 0 0 3px #fff, 0 0 0 6px var(--primary-light);
+    box-shadow: 0 0 0 3px #fff, 0 0 0 6px var(--color-accent-pale);
 }
 
 /* ===== Season & Total Sets ===== */
@@ -153,7 +144,7 @@
     font-size: 2.25rem;
     font-weight: 700;
     text-align: center;
-    color: var(--primary-dark);
+    color: var(--color-brand-primary);
     margin-bottom: 1.5rem;
 }
 
@@ -161,7 +152,7 @@
     overflow-x: auto;
     /* make scrollbar overlay content, no default track */
     scrollbar-width: thin;
-    scrollbar-color: var(--scroll-thumb) transparent;
+    scrollbar-color: var(--color-scroll-thumb) transparent;
 }
 
 /* WebKit-based browsers */
@@ -172,7 +163,7 @@
     background: transparent;
 }
 .stats-scroll::-webkit-scrollbar-thumb {
-    background: var(--scroll-thumb);
+    background: var(--color-scroll-thumb);
     border-radius: 3px;
 }
 
@@ -203,7 +194,7 @@
 .stats-table thead th {
     position: sticky;
     top: 0;
-    background: var(--primary-dark);
+    background: var(--color-brand-primary);
     color: #fff;
     font-weight: 600;
     padding: 0.9rem 1.1rem;
@@ -244,7 +235,7 @@
 
 /* ===== Separator styling ===== */
 .stats-table tbody tr.team-separator {
-    background-color: #0b1e35eb !important;
+    background-color: var(--color-brand-primary-separator) !important;
     height: 16px;
 }
 .stats-table tbody tr.team-separator td {

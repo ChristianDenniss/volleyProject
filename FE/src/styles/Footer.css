@@ -41,7 +41,7 @@
 
 .footer-nav a:hover
 {
-    color: #d6ebff;
+    color: var(--color-accent-pale);
 }
 
 .footer-socials
@@ -56,7 +56,7 @@
 {
     margin: 1rem 2rem;
     border: none;
-    border-top: 1px solid #d6ebff;
+    border-top: 1px solid var(--color-accent-pale);
 }
 
 .footer-bottom
@@ -82,7 +82,7 @@
 .back-to-top:hover
 {
     transform: scale(1.2);
-    color: #d6ebff;
+    color: var(--color-accent-pale);
 }
 
 /* Each social media link */
@@ -97,6 +97,6 @@
 .footer-socials a:hover
 {
     transform: scale(1.2);
-    color: #d6ebff;
+    color: var(--color-accent-pale);
 }
 

@@ -54,7 +54,7 @@
   }
   
   .portal-sidebar a.active {       /* NavLink adds .active */
-    color: #38bdf8;                /* sky-400 */
+    color: var(--color-accent);                /* sky-400 */
   }
   
   /*— main content —*/

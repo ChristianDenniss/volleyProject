@@ -104,7 +104,7 @@
     background-color: var(--primary-blue-hover) !important;
     border-color: var(--primary-blue-hover) !important;
     outline: none;
-    box-shadow: 0 0 0 2px rgba(26, 54, 93, 0.2);
+    box-shadow: 0 0 0 2px var(--color-focus-ring);
 }
 
 /* -----------------------------------------------------------
@@ -166,7 +166,7 @@
     background-color: #ffffff;
     border: 1px solid var(--primary-blue);
     border-radius: 4px;
-    box-shadow: 0 2px 8px rgba(26, 54, 93, 0.2);
+    box-shadow: 0 2px 8px var(--color-focus-ring);
     z-index: 1000;
     min-width: 400px;
     margin-top: 5px;
@@ -197,7 +197,7 @@
     cursor: pointer;
     transition: background-color 0.2s ease;
     border-radius: 4px;
-    color: #2d3748;
+    color: var(--color-text);
 }
 
 .filter-menu-item:hover { background-color: #f7fafc; }
@@ -349,7 +349,7 @@
 
 .stats-stage-filter label {
     margin-right: 8px;
-    color: #2d3748;
+    color: var(--color-text);
     font-weight: 500;
 }
 
@@ -359,13 +359,13 @@
 
 .stats-type-filter label {
     margin-right: 8px;
-    color: #2d3748;
+    color: var(--color-text);
     font-weight: 500;
 }
 
 .stats-view-filter label {
     margin-right: 8px;
-    color: #2d3748;
+    color: var(--color-text);
     font-weight: 500;
 }
 
@@ -551,7 +551,7 @@
     background-color: #ffffff;
     border: 1px solid var(--primary-blue);
     border-radius: 4px;
-    box-shadow: 0 2px 8px rgba(26, 54, 93, 0.2);
+    box-shadow: 0 2px 8px var(--color-focus-ring);
     margin-top: 10px;
     padding: 20px;
     max-width: 800px;
@@ -780,7 +780,7 @@
 }
 
 .stats-summary {
-  background: #f0f4f8;
+  background: var(--color-bg-muted);
   border-radius: 8px;
   padding: 16px 24px;
   box-shadow: 0 1px 4px rgba(45,60,80,0.04);
@@ -790,7 +790,7 @@
   margin: 0 0 12px 0;
   font-size: 1.1rem;
   font-weight: 600;
-  color: #2d3c50;
+  color: var(--color-brand-primary);
 }
 
 .stats-grid {
@@ -802,7 +802,7 @@
 .stat-item {
   min-width: 120px;
   font-size: 1rem;
-  color: #2d3c50;
+  color: var(--color-brand-primary);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -815,7 +815,7 @@
 
 .stat-value {
   font-weight: 700;
-  color: #2d3c50;
+  color: var(--color-brand-primary);
 }
 
 @media (max-width: 900px) {

@@ -1,0 +1,107 @@
+/* Shared table layout for public list pages (Games, Players, etc.) */
+
+.listing-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  min-height: 500px;
+}
+
+.listing-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+
+.listing-table thead th {
+  background: var(--color-brand-primary);
+  color: #fff;
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.listing-table tbody tr {
+  border-bottom: 1px solid var(--color-border);
+  transition: background-color 0.15s ease;
+}
+
+.listing-table tbody tr.listing-row-clickable {
+  cursor: pointer;
+}
+
+.listing-table tbody tr.listing-row-clickable:hover {
+  background: var(--color-accent-hover-bg);
+}
+
+.listing-table td {
+  padding: 0.75rem 1rem;
+  color: var(--color-text);
+  vertical-align: middle;
+}
+
+.listing-table td a {
+  color: var(--color-brand-primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.listing-table td a:hover {
+  color: var(--color-brand-primary-hover);
+  text-decoration: underline;
+}
+
+.listing-table-teams {
+  display: block;
+  max-width: 420px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
+
+.listing-table-empty {
+  padding: 2rem;
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.listing-skeleton-table {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.listing-skeleton-row {
+  height: 48px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(
+    90deg,
+    var(--color-bg-muted) 25%,
+    var(--color-accent-border) 50%,
+    var(--color-bg-muted) 75%
+  );
+  background-size: 200% 100%;
+  animation: listing-skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes listing-skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@media (max-width: 768px) {
+  .listing-table thead th,
+  .listing-table td {
+    padding: 0.625rem 0.75rem;
+    font-size: 0.875rem;
+  }
+
+  .listing-table-teams {
+    max-width: 180px;
+  }
+}

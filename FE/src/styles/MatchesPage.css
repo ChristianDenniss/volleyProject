@@ -179,7 +179,7 @@
 
 /* Input styling for score editing */
 .score-container input[type="number"] {
-  border: 2px solid #3b82f6;
+  border: 2px solid var(--color-brand-primary);
   border-radius: 4px;
   padding: 4px 6px;
   font-size: 0.875rem;
@@ -198,7 +198,7 @@
 }
 
 .set-scores input[type="text"] {
-  border: 2px solid #3b82f6;
+  border: 2px solid var(--color-brand-primary);
   border-radius: 4px;
   padding: 2px 6px;
   font-size: 0.75rem;
@@ -321,7 +321,7 @@
 .stay-updated-section {
   margin-top: 40px;
   padding: 40px;
-  background: linear-gradient(135deg, #f7f7f7 0%, #f0f4f8 100%);
+  background: linear-gradient(135deg, #f7f7f7 0%, var(--color-bg-muted) 100%);
   border-radius: 12px;
   position: relative;
   overflow: hidden;
@@ -358,7 +358,7 @@
 .stay-updated-content p {
   font-size: 1rem;
   line-height: 1.6;
-  color: #2d3748;
+  color: var(--color-text);
   margin: 0 0 24px 0;
   max-width: 600px;
 }

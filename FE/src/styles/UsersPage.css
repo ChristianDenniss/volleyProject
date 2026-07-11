@@ -68,7 +68,7 @@
 
 .users-table select:focus {
   outline: none;
-  border-color: #38bdf8;        /* sky-400 */
+  border-color: var(--color-accent);        /* sky-400 */
   background: #f8fafc;          /* slate-50 */
 }
 
@@ -89,7 +89,7 @@
 
 /* Link appearance for image URLs */
 .text-link {
-  color: #38bdf8;               /* sky-400 */
+  color: var(--color-accent);               /* sky-400 */
   text-decoration: none;
   overflow-wrap: anywhere;      /* allow long URLs to wrap */
 }
@@ -115,7 +115,7 @@
 }
 
 .create-button {
-  background-color: #2d3c50;
+  background-color: var(--color-brand-primary);
   color: white;
   padding: 0.5rem 1rem;
   border: none;
@@ -126,11 +126,11 @@
 }
 
 .create-button:hover {
-  background-color: #5b7dab;
+  background-color: var(--color-brand-primary-hover);
 }
 
 .create-button:active {
-  background-color: #2d3c50;
+  background-color: var(--color-brand-primary);
 }
 
 .create-button:disabled {
@@ -171,7 +171,7 @@
 .clear-filters-button {
   padding: 0.5rem 1rem;
   border-radius: 0.25rem;
-  background-color: #2d3c50;
+  background-color: var(--color-brand-primary);
   color: #fff;
   border: none;
   cursor: pointer;
@@ -180,7 +180,7 @@
 }
 
 .clear-filters-button:hover {
-  background-color: #5b7dab;
+  background-color: var(--color-brand-primary-hover);
 }
 
 .results-counter {
@@ -251,7 +251,7 @@
 
 .modal input:focus {
     outline: none;
-    border-color: #007bff;
+    border-color: var(--color-brand-primary);
     box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
 }
 
@@ -260,7 +260,7 @@
 }
 
 .modal .modal-submit-button {
-    background-color: #2d3c50 !important;
+    background-color: var(--color-brand-primary) !important;
     color: white !important;
     padding: 0.5rem 1rem;
     border: none;
@@ -272,7 +272,7 @@
 }
 
 .modal .modal-submit-button:hover {
-    background-color: #5b7dab !important;
+    background-color: var(--color-brand-primary-hover) !important;
 }
 
 .modal .modal-submit-button:disabled {

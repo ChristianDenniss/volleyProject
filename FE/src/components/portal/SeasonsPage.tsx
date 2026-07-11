@@ -546,7 +546,7 @@ const SeasonsPage: React.FC = () =>
                             width:        "100%",
                             padding:      "0.5rem",
                             borderRadius: "0.25rem",
-                            background:   "#007bff",
+                            background:   "var(--color-brand-primary)",
                             color:        "#fff",
                             border:       "none",
                             cursor:       "pointer",

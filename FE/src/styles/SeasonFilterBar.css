@@ -1,16 +1,5 @@
-/* -----------------------------------------------------------
-   Colour palette — --season-filter-primary is intentionally a
-   distinct navy from the shared --primary-blue brand token
-   (tokens.css); --primary-blue-hover matches the shared value
-   exactly so it comes from tokens.css instead of being redeclared.
------------------------------------------------------------ */
-:root {
-    --season-filter-primary: #1a365d;
-}
+/* Season filter bar — colors from src/styles/tokens.css */
 
-/* -----------------------------------------------------------
-   Season filter bar styles
------------------------------------------------------------ */
 .season-filter-bar {
     display: flex;
     align-items: center;
@@ -27,22 +16,22 @@
     padding: 6px 12px;
     font-size: 15px;
     border-radius: 4px;
-    border: 1px solid var(--season-filter-primary);
-    background: var(--season-filter-primary);
+    border: 1px solid var(--color-brand-primary);
+    background: var(--color-brand-primary);
     color: white;
     cursor: pointer;
     transition: background-color 0.2s ease;
 }
 
 .season-filter-bar select:hover {
-    background-color: var(--primary-blue-hover);
-    border-color: var(--primary-blue-hover);
+    background-color: var(--color-brand-primary-hover);
+    border-color: var(--color-brand-primary-hover);
 }
 
 .season-filter-bar select:focus {
     outline: none;
-    border-color: var(--primary-blue-hover);
-    box-shadow: 0 0 0 2px rgba(26, 54, 93, 0.2);
+    border-color: var(--color-brand-primary-hover);
+    box-shadow: 0 0 0 2px var(--color-focus-ring);
 }
 
 /* Limit dropdown height and add scrollbar */
@@ -65,10 +54,10 @@
 }
 
 .season-filter-bar select::-webkit-scrollbar-thumb {
-    background: var(--season-filter-primary);
+    background: var(--color-brand-primary);
     border-radius: 4px;
 }
 
 .season-filter-bar select::-webkit-scrollbar-thumb:hover {
-    background: var(--primary-blue-hover);
+    background: var(--color-brand-primary-hover);
 }

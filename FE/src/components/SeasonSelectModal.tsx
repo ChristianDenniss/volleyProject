@@ -62,7 +62,7 @@ const SeasonSelectModal: React.FC<SeasonSelectModalProps> = ({
                 }),
                 option: (base, state) => ({
                   ...base,
-                  backgroundColor: state.isFocused ? "#2c5a7d" : "#1a1a1a",
+                  backgroundColor: state.isFocused ? "var(--color-brand-primary-hover)" : "#1a1a1a",
                   color: "#fff",
                   cursor: "pointer"
                 }),

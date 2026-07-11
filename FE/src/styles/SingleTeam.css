@@ -66,7 +66,7 @@
     font-size: 2rem;
     margin: 30px 0 15px;
     color: #1e3d59;
-    border-bottom: 3px solid #d6ebff;
+    border-bottom: 3px solid var(--color-accent-pale);
     padding-bottom: 8px;
     letter-spacing: 1px;
     min-height: 3rem; /* Reserve space for section titles */
@@ -74,7 +74,7 @@
 
 /* Collapse Button */
 .toggle-button {
-    background-color: #d6ebff;
+    background-color: var(--color-accent-pale);
     border: none;
     font-size: 1rem;
     padding: 10px 15px;
@@ -110,7 +110,7 @@
     min-width: 270px;
     max-width: 270px;
     min-height: 250px;
-    background-color: #d6ebff;
+    background-color: var(--color-accent-pale);
     padding: 14px 12px;
     border-radius: 16px;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
@@ -242,7 +242,7 @@
 /* Detail wrapper styled as the card container */
 .players-list li details {
     background-color: #f7f7f7;
-    border-left: 6px solid #d6ebff;
+    border-left: 6px solid var(--color-accent-pale);
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     overflow: hidden;
@@ -280,7 +280,7 @@
 
 /* Stats panel: full width, flush to card edges */
 .players-list li details .player-stats {
-    background-color: #d6ebff;
+    background-color: var(--color-accent-pale);
     padding: 15px;
     border-bottom-left-radius: 8px;
     border-bottom-right-radius: 8px;

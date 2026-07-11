@@ -50,7 +50,7 @@
 .players-season-filter label,
 .players-position-filter label {
     margin-right: 8px;
-    color: #2d3748;
+    color: var(--color-text);
     font-weight: 500;
 }
 
@@ -59,9 +59,9 @@
     font-size: 15px;
     padding: 8px 16px;
     padding-right: 32px;
-    border: 1px solid #2D3C50;
+    border: 1px solid var(--color-brand-primary);
     border-radius: 4px;
-    background: #2D3C50 url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e") no-repeat right 8px center / 20px;
+    background: var(--color-brand-primary) url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e") no-repeat right 8px center / 20px;
     color: #ffffff;
     cursor: pointer;
     transition: background-color 0.2s ease;
@@ -75,9 +75,9 @@
 .players-position-filter select:hover,
 .players-season-filter select:focus,
 .players-position-filter select:focus {
-    background-color: #5b7dab;
-    border-color: #5b7dab;
-    background: #5b7dab url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e") no-repeat right 8px center / 20px;
+    background-color: var(--color-brand-primary-hover);
+    border-color: var(--color-brand-primary-hover);
+    background: var(--color-brand-primary-hover) url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e") no-repeat right 8px center / 20px;
     outline: none;
     box-shadow: 0 0 0 2px rgba(45, 60, 80, 0.2);
 }
@@ -95,169 +95,13 @@
     white-space: nowrap; 
 }
 
-/* Players wrapper and container */
-.players-wrapper {
-    padding: 10px 0;
-    min-height: 600px; /* Reserve minimum space for content */
-    content-visibility: auto; /* Optimize rendering performance */
-    contain-intrinsic-size: 600px; /* Help browser calculate size */
-}
-
-.players-container {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding: 10px 0;
-    min-height: 500px; /* Reserve minimum space for cards */
-}
-
-/* Player card styles */
-.players-card {
-    background-color: #e6f2ff;
-    border: 2px solid #CFFFFF;
-    border-radius: 20px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-    color: #000000;
-    overflow: hidden;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-    cursor: pointer;
-    will-change: transform;
-    min-height: 80px; /* Reserve minimum height for collapsed cards */
-    box-sizing: border-box;
-    contain: layout style; /* Optimize card rendering */
-    transform: translateZ(0); /* Force hardware acceleration */
-    backface-visibility: hidden; /* Prevent flickering */
-}
-
-/* Hover effect */
-.players-card:hover {
-    background-color: #cce0ff;
-    transform: scale(1.02);
-}
-
-/* Header section of the card */
-.players-card-header {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    height: 60px;
-    padding: 0 30px;
-    white-space: nowrap;
-    min-height: 60px; /* Ensure consistent header height */
-}
-
-/* Player name, ID, and teams styling */
-.players-name,
-.players-id,
-.players-teams {
-    font-size: 22px;
-    font-weight: bold;
-    margin: 0 20px;
-    flex-shrink: 0;
-    white-space: nowrap;
-}
-
-/* Accordion content */
-.players-details {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.3s ease-out, padding 0.3s ease-out;
-    background-color: #f3f9ff;
-    padding: 0 30px;
-    font-size: 18px;
-    line-height: 1.6;
-    color: #333;
-    will-change: max-height, padding;
-    box-sizing: border-box;
-    transform: translateZ(0); /* Force hardware acceleration */
-    backface-visibility: hidden; /* Prevent flickering */
-    contain: layout style; /* Optimize rendering */
-}
-
-/* Expanded state */
-.players-card.expanded .players-details {
-    max-height: 800px;
-    padding-top: 15px;
-    padding-bottom: 15px;
-}
-
-/* Ensure consistent spacing even when collapsed */
-.players-card:not(.expanded) .players-details {
-    padding: 0 30px;
-}
-
-/* Paragraph inside accordion */
-.players-details p {
-    margin: 10px 0;
-}
-
-/* Make the "Teams" and "Position" labels consistent */
-.players-details strong {
-    display: inline-block;
-    width: 100px;
-    color: #005999;
-}
-
-/* Line breaks in team list */
-.players-details br {
-    line-height: 1.8;
-}
-
-/* Team tags styling */
-.players-team-tag {
-    display: inline-block;
-    background: #e6f2ff;
-    color: #005999;
-    padding: 4px 8px;
-    border-radius: 4px;
-    margin: 2px;
-    text-decoration: none;
-    border: 1px solid #CFFFFF;
-}
-
-.players-team-tag:hover {
-    background: #cce0ff;
-    text-decoration: none;
-}
-
-/* Team line container */
-.players-team-line {
-    margin: 5px 0;
-}
-
-/* See more button */
-.players-see-more {
-    margin-top: 15px;
-    text-align: right;
-    padding-right: 30px;
-}
-
-.see-more-button {
-    display: inline-block;
-    background-color: #cce0ff;
-    color: #005999;
-    text-decoration: none;
-    font-size: 16px;
-    font-weight: 600;
-    padding: 8px 20px;
-    border-radius: 6px;
-    transition: all 0.2s ease;
-}
-
-.see-more-button:hover {
-    background-color: #CFFFFF;
-    text-decoration: none;
-    color: #005999;
-}
-
 /* Pagination button styling */
 .players-pagination-wrapper button {
     height: 30px;
     padding: 0 8px;
-    border: 1px solid #2D3C50;
+    border: 1px solid var(--color-brand-primary);
     border-radius: 6px;
-    background: #2D3C50;
+    background: var(--color-brand-primary);
     color: #ffffff;
     font-size: 14px;
     font-family: inherit;
@@ -267,8 +111,8 @@
 
 .players-pagination-wrapper button:hover:not(:disabled),
 .players-pagination-wrapper button.active {
-    background: #5b7dab;
-    border-color: #5b7dab;
+    background: var(--color-brand-primary-hover);
+    border-color: var(--color-brand-primary-hover);
     color: #ffffff;
 }
 
@@ -301,50 +145,10 @@
     .players-controls-wrapper {
         min-height: 150px;
     }
-    
-    .players-wrapper {
-        min-height: 500px;
-    }
-    
-    .players-container {
-        min-height: 400px;
-    }
 }
 
 /* Loading state to prevent layout shift */
 .players-page.loading {
     opacity: 0.8;
     pointer-events: none;
-}
-
-/* Prevent layout shift during data loading */
-.players-container:empty::before {
-    content: "";
-    display: block;
-    height: 500px;
-    width: 100%;
-}
-
-/* Skeleton loader for better UX */
-.players-skeleton {
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-    background-size: 200% 100%;
-    animation: loading 1.5s infinite;
-    border-radius: 8px;
-    height: 80px;
-    margin-bottom: 10px;
-}
-
-@keyframes loading {
-    0% {
-        background-position: 200% 0;
-    }
-    100% {
-        background-position: -200% 0;
-    }
-}
-
-/* Optimize for Core Web Vitals */
-.players-card {
-    contain: layout style; /* Optimize card rendering */
 }

@@ -81,13 +81,13 @@
 }
 
 .submit-btn {
-    background-color: #2D3C50;
+    background-color: var(--color-brand-primary);
     border: none;
     color: #ffffff;
 }
 
 .submit-btn:hover {
-    background-color: #5b7dab;
+    background-color: var(--color-brand-primary-hover);
 }
 
 .success-message {
@@ -195,7 +195,7 @@
 }
 
 .close-modal-btn {
-    background-color: #2d3c50;
+    background-color: var(--color-brand-primary);
     color: white;
     border: none;
     padding: 0.5rem 1rem;

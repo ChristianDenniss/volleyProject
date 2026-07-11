@@ -81,7 +81,7 @@
 
 /* “+ Add Another” button (natural width, not stretched) */
 .player-btn-add {
-  background-color: #2d3c50; /* dark slate */
+  background-color: var(--color-brand-primary); /* dark slate */
   color: #ffffff;
   border: none;
   border-radius: 0.25rem;
@@ -97,7 +97,7 @@
 .player-btn-submit {
   padding: 0.5rem 1rem;
   border-radius: 0.25rem;
-  background-color: #2d3c50; /* blue-600 */
+  background-color: var(--color-brand-primary); /* blue-600 */
   color: #ffffff;
   border: none;
   font-size: 1rem;

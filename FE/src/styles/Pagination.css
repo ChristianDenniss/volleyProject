@@ -9,7 +9,7 @@
   
   /* Pagination buttons */
   .pagination-btn {
-    background-color: #d6ebff;
+    background-color: var(--color-accent-pale);
     color: #ffffff;
     border: none;
     padding: 10px 20px;

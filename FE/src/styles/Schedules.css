@@ -163,7 +163,7 @@
 }
 
 .date-header {
-  background: #2c3e50;
+  background: var(--color-brand-primary);
   color: white;
   padding: 15px 20px;
   text-align: center;
@@ -175,7 +175,7 @@
 }
 
 .date-header:hover {
-  background: #34495e;
+  background: var(--color-brand-primary-hover);
 }
 
 .date-header h2 {
@@ -240,7 +240,7 @@
 
 .match-number {
   font-weight: 700;
-  color: #2c3e50;
+  color: var(--color-brand-primary);
   font-size: 0.9rem;
 }
 
@@ -422,7 +422,7 @@
 }
 
 .action-button.watch:hover {
-  background: #0056b3;
+  background: var(--color-brand-primary-hover);
 }
 
 .action-button.shop {
@@ -779,7 +779,7 @@
 .stay-updated-section {
   margin: 0; /* Remove all margins */
   padding: 2.5rem 3.75rem 0 0; /* Keep top and right padding, remove left and bottom */
-  background: linear-gradient(135deg, #f7f7f7 0%, #ffffff 75%, #f0f4f8 100%);
+  background: linear-gradient(135deg, #f7f7f7 0%, #ffffff 75%, var(--color-bg-muted) 100%);
   position: relative;
   overflow: hidden;
   clip-path: polygon(0 0, 100% 0, 85% 100%, 0 100%);
@@ -821,7 +821,7 @@
 .stay-updated-content p {
   font-size: 1rem;
   line-height: 1.6;
-  color: #2d3748;
+  color: var(--color-text);
   margin: 0 0 24px 0;
   max-width: 600px;
 }
