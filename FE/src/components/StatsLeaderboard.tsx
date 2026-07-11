@@ -63,27 +63,50 @@ interface TeamStatsData {
 
 type DisplayData = Player | TeamStatsData;
 
-// Stage mapping configuration
-const STAGE_ROUNDS: Record<StageRound, string[]> = {
-  'R1': ['Winners Bracket; Round of 16'],
-  'R2': ['Winners Bracket; Quarterfinals', 'Losers Bracket; Round 1'],
-  'R3': ['Winners Bracket; Semifinals', 'Losers Bracket; Round 2'],
-  'R4': ['Winners Bracket; Finals', 'Losers Bracket; Round 3', 'Losers Bracket; Quarterfinals'],
-  'R5': ['Losers Bracket; Semifinals', 'Losers Bracket; Finals'],
-  'R6': ['Grand Finals', 'Grand Finals; Bracket Reset'],
+// Stage mapping: clean stage labels + optional bracket (winners/losers)
+type StageKey = { stage: string; bracket?: 'winners' | 'losers' | null };
+
+const STAGE_ROUNDS: Record<StageRound, StageKey[]> = {
+  'R1': [{ stage: 'Round of 16', bracket: 'winners' }],
+  'R2': [
+    { stage: 'Quarterfinals', bracket: 'winners' },
+    { stage: 'Round 1', bracket: 'losers' },
+  ],
+  'R3': [
+    { stage: 'Semifinals', bracket: 'winners' },
+    { stage: 'Round 2', bracket: 'losers' },
+  ],
+  'R4': [
+    { stage: 'Finals', bracket: 'winners' },
+    { stage: 'Round 3', bracket: 'losers' },
+    { stage: 'Quarterfinals', bracket: 'losers' },
+  ],
+  'R5': [
+    { stage: 'Semifinals', bracket: 'losers' },
+    { stage: 'Finals', bracket: 'losers' },
+  ],
+  'R6': [
+    { stage: 'Grand Finals' },
+    { stage: 'Bracket Reset' },
+  ],
   'all': []
 };
 
-// Helper function to get round from stage
-const getStageRound = (stage: string): StageRound => {
-  for (const [round, stages] of Object.entries(STAGE_ROUNDS)) {
+function getStageRound(game: { stage?: string | null; bracket?: string | null }): StageRound {
+  const stage = game.stage ?? '';
+  const bracket = game.bracket ?? null;
+
+  for (const [round, keys] of Object.entries(STAGE_ROUNDS)) {
     if (round === 'all') continue;
-    if (stages.includes(stage)) {
-      return round as StageRound;
-    }
+    const match = keys.some((key) => {
+      if (key.stage !== stage) return false;
+      if (key.bracket === undefined) return true;
+      return key.bracket === bracket;
+    });
+    if (match) return round as StageRound;
   }
-  return 'all'; // Default to all if stage doesn't match any round
-};
+  return 'all';
+}
 
 // Advanced Filter Component
 const AdvancedFilter: React.FC<{
@@ -338,10 +361,9 @@ const StatsLeaderboard: React.FC = () => {
     // Filter by stage round if not 'all'
     if (selectedStageRound !== 'all') {
       relevantStats = relevantStats.filter(statRecord => {
-        const gameStage = statRecord.game?.stage;
-        if (!gameStage) return false;
-        const stageRound = getStageRound(gameStage);
-        return stageRound === selectedStageRound;
+        const game = statRecord.game;
+        if (!game?.stage) return false;
+        return getStageRound(game) === selectedStageRound;
       });
     }
     
@@ -502,10 +524,9 @@ const StatsLeaderboard: React.FC = () => {
           // Filter by stage round if not 'all'
           if (selectedStageRound !== 'all') {
             relevantStats = relevantStats.filter(statRecord => {
-              const gameStage = statRecord.game?.stage;
-              if (!gameStage) return false;
-              const stageRound = getStageRound(gameStage);
-              return stageRound === selectedStageRound;
+              const game = statRecord.game;
+              if (!game?.stage) return false;
+              return getStageRound(game) === selectedStageRound;
             });
           }
           
@@ -654,10 +675,9 @@ const StatsLeaderboard: React.FC = () => {
     // Filter by stage round if not 'all'
     if (selectedStageRound !== 'all') {
       relevantStats = relevantStats.filter(statRecord => {
-        const gameStage = statRecord.game?.stage;
-        if (!gameStage) return false;
-        const stageRound = getStageRound(gameStage);
-        return stageRound === selectedStageRound;
+        const game = statRecord.game;
+        if (!game?.stage) return false;
+        return getStageRound(game) === selectedStageRound;
       });
     }
     

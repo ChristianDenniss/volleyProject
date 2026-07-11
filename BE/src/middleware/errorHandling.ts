@@ -11,8 +11,8 @@ import { InvalidFormatError } from '../errors/InvalidFormatError.js';
 import { DateError } from '../errors/DateErrors.js';
 import { ConflictError } from '../errors/ConflictError.js';
 import { BadRequestError } from '../errors/BadRequestError.js';
+import { sanitizeForLogging } from '../utils/sanitizeForLogging.js';
 
-// Map error types to HTTP status codes
 const errorCodeMapping: Record<string, number> = {
     DuplicateError: 400,
     MissingFieldError: 400,
@@ -28,24 +28,19 @@ const errorCodeMapping: Record<string, number> = {
     NotFoundError: 404,
 };
 
-// Error handler middleware
 export const errorHandler = (err: Error, req: Request, res: Response, next: NextFunction): void => {
-    // Log error details
     console.error(`Error occurred during ${req.method} ${req.originalUrl}`);
-    console.error("Request Body:", req.body);
-    console.error("Request Params:", req.params);
-    console.error("Request Query:", req.query);
-    console.error(err);
+    console.error("Request Body:", sanitizeForLogging(req.body));
+    console.error("Request Params:", sanitizeForLogging(req.params));
+    console.error("Request Query:", sanitizeForLogging(req.query));
+    console.error(err.message);
 
-    // Get the appropriate status code from the errorCodeMapping
     const statusCode = errorCodeMapping[err.constructor.name] || 500;
 
-    // Include the stack trace only in development
     const response = {
         error: err.message,
         stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
     };
 
-    // Send the error response
     res.status(statusCode).json(response);
 };

@@ -8,6 +8,7 @@ import Pagination from "../Pagination";
 import FilterBar from "../ui/FilterBar";
 import Table from "../ui/Table";
 import "../../styles/UsersPage.css";
+import "../../styles/PortalPlayersPage.css";
 
 const USERS_PER_PAGE = 10;
 const ALL_ROLES: User["role"][] = ["user", "admin", "superadmin"];
@@ -51,15 +52,11 @@ const UsersPage: React.FC = () => {
   };
 
   const canPromote = (target: User, to: User["role"]) => {
-    if (me?.role === "admin") {
-      return target.role === "user" && to === "admin";
+    if (me?.role !== "superadmin") {
+      return false;
     }
-    if (me?.role === "superadmin") {
-      if (target.role === "superadmin") return false;
-      if (target.role === "admin" && to === "user") return true;
-      return true;
-    }
-    return false;
+    if (target.role === "superadmin") return false;
+    return target.role !== to;
   };
 
   // Table requires rows to satisfy Record<string, unknown>; User has no index

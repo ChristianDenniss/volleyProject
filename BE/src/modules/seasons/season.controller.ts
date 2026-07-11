@@ -1,16 +1,21 @@
 import { Request, Response } from "express";
-import { SeasonService } from "./season.service.js";
+import { SeasonService, SeasonFilters } from "./season.service.js";
 import { parsePagination, toPaginatedResult } from "../../utils/pagination.js";
+import { parseRegionQuery } from "../../utils/regionQuery.js";
+import { RegionService } from "../regions/region.service.js";
+import { RegionCode } from "../regions/region.entity.js";
 
 const SEASONS_DEFAULT_LIMIT = 10;
 
 export class SeasonController
 {
     private seasonService: SeasonService;
+    private regionService: RegionService;
 
     constructor()
     {
         this.seasonService = new SeasonService();
+        this.regionService = new RegionService();
     }
 
     /* ------------------------------------------------------------
@@ -25,7 +30,9 @@ export class SeasonController
                 startDate,
                 endDate,
                 theme,        
-                image    
+                image,
+                regionId,
+                region,
             } = req.body;
 
             const savedSeason = await this.seasonService.createSeason(
@@ -33,7 +40,9 @@ export class SeasonController
                 new Date(startDate),
                 new Date(endDate),
                 theme,
-                image
+                image,
+                regionId,
+                region as RegionCode | undefined
             );
 
             res.status(201).json(savedSeason);
@@ -53,7 +62,8 @@ export class SeasonController
         {
             console.log('Attempting to fetch all seasons...');
             const pagination = parsePagination(req.query, SEASONS_DEFAULT_LIMIT);
-            const [data, total] = await this.seasonService.getAllSeasons(pagination);
+            const filters = await this.parseFilters(req);
+            const [data, total] = await this.seasonService.getAllSeasons(pagination, filters);
             console.log(`Successfully fetched ${data.length} seasons`);
             res.status(200).json(toPaginatedResult(data, total, pagination));
         }
@@ -78,7 +88,8 @@ export class SeasonController
             {
                 console.log('Attempting to fetch all seasons...');
                 const pagination = parsePagination(req.query, SEASONS_DEFAULT_LIMIT);
-                const [data, total] = await this.seasonService.getSkinnyAllSeasons(pagination);
+                const filters = await this.parseFilters(req);
+                const [data, total] = await this.seasonService.getSkinnyAllSeasons(pagination, filters);
                 console.log(`Successfully fetched ${data.length} seasons`);
                 res.status(200).json(toPaginatedResult(data, total, pagination));
             }
@@ -103,7 +114,8 @@ export class SeasonController
         {
             console.log('Attempting to fetch all seasons...');
             const pagination = parsePagination(req.query, SEASONS_DEFAULT_LIMIT);
-            const [data, total] = await this.seasonService.getMediumAllSeasons(pagination);
+            const filters = await this.parseFilters(req);
+            const [data, total] = await this.seasonService.getMediumAllSeasons(pagination, filters);
             console.log(`Successfully fetched ${data.length} seasons`);
             res.status(200).json(toPaginatedResult(data, total, pagination));
         }
@@ -189,6 +201,12 @@ export class SeasonController
             this.handleError(error, res, "deleting season");
         }
     };
+
+    private async parseFilters(req: Request): Promise<SeasonFilters> {
+        const regionFilter = parseRegionQuery(req.query as Record<string, unknown>);
+        const regionId = await this.regionService.resolveRegionId(regionFilter);
+        return { regionId };
+    }
 
     /* ------------------------------------------------------------
        Shared error-handling helper

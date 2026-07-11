@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { GameService, GameFilters } from './game.service.js';
 import { ChallongeImportService } from './challongeImport.service.js';
-import { GameStatus, GamePhase, GameRegion } from './game.entity.js';
+import { GameStatus, GamePhase, GameBracket } from './game.entity.js';
 import { MissingFieldError } from '../../errors/MissingFieldError.js';
 import { NotFoundError } from '../../errors/NotFoundError.js';
 import { ConflictError } from '../../errors/ConflictError.js';
@@ -9,23 +9,27 @@ import { DuplicateError } from '../../errors/DuplicateError.js';
 import { DateError } from '../../errors/DateErrors.js';
 import { InvalidFormatError } from '../../errors/InvalidFormatError.js';
 import { parsePagination, toPaginatedResult } from '../../utils/pagination.js';
+import { parseRegionQuery } from '../../utils/regionQuery.js';
+import { RegionService } from '../regions/region.service.js';
 
 const GAMES_DEFAULT_LIMIT = 10;
 
 export class GameController {
     private gameService: GameService;
     private challongeImportService: ChallongeImportService;
+    private regionService: RegionService;
 
     constructor() {
         this.gameService = new GameService();
         this.challongeImportService = new ChallongeImportService();
+        this.regionService = new RegionService();
     }
 
     // Create a new game
     createGame = async (req: Request, res: Response): Promise<void> => {
         try {
             // Destructure the required fields from the request body
-            const { date, seasonId, teamIds, team1Score, team2Score, stage, videoUrl, status, matchNumber, round, phase, region, setScores, tags, name } = req.body;
+            const { date, seasonId, teamIds, team1Score, team2Score, stage, videoUrl, status, phase, bracket, setScores, tags, name } = req.body;
 
             // Validate the required fields
             if (!date || !seasonId || !stage|| !teamIds || teamIds.length !== 2) {
@@ -53,10 +57,8 @@ export class GameController {
                 date, seasonId, teamIds, team1Score ?? null, team2Score ?? null, stage, videoUrl,
                 {
                     status: status as GameStatus | undefined,
-                    matchNumber,
-                    round,
                     phase: phase as GamePhase | undefined,
-                    region: region as GameRegion | undefined,
+                    bracket: bracket as GameBracket | null | undefined,
                     setScores,
                     tags,
                     name,
@@ -95,7 +97,7 @@ export class GameController {
     createGameByNames = async (req: Request, res: Response): Promise<void> => {
         try {
             // Extract the relevant fields from the request body
-            const { date, seasonId, teamNames, team1Score, team2Score, stage, videoUrl, status, matchNumber, round, phase, region, setScores, tags, name } = req.body;
+            const { date, seasonId, teamNames, team1Score, team2Score, stage, videoUrl, status, phase, bracket, setScores, tags, name } = req.body;
 
             // Validate the required fields
             if (!date || !seasonId || !teamNames || !stage || teamNames.length !== 2) {
@@ -123,10 +125,8 @@ export class GameController {
                 date, seasonId, teamNames, team1Score ?? null, team2Score ?? null, stage, videoUrl,
                 {
                     status: status as GameStatus | undefined,
-                    matchNumber,
-                    round,
                     phase: phase as GamePhase | undefined,
-                    region: region as GameRegion | undefined,
+                    bracket: bracket as GameBracket | null | undefined,
                     setScores,
                     tags,
                     name,
@@ -188,7 +188,7 @@ export class GameController {
     getGames = async (req: Request, res: Response): Promise<void> => {
         try {
             const pagination = parsePagination(req.query, GAMES_DEFAULT_LIMIT);
-            const filters = this.parseFilters(req);
+            const filters = await this.parseFilters(req);
             const [data, total] = await this.gameService.getAllGames(pagination, filters);
             res.json(toPaginatedResult(data, total, pagination));
         } catch (error: any) {
@@ -213,7 +213,7 @@ export class GameController {
     getSkinnyGames = async (req: Request, res: Response): Promise<void> => {
         try {
             const pagination = parsePagination(req.query, GAMES_DEFAULT_LIMIT);
-            const filters = this.parseFilters(req);
+            const filters = await this.parseFilters(req);
             const [data, total] = await this.gameService.getSkinnyAllGames(pagination, filters);
             res.json(toPaginatedResult(data, total, pagination));
         } catch (error: any) {
@@ -260,15 +260,13 @@ export class GameController {
     updateGame = async (req: Request, res: Response): Promise<void> => {
         try {
             const { id } = req.params;
-            const { date, seasonId, teamIds, team1Score, team2Score, videoUrl, stage, status, matchNumber, round, phase, region, setScores, tags, name } = req.body;
+            const { date, seasonId, teamIds, team1Score, team2Score, videoUrl, stage, status, phase, bracket, region, setScores, tags, name } = req.body;
             const updatedGame = await this.gameService.updateGame(
                 parseInt(id), date, seasonId, teamIds, team1Score, team2Score, stage, videoUrl,
                 {
                     status: status as GameStatus | undefined,
-                    matchNumber,
-                    round,
                     phase: phase as GamePhase | undefined,
-                    region: region as GameRegion | undefined,
+                    bracket: bracket as GameBracket | null | undefined,
                     setScores,
                     tags,
                     name,
@@ -369,16 +367,18 @@ export class GameController {
         }
     };
 
-    private parseFilters(req: Request): GameFilters {
-        const { search, seasonId, stage, status, round, phase, region } = req.query;
+    private async parseFilters(req: Request): Promise<GameFilters> {
+        const { search, seasonId, stage, status, phase, bracket } = req.query;
+        const regionFilter = parseRegionQuery(req.query as Record<string, unknown>);
+        const regionId = await this.regionService.resolveRegionId(regionFilter);
         return {
             search: typeof search === 'string' && search.length > 0 ? search : undefined,
             seasonId: seasonId ? Number(seasonId) : undefined,
             stage: typeof stage === 'string' && stage.length > 0 ? stage : undefined,
             status: typeof status === 'string' && status.length > 0 ? status : undefined,
-            round: typeof round === 'string' && round.length > 0 ? round : undefined,
             phase: typeof phase === 'string' && phase.length > 0 ? phase : undefined,
-            region: typeof region === 'string' && region.length > 0 ? region : undefined,
+            regionId,
+            bracket: typeof bracket === 'string' && bracket.length > 0 ? bracket : undefined,
         };
     }
 

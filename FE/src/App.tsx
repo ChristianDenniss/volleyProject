@@ -2,6 +2,7 @@
 import React from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./context/authContext";
+import { RegionProvider } from "./context/regionContext";
 import ViewportLayoutSync from "./components/ViewportLayoutSync";
 import Applications from "./components/Applications";
 import Header         from "./components/Header";
@@ -49,8 +50,9 @@ import VectorGraphPage from "./components/VectorGraphPage";
 
 const App: React.FC = () => (
   <AuthProvider>
-    <ViewportLayoutSync />
     <Router>
+    <RegionProvider>
+    <ViewportLayoutSync />
       <Header />
       <Navbar />
 
@@ -114,6 +116,7 @@ const App: React.FC = () => (
       </div>
 
       <Footer />
+    </RegionProvider>
     </Router>
   </AuthProvider>
 );

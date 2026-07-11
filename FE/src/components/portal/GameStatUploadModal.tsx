@@ -46,7 +46,7 @@ const GameStatUploadModal: React.FC<GameStatUploadModalProps> = ({ game, isOpen,
   if (!isOpen || !game) return null;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={`Upload Stats — ${game.name || game.matchNumber || `Game #${game.id}`}`}>
+    <Modal isOpen={isOpen} onClose={onClose} title={`Upload Stats — ${game.name || `Game #${game.id}`}`}>
       <p style={{ marginBottom: '1rem' }}>
         Upload a stat sheet CSV for this game. Stats will be attached to game #{game.id}.
       </p>

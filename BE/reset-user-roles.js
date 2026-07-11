@@ -1,5 +1,6 @@
 // reset-user-roles.js
 // Seed script to reset all admin/superadmin users back to plain user role
+// and invalidate their existing JWTs by bumping tokenVersion.
 
 import { existsSync } from "fs";
 import { DataSource, In } from "typeorm";
@@ -56,12 +57,13 @@ async function resetUserRoles() {
             console.log(`  - id=${user.id} username=${user.username} role=${user.role}`);
         }
 
-        const result = await userRepository.update(
-            { role: In(ELEVATED_ROLES) },
-            { role: "user" }
-        );
+        for (const user of elevatedUsers) {
+            await userRepository.update(user.id, { role: "user" });
+            await userRepository.increment({ id: user.id }, "tokenVersion", 1);
+        }
 
-        console.log(`\n✅ Reset ${result.affected ?? 0} user(s) to role: user`);
+        console.log(`\n✅ Reset ${elevatedUsers.length} user(s) to role: user`);
+        console.log("Existing JWTs for those users are now invalid.");
     } catch (error) {
         console.error("Error resetting user roles:", error);
         process.exitCode = 1;

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRecords } from "../hooks/allFetch";
+import { useRegion } from "../context/regionContext";
 import { useCalculateRecords } from "../hooks/allCreate";
 import { useAuth } from "../context/authContext";
 import type { Records } from "../types/interfaces";
@@ -10,7 +11,8 @@ import "../styles/RecordsPage.css";
 
 const RecordsPage: React.FC = () => {
     // Retrieve records list from API
-    const { data: records, loading, error, refetch } = useRecords();
+    const { regionQuery } = useRegion();
+    const { data: records, loading, error, refetch } = useRecords(regionQuery);
 
     // Retrieve current user (for permission checks)
     const { user } = useAuth();

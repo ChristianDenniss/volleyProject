@@ -9,6 +9,10 @@ import { NotFoundError } from '../../errors/NotFoundError.js';
 import { CreateRecordDto, UpdateRecordDto } from './records.schema.js';
 import { PaginationParams } from '../../utils/pagination.js';
 
+export interface RecordFilters {
+    regionId?: number;
+}
+
 export class RecordService {
     private recordRepository: Repository<Records>;
     private playerRepository: Repository<Players>;
@@ -72,6 +76,7 @@ export class RecordService {
         newRecord.date = recordData.date ? new Date(recordData.date) : new Date();
         newRecord.season = season;
         newRecord.player = player;
+        newRecord.regionId = season.regionId;
 
         return this.recordRepository.save(newRecord);
     }
@@ -79,9 +84,13 @@ export class RecordService {
     /**
      * Get all records
      */
-    async getAllRecords(pagination: PaginationParams): Promise<[Records[], number]> {
+    async getAllRecords(pagination: PaginationParams, filters: RecordFilters = {}): Promise<[Records[], number]> {
+        const where: { regionId?: number } = {};
+        if (filters.regionId) where.regionId = filters.regionId;
+
         return this.recordRepository.findAndCount({
-            relations: ["player", "season"],
+            where,
+            relations: ["player", "season", "region"],
             skip: pagination.skip,
             take: pagination.take
         });

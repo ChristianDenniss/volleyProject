@@ -1,5 +1,6 @@
 import React from "react";
 import "../styles/Pagination.css";
+
 interface PaginationProps {
   currentPage: number;
   totalPages: number;
@@ -8,46 +9,53 @@ interface PaginationProps {
 
 const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPageChange }) => {
   return (
-    <div className="pagination">
-      {/* "First" Button */}
+    <div className="pagination" role="navigation" aria-label="Pagination">
       <button
+        type="button"
         className="pagination-btn"
         onClick={() => onPageChange(1)}
         disabled={currentPage === 1}
+        aria-label="First page"
+        title="First page"
       >
-        First
+        {"<<"}
       </button>
 
-      {/* "Prev" Button */}
       <button
+        type="button"
         className="pagination-btn"
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
+        aria-label="Previous page"
+        title="Previous page"
       >
-        Prev
+        {"<"}
       </button>
 
-      {/* Current Page Display */}
-      <span className="pagination-current-page">
+      <span className="pagination-current-page" aria-live="polite">
         {currentPage} / {totalPages}
       </span>
 
-      {/* "Next" Button */}
       <button
+        type="button"
         className="pagination-btn"
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
+        aria-label="Next page"
+        title="Next page"
       >
-        Next
+        {">"}
       </button>
 
-      {/* "Last" Button */}
       <button
+        type="button"
         className="pagination-btn"
         onClick={() => onPageChange(totalPages)}
         disabled={currentPage === totalPages}
+        aria-label="Last page"
+        title="Last page"
       >
-        Last
+        {">>"}
       </button>
     </div>
   );

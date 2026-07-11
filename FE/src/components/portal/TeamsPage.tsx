@@ -6,6 +6,7 @@ import { useTeamMutations } from "../../hooks/allPatch";
 import { useCreateTeams } from "../../hooks/allCreate";
 import { useDeleteTeams } from "../../hooks/allDelete";
 import { useAuth } from "../../context/authContext";
+import { useRegion } from "../../context/regionContext";
 import type { Team } from "../../types/interfaces";
 import "../../styles/PlayersPage.css";
 import "../../styles/PortalPlayersPage.css";
@@ -61,13 +62,16 @@ const TeamsPage: React.FC = () => {
   // Filter state
   const [seasonFilter, setSeasonFilter] = useState<string>("");
 
+  const { regionQuery, activeRegion } = useRegion();
+
   const { data: teams, total, totalPages, loading, error, refetch } = useSkinnyTeams({
     page: currentPage,
     limit: TEAMS_PER_PAGE,
     search: searchQuery || undefined,
     seasonId: seasonFilter || undefined,
+    ...regionQuery,
   });
-  const { data: seasons } = useSkinnySeasons({ page: 1, limit: 100 });
+  const { data: seasons } = useSkinnySeasons({ page: 1, limit: 100, ...regionQuery });
   const { patchTeam } = useTeamMutations();
   const { createTeam, loading: creating, error: createError } = useCreateTeams();
   const { deleteItem: deleteTeam, loading: deleting, error: deleteError } = useDeleteTeams();
@@ -213,7 +217,9 @@ const TeamsPage: React.FC = () => {
       name: newName,
       seasonNumber: newSeasonNumber,
       placement: newPlacement,
-      logoUrl: newLogoUrl.trim() || undefined, // Only include if not empty
+      logoUrl: newLogoUrl.trim() || undefined,
+      regionId: activeRegion?.id,
+      region: activeRegion?.code,
     };
 
     try {

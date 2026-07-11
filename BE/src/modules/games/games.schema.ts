@@ -1,4 +1,9 @@
 import { z } from 'zod';
+import { REGION_CODES } from '../regions/region.entity.js';
+
+export const gamePhaseSchema = z.enum(['qualifiers', 'playoffs', 'pre_season']);
+export const gameBracketSchema = z.enum(['winners', 'losers']).nullable().optional();
+export const regionCodeSchema = z.enum(REGION_CODES);
 
 export const createGameSchema = z.object({
     team1Id: z.number().int().positive().optional(),
@@ -9,14 +14,13 @@ export const createGameSchema = z.object({
     team2Score: z.number().int().min(0).nullable().optional(),
     stats: z.array(z.number().int().positive().optional()).optional(),
     videoUrl: z.string().optional(),
-    stage: z.string().min(2, { message: "stage is required, min 2 characters" }),
+    stage: z.string().min(1, { message: "stage is required" }),
     status: z.enum(['scheduled', 'completed']).optional(),
-    matchNumber: z.string().optional(),
-    round: z.string().optional(),
-    phase: z.enum(['qualifiers', 'playoffs']).optional(),
-    region: z.enum(['na', 'eu', 'as', 'sa']).optional(),
+    phase: gamePhaseSchema.optional(),
+    bracket: gameBracketSchema,
     setScores: z.array(z.string()).max(5).optional(),
     tags: z.array(z.string()).optional(),
+    name: z.string().optional(),
 });
 
 export const updateGameSchema = z.object({
@@ -28,10 +32,8 @@ export const updateGameSchema = z.object({
     videoUrl: z.string().optional(),
     stage: z.string().optional(),
     status: z.enum(['scheduled', 'completed']).optional(),
-    matchNumber: z.string().optional(),
-    round: z.string().optional(),
-    phase: z.enum(['qualifiers', 'playoffs']).optional(),
-    region: z.enum(['na', 'eu', 'as', 'sa']).optional(),
+    phase: gamePhaseSchema.optional(),
+    bracket: gameBracketSchema,
     setScores: z.array(z.string()).max(5).optional(),
     tags: z.array(z.string()).optional(),
 });
@@ -43,8 +45,8 @@ export const importChallongeSchema = z.object({
     roundStartDate: z.coerce.date(),
     roundEndDate: z.coerce.date(),
     matchSpacingMinutes: z.number().min(15).max(120).default(30),
-    phase: z.enum(['qualifiers', 'playoffs']).default('qualifiers'),
-    region: z.enum(['na', 'eu', 'as', 'sa']).default('na'),
+    phase: gamePhaseSchema.default('qualifiers'),
+    region: regionCodeSchema.default('na'),
     tags: z.array(z.string()).optional(),
     dryRun: z.boolean().optional(),
 });

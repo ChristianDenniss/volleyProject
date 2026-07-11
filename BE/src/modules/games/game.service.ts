@@ -1,6 +1,6 @@
 import { Repository, In, ILike, FindOptionsWhere } from 'typeorm';
 import { AppDataSource } from '../../db/data-source.js';
-import { Games, GameStatus, GamePhase, GameRegion } from './game.entity.js';
+import { Games, GameStatus, GamePhase, GameBracket } from './game.entity.js';
 import { Teams } from '../teams/team.entity.js';
 import { Seasons } from '../seasons/season.entity.js';
 import { MissingFieldError } from '../../errors/MissingFieldError.js';
@@ -10,15 +10,16 @@ import { DuplicateError } from '../../errors/DuplicateError.js';
 import { InvalidFormatError } from '../../errors/InvalidFormatError.js';
 import { PaginationParams } from '../../utils/pagination.js';
 import { orderTeamsByIds, applyWinnerToGame } from './gameWinner.js';
+import { resolveGameBracket } from './gameBracket.js';
 
 export interface GameFilters {
     search?: string;
     seasonId?: number;
     stage?: string;
     status?: string;
-    round?: string;
     phase?: string;
-    region?: string;
+    regionId?: number;
+    bracket?: string;
 }
 
 export class GameService {
@@ -45,10 +46,9 @@ export class GameService {
         videoUrl?: string,
         options?: {
             status?: GameStatus;
-            matchNumber?: string;
-            round?: string;
             phase?: GamePhase;
-            region?: GameRegion;
+            bracket?: GameBracket | null;
+            region?: never;
             setScores?: string[];
             tags?: string[];
             name?: string;
@@ -91,10 +91,13 @@ export class GameService {
             newGame.videoUrl = videoUrl ?? '';
             newGame.stage = stage;
             newGame.status = options?.status ?? (team1Score != null && team2Score != null ? GameStatus.COMPLETED : GameStatus.SCHEDULED);
-            newGame.matchNumber = options?.matchNumber ?? null;
-            newGame.round = options?.round ?? null;
             newGame.phase = options?.phase ?? GamePhase.QUALIFIERS;
-            newGame.region = options?.region ?? GameRegion.NA;
+            newGame.regionId = season.regionId;
+            newGame.bracket = resolveGameBracket({
+                stage,
+                phase: newGame.phase,
+                explicitBracket: options?.bracket,
+            });
             newGame.tags = options?.tags ?? null;
             newGame.name = options?.name ?? null;
 
@@ -168,6 +171,7 @@ export class GameService {
                 newGame.teams = teamsInGame;
                 newGame.videoUrl = data.videoUrl ?? '';
                 newGame.stage = data.stage;
+                newGame.regionId = season.regionId;
 
                 return newGame;
             }));
@@ -191,9 +195,9 @@ export class GameService {
         if (filters.seasonId) where.season = { id: filters.seasonId } as any;
         if (filters.stage) where.stage = filters.stage;
         if (filters.status) where.status = filters.status as GameStatus;
-        if (filters.round) where.round = filters.round;
         if (filters.phase) where.phase = filters.phase as GamePhase;
-        if (filters.region) where.region = filters.region as GameRegion;
+        if (filters.regionId) where.regionId = filters.regionId;
+        if (filters.bracket) where.bracket = filters.bracket as GameBracket;
         return where;
     }
 
@@ -203,7 +207,7 @@ export class GameService {
     async getAllGames(pagination: PaginationParams, filters: GameFilters = {}): Promise<[Games[], number]> {
         return this.gameRepository.findAndCount({
             where: this.buildWhere(filters),
-            relations: ["season", "teams", "winner", "stats"],
+            relations: ["season", "teams", "winner", "stats", "region"],
             order: { date: "DESC" }, // Most recent games first
             skip: pagination.skip,
             take: pagination.take
@@ -216,7 +220,7 @@ export class GameService {
     async getSkinnyAllGames(pagination: PaginationParams, filters: GameFilters = {}): Promise<[Games[], number]> {
         return this.gameRepository.findAndCount({
             where: this.buildWhere(filters),
-            relations: ["season"],
+            relations: ["season", "region"],
             order: { date: "DESC" }, // Most recent games first
             skip: pagination.skip,
             take: pagination.take
@@ -234,10 +238,9 @@ export class GameService {
         videoUrl?: string,
         options?: {
             status?: GameStatus;
-            matchNumber?: string;
-            round?: string;
             phase?: GamePhase;
-            region?: GameRegion;
+            bracket?: GameBracket | null;
+            region?: never;
             setScores?: string[];
             tags?: string[];
             name?: string;
@@ -296,7 +299,7 @@ export class GameService {
     
         const game = await this.gameRepository.findOne({
             where: { id },
-            relations: ["season", "teams", "teams.players", "winner", "stats", "stats.player"],
+            relations: ["season", "teams", "teams.players", "winner", "stats", "stats.player", "region"],
         });
     
         if (!game) throw new NotFoundError(`Game with ID ${id} not found`);
@@ -313,7 +316,7 @@ export class GameService {
 
         const game = await this.gameRepository.findOne({
             where: { id },
-            relations: ["season", "teams", "winner", "stats"],
+            relations: ["season", "teams", "winner", "stats", "region"],
         });
 
         if (!game) throw new NotFoundError(`Game with ID ${id} not found`);
@@ -336,10 +339,9 @@ export class GameService {
         videoUrl?: string,
         options?: {
             status?: GameStatus;
-            matchNumber?: string;
-            round?: string;
             phase?: GamePhase;
-            region?: GameRegion;
+            bracket?: GameBracket | null;
+            region?: never;
             setScores?: string[];
             tags?: string[];
             name?: string;
@@ -349,7 +351,7 @@ export class GameService {
 
         const game = await this.gameRepository.findOne({
             where: { id },
-            relations: ["season", "teams", "winner", "stats"],
+            relations: ["season", "teams", "winner", "stats", "region"],
         });
 
         if (!game) throw new NotFoundError(`Game with ID ${id} not found`);
@@ -369,6 +371,7 @@ export class GameService {
             const season = await this.seasonRepository.findOneBy({ id: seasonId });
             if (!season) throw new NotFoundError(`Season with ID ${seasonId} not found`);
             game.season = season;
+            game.regionId = season.regionId;
         }
 
         
@@ -407,12 +410,16 @@ export class GameService {
         }
 
         if (options?.status) game.status = options.status;
-        if (options?.matchNumber !== undefined) game.matchNumber = options.matchNumber;
-        if (options?.round !== undefined) game.round = options.round;
         if (options?.phase) game.phase = options.phase;
-        if (options?.region) game.region = options.region;
         if (options?.tags !== undefined) game.tags = options.tags;
         if (options?.name !== undefined) game.name = options.name;
+
+        game.bracket = resolveGameBracket({
+            stage: game.stage,
+            phase: game.phase,
+            explicitBracket: options?.bracket,
+            challongeRound: game.challongeRound,
+        });
 
         if (options?.setScores) {
             const setScores = options.setScores;
@@ -491,7 +498,7 @@ export class GameService {
         // Fetch full game data with relations using TypeORM's In()
         return this.gameRepository.find({
             where: { id: In(gameIds) },
-            relations: ["season", "teams", "winner", "stats"],
+            relations: ["season", "teams", "winner", "stats", "region"],
             order: { date: "DESC" }
         });
     }

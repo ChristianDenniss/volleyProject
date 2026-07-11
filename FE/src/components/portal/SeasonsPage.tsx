@@ -5,7 +5,8 @@ import { useSkinnySeasons }                  from "../../hooks/allFetch";
 import { useSeasonMutations }          from "../../hooks/allPatch";
 import { useCreateSeasons }            from "../../hooks/allCreate";
 import { useDeleteSeasons }            from "../../hooks/allDelete";
-import { useAuth }                     from "../../context/authContext";
+import { useAuth } from "../../context/authContext";
+import { useRegion } from "../../context/regionContext";
 import type { Season }                 from "../../types/interfaces";
 import Modal                           from "../ui/Modal";
 import Table                           from "../ui/Table";
@@ -35,7 +36,8 @@ const SeasonTable = Table as unknown as React.ComponentType<{
 const SeasonsPage: React.FC = () =>
 {
     // Fetch existing seasons
-    const { data: seasons, loading, error } = useSkinnySeasons({ page: 1, limit: 100 });
+    const { regionQuery, activeRegion } = useRegion();
+    const { data: seasons, loading, error } = useSkinnySeasons({ page: 1, limit: 100, ...regionQuery });
 
     // Patch (edit) existing seasons
     const { patchSeason }                   = useSeasonMutations();
@@ -199,6 +201,8 @@ const SeasonsPage: React.FC = () =>
             image:        newImage !== "" ? newImage : undefined,
             startDate:    new Date(newStartDate).toISOString(),
             endDate:      newEndDate !== "" ? new Date(newEndDate).toISOString() : undefined,
+            regionId:     activeRegion?.id,
+            region:       activeRegion?.code,
         };
 
         try

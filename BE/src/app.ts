@@ -8,7 +8,9 @@ import { errorHandler } from './middleware/errorHandling.js';
  */
 export default function createApp(): Application 
 {
-  const app = express();
+    const app = express();
+
+  app.set('trust proxy', 1);
 
   // Register global middleware
   globalMiddleware(app);  

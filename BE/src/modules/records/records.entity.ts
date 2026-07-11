@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 import type { Seasons } from '../seasons/season.entity.js';
 import type { Players } from '../players/player.entity.js';
+import type { Region } from '../regions/region.entity.js';
 
 @Entity()
 export class Records {
@@ -30,22 +31,29 @@ export class Records {
         enum: ['game', 'season'],
         default: "game"
     })
-    type!: string; // 'game' for single game records, 'season' for season aggregate records
+    type!: string;
 
     @Column({ type: 'int' })
-    rank!: number; // Position in top 10 (1-10)
+    rank!: number;
 
     @Column('decimal', { precision: 10, scale: 2 })
-    value!: number; // The actual record value (e.g., 25 kills, 85.5% spike percentage)
+    value!: number;
 
     @Column('date')
-    date!: Date; // Date when the record was achieved (date of the game)
+    date!: Date;
 
     @Column()
-    seasonId!: number; // Foreign key to seasons table
+    seasonId!: number;
 
     @Column()
-    playerId!: number; // Foreign key to players table
+    playerId!: number;
+
+    @Column()
+    regionId!: number;
+
+    @ManyToOne('Region')
+    @JoinColumn({ name: 'regionId' })
+    region!: Region;
 
     @CreateDateColumn({ type: 'timestamp' })
     createdAt!: Date;
@@ -53,17 +61,14 @@ export class Records {
     @UpdateDateColumn({ type: 'timestamp' })
     updatedAt!: Date;
 
-    // Many-to-one relationship with Players
     @ManyToOne('Players', 'records')
     @JoinColumn()
     player!: Players;
 
-    // Many-to-one relationship with Seasons
     @ManyToOne('Seasons', 'records')
     @JoinColumn()
     season!: Seasons;
 
-    // Game ID (optional, only for game records)
     @Column({ type: 'int', nullable: true })
     gameId!: number;
 }

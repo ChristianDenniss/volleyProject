@@ -12,6 +12,7 @@ import FilterBar from "../ui/FilterBar";
 import Table from "../ui/Table";
 import "../../styles/UsersPage.css";
 import "../../styles/AwardsPage.css";
+import "../../styles/PortalPlayersPage.css";
 
 const AWARD_TYPES = [
   "MVP",

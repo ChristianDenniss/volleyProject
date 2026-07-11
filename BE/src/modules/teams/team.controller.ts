@@ -4,14 +4,18 @@ import { MissingFieldError } from '../../errors/MissingFieldError.js';
 import { NotFoundError } from '../../errors/NotFoundError.js';
 import { CreateTeamDto, UpdateTeamDto } from './teams.schema.js';
 import { parsePagination, toPaginatedResult } from '../../utils/pagination.js';
+import { parseRegionQuery } from '../../utils/regionQuery.js';
+import { RegionService } from '../regions/region.service.js';
 
 const TEAMS_DEFAULT_LIMIT = 10;
 
 export class TeamController {
     private teamService: TeamService;
+    private regionService: RegionService;
 
     constructor() {
         this.teamService = new TeamService();
+        this.regionService = new RegionService();
     }
 
     // Create a new Team
@@ -111,7 +115,7 @@ export class TeamController {
     getTeams = async (req: Request, res: Response): Promise<void> => {
         try {
             const pagination = parsePagination(req.query, TEAMS_DEFAULT_LIMIT);
-            const filters = this.parseFilters(req);
+            const filters = await this.parseFilters(req);
             const [data, total] = await this.teamService.getAllTeams(pagination, filters);
             res.json(toPaginatedResult(data, total, pagination));
         } catch (error) {
@@ -124,7 +128,7 @@ export class TeamController {
     getSkinnyTeams = async (req: Request, res: Response): Promise<void> => {
         try {
             const pagination = parsePagination(req.query, TEAMS_DEFAULT_LIMIT);
-            const filters = this.parseFilters(req);
+            const filters = await this.parseFilters(req);
             const [data, total] = await this.teamService.getSkinnyAllTeams(pagination, filters);
             res.json(toPaginatedResult(data, total, pagination));
         } catch (error) {
@@ -137,7 +141,7 @@ export class TeamController {
     getMediumTeams = async (req: Request, res: Response): Promise<void> => {
         try {
             const pagination = parsePagination(req.query, TEAMS_DEFAULT_LIMIT);
-            const filters = this.parseFilters(req);
+            const filters = await this.parseFilters(req);
             const [data, total] = await this.teamService.getMediumAllTeams(pagination, filters);
             res.json(toPaginatedResult(data, total, pagination));
         } catch (error) {
@@ -146,11 +150,14 @@ export class TeamController {
         }
     };
 
-    private parseFilters(req: Request): TeamFilters {
+    private async parseFilters(req: Request): Promise<TeamFilters> {
         const { search, seasonId } = req.query;
+        const regionFilter = parseRegionQuery(req.query as Record<string, unknown>);
+        const regionId = await this.regionService.resolveRegionId(regionFilter);
         return {
             search: typeof search === 'string' && search.length > 0 ? search : undefined,
             seasonId: seasonId ? Number(seasonId) : undefined,
+            regionId,
         };
     }
 

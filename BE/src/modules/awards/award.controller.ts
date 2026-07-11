@@ -4,14 +4,18 @@ import { NotFoundError } from '../../errors/NotFoundError.js';
 import { AwardService, AwardFilters } from './award.service.js';
 import { CreateAwardDto, CreateMultipleAwardsDto, UpdateAwardDto } from './awards.schema.js';
 import { parsePagination, toPaginatedResult } from '../../utils/pagination.js';
+import { parseRegionQuery } from '../../utils/regionQuery.js';
+import { RegionService } from '../regions/region.service.js';
 
 const AWARDS_DEFAULT_LIMIT = 10;
 
 export class AwardController {
     private awardService: AwardService;
+    private regionService: RegionService;
 
     constructor(awardService: AwardService) {
         this.awardService = awardService;
+        this.regionService = new RegionService();
     }
 
     // Create a new award
@@ -62,7 +66,7 @@ export class AwardController {
     getAwards = async (req: Request, res: Response): Promise<void> => {
         try {
             const pagination = parsePagination(req.query, AWARDS_DEFAULT_LIMIT);
-            const filters = this.parseFilters(req);
+            const filters = await this.parseFilters(req);
             const [data, total] = await this.awardService.findAllAwards(pagination, filters);
             res.json(toPaginatedResult(data, total, pagination));
         } catch (error) {
@@ -75,7 +79,7 @@ export class AwardController {
     getSkinnyAwards = async (req: Request, res: Response): Promise<void> => {
         try {
             const pagination = parsePagination(req.query, AWARDS_DEFAULT_LIMIT);
-            const filters = this.parseFilters(req);
+            const filters = await this.parseFilters(req);
             const [data, total] = await this.awardService.findSkinnyAllAwards(pagination, filters);
             res.json(toPaginatedResult(data, total, pagination));
         } catch (error) {
@@ -84,12 +88,15 @@ export class AwardController {
         }
     };
 
-    private parseFilters(req: Request): AwardFilters {
+    private async parseFilters(req: Request): Promise<AwardFilters> {
         const { search, seasonNumber, type } = req.query;
+        const regionFilter = parseRegionQuery(req.query as Record<string, unknown>);
+        const regionId = await this.regionService.resolveRegionId(regionFilter);
         return {
             search: typeof search === 'string' && search.length > 0 ? search : undefined,
             seasonNumber: seasonNumber ? Number(seasonNumber) : undefined,
             type: typeof type === 'string' && type.length > 0 ? type : undefined,
+            regionId,
         };
     }
 

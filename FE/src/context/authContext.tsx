@@ -13,22 +13,18 @@ import type {
     AuthContextType
 } from "../types/interfaces"
 import { MOCK_AUTH_TOKEN, mockAuthUser } from "../mocks/data"
+import { isMockMode, clearClientAuthState } from "../utils/authStorage"
 
-const isMockMode = import.meta.env.VITE_USE_MSW === "true"
+const API_BASE = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000"
 
-// create the AuthContext with an undefined default
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-// provider component that wraps your app and makes auth available
 export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
 {
-    // state for user object and token
     const [user,    setUser]    = useState<User | null>(null)
     const [token,   setToken]   = useState<string | null>(null)
-    // track whether we've initialized from storage
     const [loading, setLoading] = useState(true)
 
-    // on mount, read from localStorage (or auto-login in mock mode)
     useEffect(() =>
     {
         if (isMockMode)
@@ -41,43 +37,66 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
             return
         }
 
-        const storedToken = localStorage.getItem("authToken_v2")
-        const storedUser  = localStorage.getItem("currentUser")
-
-        if (storedToken && storedUser)
+        void (async () =>
         {
-            setToken(storedToken)
-
             try
             {
-                setUser(JSON.parse(storedUser))
+                const res = await fetch(`${API_BASE}/api/users/profile`, {
+                    credentials: "include",
+                })
+
+                if (!res.ok)
+                {
+                    clearClientAuthState()
+                    setToken(null)
+                    setUser(null)
+                    return
+                }
+
+                const profile = await res.json() as User
+                const { password: _password, ...userWithoutPassword } = profile as User & { password?: string }
+                localStorage.setItem("currentUser", JSON.stringify(userWithoutPassword))
+                setUser(userWithoutPassword)
+                setToken(null)
             }
             catch
             {
-                // invalid JSON, remove stored user
-                localStorage.removeItem("currentUser")
+                clearClientAuthState()
+                setToken(null)
+                setUser(null)
             }
-        }
-        // mark init complete
-        setLoading(false)
+            finally
+            {
+                setLoading(false)
+            }
+        })()
     }, [])
 
-    // login method: save token & user to state and storage
-    const login = (newToken: string, newUser: User) =>
+    const login = (newUser: User, mockToken?: string) =>
     {
-        localStorage.setItem("authToken_v2", newToken)
         localStorage.setItem("currentUser", JSON.stringify(newUser))
-        setToken(newToken)
         setUser(newUser)
+
+        if (isMockMode && mockToken) {
+            localStorage.setItem("authToken_v2", mockToken)
+            setToken(mockToken)
+            return
+        }
+
+        setToken(null)
     }
 
-    // logout method: clear storage & state
     const logout = () =>
     {
-        localStorage.removeItem("authToken_v2")
-        localStorage.removeItem("currentUser")
-        setToken(null)
-        setUser(null)
+        void fetch(`${API_BASE}/api/users/logout`, {
+            method: "POST",
+            credentials: "include",
+        }).finally(() =>
+        {
+            clearClientAuthState()
+            setToken(null)
+            setUser(null)
+        })
     }
 
     return (
@@ -87,7 +106,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
                 token,
                 login,
                 logout,
-                isAuthenticated: !!token,
+                isAuthenticated: !!user,
                 loading
             }}
         >
@@ -96,7 +115,6 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
     )
 }
 
-// custom hook to use auth context
 export function useAuth(): AuthContextType
 {
     const context = useContext(AuthContext)

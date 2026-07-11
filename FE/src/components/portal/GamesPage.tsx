@@ -6,6 +6,7 @@ import { useGameMutations } from "../../hooks/allPatch";
 import { useCreateGames } from "../../hooks/allCreate";
 import { useDeleteGames } from "../../hooks/allDelete";
 import { useAuth } from "../../context/authContext";
+import { useRegion } from "../../context/regionContext";
 import type { Game, CreateGameInput, ChallongeImportResult } from "../../types/interfaces";
 import ChallongeImport from "../ChallongeImport";
 import GameStatUploadModal from "./GameStatUploadModal";
@@ -17,8 +18,9 @@ import Pagination from "../Pagination";
 import Modal from "../ui/Modal";
 import FilterBar from "../ui/FilterBar";
 import Table, { type TableColumn } from "../ui/Table";
+import { formatGameStage } from "../../utils/gameLabels";
 
-type EditField = "name" | "seasonId" | "stage" | "team1Score" | "team2Score" | "date" | "videoUrl" | "status" | "round" | "matchNumber";
+type EditField = "name" | "seasonId" | "stage" | "phase" | "bracket" | "team1Score" | "team2Score" | "date" | "videoUrl" | "status";
 
 interface EditingState {
   id: number;
@@ -36,7 +38,10 @@ const GamesPage: React.FC = () => {
   const [seasonFilter, setSeasonFilter] = useState<string>("");
   const [stageFilter, setStageFilter] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("");
-  const [roundFilter, setRoundFilter] = useState<string>("");
+  const [phaseFilter, setPhaseFilter] = useState<string>("");
+  const [bracketFilter, setBracketFilter] = useState<string>("");
+
+  const { regionQuery } = useRegion();
 
   const { data: games, total, totalPages, loading, error, refetch } = useGames({
     page: currentPage,
@@ -45,9 +50,11 @@ const GamesPage: React.FC = () => {
     seasonId: seasonFilter || undefined,
     stage: stageFilter || undefined,
     status: statusFilter || undefined,
-    round: roundFilter || undefined,
+    phase: phaseFilter || undefined,
+    ...regionQuery,
+    bracket: bracketFilter || undefined,
   });
-  const { data: seasons } = useSkinnySeasons({ page: 1, limit: 100 });
+  const { data: seasons } = useSkinnySeasons({ page: 1, limit: 100, ...regionQuery });
   const { data: gamesSample } = useGames({ page: 1, limit: 100 });
   const { patchGame } = useGameMutations();
   const { createGame, loading: creating, error: createError } = useCreateGames();
@@ -64,9 +71,10 @@ const GamesPage: React.FC = () => {
   const [statUploadGame, setStatUploadGame] = useState<Game | null>(null);
   const [newName, setNewName] = useState<string>("");
   const [newSeasonNumber, setNewSeasonNumber] = useState<string>("");
-  const [newStage, setNewStage] = useState<string>("Qualifiers; Round 1");
+  const [newStage, setNewStage] = useState<string>("Round 1");
+  const [newPhase, setNewPhase] = useState<Game["phase"]>("qualifiers");
+  const [newBracket, setNewBracket] = useState<Game["bracket"]>(null);
   const [newStatus, setNewStatus] = useState<string>("scheduled");
-  const [newRound, setNewRound] = useState<string>("Round 1");
   const [newTeam1Score, setNewTeam1Score] = useState<string>("");
   const [newTeam2Score, setNewTeam2Score] = useState<string>("");
   const [newDate, setNewDate] = useState<string>("");
@@ -85,9 +93,6 @@ const GamesPage: React.FC = () => {
   const uniqueStages = Array.from(
     new Set((gamesSample ?? []).map((game) => game.stage).filter((stage) => stage))
   ).sort();
-  const uniqueRounds = Array.from(
-    new Set((gamesSample ?? []).map((game) => game.round).filter(Boolean) as string[])
-  ).sort();
 
   // Commit inline edits
   const commitEdit = async () => {
@@ -105,8 +110,8 @@ const GamesPage: React.FC = () => {
       case "date": payload.date = new Date(value); break;
       case "videoUrl": payload.videoUrl = value === "" ? null : value; break;
       case "status": payload.status = value; break;
-      case "round": payload.round = value; break;
-      case "matchNumber": payload.matchNumber = value; break;
+      case "phase": payload.phase = value; break;
+      case "bracket": payload.bracket = value === "" ? null : value; break;
     }
 
     try {
@@ -173,8 +178,9 @@ const GamesPage: React.FC = () => {
         videoUrl: newVideoUrl === "" ? null : newVideoUrl,
         date: new Date(newDate),
         stage: newStage,
+        phase: newPhase,
+        bracket: newPhase === "playoffs" ? newBracket : null,
         status: newStatus as 'scheduled' | 'completed',
-        round: newRound,
       } satisfies CreateGameInput);
       setIsModalOpen(false);
       setNewName("");
@@ -225,8 +231,8 @@ const GamesPage: React.FC = () => {
         break;
       case "videoUrl": origValue = orig.videoUrl || ''; break;
       case "status": origValue = orig.status; break;
-      case "round": origValue = orig.round || ''; break;
-      case "matchNumber": origValue = orig.matchNumber || ''; break;
+      case "phase": origValue = orig.phase ?? 'qualifiers'; break;
+      case "bracket": origValue = orig.bracket ?? ''; break;
     }
     setEditing({ id, field, value: origValue });
   };
@@ -253,8 +259,13 @@ const GamesPage: React.FC = () => {
     setCurrentPage(1);
   };
 
-  const handleRoundFilterChange = (value: string) => {
-    setRoundFilter(value);
+  const handlePhaseFilterChange = (value: string) => {
+    setPhaseFilter(value);
+    setCurrentPage(1);
+  };
+
+  const handleBracketFilterChange = (value: string) => {
+    setBracketFilter(value);
     setCurrentPage(1);
   };
 
@@ -264,7 +275,8 @@ const GamesPage: React.FC = () => {
     setSeasonFilter("");
     setStageFilter("");
     setStatusFilter("");
-    setRoundFilter("");
+    setPhaseFilter("");
+    setBracketFilter("");
     setCurrentPage(1);
   };
 
@@ -276,10 +288,10 @@ const GamesPage: React.FC = () => {
 
   const columns: GameColumn[] = [
     {
-      key: "matchNumber",
-      header: "Match #",
+      key: "name",
+      header: "Game",
       render: (g) =>
-        editing?.id === g.id && editing?.field === "matchNumber" ? (
+        editing?.id === g.id && editing?.field === "name" ? (
           <input
             type="text"
             value={editing.value}
@@ -289,7 +301,45 @@ const GamesPage: React.FC = () => {
             autoFocus
           />
         ) : (
-          <span onClick={() => startEdit(g.id, "matchNumber")}>{g.matchNumber || g.name || `#${g.id}`}</span>
+          <span onClick={() => startEdit(g.id, "name")}>{g.name || `#${g.id}`}</span>
+        ),
+    },
+    {
+      key: "phase",
+      header: "Phase",
+      render: (g) =>
+        editing?.id === g.id && editing?.field === "phase" ? (
+          <select
+            value={editing.value}
+            onChange={e => setEditing({ ...editing, value: e.target.value })}
+            onBlur={commitEdit}
+            autoFocus
+          >
+            <option value="pre_season">Pre-Season</option>
+            <option value="qualifiers">Qualifiers</option>
+            <option value="playoffs">Playoffs</option>
+          </select>
+        ) : (
+          <span onClick={() => startEdit(g.id, "phase")}>{g.phase ?? 'qualifiers'}</span>
+        ),
+    },
+    {
+      key: "bracket",
+      header: "Bracket",
+      render: (g) =>
+        editing?.id === g.id && editing?.field === "bracket" ? (
+          <select
+            value={editing.value}
+            onChange={e => setEditing({ ...editing, value: e.target.value })}
+            onBlur={commitEdit}
+            autoFocus
+          >
+            <option value="">—</option>
+            <option value="winners">Winners</option>
+            <option value="losers">Losers</option>
+          </select>
+        ) : (
+          <span onClick={() => startEdit(g.id, "bracket")}>{g.bracket ?? '—'}</span>
         ),
     },
     {
@@ -341,24 +391,7 @@ const GamesPage: React.FC = () => {
             autoFocus
           />
         ) : (
-          <span onClick={() => startEdit(g.id, "stage")}>{g.stage}</span>
-        ),
-    },
-    {
-      key: "round",
-      header: "Round",
-      render: (g) =>
-        editing?.id === g.id && editing?.field === "round" ? (
-          <input
-            type="text"
-            value={editing.value}
-            onChange={e => setEditing({ ...editing, value: e.target.value })}
-            onBlur={commitEdit}
-            onKeyDown={e => e.key === 'Enter' && commitEdit()}
-            autoFocus
-          />
-        ) : (
-          <span onClick={() => startEdit(g.id, "round")}>{g.round || '—'}</span>
+          <span onClick={() => startEdit(g.id, "stage")}>{formatGameStage(g)}</span>
         ),
     },
     {
@@ -497,7 +530,7 @@ const GamesPage: React.FC = () => {
       </div>
 
       {/* Filters */}
-      <FilterBar onReset={(searchQuery || seasonFilter || stageFilter || statusFilter || roundFilter) ? clearFilters : undefined}>
+      <FilterBar onReset={(searchQuery || seasonFilter || stageFilter || statusFilter || phaseFilter || bracketFilter) ? clearFilters : undefined}>
         <div className="filter-group">
           <select
             className="filter-select"
@@ -539,11 +572,19 @@ const GamesPage: React.FC = () => {
         </div>
 
         <div className="filter-group">
-          <select className="filter-select" aria-label="Round" value={roundFilter} onChange={(e) => handleRoundFilterChange(e.target.value)}>
-            <option value="">All Rounds</option>
-            {uniqueRounds.map(round => (
-              <option key={round} value={round}>{round}</option>
-            ))}
+          <select className="filter-select" aria-label="Phase" value={phaseFilter} onChange={(e) => handlePhaseFilterChange(e.target.value)}>
+            <option value="">All Phases</option>
+            <option value="pre_season">Pre-Season</option>
+            <option value="qualifiers">Qualifiers</option>
+            <option value="playoffs">Playoffs</option>
+          </select>
+        </div>
+
+        <div className="filter-group">
+          <select className="filter-select" aria-label="Bracket" value={bracketFilter} onChange={(e) => handleBracketFilterChange(e.target.value)}>
+            <option value="">All Brackets</option>
+            <option value="winners">Winners</option>
+            <option value="losers">Losers</option>
           </select>
         </div>
       </FilterBar>
@@ -595,17 +636,45 @@ const GamesPage: React.FC = () => {
           </label>
 
           <label>
-            Round
-            <input type="text" value={newRound} onChange={(e) => setNewRound(e.target.value)} style={{ width: "100%", marginBottom: "0.75rem" }} />
+            Phase
+            <select
+              value={newPhase ?? 'qualifiers'}
+              onChange={(e) => {
+                const phase = e.target.value as Game["phase"];
+                setNewPhase(phase);
+                if (phase !== "playoffs") setNewBracket(null);
+              }}
+              style={{ width: "100%", marginBottom: "0.75rem" }}
+            >
+              <option value="pre_season">Pre-Season</option>
+              <option value="qualifiers">Qualifiers</option>
+              <option value="playoffs">Playoffs</option>
+            </select>
           </label>
 
-          {/* Stage */}
+          {newPhase === "playoffs" && (
+            <label>
+              Bracket
+              <select
+                value={newBracket ?? ""}
+                onChange={(e) => setNewBracket(e.target.value === "" ? null : e.target.value as Game["bracket"])}
+                style={{ width: "100%", marginBottom: "0.75rem" }}
+              >
+                <option value="">Auto (from stage)</option>
+                <option value="winners">Winners</option>
+                <option value="losers">Losers</option>
+              </select>
+            </label>
+          )}
+
           <label>
             Stage
             <input
               type="text"
               value={newStage}
               onChange={(e) => setNewStage(e.target.value)}
+              placeholder="e.g. Round 1, Round of 16, Finals"
+              required
               style={{ width: "100%", marginBottom: "0.75rem" }}
             />
           </label>

@@ -18,6 +18,7 @@ import "../../styles/SingleGame.css"
 
 // Import SEO component
 import SEO from "../SEO"
+import { formatGameStage } from "../../utils/gameLabels"
 
 function getWinningTeamIndex(game: Game): 0 | 1 | null {
     const winnerId = game.winnerTeamId ?? game.winner?.id ?? null
@@ -186,8 +187,8 @@ const SingleGame: React.FC = () =>
                                         ? `${game.name} - Upcoming Match`
                                         : `${game.name} - Game Results`}
                                     description={isUpcoming
-                                        ? `${team1.name} vs ${team2.name} - Upcoming ${game.stage} match from Season ${game.season.seasonNumber} of the Roblox Volleyball League.`
-                                        : `${team1.name} vs ${team2.name} - Final Score: ${game.team1Score}-${game.team2Score}. ${game.stage} match from Season ${game.season.seasonNumber} of the Roblox Volleyball League.`}
+                                        ? `${team1.name} vs ${team2.name} - Upcoming ${formatGameStage(game)} match from Season ${game.season.seasonNumber} of the Roblox Volleyball League.`
+                                        : `${team1.name} vs ${team2.name} - Final Score: ${game.team1Score}-${game.team2Score}. ${formatGameStage(game)} match from Season ${game.season.seasonNumber} of the Roblox Volleyball League.`}
                                     image="https://volleyball4-2.com/rvlLogo.png"
                                     url={`https://volleyball4-2.com/games/${game.id}`}
                                     type="sports_event"
@@ -196,7 +197,7 @@ const SingleGame: React.FC = () =>
                                         "@context": "https://schema.org",
                                         "@type": "SportsEvent",
                                         "name": game.name,
-                                        "description": `${team1.name} vs ${team2.name} - ${game.stage} match`,
+                                        "description": `${team1.name} vs ${team2.name} - ${formatGameStage(game)} match`,
                                         "url": `https://volleyball4-2.com/games/${game.id}`,
                                         "startDate": new Date(game.date).toISOString(),
                                         "endDate": new Date(game.date).toISOString(),
@@ -234,7 +235,7 @@ const SingleGame: React.FC = () =>
                                 <h1 className="game-title">{game.name}</h1>
 
                                 <div className="game-stage-block">
-                                    <h1 className="game-stage">{game.stage}</h1>
+                                    <h1 className="game-stage">{formatGameStage(game)}</h1>
                                 </div>
 
                                 {/* Metadata */}

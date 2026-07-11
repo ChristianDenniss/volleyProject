@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToMany, JoinTable, ManyToOne, JoinColumn } from 'typeorm';
 import { Players } from '../players/player.entity.js';
 import { Seasons } from '../seasons/season.entity.js';
+import type { Region } from '../regions/region.entity.js';
 
 @Entity()
 export class Awards {
@@ -21,7 +22,14 @@ export class Awards {
     imageUrl?: string;
 
     @Column()
-    seasonId!: number; // Foreign key to seasons table
+    seasonId!: number;
+
+    @Column()
+    regionId!: number;
+
+    @ManyToOne('Region')
+    @JoinColumn({ name: 'regionId' })
+    region!: Region;
 
     @CreateDateColumn({ type: 'timestamp' })
     createdAt!: Date;
@@ -29,13 +37,11 @@ export class Awards {
     @UpdateDateColumn({ type: 'timestamp' })
     updatedAt!: Date;
 
-    // Many-to-many relationship with Players
     @ManyToMany(() => Players, (player) => player.awards)
-    @JoinTable({ name: 'awards_players_players' }) // Explicitly set the join table name
-    players!: Players[];  // An award can be given to many players
+    @JoinTable({ name: 'awards_players_players' })
+    players!: Players[];
 
-    // Many-to-one relationship with Seasons
     @ManyToOne(() => Seasons, (season) => season.awards)
     @JoinColumn()
     season!: Seasons;
-} 
+}

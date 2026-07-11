@@ -1,39 +1,61 @@
 import { loggerMiddleware } from './logger.js';
-import { errorHandler } from './errorHandling.js';
 import { Application } from 'express';
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 import { authenticateToken } from "./authentication.js";
-import { authorizeRoles } from "./authorizeRoles.js"
+import { authorizeRoles } from "./authorizeRoles.js";
+import { adminRateLimiter } from "./rateLimit.js";
+import { csrfProtection } from "./csrfProtection.js";
+import { adminIpAllowlist } from "./adminIpAllowlist.js";
 
+const PRODUCTION_ORIGINS = ['https://volleyball4-2.com'];
+const DEVELOPMENT_ORIGINS = [
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'http://localhost:5174',
+];
+
+function getAllowedOrigins(): string[] {
+    if (process.env.CORS_ORIGINS) {
+        return process.env.CORS_ORIGINS.split(',').map((origin) => origin.trim()).filter(Boolean);
+    }
+
+    if (process.env.NODE_ENV === 'production') {
+        return PRODUCTION_ORIGINS;
+    }
+
+    return [...PRODUCTION_ORIGINS, ...DEVELOPMENT_ORIGINS];
+}
 
 /**
  * Register all global middleware to the Express application
  */
 export function globalMiddleware(app: Application): void
 {
-    // Code to only allow requests from a specific origin
-    // app.use(cors({
-    //     origin: 'http://localhost:3000' 
-    //   }));
+    app.use(helmet());
 
-    // CORS configuration
-    app.use(cors({
-        origin: ['https://volleyball4-2.com', 'http://localhost:3000', 'http://localhost:5173', 'http://localhost:5174']
-    }));
-    
-    // Handle preflight requests
-    app.options('*', cors());
-    
-    // Parse JSON bodies
-    app.use(express.json()); 
+    const allowedOrigins = getAllowedOrigins();
+    const corsOptions: cors.CorsOptions = {
+        origin: allowedOrigins,
+        credentials: true,
+    };
 
-    // Log requests
+    app.use(cors(corsOptions));
+    app.options('*', cors(corsOptions));
+
+    app.use(cookieParser());
+    app.use(express.json({ limit: "1mb" }));
+    app.use(csrfProtection);
+
     app.use(loggerMiddleware);
 
     app.use(
         "/api/admin",
         authenticateToken,
+        adminIpAllowlist,
+        adminRateLimiter,
         authorizeRoles("admin", "superadmin")
     );
-}   
+}

@@ -1,16 +1,20 @@
 import { Request, Response } from 'express';
 import { MissingFieldError } from '../../errors/MissingFieldError.js';
 import { NotFoundError } from '../../errors/NotFoundError.js';
-import { RecordService } from './records.service.js';
+import { RecordService, RecordFilters } from './records.service.js';
 import { parsePagination, toPaginatedResult } from '../../utils/pagination.js';
+import { parseRegionQuery } from '../../utils/regionQuery.js';
+import { RegionService } from '../regions/region.service.js';
 
 const RECORDS_DEFAULT_LIMIT = 10;
 
 export class RecordController {
     private recordService: RecordService;
+    private regionService: RegionService;
 
     constructor() {
         this.recordService = new RecordService();
+        this.regionService = new RegionService();
     }
 
     // Create a new record
@@ -40,7 +44,8 @@ export class RecordController {
     getRecords = async (req: Request, res: Response): Promise<void> => {
         try {
             const pagination = parsePagination(req.query, RECORDS_DEFAULT_LIMIT);
-            const [data, total] = await this.recordService.getAllRecords(pagination);
+            const filters = await this.parseFilters(req);
+            const [data, total] = await this.recordService.getAllRecords(pagination, filters);
             res.json(toPaginatedResult(data, total, pagination));
         } catch (error) {
             console.error("Error fetching records:", error);
@@ -209,4 +214,10 @@ export class RecordController {
             }
         }
     };
+
+    private async parseFilters(req: Request): Promise<RecordFilters> {
+        const regionFilter = parseRegionQuery(req.query as Record<string, unknown>);
+        const regionId = await this.regionService.resolveRegionId(regionFilter);
+        return { regionId };
+    }
 }

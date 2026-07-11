@@ -53,7 +53,6 @@ function paginated<T>(
 
 function gameListFilter(game: Game, params: URLSearchParams): boolean {
   const search = params.get("search")?.toLowerCase();
-  const round = params.get("round");
   const status = params.get("status");
   const stage = params.get("stage");
   const seasonId = params.get("seasonId");
@@ -61,16 +60,18 @@ function gameListFilter(game: Game, params: URLSearchParams): boolean {
   const region = params.get("region");
 
   if (seasonId && game.season.id !== Number(seasonId)) return false;
-  if (round && game.round !== round) return false;
   if (status && game.status !== status) return false;
   if (stage && game.stage !== stage) return false;
   if (phase && game.phase !== phase) return false;
-  if (region && game.region !== region) return false;
+  if (region) {
+    const gameRegion = typeof game.region === "string" ? game.region : game.region?.code;
+    if (gameRegion !== region) return false;
+  }
+  const bracket = params.get("bracket");
+  if (bracket && game.bracket !== bracket) return false;
   if (search) {
     const haystack = [
       game.name,
-      game.matchNumber,
-      game.round,
       game.stage,
       game.teams?.[0]?.name,
       game.teams?.[1]?.name,
@@ -84,10 +85,19 @@ function gameListFilter(game: Game, params: URLSearchParams): boolean {
 }
 
 export const handlers = [
+  http.get(api("regions"), () =>
+    json([
+      { id: 1, code: "na", name: "North American", sortOrder: 1 },
+      { id: 2, code: "eu", name: "European", sortOrder: 2 },
+      { id: 3, code: "as", name: "Asian", sortOrder: 3 },
+    ])
+  ),
+
   // Auth
   http.post(api("users/login"), async () =>
     json({ token: MOCK_AUTH_TOKEN, user: getAuthUser() })
   ),
+  http.post(api("users/logout"), async () => new HttpResponse(null, { status: 204 })),
   http.post(api("users/register"), async ({ request }) => {
     const body = (await request.json()) as {
       username: string;

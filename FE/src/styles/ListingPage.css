@@ -5,7 +5,14 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 0.75rem;
-  margin-bottom: 0.75rem;
+  /* Match teams-page: section gap below filters, then content wrapper padding */
+  margin-bottom: var(--space-section);
+}
+
+/* Mirrors .teams-wrapper spacing on card-grid listing pages */
+.listing-content-wrapper {
+  padding: 10px 0;
+  min-height: 500px;
 }
 
 .listing-controls-toolbar .ui-filter-bar {
@@ -36,7 +43,6 @@
 .listing-table-wrapper {
   width: 100%;
   overflow-x: auto;
-  min-height: 500px;
 }
 
 .listing-table {

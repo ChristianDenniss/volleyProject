@@ -79,10 +79,10 @@ export const useFetchArticleById = <T>(articleId: string) =>
         return useFetch<T>(`articles/${articleId}`);  // Always treats result as an array
     };
 
-export const useFetchPlayerById = <T>(playerId: string) =>
+export const useFetchPlayerById = <T>(playerId: string, region?: string) =>
 {
-    console.log(`Use fetch called using players/${playerId}`);
-    return useObjectFetch<T>(`players/${playerId}`);  // Always treats result as an array
+    const query = region ? `?region=${region}` : '';
+    return useObjectFetch<T>(`players/${playerId}${query}`);
 };
 
 export const useFetchAwardsById = <T>(playerId: string) =>

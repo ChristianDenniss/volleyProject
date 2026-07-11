@@ -1,10 +1,12 @@
 import { AppDataSource } from '../../db/data-source.js';
-import { Games, GameStatus, GamePhase, GameRegion } from './game.entity.js';
+import { Games, GameStatus, GamePhase } from './game.entity.js';
 import { resolveWinnerTeamId } from './gameWinner.js';
 import { Teams } from '../teams/team.entity.js';
 import { Seasons } from '../seasons/season.entity.js';
 import { mapChallongeToStage, parseRegionFromTournamentName } from './challongeStageMapper.js';
+import { inferBracketFromChallonge } from './gameBracket.js';
 import type { ImportChallongeInput } from './games.schema.js';
+import { RegionCode } from '../regions/region.entity.js';
 
 interface ChallongeMatch {
     id: number;
@@ -49,7 +51,7 @@ export interface ChallongeImportResult {
         failed: number;
     };
     details?: {
-        created: Array<{ gameId: number; matchNumber: string; team1: string; team2: string }>;
+        created: Array<{ gameId: number; stage: string; team1: string; team2: string }>;
         updated: Array<{ gameId: number; challongeMatchId: string; changedFields: string[] }>;
         skipped: Array<{ challongeMatchId: string; reason: string }>;
     };
@@ -62,7 +64,7 @@ interface PreparedGame {
     existingGameId?: number;
     changedFields?: string[];
     challongeMatchId: string;
-    matchNumber: string;
+    stage: string;
     team1Name: string;
     team2Name: string;
     team1Id: number;
@@ -87,7 +89,7 @@ export class ChallongeImportService {
         }
 
         const phase = (input.phase ?? 'qualifiers') as GamePhase;
-        const region = (input.region ?? parseRegionFromTournamentName(tournament.name) ?? 'na') as GameRegion;
+        const regionCode = (input.region ?? parseRegionFromTournamentName(tournament.name) ?? 'na') as RegionCode;
 
         const eligibleMatches = matchesData.filter(m => {
             if (input.round && m.round.toString() !== input.round && `Round ${m.round}` !== input.round) {
@@ -139,14 +141,22 @@ export class ChallongeImportService {
 
             const setScores = this.parseChallongeSetScores(challongeMatch.scores_csv);
             const overallScore = this.calculateOverallScoreFromSetScores(setScores);
-            const mapping = mapChallongeToStage({
+            const stage = mapChallongeToStage({
                 tournamentType: tournament.tournament_type,
                 tournamentName: tournament.name,
                 round: challongeMatch.round,
                 groupId: challongeMatch.group_id,
                 identifier: challongeMatch.identifier,
                 phase,
-                region,
+                region: regionCode,
+            });
+
+            const bracket = inferBracketFromChallonge({
+                round: challongeMatch.round,
+                tournamentType: tournament.tournament_type,
+                identifier: challongeMatch.identifier,
+                phase,
+                stage,
             });
 
             const matchDate = this.calculateMatchDate(
@@ -159,12 +169,11 @@ export class ChallongeImportService {
             );
 
             const gameData: Partial<Games> = {
-                matchNumber: `Round ${challongeMatch.round} - Match ${challongeMatch.number}`,
                 status: challongeMatch.state === 'complete' ? GameStatus.COMPLETED : GameStatus.SCHEDULED,
-                round: mapping.round,
                 phase,
-                region,
-                stage: mapping.stage,
+                regionId: season.regionId,
+                stage,
+                bracket,
                 date: matchDate,
                 team1Score: overallScore.team1Sets || null,
                 team2Score: overallScore.team2Sets || null,
@@ -208,7 +217,7 @@ export class ChallongeImportService {
                     prepared.push({
                         action: 'skip',
                         challongeMatchId: challongeMatch.id.toString(),
-                        matchNumber: gameData.matchNumber!,
+                        stage,
                         team1Name,
                         team2Name,
                         team1Id: team1.id,
@@ -221,7 +230,7 @@ export class ChallongeImportService {
                         existingGameId: existingByChallonge.id,
                         changedFields,
                         challongeMatchId: challongeMatch.id.toString(),
-                        matchNumber: gameData.matchNumber!,
+                        stage,
                         team1Name,
                         team2Name,
                         team1Id: team1.id,
@@ -233,7 +242,7 @@ export class ChallongeImportService {
                 prepared.push({
                     action: 'create',
                     challongeMatchId: challongeMatch.id.toString(),
-                    matchNumber: gameData.matchNumber!,
+                    stage,
                     team1Name,
                     team2Name,
                     team1Id: team1.id,
@@ -257,7 +266,7 @@ export class ChallongeImportService {
                 details: {
                     created: prepared.filter(p => p.action === 'create').map(p => ({
                         gameId: 0,
-                        matchNumber: p.matchNumber,
+                        stage: p.stage,
                         team1: p.team1Name,
                         team2: p.team2Name,
                     })),
@@ -315,7 +324,7 @@ export class ChallongeImportService {
                 result.summary.created++;
                 result.details!.created.push({
                     gameId: saved.id,
-                    matchNumber: item.matchNumber,
+                    stage: item.stage,
                     team1: item.team1Name,
                     team2: item.team2Name,
                 });
@@ -383,9 +392,9 @@ export class ChallongeImportService {
     private getChangedFields(existing: Games, incoming: Partial<Games>): string[] {
         const fields: string[] = [];
         const compare: Array<keyof Games> = [
-            'status', 'team1Score', 'team2Score', 'round', 'stage', 'phase', 'region',
+            'status', 'team1Score', 'team2Score', 'stage', 'phase', 'regionId', 'bracket',
             'winnerTeamId',
-            'set1Score', 'set2Score', 'set3Score', 'set4Score', 'set5Score', 'date', 'matchNumber',
+            'set1Score', 'set2Score', 'set3Score', 'set4Score', 'set5Score', 'date',
         ];
 
         for (const field of compare) {

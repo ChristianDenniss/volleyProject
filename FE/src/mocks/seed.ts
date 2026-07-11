@@ -23,20 +23,23 @@ const POSITIONS = [
 
 const STAGES = [
   "Regular Season",
-  "Winners Bracket; Round of 16",
-  "Winners Bracket; Quarterfinals",
-  "Winners Bracket; Semifinals",
-  "Winners Bracket; Finals",
-  "Losers Bracket; Round 1",
-  "Losers Bracket; Round 2",
-  "Losers Bracket; Round 3",
-  "Losers Bracket; Quarterfinals",
-  "Losers Bracket; Semifinals",
-  "Losers Bracket; Finals",
+  "Round 1",
+  "Round 2",
+  "Round 3",
+  "Round of 16",
+  "Quarterfinals",
+  "Semifinals",
+  "Finals",
   "Grand Finals",
-  "Grand Finals; Bracket Reset",
+  "Bracket Reset",
   "3rd Place Match",
 ] as const;
+
+const MOCK_REGIONS = {
+  na: { id: 1, code: "na" as const, name: "North American" },
+  eu: { id: 2, code: "eu" as const, name: "European" },
+  as: { id: 3, code: "as" as const, name: "Asian" },
+} as const;
 
 const PLAYER_NAMES = [
   "ace_striker",
@@ -365,6 +368,10 @@ function buildTeams(seasons: Season[], players: Player[]): Team[] {
   return teams;
 }
 
+function inferPlayoffBracket(slotIndex: number, gameId: number): Game["bracket"] {
+  return (slotIndex + gameId) % 3 === 0 ? "losers" : "winners";
+}
+
 function buildGames(seasons: Season[], teams: Team[]): Game[] {
   const games: Game[] = [];
   let gameId = 1;
@@ -389,6 +396,11 @@ function buildGames(seasons: Season[], teams: Team[]): Game[] {
         const team2Score = team1Wins ? loserScore : 3;
         const winnerTeamId = team1Wins ? team1.id : team2.id;
 
+        const stage = pick(STAGES, matchIndex + season.id);
+        const isPlayoff =
+          stage.includes("Round of") ||
+          ["Quarterfinals", "Semifinals", "Finals", "Grand Finals", "Bracket Reset", "3rd Place Match"].includes(stage);
+
         games.push({
           id: gameId++,
           name: `${team1.name} vs ${team2.name}`,
@@ -398,12 +410,14 @@ function buildGames(seasons: Season[], teams: Team[]): Game[] {
           winnerTeamId,
           videoUrl: matchIndex % 3 === 0 ? "https://www.youtube.com/watch?v=jUYJKjPvPoQ" : null,
           date: new Date(isoDate(2025, month, day, 18 + (matchIndex % 3))),
-          stage: pick(STAGES, matchIndex + season.id),
+          stage,
           status: 'completed',
-          phase: pick(STAGES, matchIndex + season.id).includes("Bracket") ? "playoffs" : "qualifiers",
-          region: pick(["na", "eu", "as", "sa"] as const, gameId),
-          round: pick(MATCH_ROUNDS, matchIndex),
-          matchNumber: `Match ${matchIndex + 1}`,
+          phase: isPlayoff ? "playoffs" : "qualifiers",
+          bracket: isPlayoff
+            ? ((matchIndex + season.id) % 3 === 0 ? "losers" : "winners")
+            : null,
+          regionId: MOCK_REGIONS[pick(["na", "eu", "as"] as const, gameId)].id,
+          region: MOCK_REGIONS[pick(["na", "eu", "as"] as const, gameId)],
           set1Score: "25-20",
           set2Score: team1Score + team2Score >= 4 ? "23-25" : "25-18",
           set3Score: "25-22",
@@ -588,15 +602,13 @@ function buildScheduleGameEntry(
   const tags = buildGameTags(round, slotIndex, gameId);
   const isExhibition = tags.includes("Exhibition");
   const phase: Game["phase"] = isExhibition
-    ? undefined
+    ? "pre_season"
     : tags.includes("Qualifiers")
       ? "qualifiers"
       : "playoffs";
-  const stage = isExhibition
-    ? "Pre-Season; Exhibition"
-    : tags.includes("Qualifiers")
-      ? `Qualifiers; ${round}`
-      : `${tags[tags.length - 1]}; ${round}`;
+  const stage = round;
+  const bracket: Game["bracket"] =
+    phase === "playoffs" ? inferPlayoffBracket(slotIndex, gameId) : null;
   const team1Score = completed ? pseudoRandom(gameId, 1, 3) : null;
   const team2Score = completed ? pseudoRandom(gameId + 2, 0, 2) : null;
   const winnerTeamId =
@@ -607,11 +619,11 @@ function buildScheduleGameEntry(
   return {
     id: gameId,
     name: `${team1.name} vs ${team2.name}`,
-    matchNumber: `${round} - Match ${(slotIndex % 4) + 1}`,
     status: completed ? "completed" : "scheduled",
-    round,
     phase,
-    region: 'na',
+    bracket,
+    regionId: MOCK_REGIONS.na.id,
+    region: MOCK_REGIONS.na,
     stage,
     date,
     team1Score,

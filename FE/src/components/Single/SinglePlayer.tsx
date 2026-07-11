@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react"
 import { useSinglePlayer, useAwardsByPlayerID } from "../../hooks/allFetch"
 import { useParams } from "react-router-dom"
+import { useRegion } from "../../context/regionContext"
+import type { RegionCode } from "../../types/interfaces"
 import { getRobloxAvatarUrl } from "../../utils/fetchAvatarRoblox"
 import Select from "react-select"
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -226,11 +228,14 @@ const calculateHOFScore = (player: any, awards: any[], careerTotals: any): numbe
 const PlayerProfiles: React.FC = () =>
 {
     const { id } = useParams<{ id: string }>()
+    const { regions } = useRegion()
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
-    const { data, error, loading } = useSinglePlayer(id || "")
+    const [profileRegion, setProfileRegion] = useState<'all' | RegionCode>('all')
+    const regionFilter = profileRegion === 'all' ? undefined : profileRegion
+    const { data, error, loading } = useSinglePlayer(id || "", regionFilter)
     const [selectedSeason, setSelectedSeason] = useState<number>(0)
     const [showAllGames, setShowAllGames] = useState<boolean>(false)
-    const { data: awards, loading: awardsLoading, error: awardsError } = useAwardsByPlayerID(id || "")
+    const { data: awards, loading: awardsLoading, error: awardsError } = useAwardsByPlayerID(id || "", regionFilter)
 
     useEffect(() =>
     {
@@ -492,6 +497,26 @@ const PlayerProfiles: React.FC = () =>
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <div className="player-region-tabs" style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem", flexWrap: "wrap" }}>
+                <button
+                    type="button"
+                    className={profileRegion === 'all' ? 'active' : ''}
+                    onClick={() => setProfileRegion('all')}
+                >
+                    All Regions
+                </button>
+                {regions.map((region) => (
+                    <button
+                        key={region.id}
+                        type="button"
+                        className={profileRegion === region.code ? 'active' : ''}
+                        onClick={() => setProfileRegion(region.code)}
+                    >
+                        {region.name}
+                    </button>
+                ))}
             </div>
 
             <div style={{ marginBottom: "1.5rem", maxWidth: "300px" }}>

@@ -1,7 +1,6 @@
-// src/validation/season.schema.ts
 import { z } from "zod";
+import { REGION_CODES } from "../regions/region.entity.js";
 
-// same as before
 export const createSeasonSchema = z.object({
     seasonNumber: z
         .number()
@@ -11,11 +10,10 @@ export const createSeasonSchema = z.object({
     endDate: z.coerce.date(),
     image: z.string().url().optional(),
     theme: z.string().default("None"),
-    // (relations commented out)
+    regionId: z.number().int().positive().optional(),
+    region: z.enum(REGION_CODES).optional(),
 });
 
-// for PATCH we allow any subset of fields
 export const updateSeasonSchema = createSeasonSchema.partial();
 
-// Type for your controller
 export type UpdateSeasonDto = z.infer<typeof updateSeasonSchema>;

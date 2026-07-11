@@ -15,10 +15,12 @@ import { Games } from "../modules/games/game.entity.js";
 import { Seasons } from "../modules/seasons/season.entity.js";
 import { Stats } from "../modules/stats/stat.entity.js";
 import { User } from "../modules/user/user.entity.js";
+import { RoleAuditLog } from "../modules/user/role-audit-log.entity.js";
 import { Article } from "../modules/articles/article.entity.js";
 import { Awards } from "../modules/awards/award.entity.js";
 import { Records } from "../modules/records/records.entity.js";
 import { Application } from "../modules/applications/application.entity.js";
+import { Region } from "../modules/regions/region.entity.js";
 
 dotenv.config();
 
@@ -30,10 +32,12 @@ const entities = [
     Seasons,
     Stats,
     User,
+    RoleAuditLog,
     Article,
     Awards,
     Records,
-    Application
+    Application,
+    Region
 ];
 
 // Configure AppDataSource
@@ -49,16 +53,9 @@ export const AppDataSource = new DataSource({
             database: process.env.DB_NAME || "volleyball",
         }
     ),
-    synchronize: false, // Disable synchronize to prevent automatic schema updates
-    logging: [
-        "error",           // Log all errors
-        "warn",            // Log warnings
-        "query",           // Log all queries
-        "schema",          // Log schema changes
-        "migration",       // Log migrations
-        "info"             // Log general info
-    ],
-    maxQueryExecutionTime: 1000, // Log queries that take more than 1 second
+    synchronize: false,
+    logging: process.env.NODE_ENV === "production" ? ["error"] : ["error", "warn", "migration"],
+    maxQueryExecutionTime: 1000,
     entities: entities,
     migrations: [join(__dirname, "..", "..", "migrations", "*.{js,ts}")], // Point to dist/migrations in production
     migrationsTableName: "migrations", // Explicitly set migrations table name

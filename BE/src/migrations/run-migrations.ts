@@ -6,8 +6,9 @@ import { fileURLToPath } from "url";
 // Load environment variables
 config();
 
-// Force production mode
-process.env.NODE_ENV = 'production';
+// Default to local development unless the environment explicitly selects
+// production (for example, NODE_ENV=production in the deployment platform).
+process.env.NODE_ENV ??= 'development';
 
 // Get current directory for ES modules
 const __filename = fileURLToPath(import.meta.url);

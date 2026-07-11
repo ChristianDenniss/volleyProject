@@ -1,16 +1,20 @@
 import { Request, Response } from 'express';
 import { StatService, StatFilters } from './stat.service.js';
 import { parsePagination, toPaginatedResult } from '../../utils/pagination.js';
+import { parseRegionQuery } from '../../utils/regionQuery.js';
+import { RegionService } from '../regions/region.service.js';
 
 const STATS_DEFAULT_LIMIT = 25;
 
 export class StatController
 {
     private statService: StatService;
+    private regionService: RegionService;
 
     constructor()
     {
         this.statService = new StatService();
+        this.regionService = new RegionService();
     }
 
     // Create a new stat entry
@@ -99,7 +103,12 @@ export class StatController
         {
             const pagination = parsePagination(req.query, STATS_DEFAULT_LIMIT);
             const { search } = req.query;
-            const filters: StatFilters = { search: typeof search === 'string' && search.length > 0 ? search : undefined };
+            const regionFilter = parseRegionQuery(req.query as Record<string, unknown>);
+            const regionId = await this.regionService.resolveRegionId(regionFilter);
+            const filters: StatFilters = {
+                search: typeof search === 'string' && search.length > 0 ? search : undefined,
+                regionId,
+            };
             const [data, total] = await this.statService.getAllStats(pagination, filters);
             res.json(toPaginatedResult(data, total, pagination));
         }

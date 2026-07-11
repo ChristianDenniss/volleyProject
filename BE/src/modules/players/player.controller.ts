@@ -3,14 +3,18 @@ import { MissingFieldError } from '../../errors/MissingFieldError.js';
 import { NotFoundError } from '../../errors/NotFoundError.js';
 import { PlayerService, PlayerFilters } from './player.service.js';
 import { parsePagination, toPaginatedResult } from '../../utils/pagination.js';
+import { parseRegionQuery } from '../../utils/regionQuery.js';
+import { RegionService } from '../regions/region.service.js';
 
 const PLAYERS_DEFAULT_LIMIT = 25;
 
 export class PlayerController {
     private playerService: PlayerService;
+    private regionService: RegionService;
 
     constructor() {
         this.playerService = new PlayerService();
+        this.regionService = new RegionService();
     }
 
     // Create a new player
@@ -190,7 +194,7 @@ export class PlayerController {
     getPlayers = async (req: Request, res: Response): Promise<void> => {
         try {
             const pagination = parsePagination(req.query, PLAYERS_DEFAULT_LIMIT);
-            const filters = this.parseFilters(req);
+            const filters = await this.parseFilters(req);
             const [data, total] = await this.playerService.getAllPlayers(pagination, filters);
             res.json(toPaginatedResult(data, total, pagination));
         } catch (error) {
@@ -203,7 +207,7 @@ export class PlayerController {
     getMediumPlayers = async (req: Request, res: Response): Promise<void> => {
         try {
             const pagination = parsePagination(req.query, PLAYERS_DEFAULT_LIMIT);
-            const filters = this.parseFilters(req);
+            const filters = await this.parseFilters(req);
             const [data, total] = await this.playerService.getMediumAllPlayers(pagination, filters);
             res.json(toPaginatedResult(data, total, pagination));
         } catch (error) {
@@ -212,16 +216,23 @@ export class PlayerController {
         }
     };
 
-    private parseFilters(req: Request): PlayerFilters {
+    private async parseFilters(req: Request): Promise<PlayerFilters> {
         const { search } = req.query;
-        return { search: typeof search === 'string' && search.length > 0 ? search : undefined };
+        const regionFilter = parseRegionQuery(req.query as Record<string, unknown>);
+        const regionId = await this.regionService.resolveRegionId(regionFilter);
+        return {
+            search: typeof search === 'string' && search.length > 0 ? search : undefined,
+            regionId,
+        };
     }
 
     // Get player by ID
     getPlayerById = async (req: Request, res: Response): Promise<void> => {
         try {
             const { id } = req.params;
-            const player = await this.playerService.getPlayerById(parseInt(id));
+            const regionFilter = parseRegionQuery(req.query as Record<string, unknown>);
+            const regionId = await this.regionService.resolveRegionId(regionFilter);
+            const player = await this.playerService.getPlayerById(parseInt(id), regionId);
             res.json(player);
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : "Failed to fetch player";

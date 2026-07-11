@@ -7,11 +7,12 @@ import "../styles/ListingPage.css";
 import SearchBar                                from "./Searchbar";
 import Pagination                               from "./Pagination";
 import FilterBar                                from "./ui/FilterBar";
+import { useRegion } from "../context/regionContext";
 
 const Teams: React.FC = () =>
 {
-    /* Get team data via custom hook */
-    const { data, error } = useMediumTeams();
+    const { regionQuery } = useRegion();
+    const { data, error } = useMediumTeams(regionQuery);
 
     /* Track the currently "opened" team card */
     const [ activeTeam,         setActiveTeam ]         = useState<string | null>(null);

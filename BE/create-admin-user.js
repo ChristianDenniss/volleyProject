@@ -1,26 +1,18 @@
 // create-admin-user.js
-// Script to create an initial admin user
+// Script to create an initial superadmin user.
+// Requires ADMIN_USERNAME, ADMIN_EMAIL, and ADMIN_PASSWORD env vars — never hardcodes credentials.
 
 import { DataSource } from "typeorm";
 import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
-import { join, dirname } from "path";
-import { fileURLToPath } from "url";
 
-// Get the current file's directory in ESM
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-// Load environment variables
 dotenv.config();
 
-// Import the User entity
 import { User } from "./src/modules/user/user.entity.js";
 
-// Configure DataSource
 const AppDataSource = new DataSource({
     type: "postgres",
-    ...(process.env.DATABASE_URL 
+    ...(process.env.DATABASE_URL
         ? { url: process.env.DATABASE_URL }
         : {
             host: process.env.DB_HOST || "localhost",
@@ -37,16 +29,28 @@ const AppDataSource = new DataSource({
 });
 
 async function createAdminUser() {
+    const username = process.env.ADMIN_USERNAME;
+    const email = process.env.ADMIN_EMAIL;
+    const password = process.env.ADMIN_PASSWORD;
+
+    if (!username || !email || !password) {
+        console.error("FATAL: Set ADMIN_USERNAME, ADMIN_EMAIL, and ADMIN_PASSWORD before running this script.");
+        process.exit(1);
+    }
+
+    if (password.length < 12) {
+        console.error("FATAL: ADMIN_PASSWORD must be at least 12 characters.");
+        process.exit(1);
+    }
+
     try {
-        // Initialize database connection
         await AppDataSource.initialize();
         console.log("Database connection established");
 
         const userRepository = AppDataSource.getRepository(User);
 
-        // Check if admin user already exists
         const existingAdmin = await userRepository.findOne({
-            where: { username: "admin" }
+            where: { username },
         });
 
         if (existingAdmin) {
@@ -57,37 +61,31 @@ async function createAdminUser() {
             return;
         }
 
-        // Hash password
-        const hashedPassword = await bcrypt.hash("admin123", 10);
+        const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Create admin user
         const adminUser = new User();
-        adminUser.username = "admin";
-        adminUser.email = "admin@volleyball.com";
+        adminUser.username = username;
+        adminUser.email = email;
         adminUser.password = hashedPassword;
         adminUser.role = "superadmin";
+        adminUser.tokenVersion = 0;
 
         const savedUser = await userRepository.save(adminUser);
 
         console.log("✅ Admin user created successfully!");
-        console.log("Username: admin");
-        console.log("Password: admin123");
-        console.log("Role: superadmin");
-        console.log("Email: admin@volleyball.com");
+        console.log("Username:", savedUser.username);
+        console.log("Role:", savedUser.role);
+        console.log("Email:", savedUser.email);
         console.log("ID:", savedUser.id);
-
-        console.log("\n🔐 You can now:");
-        console.log("1. Login via the web app with username: 'admin', password: 'admin123'");
-        console.log("2. Use JWT tokens for API access");
-        console.log("3. Use your API key for direct access");
-
     } catch (error) {
         console.error("Error creating admin user:", error);
+        process.exitCode = 1;
     } finally {
-        await AppDataSource.destroy();
-        console.log("Database connection closed");
+        if (AppDataSource.isInitialized) {
+            await AppDataSource.destroy();
+            console.log("Database connection closed");
+        }
     }
 }
 
-// Run the script
-createAdminUser(); 
+createAdminUser();

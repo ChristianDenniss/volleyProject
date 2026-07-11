@@ -13,7 +13,7 @@ export interface UserListParams extends PaginationParams {
 // Custom hook to fetch a page of users and handle role changes
 export const useUsers = (params: UserListParams = DEFAULT_PAGINATION) =>
 {
-    const { token } = useAuth();
+    const { token, isAuthenticated } = useAuth();
     const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
     const { data, total, totalPages, page, limit, loading, error } =
@@ -30,7 +30,7 @@ export const useUsers = (params: UserListParams = DEFAULT_PAGINATION) =>
     (
         async (id: number, role: User["role"]) =>
         {
-            if (!token) {
+            if (!isAuthenticated) {
                 throw new Error("You must be logged in to change user roles");
             }
 

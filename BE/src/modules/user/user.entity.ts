@@ -19,6 +19,9 @@ export class User
     @Column({ default: 'user' })
     role!: string;
 
+    @Column({ default: 0 })
+    tokenVersion!: number;
+
     @CreateDateColumn({ type: 'timestamp' })
     createdAt!: Date;
 

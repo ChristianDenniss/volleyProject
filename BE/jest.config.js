@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   transform: {
     '^.+\\.tsx?$': ['@swc/jest']
   },
@@ -7,5 +7,6 @@ module.exports = {
   moduleFileExtensions: ['ts', 'js', 'json', 'node'],
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1'
-  }
+  },
+  extensionsToTreatAsEsm: ['.ts'],
 };

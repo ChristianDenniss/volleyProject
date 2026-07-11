@@ -3,20 +3,26 @@ version: '3.8'
 services:
   backend:
     build:
-      context: .               # Keep the context as the BE directory
-      dockerfile: Dockerfile     # Point to the Dockerfile outside the BE directory (root directory)
+      context: .
+      dockerfile: Dockerfile
     volumes:
-      - ./dist:/app/dist       # Only mount the dist directory
+      - ./dist:/app/dist
     ports:
-      - "3000:3000"                 # Explicitly set port to 3000
+      - "3000:3000"
     environment:
-      - NODE_ENV=production
-      - PORT=3000                   # Hardcode PORT for reliability
+      - NODE_ENV=${NODE_ENV:-development}
+      - PORT=3000
       - COOLIFY_URL=${COOLIFY_URL}
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/volleyball?sslmode=disable
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET is required}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:?REDIS_PASSWORD is required}
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@db:5432/${POSTGRES_DB:-volleyball}?sslmode=disable
+      - ALLOW_REGISTRATION=${ALLOW_REGISTRATION:-false}
+      - CORS_ORIGINS=${CORS_ORIGINS:-https://volleyball4-2.com}
+      - ADMIN_IP_ALLOWLIST=${ADMIN_IP_ALLOWLIST:-}
     depends_on:
-      - db                          # Ensure DB service starts before backend
-      - redis                       # Ensure Redis service starts before backend
+      - db
+      - redis
     logging:
       driver: "json-file"
       options:
@@ -27,13 +33,11 @@ services:
   db:
     image: postgres:16-alpine
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=volleyball
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      - POSTGRES_DB=${POSTGRES_DB:-volleyball}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
     logging:
       driver: "json-file"
       options:
@@ -43,8 +47,7 @@ services:
 
   redis:
     image: redis:7-alpine
-    ports:
-      - "6379:6379"
+    command: redis-server --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
     volumes:
       - redis_data:/data
     logging:

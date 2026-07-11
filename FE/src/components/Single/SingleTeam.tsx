@@ -5,6 +5,7 @@ import { Player, Stats, Game, Team }                 from '../../types/interface
 import { useSingleTeam }                             from '../../hooks/allFetch';
 import "../../styles/SingleTeam.css";
 import SEO from "../SEO";
+import { formatGameStage } from "../../utils/gameLabels";
 
 const SingleTeam: React.FC = () =>
 {
@@ -340,7 +341,7 @@ const SingleTeam: React.FC = () =>
                                     <p><strong>Date:</strong> {new Date(game.date).toLocaleDateString()}</p>
                                     <p><strong>Score:</strong> {game.team1Score} - {game.team2Score}</p>
                                     <p><strong>Season:</strong> {team.season?.seasonNumber ?? "N/A"}</p>
-                                    <p><strong>Stage: </strong> {game.stage}</p>
+                                    <p><strong>Stage: </strong> {formatGameStage(game)}</p>
                                 </Link>
                             ))}
                         </div>

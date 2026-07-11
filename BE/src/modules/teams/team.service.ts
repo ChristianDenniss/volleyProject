@@ -11,10 +11,13 @@ import { DuplicateError } from '../../errors/DuplicateError.js';
 import { NotFoundError } from '../../errors/NotFoundError.js';
 import { CreateTeamDto, UpdateTeamDto, CreateMultipleTeamsDto } from './teams.schema.js';
 import { PaginationParams } from '../../utils/pagination.js';
+import { RegionService } from '../regions/region.service.js';
+import { RegionCode } from '../regions/region.entity.js';
 
 export interface TeamFilters {
     search?: string;
     seasonId?: number;
+    regionId?: number;
 }
 
 export class TeamService {
@@ -22,19 +25,35 @@ export class TeamService {
     private playerRepository: Repository<Players>;
     private seasonRepository: Repository<Seasons>;
     private gameRepository: Repository<Games>;
+    private regionService: RegionService;
 
     constructor() {
         this.teamRepository = AppDataSource.getRepository(Teams);
         this.playerRepository = AppDataSource.getRepository(Players);
         this.seasonRepository = AppDataSource.getRepository(Seasons);
         this.gameRepository = AppDataSource.getRepository(Games);
+        this.regionService = new RegionService();
+    }
+
+    private async resolveRegionId(regionId?: number, regionCode?: string): Promise<number> {
+        if (regionId) {
+            const region = await this.regionService.getRegionById(regionId);
+            if (!region) throw new NotFoundError(`Region with ID ${regionId} not found`);
+            return region.id;
+        }
+        if (regionCode) {
+            const region = await this.regionService.requireRegionByCode(regionCode as RegionCode);
+            return region.id;
+        }
+        const na = await this.regionService.requireRegionByCode('na');
+        return na.id;
     }
 
     /**
      * Create a new team with validation
      */
     async createTeam(teamData: CreateTeamDto): Promise<Teams> {
-        const { name, seasonNumber, placement, playerIds, gameIds, logoUrl } = teamData;
+        const { name, seasonNumber, placement, playerIds, gameIds, logoUrl, regionId, region } = teamData;
 
         // Validation for missing name
         if (!name) {
@@ -47,17 +66,18 @@ export class TeamService {
         }
 
         // Fetch the season to associate with the team
+        const resolvedRegionId = await this.resolveRegionId(regionId, region);
+
         const season = await this.seasonRepository.findOne({
-            where: { seasonNumber },
+            where: { seasonNumber, regionId: resolvedRegionId },
             relations: ["teams"]
         });
         if (!season) {
-            throw new NotFoundError(`Season with number:${seasonNumber} not found`);
+            throw new NotFoundError(`Season ${seasonNumber} not found in this region`);
         }
 
-        // Check for existing team with the same name and seasonNumber
         const existingTeam = await this.teamRepository.findOne({
-            where: { name, season: { seasonNumber } }
+            where: { name, season: { seasonNumber, regionId: resolvedRegionId } }
         });
 
         if (existingTeam) {
@@ -68,6 +88,7 @@ export class TeamService {
         const newTeam = new Teams();
         newTeam.name = name;
         newTeam.season = season;
+        newTeam.regionId = season.regionId;
 
         // Only override placement if one was provided
         if (placement !== undefined) {
@@ -193,6 +214,7 @@ export class TeamService {
         const where: FindOptionsWhere<Teams> = {};
         if (filters.search) where.name = ILike(`%${filters.search}%`);
         if (filters.seasonId) where.season = { id: filters.seasonId } as any;
+        if (filters.regionId) where.regionId = filters.regionId;
         return where;
     }
 
@@ -204,6 +226,7 @@ export class TeamService {
             where: this.buildWhere(filters),
             relations: [
                 "season",
+                "region",
                 "players",
                 "players.stats",
                 "players.stats.game",
@@ -251,6 +274,7 @@ export class TeamService {
             where: { id },
             relations: [
                 "season",
+                "region",
                 "players",
                 "players.stats",
                 "players.stats.game",
@@ -288,6 +312,7 @@ export class TeamService {
             where: { season: { id: seasonId } },
             relations: [
                 "season",
+                "region",
                 "players",
                 "players.stats",
                 "players.stats.game",

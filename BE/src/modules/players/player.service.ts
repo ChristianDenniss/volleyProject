@@ -10,6 +10,7 @@ import { PaginationParams } from '../../utils/pagination.js';
 
 export interface PlayerFilters {
     search?: string;
+    regionId?: number;
 }
 
 export class PlayerService extends CacheableService
@@ -110,7 +111,22 @@ export class PlayerService extends CacheableService
     private buildWhere(filters: PlayerFilters): FindOptionsWhere<Players> {
         const where: FindOptionsWhere<Players> = {};
         if (filters.search) where.name = ILike(`%${filters.search}%`);
+        if (filters.regionId) where.teams = { regionId: filters.regionId } as any;
         return where;
+    }
+
+    private filterPlayerByRegion(player: Players, regionId?: number): Players {
+        if (!regionId) return player;
+
+        if (player.teams) {
+            player.teams = player.teams.filter(team => team.regionId === regionId);
+        }
+        if (player.stats) {
+            player.stats = player.stats.filter(stat =>
+                stat.game?.regionId === regionId || stat.game?.season?.regionId === regionId
+            );
+        }
+        return player;
     }
 
     /**
@@ -121,7 +137,7 @@ export class PlayerService extends CacheableService
         return this.getCachedQuery('all', { ...pagination, ...filters }, () =>
             this.playerRepository.findAndCount({
                 where: this.buildWhere(filters),
-                relations: ["teams", "teams.season", "stats", "stats.game", "stats.game.season", "stats.game.teams"], // Include game and season relations for stats
+                relations: ["teams", "teams.season", "teams.region", "stats", "stats.game", "stats.game.season", "stats.game.teams"],
                 skip: pagination.skip,
                 take: pagination.take
             })
@@ -136,7 +152,7 @@ export class PlayerService extends CacheableService
         return this.getCachedQuery('medium', { ...pagination, ...filters }, () =>
             this.playerRepository.findAndCount({
                 where: this.buildWhere(filters),
-                relations: ["teams", "teams.season"],
+                relations: ["teams", "teams.season", "teams.region"],
                 skip: pagination.skip,
                 take: pagination.take
             })
@@ -146,14 +162,14 @@ export class PlayerService extends CacheableService
     /**
      * Get player by ID with validation
      */
-    async getPlayerById(id: number): Promise<Players> 
+    async getPlayerById(id: number, regionId?: number): Promise<Players> 
     {
         if (!id) throw new MissingFieldError("Player ID");
 
         const player = await this.getCachedById(id, async () => {
             const player = await this.playerRepository.findOne({
                 where: { id },
-                relations: ["teams", "stats", "stats.game", "stats.game.season", "teams.season", "teams.games", "teams.games.season"],
+                relations: ["teams", "teams.season", "teams.region", "stats", "stats.game", "stats.game.season", "teams.games", "teams.games.season"],
             });
 
             return player;
@@ -161,7 +177,7 @@ export class PlayerService extends CacheableService
 
         if (!player) throw new NotFoundError(`Player with ID ${id} not found`);
 
-        return player;
+        return this.filterPlayerByRegion(player, regionId);
     }
 
     /**

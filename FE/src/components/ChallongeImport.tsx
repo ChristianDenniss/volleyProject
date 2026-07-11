@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useSeasons } from '../hooks/allFetch';
 import { authFetch } from '../hooks/authFetch';
+import { useAuth } from '../context/authContext';
 import type { ImportChallongeInput, ChallongeImportResult } from '../types/interfaces';
 import '../styles/ChallongeImport.css';
 
@@ -11,6 +12,7 @@ interface ChallongeImportProps {
 
 const ChallongeImport: React.FC<ChallongeImportProps> = ({ onImportSuccess, onCancel }) => {
   const { data: seasons } = useSeasons();
+  const { token } = useAuth();
   const [formData, setFormData] = useState<Partial<ImportChallongeInput>>({
     challongeUrl: '',
     seasonId: 0,
@@ -47,7 +49,7 @@ const ChallongeImport: React.FC<ChallongeImportProps> = ({ onImportSuccess, onCa
       const response = await authFetch(`${backendUrl}/api/games/import-challonge`, {
         method: 'POST',
         body: JSON.stringify(formData),
-      }, localStorage.getItem('authToken_v2'));
+      }, token);
 
       const result: ChallongeImportResult = await response.json();
 
@@ -125,6 +127,7 @@ const ChallongeImport: React.FC<ChallongeImportProps> = ({ onImportSuccess, onCa
                 onChange={(e) => handleInputChange('phase', e.target.value)}
                 required
               >
+                <option value="pre_season">Pre-Season</option>
                 <option value="qualifiers">Qualifiers</option>
                 <option value="playoffs">Playoffs</option>
               </select>
@@ -138,17 +141,16 @@ const ChallongeImport: React.FC<ChallongeImportProps> = ({ onImportSuccess, onCa
                 onChange={(e) => handleInputChange('region', e.target.value)}
                 required
               >
-                <option value="na">NA</option>
-                <option value="eu">EU</option>
-                <option value="as">AS</option>
-                <option value="sa">SA</option>
+                <option value="na">North American</option>
+                <option value="eu">European</option>
+                <option value="as">Asian</option>
               </select>
             </div>
           </div>
 
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="round">Round (Optional)</label>
+              <label htmlFor="round">Challonge Round Filter (Optional)</label>
               <input
                 type="text"
                 id="round"
@@ -234,7 +236,7 @@ const ChallongeImport: React.FC<ChallongeImportProps> = ({ onImportSuccess, onCa
             <li><strong>Teams must exist</strong> in the selected season before import — none are created automatically</li>
             <li><strong>All-or-nothing:</strong> if any team cannot be matched, the entire import is aborted</li>
             <li><strong>Re-import:</strong> existing games update only when teams match; identical games are skipped</li>
-            <li><strong>Stages:</strong> Swiss/qualifier rounds map to &quot;Qualifiers; Round N&quot;</li>
+            <li><strong>Stages:</strong> Swiss/qualifier rounds map to &quot;Round N&quot;; playoffs use clean labels like &quot;Round of 16&quot; with winners/losers on the bracket field</li>
           </ul>
         </div>
       </div>

@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateCol
 import type { Seasons } from '../seasons/season.entity.js';
 import type { Teams } from '../teams/team.entity.js';
 import type { Stats } from '../stats/stat.entity.js';
+import type { Region } from '../regions/region.entity.js';
 
 export enum GameStatus {
     SCHEDULED = 'scheduled',
@@ -10,14 +11,14 @@ export enum GameStatus {
 
 export enum GamePhase {
     QUALIFIERS = 'qualifiers',
-    PLAYOFFS = 'playoffs'
+    PLAYOFFS = 'playoffs',
+    PRE_SEASON = 'pre_season',
 }
 
-export enum GameRegion {
-    NA = 'na',
-    EU = 'eu',
-    AS = 'as',
-    SA = 'sa'
+/** Double-elimination side; null for qualifiers, pre-season, grand finals, etc. */
+export enum GameBracket {
+    WINNERS = 'winners',
+    LOSERS = 'losers',
 }
 
 @Entity()
@@ -40,7 +41,7 @@ export class Games {
     @Column({ default: null })
     videoUrl!: string;
 
-    @Column({ default: "Winners Bracket; Round of 16" })
+    @Column({ default: "Round 1" })
     stage!: string;
 
     @Column({
@@ -49,12 +50,6 @@ export class Games {
         default: GameStatus.SCHEDULED
     })
     status!: GameStatus;
-
-    @Column({ nullable: true, type: 'varchar' })
-    matchNumber!: string | null;
-
-    @Column({ nullable: true, type: 'varchar' })
-    round!: string | null;
 
     @Column({
         type: 'enum',
@@ -65,10 +60,17 @@ export class Games {
 
     @Column({
         type: 'enum',
-        enum: GameRegion,
-        default: GameRegion.NA
+        enum: GameBracket,
+        nullable: true,
     })
-    region!: GameRegion;
+    bracket!: GameBracket | null;
+
+    @Column()
+    regionId!: number;
+
+    @ManyToOne('Region')
+    @JoinColumn({ name: 'regionId' })
+    region!: Region;
 
     @Column({ nullable: true, type: 'varchar' })
     set1Score!: string | null;

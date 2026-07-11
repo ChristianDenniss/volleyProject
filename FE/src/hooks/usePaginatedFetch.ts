@@ -17,8 +17,9 @@ export const DEFAULT_PAGINATION: PaginationParams = { page: 1, limit: 100 };
  */
 export const usePaginatedFetch = <T>(
     endpoint: string,
-    params: PaginationParams = DEFAULT_PAGINATION
+    params: Partial<PaginationParams> = DEFAULT_PAGINATION
 ) => {
+    const mergedParams: PaginationParams = { ...DEFAULT_PAGINATION, ...params };
     const [data, setData] = useState<T[]>([]);
     const [total, setTotal] = useState<number>(0);
     const [totalPages, setTotalPages] = useState<number>(1);
@@ -37,7 +38,7 @@ export const usePaginatedFetch = <T>(
             setLoading(true);
 
             const query = new URLSearchParams();
-            Object.entries(params).forEach(([key, value]) => {
+            Object.entries(mergedParams).forEach(([key, value]) => {
                 if (value !== undefined && value !== null && value !== "") {
                     query.set(key, String(value));
                 }
@@ -72,5 +73,5 @@ export const usePaginatedFetch = <T>(
 
     const refetch = useCallback(() => setRefreshCount((c) => c + 1), []);
 
-    return { data, total, totalPages, page: params.page, limit: params.limit, loading, error, refetch };
+    return { data, total, totalPages, page: mergedParams.page, limit: mergedParams.limit, loading, error, refetch };
 };

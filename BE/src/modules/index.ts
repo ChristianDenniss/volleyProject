@@ -11,7 +11,10 @@ import { registerAwardRoutes } from './awards/award.routes.js';
 import { registerRecordRoutes } from './records/records.routes.js';
 import { registerTriviaRoutes } from './trivia/trivia.routes.js';
 import { registerApplicationRoutes } from './applications/application.routes.js';
+import { registerRegionRoutes } from './regions/region.routes.js';
 import { cacheHealthCheck } from '../middleware/cache.js';
+import { authenticateToken } from '../middleware/authentication.js';
+import { authorizeRoles } from '../middleware/authorizeRoles.js';
 
 /**
  * Register all module routes with the Express application
@@ -19,6 +22,7 @@ import { cacheHealthCheck } from '../middleware/cache.js';
 export function registerModules(app: Application): void 
 {
     // Register routes from each module
+    registerRegionRoutes(app);
     registerRobloxRoutes(app);
     registerTeamRoutes(app);
     registerPlayerRoutes(app);
@@ -32,8 +36,8 @@ export function registerModules(app: Application): void
     registerTriviaRoutes(app);
     registerApplicationRoutes(app);
 
-    // Cache health check route
-    app.get('/api/cache/health', cacheHealthCheck);
+    // Cache health check route (admin only)
+    app.get('/api/cache/health', authenticateToken, authorizeRoles("admin", "superadmin"), cacheHealthCheck);
 
     // Default route
     app.get('/', (req, res) => {

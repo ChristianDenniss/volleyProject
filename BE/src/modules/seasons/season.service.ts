@@ -1,4 +1,4 @@
-import { Repository } from "typeorm";
+import { Repository, FindOptionsWhere } from "typeorm";
 import { AppDataSource } from "../../db/data-source.js";
 import { Seasons } from "./season.entity.js";
 import { MissingFieldError } from "../../errors/MissingFieldError.js";
@@ -8,49 +8,76 @@ import { DateError } from "../../errors/DateErrors.js";
 import { OutOfBoundsError } from "../../errors/OutOfBoundsError.js";
 import { ConflictError } from "../../errors/ConflictError.js";
 import { PaginationParams } from "../../utils/pagination.js";
+import { RegionService } from "../regions/region.service.js";
+import { RegionCode } from "../regions/region.entity.js";
+
+export interface SeasonFilters {
+    regionId?: number;
+}
 
 export class SeasonService
 {
     private seasonRepository: Repository<Seasons>;
+    private regionService: RegionService;
 
     constructor()
     {
         this.seasonRepository = AppDataSource.getRepository(Seasons);
+        this.regionService = new RegionService();
     }
 
-    /**
-     * Create a new season with validation
-     */
+    private buildWhere(filters: SeasonFilters): FindOptionsWhere<Seasons> {
+        const where: FindOptionsWhere<Seasons> = {};
+        if (filters.regionId) where.regionId = filters.regionId;
+        return where;
+    }
+
+    private async resolveRegionId(regionId?: number, regionCode?: RegionCode): Promise<number> {
+        if (regionId) {
+            const region = await this.regionService.getRegionById(regionId);
+            if (!region) throw new NotFoundError(`Region with ID ${regionId} not found`);
+            return region.id;
+        }
+        if (regionCode) {
+            const region = await this.regionService.requireRegionByCode(regionCode);
+            return region.id;
+        }
+        const na = await this.regionService.requireRegionByCode('na');
+        return na.id;
+    }
+
     async createSeason(
         seasonNumber: number,
         startDate: Date,
         endDate: Date,
         theme: string,
-        image?: string
+        image?: string,
+        regionId?: number,
+        regionCode?: RegionCode
     ): Promise<Seasons>
     {
-        /* ---------- Field presence checks ---------- */
         if (!seasonNumber)   throw new MissingFieldError("Season name");
         if (!startDate)      throw new MissingFieldError("Start date");
         if (!endDate)        throw new MissingFieldError("End date");
         if (!theme)          throw new MissingFieldError("Theme");
 
-        /* ---------- Duplicate season check ---------- */
+        const resolvedRegionId = await this.resolveRegionId(regionId, regionCode);
+
         const existingSeason = await this.seasonRepository.findOne({
-            where: { seasonNumber }
+            where: { seasonNumber, regionId: resolvedRegionId }
         });
 
         if (existingSeason)
         {
-            throw new DuplicateError(`Season with name ${seasonNumber} already exists`);
+            throw new DuplicateError(`Season ${seasonNumber} already exists in this region`);
         }
 
-        /* ---------- Create and save ---------- */
         const newSeason        = new Seasons();
         newSeason.seasonNumber = seasonNumber;
         newSeason.startDate    = startDate;
         newSeason.endDate      = endDate;
         newSeason.theme        = theme;
+        newSeason.regionId     = resolvedRegionId;
         if (image !== undefined)
         {
             newSeason.image = image;
@@ -59,15 +86,13 @@ export class SeasonService
         return this.seasonRepository.save(newSeason);
     }
 
-    /**
-     * Get all seasons
-     */
-    async getAllSeasons(pagination: PaginationParams): Promise<[Seasons[], number]>
+    async getAllSeasons(pagination: PaginationParams, filters: SeasonFilters = {}): Promise<[Seasons[], number]>
     {
         try {
             console.log('Fetching all seasons...');
             const result = await this.seasonRepository.findAndCount({
-                relations: ["teams", "games", "awards"],
+                where: this.buildWhere(filters),
+                relations: ["teams", "games", "awards", "region"],
                 order: { seasonNumber: "DESC" },
                 skip: pagination.skip,
                 take: pagination.take
@@ -87,15 +112,13 @@ export class SeasonService
         }
     }
 
-    /**
-     * Get all seasons without relations / minimal data
-     */
-    async getSkinnyAllSeasons(pagination: PaginationParams): Promise<[Seasons[], number]>
+    async getSkinnyAllSeasons(pagination: PaginationParams, filters: SeasonFilters = {}): Promise<[Seasons[], number]>
     {
         try {
             console.log('Fetching all seasons without relations...');
             const result = await this.seasonRepository.findAndCount({
-                relations: [],
+                where: this.buildWhere(filters),
+                relations: ["region"],
                 order: { seasonNumber: "DESC" },
                 skip: pagination.skip,
                 take: pagination.take
@@ -115,15 +138,13 @@ export class SeasonService
         }
     }
 
-    /**
-     * Get all seasons with medium relations / minimal data
-     */
-    async getMediumAllSeasons(pagination: PaginationParams): Promise<[Seasons[], number]>
+    async getMediumAllSeasons(pagination: PaginationParams, filters: SeasonFilters = {}): Promise<[Seasons[], number]>
     {
         try {
             console.log('Fetching all seasons with medium relations...');
             const result = await this.seasonRepository.findAndCount({
-                relations: ["teams", "games"],
+                where: this.buildWhere(filters),
+                relations: ["teams", "games", "region"],
                 order: { seasonNumber: "DESC" },
                 skip: pagination.skip,
                 take: pagination.take
@@ -143,16 +164,13 @@ export class SeasonService
         }
     }
 
-    /**
-     * Get season by ID with validation
-     */
     async getSeasonById(id: number): Promise<Seasons>
     {
         if (!id) throw new MissingFieldError("Season ID");
 
         const season = await this.seasonRepository.findOne({
             where: { id },
-            relations: ["teams", "games", "teams.players"]
+            relations: ["teams", "games", "teams.players", "region"]
         });
 
         if (!season) throw new NotFoundError(`Season with ID ${id} not found`);
@@ -160,9 +178,6 @@ export class SeasonService
         return season;
     }
 
-    /**
-     * Update a season with validation
-     */
     async updateSeason(
         id: number,
         seasonNumber?: number,
@@ -181,12 +196,10 @@ export class SeasonService
 
         if (!season) throw new NotFoundError(`Season with ID: ${id} not found`);
 
-        /* ---------- Update simple scalar fields if supplied ---------- */
         if (seasonNumber !== undefined)
         {
             season.seasonNumber = seasonNumber;
 
-            // Optional numeric range guard
             if (seasonNumber < 1 || seasonNumber > 100)
             {
                 throw new OutOfBoundsError(
@@ -216,7 +229,6 @@ export class SeasonService
             season.image = image;
         }
 
-        /* ---------- Cross-field date consistency ---------- */
         if (season.startDate && season.endDate && season.startDate > season.endDate)
         {
             throw new DateError(season.startDate, season.endDate);
@@ -225,9 +237,6 @@ export class SeasonService
         return this.seasonRepository.save(season);
     }
 
-    /**
-     * Delete a season with validation
-     */
     async deleteSeason(id: number): Promise<void>
     {
         if (!id) throw new MissingFieldError("Season ID");
@@ -239,7 +248,6 @@ export class SeasonService
 
         if (!season) throw new NotFoundError(`Season with ID ${id} not found`);
 
-        /* ---------- Guard against removing seasons in use ---------- */
         if (
             (season.teams && season.teams.length > 0) ||
             (season.games && season.games.length > 0)
@@ -251,3 +259,4 @@ export class SeasonService
         await this.seasonRepository.remove(season);
     }
 }
+

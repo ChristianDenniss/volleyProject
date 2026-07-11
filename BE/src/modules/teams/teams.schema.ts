@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { REGION_CODES } from "../regions/region.entity.js";
 import type { Players } from '../players/player.entity.js';
 import type { Games } from '../games/game.entity.js';
 
@@ -21,7 +22,9 @@ export const createTeamSchema = z.object({
 
     games: z.array(z.number().int().positive()).optional(),
 
-    logoUrl: z.string().optional(), // Optional logo URL for team - no validation, allow any string
+    logoUrl: z.string().optional(),
+    regionId: z.number().int().positive().optional(),
+    region: z.enum(REGION_CODES).optional(),
 });
 
 //we are using a partial extend to make the fields we want to update optional
@@ -31,11 +34,13 @@ export const updateTeamSchema = createTeamSchema.partial();
 
 export interface CreateTeamDto {
     name: string;
-    seasonNumber: number; // Changed from seasonId to seasonNumber
+    seasonNumber: number;
     placement?: string;
     playerIds?: number[];
     gameIds?: number[];
-    logoUrl?: string; // Optional logo URL for team
+    logoUrl?: string;
+    regionId?: number;
+    region?: string;
 }
 
 export interface UpdateTeamDto {

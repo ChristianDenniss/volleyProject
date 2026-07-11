@@ -5,13 +5,16 @@ import type { Game } from '../types/interfaces';
 import SearchBar from './Searchbar';
 import CalendarModal from './CalendarModal';
 import FilterBar from './ui/FilterBar';
+import { formatGameStage } from '../utils/gameLabels';
+import { useRegion } from '../context/regionContext';
 import '../styles/Schedules.css';
 
 const Schedules: React.FC = () => {
   const navigate = useNavigate();
-  const { data: seasons } = useSeasons();
+  const { regionQuery } = useRegion();
+  const { data: seasons } = useSeasons(regionQuery);
   const [selectedSeason, setSelectedSeason] = useState<number | undefined>();
-  const [selectedRound, setSelectedRound] = useState<string>('');
+  const [selectedStage, setSelectedStage] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [currentDateRange, setCurrentDateRange] = useState<Date>(new Date());
   const [showLocalTime, setShowLocalTime] = useState<boolean>(false);
@@ -29,7 +32,6 @@ const Schedules: React.FC = () => {
   // }, [seasons, selectedSeason]);
 
   const [selectedPhase, setSelectedPhase] = useState<string>('');
-  const [selectedRegion, setSelectedRegion] = useState<string>('');
   const [selectedTag, setSelectedTag] = useState<string>('');
 
   const { data: games, error, loading } = useGames({
@@ -37,18 +39,17 @@ const Schedules: React.FC = () => {
     limit: 500,
     seasonId: selectedSeason,
     search: searchQuery || undefined,
-    round: selectedRound || undefined,
+    stage: selectedStage || undefined,
     status: 'scheduled',
     phase: selectedPhase || undefined,
-    region: selectedRegion || undefined,
+    ...regionQuery,
   });
 
   // Get unique rounds from matches
-  const uniqueRounds = useMemo(() => {
+  const uniqueStages = useMemo(() => {
     if (!games) return [];
-    return Array.from(new Set(games.map(game => game.round).filter(Boolean) as string[]))
+    return Array.from(new Set(games.map(game => game.stage).filter(Boolean) as string[]))
       .sort((a, b) => {
-        // Sort rounds numerically if possible
         const aNum = parseInt(a.replace(/\D/g, ''));
         const bNum = parseInt(b.replace(/\D/g, ''));
         if (!isNaN(aNum) && !isNaN(bNum)) {
@@ -62,18 +63,18 @@ const Schedules: React.FC = () => {
     if (!games) return [];
     
     return games.filter(game => {
-      const matchesRound = !selectedRound || game.round === selectedRound;
+      const matchesStage = !selectedStage || game.stage === selectedStage;
       const team1Name = game.teams?.[0]?.name ?? '';
       const team2Name = game.teams?.[1]?.name ?? '';
-      const label = game.matchNumber ?? game.name ?? '';
+      const label = game.name ?? `${team1Name} vs ${team2Name}`;
       const matchesSearch = label.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           team1Name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           team2Name.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesTag = !selectedTag || (game.tags ?? []).some(t => t.toLowerCase().includes(selectedTag.toLowerCase()));
        
-      return matchesRound && matchesSearch && matchesTag;
+      return matchesStage && matchesSearch && matchesTag;
     });
-  }, [games, selectedRound, searchQuery, selectedTag]);
+  }, [games, selectedStage, searchQuery, selectedTag]);
 
   const gamesByDate = useMemo(() => {
     const grouped: { [key: string]: Game[] } = {};
@@ -250,29 +251,23 @@ const Schedules: React.FC = () => {
           </select>
           <select
             className="filter-dropdown"
-            value={selectedRound}
+            value={selectedStage}
             onChange={(e) => {
-              setSelectedRound(e.target.value);
+              setSelectedStage(e.target.value);
             }}
           >
-            <option value="">All Rounds</option>
-            {uniqueRounds.map(round => (
-              <option key={round} value={round}>
-                {round}
+            <option value="">All Stages</option>
+            {uniqueStages.map(stage => (
+              <option key={stage} value={stage}>
+                {stage}
               </option>
             ))}
           </select>
           <select className="filter-dropdown" value={selectedPhase} onChange={(e) => setSelectedPhase(e.target.value)}>
             <option value="">All Phases</option>
+            <option value="pre_season">Pre-Season</option>
             <option value="qualifiers">Qualifiers</option>
             <option value="playoffs">Playoffs</option>
-          </select>
-          <select className="filter-dropdown" value={selectedRegion} onChange={(e) => setSelectedRegion(e.target.value)}>
-            <option value="">All Regions</option>
-            <option value="na">NA</option>
-            <option value="eu">EU</option>
-            <option value="as">AS</option>
-            <option value="sa">SA</option>
           </select>
           <select className="filter-dropdown" value={selectedTag} onChange={(e) => setSelectedTag(e.target.value)}>
             <option value="">All Divisions</option>
@@ -364,7 +359,7 @@ const Schedules: React.FC = () => {
                             )}
                             <div className="match-info">
                               <span className="match-type">
-                                Upcoming {game.round ?? game.stage} · {game.matchNumber ?? game.name}
+                                Upcoming {formatGameStage(game)} · {game.name ?? `${team1?.name ?? 'TBD'} vs ${team2?.name ?? 'TBD'}`}
                               </span>
                               <span className="venue">TBD Venue</span>
                             </div>

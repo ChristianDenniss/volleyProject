@@ -17,6 +17,7 @@ import { PaginationParams } from '../../utils/pagination.js';
 
 export interface StatFilters {
     search?: string;
+    regionId?: number;
 }
 
 export class StatService extends CacheableService
@@ -404,6 +405,9 @@ export class StatService extends CacheableService
                         : 'player.name ILIKE :search',
                     { search: `%${filters.search}%`, numericSearch }
                 );
+            }
+            if (filters.regionId) {
+                qb.andWhere('game.regionId = :regionId', { regionId: filters.regionId });
             }
 
             return qb.getManyAndCount();

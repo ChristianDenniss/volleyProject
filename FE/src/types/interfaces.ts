@@ -1,4 +1,13 @@
 // Define Types for Data
+export type RegionCode = 'na' | 'eu' | 'as';
+
+interface Region {
+  id: number;
+  code: RegionCode;
+  name: string;
+  sortOrder?: number;
+}
+
 interface Game 
 {
   id: number;
@@ -10,10 +19,10 @@ interface Game
   date: Date;
   stage: string;
   status: 'scheduled' | 'completed';
-  matchNumber?: string | null;
-  round?: string | null;
-  phase?: 'qualifiers' | 'playoffs';
-  region?: 'na' | 'eu' | 'as' | 'sa';
+  phase?: 'qualifiers' | 'playoffs' | 'pre_season';
+  bracket?: 'winners' | 'losers' | null;
+  regionId?: number;
+  region?: Region;
   set1Score?: string | null;
   set2Score?: string | null;
   set3Score?: string | null;
@@ -36,6 +45,8 @@ interface Award
   players: Player[];
   description: string;
   season: Season;
+  regionId?: number;
+  region?: Region;
   imageUrl?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -101,8 +112,10 @@ interface Team
   id: number;
   placement: string;
   name: string;
-  logoUrl?: string; // URL for team logo/flag
+  logoUrl?: string;
   season: Season;
+  regionId?: number;
+  region?: Region;
   games?: Game[]; 
   players?: Player[]; 
 }
@@ -117,6 +130,8 @@ interface Season
   endDate?: Date; 
   image?: string;
   theme: string;
+  regionId?: number;
+  region?: Region;
 }
 
 interface Article 
@@ -163,7 +178,9 @@ interface Records
   updatedAt: string;
   season: Season;
   player: Player;
-  gameId?: number; // Optional, only for game records
+  regionId?: number;
+  region?: Region;
+  gameId?: number;
 }
 
 /** what your AuthContext provides */
@@ -171,7 +188,7 @@ interface Records
  {
   user: User | null;
   token: string | null;
-  login: (token: string, user: User) => void;
+  login: (user: User, mockToken?: string) => void;
   logout: () => void;
   isAuthenticated: boolean;
   loading: boolean;
@@ -191,7 +208,7 @@ interface Application {
   updatedAt?: string;
 }
 
-export type { Game, Player, Stats, Team, Season, Article, User, Award, Records, AuthContextType, PublicInterface, Role, Application };
+export type { Game, Player, Stats, Team, Season, Article, User, Award, Records, AuthContextType, PublicInterface, Role, Application, Region };
 
 export interface PaginatedResponse<T> {
   data: T[];
@@ -214,21 +231,38 @@ export type CreateGameInput = {
   stage: string;
   teamNames: string[];
   status?: 'scheduled' | 'completed';
-  matchNumber?: string;
-  round?: string;
-  phase?: 'qualifiers' | 'playoffs';
-  region?: 'na' | 'eu' | 'as' | 'sa';
+  phase?: 'qualifiers' | 'playoffs' | 'pre_season';
+  bracket?: 'winners' | 'losers' | null;
+  region?: RegionCode;
   tags?: string[];
 };
 
-// When creating a Player, omit "id" and nested arrays.
+export type CreateSeasonInput = {
+  seasonNumber: number;
+  startDate:    string; 
+  endDate?:     string; 
+  image?:       string;
+  theme:        string;
+  regionId?:    number;
+  region?:      RegionCode;
+};
+
+export type CreateTeamInput = {
+  placement: string;
+  name:      string;
+  seasonNumber: number;
+  logoUrl?:  string;
+  playerIds?: number[];
+  regionId?: number;
+  region?: RegionCode;
+};
+
 export type CreatePlayerInput = {
   name:     string;
   position: string;
   teamIds?: number[];
 };
 
-// When creating a Stats record, omit "id" and read-only timestamps & nested player.
 export type CreateStatsInput = {
   spikingErrors: number;
   apeKills:      number;
@@ -243,27 +277,9 @@ export type CreateStatsInput = {
   aces:          number;
   servingErrors: number;
   miscErrors:    number;
-  playerId?:     number;  // Optional for backward compatibility
-  playerName?:   string;  // New field for creating by name
-  gameId:        number;  // Added gameId which was missing
-};
-
-// When creating a Team, omit "id" and nested arrays; supply seasonId instead of Season object.
-export type CreateTeamInput = {
-  placement: string;
-  name:      string;
-  seasonNumber: number; // Changed from seasonId to seasonNumber
-  logoUrl?:  string; // Optional logo URL for team
-  playerIds?: number[];
-};
-
-// When creating a Season, omit "id" and nested arrays.
-export type CreateSeasonInput = {
-  seasonNumber: number;
-  startDate:    string; 
-  endDate?:     string; 
-  image?:       string;
-  theme:        string;
+  playerId?:     number;
+  playerName?:   string;
+  gameId:        number;
 };
 
 // When creating an Article, omit "id" and nested author object; supply userId.
@@ -381,8 +397,8 @@ export type ImportChallongeInput = {
   roundStartDate: string;
   roundEndDate: string;
   matchSpacingMinutes?: number;
-  phase?: 'qualifiers' | 'playoffs';
-  region?: 'na' | 'eu' | 'as' | 'sa';
+  phase?: 'qualifiers' | 'playoffs' | 'pre_season';
+  region?: RegionCode;
   tags?: string[];
   dryRun?: boolean;
 };
@@ -396,7 +412,7 @@ export type ChallongeImportResult = {
     failed: number;
   };
   details?: {
-    created: Array<{ gameId: number; matchNumber: string; team1: string; team2: string }>;
+    created: Array<{ gameId: number; stage: string; team1: string; team2: string }>;
     updated: Array<{ gameId: number; challongeMatchId: string; changedFields: string[] }>;
     skipped: Array<{ challongeMatchId: string; reason: string }>;
   };

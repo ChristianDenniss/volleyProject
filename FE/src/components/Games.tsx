@@ -8,6 +8,8 @@ import "../styles/ListingPage.css"
 import SearchBar from "./Searchbar"
 import Pagination from "./Pagination"
 import FilterBar from "./ui/FilterBar"
+import { formatGameStage } from "../utils/gameLabels"
+import { useRegion } from "../context/regionContext"
 
 const gameColumns: TableColumn<Game>[] = [
   {
@@ -27,7 +29,7 @@ const gameColumns: TableColumn<Game>[] = [
   {
     key: "stage",
     header: "Stage",
-    render: (game) => game.stage || "—",
+    render: (game) => formatGameStage(game),
   },
   {
     key: "score",
@@ -42,7 +44,8 @@ const gameColumns: TableColumn<Game>[] = [
 ]
 
 const Games: React.FC = () => {
-  const { data, error } = useSkinnyGames({ status: 'completed', limit: 500, page: 1 })
+  const { regionQuery } = useRegion()
+  const { data, error } = useSkinnyGames({ status: 'completed', limit: 500, page: 1, ...regionQuery })
   const navigate = useNavigate()
 
   const [searchQuery, setSearchQuery] = useState<string>("")
@@ -149,26 +152,30 @@ const Games: React.FC = () => {
 
       {error ? (
         <div>Error: {error}</div>
-      ) : !data ? (
-        <div className="listing-table-wrapper">
-          <div className="listing-skeleton-table">
-            {Array.from({ length: 20 }).map((_, index) => (
-              <div key={index} className="listing-skeleton-row" />
-            ))}
-          </div>
-        </div>
-      ) : paginatedGames.length === 0 ? (
-        <div className="listing-table-empty">No games match your filters.</div>
       ) : (
-        <Table
-          columns={gameColumns}
-          rows={paginatedGames}
-          rowKey={(game) => game.id}
-          tableClassName="listing-table"
-          wrapperClassName="listing-table-wrapper"
-          rowClassName={() => "listing-row-clickable"}
-          onRowClick={(game) => navigate(`/games/${game.id}`)}
-        />
+        <div className="listing-content-wrapper">
+          {!data ? (
+            <div className="listing-table-wrapper">
+              <div className="listing-skeleton-table">
+                {Array.from({ length: 20 }).map((_, index) => (
+                  <div key={index} className="listing-skeleton-row" />
+                ))}
+              </div>
+            </div>
+          ) : paginatedGames.length === 0 ? (
+            <div className="listing-table-empty">No games match your filters.</div>
+          ) : (
+            <Table
+              columns={gameColumns}
+              rows={paginatedGames}
+              rowKey={(game) => game.id}
+              tableClassName="listing-table"
+              wrapperClassName="listing-table-wrapper"
+              rowClassName={() => "listing-row-clickable"}
+              onRowClick={(game) => navigate(`/games/${game.id}`)}
+            />
+          )}
+        </div>
       )}
     </div>
   )

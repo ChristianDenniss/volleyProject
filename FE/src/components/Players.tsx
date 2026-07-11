@@ -8,6 +8,7 @@ import "../styles/ListingPage.css";
 import SearchBar from "./Searchbar";
 import Pagination from "./Pagination";
 import FilterBar from "./ui/FilterBar";
+import { useRegion } from "../context/regionContext";
 import OverflowListCell from "./ui/OverflowListCell";
 
 function getPlayerTeamLabels(player: Player): string[] {
@@ -75,7 +76,8 @@ const playerColumns: TableColumn<Player>[] = [
 ];
 
 const Players: React.FC = () => {
-  const { data, error } = useMediumPlayers();
+  const { regionQuery } = useRegion();
+  const { data, error } = useMediumPlayers(regionQuery);
   const navigate = useNavigate();
 
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -195,26 +197,30 @@ const Players: React.FC = () => {
 
       {error ? (
         <div>Error: {error}</div>
-      ) : !data ? (
-        <div className="listing-table-wrapper">
-          <div className="listing-skeleton-table">
-            {Array.from({ length: 10 }).map((_, index) => (
-              <div key={index} className="listing-skeleton-row" />
-            ))}
-          </div>
-        </div>
-      ) : paginatedPlayers.length === 0 ? (
-        <div className="listing-table-empty">No players match your filters.</div>
       ) : (
-        <Table
-          columns={playerColumns}
-          rows={paginatedPlayers}
-          rowKey={(player) => player.id}
-          tableClassName="listing-table"
-          wrapperClassName="listing-table-wrapper"
-          rowClassName={() => "listing-row-clickable"}
-          onRowClick={(player) => navigate(`/players/${player.id}`)}
-        />
+        <div className="listing-content-wrapper">
+          {!data ? (
+            <div className="listing-table-wrapper">
+              <div className="listing-skeleton-table">
+                {Array.from({ length: 10 }).map((_, index) => (
+                  <div key={index} className="listing-skeleton-row" />
+                ))}
+              </div>
+            </div>
+          ) : paginatedPlayers.length === 0 ? (
+            <div className="listing-table-empty">No players match your filters.</div>
+          ) : (
+            <Table
+              columns={playerColumns}
+              rows={paginatedPlayers}
+              rowKey={(player) => player.id}
+              tableClassName="listing-table"
+              wrapperClassName="listing-table-wrapper"
+              rowClassName={() => "listing-row-clickable"}
+              onRowClick={(player) => navigate(`/players/${player.id}`)}
+            />
+          )}
+        </div>
       )}
     </div>
   );

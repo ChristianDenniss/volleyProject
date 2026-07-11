@@ -2,27 +2,27 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react-swc'
 
 // https://vite.dev/config/
-export default defineConfig({
-  plugins: [react()],
-  server: {
-    port: 5173,
-    strictPort: true,
-    // headers: {
-    //   'Cache-Control': 'public, max-age=604800', // 1 week in seconds
-    // },
-  },
-  build: {
-    // Enable source maps for better debugging
-    sourcemap: true,
-    // Optimize chunk size
-    chunkSizeWarningLimit: 1000,
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
-          // Add other large dependencies here
+export default defineConfig(({ mode }) => {
+  if (mode === 'production' && process.env.VITE_USE_MSW === 'true') {
+    throw new Error('FATAL: VITE_USE_MSW must not be enabled in production builds.');
+  }
+
+  return {
+    plugins: [react()],
+    server: {
+      port: 5173,
+      strictPort: true,
+    },
+    build: {
+      sourcemap: true,
+      chunkSizeWarningLimit: 1000,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            vendor: ['react', 'react-dom', 'react-router-dom'],
+          },
         },
       },
     },
-  },
+  }
 })

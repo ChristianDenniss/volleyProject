@@ -14,6 +14,7 @@ export interface AwardFilters {
     search?: string;
     seasonNumber?: number;
     type?: string;
+    regionId?: number;
 }
 
 export class AwardService {
@@ -56,7 +57,8 @@ export class AwardService {
             description,
             type,
             imageUrl,
-            season
+            season,
+            regionId: season.regionId,
         });
 
         // Add players if provided
@@ -111,6 +113,9 @@ export class AwardService {
         if (filters.type) {
             qb.andWhere('award.type = :type', { type: filters.type });
         }
+        if (filters.regionId) {
+            qb.andWhere('award.regionId = :regionId', { regionId: filters.regionId });
+        }
 
         return qb.skip(pagination.skip).take(pagination.take);
     }
@@ -138,7 +143,7 @@ export class AwardService {
     async findAwardById(id: number): Promise<Awards | null> {
         return this.awardRepository.findOne({
             where: { id },
-            relations: ["players", "season", "players.teams", "players.teams.season"]
+            relations: ["players", "season", "region", "players.teams", "players.teams.season"]
         });
     }
 

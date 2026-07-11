@@ -1,0 +1,44 @@
+.region-switcher {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.region-switcher-label {
+  font-size: 0.85rem;
+  color: var(--color-text-muted, #666);
+  white-space: nowrap;
+}
+
+.region-switcher-select {
+  padding: 0.35rem 0.6rem;
+  border-radius: var(--radius-sm, 4px);
+  border: 1px solid var(--color-border, #ccc);
+  background: var(--color-surface, #fff);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.region-badge {
+  display: inline-block;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.region-badge.na {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.region-badge.eu {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.region-badge.as {
+  background: #dcfce7;
+  color: #166534;
+}

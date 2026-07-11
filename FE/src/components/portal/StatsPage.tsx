@@ -44,24 +44,19 @@ interface EditingState {
 
 // Common stage options for dropdown
 const STAGE_OPTIONS = [
-    "Winners Bracket; Round of 16",
-    "Winners Bracket; Quarterfinals",
-    "Winners Bracket; Semifinals",
-    "Winners Bracket; Finals",
-    "Losers Bracket; Round 1",
-    "Losers Bracket; Round 2",
-    "Losers Bracket; Round 3",
-    "Losers Bracket; Quarterfinals",
-    "Losers Bracket; Semifinals",
-    "Losers Bracket; Finals",
+    "Round 1",
+    "Round 2",
+    "Round 3",
+    "Round 4",
+    "Round 5",
+    "Round 6",
+    "Round of 16",
+    "Quarterfinals",
+    "Semifinals",
+    "Finals",
     "Grand Finals",
-    "Grand Finals; Bracket Reset",
+    "Bracket Reset",
     "3rd Place Match",
-    "Single Elimination; Round of 16",
-    "Single Elimination; Quarterfinals",
-    "Single Elimination; Semifinals",
-    "Single Elimination; Finals",
-
 ];
 
 const STATS_PER_PAGE = 10;
