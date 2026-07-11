@@ -27,7 +27,7 @@ const Schedules: React.FC = () => {
 
   const { data: matches, error, loading } = useMatches({
     page: 1,
-    limit: 100,
+    limit: 500,
     seasonId: selectedSeason,
     search: searchQuery || undefined,
     round: selectedRound || undefined,

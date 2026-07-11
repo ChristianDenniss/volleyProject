@@ -139,6 +139,29 @@ const SEASON_RECORD_TYPES = [
   "Highest Spike % in a Season",
 ] as const;
 
+const SCHEDULE_START_OFFSET_DAYS = -31;
+const SCHEDULE_SPAN_DAYS = 62;
+
+/**
+ * Matches per day for the latest season schedule (~2 months).
+ * Showcases empty days (0), single-match days, and busy days (up to 6).
+ */
+const SCHEDULE_DAILY_MATCH_COUNTS = [
+  0, 0, 1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 1, 0,
+  0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6,
+  0, 0, 0, 1, 2, 3, 4, 5, 6, 4, 2, 1, 0,
+  1, 3, 5, 6, 5, 3, 1, 0, 0, 2, 4, 6, 5, 4, 3, 2, 1, 0, 0, 1, 2, 0,
+] as const;
+
+const MATCH_TIME_SLOTS = [
+  { hour: 12, minute: 0 },
+  { hour: 14, minute: 30 },
+  { hour: 16, minute: 0 },
+  { hour: 17, minute: 30 },
+  { hour: 19, minute: 0 },
+  { hour: 21, minute: 30 },
+] as const;
+
 const MATCH_ROUNDS = [
   "Round 1",
   "Round 2",
@@ -411,56 +434,120 @@ function buildAwards(seasons: Season[], players: Player[]): Award[] {
   return awards;
 }
 
+function pickTeamPair(
+  teams: Team[],
+  dayIndex: number,
+  slot: number
+): [Team, Team] | null {
+  if (teams.length < 2) return null;
+  const a = teams[(dayIndex * 3 + slot) % teams.length];
+  const b = teams[(dayIndex * 3 + slot + 1 + (slot % 2)) % teams.length];
+  if (a.id === b.id) {
+    const c = teams[(dayIndex * 3 + slot + 2) % teams.length];
+    if (c.id === a.id) return null;
+    return [a, c];
+  }
+  return [a, b];
+}
+
+function buildMatchEntry(
+  matchId: number,
+  season: Season,
+  team1: Team,
+  team2: Team,
+  date: Date,
+  completed: boolean,
+  slotIndex: number
+): Match {
+  const round = pick(MATCH_ROUNDS, slotIndex + matchId);
+  return {
+    id: matchId,
+    matchNumber: `${round} - Match ${(slotIndex % 4) + 1}`,
+    status: completed ? "completed" : "scheduled",
+    round,
+    date,
+    team1Score: completed ? pseudoRandom(matchId, 1, 3) : undefined,
+    team2Score: completed ? pseudoRandom(matchId + 2, 0, 2) : undefined,
+    set1Score: completed ? "25-20" : undefined,
+    set2Score: completed ? "23-25" : undefined,
+    set3Score: completed ? "25-22" : undefined,
+    set4Score: completed && pseudoRandom(matchId, 0, 1) === 1 ? "25-18" : undefined,
+    set5Score: completed && pseudoRandom(matchId + 1, 0, 1) === 1 ? "15-13" : undefined,
+    seasonId: season.id,
+    season,
+    team1Name: team1.name,
+    team2Name: team2.name,
+    team1LogoUrl: team1.logoUrl,
+    team2LogoUrl: team2.logoUrl,
+    tags: [pick(TAGS, slotIndex), pick(TAGS, slotIndex + 1)].filter(
+      (tag, idx, arr) => arr.indexOf(tag) === idx
+    ),
+  };
+}
+
+function buildLatestSeasonSchedule(
+  season: Season,
+  seasonTeams: Team[],
+  startMatchId: number
+): Match[] {
+  const matches: Match[] = [];
+  let matchId = startMatchId;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  for (let dayIndex = 0; dayIndex < SCHEDULE_SPAN_DAYS; dayIndex++) {
+    const dayOffset = SCHEDULE_START_OFFSET_DAYS + dayIndex;
+    const matchesToday =
+      SCHEDULE_DAILY_MATCH_COUNTS[dayIndex % SCHEDULE_DAILY_MATCH_COUNTS.length];
+
+    for (let slot = 0; slot < matchesToday; slot++) {
+      const pair = pickTeamPair(seasonTeams, dayIndex, slot);
+      if (!pair) continue;
+
+      const [team1, team2] = pair;
+      const time = MATCH_TIME_SLOTS[slot % MATCH_TIME_SLOTS.length];
+      const matchDate = addDays(today, dayOffset, time.hour, time.minute);
+
+      const isPast = dayOffset < 0;
+      const isFuture = dayOffset > 0;
+      const completed = isPast || (!isFuture && slot % 2 === 0);
+
+      matches.push(
+        buildMatchEntry(matchId++, season, team1, team2, matchDate, completed, slot + dayIndex)
+      );
+    }
+  }
+
+  return matches;
+}
+
 function buildMatches(seasons: Season[], teams: Team[]): Match[] {
   const matches: Match[] = [];
   let matchId = 1;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
 
   seasons.forEach((season, seasonIndex) => {
     const seasonTeams = teams.filter((team) => team.season.id === season.id);
     if (seasonTeams.length < 2) return;
 
-    // Latest season gets a full schedule spread around today for /schedules
-    const isLatestSeason = seasonIndex === 0;
-    const matchesPerSeason = isLatestSeason ? 28 : 10;
+    if (seasonIndex === 0) {
+      const schedule = buildLatestSeasonSchedule(season, seasonTeams, matchId);
+      matches.push(...schedule);
+      matchId += schedule.length;
+      return;
+    }
 
-    for (let i = 0; i < matchesPerSeason; i++) {
-      const team1 = seasonTeams[i % seasonTeams.length];
-      const team2 = seasonTeams[(i + 1 + (i % 3)) % seasonTeams.length];
-      if (!team1 || !team2 || team1.id === team2.id) continue;
+    for (let i = 0; i < 8; i++) {
+      const pair = pickTeamPair(seasonTeams, seasonIndex * 10 + i, i);
+      if (!pair) continue;
+      const [team1, team2] = pair;
+      const completed = i % 4 !== 3;
+      const matchDate = new Date(
+        isoDate(2024 + (seasonIndex % 2), 1 + (i % 10), 1 + ((i * 3) % 26), 17 + (i % 4))
+      );
 
-      const completed = isLatestSeason ? i % 3 !== 2 : i % 4 !== 3;
-      const round = pick(MATCH_ROUNDS, i);
-
-      const matchDate = isLatestSeason
-        ? addDays(today, -21 + Math.floor((i / Math.max(1, matchesPerSeason - 1)) * 42), 17 + (i % 5), (i % 2) * 30)
-        : new Date(isoDate(2024 + (seasonIndex % 2), 1 + (i % 10), 1 + ((i * 3) % 26), 17 + (i % 4)));
-
-      const team1Score = completed ? pseudoRandom(matchId, 1, 3) : undefined;
-      const team2Score = completed ? pseudoRandom(matchId + 2, 0, 2) : undefined;
-
-      matches.push({
-        id: matchId++,
-        matchNumber: `${round} - Match ${(i % 4) + 1}`,
-        status: completed ? "completed" : "scheduled",
-        round,
-        date: matchDate,
-        team1Score,
-        team2Score,
-        set1Score: completed ? "25-20" : undefined,
-        set2Score: completed ? "23-25" : undefined,
-        set3Score: completed ? "25-22" : undefined,
-        set4Score: completed && pseudoRandom(matchId, 0, 1) === 1 ? "25-18" : undefined,
-        set5Score: completed && pseudoRandom(matchId + 1, 0, 1) === 1 ? "15-13" : undefined,
-        seasonId: season.id,
-        season,
-        team1Name: team1.name,
-        team2Name: team2.name,
-        team1LogoUrl: team1.logoUrl,
-        team2LogoUrl: team2.logoUrl,
-        tags: [pick(TAGS, i), pick(TAGS, i + 1)].filter((tag, idx, arr) => arr.indexOf(tag) === idx),
-      });
+      matches.push(
+        buildMatchEntry(matchId++, season, team1, team2, matchDate, completed, i)
+      );
     }
   });
 

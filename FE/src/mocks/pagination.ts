@@ -16,7 +16,7 @@ export function toPaginatedResult<T>(
     Number.isFinite(rawPage) && rawPage >= 1 ? Math.floor(rawPage) : 1;
   const limit =
     Number.isFinite(rawLimit) && rawLimit >= 1
-      ? Math.min(Math.floor(rawLimit), 100)
+      ? Math.min(Math.floor(rawLimit), 500)
       : 10;
 
   const filtered = filter
