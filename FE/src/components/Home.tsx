@@ -5,10 +5,20 @@ import promoImg from "../images/callToAction.png";
 import { useArticles } from "../hooks/allFetch";
 import SEO from "./SEO";
 
+const MAX_SIDE_ARTICLES = 5;
+const DEFAULT_SIDE_ARTICLE_COUNT = 4;
+const LARGE_SIDE_ARTICLE_COUNT = 5;
+const SIDE_ARTICLE_MIN_HEIGHT = 80;
+const SIDE_ARTICLE_GAP = 16;
+const STACKED_LAYOUT_BREAKPOINT = 1024;
+const LARGE_SCREEN_BREAKPOINT = 1400;
+
 const Home: React.FC = () => {
     const playerRef = useRef<any>(null);
     const videoContainerRef = useRef<HTMLDivElement>(null);
+    const featuredRef = useRef<HTMLDivElement>(null);
     const [isPlayerReady, setIsPlayerReady] = useState(false);
+    const [visibleSideCount, setVisibleSideCount] = useState(4);
 
     // Fetch real articles
     const { data: articles = [], loading, error } = useArticles();
@@ -27,10 +37,60 @@ const Home: React.FC = () => {
         return sortedById.length > 0 ? sortedById[0] : null;
     }, [sortedById]);
 
-    // Next four IDs = side articles
-    const sideArticles = useMemo(() => {
-        return sortedById.slice(1, 5);
+    const allSideArticles = useMemo(() => {
+        return sortedById.slice(1, 1 + MAX_SIDE_ARTICLES);
     }, [sortedById]);
+
+    const sideArticles = useMemo(() => {
+        return allSideArticles.slice(0, visibleSideCount);
+    }, [allSideArticles, visibleSideCount]);
+
+    useEffect(() => {
+        const featured = featuredRef.current;
+        if (!featured) {
+            return;
+        }
+
+        const updateVisibleSideCount = () => {
+            const isStacked = window.matchMedia(
+                `(max-width: ${STACKED_LAYOUT_BREAKPOINT}px)`
+            ).matches;
+
+            if (isStacked) {
+                setVisibleSideCount(Math.min(allSideArticles.length, DEFAULT_SIDE_ARTICLE_COUNT));
+                return;
+            }
+
+            const height = featured.getBoundingClientRect().height;
+            if (height <= 0) {
+                return;
+            }
+
+            const maxByHeight = Math.floor(
+                (height + SIDE_ARTICLE_GAP) /
+                    (SIDE_ARTICLE_MIN_HEIGHT + SIDE_ARTICLE_GAP)
+            );
+            const isLargeScreen = window.innerWidth >= LARGE_SCREEN_BREAKPOINT;
+            const targetCount = isLargeScreen
+                ? LARGE_SIDE_ARTICLE_COUNT
+                : DEFAULT_SIDE_ARTICLE_COUNT;
+            const clamped = Math.max(
+                1,
+                Math.min(targetCount, maxByHeight, allSideArticles.length)
+            );
+            setVisibleSideCount(clamped);
+        };
+
+        const observer = new ResizeObserver(updateVisibleSideCount);
+        observer.observe(featured);
+        window.addEventListener("resize", updateVisibleSideCount);
+        updateVisibleSideCount();
+
+        return () => {
+            observer.disconnect();
+            window.removeEventListener("resize", updateVisibleSideCount);
+        };
+    }, [allSideArticles.length, loading, featuredArticle?.id]);
 
     // Load YouTube IFrame API and initialize player
     useEffect(() => {
@@ -135,50 +195,52 @@ const Home: React.FC = () => {
 
             <main className={`home ${loading ? 'loading' : ''}`}>
                 <section className="headline-section">
-                    {loading ? (
-                        <div className="featured-article">
-                            <div className="home-skeleton-featured"></div>
-                        </div>
-                    ) : featuredArticle ? (
-                        <Link to={`/articles/${featuredArticle.id}`}>
+                    <div className="headline-featured" ref={featuredRef}>
+                        {loading ? (
                             <div className="featured-article">
-                                {error && <p>Error: {error}</p>}
-                                {!error && (
-                                    <>
-                                        <img
-                                            src={featuredArticle.imageUrl}
-                                            alt={featuredArticle.title}
-                                            className="featured-image"
-                                        />
-                                        <div className="featured-text">
-                                            <span className="tag">
-                                                By {featuredArticle.author.username}
-                                            </span>
-                                            <span className="date-tag">
-                                                {new Date(
-                                                    featuredArticle.createdAt
-                                                ).toLocaleDateString()}
-                                            </span>
-                                            <h2>{featuredArticle.title}</h2>
-                                            <p>{featuredArticle.summary}</p>
-                                        </div>
-                                    </>
-                                )}
+                                <div className="home-skeleton-featured"></div>
                             </div>
-                        </Link>
-                    ) : (
-                        <div className="featured-article">
-                            <div className="featured-text">
-                                <h2>No Featured Articles Yet</h2>
-                                <p>Check back soon for the latest news and updates!</p>
+                        ) : featuredArticle ? (
+                            <Link to={`/articles/${featuredArticle.id}`}>
+                                <div className="featured-article">
+                                    {error && <p>Error: {error}</p>}
+                                    {!error && (
+                                        <>
+                                            <img
+                                                src={featuredArticle.imageUrl}
+                                                alt={featuredArticle.title}
+                                                className="featured-image"
+                                            />
+                                            <div className="featured-text">
+                                                <span className="tag">
+                                                    By {featuredArticle.author.username}
+                                                </span>
+                                                <span className="date-tag">
+                                                    {new Date(
+                                                        featuredArticle.createdAt
+                                                    ).toLocaleDateString()}
+                                                </span>
+                                                <h2>{featuredArticle.title}</h2>
+                                                <p>{featuredArticle.summary}</p>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            </Link>
+                        ) : (
+                            <div className="featured-article">
+                                <div className="featured-text">
+                                    <h2>No Featured Articles Yet</h2>
+                                    <p>Check back soon for the latest news and updates!</p>
+                                </div>
                             </div>
-                        </div>
-                    )}
+                        )}
+                    </div>
 
                     <aside className="side-articles">
                         {loading ? (
                             // Skeleton loaders for side articles
-                            Array.from({ length: 4 }).map((_, index) => (
+                            Array.from({ length: visibleSideCount }).map((_, index) => (
                                 <div key={index} className="home-skeleton-side"></div>
                             ))
                         ) : error ? (

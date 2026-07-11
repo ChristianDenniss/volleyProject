@@ -23,20 +23,43 @@
     margin-top: 2rem;
     margin-bottom: 4rem;
     min-height: 400px;
-    align-items: flex-start; /* Align both sections to top */
+    align-items: stretch;
+}
+
+.headline-featured
+{
+    flex: 2;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.headline-featured > a
+{
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    text-decoration: none;
+    color: inherit;
+}
+
+.headline-featured > a:hover
+{
+    text-decoration: none;
+    color: inherit;
 }
 
 .featured-article
 {
-    flex: 2;
+    flex: 1;
     position: relative;
     border-radius: 8px;
     overflow: hidden;
     box-shadow: 0 2px 8px rgb(0 0 0 / 0.1);
     aspect-ratio: 17.5/9;
     min-height: 300px;
-    width: 100%; /* Ensure it fills available space */
-    max-width: none; /* Remove any inherited max-width */
+    width: 100%;
+    max-width: none;
 }
 
 .featured-image
@@ -100,21 +123,22 @@
     display: flex;
     flex-direction: column;
     gap: 1rem;
-    height: 100%; /* Match the height of the featured article exactly */
     min-width: 280px;
     max-width: 400px;
     padding-left: 1.5rem;
     border-left: 1px solid #eee; /* subtle visual separation */
-    justify-content: stretch; /* Stretch articles to fill container */
-    align-items: stretch; /* Ensure articles stretch to full width */
+    justify-content: stretch;
+    align-items: stretch;
     box-sizing: border-box;
+    min-height: 0;
+    overflow: hidden;
 }
 
 .side-articles article
 {
     display: flex;
-    justify-content: space-between;     /* Pushes image to far right */
-    align-items: center;                /* Vertically aligns image and text */
+    justify-content: space-between;
+    align-items: center;
     gap: 1rem;
     border-radius: 8px;
     box-shadow: 0 2px 6px rgb(0 0 0 / 0.1);
@@ -122,10 +146,10 @@
     background-color: white;
     cursor: pointer;
     transition: all 0.3s ease;
-    flex: 1;                            /* Articles grow to fill available space */
-    min-height: 80px;                   /* Minimum height for readability */
+    flex: 1;
+    min-height: 0;
     box-sizing: border-box;
-    width: 100%; /* Ensure full width within container */
+    width: 100%;
 }
 
 /* Hover effect */
@@ -249,25 +273,16 @@
     color: inherit;
 }
 
-/* Make the <Link> wrapping the featured card take up the same flex space */
-.headline-section > a {
-    display: block;
-    flex: 2;
-}
-
-/* Ensure the inner .featured-article still fills its parent */
-.headline-section > a .featured-article {
+/* Make the <Link> wrapping the featured card fill the column */
+.headline-featured > a .featured-article {
     width: 100%;
 }
 
-/* Also make each side‐article link a block so it sizes properly */
+/* Side-article links participate in flex distribution */
 .side-articles > a {
-    display: block;
-}
-
-/* Remove default link styling around side-article links */
-.side-articles > a {
-    display: block;       /* so the entire block is clickable */
+    display: flex;
+    flex: 1;
+    min-height: 0;
     text-decoration: none;
     color: inherit;
 }
@@ -279,13 +294,13 @@
 }
 
 /* Smooth transition on both featured and side cards */
-.headline-section > a .featured-article,
+.headline-featured > a .featured-article,
 .side-articles > a article {
     transition: transform 0.3s ease;
 }
 
 /* Slightly enlarge on hover */
-.headline-section > a:hover .featured-article,
+.headline-featured > a:hover .featured-article,
 .side-articles > a:hover article {
     transform: scale(1.02);
 }
@@ -334,12 +349,17 @@
         padding-top: 1.5rem;
         min-width: auto;
         max-width: none;
-        max-height: none; /* Remove height constraint on mobile */
-        overflow: visible; /* Allow normal flow on mobile */
+        overflow: visible;
+    }
+
+    .side-articles > a {
+        flex: none;
     }
 
     .side-articles article {
-        height: 90px; /* Slightly larger on mobile for touch */
+        flex: none;
+        height: 90px;
+        min-height: 90px;
     }
 
     .side-articles img {
@@ -518,7 +538,8 @@
     background-size: 200% 100%;
     animation: loading 1.5s infinite;
     border-radius: 8px;
-    height: 80px;
+    flex: 1;
+    min-height: 80px;
     width: 100%;
 }
 

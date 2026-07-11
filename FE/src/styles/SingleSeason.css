@@ -32,7 +32,7 @@
     top: 50%;
     width: 120%;
     height: 0.4em;
-    background: rgba(var(--color-brand-primary-rgb), 0.22);
+    background: var(--color-accent);
     transform: translate(-50%, -50%) skewX(-25deg);
     z-index: -1;
 }
@@ -58,11 +58,11 @@
 
 /* Each meta span styled as box */
 .single-season-meta span {
-    background: #1a1a1a;
-    color: #fff;
+    background: var(--color-brand-primary);
+    color: var(--color-text-on-brand);
     padding: 0.5rem 1rem;
-    border: 1px solid #333;
-    border-radius: 4px;
+    border: 1px solid var(--color-brand-primary);
+    border-radius: var(--radius-sm);
     font-size: 1rem;
     min-width: 8rem;
     text-align: center;
@@ -215,19 +215,21 @@
 .ss-awards-button {
     font-size: 1rem;
     padding: 0.5rem 1rem;
-    background: #1a1a1a;
-    color: #fff;
+    background: var(--color-brand-primary);
+    color: var(--color-text-on-brand);
     text-decoration: none;
-    border-radius: 4px;
+    border: 1px solid var(--color-brand-primary);
+    border-radius: var(--radius-sm);
     transition: all 0.2s ease;
     text-transform: none;
     font-weight: normal;
 }
 
 .ss-awards-button:hover {
-    background: #333;
+    background: var(--color-brand-primary-hover);
+    border-color: var(--color-brand-primary-hover);
     transform: translateY(-2px);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    box-shadow: var(--shadow-sm);
 }
 
 /* Loading state to prevent layout shift */

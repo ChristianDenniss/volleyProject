@@ -489,11 +489,18 @@ function buildArticles(users: User[]): Article[] {
     "Hall of Fame: Legacy Squad Honored",
   ];
 
+  // Keep at least 6 approved so home can show 1 featured + 5 side articles.
+  const MIN_APPROVED = 6;
+
   return titles.map((title, index) => {
     const approvalStatus: boolean | null =
-      index % 3 === 0 ? true :
-      index % 3 === 1 ? null :
-      false;
+      index < MIN_APPROVED
+        ? true
+        : index % 3 === 0
+          ? true
+          : index % 3 === 1
+            ? null
+            : false;
 
     return {
       id: index + 1,
