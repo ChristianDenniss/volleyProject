@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import ReactDOM from "react-dom";
 import { usePlayers } from "../hooks/allFetch";
 import { Player, Stats } from "../types/interfaces";
@@ -778,6 +778,129 @@ const StatsLeaderboard: React.FC = () => {
     setExpandedRows(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
+  const leaderboardColumns: TableColumn<DisplayData>[] = useMemo(() => {
+    const cols: TableColumn<DisplayData>[] = [
+      {
+        key: "rank",
+        header: "Rank",
+        render: (_item, index) => (currentPage - 1) * playersPerPage + index + 1,
+      },
+      {
+        key: "name",
+        header: (
+          <>
+            {viewType === "team" ? "Team Name" : "Player Name"}
+            {sortColumn === "name" && (
+              <span className={`sort-arrow ${sortDirection}`}>
+                {sortDirection === "desc" ? "↓" : "↑"}
+              </span>
+            )}
+          </>
+        ),
+        headerClassName: "sortable",
+        onHeaderClick: () => handleSort("name"),
+        render: (item) => {
+          const isPlayer = "position" in item;
+          if (isPlayer) {
+            return (
+              <Link className="stats-pill-link" to={`/players/${item.id}`}>
+                {item.name}
+              </Link>
+            );
+          }
+          const teamData = item as TeamStatsData;
+          return (
+            <Link className="stats-pill-link" to={`/teams/${encodeURIComponent(item.name)}`}>
+              {teamData.logoUrl ? (
+                <div className="team-logo-container">
+                  <img
+                    src={teamData.logoUrl}
+                    alt={`${item.name} logo`}
+                    className="team-logo"
+                  />
+                  <span className="team-name-text">{item.name}</span>
+                </div>
+              ) : (
+                item.name
+              )}
+            </Link>
+          );
+        },
+      },
+    ];
+
+    if (selectedSeason !== null && viewType === "player") {
+      cols.push({
+        key: "team",
+        header: "Team",
+        render: (item) => {
+          if (!("position" in item)) return null;
+          const team = (item as Player).teams?.find(
+            (t) => t?.season?.seasonNumber === selectedSeason
+          );
+          if (!team) return "N/A";
+          return (
+            <Link className="stats-pill-link" to={`/teams/${encodeURIComponent(team.name)}`}>
+              {team.logoUrl ? (
+                <div className="team-logo-container">
+                  <img
+                    src={team.logoUrl}
+                    alt={`${team.name} logo`}
+                    className="team-logo"
+                  />
+                  <span className="team-name-text">{team.name}</span>
+                </div>
+              ) : (
+                team.name
+              )}
+            </Link>
+          );
+        },
+      });
+    }
+
+    visibleStatCategories.forEach((stat) => {
+      cols.push({
+        key: stat,
+        header: (
+          <>
+            {formatStatName(stat)}{" "}
+            {statType === "perGame"
+              ? "(Per Game)"
+              : statType === "perSet"
+                ? "(Per Set)"
+                : ""}
+            {sortColumn === stat && (
+              <span className={`sort-arrow ${sortDirection}`}>
+                {sortDirection === "desc" ? "↓" : "↑"}
+              </span>
+            )}
+          </>
+        ),
+        headerClassName: "sortable",
+        onHeaderClick: () => handleSort(stat),
+        render: (item) => {
+          const isTeam = "totalStats" in item;
+          const statValue = isTeam
+            ? getTeamStat(item as TeamStatsData, stat)
+            : getPlayerStat(item as Player, stat);
+          return formatStatValue(stat, statValue, statType);
+        },
+      });
+    });
+
+    return cols;
+  }, [
+    currentPage,
+    playersPerPage,
+    viewType,
+    sortColumn,
+    sortDirection,
+    selectedSeason,
+    visibleStatCategories,
+    statType,
+  ]);
+
   return (
     <div className={`stats-leaderboard-page ${!players ? 'loading' : ''}`}>
       <h1>Statistics Leaderboard</h1>
@@ -932,129 +1055,33 @@ const StatsLeaderboard: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div className="stats-table-wrapper">
-          <table className="stats-table">
-            <thead>
-              <tr>
-                <th>Rank</th>
-                <th 
-                  onClick={() => handleSort('name')}
-                  className="sortable"
-                >
-                  {viewType === 'team' ? 'Team Name' : 'Player Name'}
-                  {sortColumn === 'name' && (
-                    <span className={`sort-arrow ${sortDirection}`}>
-                      {sortDirection === 'desc' ? '↓' : '↑'}
-                    </span>
-                  )}
-                </th>
-                {selectedSeason !== null && viewType === 'player' && (
-                  <th>Team</th>
-                )}
-                {visibleStatCategories.map((stat) => (
-                  <th 
-                    key={stat}
-                    onClick={() => handleSort(stat)}
-                    className="sortable"
-                  >
-                    {formatStatName(stat)} {statType === 'perGame' ? '(Per Game)' : statType === 'perSet' ? '(Per Set)' : ''}
-                    {sortColumn === stat && (
-                      <span className={`sort-arrow ${sortDirection}`}>
-                        {sortDirection === 'desc' ? '↓' : '↑'}
-                      </span>
-                    )}
-                  </th>
-                ))}
+        <Table
+          columns={leaderboardColumns}
+          rows={paginatedData}
+          rowKey={(item) => item.id}
+          tableClassName="stats-table"
+          wrapperClassName="stats-table-wrapper"
+          rowClassName={(item) => ("position" in item ? "player-row" : undefined)}
+          onRowClick={(item) => {
+            if ("position" in item) handleRowClick(String(item.id));
+          }}
+          renderAfterRow={(item) => {
+            if (!("position" in item)) return null;
+            const rowId = String(item.id);
+            if (!expandedRows[rowId]) return null;
+            return (
+              <tr className="player-visualization-row" key={`viz-${rowId}`}>
+                <td colSpan={leaderboardColumns.length}>
+                  <PlayerStatsVisualization
+                    player={item as Player}
+                    allPlayers={players || []}
+                    selectedSeason={selectedSeason}
+                  />
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {paginatedData.map((item, index) => {
-                const isPlayer = 'position' in item;
-                const isTeam = 'totalStats' in item;
-                const rowId = String(item.id);
-                return (
-                  <React.Fragment key={rowId}>
-                    <tr
-                      className={isPlayer ? 'player-row' : ''}
-                      onClick={isPlayer ? () => handleRowClick(rowId) : undefined}
-                      style={isPlayer ? { cursor: 'pointer' } : {}}
-                    >
-                      <td>{(currentPage - 1) * playersPerPage + index + 1}</td>
-                      <td>{
-                        isPlayer
-                          ? <Link className="stats-pill-link" to={`/players/${item.id}`}>{item.name}</Link>
-                          : (() => {
-                              const teamData = item as TeamStatsData;
-                              return (
-                                <Link className="stats-pill-link" to={`/teams/${encodeURIComponent(item.name)}`}>
-                                  {teamData.logoUrl ? (
-                                    <div className="team-logo-container">
-                                      <img 
-                                        src={teamData.logoUrl} 
-                                        alt={`${item.name} logo`}
-                                        className="team-logo"
-                                      />
-                                      <span className="team-name-text">{item.name}</span>
-                                    </div>
-                                  ) : (
-                                    item.name
-                                  )}
-                                </Link>
-                              );
-                            })()
-                      }</td>
-                      {selectedSeason !== null && isPlayer && viewType === 'player' && (
-                        <td>
-                          {(() => {
-                            const team = (item as Player).teams?.find(team => team?.season?.seasonNumber === selectedSeason);
-                            return team ? (
-                              <Link className="stats-pill-link" to={`/teams/${encodeURIComponent(team.name)}`}>
-                                {team.logoUrl ? (
-                                  <div className="team-logo-container">
-                                    <img 
-                                      src={team.logoUrl} 
-                                      alt={`${team.name} logo`}
-                                      className="team-logo"
-                                    />
-                                    <span className="team-name-text">{team.name}</span>
-                                  </div>
-                                ) : (
-                                  team.name
-                                )}
-                              </Link>
-                            ) : 'N/A';
-                          })()}
-                        </td>
-                      )}
-                      {visibleStatCategories.map((stat) => (
-                        <td key={stat}>
-                          {(() => {
-                            const statValue = isTeam 
-                              ? getTeamStat(item as TeamStatsData, stat)
-                              : getPlayerStat(item as Player, stat);
-                            return formatStatValue(stat, statValue, statType);
-                          })()}
-                        </td>
-                      ))}
-                    </tr>
-                    {/* Accordion row for player visualization */}
-                    {isPlayer && expandedRows[rowId] && (
-                      <tr className="player-visualization-row">
-                        <td colSpan={2 + (selectedSeason !== null && viewType === 'player' ? 1 : 0) + visibleStatCategories.length}>
-                          <PlayerStatsVisualization
-                            player={item as Player}
-                            allPlayers={players || []}
-                            selectedSeason={selectedSeason}
-                          />
-                        </td>
-                      </tr>
-                    )}
-                  </React.Fragment>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+            );
+          }}
+        />
       )}
     </div>
   );

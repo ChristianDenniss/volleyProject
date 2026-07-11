@@ -3,7 +3,7 @@ import { useState, useCallback, useEffect } from "react";
 import { authFetch }             from "./authFetch";
 import type { User } from "../types/interfaces";
 import { useAuth } from "../context/authContext";
-import { usePaginatedFetch, PaginationParams } from "./usePaginatedFetch";
+import { usePaginatedFetch, PaginationParams, DEFAULT_PAGINATION } from "./usePaginatedFetch";
 
 export interface UserListParams extends PaginationParams {
     search?: string;
@@ -11,7 +11,7 @@ export interface UserListParams extends PaginationParams {
 }
 
 // Custom hook to fetch a page of users and handle role changes
-export const useUsers = (params: UserListParams) =>
+export const useUsers = (params: UserListParams = DEFAULT_PAGINATION) =>
 {
     const { token } = useAuth();
     const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";

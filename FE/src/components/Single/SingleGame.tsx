@@ -250,6 +250,30 @@ const SingleGame: React.FC = () =>
                                                         columns={statsColumns}
                                                         rows={allStats}
                                                         rowKey={(row) => row.id}
+                                                        tableClassName="stats-table"
+                                                        wrapperClassName=""
+                                                        rowClassName={(row) =>
+                                                            team2Stats.some((s) => s.id === row.id)
+                                                                ? "team2-row"
+                                                                : undefined
+                                                        }
+                                                        renderBeforeRow={(_row, index) =>
+                                                            team1Stats.length === 0 &&
+                                                            team2Stats.length > 0 &&
+                                                            index === 0 ? (
+                                                                <tr className="team-separator" key="sep-before-team2">
+                                                                    <td colSpan={statsColumns.length}></td>
+                                                                </tr>
+                                                            ) : null
+                                                        }
+                                                        renderAfterRow={(_row, index) =>
+                                                            team1Stats.length > 0 &&
+                                                            index === team1Stats.length - 1 ? (
+                                                                <tr className="team-separator" key="sep-after-team1">
+                                                                    <td colSpan={statsColumns.length}></td>
+                                                                </tr>
+                                                            ) : null
+                                                        }
                                                     />
                                                 </div>
                                             </section>

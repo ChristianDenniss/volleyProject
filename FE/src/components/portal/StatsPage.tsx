@@ -63,13 +63,19 @@ const STAGE_OPTIONS = [
 
 ];
 
+const STATS_PER_PAGE = 10;
+
 const StatsPage: React.FC = () =>
 {
-    // Retrieve stats list from API
-    const { data: stats, loading, error } = useStats();
+    const [searchQuery, setSearchQuery] = useState<string>("");
+    const [currentPage, setCurrentPage] = useState<number>(1);
 
-    // Retrieve players list for the dropdown
-    const { data: players } = usePlayers();
+    const { data: stats, total, totalPages, loading, error, refetch } = useStats({
+        page: currentPage,
+        limit: STATS_PER_PAGE,
+        search: searchQuery || undefined,
+    });
+    const { data: players } = usePlayers({ page: 1, limit: 100 });
 
     // Destructure mutation functions for patching stats
     const { patchStats }                 = useStatsMutations();
@@ -109,9 +115,6 @@ const StatsPage: React.FC = () =>
     const [ editing, setEditing ]       = useState<EditingState | null>(null);
 
     // Search and pagination state
-    const [ searchQuery, setSearchQuery ] = useState<string>("");
-    const [ currentPage, setCurrentPage ] = useState<number>(1);
-    const statsPerPage = 10;
 
     // Modal state for creating a new stats record
     const [ isModalOpen, setIsModalOpen ]           = useState<boolean>(false);
@@ -189,32 +192,8 @@ const StatsPage: React.FC = () =>
     // Initialize localStats when data is fetched
     useEffect(() =>
     {
-        if (stats)
-        {
-            setLocalStats(stats);
-        }
+        setLocalStats(stats);
     }, [stats]);
-
-    // Filter stats based on search query
-    const filteredStats = localStats.filter(stat => {
-        const playerName = stat.player?.name || '';
-        const gameId = stat.game?.id?.toString() || '';
-        const playerId = stat.player?.id?.toString() || '';
-        
-        const searchLower = searchQuery.toLowerCase();
-        return (
-            playerName.toLowerCase().includes(searchLower) ||
-            gameId.includes(searchLower) ||
-            playerId.includes(searchLower)
-        );
-    });
-
-    // Calculate pagination
-    const totalPages = Math.ceil(filteredStats.length / statsPerPage);
-    const paginatedStats = filteredStats.slice(
-        (currentPage - 1) * statsPerPage,
-        currentPage * statsPerPage
-    );
 
     // Handle search
     const handleSearch = (query: string) => {
@@ -330,6 +309,7 @@ const StatsPage: React.FC = () =>
             setLocalStats((prev) =>
                 prev.map((s) => (s.id === id ? { ...s, ...updated } : s))
             );
+            refetch();
         }
         catch (err: any)
         {
@@ -361,8 +341,8 @@ const StatsPage: React.FC = () =>
         const wasDeleted = await deleteStat(id.toString());
         if (wasDeleted)
         {
-            // Remove from local state if deletion succeeded
             setLocalStats((prev) => prev.filter((s) => s.id !== id));
+            refetch();
         }
     };
 
@@ -444,6 +424,7 @@ const StatsPage: React.FC = () =>
                     return;
                 }
                 setLocalStats(prev => [...result.stats, ...prev]);
+                refetch();
                 setIsStageModalOpen(false);
                 setPendingCSV(null);
                 setStageInput("");
@@ -469,6 +450,7 @@ const StatsPage: React.FC = () =>
                     return;
                 }
                 setLocalStats(prev => [...result, ...prev]);
+                refetch();
                 setIsStageModalOpen(false);
                 setPendingCSV(null);
                 setExistingGameId("");
@@ -522,6 +504,7 @@ const StatsPage: React.FC = () =>
             {
                 // Prepend new record to local state
                 setLocalStats((prev) => [created, ...prev]);
+                refetch();
                 closeModal();
             }
         }
@@ -1141,8 +1124,8 @@ const StatsPage: React.FC = () =>
             {/* Results Counter and Clear Filters */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                 <div className="results-counter">
-                    {filteredStats.length > 0 ? (
-                        `Showing ${((currentPage - 1) * statsPerPage) + 1}-${Math.min(currentPage * statsPerPage, filteredStats.length)} of ${filteredStats.length} stats`
+                    {total > 0 ? (
+                        `Showing ${((currentPage - 1) * STATS_PER_PAGE) + 1}-${Math.min(currentPage * STATS_PER_PAGE, total)} of ${total} stats`
                     ) : (
                         'No stats found'
                     )}
@@ -1169,7 +1152,7 @@ const StatsPage: React.FC = () =>
             {/* Stats Table */}
             <Table
                 columns={columns}
-                rows={paginatedStats}
+                rows={localStats}
                 rowKey={(row) => row.id}
             />
         </div>

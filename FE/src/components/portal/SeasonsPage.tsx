@@ -35,7 +35,7 @@ const SeasonTable = Table as unknown as React.ComponentType<{
 const SeasonsPage: React.FC = () =>
 {
     // Fetch existing seasons
-    const { data: seasons, loading, error } = useSkinnySeasons();
+    const { data: seasons, loading, error } = useSkinnySeasons({ page: 1, limit: 100 });
 
     // Patch (edit) existing seasons
     const { patchSeason }                   = useSeasonMutations();

@@ -13,7 +13,7 @@ import SearchBar from "../Searchbar";
 import Pagination from "../Pagination";
 import Modal from "../ui/Modal";
 import FilterBar from "../ui/FilterBar";
-import Table from "../ui/Table";
+import Table, { type TableColumn } from "../ui/Table";
 
 type EditField =
   | "name"
@@ -27,11 +27,7 @@ interface EditingState {
   value: string;
 }
 
-interface TeamTableColumn {
-  key: string;
-  header: string;
-  render?: (row: Team) => React.ReactNode;
-}
+interface TeamTableColumn extends TableColumn<Team> {}
 
 const TEAMS_PER_PAGE = 10;
 
@@ -490,13 +486,10 @@ const TeamsPage: React.FC = () => {
 
       {/* Teams Table */}
       <div style={{ marginTop: "1.5rem" }}>
-        {/* Table<T> constrains T extends Record<string, unknown>; Team (a plain interface
-            without an index signature) doesn't structurally satisfy that constraint, so the
-            props are cast here. This does not change runtime behavior. */}
         <Table
-          columns={columns as any}
-          rows={localTeams as any}
-          rowKey={(row: any) => (row as Team).id}
+          columns={columns}
+          rows={localTeams}
+          rowKey={(row) => row.id}
         />
       </div>
     </div>

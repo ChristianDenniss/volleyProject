@@ -5,7 +5,7 @@ import Table, { type TableColumn } from '../ui/Table';
 import '../../styles/ArticlesPage.css';
 
 const ArticlesPage: React.FC = () => {
-    const { data: fetchedArticles, loading, error } = useArticles();
+    const { data: fetchedArticles, loading, error } = useArticles({ page: 1, limit: 100 });
     const { patchArticle } = useArticleMutations();
     const [filter, setFilter] = useState<'all' | 'pending'>('pending');
     const [expandedArticleId, setExpandedArticleId] = useState<number | null>(null);
@@ -57,57 +57,28 @@ const ArticlesPage: React.FC = () => {
         filter === 'all' ? true : article.approved === null
     ) || [];
 
-    const expandedArticle = filteredArticles.find(article => article.id === expandedArticleId) || null;
-
     const columns: TableColumn<typeof filteredArticles[number]>[] = [
         {
             key: 'title',
             header: 'Title',
-            render: (article) => (
-                <span
-                    style={{ cursor: 'pointer', display: 'block', width: '100%' }}
-                    onClick={() => toggleExpand(article.id)}
-                >
-                    {article.title}
-                </span>
-            ),
+            render: (article) => article.title,
         },
         {
             key: 'author',
             header: 'Author',
-            render: (article) => (
-                <span
-                    style={{ cursor: 'pointer', display: 'block', width: '100%' }}
-                    onClick={() => toggleExpand(article.id)}
-                >
-                    {article.author.username}
-                </span>
-            ),
+            render: (article) => article.author.username,
         },
         {
             key: 'createdAt',
             header: 'Created',
-            render: (article) => (
-                <span
-                    style={{ cursor: 'pointer', display: 'block', width: '100%' }}
-                    onClick={() => toggleExpand(article.id)}
-                >
-                    {new Date(article.createdAt).toLocaleDateString()}
-                </span>
-            ),
+            render: (article) => new Date(article.createdAt).toLocaleDateString(),
         },
         {
             key: 'status',
             header: 'Status',
-            render: (article) => (
-                <span
-                    style={{ cursor: 'pointer', display: 'block', width: '100%' }}
-                    onClick={() => toggleExpand(article.id)}
-                >
-                    {article.approved === null ? 'Pending' :
-                     article.approved ? 'Approved' : 'Rejected'}
-                </span>
-            ),
+            render: (article) =>
+                article.approved === null ? 'Pending' :
+                article.approved ? 'Approved' : 'Rejected',
         },
         {
             key: 'actions',
@@ -169,22 +140,30 @@ const ArticlesPage: React.FC = () => {
                     columns={columns}
                     rows={filteredArticles}
                     rowKey={(article) => article.id}
+                    rowClassName={(article) =>
+                        `article-row${expandedArticleId === article.id ? ' expanded' : ''}`
+                    }
+                    onRowClick={(article) => toggleExpand(article.id)}
+                    renderAfterRow={(article) =>
+                        expandedArticleId === article.id ? (
+                            <tr className="article-details" key={`details-${article.id}`}>
+                                <td colSpan={columns.length}>
+                                    <div className="article-content">
+                                        <div className="article-image">
+                                            <img src={article.imageUrl} alt={article.title} />
+                                        </div>
+                                        <div className="article-text">
+                                            <h3>Summary</h3>
+                                            <p>{article.summary}</p>
+                                            <h3>Content</h3>
+                                            <p>{article.content}</p>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        ) : null
+                    }
                 />
-                {expandedArticle && (
-                    <div className="article-details">
-                        <div className="article-content">
-                            <div className="article-image">
-                                <img src={expandedArticle.imageUrl} alt={expandedArticle.title} />
-                            </div>
-                            <div className="article-text">
-                                <h3>Summary</h3>
-                                <p>{expandedArticle.summary}</p>
-                                <h3>Content</h3>
-                                <p>{expandedArticle.content}</p>
-                            </div>
-                        </div>
-                    </div>
-                )}
             </div>
         </div>
     );

@@ -1,6 +1,7 @@
 import { http, HttpResponse } from "msw";
 import { bumpId, db, getAuthUser } from "./db";
 import { MOCK_AUTH_TOKEN } from "./data";
+import { toPaginatedResult } from "./pagination";
 import {
   enrichTeam,
   getAwardsForPlayer,
@@ -40,6 +41,14 @@ function patchById<T extends { id: number }>(
   return item;
 }
 
+function paginated<T>(
+  items: T[],
+  request: Request,
+  filter?: (item: T, params: URLSearchParams) => boolean
+) {
+  return toPaginatedResult(items, new URL(request.url).searchParams, filter);
+}
+
 export const handlers = [
   // Auth
   http.post(api("users/login"), async () =>
@@ -64,7 +73,7 @@ export const handlers = [
     const user = findById(db.users, Number(params.id));
     return user ? json(user) : json({ message: "Not found" }, 404);
   }),
-  http.get(api("users"), () => json(db.users)),
+  http.get(api("users"), ({ request }) => json(paginated(db.users, request))),
   http.patch(api("admin/users/:id/role"), async ({ params, request }) => {
     const body = (await request.json()) as { role: string };
     const user = patchById(db.users, Number(params.id), {
@@ -74,12 +83,12 @@ export const handlers = [
   }),
 
   // Seasons
-  http.get(api("seasons/skinny"), () => json(db.seasons)),
-  http.get(api("seasons/medium"), () => json(db.seasons)),
+  http.get(api("seasons/skinny"), ({ request }) => json(paginated(db.seasons, request))),
+  http.get(api("seasons/medium"), ({ request }) => json(paginated(db.seasons, request))),
   http.get(api("seasons/:id"), ({ params }) => {
     const season = getSeasonDetail(Number(params.id));
     return season ? json([season]) : json([], 404);
-  }),  http.get(api("seasons"), () => json(db.seasons)),
+  }),  http.get(api("seasons"), ({ request }) => json(paginated(db.seasons, request))),
   http.post(api("seasons"), async ({ request }) => {
     const body = (await request.json()) as Record<string, unknown>;
     const season = { id: bumpId("seasons"), ...body };
@@ -97,12 +106,12 @@ export const handlers = [
   }),
 
   // Players
-  http.get(api("players/medium"), () => json(getPlayersWithRelations())),
+  http.get(api("players/medium"), ({ request }) => json(paginated(getPlayersWithRelations(), request))),
   http.get(api("players/:id"), ({ params }) => {
     const player = getPlayerDetail(Number(params.id));
     return player ? json(player) : json({ message: "Not found" }, 404);
   }),
-  http.get(api("players"), () => json(getPlayersWithRelations())),  http.post(api("players/batch/by-team-name"), async ({ request }) => {
+  http.get(api("players"), ({ request }) => json(paginated(getPlayersWithRelations(), request))),  http.post(api("players/batch/by-team-name"), async ({ request }) => {
     const body = (await request.json()) as { players?: Array<{ name: string; position: string }> };
     const created = (body.players ?? []).map((player) => ({
       id: bumpId("players"),
@@ -129,8 +138,8 @@ export const handlers = [
   }),
 
   // Teams
-  http.get(api("teams/skinny"), () => json(db.teams)),
-  http.get(api("teams/medium"), () => json(db.teams)),
+  http.get(api("teams/skinny"), ({ request }) => json(paginated(db.teams, request))),
+  http.get(api("teams/medium"), ({ request }) => json(paginated(db.teams, request))),
   http.get(api("teams/name/:name"), ({ params }) => {
     const name = decodeURIComponent(String(params.name));
     return json(getTeamsByName(name));
@@ -138,7 +147,7 @@ export const handlers = [
   http.get(api("teams/:id"), ({ params }) => {
     const team = findById(db.teams, Number(params.id));
     return team ? json(enrichTeam(team)) : json({ message: "Not found" }, 404);
-  }),  http.get(api("teams"), () => json(db.teams)),
+  }),  http.get(api("teams"), ({ request }) => json(paginated(db.teams, request))),
   http.post(api("teams/batch"), async ({ request }) => {
     const body = (await request.json()) as Array<Record<string, unknown>>;
     const created = body.map((team) => {
@@ -165,12 +174,12 @@ export const handlers = [
   }),
 
   // Games
-  http.get(api("games/skinny"), () => json(db.games)),
+  http.get(api("games/skinny"), ({ request }) => json(paginated(db.games, request))),
   http.get(api("games/:id"), ({ params }) => {
     const game = findById(db.games, Number(params.id));
     return game ? json([game]) : json([], 404);
   }),
-  http.get(api("games"), () => json(db.games)),
+  http.get(api("games"), ({ request }) => json(paginated(db.games, request))),
   http.post(api("games"), async ({ request }) => {
     const body = (await request.json()) as Record<string, unknown>;
     const game = { id: bumpId("games"), ...body };
@@ -188,7 +197,7 @@ export const handlers = [
   }),
 
   // Stats
-  http.get(api("stats"), () => json(db.stats)),
+  http.get(api("stats"), ({ request }) => json(paginated(db.stats, request))),
   http.post(api("stats/batch-csv"), async ({ request }) => {
     const body = (await request.json()) as { statsData?: Array<Record<string, unknown>> };
     const created = (body.statsData ?? []).map((stat) => ({
@@ -222,7 +231,7 @@ export const handlers = [
     const article = findById(db.articles, Number(params.id));
     return article ? json([article]) : json([], 404);
   }),
-  http.get(api("articles"), () => json(db.articles)),
+  http.get(api("articles"), ({ request }) => json(paginated(db.articles, request))),
   http.post(api("articles"), async ({ request }) => {
     const body = (await request.json()) as Record<string, unknown>;
     const article = {
@@ -247,14 +256,14 @@ export const handlers = [
   }),
 
   // Awards
-  http.get(api("awards/skinny"), () => json(db.awards)),
-  http.get(api("awards/player/:playerId"), ({ params }) =>
-    json(getAwardsForPlayer(Number(params.playerId)))
+  http.get(api("awards/skinny"), ({ request }) => json(paginated(db.awards, request))),
+  http.get(api("awards/player/:playerId"), ({ params, request }) =>
+    json(paginated(getAwardsForPlayer(Number(params.playerId)), request))
   ),  http.get(api("awards/:id"), ({ params }) => {
     const award = findById(db.awards, Number(params.id));
     return award ? json(award) : json({ message: "Not found" }, 404);
   }),
-  http.get(api("awards"), () => json(db.awards)),
+  http.get(api("awards"), ({ request }) => json(paginated(db.awards, request))),
   http.post(api("awards/with-names"), async ({ request }) => {
     const body = (await request.json()) as Record<string, unknown>;
     const season = db.seasons.find((s) => s.id === body.seasonId) ?? db.seasons[0];
@@ -287,23 +296,24 @@ export const handlers = [
   }),
 
   // Matches
-  http.get(api("matches/season/:seasonId/round/:round"), ({ params }) => {
+  http.get(api("matches/season/:seasonId/round/:round"), ({ params, request }) => {
     const seasonId = Number(params.seasonId);
     const round = String(params.round);
     const matches = db.matches.filter(
       (match) => match.seasonId === seasonId && match.round === round
     );
-    return json(matches);
+    return json(paginated(matches, request));
   }),
-  http.get(api("matches/season/:seasonId"), ({ params }) => {
+  http.get(api("matches/season/:seasonId"), ({ params, request }) => {
     const seasonId = Number(params.seasonId);
-    return json(db.matches.filter((match) => match.seasonId === seasonId));
+    const filtered = db.matches.filter((match) => match.seasonId === seasonId);
+    return json(paginated(filtered, request));
   }),
   http.get(api("matches/:id"), ({ params }) => {
     const match = findById(db.matches, Number(params.id));
     return match ? json(match) : json({ message: "Not found" }, 404);
   }),
-  http.get(api("matches"), () => json(db.matches)),
+  http.get(api("matches"), ({ request }) => json(paginated(db.matches, request))),
   http.post(api("matches/import-challonge"), () =>
     json({ imported: 2, matches: db.matches })
   ),
@@ -324,7 +334,7 @@ export const handlers = [
   }),
 
   // Records
-  http.get(api("records"), () => json(db.records)),
+  http.get(api("records"), ({ request }) => json(paginated(db.records, request))),
   http.post(api("records/calculate"), () => json({ updated: db.records.length, records: db.records })),
 
   // Trivia

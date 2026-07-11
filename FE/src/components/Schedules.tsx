@@ -25,7 +25,13 @@ const Schedules: React.FC = () => {
   //   }
   // }, [seasons, selectedSeason]);
 
-  const { data: matches, error, loading } = useMatches(selectedSeason);
+  const { data: matches, error, loading } = useMatches({
+    page: 1,
+    limit: 100,
+    seasonId: selectedSeason,
+    search: searchQuery || undefined,
+    round: selectedRound || undefined,
+  });
 
   // Get unique rounds from matches
   const uniqueRounds = useMemo(() => {

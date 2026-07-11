@@ -52,6 +52,14 @@ const AwardsPage: React.FC = () => {
     type: awardTypeFilter || undefined,
   });
   const { data: seasons } = useSkinnySeasons({ page: 1, limit: 100 });
+  const { patchAward } = useAwardsMutations();
+  const { createAwards, loading: creating } = useCreateAwards();
+  const { deleteItem: deleteAward, loading: deleting } = useDeleteAwards();
+  const { user } = useAuth();
+
+  const [localAwards, setLocalAwards] = useState<Award[]>([]);
+  const [editing, setEditing] = useState<EditingState | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Modal state for creating a new award
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -63,27 +71,12 @@ const AwardsPage: React.FC = () => {
   const [formError, setFormError] = useState<string>("");
 
   useEffect(() => {
-    if (awards) setLocalAwards(awards);
+    setLocalAwards(awards);
   }, [awards]);
 
-  // Get unique seasons for filter options
-  const uniqueSeasons = Array.from(new Set(localAwards.map(award => award.season.seasonNumber))).sort((a, b) => a - b);
-
-  // Filter awards based on search query, season and award type
-  const filteredAwards = localAwards.filter(award => {
-    const matchesSearch = award.players[0]?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false;
-    const matchesSeason = !seasonFilter || award.season.seasonNumber.toString() === seasonFilter;
-    const matchesAwardType = !awardTypeFilter || award.type === awardTypeFilter;
-    
-    return matchesSearch && matchesSeason && matchesAwardType;
-  });
-
-  // Calculate pagination
-  const totalPages = Math.ceil(filteredAwards.length / awardsPerPage);
-  const paginatedAwards = filteredAwards.slice(
-    (currentPage - 1) * awardsPerPage,
-    currentPage * awardsPerPage
-  );
+  const uniqueSeasons = (seasons ?? [])
+    .map((season) => season.seasonNumber)
+    .sort((a, b) => a - b);
 
   // Handle search
   const handleSearch = (query: string) => {
@@ -173,6 +166,7 @@ const AwardsPage: React.FC = () => {
       setLocalAwards((prev) =>
         prev.map((a) => (a.id === id ? { ...a, ...updated } : a))
       );
+      refetch();
     } catch (err: any) {
       console.error(err);
       alert("Failed to save changes:\n" + err.message);
@@ -190,6 +184,7 @@ const AwardsPage: React.FC = () => {
     const wasDeleted = await deleteAward(id.toString());
     if (wasDeleted) {
       setLocalAwards((prev) => prev.filter((a) => a.id !== id));
+      refetch();
     }
   };
 
@@ -232,6 +227,7 @@ const AwardsPage: React.FC = () => {
       const created = await createAwards(payload);
       if (created) {
         setLocalAwards((prev) => [created, ...prev]);
+        refetch();
         closeModal();
       }
     } catch (err: any) {
@@ -545,14 +541,14 @@ const AwardsPage: React.FC = () => {
       </FilterBar>
 
       <div className="results-counter">
-        Showing {((currentPage - 1) * awardsPerPage) + 1}-{Math.min(currentPage * awardsPerPage, filteredAwards.length)} of {filteredAwards.length} awards
+        Showing {total === 0 ? 0 : ((currentPage - 1) * AWARDS_PER_PAGE) + 1}-{Math.min(currentPage * AWARDS_PER_PAGE, total)} of {total} awards
       </div>
 
       {/* Awards Table */}
       <div className="table-container">
         <Table
           columns={columns}
-          rows={paginatedAwards as unknown as (Award & Record<string, unknown>)[]}
+          rows={localAwards as unknown as (Award & Record<string, unknown>)[]}
           rowKey={(award) => award.id}
         />
       </div>

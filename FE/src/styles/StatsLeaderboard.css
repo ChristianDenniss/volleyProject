@@ -739,6 +739,10 @@
 }
 
 /* Accordion visualization row */
+.stats-table tbody tr.player-row {
+  cursor: pointer;
+}
+
 .player-visualization-row td {
   background: #f5f8fa;
   border-bottom: 2px solid #e2e8f0;

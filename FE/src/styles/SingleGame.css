@@ -192,6 +192,67 @@
     background: transparent !important;
 }
 
+/* ===== Table styling ===== */
+.stats-table {
+    width: 100%;
+    min-width: 960px;
+    border-collapse: collapse;
+    font-size: 0.93rem;
+}
+
+.stats-table thead th {
+    position: sticky;
+    top: 0;
+    background: var(--primary-dark);
+    color: #fff;
+    font-weight: 600;
+    padding: 0.9rem 1.1rem;
+    text-align: center;
+    white-space: nowrap;
+    z-index: 1;
+}
+
+.stats-table tbody tr {
+    transition: background 0.15s ease;
+}
+
+.stats-table tbody tr:hover {
+    background: rgba(214, 235, 255, 0.45);
+}
+
+.stats-table td {
+    padding: 0.8rem 1.1rem;
+    text-align: center;
+    white-space: nowrap;
+    border-bottom: 1px solid #eef3f8;
+}
+
+.stats-table tbody tr:nth-child(even) {
+    background: #f7fbff;
+}
+
+/* ===== Team 2 custom striping ===== */
+.stats-table tbody tr.team2-row:nth-child(even) {
+    background: #ffecec;
+}
+.stats-table tbody tr.team2-row:nth-child(odd) {
+    background: #fff;
+}
+.stats-table tbody tr.team2-row:hover {
+    background: rgba(255, 0, 0, 0.1);
+}
+
+/* ===== Separator styling ===== */
+.stats-table tbody tr.team-separator {
+    background-color: #0b1e35eb !important;
+    height: 16px;
+}
+.stats-table tbody tr.team-separator td {
+    padding: 0;
+    height: 16px;
+    border: none;
+}
+
 .no-stats {
     text-align: center;
     font-size: 1.3rem;

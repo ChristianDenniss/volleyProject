@@ -38,9 +38,30 @@ interface EditingState {
   value: string;
 }
 
+const MATCHES_PER_PAGE = 10;
+const MATCH_STATUSES = ["scheduled", "completed"] as const;
+
 const MatchesPage: React.FC = () => {
-  const { data: matches, loading, error } = useMatches();
-  const { data: seasons } = useSkinnySeasons();
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [seasonFilter, setSeasonFilter] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [roundFilter, setRoundFilter] = useState<string>("");
+
+  const { data: matches, total, totalPages, loading, error, refetch } = useMatches({
+    page: currentPage,
+    limit: MATCHES_PER_PAGE,
+    search: searchQuery || undefined,
+    seasonId: seasonFilter || undefined,
+    status: statusFilter || undefined,
+    round: roundFilter || undefined,
+  });
+  const { data: seasons } = useSkinnySeasons({ page: 1, limit: 100 });
+  const { data: matchesSample } = useMatches({
+    page: 1,
+    limit: 100,
+    seasonId: seasonFilter || undefined,
+  });
   const { user } = useAuth();
   const { patchMatch } = useMatchMutations();
   const { createMatch } = useCreateMatches();
@@ -48,14 +69,6 @@ const MatchesPage: React.FC = () => {
 
   const [localMatches, setLocalMatches] = useState<Match[]>([]);
   const [editing, setEditing] = useState<EditingState | null>(null);
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const matchesPerPage = 10;
-
-  // Filter state
-  const [seasonFilter, setSeasonFilter] = useState<string>("");
-  const [statusFilter, setStatusFilter] = useState<string>("");
-  const [roundFilter, setRoundFilter] = useState<string>("");
 
   // Modal state for creating a new match
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -74,30 +87,15 @@ const MatchesPage: React.FC = () => {
   const [formError, setFormError] = useState<string>("");
 
   useEffect(() => {
-    if (matches) setLocalMatches(matches as Match[]);
+    setLocalMatches(matches as Match[]);
   }, [matches]);
 
-  // Get unique seasons, statuses, and rounds for filter options
-  const uniqueSeasons = Array.from(new Set(localMatches.map(match => match.seasonId))).sort((a, b) => a - b);
-  const uniqueStatuses = Array.from(new Set(localMatches.map(match => match.status)));
-  const uniqueRounds = Array.from(new Set(localMatches.map(match => match.round))).sort();
-
-  // Filter matches based on search query and filters
-  const filteredMatches = localMatches.filter(match => {
-    const matchesSearch = match?.matchNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false;
-    const matchesSeason = !seasonFilter || match.seasonId.toString() === seasonFilter;
-    const matchesStatus = !statusFilter || match.status === statusFilter;
-    const matchesRound = !roundFilter || match.round === roundFilter;
-    
-    return matchesSearch && matchesSeason && matchesStatus && matchesRound;
-  });
-
-  // Calculate pagination
-  const totalPages = Math.ceil(filteredMatches.length / matchesPerPage);
-  const paginatedMatches = filteredMatches.slice(
-    (currentPage - 1) * matchesPerPage,
-    currentPage * matchesPerPage
-  );
+  const uniqueSeasons = (seasons ?? [])
+    .map((season) => season.id)
+    .sort((a, b) => a - b);
+  const uniqueRounds = Array.from(
+    new Set((matchesSample ?? []).map((match) => match.round))
+  ).sort();
 
   // Handle search
   const handleSearch = (query: string) => {
@@ -158,6 +156,7 @@ const MatchesPage: React.FC = () => {
       setLocalMatches(prev =>
         prev.map(m => (m.id === id ? { ...m, ...updatedMatch, season: updatedMatch.season || m.season } : m))
       );
+      refetch();
       setEditing(null);
     } catch (error) {
       console.error("Error updating match:", error);
@@ -172,6 +171,7 @@ const MatchesPage: React.FC = () => {
     try {
       await deleteMatch(id.toString());
       setLocalMatches(prev => prev.filter(m => m.id !== id));
+      refetch();
     } catch (error) {
       console.error("Error deleting match:", error);
       alert("Failed to delete match");
@@ -237,6 +237,7 @@ const MatchesPage: React.FC = () => {
       const newMatch = await createMatch(matchData);
       if (newMatch) {
         setLocalMatches(prev => [newMatch, ...prev]);
+        refetch();
         closeModal();
         alert("Match created successfully!");
       }
@@ -338,6 +339,7 @@ const MatchesPage: React.FC = () => {
                     setLocalMatches(prev =>
                       prev.map(m => (m.id === id ? { ...m, ...updatedMatch, season: updatedMatch.season || m.season } : m))
                     );
+                    refetch();
                     setEditing(null);
                   } catch (error) {
                     console.error("Error updating match status:", error);
@@ -638,11 +640,14 @@ const MatchesPage: React.FC = () => {
               onChange={(e) => handleSeasonFilterChange(e.target.value)}
             >
               <option value="">All Seasons</option>
-              {uniqueSeasons.map(seasonId => (
-                <option key={seasonId} value={seasonId}>
-                  Season {seasonId}
-                </option>
-              ))}
+              {uniqueSeasons.map(seasonId => {
+                const season = seasons?.find((s) => s.id === seasonId);
+                return (
+                  <option key={seasonId} value={seasonId}>
+                    Season {season?.seasonNumber ?? seasonId}
+                  </option>
+                );
+              })}
             </select>
           </div>
 
@@ -654,7 +659,7 @@ const MatchesPage: React.FC = () => {
               onChange={(e) => handleStatusFilterChange(e.target.value)}
             >
               <option value="">All Statuses</option>
-              {uniqueStatuses.map(status => (
+              {MATCH_STATUSES.map(status => (
                 <option key={status} value={status}>
                   {status}
                 </option>
@@ -679,6 +684,10 @@ const MatchesPage: React.FC = () => {
           </div>
         </FilterBar>
 
+        <div className="results-counter">
+          Showing {total === 0 ? 0 : ((currentPage - 1) * MATCHES_PER_PAGE) + 1}-{Math.min(currentPage * MATCHES_PER_PAGE, total)} of {total} matches
+        </div>
+
         <div className="search-row">
           <SearchBar 
             onSearch={handleSearch} 
@@ -699,7 +708,7 @@ const MatchesPage: React.FC = () => {
       <div className="table-container">
         <Table
           columns={columns}
-          rows={paginatedMatches as unknown as MatchRow[]}
+          rows={localMatches as unknown as MatchRow[]}
           rowKey={(row) => row.id}
         />
       </div>

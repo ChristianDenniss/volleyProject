@@ -14,7 +14,7 @@ import SearchBar from "../Searchbar";
 import Pagination from "../Pagination";
 import Modal from "../ui/Modal";
 import FilterBar from "../ui/FilterBar";
-import Table from "../ui/Table";
+import Table, { type TableColumn } from "../ui/Table";
 
 type EditField = "name" | "seasonId" | "stage" | "team1Score" | "team2Score" | "date" | "videoUrl";
 
@@ -24,11 +24,7 @@ interface EditingState {
   value: string;
 }
 
-interface GameColumn {
-  key: string;
-  header: string;
-  render?: (row: Game) => React.ReactNode;
-}
+interface GameColumn extends TableColumn<Game> {}
 
 interface CreateGameInput {
   name: string;
@@ -601,9 +597,9 @@ const GamesPage: React.FC = () => {
       {/* Games Table */}
       <div className="users-table" style={{ marginTop: "1.5rem" }}>
         <Table
-          columns={columns as any}
-          rows={localGames as unknown as Record<string, unknown>[]}
-          rowKey={(row) => (row as unknown as Game).id}
+          columns={columns}
+          rows={localGames}
+          rowKey={(row) => row.id}
         />
       </div>
     </div>

@@ -9,11 +9,16 @@ export interface PaginationParams {
     [filterKey: string]: string | number | undefined;
 }
 
+export const DEFAULT_PAGINATION: PaginationParams = { page: 1, limit: 100 };
+
 /**
  * Fetches one page of a paginated list endpoint, rebuilding the query string
  * (and refetching) whenever the endpoint or any param changes.
  */
-export const usePaginatedFetch = <T>(endpoint: string, params: PaginationParams) => {
+export const usePaginatedFetch = <T>(
+    endpoint: string,
+    params: PaginationParams = DEFAULT_PAGINATION
+) => {
     const [data, setData] = useState<T[]>([]);
     const [total, setTotal] = useState<number>(0);
     const [totalPages, setTotalPages] = useState<number>(1);
