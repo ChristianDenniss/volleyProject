@@ -2,6 +2,7 @@ import { Application, Router } from 'express';
 import { ArticleController } from './article.controller.js';
 import { validate } from '../../middleware/validate.js';
 import { authenticateCombined } from '../../middleware/combinedAuth.js';
+import { authorizeRoles } from '../../middleware/authorizeRoles.js';
 import { createArticleSchema, updateArticleSchema } from './article.schema.js';
 
 export function registerArticleRoutes(app: Application): void
@@ -10,7 +11,7 @@ export function registerArticleRoutes(app: Application): void
     const articleController = new ArticleController();
 
     // Create a new article - PROTECTED
-    router.post('/', authenticateCombined, validate(createArticleSchema), articleController.createArticle);
+    router.post('/', authenticateCombined, authorizeRoles("admin", "superadmin"), validate(createArticleSchema), articleController.createArticle);
 
     // GET routes - PUBLIC (for website display)
     router.get('/', articleController.getAllArticles);
@@ -18,9 +19,9 @@ export function registerArticleRoutes(app: Application): void
     router.get('/:id', articleController.getArticleById);
 
     // UPDATE/DELETE routes - PROTECTED
-    router.put('/:id', authenticateCombined, articleController.updateArticle);
-    router.patch('/:id', authenticateCombined, validate(updateArticleSchema), articleController.updateArticle);
-    router.delete('/:id', authenticateCombined, articleController.deleteArticle);
+    router.put('/:id', authenticateCombined, authorizeRoles("admin", "superadmin"), articleController.updateArticle);
+    router.patch('/:id', authenticateCombined, authorizeRoles("admin", "superadmin"), validate(updateArticleSchema), articleController.updateArticle);
+    router.delete('/:id', authenticateCombined, authorizeRoles("admin", "superadmin"), articleController.deleteArticle);
 
     // Like an article (requires authentication)
     router.post('/:id/like', authenticateCombined, articleController.likeArticle);

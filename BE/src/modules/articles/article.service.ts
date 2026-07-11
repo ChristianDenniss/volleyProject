@@ -4,6 +4,7 @@ import { Article } from './article.entity.js';
 import { User } from '../user/user.entity.js';
 import { MissingFieldError } from '../../errors/MissingFieldError.js';
 import { NotFoundError } from '../../errors/NotFoundError.js';
+import { PaginationParams } from '../../utils/pagination.js';
 
 export class ArticleService {
     private articleRepository: Repository<Article>;
@@ -51,9 +52,11 @@ export class ArticleService {
     /**
      * Get all articles with their author
      */
-    async getAllArticles(): Promise<Article[]> {
-        return this.articleRepository.find({
+    async getAllArticles(pagination: PaginationParams): Promise<[Article[], number]> {
+        return this.articleRepository.findAndCount({
             relations: ["author"],  // Including the author in the response
+            skip: pagination.skip,
+            take: pagination.take
         });
     }
 
@@ -128,16 +131,18 @@ export class ArticleService {
     /**
      * Get articles by user ID (author) with validation
      */
-    async getArticlesByUserId(userId: number): Promise<Article[]> {
+    async getArticlesByUserId(userId: number, pagination: PaginationParams): Promise<[Article[], number]> {
         if (!userId) throw new MissingFieldError("User ID");
 
         // Check if user exists
         const user = await this.userRepository.findOneBy({ id: userId });
         if (!user) throw new NotFoundError(`User with ID ${userId} not found`);
 
-        return this.articleRepository.find({
+        return this.articleRepository.findAndCount({
             where: { author: { id: userId } },
             relations: ["author"],  // Including author in response
+            skip: pagination.skip,
+            take: pagination.take
         });
     }
 

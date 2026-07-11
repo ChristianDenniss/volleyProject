@@ -11,6 +11,9 @@ import "../../styles/PlayersPage.css";
 import "../../styles/PortalPlayersPage.css";
 import SearchBar from "../Searchbar";
 import Pagination from "../Pagination";
+import Modal from "../ui/Modal";
+import FilterBar from "../ui/FilterBar";
+import Table from "../ui/Table";
 
 type EditField =
   | "name"
@@ -22,6 +25,12 @@ interface EditingState {
   id: number;
   field: EditField;
   value: string;
+}
+
+interface TeamTableColumn {
+  key: string;
+  header: string;
+  render?: (row: Team) => React.ReactNode;
 }
 
 const TeamsPage: React.FC = () => {
@@ -203,6 +212,153 @@ const TeamsPage: React.FC = () => {
     }
   };
 
+  const columns: TeamTableColumn[] = [
+    {
+      key: "id",
+      header: "ID",
+      render: (t) => t.id,
+    },
+    {
+      key: "name",
+      header: "Name",
+      render: (t) => (
+        <div
+          style={{ cursor: "pointer" }}
+          onClick={() => setEditing({ id: t.id, field: "name", value: t.name })}
+        >
+          {editing?.id === t.id && editing.field === "name" ? (
+            <input
+              type="text"
+              value={editing.value}
+              onChange={(e) => setEditing({ ...editing, value: e.target.value })}
+              onBlur={commitEdit}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") e.currentTarget.blur();
+                if (e.key === "Escape") setEditing(null);
+              }}
+              autoFocus
+            />
+          ) : (
+            t.name
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "seasonNumber",
+      header: "Season",
+      render: (t) => (
+        <div
+          className="small-column"
+          style={{ cursor: "pointer" }}
+          onClick={() =>
+            setEditing({ id: t.id, field: "seasonNumber", value: t.season.seasonNumber.toString() })
+          }
+        >
+          {editing?.id === t.id && editing.field === "seasonNumber" ? (
+            <input
+              type="number"
+              min="1"
+              value={editing.value}
+              onChange={(e) => setEditing({ ...editing, value: e.target.value })}
+              onBlur={commitEdit}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") e.currentTarget.blur();
+                if (e.key === "Escape") setEditing(null);
+              }}
+              autoFocus
+            />
+          ) : (
+            t.season.seasonNumber
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "placement",
+      header: "Placement",
+      render: (t) => (
+        <div
+          style={{ cursor: "pointer" }}
+          onClick={() => setEditing({ id: t.id, field: "placement", value: t.placement })}
+        >
+          {editing?.id === t.id && editing.field === "placement" ? (
+            <input
+              type="text"
+              value={editing.value}
+              onChange={(e) => setEditing({ ...editing, value: e.target.value })}
+              onBlur={commitEdit}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") e.currentTarget.blur();
+                if (e.key === "Escape") setEditing(null);
+              }}
+              autoFocus
+            />
+          ) : (
+            t.placement
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "logoUrl",
+      header: "Logo URL",
+      render: (t) => (
+        <div
+          style={{ cursor: "pointer" }}
+          onClick={() => setEditing({ id: t.id, field: "logoUrl", value: t.logoUrl || "" })}
+        >
+          {editing?.id === t.id && editing.field === "logoUrl" ? (
+            <input
+              type="url"
+              value={editing.value}
+              onChange={(e) => setEditing({ ...editing, value: e.target.value })}
+              onBlur={commitEdit}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") e.currentTarget.blur();
+                if (e.key === "Escape") setEditing(null);
+              }}
+              autoFocus
+            />
+          ) : (
+            t.logoUrl || "N/A"
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "actions",
+      header: "Actions",
+      render: (t) => (
+        <>
+          {user?.role === "superadmin" ? (
+            <button
+              onClick={() => handleDelete(t.id)}
+              disabled={deleting}
+              style={{
+                padding: "0.25rem 0.5rem",
+                borderRadius: "0.25rem",
+                background: "#dc3545",
+                color: "#fff",
+                border: "none",
+                cursor: "pointer",
+              }}
+            >
+              Delete
+            </button>
+          ) : (
+            <span className="text-muted">No permission</span>
+          )}
+          {deleteError && (
+            <p className="error" style={{ color: "red", marginTop: "0.25rem" }}>
+              {deleteError}
+            </p>
+          )}
+        </>
+      ),
+    },
+  ];
+
   if (loading) return <p>Loading teams…</p>;
   if (error) return <p>Error: {error}</p>;
 
@@ -226,16 +382,7 @@ const TeamsPage: React.FC = () => {
       </div>
 
       {/* Filters */}
-      <div className="filters-container" style={{ 
-        marginTop: "1rem", 
-        padding: "1rem", 
-        backgroundColor: "#f8f9fa", 
-        borderRadius: "0.5rem",
-        display: "flex",
-        gap: "1rem",
-        alignItems: "center",
-        flexWrap: "wrap"
-      }}>
+      <FilterBar onReset={clearFilters}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
           <label style={{ fontWeight: "bold", minWidth: "80px" }}>Season:</label>
           <select
@@ -252,290 +399,109 @@ const TeamsPage: React.FC = () => {
           </select>
         </div>
 
-        {(searchQuery || seasonFilter) && (
-          <button
-            className="clear-filters-button"
-            onClick={clearFilters}
-          >
-            Clear Filters
-          </button>
-        )}
-
         <div className="results-counter">
           Showing {((currentPage - 1) * teamsPerPage) + 1}-{Math.min(currentPage * teamsPerPage, filteredTeams.length)} of {filteredTeams.length} teams
         </div>
-      </div>
+      </FilterBar>
 
-      {/* Modal Overlay for Creating a New Team */}
-      {isModalOpen && (
-        <div
-          className="modal-overlay"
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000,
-          }}
-        >
-          <div
-            className="modal"
+      {/* Modal for Creating a New Team */}
+      <Modal isOpen={isModalOpen} onClose={closeModal} title="New Team">
+        {formError && (
+          <p className="error" style={{ color: "red", marginBottom: "0.5rem" }}>
+            {formError}
+          </p>
+        )}
+
+        {/* Create Team Form */}
+        <form onSubmit={handleCreate}>
+          {/* Name */}
+          <label>
+            Name*
+            <input
+              type="text"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              required
+              style={{ width: "100%", marginBottom: "0.75rem" }}
+            />
+          </label>
+
+          {/* Season Number */}
+          <label>
+            Season*
+            <select
+              value={newSeasonNumber || ""}
+              onChange={(e) => setNewSeasonNumber(Number(e.target.value))}
+              required
+              style={{ width: "100%", marginBottom: "0.75rem" }}
+            >
+              <option value="">Select a Season</option>
+              {seasons?.map((season) => (
+                <option key={season.id} value={season.seasonNumber}>
+                  Season {season.seasonNumber}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          {/* Placement */}
+          <label>
+            Placement
+            <input
+              type="text"
+              value={newPlacement}
+              onChange={(e) => setNewPlacement(e.target.value)}
+              style={{ width: "100%", marginBottom: "0.75rem" }}
+            />
+          </label>
+
+          {/* Logo URL */}
+          <label>
+            Logo URL (Optional)
+            <input
+              type="url"
+              value={newLogoUrl}
+              onChange={(e) => setNewLogoUrl(e.target.value)}
+              placeholder="https://example.com/logo.png"
+              style={{ width: "100%", marginBottom: "1rem" }}
+            />
+          </label>
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={creating}
             style={{
-              background: "#fff",
-              padding: "1.5rem",
-              borderRadius: "0.5rem",
-              width: "90%",
-              maxWidth: "400px",
-              boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
+              width: "100%",
+              padding: "0.5rem",
+              borderRadius: "0.25rem",
+              background: "#007bff",
+              color: "#fff",
+              border: "none",
+              cursor: "pointer",
             }}
           >
-            {/* Close Modal Button */}
-            <button
-              onClick={closeModal}
-              style={{
-                background: "transparent",
-                border: "none",
-                fontSize: "1.25rem",
-                float: "right",
-                cursor: "pointer",
-              }}
-            >
-              ×
-            </button>
-
-            <h2 style={{ marginTop: 0 }}>New Team</h2>
-
-            {formError && (
-              <p className="error" style={{ color: "red", marginBottom: "0.5rem" }}>
-                {formError}
-              </p>
-            )}
-
-            {/* Create Team Form */}
-            <form onSubmit={handleCreate}>
-              {/* Name */}
-              <label>
-                Name*
-                <input
-                  type="text"
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  required
-                  style={{ width: "100%", marginBottom: "0.75rem" }}
-                />
-              </label>
-
-              {/* Season Number */}
-              <label>
-                Season*
-                <select
-                  value={newSeasonNumber || ""}
-                  onChange={(e) => setNewSeasonNumber(Number(e.target.value))}
-                  required
-                  style={{ width: "100%", marginBottom: "0.75rem" }}
-                >
-                  <option value="">Select a Season</option>
-                  {seasons?.map((season) => (
-                    <option key={season.id} value={season.seasonNumber}>
-                      Season {season.seasonNumber}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              {/* Placement */}
-              <label>
-                Placement
-                <input
-                  type="text"
-                  value={newPlacement}
-                  onChange={(e) => setNewPlacement(e.target.value)}
-                  style={{ width: "100%", marginBottom: "0.75rem" }}
-                />
-              </label>
-
-              {/* Logo URL */}
-              <label>
-                Logo URL (Optional)
-                <input
-                  type="url"
-                  value={newLogoUrl}
-                  onChange={(e) => setNewLogoUrl(e.target.value)}
-                  placeholder="https://example.com/logo.png"
-                  style={{ width: "100%", marginBottom: "1rem" }}
-                />
-              </label>
-
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={creating}
-                style={{
-                  width: "100%",
-                  padding: "0.5rem",
-                  borderRadius: "0.25rem",
-                  background: "#007bff",
-                  color: "#fff",
-                  border: "none",
-                  cursor: "pointer",
-                }}
-              >
-                {creating ? "Creating…" : "Submit"}
-              </button>
-              {createError && (
-                <p className="error" style={{ color: "red", marginTop: "0.5rem" }}>
-                  {createError}
-                </p>
-              )}
-            </form>
-          </div>
-        </div>
-      )}
+            {creating ? "Creating…" : "Submit"}
+          </button>
+          {createError && (
+            <p className="error" style={{ color: "red", marginTop: "0.5rem" }}>
+              {createError}
+            </p>
+          )}
+        </form>
+      </Modal>
 
       {/* Teams Table */}
-      <table className="users-table" style={{ marginTop: "1.5rem" }}>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th className="small-column">Season</th>
-            <th>Placement</th>
-            <th>Logo URL</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {paginatedTeams.map((t) => (
-            <tr key={t.id}>
-              <td>{t.id}</td>
-
-              {/* Name (editable) */}
-              <td
-                style={{ cursor: "pointer" }}
-                onClick={() => setEditing({ id: t.id, field: "name", value: t.name })}
-              >
-                {editing?.id === t.id && editing.field === "name" ? (
-                  <input
-                    type="text"
-                    value={editing.value}
-                    onChange={(e) => setEditing({ ...editing, value: e.target.value })}
-                    onBlur={commitEdit}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") e.currentTarget.blur();
-                      if (e.key === "Escape") setEditing(null);
-                    }}
-                    autoFocus
-                  />
-                ) : (
-                  t.name
-                )}
-              </td>
-
-              {/* Season ID (editable) */}
-              <td
-                className="small-column"
-                style={{ cursor: "pointer" }}
-                onClick={() =>
-                  setEditing({ id: t.id, field: "seasonNumber", value: t.season.seasonNumber.toString() })
-                }
-              >
-                {editing?.id === t.id && editing.field === "seasonNumber" ? (
-                  <input
-                    type="number"
-                    min="1"
-                    value={editing.value}
-                    onChange={(e) => setEditing({ ...editing, value: e.target.value })}
-                    onBlur={commitEdit}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") e.currentTarget.blur();
-                      if (e.key === "Escape") setEditing(null);
-                    }}
-                    autoFocus
-                  />
-                ) : (
-                  t.season.seasonNumber
-                )}
-              </td>
-
-              {/* Placement (editable) */}
-              <td
-                style={{ cursor: "pointer" }}
-                onClick={() => setEditing({ id: t.id, field: "placement", value: t.placement })}
-              >
-                {editing?.id === t.id && editing.field === "placement" ? (
-                  <input
-                    type="text"
-                    value={editing.value}
-                    onChange={(e) => setEditing({ ...editing, value: e.target.value })}
-                    onBlur={commitEdit}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") e.currentTarget.blur();
-                      if (e.key === "Escape") setEditing(null);
-                    }}
-                    autoFocus
-                  />
-                ) : (
-                  t.placement
-                )}
-              </td>
-
-              {/* Logo URL (editable) */}
-              <td
-                style={{ cursor: "pointer" }}
-                onClick={() => setEditing({ id: t.id, field: "logoUrl", value: t.logoUrl || "" })}
-              >
-                {editing?.id === t.id && editing.field === "logoUrl" ? (
-                  <input
-                    type="url"
-                    value={editing.value}
-                    onChange={(e) => setEditing({ ...editing, value: e.target.value })}
-                    onBlur={commitEdit}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") e.currentTarget.blur();
-                      if (e.key === "Escape") setEditing(null);
-                    }}
-                    autoFocus
-                  />
-                ) : (
-                  t.logoUrl || "N/A"
-                )}
-              </td>
-
-              {/* Actions (delete if superadmin) */}
-              <td>
-                {user?.role === "superadmin" ? (
-                  <button
-                    onClick={() => handleDelete(t.id)}
-                    disabled={deleting}
-                    style={{
-                      padding: "0.25rem 0.5rem",
-                      borderRadius: "0.25rem",
-                      background: "#dc3545",
-                      color: "#fff",
-                      border: "none",
-                      cursor: "pointer",
-                    }}
-                  >
-                    Delete
-                  </button>
-                ) : (
-                  <span className="text-muted">No permission</span>
-                )}
-                {deleteError && (
-                  <p className="error" style={{ color: "red", marginTop: "0.25rem" }}>
-                    {deleteError}
-                  </p>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div style={{ marginTop: "1.5rem" }}>
+        {/* Table<T> constrains T extends Record<string, unknown>; Team (a plain interface
+            without an index signature) doesn't structurally satisfy that constraint, so the
+            props are cast here. This does not change runtime behavior. */}
+        <Table
+          columns={columns as any}
+          rows={paginatedTeams as any}
+          rowKey={(row: any) => (row as Team).id}
+        />
+      </div>
     </div>
   );
 };

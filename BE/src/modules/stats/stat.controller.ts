@@ -1,5 +1,8 @@
 import { Request, Response } from 'express';
-import { StatService } from './stat.service.js';
+import { StatService, StatFilters } from './stat.service.js';
+import { parsePagination, toPaginatedResult } from '../../utils/pagination.js';
+
+const STATS_DEFAULT_LIMIT = 25;
 
 export class StatController
 {
@@ -94,8 +97,11 @@ export class StatController
     {
         try
         {
-            const stats = await this.statService.getAllStats();
-            res.json(stats);
+            const pagination = parsePagination(req.query, STATS_DEFAULT_LIMIT);
+            const { search } = req.query;
+            const filters: StatFilters = { search: typeof search === 'string' && search.length > 0 ? search : undefined };
+            const [data, total] = await this.statService.getAllStats(pagination, filters);
+            res.json(toPaginatedResult(data, total, pagination));
         }
         catch (error)
         {
@@ -245,20 +251,21 @@ export class StatController
         try
         {
             const { playerId } = req.params;
-            const stats = await this.statService.getStatsByPlayerId(parseInt(playerId));
-            
-            if (stats.length === 0)
+            const pagination = parsePagination(req.query, STATS_DEFAULT_LIMIT);
+            const [data, total] = await this.statService.getStatsByPlayerId(parseInt(playerId), pagination);
+
+            if (data.length === 0)
             {
                 res.status(404).json({ message: "No stats found for the specified player" });
                 return;
             }
-            
-            res.json(stats);
+
+            res.json(toPaginatedResult(data, total, pagination));
         }
         catch (error)
         {
             const errorMessage = error instanceof Error ? error.message : "Failed to fetch stats by player";
-            
+
             if (errorMessage.includes("not found") || errorMessage.includes("required"))
             {
                 res.status(400).json({ error: errorMessage });
@@ -277,20 +284,21 @@ export class StatController
         try
         {
             const { gameId } = req.params;
-            const stats = await this.statService.getStatsByGameId(parseInt(gameId));
-            
-            if (stats.length === 0)
+            const pagination = parsePagination(req.query, STATS_DEFAULT_LIMIT);
+            const [data, total] = await this.statService.getStatsByGameId(parseInt(gameId), pagination);
+
+            if (data.length === 0)
             {
                 res.status(404).json({ message: "No stats found for the specified game" });
                 return;
             }
-            
-            res.json(stats);
+
+            res.json(toPaginatedResult(data, total, pagination));
         }
         catch (error)
         {
             const errorMessage = error instanceof Error ? error.message : "Failed to fetch stats by game";
-            
+
             if (errorMessage.includes("not found") || errorMessage.includes("required"))
             {
                 res.status(400).json({ error: errorMessage });

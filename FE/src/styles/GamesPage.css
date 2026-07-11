@@ -5,13 +5,6 @@
     padding: 1rem;
   }
   
-  /* Full-width, auto layout table */
-  .users-table {
-    width: 100%;
-    border-collapse: collapse;
-    table-layout: auto;
-  }
-
   .game-btn-remove {
     background-color: #dc2626; /* red-600 */
     color: #ffffff;
@@ -23,26 +16,6 @@
     white-space: nowrap;
   }
 
-  /* Header styling */
-  .users-table thead th {
-    background-color: #f9fafb;
-    padding: 0.5rem 0.75rem;
-    text-align: left;
-    font-weight: 600;
-    border-bottom: 2px solid #e5e7eb;
-    white-space: nowrap;
-  }
-  
-  /* Body cells */
-  .users-table tbody td {
-    padding: 0.5rem 0.75rem;
-    border-bottom: 1px solid #e5e7eb;
-    vertical-align: middle;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  
   /* ID column (narrow) */
   .users-table th:nth-child(1),
   .users-table td:nth-child(1) {
@@ -129,27 +102,14 @@
   cursor: not-allowed;
 }
 
-/* Full-width, clean table */
+/* Container chrome for the table (background/shadow/rounding); border-collapse,
+   base th/td padding+border, and header background are now provided by ui.css's
+   .ui-table / .ui-table th / .ui-table td on the shared Table component. */
 .users-table {
-  width: 100%;
-  border-collapse: collapse;
   background: #ffffff;          /* white */
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   border-radius: 0.375rem;      /* rounded-md */
   overflow: hidden;
-}
-
-.users-table th,
-.users-table td {
-  padding: 0.75rem 1rem;        /* py-3 px-4 */
-  text-align: left;
-  border-bottom: 1px solid #e2e8f0;  /* slate-200 */
-}
-
-.users-table th {
-  font-weight: 600;
-  color: #374151;               /* slate-700 */
-  background: #f1f5f9;          /* slate-100 */
 }
 
 .users-table tr:last-child td {

@@ -7,6 +7,9 @@ import { useAuth } from "../../context/authContext";
 import type { Award } from "../../types/interfaces";
 import SearchBar from "../Searchbar";
 import Pagination from "../Pagination";
+import Modal from "../ui/Modal";
+import FilterBar from "../ui/FilterBar";
+import Table from "../ui/Table";
 import "../../styles/UsersPage.css";
 import "../../styles/AwardsPage.css";
 
@@ -241,6 +244,250 @@ const AwardsPage: React.FC = () => {
   if (loading) return <p>Loading awards...</p>;
   if (error) return <p>Error: {error}</p>;
 
+  const columns = [
+    {
+      key: "id",
+      header: "ID",
+      render: (award: Award) => award.id,
+    },
+    {
+      key: "type",
+      header: "Type",
+      render: (award: Award) =>
+        editing?.id === award.id && editing.field === "type" ? (
+          <select
+            value={editing.value}
+            onChange={(e) =>
+              setEditing({ ...editing, value: e.target.value })
+            }
+            onBlur={commitEdit}
+            disabled={isSubmitting}
+            autoFocus
+          >
+            {AWARD_TYPES.map((type) => (
+              <option key={type} value={type}>
+                {type}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <span
+            onClick={() =>
+              !isSubmitting && setEditing({ id: award.id, field: "type", value: award.type })
+            }
+          >
+            {award.type}
+          </span>
+        ),
+    },
+    {
+      key: "description",
+      header: "Description",
+      render: (award: Award) =>
+        editing?.id === award.id && editing.field === "description" ? (
+          <input
+            type="text"
+            value={editing.value}
+            onChange={(e) =>
+              setEditing({ ...editing, value: e.target.value })
+            }
+            onBlur={commitEdit}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !isSubmitting) {
+                e.preventDefault();
+                commitEdit();
+              }
+            }}
+            disabled={isSubmitting}
+            autoFocus
+          />
+        ) : (
+          <span
+            onClick={() =>
+              !isSubmitting && setEditing({
+                id: award.id,
+                field: "description",
+                value: award.description,
+              })
+            }
+          >
+            {award.description}
+          </span>
+        ),
+    },
+    {
+      key: "season",
+      header: "Season",
+      render: (award: Award) =>
+        editing?.id === award.id && editing.field === "seasonId" ? (
+          <input
+            type="number"
+            value={editing.value}
+            onChange={(e) =>
+              setEditing({ ...editing, value: e.target.value })
+            }
+            onBlur={commitEdit}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !isSubmitting) {
+                e.preventDefault();
+                commitEdit();
+              }
+            }}
+            disabled={isSubmitting}
+            autoFocus
+          />
+        ) : (
+          <span
+            onClick={() =>
+              !isSubmitting && setEditing({
+                id: award.id,
+                field: "seasonId",
+                value: award.season.id.toString(),
+              })
+            }
+          >
+            {award.season.seasonNumber}
+          </span>
+        ),
+    },
+    {
+      key: "player",
+      header: "Player",
+      render: (award: Award) =>
+        editing?.id === award.id && editing.field === "playerName" ? (
+          <input
+            type="text"
+            value={editing.value}
+            onChange={(e) =>
+              setEditing({ ...editing, value: e.target.value.toLowerCase() })
+            }
+            onBlur={commitEdit}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !isSubmitting) {
+                e.preventDefault();
+                commitEdit();
+              }
+            }}
+            disabled={isSubmitting}
+            autoFocus
+          />
+        ) : (
+          <span
+            onClick={() =>
+              !isSubmitting && setEditing({
+                id: award.id,
+                field: "playerName",
+                value: award.players[0]?.name?.toLowerCase() || "",
+              })
+            }
+          >
+            {award.players[0]?.name || "N/A"}
+          </span>
+        ),
+    },
+    {
+      key: "createdAt",
+      header: "Awarded Date",
+      render: (award: Award) =>
+        editing?.id === award.id && editing.field === "createdAt" ? (
+          <input
+            type="date"
+            value={editing.value.slice(0, 10)} // Format for date input (YYYY-MM-DD)
+            onChange={(e) =>
+              setEditing({ ...editing, value: new Date(e.target.value + 'T00:00:00').toISOString() })
+            }
+            onBlur={commitEdit}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !isSubmitting) {
+                e.preventDefault();
+                commitEdit();
+              }
+            }}
+            disabled={isSubmitting}
+            autoFocus
+          />
+        ) : (
+          <span
+            onClick={() =>
+              !isSubmitting && setEditing({
+                id: award.id,
+                field: "createdAt",
+                value: new Date(award.createdAt).toISOString(),
+              })
+            }
+          >
+            {new Date(award.createdAt).toLocaleDateString()}
+          </span>
+        ),
+    },
+    {
+      key: "imageUrl",
+      header: "Image",
+      render: (award: Award) =>
+        editing?.id === award.id && editing.field === "imageUrl" ? (
+          <input
+            type="url"
+            value={editing.value}
+            onChange={(e) =>
+              setEditing({ ...editing, value: e.target.value })
+            }
+            onBlur={commitEdit}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !isSubmitting) {
+                e.preventDefault();
+                commitEdit();
+              }
+            }}
+            autoFocus
+          />
+        ) : (
+          <div
+            onClick={() =>
+              !isSubmitting && setEditing({
+                id: award.id,
+                field: "imageUrl",
+                value: award.imageUrl || "",
+              })
+            }
+            style={{ cursor: "pointer" }}
+          >
+            {award.imageUrl ? (
+              <img
+                src={award.imageUrl}
+                alt={`${award.type} award`}
+                style={{
+                  maxWidth: "80px",
+                  maxHeight: "45px",
+                  width: "auto",
+                  height: "auto",
+                  objectFit: "contain",
+                  borderRadius: "4px"
+                }}
+              />
+            ) : (
+              "No image"
+            )}
+          </div>
+        ),
+    },
+    {
+      key: "actions",
+      header: "Actions",
+      render: (award: Award) =>
+        user?.role === "superadmin" ? (
+          <button
+            onClick={() => handleDelete(award.id)}
+            disabled={deleting}
+            className="delete-button"
+          >
+            Delete
+          </button>
+        ) : (
+          <span style={{ color: "#666", fontStyle: "italic" }}>No permissions</span>
+        ),
+    },
+  ];
+
   return (
     <div className="portal-main">
       <h1 className="users-title">Awards</h1>
@@ -264,7 +511,7 @@ const AwardsPage: React.FC = () => {
       </div>
 
       {/* Filters */}
-      <div className="filters-container">
+      <FilterBar onReset={clearFilters}>
         <div className="filter-group">
           <label className="filter-label">Season:</label>
           <select
@@ -296,330 +543,85 @@ const AwardsPage: React.FC = () => {
             ))}
           </select>
         </div>
+      </FilterBar>
 
-        {(searchQuery || seasonFilter || awardTypeFilter) && (
-          <button
-            className="clear-filters-button"
-            onClick={clearFilters}
-          >
-            Clear Filters
-          </button>
-        )}
-
-        <div className="results-counter">
-          Showing {((currentPage - 1) * awardsPerPage) + 1}-{Math.min(currentPage * awardsPerPage, filteredAwards.length)} of {filteredAwards.length} awards
-        </div>
+      <div className="results-counter">
+        Showing {((currentPage - 1) * awardsPerPage) + 1}-{Math.min(currentPage * awardsPerPage, filteredAwards.length)} of {filteredAwards.length} awards
       </div>
 
       {/* Awards Table */}
       <div className="table-container">
-        <table className="users-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Type</th>
-              <th>Description</th>
-              <th>Season</th>
-              <th>Player</th>
-              <th>Awarded Date</th>
-              <th>Image</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {paginatedAwards.map((award) => (
-              <tr key={award.id}>
-                <td>{award.id}</td>
-                <td>
-                  {editing?.id === award.id && editing.field === "type" ? (
-                    <select
-                      value={editing.value}
-                      onChange={(e) =>
-                        setEditing({ ...editing, value: e.target.value })
-                      }
-                      onBlur={commitEdit}
-                      disabled={isSubmitting}
-                      autoFocus
-                    >
-                      {AWARD_TYPES.map((type) => (
-                        <option key={type} value={type}>
-                          {type}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <span
-                      onClick={() =>
-                        !isSubmitting && setEditing({ id: award.id, field: "type", value: award.type })
-                      }
-                    >
-                      {award.type}
-                    </span>
-                  )}
-                </td>
-                <td>
-                  {editing?.id === award.id && editing.field === "description" ? (
-                    <input
-                      type="text"
-                      value={editing.value}
-                      onChange={(e) =>
-                        setEditing({ ...editing, value: e.target.value })
-                      }
-                      onBlur={commitEdit}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && !isSubmitting) {
-                          e.preventDefault();
-                          commitEdit();
-                        }
-                      }}
-                      disabled={isSubmitting}
-                      autoFocus
-                    />
-                  ) : (
-                    <span
-                      onClick={() =>
-                        !isSubmitting && setEditing({
-                          id: award.id,
-                          field: "description",
-                          value: award.description,
-                        })
-                      }
-                    >
-                      {award.description}
-                    </span>
-                  )}
-                </td>
-                <td>
-                  {editing?.id === award.id && editing.field === "seasonId" ? (
-                    <input
-                      type="number"
-                      value={editing.value}
-                      onChange={(e) =>
-                        setEditing({ ...editing, value: e.target.value })
-                      }
-                      onBlur={commitEdit}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && !isSubmitting) {
-                          e.preventDefault();
-                          commitEdit();
-                        }
-                      }}
-                      disabled={isSubmitting}
-                      autoFocus
-                    />
-                  ) : (
-                    <span
-                      onClick={() =>
-                        !isSubmitting && setEditing({
-                          id: award.id,
-                          field: "seasonId",
-                          value: award.season.id.toString(),
-                        })
-                      }
-                    >
-                      {award.season.seasonNumber}
-                    </span>
-                  )}
-                </td>
-                <td>
-                  {editing?.id === award.id && editing.field === "playerName" ? (
-                    <input
-                      type="text"
-                      value={editing.value}
-                      onChange={(e) =>
-                        setEditing({ ...editing, value: e.target.value.toLowerCase() })
-                      }
-                      onBlur={commitEdit}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && !isSubmitting) {
-                          e.preventDefault();
-                          commitEdit();
-                        }
-                      }}
-                      disabled={isSubmitting}
-                      autoFocus
-                    />
-                  ) : (
-                    <span
-                      onClick={() =>
-                        !isSubmitting && setEditing({
-                          id: award.id,
-                          field: "playerName",
-                          value: award.players[0]?.name?.toLowerCase() || "",
-                        })
-                      }
-                    >
-                      {award.players[0]?.name || "N/A"}
-                    </span>
-                  )}
-                </td>
-                <td>
-                  {editing?.id === award.id && editing.field === "createdAt" ? (
-                    <input
-                      type="date"
-                      value={editing.value.slice(0, 10)} // Format for date input (YYYY-MM-DD)
-                      onChange={(e) =>
-                        setEditing({ ...editing, value: new Date(e.target.value + 'T00:00:00').toISOString() })
-                      }
-                      onBlur={commitEdit}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && !isSubmitting) {
-                          e.preventDefault();
-                          commitEdit();
-                        }
-                      }}
-                      disabled={isSubmitting}
-                      autoFocus
-                    />
-                  ) : (
-                    <span
-                      onClick={() =>
-                        !isSubmitting && setEditing({
-                          id: award.id,
-                          field: "createdAt",
-                          value: new Date(award.createdAt).toISOString(),
-                        })
-                      }
-                    >
-                      {new Date(award.createdAt).toLocaleDateString()}
-                    </span>
-                  )}
-                </td>
-                <td>
-                  {editing?.id === award.id && editing.field === "imageUrl" ? (
-                    <input
-                      type="url"
-                      value={editing.value}
-                      onChange={(e) =>
-                        setEditing({ ...editing, value: e.target.value })
-                      }
-                      onBlur={commitEdit}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && !isSubmitting) {
-                          e.preventDefault();
-                          commitEdit();
-                        }
-                      }}
-                      autoFocus
-                    />
-                  ) : (
-                    <div
-                      onClick={() =>
-                        !isSubmitting && setEditing({
-                          id: award.id,
-                          field: "imageUrl",
-                          value: award.imageUrl || "",
-                        })
-                      }
-                      style={{ cursor: "pointer" }}
-                    >
-                      {award.imageUrl ? (
-                        <img 
-                          src={award.imageUrl} 
-                          alt={`${award.type} award`} 
-                          style={{ 
-                            maxWidth: "80px",
-                            maxHeight: "45px",
-                            width: "auto",
-                            height: "auto",
-                            objectFit: "contain",
-                            borderRadius: "4px"
-                          }} 
-                        />
-                      ) : (
-                        "No image"
-                      )}
-                    </div>
-                  )}
-                </td>
-                <td>
-                  {user?.role === "superadmin" ? (
-                    <button
-                      onClick={() => handleDelete(award.id)}
-                      disabled={deleting}
-                      className="delete-button"
-                    >
-                      Delete
-                    </button>
-                  ) : (
-                    <span style={{ color: "#666", fontStyle: "italic" }}>No permissions</span>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <Table
+          columns={columns}
+          rows={paginatedAwards as unknown as (Award & Record<string, unknown>)[]}
+          rowKey={(award) => award.id}
+        />
       </div>
 
-      {/* Modal Overlay for Creating a New Award */}
-      {isModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h2>Create New Award</h2>
-            <form onSubmit={handleCreate}>
-              <div className="form-group">
-                <label>Type:</label>
-                <select
-                  value={newType}
-                  onChange={(e) => setNewType(e.target.value)}
-                  required
-                >
-                  <option value="">Select an award type</option>
-                  {AWARD_TYPES.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Description:</label>
-                <textarea
-                  value={newDescription}
-                  onChange={(e) => setNewDescription(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Season ID:</label>
-                <input
-                  type="number"
-                  value={newSeasonId}
-                  onChange={(e) => setNewSeasonId(Number(e.target.value))}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Player Name:</label>
-                <input
-                  type="text"
-                  value={newPlayerName}
-                  onChange={(e) => setNewPlayerName(e.target.value.toLowerCase())}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Image URL:</label>
-                <input
-                  type="url"
-                  value={newImageUrl}
-                  onChange={(e) => setNewImageUrl(e.target.value)}
-                  placeholder="https://example.com/image.jpg"
-                />
-              </div>
-              {formError && <p className="error-message">{formError}</p>}
-              <div className="modal-buttons">
-                <button type="submit" disabled={creating}>
-                  {creating ? "Creating..." : "Create"}
-                </button>
-                <button type="button" onClick={closeModal}>
-                  Cancel
-                </button>
-              </div>
-            </form>
+      {/* Modal for Creating a New Award */}
+      <Modal isOpen={isModalOpen} onClose={closeModal} title="Create New Award">
+        <form onSubmit={handleCreate}>
+          <div className="form-group">
+            <label>Type:</label>
+            <select
+              value={newType}
+              onChange={(e) => setNewType(e.target.value)}
+              required
+            >
+              <option value="">Select an award type</option>
+              {AWARD_TYPES.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </select>
           </div>
-        </div>
-      )}
+          <div className="form-group">
+            <label>Description:</label>
+            <textarea
+              value={newDescription}
+              onChange={(e) => setNewDescription(e.target.value)}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label>Season ID:</label>
+            <input
+              type="number"
+              value={newSeasonId}
+              onChange={(e) => setNewSeasonId(Number(e.target.value))}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label>Player Name:</label>
+            <input
+              type="text"
+              value={newPlayerName}
+              onChange={(e) => setNewPlayerName(e.target.value.toLowerCase())}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label>Image URL:</label>
+            <input
+              type="url"
+              value={newImageUrl}
+              onChange={(e) => setNewImageUrl(e.target.value)}
+              placeholder="https://example.com/image.jpg"
+            />
+          </div>
+          {formError && <p className="error-message">{formError}</p>}
+          <div className="modal-buttons">
+            <button type="submit" disabled={creating}>
+              {creating ? "Creating..." : "Create"}
+            </button>
+            <button type="button" onClick={closeModal}>
+              Cancel
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 };

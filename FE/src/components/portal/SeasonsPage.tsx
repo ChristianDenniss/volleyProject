@@ -7,6 +7,8 @@ import { useCreateSeasons }            from "../../hooks/allCreate";
 import { useDeleteSeasons }            from "../../hooks/allDelete";
 import { useAuth }                     from "../../context/authContext";
 import type { Season }                 from "../../types/interfaces";
+import Modal                           from "../ui/Modal";
+import Table                           from "../ui/Table";
 import "../../styles/SeasonsPage.css";
 
 type EditField = "theme" | "image" | "startDate" | "endDate";
@@ -15,6 +17,20 @@ interface EditingState {
     field: EditField;
     value: string; // "YYYY-MM-DD" for dates, text otherwise
 }
+
+// Table<T> constrains T to Record<string, unknown>, which plain domain
+// interfaces like Season don't structurally satisfy (no index signature).
+// Narrow the shared component to a Season-specific alias once here so the
+// column/row definitions below stay fully typed against Season.
+const SeasonTable = Table as unknown as React.ComponentType<{
+    columns: {
+        key:     string;
+        header:  string;
+        render?: (row: Season) => React.ReactNode;
+    }[];
+    rows:   Season[];
+    rowKey: (row: Season) => string | number;
+}>;
 
 const SeasonsPage: React.FC = () =>
 {
@@ -227,6 +243,212 @@ const SeasonsPage: React.FC = () =>
         }
     };
 
+    // Column definitions for the shared Table component, reproducing the
+    // exact per-cell rendering (inline edit, permission checks, etc.) that
+    // previously lived in the hand-rolled <table> markup below.
+    const columns = [
+        {
+            key:    "seasonNumber",
+            header: "Season #",
+            render: (row: Season) => row.seasonNumber,
+        },
+        {
+            key:    "theme",
+            header: "Theme",
+            render: (row: Season) => (
+                <div
+                    style={{ cursor: "pointer" }}
+                    onClick={() =>
+                        setEditing({ id: row.id, field: "theme", value: row.theme })
+                    }
+                >
+                    {editing?.id === row.id && editing.field === "theme" ? (
+                        <input
+                            type="text"
+                            value={editing.value}
+                            onChange={(e) =>
+                                setEditing({ ...editing, value: e.target.value })
+                            }
+                            onBlur={commitEdit}
+                            onKeyDown={(e) =>
+                            {
+                                if (e.key === "Enter")
+                                {
+                                    e.currentTarget.blur();
+                                }
+                                if (e.key === "Escape")
+                                {
+                                    setEditing(null);
+                                }
+                            }}
+                            autoFocus
+                        />
+                    ) : (
+                        row.theme
+                    )}
+                </div>
+            ),
+        },
+        {
+            key:    "image",
+            header: "Image URL",
+            render: (row: Season) => (
+                <div
+                    style={{ cursor: "pointer" }}
+                    onClick={() =>
+                        setEditing({ id: row.id, field: "image", value: row.image ?? "" })
+                    }
+                >
+                    {editing?.id === row.id && editing.field === "image" ? (
+                        <input
+                            type="text"
+                            value={editing.value}
+                            onChange={(e) =>
+                                setEditing({ ...editing, value: e.target.value })
+                            }
+                            onBlur={commitEdit}
+                            onKeyDown={(e) =>
+                            {
+                                if (e.key === "Enter")
+                                {
+                                    e.currentTarget.blur();
+                                }
+                                if (e.key === "Escape")
+                                {
+                                    setEditing(null);
+                                }
+                            }}
+                            autoFocus
+                        />
+                    ) : row.image ? (
+                        row.image
+                    ) : (
+                        <span className="text-muted">None</span>
+                    )}
+                </div>
+            ),
+        },
+        {
+            key:    "startDate",
+            header: "Start Date",
+            render: (row: Season) =>
+            {
+                const startStr = new Date(row.startDate).toISOString().slice(0, 10);
+
+                return (
+                    <div
+                        style={{ cursor: "pointer" }}
+                        onClick={() =>
+                            setEditing({ id: row.id, field: "startDate", value: startStr })
+                        }
+                    >
+                        {editing?.id === row.id && editing.field === "startDate" ? (
+                            <input
+                                type="date"
+                                value={editing.value}
+                                onChange={(e) =>
+                                    setEditing({ ...editing, value: e.target.value })
+                                }
+                                onBlur={commitEdit}
+                                onKeyDown={(e) =>
+                                {
+                                    if (e.key === "Enter")
+                                    {
+                                        e.currentTarget.blur();
+                                    }
+                                    if (e.key === "Escape")
+                                    {
+                                        setEditing(null);
+                                    }
+                                }}
+                                autoFocus
+                            />
+                        ) : (
+                            new Date(row.startDate).toLocaleDateString()
+                        )}
+                    </div>
+                );
+            },
+        },
+        {
+            key:    "endDate",
+            header: "End Date",
+            render: (row: Season) =>
+            {
+                const endStr = row.endDate
+                    ? new Date(row.endDate).toISOString().slice(0, 10)
+                    : "";
+
+                return (
+                    <div
+                        style={{ cursor: "pointer" }}
+                        onClick={() =>
+                            setEditing({ id: row.id, field: "endDate", value: endStr })
+                        }
+                    >
+                        {editing?.id === row.id && editing.field === "endDate" ? (
+                            <input
+                                type="date"
+                                value={editing.value}
+                                onChange={(e) =>
+                                    setEditing({ ...editing, value: e.target.value })
+                                }
+                                onBlur={commitEdit}
+                                onKeyDown={(e) =>
+                                {
+                                    if (e.key === "Enter")
+                                    {
+                                        e.currentTarget.blur();
+                                    }
+                                    if (e.key === "Escape")
+                                    {
+                                        setEditing(null);
+                                    }
+                                }}
+                                autoFocus
+                            />
+                        ) : row.endDate ? (
+                            new Date(row.endDate).toLocaleDateString()
+                        ) : (
+                            "Ongoing"
+                        )}
+                    </div>
+                );
+            },
+        },
+        {
+            key:    "actions",
+            header: "Actions",
+            render: (row: Season) => (
+                <>
+                    {user?.role === "superadmin" ? (
+                        <button
+                            onClick={() => handleDelete(row.id)}
+                            disabled={deleting}
+                            style={{
+                                padding:      "0.25rem 0.5rem",
+                                borderRadius: "0.25rem",
+                                background:   "#dc3545",
+                                color:        "#fff",
+                                border:       "none",
+                                cursor:       "pointer",
+                            }}
+                        >
+                            Delete
+                        </button>
+                    ) : (
+                        <span className="text-muted">No permission</span>
+                    )}
+                    {deleteError && (
+                        <p className="error" style={{ color: "red" }}>
+                            {deleteError}
+                        </p>
+                    )}
+                </>
+            ),
+        },
+    ];
+
     if (loading) return <p>Loading seasons…</p>;
     if (error)   return <p>Error: {error}</p>;
 
@@ -242,335 +464,105 @@ const SeasonsPage: React.FC = () =>
                 Create Season
             </button>
 
-            {/* Modal Overlay */}
-            {isModalOpen && (
-                <div
-                    className="modal-overlay"
-                    style={{
-                        position:       "fixed",
-                        top:            0,
-                        left:           0,
-                        width:          "100%",
-                        height:         "100%",
-                        backgroundColor: "rgba(0, 0, 0, 0.5)",
-                        display:        "flex",
-                        alignItems:     "center",
-                        justifyContent: "center",
-                        zIndex:         1000,
-                    }}
-                >
-                    <div
-                        className="modal"
+            {/* Create Season Modal */}
+            <Modal isOpen={isModalOpen} onClose={closeModal} title="New Season">
+                {/* Form-level Error */}
+                {formError && (
+                    <p
+                        className="error"
+                        style={{ color: "red", marginBottom: "0.5rem" }}
+                    >
+                        {formError}
+                    </p>
+                )}
+
+                {/* Create Form */}
+                <form onSubmit={handleCreate}>
+                    {/* Season Number */}
+                    <label>
+                        Season Number*
+                        <input
+                            type="number"
+                            value={newSeasonNumber}
+                            onChange={(e) =>
+                                setNewSeasonNumber(Number(e.target.value))
+                            }
+                            required
+                            style={{ width: "100%", marginBottom: "0.75rem" }}
+                        />
+                    </label>
+
+                    {/* Theme */}
+                    <label>
+                        Theme*
+                        <input
+                            type="text"
+                            value={newTheme}
+                            onChange={(e) => setNewTheme(e.target.value)}
+                            required
+                            style={{ width: "100%", marginBottom: "0.75rem" }}
+                        />
+                    </label>
+
+                    {/* Image URL */}
+                    <label>
+                        Image URL
+                        <input
+                            type="text"
+                            value={newImage}
+                            onChange={(e) => setNewImage(e.target.value)}
+                            style={{ width: "100%", marginBottom: "0.75rem" }}
+                        />
+                    </label>
+
+                    {/* Start Date */}
+                    <label>
+                        Start Date*
+                        <input
+                            type="date"
+                            value={newStartDate}
+                            onChange={(e) => setNewStartDate(e.target.value)}
+                            required
+                            style={{ width: "100%", marginBottom: "0.75rem" }}
+                        />
+                    </label>
+
+                    {/* End Date */}
+                    <label>
+                        End Date
+                        <input
+                            type="date"
+                            value={newEndDate}
+                            onChange={(e) => setNewEndDate(e.target.value)}
+                            style={{ width: "100%", marginBottom: "1rem" }}
+                        />
+                    </label>
+
+                    {/* Submit Button */}
+                    <button
+                        type="submit"
+                        disabled={creating}
                         style={{
-                            background:      "#fff",
-                            padding:         "1.5rem",
-                            borderRadius:    "0.5rem",
-                            width:           "90%",
-                            maxWidth:        "400px",
-                            boxShadow:       "0 2px 10px rgba(0,0,0,0.3)",
+                            width:        "100%",
+                            padding:      "0.5rem",
+                            borderRadius: "0.25rem",
+                            background:   "#007bff",
+                            color:        "#fff",
+                            border:       "none",
+                            cursor:       "pointer",
                         }}
                     >
-                        {/* Close Button */}
-                        <button
-                            onClick={closeModal}
-                            style={{
-                                background:      "transparent",
-                                border:          "none",
-                                fontSize:        "1.25rem",
-                                float:           "right",
-                                cursor:          "pointer",
-                            }}
-                        >
-                            ×
-                        </button>
-
-                        {/* Modal Title */}
-                        <h2 style={{ marginTop: 0 }}>New Season</h2>
-
-                        {/* Form-level Error */}
-                        {formError && (
-                            <p
-                                className="error"
-                                style={{ color: "red", marginBottom: "0.5rem" }}
-                            >
-                                {formError}
-                            </p>
-                        )}
-
-                        {/* Create Form */}
-                        <form onSubmit={handleCreate}>
-                            {/* Season Number */}
-                            <label>
-                                Season Number*
-                                <input
-                                    type="number"
-                                    value={newSeasonNumber}
-                                    onChange={(e) =>
-                                        setNewSeasonNumber(Number(e.target.value))
-                                    }
-                                    required
-                                    style={{ width: "100%", marginBottom: "0.75rem" }}
-                                />
-                            </label>
-
-                            {/* Theme */}
-                            <label>
-                                Theme*
-                                <input
-                                    type="text"
-                                    value={newTheme}
-                                    onChange={(e) => setNewTheme(e.target.value)}
-                                    required
-                                    style={{ width: "100%", marginBottom: "0.75rem" }}
-                                />
-                            </label>
-
-                            {/* Image URL */}
-                            <label>
-                                Image URL
-                                <input
-                                    type="text"
-                                    value={newImage}
-                                    onChange={(e) => setNewImage(e.target.value)}
-                                    style={{ width: "100%", marginBottom: "0.75rem" }}
-                                />
-                            </label>
-
-                            {/* Start Date */}
-                            <label>
-                                Start Date*
-                                <input
-                                    type="date"
-                                    value={newStartDate}
-                                    onChange={(e) => setNewStartDate(e.target.value)}
-                                    required
-                                    style={{ width: "100%", marginBottom: "0.75rem" }}
-                                />
-                            </label>
-
-                            {/* End Date */}
-                            <label>
-                                End Date
-                                <input
-                                    type="date"
-                                    value={newEndDate}
-                                    onChange={(e) => setNewEndDate(e.target.value)}
-                                    style={{ width: "100%", marginBottom: "1rem" }}
-                                />
-                            </label>
-
-                            {/* Submit Button */}
-                            <button
-                                type="submit"
-                                disabled={creating}
-                                style={{
-                                    width:        "100%",
-                                    padding:      "0.5rem",
-                                    borderRadius: "0.25rem",
-                                    background:   "#007bff",
-                                    color:        "#fff",
-                                    border:       "none",
-                                    cursor:       "pointer",
-                                }}
-                            >
-                                {creating ? "Creating…" : "Submit"}
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            )}
+                        {creating ? "Creating…" : "Submit"}
+                    </button>
+                </form>
+            </Modal>
 
             {/* Seasons Table */}
-            <table className="users-table" style={{ marginTop: "1.5rem" }}>
-                <thead>
-                    <tr>
-                        <th>Season #</th>
-                        <th>Theme</th>
-                        <th>Image URL</th>
-                        <th>Start Date</th>
-                        <th>End Date</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {localSeasons.map((s) =>
-                    {
-                        const startStr = new Date(s.startDate).toISOString().slice(0, 10);
-                        const endStr   = s.endDate
-                            ? new Date(s.endDate).toISOString().slice(0, 10)
-                            : "";
-
-                        return (
-                            <tr key={s.id}>
-                                <td>{s.seasonNumber}</td>
-
-                                {/* Theme */}
-                                <td
-                                    style={{ cursor: "pointer" }}
-                                    onClick={() =>
-                                        setEditing({ id: s.id, field: "theme", value: s.theme })
-                                    }
-                                >
-                                    {editing?.id === s.id && editing.field === "theme" ? (
-                                        <input
-                                            type="text"
-                                            value={editing.value}
-                                            onChange={(e) =>
-                                                setEditing({ ...editing, value: e.target.value })
-                                            }
-                                            onBlur={commitEdit}
-                                            onKeyDown={(e) =>
-                                            {
-                                                if (e.key === "Enter")
-                                                {
-                                                    e.currentTarget.blur();
-                                                }
-                                                if (e.key === "Escape")
-                                                {
-                                                    setEditing(null);
-                                                }
-                                            }}
-                                            autoFocus
-                                        />
-                                    ) : (
-                                        s.theme
-                                    )}
-                                </td>
-
-                                {/* Image URL */}
-                                <td
-                                    style={{ cursor: "pointer" }}
-                                    onClick={() =>
-                                        setEditing({ id: s.id, field: "image", value: s.image ?? "" })
-                                    }
-                                >
-                                    {editing?.id === s.id && editing.field === "image" ? (
-                                        <input
-                                            type="text"
-                                            value={editing.value}
-                                            onChange={(e) =>
-                                                setEditing({ ...editing, value: e.target.value })
-                                            }
-                                            onBlur={commitEdit}
-                                            onKeyDown={(e) =>
-                                            {
-                                                if (e.key === "Enter")
-                                                {
-                                                    e.currentTarget.blur();
-                                                }
-                                                if (e.key === "Escape")
-                                                {
-                                                    setEditing(null);
-                                                }
-                                            }}
-                                            autoFocus
-                                        />
-                                    ) : s.image ? (
-                                        s.image
-                                    ) : (
-                                        <span className="text-muted">None</span>
-                                    )}
-                                </td>
-
-                                {/* Start Date */}
-                                <td
-                                    style={{ cursor: "pointer" }}
-                                    onClick={() =>
-                                        setEditing({ id: s.id, field: "startDate", value: startStr })
-                                    }
-                                >
-                                    {editing?.id === s.id && editing.field === "startDate" ? (
-                                        <input
-                                            type="date"
-                                            value={editing.value}
-                                            onChange={(e) =>
-                                                setEditing({ ...editing, value: e.target.value })
-                                            }
-                                            onBlur={commitEdit}
-                                            onKeyDown={(e) =>
-                                            {
-                                                if (e.key === "Enter")
-                                                {
-                                                    e.currentTarget.blur();
-                                                }
-                                                if (e.key === "Escape")
-                                                {
-                                                    setEditing(null);
-                                                }
-                                            }}
-                                            autoFocus
-                                        />
-                                    ) : (
-                                        new Date(s.startDate).toLocaleDateString()
-                                    )}
-                                </td>
-
-                                {/* End Date */}
-                                <td
-                                    style={{ cursor: "pointer" }}
-                                    onClick={() =>
-                                        setEditing({ id: s.id, field: "endDate", value: endStr })
-                                    }
-                                >
-                                    {editing?.id === s.id && editing.field === "endDate" ? (
-                                        <input
-                                            type="date"
-                                            value={editing.value}
-                                            onChange={(e) =>
-                                                setEditing({ ...editing, value: e.target.value })
-                                            }
-                                            onBlur={commitEdit}
-                                            onKeyDown={(e) =>
-                                            {
-                                                if (e.key === "Enter")
-                                                {
-                                                    e.currentTarget.blur();
-                                                }
-                                                if (e.key === "Escape")
-                                                {
-                                                    setEditing(null);
-                                                }
-                                            }}
-                                            autoFocus
-                                        />
-                                    ) : s.endDate ? (
-                                        new Date(s.endDate).toLocaleDateString()
-                                    ) : (
-                                        "Ongoing"
-                                    )}
-                                </td>
-
-                                {/* Actions Column */}
-                                <td>
-                                    {user?.role === "superadmin" ? (
-                                        <button
-                                            onClick={() => handleDelete(s.id)}
-                                            disabled={deleting}
-                                            style={{
-                                                padding:      "0.25rem 0.5rem",
-                                                borderRadius: "0.25rem",
-                                                background:   "#dc3545",
-                                                color:        "#fff",
-                                                border:       "none",
-                                                cursor:       "pointer",
-                                            }}
-                                        >
-                                            Delete
-                                        </button>
-                                    ) : (
-                                        <span className="text-muted">No permission</span>
-                                    )}
-                                    {deleteError && (
-                                        <p className="error" style={{ color: "red" }}>
-                                            {deleteError}
-                                        </p>
-                                    )}
-                                </td>
-                            </tr>
-                        );
-                    })}
-                </tbody>
-            </table>
+            <SeasonTable
+                columns={columns}
+                rows={localSeasons}
+                rowKey={(row) => row.id}
+            />
         </div>
     );
 };

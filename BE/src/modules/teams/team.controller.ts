@@ -1,8 +1,11 @@
 import { Request, Response } from 'express';
-import { TeamService } from './team.service.js';
+import { TeamService, TeamFilters } from './team.service.js';
 import { MissingFieldError } from '../../errors/MissingFieldError.js';
 import { NotFoundError } from '../../errors/NotFoundError.js';
 import { CreateTeamDto, UpdateTeamDto } from './teams.schema.js';
+import { parsePagination, toPaginatedResult } from '../../utils/pagination.js';
+
+const TEAMS_DEFAULT_LIMIT = 10;
 
 export class TeamController {
     private teamService: TeamService;
@@ -107,8 +110,10 @@ export class TeamController {
     // Get all Teams
     getTeams = async (req: Request, res: Response): Promise<void> => {
         try {
-            const teams = await this.teamService.getAllTeams();
-            res.json(teams);
+            const pagination = parsePagination(req.query, TEAMS_DEFAULT_LIMIT);
+            const filters = this.parseFilters(req);
+            const [data, total] = await this.teamService.getAllTeams(pagination, filters);
+            res.json(toPaginatedResult(data, total, pagination));
         } catch (error) {
             console.error("Error fetching teams:", error);
             res.status(500).json({ error: "Failed to fetch teams" });
@@ -118,8 +123,10 @@ export class TeamController {
     // Get all Teams without relations / minimal data
     getSkinnyTeams = async (req: Request, res: Response): Promise<void> => {
         try {
-            const teams = await this.teamService.getSkinnyAllTeams();
-            res.json(teams);
+            const pagination = parsePagination(req.query, TEAMS_DEFAULT_LIMIT);
+            const filters = this.parseFilters(req);
+            const [data, total] = await this.teamService.getSkinnyAllTeams(pagination, filters);
+            res.json(toPaginatedResult(data, total, pagination));
         } catch (error) {
             console.error("Error fetching teams with skinny relations:", error);
             res.status(500).json({ error: "Failed to fetch skinny teams" });
@@ -129,13 +136,23 @@ export class TeamController {
     // Get all Teams without relations / minimal data (players, season)
     getMediumTeams = async (req: Request, res: Response): Promise<void> => {
         try {
-            const teams = await this.teamService.getMediumAllTeams();
-            res.json(teams);
+            const pagination = parsePagination(req.query, TEAMS_DEFAULT_LIMIT);
+            const filters = this.parseFilters(req);
+            const [data, total] = await this.teamService.getMediumAllTeams(pagination, filters);
+            res.json(toPaginatedResult(data, total, pagination));
         } catch (error) {
             console.error("Error fetching teams with medium relations:", error);
             res.status(500).json({ error: "Failed to fetch medium teams" });
         }
     };
+
+    private parseFilters(req: Request): TeamFilters {
+        const { search, seasonId } = req.query;
+        return {
+            search: typeof search === 'string' && search.length > 0 ? search : undefined,
+            seasonId: seasonId ? Number(seasonId) : undefined,
+        };
+    }
 
     // Get Team by ID
     getTeamById = async (req: Request, res: Response): Promise<void> => {

@@ -12,6 +12,11 @@ import { CacheableService } from '../../utils/cacheService.js';
 import { InvalidFormatError } from '../../errors/InvalidFormatError.js';
 import { Seasons } from '../seasons/season.entity.js';
 import { Teams } from '../teams/team.entity.js';
+import { PaginationParams } from '../../utils/pagination.js';
+
+export interface StatFilters {
+    search?: string;
+}
 
 export class StatService extends CacheableService
 {
@@ -381,24 +386,40 @@ export class StatService extends CacheableService
     /**
      * Get all stats
      */
-    async getAllStats(): Promise<Stats[]>
+    async getAllStats(pagination: PaginationParams, filters: StatFilters = {}): Promise<[Stats[], number]>
     {
-        return this.getCachedList('all', () => 
-            this.statRepository.find({
-                relations: ["player", "game"]
-            })
-        );
+        return this.getCachedQuery('all', { ...pagination, ...filters }, () => {
+            const qb = this.statRepository.createQueryBuilder('stat')
+                .leftJoinAndSelect('stat.player', 'player')
+                .leftJoinAndSelect('stat.game', 'game')
+                .skip(pagination.skip)
+                .take(pagination.take);
+
+            if (filters.search) {
+                const numericSearch = Number(filters.search);
+                qb.andWhere(
+                    Number.isFinite(numericSearch)
+                        ? '(player.name ILIKE :search OR player.id = :numericSearch OR game.id = :numericSearch)'
+                        : 'player.name ILIKE :search',
+                    { search: `%${filters.search}%`, numericSearch }
+                );
+            }
+
+            return qb.getManyAndCount();
+        });
     }
 
     /**
      * Get stats for a given player
      */
-    async getStatsByPlayerId(playerId: number): Promise<Stats[]>
+    async getStatsByPlayerId(playerId: number, pagination: PaginationParams): Promise<[Stats[], number]>
     {
-        return this.getCachedByField('player', playerId, () =>
-            this.statRepository.find({
+        return this.getCachedQuery('player', { playerId, ...pagination }, () =>
+            this.statRepository.findAndCount({
                 where: { player: { id: playerId } },
-                relations: ["game"]
+                relations: ["game"],
+                skip: pagination.skip,
+                take: pagination.take
             })
         );
     }
@@ -406,12 +427,14 @@ export class StatService extends CacheableService
     /**
      * Get stats for a given game
      */
-    async getStatsByGameId(gameId: number): Promise<Stats[]>
+    async getStatsByGameId(gameId: number, pagination: PaginationParams): Promise<[Stats[], number]>
     {
-        return this.getCachedByField('game', gameId, () =>
-            this.statRepository.find({
+        return this.getCachedQuery('game', { gameId, ...pagination }, () =>
+            this.statRepository.findAndCount({
                 where: { game: { id: gameId } },
-                relations: ["player"]
+                relations: ["player"],
+                skip: pagination.skip,
+                take: pagination.take
             })
         );
     }

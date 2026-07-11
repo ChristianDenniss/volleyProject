@@ -7,6 +7,7 @@ import { NotFoundError } from "../../errors/NotFoundError.js";
 import { DateError } from "../../errors/DateErrors.js";
 import { OutOfBoundsError } from "../../errors/OutOfBoundsError.js";
 import { ConflictError } from "../../errors/ConflictError.js";
+import { PaginationParams } from "../../utils/pagination.js";
 
 export class SeasonService
 {
@@ -61,16 +62,18 @@ export class SeasonService
     /**
      * Get all seasons
      */
-    async getAllSeasons(): Promise<Seasons[]>
+    async getAllSeasons(pagination: PaginationParams): Promise<[Seasons[], number]>
     {
         try {
             console.log('Fetching all seasons...');
-            const seasons = await this.seasonRepository.find({
+            const result = await this.seasonRepository.findAndCount({
                 relations: ["teams", "games", "awards"],
-                order: { seasonNumber: "DESC" }
+                order: { seasonNumber: "DESC" },
+                skip: pagination.skip,
+                take: pagination.take
             });
-            console.log(`Found ${seasons.length} seasons`);
-            return seasons;
+            console.log(`Found ${result[1]} seasons`);
+            return result;
         } catch (error) {
             console.error('Error in getAllSeasons:', {
                 error: error instanceof Error ? {
@@ -87,16 +90,18 @@ export class SeasonService
     /**
      * Get all seasons without relations / minimal data
      */
-    async getSkinnyAllSeasons(): Promise<Seasons[]>
+    async getSkinnyAllSeasons(pagination: PaginationParams): Promise<[Seasons[], number]>
     {
         try {
             console.log('Fetching all seasons without relations...');
-            const seasons = await this.seasonRepository.find({
+            const result = await this.seasonRepository.findAndCount({
                 relations: [],
-                order: { seasonNumber: "DESC" }
+                order: { seasonNumber: "DESC" },
+                skip: pagination.skip,
+                take: pagination.take
             });
-            console.log(`Found ${seasons.length} seasons`);
-            return seasons;
+            console.log(`Found ${result[1]} seasons`);
+            return result;
         } catch (error) {
             console.error('Error in getSkinnyAllSeasons:', {
                 error: error instanceof Error ? {
@@ -113,16 +118,18 @@ export class SeasonService
     /**
      * Get all seasons with medium relations / minimal data
      */
-    async getMediumAllSeasons(): Promise<Seasons[]>
+    async getMediumAllSeasons(pagination: PaginationParams): Promise<[Seasons[], number]>
     {
         try {
             console.log('Fetching all seasons with medium relations...');
-            const seasons = await this.seasonRepository.find({
+            const result = await this.seasonRepository.findAndCount({
                 relations: ["teams", "games"],
-                order: { seasonNumber: "DESC" }
+                order: { seasonNumber: "DESC" },
+                skip: pagination.skip,
+                take: pagination.take
             });
-            console.log(`Found ${seasons.length} seasons`);
-            return seasons;
+            console.log(`Found ${result[1]} seasons`);
+            return result;
         } catch (error) {
             console.error('Error in getMediumAllSeasons:', {
                 error: error instanceof Error ? {

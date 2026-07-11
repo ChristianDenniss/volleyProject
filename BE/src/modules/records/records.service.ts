@@ -7,6 +7,7 @@ import { Stats } from '../stats/stat.entity.js';
 import { MissingFieldError } from '../../errors/MissingFieldError.js';
 import { NotFoundError } from '../../errors/NotFoundError.js';
 import { CreateRecordDto, UpdateRecordDto } from './records.schema.js';
+import { PaginationParams } from '../../utils/pagination.js';
 
 export class RecordService {
     private recordRepository: Repository<Records>;
@@ -78,54 +79,62 @@ export class RecordService {
     /**
      * Get all records
      */
-    async getAllRecords(): Promise<Records[]> {
-        return this.recordRepository.find({
-            relations: ["player", "season"]
+    async getAllRecords(pagination: PaginationParams): Promise<[Records[], number]> {
+        return this.recordRepository.findAndCount({
+            relations: ["player", "season"],
+            skip: pagination.skip,
+            take: pagination.take
         });
     }
 
     /**
      * Get records by season
      */
-    async getRecordsBySeason(seasonId: number): Promise<Records[]> {
+    async getRecordsBySeason(seasonId: number, pagination: PaginationParams): Promise<[Records[], number]> {
         if (!seasonId) throw new MissingFieldError("Season ID");
 
         const season = await this.seasonRepository.findOneBy({ id: seasonId });
         if (!season) throw new NotFoundError(`Season with ID ${seasonId} not found`);
 
-        return this.recordRepository.find({
+        return this.recordRepository.findAndCount({
             where: { season: { id: seasonId } },
             relations: ["player", "season"],
-            order: { record: "ASC", rank: "ASC" }
+            order: { record: "ASC", rank: "ASC" },
+            skip: pagination.skip,
+            take: pagination.take
         });
     }
 
     /**
      * Get records by record type
      */
-    async getRecordsByType(recordType: string): Promise<Records[]> {
+    async getRecordsByType(recordType: string, pagination: PaginationParams): Promise<[Records[], number]> {
         if (!recordType) throw new MissingFieldError("Record type");
 
-        return this.recordRepository.find({
+        return this.recordRepository.findAndCount({
             where: { record: recordType },
             relations: ["player", "season"],
-            order: { rank: "ASC" }
+            order: { rank: "ASC" },
+            skip: pagination.skip,
+            take: pagination.take
         });
     }
 
     /**
      * Get records by player
      */
-    async getRecordsByPlayer(playerId: number): Promise<Records[]> {
+    async getRecordsByPlayer(playerId: number, pagination: PaginationParams): Promise<[Records[], number]> {
         if (!playerId) throw new MissingFieldError("Player ID");
 
         const player = await this.playerRepository.findOneBy({ id: playerId });
         if (!player) throw new NotFoundError(`Player with ID ${playerId} not found`);
 
-        return this.recordRepository.find({
+        return this.recordRepository.findAndCount({
             where: { player: { id: playerId } },
             relations: ["player", "season"],
-            order: { record: "ASC", rank: "ASC" }
+            order: { record: "ASC", rank: "ASC" },
+            skip: pagination.skip,
+            take: pagination.take
         });
     }
 

@@ -1,41 +1,62 @@
+import { ILike, FindOptionsWhere } from 'typeorm';
 import { AppDataSource } from '../../db/data-source.js';
 import { Matches, MatchStatus, MatchPhase, MatchRegion } from './match.entity.js';
 import { Seasons } from '../seasons/season.entity.js';
 import type { CreateMatchInput, UpdateMatchInput, ImportChallongeInput } from './matches.schema.js';
+import type { PaginationParams } from '../../utils/pagination.js';
 
 const matchRepository = AppDataSource.getRepository(Matches);
 const seasonRepository = AppDataSource.getRepository(Seasons);
 
+export interface MatchFilters {
+  search?: string;
+  status?: string;
+  round?: string;
+}
+
 export class MatchService {
-  async getAllMatches() {
-    return await matchRepository.find({
+  private buildWhere(seasonId: number | undefined, filters: MatchFilters): FindOptionsWhere<Matches> {
+    const where: FindOptionsWhere<Matches> = {};
+    if (seasonId) where.seasonId = seasonId;
+    if (filters.search) where.matchNumber = ILike(`%${filters.search}%`);
+    if (filters.status) where.status = filters.status as MatchStatus;
+    if (filters.round) where.round = filters.round;
+    return where;
+  }
+
+  async getAllMatches(pagination: PaginationParams, filters: MatchFilters = {}) {
+    return await matchRepository.findAndCount({
+      where: this.buildWhere(undefined, filters),
       relations: ['season'],
       order: {
         date: 'ASC'
-      }
-    });
-  }
-
-  async getMatchesBySeason(seasonId: number) {
-    return await matchRepository.find({
-      where: { seasonId: seasonId },
-      relations: ['season'],
-      order: {
-        date: 'ASC'
-      }
-    });
-  }
-
-  async getMatchesByRound(seasonId: number, round: string) {
-    return await matchRepository.find({
-      where: { 
-        seasonId: seasonId,
-        round: round
       },
+      skip: pagination.skip,
+      take: pagination.take
+    });
+  }
+
+  async getMatchesBySeason(seasonId: number, pagination: PaginationParams, filters: MatchFilters = {}) {
+    return await matchRepository.findAndCount({
+      where: this.buildWhere(seasonId, filters),
       relations: ['season'],
       order: {
         date: 'ASC'
-      }
+      },
+      skip: pagination.skip,
+      take: pagination.take
+    });
+  }
+
+  async getMatchesByRound(seasonId: number, round: string, pagination: PaginationParams, filters: MatchFilters = {}) {
+    return await matchRepository.findAndCount({
+      where: this.buildWhere(seasonId, { ...filters, round }),
+      relations: ['season'],
+      order: {
+        date: 'ASC'
+      },
+      skip: pagination.skip,
+      take: pagination.take
     });
   }
 

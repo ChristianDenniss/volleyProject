@@ -5,6 +5,7 @@ import { useRecords } from "../hooks/allFetch";
 import { useCalculateRecords } from "../hooks/allCreate";
 import { useAuth } from "../context/authContext";
 import type { Records } from "../types/interfaces";
+import Table, { type TableColumn } from "./ui/Table";
 import "../styles/RecordsPage.css";
 
 const RecordsPage: React.FC = () => {
@@ -228,6 +229,68 @@ const RecordsPage: React.FC = () => {
         );
     }
 
+    // Columns for the records table (shared across all record-type sections)
+    const recordColumns: TableColumn<Records>[] = [
+        {
+            key: "rank",
+            header: "Rank",
+            render: (record) => (
+                <div className="record-rank">
+                    <span className={getRankBadgeClass(record.rank)}>
+                        {record.rank}
+                    </span>
+                </div>
+            ),
+        },
+        {
+            key: "player",
+            header: "Player",
+            render: (record) => (
+                <a
+                    href={`/players/${record.player?.id}`}
+                    className="record-link"
+                >
+                    {record.player?.name || 'Unknown Player'}
+                </a>
+            ),
+        },
+        {
+            key: "value",
+            header: "Value",
+            render: (record) => (
+                <span className="record-value">{formatRecordValue(record)}</span>
+            ),
+        },
+        {
+            key: "date",
+            header: "Date",
+            render: (record) => (
+                <span className="record-date">{formatDate(record.date)}</span>
+            ),
+        },
+        {
+            key: "gameOrSeason",
+            header: recordTypeView === 'game' ? 'Game' : 'Season',
+            render: (record) => (
+                recordTypeView === 'game' ? (
+                    <a
+                        href={`/games/${record.gameId}`}
+                        className="record-link"
+                    >
+                        View Game
+                    </a>
+                ) : (
+                    <a
+                        href={`/seasons/${record.season?.id}`}
+                        className="record-link"
+                    >
+                        S{record.season?.seasonNumber || '?'}
+                    </a>
+                )
+            ),
+        },
+    ];
+
     if (error) {
         return (
             <div className="records-container">
@@ -290,59 +353,11 @@ const RecordsPage: React.FC = () => {
                             <h2 className="record-type-header">{getRecordDisplayName(recordType)}</h2>
                             
                             <div className="records-table-container">
-                                <table className="records-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Rank</th>
-                                            <th>Player</th>
-                                            <th>Value</th>
-                                            <th>Date</th>
-                                            <th>{recordTypeView === 'game' ? 'Game' : 'Season'}</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {recordsForType.map((record) => (
-                                            <tr key={record.id}>
-                                                <td className="record-rank">
-                                                    <span className={getRankBadgeClass(record.rank)}>
-                                                        {record.rank}
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <a 
-                                                        href={`/players/${record.player?.id}`}
-                                                        className="record-link"
-                                                    >
-                                                        {record.player?.name || 'Unknown Player'}
-                                                    </a>
-                                                </td>
-                                                <td>
-                                                    <span className="record-value">{formatRecordValue(record)}</span>
-                                                </td>
-                                                <td>
-                                                    <span className="record-date">{formatDate(record.date)}</span>
-                                                </td>
-                                                <td>
-                                                    {recordTypeView === 'game' ? (
-                                                        <a 
-                                                            href={`/games/${record.gameId}`}
-                                                            className="record-link"
-                                                        >
-                                                            View Game
-                                                        </a>
-                                                    ) : (
-                                                        <a 
-                                                            href={`/seasons/${record.season?.id}`}
-                                                            className="record-link"
-                                                        >
-                                                            S{record.season?.seasonNumber || '?'}
-                                                        </a>
-                                                    )}
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                                <Table
+                                    columns={recordColumns}
+                                    rows={recordsForType}
+                                    rowKey={(record) => record.id}
+                                />
                             </div>
                         </div>
                     );

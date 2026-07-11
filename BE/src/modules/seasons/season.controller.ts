@@ -1,5 +1,8 @@
 import { Request, Response } from "express";
 import { SeasonService } from "./season.service.js";
+import { parsePagination, toPaginatedResult } from "../../utils/pagination.js";
+
+const SEASONS_DEFAULT_LIMIT = 10;
 
 export class SeasonController
 {
@@ -44,14 +47,15 @@ export class SeasonController
     /* ------------------------------------------------------------
        Get all seasons
     ------------------------------------------------------------ */
-    getAllSeasons = async (_req: Request, res: Response): Promise<void> =>
+    getAllSeasons = async (req: Request, res: Response): Promise<void> =>
     {
         try
         {
             console.log('Attempting to fetch all seasons...');
-            const seasons = await this.seasonService.getAllSeasons();
-            console.log(`Successfully fetched ${seasons.length} seasons`);
-            res.status(200).json(seasons);
+            const pagination = parsePagination(req.query, SEASONS_DEFAULT_LIMIT);
+            const [data, total] = await this.seasonService.getAllSeasons(pagination);
+            console.log(`Successfully fetched ${data.length} seasons`);
+            res.status(200).json(toPaginatedResult(data, total, pagination));
         }
         catch (error: unknown)
         {
@@ -68,14 +72,15 @@ export class SeasonController
     };
 
 
-    getSkinnyAllSeasons = async (_req: Request, res: Response): Promise<void> =>
+    getSkinnyAllSeasons = async (req: Request, res: Response): Promise<void> =>
         {
             try
             {
                 console.log('Attempting to fetch all seasons...');
-                const seasons = await this.seasonService.getSkinnyAllSeasons();
-                console.log(`Successfully fetched ${seasons.length} seasons`);
-                res.status(200).json(seasons);
+                const pagination = parsePagination(req.query, SEASONS_DEFAULT_LIMIT);
+                const [data, total] = await this.seasonService.getSkinnyAllSeasons(pagination);
+                console.log(`Successfully fetched ${data.length} seasons`);
+                res.status(200).json(toPaginatedResult(data, total, pagination));
             }
             catch (error: unknown)
             {
@@ -90,22 +95,23 @@ export class SeasonController
                 this.handleError(error, res, "fetching seasons");
             }
         };
-    
 
-    getMediumAllSeasons = async (_req: Request, res: Response): Promise<void> =>
+
+    getMediumAllSeasons = async (req: Request, res: Response): Promise<void> =>
     {
         try
         {
             console.log('Attempting to fetch all seasons...');
-            const seasons = await this.seasonService.getMediumAllSeasons();
-            console.log(`Successfully fetched ${seasons.length} seasons`);
-            res.status(200).json(seasons);
+            const pagination = parsePagination(req.query, SEASONS_DEFAULT_LIMIT);
+            const [data, total] = await this.seasonService.getMediumAllSeasons(pagination);
+            console.log(`Successfully fetched ${data.length} seasons`);
+            res.status(200).json(toPaginatedResult(data, total, pagination));
         }
         catch (error: unknown)
         {
-            console.error('Error in getMediumAllSeasons:', 
+            console.error('Error in getMediumAllSeasons:',
             {
-                error: error instanceof Error ? 
+                error: error instanceof Error ?
                 {
                     message: error.message,
                     stack: error.stack,

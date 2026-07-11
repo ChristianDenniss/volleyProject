@@ -1,4 +1,4 @@
-import { Repository } from "typeorm";
+import { Repository, ILike, FindOptionsWhere } from "typeorm";
 import { User } from "./user.entity.js";
 import { AppDataSource } from "../../db/data-source.js";
 import bcrypt from "bcryptjs";
@@ -7,6 +7,11 @@ import { MissingFieldError } from "../../errors/MissingFieldError.js";
 import { NotFoundError } from "../../errors/NotFoundError.js";
 import { ConflictError } from "../../errors/ConflictError.js";
 import { UnauthorizedError } from "../../errors/UnauthorizedError.js";
+import { PaginationParams } from "../../utils/pagination.js";
+
+export interface UserFilters {
+    search?: string;
+}
 
 export class UserService {
     private userRepository: Repository<User>;
@@ -60,19 +65,31 @@ export class UserService {
         return await this.userRepository.save(user);
     }
 
+    private buildWhere(filters: UserFilters): FindOptionsWhere<User> {
+        const where: FindOptionsWhere<User> = {};
+        if (filters.search) where.username = ILike(`%${filters.search}%`);
+        return where;
+    }
+
     /**
      * Get all users
      */
-    async getAllUsers(): Promise<User[]> {
-        return await this.userRepository.find({
-            select: ['id', 'username', 'email', 'role', 'createdAt']
+    async getAllUsers(pagination: PaginationParams, filters: UserFilters = {}): Promise<[User[], number]> {
+        return await this.userRepository.findAndCount({
+            where: this.buildWhere(filters),
+            select: ['id', 'username', 'email', 'role', 'createdAt'],
+            skip: pagination.skip,
+            take: pagination.take
         });
     }
 
 
-    async getPublicUsers(): Promise<User[]> {
-        return await this.userRepository.find({
-            select: ['id', 'username', 'role', 'createdAt']
+    async getPublicUsers(pagination: PaginationParams, filters: UserFilters = {}): Promise<[User[], number]> {
+        return await this.userRepository.findAndCount({
+            where: this.buildWhere(filters),
+            select: ['id', 'username', 'role', 'createdAt'],
+            skip: pagination.skip,
+            take: pagination.take
         });
     }
 

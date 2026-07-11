@@ -1,0 +1,195 @@
+/* Shared UI kit primitives — Modal, Button, Card, FilterBar, PageContainer, Table.
+   All values reference tokens.css; no hardcoded colors/spacing here. */
+
+/* Modal */
+.ui-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--color-overlay);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: var(--space-4);
+}
+
+.ui-modal {
+  background: var(--color-bg);
+  border-radius: var(--radius-lg);
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-modal);
+}
+
+.ui-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-6) var(--space-6) 0 var(--space-6);
+  margin-bottom: var(--space-6);
+}
+
+.ui-modal-header h2 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+}
+
+.ui-modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--color-text-muted-alt);
+  padding: var(--space-1);
+  border-radius: var(--radius-sm);
+  transition: color 0.2s;
+}
+
+.ui-modal-close:hover {
+  color: var(--color-text);
+}
+
+.ui-modal-body {
+  padding: 0 var(--space-6) var(--space-6) var(--space-6);
+}
+
+@media (max-width: 768px) {
+  .ui-modal-body {
+    max-height: 70vh;
+  }
+}
+
+/* Button */
+.ui-btn {
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.ui-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.ui-btn-primary {
+  background: var(--color-brand-primary);
+  color: white;
+}
+
+.ui-btn-primary:hover:not(:disabled) {
+  background: var(--color-brand-primary-hover);
+}
+
+.ui-btn-secondary {
+  background: white;
+  color: var(--color-text-muted);
+  border-color: var(--color-border);
+}
+
+.ui-btn-secondary:hover:not(:disabled) {
+  background-color: var(--color-bg-light);
+}
+
+.ui-btn-danger {
+  background: var(--color-error);
+  color: white;
+}
+
+.ui-btn-danger:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+/* Card */
+.ui-card {
+  background: white;
+  border-radius: var(--radius-md);
+  padding: var(--space-section);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Page shell */
+.ui-page-container {
+  padding: var(--space-page);
+  width: min(92%, 1440px);
+  margin: 0 auto;
+}
+
+.ui-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-8);
+  flex-wrap: wrap;
+}
+
+.ui-page-title {
+  font-size: var(--font-size-page-title);
+  font-weight: 800;
+  color: var(--color-text);
+  margin: 0;
+}
+
+/* Filter bar */
+.ui-filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-section);
+}
+
+.ui-filter-bar-fields {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .ui-filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+/* Table */
+.ui-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.ui-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ui-table th,
+.ui-table td {
+  text-align: left;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--font-size-sm);
+}
+
+.ui-table th {
+  color: var(--color-text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+}

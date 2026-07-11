@@ -1,4 +1,4 @@
-/** 
+/**
  * A thin wrapper around window.fetch that automatically
  * injects your saved bearer token.
  */
@@ -17,7 +17,21 @@ export async function authFetch(
     }
 
     // delegate to fetch
-    return fetch(input, { ...init, headers });
+    const response = await fetch(input, { ...init, headers });
+
+    // a 401 on an authenticated call means the token is missing/expired/invalid -
+    // clear stale auth state and send the user back to log in
+    if (response.status === 401 && token)
+    {
+        localStorage.removeItem("authToken_v2");
+        localStorage.removeItem("currentUser");
+        if (window.location.pathname !== "/login")
+        {
+            window.location.href = "/login";
+        }
+    }
+
+    return response;
 }
     
 

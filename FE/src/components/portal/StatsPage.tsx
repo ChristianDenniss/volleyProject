@@ -12,6 +12,7 @@ import type { Stats }                from "../../types/interfaces";
 import { handleFileUpload } from "../../utils/csvUploadUtils";
 import SearchBar from "../Searchbar";
 import Pagination from "../Pagination";
+import Table, { type TableColumn } from "../ui/Table";
 import "../../styles/GamesPage.css"; // reuse table & text-muted styles
 import "../../styles/PortalPlayersPage.css"; // portal-specific styles
 import "../../styles/StatsPage.css"; // import new styles
@@ -529,6 +530,121 @@ const StatsPage: React.FC = () =>
             // Creation errors are shown by the hook
         }
     };
+
+    // Renders an inline-editable stat cell (click to edit, blur/Enter to commit, Escape to cancel)
+    const renderEditableCell = (
+        s: Stats,
+        field: EditField,
+        options?: { center?: boolean }
+    ): React.ReactNode =>
+    {
+        // Convert the current field's value to a string for the edit input
+        const getValue = (): string => {
+            switch (field) {
+                case "playerId": return s.player.id.toString();
+                case "gameId": return s.game.id.toString();
+                default: return s[field].toString();
+            }
+        };
+
+        // Determine the display value shown when not editing
+        const getDisplay = (): React.ReactNode => {
+            switch (field) {
+                case "playerId": return s.player.id;
+                case "gameId": return s.game.id;
+                default: return s[field];
+            }
+        };
+
+        const isEditing = editing?.id === s.id && editing.field === field;
+
+        return (
+            <span
+                style={{
+                    cursor: "pointer",
+                    display: "inline-block",
+                    width: "100%",
+                    ...(options?.center ? { textAlign: "center" } : {}),
+                }}
+                onClick={() =>
+                    setEditing({
+                        id:    s.id,
+                        field,
+                        value: getValue(),
+                    })
+                }
+            >
+                {isEditing ? (
+                    <input
+                        type="text"
+                        value={editing!.value}
+                        onChange={(e) =>
+                            setEditing({ ...editing!, value: e.target.value })
+                        }
+                        onBlur={commitEdit}
+                        onKeyDown={(e) =>
+                        {
+                            if (e.key === "Enter")
+                            {
+                                e.currentTarget.blur();
+                            }
+                            if (e.key === "Escape")
+                            {
+                                setEditing(null);
+                            }
+                        }}
+                        autoFocus
+                    />
+                ) : (
+                    getDisplay()
+                )}
+            </span>
+        );
+    };
+
+    // Column definitions for the shared Table component
+    const columns: TableColumn<Stats>[] = [
+        { key: "id", header: "ID", render: (row) => row.id },
+        { key: "gameId", header: "Game ID", render: (row) => renderEditableCell(row, "gameId") },
+        { key: "playerId", header: "Player ID", render: (row) => renderEditableCell(row, "playerId") },
+        { key: "spikingErrors", header: "Spiking Errors", render: (row) => renderEditableCell(row, "spikingErrors", { center: true }) },
+        { key: "apeKills", header: "Ape Kills", render: (row) => renderEditableCell(row, "apeKills", { center: true }) },
+        { key: "apeAttempts", header: "Ape Attempts", render: (row) => renderEditableCell(row, "apeAttempts", { center: true }) },
+        { key: "spikeKills", header: "Spike Kills", render: (row) => renderEditableCell(row, "spikeKills", { center: true }) },
+        { key: "spikeAttempts", header: "Spike Attempts", render: (row) => renderEditableCell(row, "spikeAttempts", { center: true }) },
+        { key: "assists", header: "Assists", render: (row) => renderEditableCell(row, "assists", { center: true }) },
+        { key: "settingErrors", header: "Setting Errors", render: (row) => renderEditableCell(row, "settingErrors", { center: true }) },
+        { key: "blocks", header: "Blocks", render: (row) => renderEditableCell(row, "blocks", { center: true }) },
+        { key: "digs", header: "Digs", render: (row) => renderEditableCell(row, "digs", { center: true }) },
+        { key: "blockFollows", header: "Block Follows", render: (row) => renderEditableCell(row, "blockFollows", { center: true }) },
+        { key: "aces", header: "Aces", render: (row) => renderEditableCell(row, "aces", { center: true }) },
+        { key: "servingErrors", header: "Serving Errors", render: (row) => renderEditableCell(row, "servingErrors", { center: true }) },
+        { key: "miscErrors", header: "Misc Errors", render: (row) => renderEditableCell(row, "miscErrors", { center: true }) },
+        {
+            key: "actions",
+            header: "Actions",
+            render: (row) => (
+                <>
+                    {user?.role === "superadmin" ? (
+                        <button
+                            onClick={() => handleDelete(row.id)}
+                            disabled={deleting}
+                            className="delete-button"
+                        >
+                            Delete
+                        </button>
+                    ) : (
+                        <span className="text-muted">No permission</span>
+                    )}
+                    {deleteError && (
+                        <p className="modal-error">
+                            {deleteError}
+                        </p>
+                    )}
+                </>
+            ),
+        },
+    ];
 
     // Display loading or error states
     if (loading)

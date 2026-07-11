@@ -1,11 +1,19 @@
 import { Request, Response } from 'express';
-import { UserService } from './user.service.js';
+import { UserService, UserFilters } from './user.service.js';
+import { parsePagination, toPaginatedResult } from '../../utils/pagination.js';
+
+const USERS_DEFAULT_LIMIT = 10;
 
 export class UserController {
     private userService: UserService;
 
     constructor() {
         this.userService = new UserService();
+    }
+
+    private parseFilters(req: Request): UserFilters {
+        const { search } = req.query;
+        return { search: typeof search === 'string' && search.length > 0 ? search : undefined };
     }
 
     // Register a new user
@@ -80,7 +88,10 @@ export class UserController {
     // Get all users (admin only)
     getUsers = async (req: Request, res: Response): Promise<void> => {
         try {
-            res.json( await this.userService.getAllUsers());
+            const pagination = parsePagination(req.query, USERS_DEFAULT_LIMIT);
+            const filters = this.parseFilters(req);
+            const [data, total] = await this.userService.getAllUsers(pagination, filters);
+            res.json(toPaginatedResult(data, total, pagination));
         } catch (error) {
             console.error("Error fetching users:", error);
             res.status(500).json({ error: "Failed to fetch users" });
@@ -89,7 +100,10 @@ export class UserController {
 
     getPublicUsers = async (req: Request, res: Response): Promise<void> => {
         try {
-            res.json( await this.userService.getPublicUsers());
+            const pagination = parsePagination(req.query, USERS_DEFAULT_LIMIT);
+            const filters = this.parseFilters(req);
+            const [data, total] = await this.userService.getPublicUsers(pagination, filters);
+            res.json(toPaginatedResult(data, total, pagination));
         } catch (error) {
             console.error("Error fetching users:", error);
             res.status(500).json({ error: "Failed to fetch users" });

@@ -8,6 +8,13 @@ import { NotFoundError } from '../../errors/NotFoundError.js';
 import { DuplicateError } from '../../errors/DuplicateError.js';
 import { MultiplePlayersNotFoundError } from '../../errors/MultiplePlayersNotFoundError.js';
 import { CreateAwardDto, CreateMultipleAwardsDto, UpdateAwardDto } from "./awards.schema.js";
+import { PaginationParams } from '../../utils/pagination.js';
+
+export interface AwardFilters {
+    search?: string;
+    seasonNumber?: number;
+    type?: string;
+}
 
 export class AwardService {
     private awardRepository: Repository<Awards>;
@@ -83,22 +90,44 @@ export class AwardService {
     }
 
     /**
+     * Build a filtered, paginated award query. `extraRelations` are joined (but not selected)
+     * in addition to players/season so filters like search can join through to player names.
+     */
+    private buildFilteredQuery(pagination: PaginationParams, filters: AwardFilters, includeTeams: boolean) {
+        const qb = this.awardRepository.createQueryBuilder('award')
+            .leftJoinAndSelect('award.players', 'players')
+            .leftJoinAndSelect('award.season', 'season');
+
+        if (includeTeams) {
+            qb.leftJoinAndSelect('players.teams', 'teams');
+        }
+
+        if (filters.search) {
+            qb.andWhere('players.name ILIKE :search', { search: `%${filters.search}%` });
+        }
+        if (filters.seasonNumber) {
+            qb.andWhere('season.seasonNumber = :seasonNumber', { seasonNumber: filters.seasonNumber });
+        }
+        if (filters.type) {
+            qb.andWhere('award.type = :type', { type: filters.type });
+        }
+
+        return qb.skip(pagination.skip).take(pagination.take);
+    }
+
+    /**
      * Find all awards
      * @returns Array of all awards
      */
-    async findAllAwards(): Promise<Awards[]> {
-        return this.awardRepository.find({
-            relations: ["players", "season", "players.teams"]
-        });
+    async findAllAwards(pagination: PaginationParams, filters: AwardFilters = {}): Promise<[Awards[], number]> {
+        return this.buildFilteredQuery(pagination, filters, true).getManyAndCount();
     }
 
     /**
      * Find all awards without relations / minimal data
      */
-    async findSkinnyAllAwards(): Promise<Awards[]> {
-        return this.awardRepository.find({
-            relations: ["players", "season"]
-        });
+    async findSkinnyAllAwards(pagination: PaginationParams, filters: AwardFilters = {}): Promise<[Awards[], number]> {
+        return this.buildFilteredQuery(pagination, filters, false).getManyAndCount();
     }
 
     /**
@@ -118,10 +147,12 @@ export class AwardService {
      * @param type - The award type
      * @returns Array of awards with the specified type
      */
-    async findAwardsByType(type: string): Promise<Awards[]> {
-        return this.awardRepository.find({
+    async findAwardsByType(type: string, pagination: PaginationParams): Promise<[Awards[], number]> {
+        return this.awardRepository.findAndCount({
             where: { type },
-            relations: ["players", "season", "players.teams"]
+            relations: ["players", "season", "players.teams"],
+            skip: pagination.skip,
+            take: pagination.take
         });
     }
 
@@ -130,10 +161,12 @@ export class AwardService {
      * @param seasonId - The season ID
      * @returns Array of awards for the specified season
      */
-    async findAwardsBySeason(seasonId: number): Promise<Awards[]> {
-        return this.awardRepository.find({
+    async findAwardsBySeason(seasonId: number, pagination: PaginationParams): Promise<[Awards[], number]> {
+        return this.awardRepository.findAndCount({
             where: { season: { id: seasonId } },
-            relations: ["players", "season"]
+            relations: ["players", "season"],
+            skip: pagination.skip,
+            take: pagination.take
         });
     }
 
@@ -310,7 +343,7 @@ export class AwardService {
      * @returns Array of awards for the player
      * @throws NotFoundError if player not found
      */
-    async getAwardsByPlayerId(playerId: number): Promise<Awards[]> {
+    async getAwardsByPlayerId(playerId: number, pagination: PaginationParams): Promise<[Awards[], number]> {
         // Check if player exists
         const player = await this.playerRepository.findOne({
             where: { id: playerId }
@@ -321,16 +354,16 @@ export class AwardService {
         }
 
         // Get all awards for the player with season information
-        const awards = await this.awardRepository.find({
+        return this.awardRepository.findAndCount({
             where: {
                 players: { id: playerId }
             },
             relations: ['season', 'players'],
             order: {
                 createdAt: 'DESC'
-            }
+            },
+            skip: pagination.skip,
+            take: pagination.take
         });
-
-        return awards;
     }
 } 

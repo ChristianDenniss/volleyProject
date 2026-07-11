@@ -1,7 +1,10 @@
 import { Request, Response } from 'express';
 import { MissingFieldError } from '../../errors/MissingFieldError.js';
 import { NotFoundError } from '../../errors/NotFoundError.js';
-import { PlayerService } from './player.service.js';
+import { PlayerService, PlayerFilters } from './player.service.js';
+import { parsePagination, toPaginatedResult } from '../../utils/pagination.js';
+
+const PLAYERS_DEFAULT_LIMIT = 25;
 
 export class PlayerController {
     private playerService: PlayerService;
@@ -186,8 +189,10 @@ export class PlayerController {
     // Get all players
     getPlayers = async (req: Request, res: Response): Promise<void> => {
         try {
-            const players = await this.playerService.getAllPlayers();
-            res.json(players);
+            const pagination = parsePagination(req.query, PLAYERS_DEFAULT_LIMIT);
+            const filters = this.parseFilters(req);
+            const [data, total] = await this.playerService.getAllPlayers(pagination, filters);
+            res.json(toPaginatedResult(data, total, pagination));
         } catch (error) {
             console.error("Error fetching players:", error);
             res.status(500).json({ error: "Failed to fetch players" });
@@ -197,13 +202,20 @@ export class PlayerController {
     // Get all players with medium relations / minimal data
     getMediumPlayers = async (req: Request, res: Response): Promise<void> => {
         try {
-            const players = await this.playerService.getMediumAllPlayers();
-            res.json(players);
+            const pagination = parsePagination(req.query, PLAYERS_DEFAULT_LIMIT);
+            const filters = this.parseFilters(req);
+            const [data, total] = await this.playerService.getMediumAllPlayers(pagination, filters);
+            res.json(toPaginatedResult(data, total, pagination));
         } catch (error) {
             console.error("Error fetching players with medium relations:", error);
             res.status(500).json({ error: "Failed to fetch players with medium relations" });
         }
     };
+
+    private parseFilters(req: Request): PlayerFilters {
+        const { search } = req.query;
+        return { search: typeof search === 'string' && search.length > 0 ? search : undefined };
+    }
 
     // Get player by ID
     getPlayerById = async (req: Request, res: Response): Promise<void> => {

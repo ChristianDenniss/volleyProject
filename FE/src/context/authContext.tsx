@@ -12,6 +12,9 @@ import type {
     User,
     AuthContextType
 } from "../types/interfaces"
+import { MOCK_AUTH_TOKEN, mockAuthUser } from "../mocks/data"
+
+const isMockMode = import.meta.env.VITE_USE_MSW === "true"
 
 // create the AuthContext with an undefined default
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -25,9 +28,19 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
     // track whether we've initialized from storage
     const [loading, setLoading] = useState(true)
 
-    // on mount, read from localStorage
+    // on mount, read from localStorage (or auto-login in mock mode)
     useEffect(() =>
     {
+        if (isMockMode)
+        {
+            localStorage.setItem("authToken_v2", MOCK_AUTH_TOKEN)
+            localStorage.setItem("currentUser", JSON.stringify(mockAuthUser))
+            setToken(MOCK_AUTH_TOKEN)
+            setUser(mockAuthUser)
+            setLoading(false)
+            return
+        }
+
         const storedToken = localStorage.getItem("authToken_v2")
         const storedUser  = localStorage.getItem("currentUser")
 

@@ -1,11 +1,14 @@
 import { Request, Response } from 'express';
-import { GameService } from './game.service.js';
+import { GameService, GameFilters } from './game.service.js';
 import { MissingFieldError } from '../../errors/MissingFieldError.js';
 import { NotFoundError } from '../../errors/NotFoundError.js';
 import { ConflictError } from '../../errors/ConflictError.js';
 import { DuplicateError } from '../../errors/DuplicateError.js';
 import { DateError } from '../../errors/DateErrors.js';
 import { InvalidFormatError } from '../../errors/InvalidFormatError.js';
+import { parsePagination, toPaginatedResult } from '../../utils/pagination.js';
+
+const GAMES_DEFAULT_LIMIT = 10;
 
 export class GameController {
     private gameService: GameService;
@@ -156,8 +159,10 @@ export class GameController {
     // Get all games
     getGames = async (req: Request, res: Response): Promise<void> => {
         try {
-            const games = await this.gameService.getAllGames();
-            res.json(games);
+            const pagination = parsePagination(req.query, GAMES_DEFAULT_LIMIT);
+            const filters = this.parseFilters(req);
+            const [data, total] = await this.gameService.getAllGames(pagination, filters);
+            res.json(toPaginatedResult(data, total, pagination));
         } catch (error: any) {
             if (error !instanceof MissingFieldError || 
                 error instanceof NotFoundError || 
@@ -179,8 +184,10 @@ export class GameController {
     // Get all games without relations / minimal data
     getSkinnyGames = async (req: Request, res: Response): Promise<void> => {
         try {
-            const games = await this.gameService.getSkinnyAllGames();
-            res.json(games);
+            const pagination = parsePagination(req.query, GAMES_DEFAULT_LIMIT);
+            const filters = this.parseFilters(req);
+            const [data, total] = await this.gameService.getSkinnyAllGames(pagination, filters);
+            res.json(toPaginatedResult(data, total, pagination));
         } catch (error: any) {
             if (error !instanceof MissingFieldError || 
                 error instanceof NotFoundError || 
@@ -321,6 +328,15 @@ export class GameController {
             }
         }
     };
+
+    private parseFilters(req: Request): GameFilters {
+        const { search, seasonId, stage } = req.query;
+        return {
+            search: typeof search === 'string' && search.length > 0 ? search : undefined,
+            seasonId: seasonId ? Number(seasonId) : undefined,
+            stage: typeof stage === 'string' && stage.length > 0 ? stage : undefined,
+        };
+    }
 
     // Get score for a game by ID
     getGameScoreById = async (req: Request, res: Response): Promise<void> => {

@@ -12,6 +12,9 @@ import type { Match } from "../../types/interfaces";
 import SearchBar from "../Searchbar";
 import Pagination from "../Pagination";
 import ChallongeImport from "../ChallongeImport";
+import Modal from "../ui/Modal";
+import FilterBar from "../ui/FilterBar";
+import Table from "../ui/Table";
 import "../../styles/PlayersPage.css";
 import "../../styles/PortalPlayersPage.css";
 import "../../styles/MatchesPage.css";
@@ -255,6 +258,358 @@ const MatchesPage: React.FC = () => {
     return value.toString();
   };
 
+  // Row type used for the shared Table component (needs an index signature
+  // to satisfy Table's generic constraint; behavior/typing of Match itself
+  // is unaffected since MatchRow is a strict superset).
+  type MatchRow = Match & Record<string, unknown>;
+
+  type MatchColumn = {
+    key: string;
+    header: string;
+    render: (row: MatchRow) => React.ReactNode;
+  };
+
+  const columns: MatchColumn[] = [
+    {
+      key: "matchNumber",
+      header: "Match Number",
+      render: (match) => (
+        <div
+          style={{ cursor: "pointer" }}
+          onClick={() =>
+            setEditing({
+              id: match.id,
+              field: "matchNumber",
+              value: toStr("matchNumber", match),
+            })
+          }
+        >
+          {editing?.id === match.id && editing?.field === "matchNumber" ? (
+            <input
+              type="text"
+              value={editing.value}
+              onChange={(e) =>
+                setEditing({ ...editing, value: e.target.value })
+              }
+              onBlur={commitEdit}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.currentTarget.blur();
+                }
+                if (e.key === "Escape") {
+                  setEditing(null);
+                }
+              }}
+              autoFocus
+            />
+          ) : (
+            match.matchNumber
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (match) => (
+        <div
+          style={{ cursor: "pointer" }}
+          onClick={() =>
+            setEditing({
+              id: match.id,
+              field: "status",
+              value: toStr("status", match),
+            })
+          }
+        >
+          {editing?.id === match.id && editing?.field === "status" ? (
+            <select
+              value={editing.value}
+              onChange={async (e) => {
+                setEditing({ ...editing, value: e.target.value });
+                // Immediately commit the change for dropdown selections
+                const { id, field } = editing;
+                const orig = localMatches.find((m) => m.id === id);
+                if (orig) {
+                  try {
+                    const updateData: any = {};
+                    updateData[field] = e.target.value;
+                    const updatedMatch = await patchMatch(id, updateData);
+                    setLocalMatches(prev =>
+                      prev.map(m => (m.id === id ? { ...m, ...updatedMatch, season: updatedMatch.season || m.season } : m))
+                    );
+                    setEditing(null);
+                  } catch (error) {
+                    console.error("Error updating match status:", error);
+                    alert("Failed to update match status");
+                  }
+                }
+              }}
+              onBlur={() => setEditing(null)}
+              autoFocus
+            >
+              <option value="scheduled">scheduled</option>
+              <option value="completed">completed</option>
+            </select>
+          ) : (
+            <span className={`status-badge ${match.status}`}>
+              {match.status}
+            </span>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "round",
+      header: "Round",
+      render: (match) => (
+        <div
+          style={{ cursor: "pointer" }}
+          onClick={() =>
+            setEditing({
+              id: match.id,
+              field: "round",
+              value: toStr("round", match),
+            })
+          }
+        >
+          {editing?.id === match.id && editing?.field === "round" ? (
+            <input
+              type="text"
+              value={editing.value}
+              onChange={(e) =>
+                setEditing({ ...editing, value: e.target.value })
+              }
+              onBlur={commitEdit}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.currentTarget.blur();
+                }
+                if (e.key === "Escape") {
+                  setEditing(null);
+                }
+              }}
+              autoFocus
+            />
+          ) : (
+            match.round
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "date",
+      header: "Date",
+      render: (match) => (
+        <div
+          style={{ cursor: "pointer" }}
+          onClick={() =>
+            setEditing({
+              id: match.id,
+              field: "date",
+              value: toStr("date", match),
+            })
+          }
+        >
+          {editing?.id === match.id && editing?.field === "date" ? (
+            <input
+              type="datetime-local"
+              value={editing.value}
+              onChange={(e) =>
+                setEditing({ ...editing, value: e.target.value })
+              }
+              onBlur={commitEdit}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.currentTarget.blur();
+                }
+                if (e.key === "Escape") {
+                  setEditing(null);
+                }
+              }}
+              autoFocus
+            />
+          ) : (
+            new Date(match.date).toLocaleDateString()
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "teams",
+      header: "Teams",
+      render: (match) => (
+        <div className="team-info">
+          <span>{match.team1Name || 'TBD'}</span>
+          <span className="vs-separator">vs</span>
+          <span>{match.team2Name || 'TBD'}</span>
+        </div>
+      ),
+    },
+    {
+      key: "score",
+      header: "Score",
+      render: (match) => (
+        <div className="score-container">
+          {/* Team 1 Score */}
+          <span
+            style={{ cursor: "pointer" }}
+            onClick={() =>
+              setEditing({
+                id: match.id,
+                field: "team1Score",
+                value: toStr("team1Score", match),
+              })
+            }
+          >
+            {editing?.id === match.id && editing?.field === "team1Score" ? (
+              <input
+                type="number"
+                value={editing.value}
+                onChange={(e) =>
+                  setEditing({ ...editing, value: e.target.value })
+                }
+                onBlur={commitEdit}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.currentTarget.blur();
+                  }
+                  if (e.key === "Escape") {
+                    setEditing(null);
+                  }
+                }}
+                autoFocus
+                style={{ width: "50px" }}
+              />
+            ) : (
+              match.team1Score ?? "-"
+            )}
+          </span>
+          <span className="score-separator"> - </span>
+          {/* Team 2 Score */}
+          <span
+            style={{ cursor: "pointer" }}
+            onClick={() =>
+              setEditing({
+                id: match.id,
+                field: "team2Score",
+                value: toStr("team2Score", match),
+              })
+            }
+          >
+            {editing?.id === match.id && editing?.field === "team2Score" ? (
+              <input
+                type="number"
+                value={editing.value}
+                onChange={(e) =>
+                  setEditing({ ...editing, value: e.target.value })
+                }
+                onBlur={commitEdit}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.currentTarget.blur();
+                  }
+                  if (e.key === "Escape") {
+                    setEditing(null);
+                  }
+                }}
+                autoFocus
+                style={{ width: "50px" }}
+              />
+            ) : (
+              match.team2Score ?? "-"
+            )}
+          </span>
+        </div>
+      ),
+    },
+    {
+      key: "setScores",
+      header: "Set Scores",
+      render: (match) => (
+        <div className="set-scores">
+          {(["set1Score", "set2Score", "set3Score", "set4Score", "set5Score"] as const).map((setField, index) => {
+            const setScore = match[setField];
+            const setNumber = index + 1;
+
+            return (
+              <span
+                key={setField}
+                style={{ cursor: "pointer", marginRight: "8px" }}
+                onClick={() =>
+                  setEditing({
+                    id: match.id,
+                    field: setField,
+                    value: toStr(setField, match),
+                  })
+                }
+              >
+                {editing?.id === match.id && editing?.field === setField ? (
+                  <input
+                    type="text"
+                    value={editing.value}
+                    onChange={(e) =>
+                      setEditing({ ...editing, value: e.target.value })
+                    }
+                    onBlur={commitEdit}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.currentTarget.blur();
+                      }
+                      if (e.key === "Escape") {
+                        setEditing(null);
+                      }
+                    }}
+                    autoFocus
+                    placeholder={`Set ${setNumber}`}
+                    style={{ width: "60px" }}
+                  />
+                ) : (
+                  <span className="set-score">
+                    {setScore || `S${setNumber}`}
+                  </span>
+                )}
+              </span>
+            );
+          })}
+        </div>
+      ),
+    },
+    {
+      key: "tags",
+      header: "Tags",
+      render: (match) => (
+        match.tags && match.tags.length > 0 ? (
+          <div className="tags-container">
+            {match.tags.map((tag, index) => (
+              <span key={index} className="tag-badge">
+                {tag}
+              </span>
+            ))}
+          </div>
+        ) : (
+          <span className="text-muted">No tags</span>
+        )
+      ),
+    },
+    {
+      key: "actions",
+      header: "Actions",
+      render: (match) => (
+        user?.role === "superadmin" ? (
+          <button
+            onClick={() => handleDelete(match.id)}
+            className="delete-button"
+          >
+            Delete
+          </button>
+        ) : (
+          <span className="text-muted">No permission</span>
+        )
+      ),
+    },
+  ];
+
   if (loading) return <div className="loading">Loading matches...</div>;
   if (error) return <div className="error">Error: {error}</div>;
 
@@ -274,7 +629,7 @@ const MatchesPage: React.FC = () => {
 
       {/* Filters */}
       <div className="filters-section">
-        <div className="filters-row">
+        <FilterBar onReset={clearFilters}>
           <div className="filter-group">
             <label htmlFor="season-filter">Season:</label>
             <select
@@ -322,13 +677,7 @@ const MatchesPage: React.FC = () => {
               ))}
             </select>
           </div>
-
-          {(searchQuery || seasonFilter || statusFilter || roundFilter) && (
-            <button onClick={clearFilters} className="clear-filters-button">
-              Clear Filters
-            </button>
-          )}
-        </div>
+        </FilterBar>
 
         <div className="search-row">
           <SearchBar 
@@ -348,350 +697,15 @@ const MatchesPage: React.FC = () => {
 
       {/* Matches Table */}
       <div className="table-container">
-        <table className="data-table">
-          <thead>
-            <tr>
-                               <th>Match Number</th>
-                 <th>Status</th>
-                 <th>Round</th>
-                 <th>Date</th>
-                 <th>Teams</th>
-                 <th>Score</th>
-                 <th>Set Scores</th>
-                 <th>Tags</th>
-                 <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {paginatedMatches.map((match) => (
-              <tr key={match.id}>
-                {/* Match Number */}
-                <td
-                  style={{ cursor: "pointer" }}
-                  onClick={() =>
-                    setEditing({
-                      id: match.id,
-                      field: "matchNumber",
-                      value: toStr("matchNumber", match),
-                    })
-                  }
-                >
-                  {editing?.id === match.id && editing?.field === "matchNumber" ? (
-                    <input
-                      type="text"
-                      value={editing.value}
-                      onChange={(e) =>
-                        setEditing({ ...editing, value: e.target.value })
-                      }
-                      onBlur={commitEdit}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.currentTarget.blur();
-                        }
-                        if (e.key === "Escape") {
-                          setEditing(null);
-                        }
-                      }}
-                      autoFocus
-                    />
-                  ) : (
-                    match.matchNumber
-                  )}
-                </td>
-
-                {/* Status */}
-                <td
-                  style={{ cursor: "pointer" }}
-                  onClick={() =>
-                    setEditing({
-                      id: match.id,
-                      field: "status",
-                      value: toStr("status", match),
-                    })
-                  }
-                >
-                  {editing?.id === match.id && editing?.field === "status" ? (
-                    <select
-                      value={editing.value}
-                      onChange={async (e) => {
-                        setEditing({ ...editing, value: e.target.value });
-                        // Immediately commit the change for dropdown selections
-                        const { id, field } = editing;
-                        const orig = localMatches.find((m) => m.id === id);
-                        if (orig) {
-                          try {
-                            const updateData: any = {};
-                            updateData[field] = e.target.value;
-                            const updatedMatch = await patchMatch(id, updateData);
-                            setLocalMatches(prev =>
-                              prev.map(m => (m.id === id ? { ...m, ...updatedMatch, season: updatedMatch.season || m.season } : m))
-                            );
-                            setEditing(null);
-                          } catch (error) {
-                            console.error("Error updating match status:", error);
-                            alert("Failed to update match status");
-                          }
-                        }
-                      }}
-                      onBlur={() => setEditing(null)}
-                      autoFocus
-                    >
-                      <option value="scheduled">scheduled</option>
-                      <option value="completed">completed</option>
-                    </select>
-                  ) : (
-                    <span className={`status-badge ${match.status}`}>
-                      {match.status}
-                    </span>
-                  )}
-                </td>
-
-                {/* Round */}
-                <td
-                  style={{ cursor: "pointer" }}
-                  onClick={() =>
-                    setEditing({
-                      id: match.id,
-                      field: "round",
-                      value: toStr("round", match),
-                    })
-                  }
-                >
-                  {editing?.id === match.id && editing?.field === "round" ? (
-                    <input
-                      type="text"
-                      value={editing.value}
-                      onChange={(e) =>
-                        setEditing({ ...editing, value: e.target.value })
-                      }
-                      onBlur={commitEdit}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.currentTarget.blur();
-                        }
-                        if (e.key === "Escape") {
-                          setEditing(null);
-                        }
-                      }}
-                      autoFocus
-                    />
-                  ) : (
-                    match.round
-                  )}
-                </td>
-
-                
-
-                {/* Date */}
-                <td
-                  style={{ cursor: "pointer" }}
-                  onClick={() =>
-                    setEditing({
-                      id: match.id,
-                      field: "date",
-                      value: toStr("date", match),
-                    })
-                  }
-                >
-                  {editing?.id === match.id && editing?.field === "date" ? (
-                    <input
-                      type="datetime-local"
-                      value={editing.value}
-                      onChange={(e) =>
-                        setEditing({ ...editing, value: e.target.value })
-                      }
-                      onBlur={commitEdit}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.currentTarget.blur();
-                        }
-                        if (e.key === "Escape") {
-                          setEditing(null);
-                        }
-                      }}
-                      autoFocus
-                    />
-                  ) : (
-                    new Date(match.date).toLocaleDateString()
-                  )}
-                </td>
-
-                                 {/* Teams */}
-                 <td>
-                   <div className="team-info">
-                     <span>{match.team1Name || 'TBD'}</span>
-                     <span className="vs-separator">vs</span>
-                     <span>{match.team2Name || 'TBD'}</span>
-                   </div>
-                 </td>
-
-                {/* Score */}
-                <td>
-                  <div className="score-container">
-                    {/* Team 1 Score */}
-                    <span
-                      style={{ cursor: "pointer" }}
-                      onClick={() =>
-                        setEditing({
-                          id: match.id,
-                          field: "team1Score",
-                          value: toStr("team1Score", match),
-                        })
-                      }
-                    >
-                      {editing?.id === match.id && editing?.field === "team1Score" ? (
-                        <input
-                          type="number"
-                          value={editing.value}
-                          onChange={(e) =>
-                            setEditing({ ...editing, value: e.target.value })
-                          }
-                          onBlur={commitEdit}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.currentTarget.blur();
-                            }
-                            if (e.key === "Escape") {
-                              setEditing(null);
-                            }
-                          }}
-                          autoFocus
-                          style={{ width: "50px" }}
-                        />
-                      ) : (
-                        match.team1Score ?? "-"
-                      )}
-                    </span>
-                    <span className="score-separator"> - </span>
-                    {/* Team 2 Score */}
-                    <span
-                      style={{ cursor: "pointer" }}
-                      onClick={() =>
-                        setEditing({
-                          id: match.id,
-                          field: "team2Score",
-                          value: toStr("team2Score", match),
-                        })
-                      }
-                    >
-                      {editing?.id === match.id && editing?.field === "team2Score" ? (
-                        <input
-                          type="number"
-                          value={editing.value}
-                          onChange={(e) =>
-                            setEditing({ ...editing, value: e.target.value })
-                          }
-                          onBlur={commitEdit}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.currentTarget.blur();
-                            }
-                            if (e.key === "Escape") {
-                              setEditing(null);
-                            }
-                          }}
-                          autoFocus
-                          style={{ width: "50px" }}
-                        />
-                      ) : (
-                        match.team2Score ?? "-"
-                      )}
-                    </span>
-                  </div>
-                </td>
-
-                {/* Set Scores */}
-                <td>
-                  <div className="set-scores">
-                    {(["set1Score", "set2Score", "set3Score", "set4Score", "set5Score"] as const).map((setField, index) => {
-                      const setScore = match[setField];
-                      const setNumber = index + 1;
-                      
-                      return (
-                        <span
-                          key={setField}
-                          style={{ cursor: "pointer", marginRight: "8px" }}
-                          onClick={() =>
-                            setEditing({
-                              id: match.id,
-                              field: setField,
-                              value: toStr(setField, match),
-                            })
-                          }
-                        >
-                          {editing?.id === match.id && editing?.field === setField ? (
-                            <input
-                              type="text"
-                              value={editing.value}
-                              onChange={(e) =>
-                                setEditing({ ...editing, value: e.target.value })
-                              }
-                              onBlur={commitEdit}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter") {
-                                  e.currentTarget.blur();
-                                }
-                                if (e.key === "Escape") {
-                                  setEditing(null);
-                                }
-                              }}
-                              autoFocus
-                              placeholder={`Set ${setNumber}`}
-                              style={{ width: "60px" }}
-                            />
-                          ) : (
-                            <span className="set-score">
-                              {setScore || `S${setNumber}`}
-                            </span>
-                          )}
-                        </span>
-                      );
-                    })}
-                  </div>
-                </td>
-
-                {/* Tags */}
-                <td>
-                  {match.tags && match.tags.length > 0 ? (
-                    <div className="tags-container">
-                      {match.tags.map((tag, index) => (
-                        <span key={index} className="tag-badge">
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  ) : (
-                    <span className="text-muted">No tags</span>
-                  )}
-                </td>
-
-                {/* Actions */}
-                <td>
-                  {user?.role === "superadmin" ? (
-                    <button
-                      onClick={() => handleDelete(match.id)}
-                      className="delete-button"
-                    >
-                      Delete
-                    </button>
-                  ) : (
-                    <span className="text-muted">No permission</span>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <Table
+          columns={columns}
+          rows={paginatedMatches as unknown as MatchRow[]}
+          rowKey={(row) => row.id}
+        />
       </div>
 
       {/* Create Match Modal */}
-      {isModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <div className="modal-header">
-              <h2>Create New Match</h2>
-              <button onClick={closeModal} className="close-button">&times;</button>
-            </div>
+      <Modal isOpen={isModalOpen} onClose={closeModal} title="Create New Match">
             <form onSubmit={handleCreate} className="modal-form">
               <div className="modal-body">
                 {/* Basic Information Row */}
@@ -843,9 +857,7 @@ const MatchesPage: React.FC = () => {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
+      </Modal>
 
       {/* Import Modal */}
       {isImportModalOpen && (

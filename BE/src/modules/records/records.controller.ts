@@ -2,6 +2,9 @@ import { Request, Response } from 'express';
 import { MissingFieldError } from '../../errors/MissingFieldError.js';
 import { NotFoundError } from '../../errors/NotFoundError.js';
 import { RecordService } from './records.service.js';
+import { parsePagination, toPaginatedResult } from '../../utils/pagination.js';
+
+const RECORDS_DEFAULT_LIMIT = 10;
 
 export class RecordController {
     private recordService: RecordService;
@@ -36,8 +39,9 @@ export class RecordController {
     // Get all records
     getRecords = async (req: Request, res: Response): Promise<void> => {
         try {
-            const records = await this.recordService.getAllRecords();
-            res.json(records);
+            const pagination = parsePagination(req.query, RECORDS_DEFAULT_LIMIT);
+            const [data, total] = await this.recordService.getAllRecords(pagination);
+            res.json(toPaginatedResult(data, total, pagination));
         } catch (error) {
             console.error("Error fetching records:", error);
             res.status(500).json({ error: "Failed to fetch records" });
@@ -48,8 +52,9 @@ export class RecordController {
     getRecordsBySeason = async (req: Request, res: Response): Promise<void> => {
         try {
             const seasonId = parseInt(req.params.seasonId);
-            const records = await this.recordService.getRecordsBySeason(seasonId);
-            res.json(records);
+            const pagination = parsePagination(req.query, RECORDS_DEFAULT_LIMIT);
+            const [data, total] = await this.recordService.getRecordsBySeason(seasonId, pagination);
+            res.json(toPaginatedResult(data, total, pagination));
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : "Failed to fetch records by season";
             
@@ -68,8 +73,9 @@ export class RecordController {
     getRecordsByType = async (req: Request, res: Response): Promise<void> => {
         try {
             const recordType = req.params.recordType;
-            const records = await this.recordService.getRecordsByType(recordType);
-            res.json(records);
+            const pagination = parsePagination(req.query, RECORDS_DEFAULT_LIMIT);
+            const [data, total] = await this.recordService.getRecordsByType(recordType, pagination);
+            res.json(toPaginatedResult(data, total, pagination));
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : "Failed to fetch records by type";
             
@@ -86,8 +92,9 @@ export class RecordController {
     getRecordsByPlayer = async (req: Request, res: Response): Promise<void> => {
         try {
             const playerId = parseInt(req.params.playerId);
-            const records = await this.recordService.getRecordsByPlayer(playerId);
-            res.json(records);
+            const pagination = parsePagination(req.query, RECORDS_DEFAULT_LIMIT);
+            const [data, total] = await this.recordService.getRecordsByPlayer(playerId, pagination);
+            res.json(toPaginatedResult(data, total, pagination));
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : "Failed to fetch records by player";
             

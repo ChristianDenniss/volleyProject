@@ -5,6 +5,8 @@ import react from '@vitejs/plugin-react-swc'
 export default defineConfig({
   plugins: [react()],
   server: {
+    port: 5173,
+    strictPort: true,
     // headers: {
     //   'Cache-Control': 'public, max-age=604800', // 1 week in seconds
     // },

@@ -2,6 +2,9 @@ import { Request, Response } from 'express';
 import { ArticleService } from './article.service.js';
 import { MissingFieldError } from '../../errors/MissingFieldError.js';
 import { NotFoundError } from '../../errors/NotFoundError.js';
+import { parsePagination, toPaginatedResult } from '../../utils/pagination.js';
+
+const ARTICLES_DEFAULT_LIMIT = 10;
 
 export class ArticleController {
     private articleService: ArticleService;
@@ -40,9 +43,10 @@ export class ArticleController {
     public getAllArticles = async (req: Request, res: Response): Promise<void> => {
         try {
             console.log(`[${new Date().toISOString()}] Incoming request to fetch all articles.`);
-            const articles = await this.articleService.getAllArticles();
-            console.log(`[${new Date().toISOString()}] Articles fetched successfully:`, articles);
-            res.status(200).json(articles);
+            const pagination = parsePagination(req.query, ARTICLES_DEFAULT_LIMIT);
+            const [data, total] = await this.articleService.getAllArticles(pagination);
+            console.log(`[${new Date().toISOString()}] Articles fetched successfully:`, data);
+            res.status(200).json(toPaginatedResult(data, total, pagination));
         } catch (error) {
             console.error(
                 `[${new Date().toISOString()}] Error occurred while fetching articles:`,
@@ -125,9 +129,10 @@ export class ArticleController {
         console.log(`[${new Date().toISOString()}] Attempting to fetch articles for user ID:`, userId);
 
         try {
-            const articles = await this.articleService.getArticlesByUserId(Number(userId));
-            console.log(`[${new Date().toISOString()}] Successfully fetched articles:`, articles);
-            res.status(200).json(articles);
+            const pagination = parsePagination(req.query, ARTICLES_DEFAULT_LIMIT);
+            const [data, total] = await this.articleService.getArticlesByUserId(Number(userId), pagination);
+            console.log(`[${new Date().toISOString()}] Successfully fetched articles:`, data);
+            res.status(200).json(toPaginatedResult(data, total, pagination));
         } catch (error) {
             console.error(`[${new Date().toISOString()}] Error in getArticlesByAuthorId:`, error);
             if (error instanceof MissingFieldError || error instanceof NotFoundError) {

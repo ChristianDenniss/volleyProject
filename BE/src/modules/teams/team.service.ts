@@ -1,4 +1,4 @@
-import { Repository, In } from 'typeorm';
+import { Repository, In, ILike, FindOptionsWhere } from 'typeorm';
 import { AppDataSource } from '../../db/data-source.js';
 import { Teams } from './team.entity.js';
 import { Players } from '../players/player.entity.js';
@@ -10,6 +10,12 @@ import { MultiplePlayersNotFoundError } from '../../errors/MultiplePlayersNotFou
 import { DuplicateError } from '../../errors/DuplicateError.js';
 import { NotFoundError } from '../../errors/NotFoundError.js';
 import { CreateTeamDto, UpdateTeamDto, CreateMultipleTeamsDto } from './teams.schema.js';
+import { PaginationParams } from '../../utils/pagination.js';
+
+export interface TeamFilters {
+    search?: string;
+    seasonId?: number;
+}
 
 export class TeamService {
     private teamRepository: Repository<Teams>;
@@ -180,10 +186,21 @@ export class TeamService {
     }
 
     /**
+     * Build a TypeORM where clause from team filters
+     */
+    private buildWhere(filters: TeamFilters): FindOptionsWhere<Teams> {
+        const where: FindOptionsWhere<Teams> = {};
+        if (filters.search) where.name = ILike(`%${filters.search}%`);
+        if (filters.seasonId) where.season = { id: filters.seasonId } as any;
+        return where;
+    }
+
+    /**
      * Get all teams
      */
-    async getAllTeams(): Promise<Teams[]> {
-        return this.teamRepository.find({
+    async getAllTeams(pagination: PaginationParams, filters: TeamFilters = {}): Promise<[Teams[], number]> {
+        return this.teamRepository.findAndCount({
+            where: this.buildWhere(filters),
             relations: [
                 "season",
                 "players",
@@ -192,28 +209,36 @@ export class TeamService {
                 "games",
                 "games.stats",
                 "games.season"
-            ]
+            ],
+            skip: pagination.skip,
+            take: pagination.take
         });
     }
     /**
      * Get all teams without relations / minimal data
      */
-    async getSkinnyAllTeams(): Promise<Teams[]> {
-        return this.teamRepository.find({
+    async getSkinnyAllTeams(pagination: PaginationParams, filters: TeamFilters = {}): Promise<[Teams[], number]> {
+        return this.teamRepository.findAndCount({
+            where: this.buildWhere(filters),
             relations: [
                 "season"
-            ]
+            ],
+            skip: pagination.skip,
+            take: pagination.take
         });
     }
 
     /**
      * Get all teams without relations / minimal data (players, season)
      */
-    async getMediumAllTeams(): Promise<Teams[]> {
-        return this.teamRepository.find({
+    async getMediumAllTeams(pagination: PaginationParams, filters: TeamFilters = {}): Promise<[Teams[], number]> {
+        return this.teamRepository.findAndCount({
+            where: this.buildWhere(filters),
             relations: [
                 "season", "players"
-            ]
+            ],
+            skip: pagination.skip,
+            take: pagination.take
         });
     }
 

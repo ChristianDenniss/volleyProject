@@ -30,15 +30,6 @@
     min-height: 100px; /* Reserve space for container */
 }
 
-.players-filters-row {
-    display: flex;
-    flex-direction: row;
-    gap: 15px;
-    align-items: center;
-    flex-wrap: wrap;
-    min-height: 40px; /* Reserve space for filters */
-}
-
 .players-search-row {
     display: flex;
     flex-direction: row;
@@ -89,24 +80,6 @@
     background: #5b7dab url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e") no-repeat right 8px center / 20px;
     outline: none;
     box-shadow: 0 0 0 2px rgba(45, 60, 80, 0.2);
-}
-
-/* Clear filters button */
-.clear-filters-button {
-    padding: 8px 16px;
-    font-size: 14px;
-    border-radius: 6px;
-    border: 1px solid #ff6b6b;
-    background: #ff6b6b;
-    color: white;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    white-space: nowrap;
-}
-
-.clear-filters-button:hover {
-    background-color: #ff5252;
-    border-color: #ff5252;
 }
 
 /* Search and pagination */
@@ -308,7 +281,6 @@
 
 /* Responsive design */
 @media (max-width: 768px) {
-    .players-filters-row,
     .players-search-row {
         flex-direction: column;
         align-items: stretch;

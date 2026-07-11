@@ -1,4 +1,4 @@
-import { Not, Repository, In } from 'typeorm';
+import { Not, Repository, In, ILike, FindOptionsWhere } from 'typeorm';
 import { AppDataSource } from '../../db/data-source.js';
 import { Games } from './game.entity.js';
 import { Teams } from '../teams/team.entity.js';
@@ -8,6 +8,13 @@ import { NotFoundError } from '../../errors/NotFoundError.js';
 import { ConflictError } from '../../errors/ConflictError.js';
 import { DuplicateError } from '../../errors/DuplicateError.js';
 import { InvalidFormatError } from '../../errors/InvalidFormatError.js';
+import { PaginationParams } from '../../utils/pagination.js';
+
+export interface GameFilters {
+    search?: string;
+    seasonId?: number;
+    stage?: string;
+}
 
 export class GameService {
     private gameRepository: Repository<Games>;
@@ -146,23 +153,37 @@ export class GameService {
         }
     }
 
+    private buildWhere(filters: GameFilters): FindOptionsWhere<Games> {
+        const where: FindOptionsWhere<Games> = {};
+        if (filters.search) where.name = ILike(`%${filters.search}%`);
+        if (filters.seasonId) where.season = { id: filters.seasonId } as any;
+        if (filters.stage) where.stage = filters.stage;
+        return where;
+    }
+
     /**
      * Get all games
      */
-    async getAllGames(): Promise<Games[]> {
-        return this.gameRepository.find({
+    async getAllGames(pagination: PaginationParams, filters: GameFilters = {}): Promise<[Games[], number]> {
+        return this.gameRepository.findAndCount({
+            where: this.buildWhere(filters),
             relations: ["season", "teams", "stats"],
-            order: { date: "DESC" } // Most recent games first
+            order: { date: "DESC" }, // Most recent games first
+            skip: pagination.skip,
+            take: pagination.take
         });
     }
 
     /**
      * Get all games without relations / minimal data
      */
-    async getSkinnyAllGames(): Promise<Games[]> {
-        return this.gameRepository.find({
+    async getSkinnyAllGames(pagination: PaginationParams, filters: GameFilters = {}): Promise<[Games[], number]> {
+        return this.gameRepository.findAndCount({
+            where: this.buildWhere(filters),
             relations: ["season"],
-            order: { date: "DESC" } // Most recent games first
+            order: { date: "DESC" }, // Most recent games first
+            skip: pagination.skip,
+            take: pagination.take
         });
     }
 

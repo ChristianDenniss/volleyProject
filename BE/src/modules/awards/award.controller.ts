@@ -1,8 +1,11 @@
 import { Request, Response } from 'express';
 import { MissingFieldError } from '../../errors/MissingFieldError.js';
 import { NotFoundError } from '../../errors/NotFoundError.js';
-import { AwardService } from './award.service.js';
+import { AwardService, AwardFilters } from './award.service.js';
 import { CreateAwardDto, CreateMultipleAwardsDto, UpdateAwardDto } from './awards.schema.js';
+import { parsePagination, toPaginatedResult } from '../../utils/pagination.js';
+
+const AWARDS_DEFAULT_LIMIT = 10;
 
 export class AwardController {
     private awardService: AwardService;
@@ -58,8 +61,10 @@ export class AwardController {
     // Get all awards
     getAwards = async (req: Request, res: Response): Promise<void> => {
         try {
-            const awards = await this.awardService.findAllAwards();
-            res.json(awards);
+            const pagination = parsePagination(req.query, AWARDS_DEFAULT_LIMIT);
+            const filters = this.parseFilters(req);
+            const [data, total] = await this.awardService.findAllAwards(pagination, filters);
+            res.json(toPaginatedResult(data, total, pagination));
         } catch (error) {
             console.error("Error fetching awards:", error);
             res.status(500).json({ error: "Failed to fetch awards" });
@@ -69,13 +74,24 @@ export class AwardController {
     // Get all awards without relations / minimal data
     getSkinnyAwards = async (req: Request, res: Response): Promise<void> => {
         try {
-            const awards = await this.awardService.findSkinnyAllAwards();
-            res.json(awards);
+            const pagination = parsePagination(req.query, AWARDS_DEFAULT_LIMIT);
+            const filters = this.parseFilters(req);
+            const [data, total] = await this.awardService.findSkinnyAllAwards(pagination, filters);
+            res.json(toPaginatedResult(data, total, pagination));
         } catch (error) {
             console.error("Error fetching awards without player-team relations:", error);
             res.status(500).json({ error: "Failed to fetch awards without player-team relations" });
         }
     };
+
+    private parseFilters(req: Request): AwardFilters {
+        const { search, seasonNumber, type } = req.query;
+        return {
+            search: typeof search === 'string' && search.length > 0 ? search : undefined,
+            seasonNumber: seasonNumber ? Number(seasonNumber) : undefined,
+            type: typeof type === 'string' && type.length > 0 ? type : undefined,
+        };
+    }
 
     // Get award by ID
     getAwardById = async (req: Request, res: Response): Promise<void> => {
@@ -99,8 +115,9 @@ export class AwardController {
     getAwardsByType = async (req: Request, res: Response): Promise<void> => {
         try {
             const { type } = req.params;
-            const awards = await this.awardService.findAwardsByType(type);
-            res.json(awards);
+            const pagination = parsePagination(req.query, AWARDS_DEFAULT_LIMIT);
+            const [data, total] = await this.awardService.findAwardsByType(type, pagination);
+            res.json(toPaginatedResult(data, total, pagination));
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : "Failed to fetch awards by type";
             
@@ -117,8 +134,9 @@ export class AwardController {
     getAwardsBySeason = async (req: Request, res: Response): Promise<void> => {
         try {
             const { seasonNumber } = req.params;
-            const awards = await this.awardService.findAwardsBySeason(parseInt(seasonNumber));
-            res.json(awards);
+            const pagination = parsePagination(req.query, AWARDS_DEFAULT_LIMIT);
+            const [data, total] = await this.awardService.findAwardsBySeason(parseInt(seasonNumber), pagination);
+            res.json(toPaginatedResult(data, total, pagination));
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : "Failed to fetch awards by season";
             
@@ -221,14 +239,15 @@ export class AwardController {
     getAwardsByPlayerId = async (req: Request, res: Response): Promise<void> => {
         try {
             const playerId = parseInt(req.params.playerId);
-            
+
             if (isNaN(playerId)) {
                 res.status(400).json({ error: 'Invalid player ID' });
                 return;
             }
 
-            const awards = await this.awardService.getAwardsByPlayerId(playerId);
-            res.json(awards);
+            const pagination = parsePagination(req.query, AWARDS_DEFAULT_LIMIT);
+            const [data, total] = await this.awardService.getAwardsByPlayerId(playerId, pagination);
+            res.json(toPaginatedResult(data, total, pagination));
         } catch (error) {
             if (error instanceof NotFoundError) {
                 res.status(404).json({ error: error.message });

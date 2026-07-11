@@ -191,6 +191,14 @@ interface Records
 
 export type { Game, Player, Stats, Team, Season, Article, User, Award, Records, AuthContextType, Match, PublicInterface, Role };
 
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 
 // When creating a Game, we send primitive fields + foreign IDs.
 // We omit nested "season" and "teams" arrays.

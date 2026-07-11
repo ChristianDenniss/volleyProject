@@ -12,6 +12,8 @@ import "../../styles/PlayersPage.css";     // custom "submit players" modal styl
 import "../../styles/PortalPlayersPage.css"; // portal-specific styles
 import SearchBar                          from "../Searchbar";
 import Pagination                         from "../Pagination";
+import Modal                              from "../ui/Modal";
+import Table, { type TableColumn }        from "../ui/Table";
 
 type EditField = "name" | "position";
 interface EditingState {
@@ -178,6 +180,106 @@ const PlayersPage: React.FC = () => {
     }
   };
 
+  const columns: TableColumn<Player>[] = [
+    {
+      key: "id",
+      header: "ID",
+      render: (p) => p.id,
+    },
+    {
+      key: "name",
+      header: "Name",
+      render: (p) => (
+        <span
+          style={{ cursor: "pointer", display: "block", width: "100%" }}
+          onClick={() => setEditing({ id: p.id, field: "name", value: p.name })}
+        >
+          {editing?.id === p.id && editing.field === "name" ? (
+            <input
+              type="text"
+              value={editing.value}
+              onChange={(e) => setEditing({ ...editing, value: e.target.value })}
+              onBlur={commitEdit}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") e.currentTarget.blur();
+                if (e.key === "Escape") setEditing(null);
+              }}
+              autoFocus
+            />
+          ) : (
+            p.name
+          )}
+        </span>
+      ),
+    },
+    {
+      key: "position",
+      header: "Position",
+      render: (p) => (
+        <span
+          style={{ cursor: "pointer", display: "block", width: "100%" }}
+          onClick={() => setEditing({ id: p.id, field: "position", value: p.position })}
+        >
+          {editing?.id === p.id && editing.field === "position" ? (
+            <input
+              type="text"
+              value={editing.value}
+              onChange={(e) => setEditing({ ...editing, value: e.target.value })}
+              onBlur={commitEdit}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") e.currentTarget.blur();
+                if (e.key === "Escape") setEditing(null);
+              }}
+              autoFocus
+            />
+          ) : (
+            p.position
+          )}
+        </span>
+      ),
+    },
+    {
+      key: "teams",
+      header: "Teams",
+      render: (p) =>
+        p.teams && p.teams.length > 0
+          ? p.teams.map((team) => team.name).join(", ")
+          : <span className="text-muted">No teams</span>,
+    },
+    {
+      key: "actions",
+      header: "Actions",
+      render: (p) => (
+        <>
+          {user?.role === "superadmin" ? (
+            <button
+              onClick={() => handleDelete(p.id)}
+              disabled={deleting}
+              style={{
+                padding:      "0.25rem 0.5rem",
+                borderRadius: "0.25rem",
+                background:   "#dc3545",
+                color:        "#fff",
+                border:       "none",
+                cursor:       "pointer",
+                fontSize:     "0.875rem",
+              }}
+            >
+              Delete
+            </button>
+          ) : (
+            <span className="text-muted">No permission</span>
+          )}
+          {deleteError && (
+            <p className="error" style={{ color: "red", marginTop: "0.25rem" }}>
+              {deleteError}
+            </p>
+          )}
+        </>
+      ),
+    },
+  ];
+
   if (loading) return <p>Loading players…</p>;
   if (error)   return <p>Error: {error}</p>;
 
@@ -200,204 +302,104 @@ const PlayersPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Modal Overlay for Submitting Players */}
-      {isModalOpen && (
-        <div className="player-modal-overlay">
-          <div className="player-modal">
-            {/* Close Modal Button */}
-            <button
-              className="player-modal-close"
-              onClick={() => {
-                setIsModalOpen(false);
-                setBatchRows([{ name: "", position: "", teamNamesCSV: "" }]);
-                setFormError("");
-              }}
-            >
-              ×
-            </button>
+      {/* Modal for Submitting Players */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setBatchRows([{ name: "", position: "", teamNamesCSV: "" }]);
+          setFormError("");
+        }}
+        title="Batch Create Players"
+      >
+        {formError && (
+          <p className="player-modal-error">{formError}</p>
+        )}
+        {batchError && (
+          <p className="player-modal-error">{batchError}</p>
+        )}
 
-            <h2 className="player-modal-title">Batch Create Players</h2>
+        <form onSubmit={handleBatchCreate} className="player-form">
+          {batchRows.map((row, idx) => (
+            <div key={idx} className="player-form-row">
+              {/* Name Input */}
+              <input
+                type="text"
+                placeholder="Name*"
+                className="player-input"
+                value={row.name}
+                onChange={(e) => {
+                  const updated = [...batchRows];
+                  updated[idx].name = e.target.value;
+                  setBatchRows(updated);
+                }}
+                required
+              />
 
-            {formError && (
-              <p className="player-modal-error">{formError}</p>
-            )}
-            {batchError && (
-              <p className="player-modal-error">{batchError}</p>
-            )}
+              {/* Position Input */}
+              <input
+                type="text"
+                placeholder="Position*"
+                className="player-input"
+                value={row.position}
+                onChange={(e) => {
+                  const updated = [...batchRows];
+                  updated[idx].position = e.target.value;
+                  setBatchRows(updated);
+                }}
+                required
+              />
 
-            <form onSubmit={handleBatchCreate} className="player-form">
-              {batchRows.map((row, idx) => (
-                <div key={idx} className="player-form-row">
-                  {/* Name Input */}
-                  <input
-                    type="text"
-                    placeholder="Name*"
-                    className="player-input"
-                    value={row.name}
-                    onChange={(e) => {
-                      const updated = [...batchRows];
-                      updated[idx].name = e.target.value;
-                      setBatchRows(updated);
-                    }}
-                    required
-                  />
+              {/* Team Names CSV Input */}
+              <input
+                type="text"
+                placeholder="Team names (comma-separated)"
+                className="player-input player-input-teams"
+                value={row.teamNamesCSV}
+                onChange={(e) => {
+                  const updated = [...batchRows];
+                  updated[idx].teamNamesCSV = e.target.value;
+                  setBatchRows(updated);
+                }}
+              />
 
-                  {/* Position Input */}
-                  <input
-                    type="text"
-                    placeholder="Position*"
-                    className="player-input"
-                    value={row.position}
-                    onChange={(e) => {
-                      const updated = [...batchRows];
-                      updated[idx].position = e.target.value;
-                      setBatchRows(updated);
-                    }}
-                    required
-                  />
-
-                  {/* Team Names CSV Input */}
-                  <input
-                    type="text"
-                    placeholder="Team names (comma-separated)"
-                    className="player-input player-input-teams"
-                    value={row.teamNamesCSV}
-                    onChange={(e) => {
-                      const updated = [...batchRows];
-                      updated[idx].teamNamesCSV = e.target.value;
-                      setBatchRows(updated);
-                    }}
-                  />
-
-                  {/* Remove Row Button */}
-                  <button
-                    type="button"
-                    className="player-btn-remove"
-                    onClick={() => removeRow(idx)}
-                  >
-                    Remove
-                  </button>
-                </div>
-              ))}
-
+              {/* Remove Row Button */}
               <button
                 type="button"
-                className="player-btn-add"
-                onClick={addRow}
+                className="player-btn-remove"
+                onClick={() => removeRow(idx)}
               >
-                + Add Another
+                Remove
               </button>
+            </div>
+          ))}
 
-              <button
-                type="submit"
-                className="player-btn-submit"
-                disabled={batchLoading}
-              >
-                {batchLoading ? "Creating…" : "Submit All"}
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
+          <button
+            type="button"
+            className="player-btn-add"
+            onClick={addRow}
+          >
+            + Add Another
+          </button>
+
+          <button
+            type="submit"
+            className="player-btn-submit"
+            disabled={batchLoading}
+          >
+            {batchLoading ? "Creating…" : "Submit All"}
+          </button>
+        </form>
+      </Modal>
 
       {/* Players Table */}
-      <table className="users-table" style={{ marginTop: "1.5rem" }}>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Position</th>
-            <th>Teams</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {paginatedPlayers.map((p) => (
-            <tr key={p.id}>
-              <td>{p.id}</td>
-
-              {/* Name (editable) */}
-              <td
-                style={{ cursor: "pointer" }}
-                onClick={() => setEditing({ id: p.id, field: "name", value: p.name })}
-              >
-                {editing?.id === p.id && editing.field === "name" ? (
-                  <input
-                    type="text"
-                    value={editing.value}
-                    onChange={(e) => setEditing({ ...editing, value: e.target.value })}
-                    onBlur={commitEdit}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") e.currentTarget.blur();
-                      if (e.key === "Escape") setEditing(null);
-                    }}
-                    autoFocus
-                  />
-                ) : (
-                  p.name
-                )}
-              </td>
-
-              {/* Position (editable) */}
-              <td
-                style={{ cursor: "pointer" }}
-                onClick={() => setEditing({ id: p.id, field: "position", value: p.position })}
-              >
-                {editing?.id === p.id && editing.field === "position" ? (
-                  <input
-                    type="text"
-                    value={editing.value}
-                    onChange={(e) => setEditing({ ...editing, value: e.target.value })}
-                    onBlur={commitEdit}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") e.currentTarget.blur();
-                      if (e.key === "Escape") setEditing(null);
-                    }}
-                    autoFocus
-                  />
-                ) : (
-                  p.position
-                )}
-              </td>
-
-              {/* Teams */}
-              <td>
-                {p.teams && p.teams.length > 0
-                  ? p.teams.map((team) => team.name).join(", ")
-                  : <span className="text-muted">No teams</span>}
-              </td>
-
-              {/* Actions (delete if superadmin) */}
-              <td>
-                {user?.role === "superadmin" ? (
-                  <button
-                    onClick={() => handleDelete(p.id)}
-                    disabled={deleting}
-                    style={{
-                      padding:      "0.25rem 0.5rem",
-                      borderRadius: "0.25rem",
-                      background:   "#dc3545",
-                      color:        "#fff",
-                      border:       "none",
-                      cursor:       "pointer",
-                      fontSize:     "0.875rem",
-                    }}
-                  >
-                    Delete
-                  </button>
-                ) : (
-                  <span className="text-muted">No permission</span>
-                )}
-                {deleteError && (
-                  <p className="error" style={{ color: "red", marginTop: "0.25rem" }}>
-                    {deleteError}
-                  </p>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div style={{ marginTop: "1.5rem" }}>
+        <Table<Player>
+          columns={columns}
+          rows={paginatedPlayers}
+          rowKey={(row) => row.id}
+        />
+      </div>
     </div>
   );
 };

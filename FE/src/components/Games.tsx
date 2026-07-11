@@ -11,6 +11,7 @@ import { Link } from "react-router-dom"
 import "../styles/Game.css"
 import SearchBar from "./Searchbar"
 import Pagination from "./Pagination"
+import FilterBar from "./ui/FilterBar"
 
 // Declare component
 const Games: React.FC = () =>
@@ -101,7 +102,7 @@ const Games: React.FC = () =>
             <div className="games-controls-wrapper">
                 <div className="games-controls-container">
                     {/* Filters Row */}
-                    <div className="games-filters-row">
+                    <FilterBar onReset={(searchQuery || seasonFilter || stageFilter) ? clearFilters : undefined}>
                         <div className="games-season-filter">
                             <label htmlFor="season-filter">Season:</label>
                             <select
@@ -139,16 +140,7 @@ const Games: React.FC = () =>
                                 ))}
                             </select>
                         </div>
-
-                        {(searchQuery || seasonFilter || stageFilter) && (
-                            <button
-                                className="clear-filters-button"
-                                onClick={clearFilters}
-                            >
-                                Clear Filters
-                            </button>
-                        )}
-                    </div>
+                    </FilterBar>
 
                     {/* Search and Pagination Row */}
                     <div className="games-search-row">

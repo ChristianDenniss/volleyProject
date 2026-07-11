@@ -1,6 +1,7 @@
 import { Application, Router } from 'express';
 import { validate } from '../../middleware/validate.js';
 import { authenticateCombined } from '../../middleware/combinedAuth.js';
+import { authorizeRoles } from '../../middleware/authorizeRoles.js';
 import { createTeamSchema, updateTeamSchema } from './teams.schema.js';
 import { TeamController } from './team.controller.js';
 
@@ -8,10 +9,10 @@ export function registerTeamRoutes(app: Application): void {
     const router = Router();
     const teamController = new TeamController();
 
-    // Team routes - PROTECTED (require authentication)
-    router.post('/', authenticateCombined, validate(createTeamSchema), teamController.createTeam);
+    // Team routes - PROTECTED (require admin/superadmin)
+    router.post('/', authenticateCombined, authorizeRoles("admin", "superadmin"), validate(createTeamSchema), teamController.createTeam);
     // Batch creation for multiple teams
-    router.post('/batch', authenticateCombined, validate(createTeamSchema), teamController.createMultipleTeams);  
+    router.post('/batch', authenticateCombined, authorizeRoles("admin", "superadmin"), validate(createTeamSchema), teamController.createMultipleTeams);
     
     // GET routes - PUBLIC (for website display)
     router.get('/', teamController.getTeams);
@@ -24,9 +25,9 @@ export function registerTeamRoutes(app: Application): void {
     router.get('/name/:name', teamController.getTeamsByName.bind(teamController));
     
     // UPDATE/DELETE routes - PROTECTED
-    router.put('/:id', authenticateCombined, validate(updateTeamSchema), teamController.updateTeam);
-    router.patch('/:id', authenticateCombined, validate(updateTeamSchema), teamController.updateTeam);
-    router.delete('/:id', authenticateCombined, teamController.deleteTeam);
+    router.put('/:id', authenticateCombined, authorizeRoles("admin", "superadmin"), validate(updateTeamSchema), teamController.updateTeam);
+    router.patch('/:id', authenticateCombined, authorizeRoles("admin", "superadmin"), validate(updateTeamSchema), teamController.updateTeam);
+    router.delete('/:id', authenticateCombined, authorizeRoles("admin", "superadmin"), teamController.deleteTeam);
 
     // Register router with prefix
     app.use('/api/teams', router);

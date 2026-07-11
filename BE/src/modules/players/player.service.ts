@@ -1,4 +1,4 @@
-import { Repository, In } from 'typeorm';
+import { Repository, In, ILike, FindOptionsWhere } from 'typeorm';
 import { AppDataSource } from '../../db/data-source.js';
 import { Players } from './player.entity.js';
 import { Teams } from '../teams/team.entity.js';
@@ -6,6 +6,11 @@ import { Stats } from '../stats/stat.entity.js';
 import { MissingFieldError } from '../../errors/MissingFieldError.js';
 import { NotFoundError } from '../../errors/NotFoundError.js';
 import { CacheableService } from '../../utils/cacheService.js';
+import { PaginationParams } from '../../utils/pagination.js';
+
+export interface PlayerFilters {
+    search?: string;
+}
 
 export class PlayerService extends CacheableService
 {
@@ -102,14 +107,23 @@ export class PlayerService extends CacheableService
     }
 
 
+    private buildWhere(filters: PlayerFilters): FindOptionsWhere<Players> {
+        const where: FindOptionsWhere<Players> = {};
+        if (filters.search) where.name = ILike(`%${filters.search}%`);
+        return where;
+    }
+
     /**
      * Get all players
      */
-    async getAllPlayers(): Promise<Players[]> 
+    async getAllPlayers(pagination: PaginationParams, filters: PlayerFilters = {}): Promise<[Players[], number]>
     {
-        return this.getCachedList('all', () =>
-            this.playerRepository.find({
+        return this.getCachedQuery('all', { ...pagination, ...filters }, () =>
+            this.playerRepository.findAndCount({
+                where: this.buildWhere(filters),
                 relations: ["teams", "teams.season", "stats", "stats.game", "stats.game.season", "stats.game.teams"], // Include game and season relations for stats
+                skip: pagination.skip,
+                take: pagination.take
             })
         );
     }
@@ -117,11 +131,14 @@ export class PlayerService extends CacheableService
     /**
      * Get all players with medium relations / minimal data
      */
-    async getMediumAllPlayers(): Promise<Players[]> 
+    async getMediumAllPlayers(pagination: PaginationParams, filters: PlayerFilters = {}): Promise<[Players[], number]>
     {
-        return this.getCachedList('medium', () =>
-            this.playerRepository.find({
+        return this.getCachedQuery('medium', { ...pagination, ...filters }, () =>
+            this.playerRepository.findAndCount({
+                where: this.buildWhere(filters),
                 relations: ["teams", "teams.season"],
+                skip: pagination.skip,
+                take: pagination.take
             })
         );
     }

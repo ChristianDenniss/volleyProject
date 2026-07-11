@@ -5,6 +5,7 @@ import { useMediumTeams }                             from "../hooks/allFetch";
 import "../styles/Teams.css";
 import SearchBar                                from "./Searchbar";
 import Pagination                               from "./Pagination";
+import FilterBar                                from "./ui/FilterBar";
 
 const Teams: React.FC = () =>
 {
@@ -156,7 +157,7 @@ const Teams: React.FC = () =>
             <div className="teams-controls-wrapper">
                 <div className="teams-controls-container">
                     {/* Filters Row */}
-                    <div className="teams-filters-row">
+                    <FilterBar onReset={(searchQuery || seasonFilter || placementFilter) ? clearFilters : undefined}>
                         <div className="teams-season-filter">
                             <label htmlFor="season-filter">Season:</label>
                             <select
@@ -194,16 +195,7 @@ const Teams: React.FC = () =>
                                 ))}
                             </select>
                         </div>
-
-                        {(searchQuery || seasonFilter || placementFilter) && (
-                            <button
-                                className="clear-filters-button"
-                                onClick={clearFilters}
-                            >
-                                Clear Filters
-                            </button>
-                        )}
-                    </div>
+                    </FilterBar>
 
                     {/* Search and Pagination Row */}
                     <div className="teams-search-row">

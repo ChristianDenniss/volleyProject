@@ -1,8 +1,11 @@
 import { Request, Response } from 'express';
-import { MatchService } from './match.service.js';
+import { MatchService, MatchFilters } from './match.service.js';
 import { MissingFieldError } from '../../errors/MissingFieldError.js';
 import { NotFoundError } from '../../errors/NotFoundError.js';
 import { CreateMatchInput, UpdateMatchInput, ImportChallongeInput } from './matches.schema.js';
+import { parsePagination, toPaginatedResult } from '../../utils/pagination.js';
+
+const MATCHES_DEFAULT_LIMIT = 10;
 
 export class MatchController {
     private matchService: MatchService;
@@ -14,8 +17,10 @@ export class MatchController {
     // Get all matches
     getAllMatches = async (req: Request, res: Response): Promise<void> => {
         try {
-            const matches = await this.matchService.getAllMatches();
-            res.json(matches);
+            const pagination = parsePagination(req.query, MATCHES_DEFAULT_LIMIT);
+            const filters = this.parseFilters(req);
+            const [data, total] = await this.matchService.getAllMatches(pagination, filters);
+            res.json(toPaginatedResult(data, total, pagination));
         } catch (error) {
             console.error("Error fetching matches:", error);
             res.status(500).json({ error: "Failed to fetch matches" });
@@ -30,8 +35,10 @@ export class MatchController {
                 throw new MissingFieldError("Season ID is required");
             }
 
-            const matches = await this.matchService.getMatchesBySeason(parseInt(seasonId));
-            res.json(matches);
+            const pagination = parsePagination(req.query, MATCHES_DEFAULT_LIMIT);
+            const filters = this.parseFilters(req);
+            const [data, total] = await this.matchService.getMatchesBySeason(parseInt(seasonId), pagination, filters);
+            res.json(toPaginatedResult(data, total, pagination));
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : "Failed to fetch matches for season";
             if (errorMessage.includes("not found")) {
@@ -51,8 +58,10 @@ export class MatchController {
                 throw new MissingFieldError("Season ID and round are required");
             }
 
-            const matches = await this.matchService.getMatchesByRound(parseInt(seasonId), round);
-            res.json(matches);
+            const pagination = parsePagination(req.query, MATCHES_DEFAULT_LIMIT);
+            const filters = this.parseFilters(req);
+            const [data, total] = await this.matchService.getMatchesByRound(parseInt(seasonId), round, pagination, filters);
+            res.json(toPaginatedResult(data, total, pagination));
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : "Failed to fetch matches for round";
             if (errorMessage.includes("not found")) {
@@ -63,6 +72,15 @@ export class MatchController {
             }
         }
     };
+
+    private parseFilters(req: Request): MatchFilters {
+        const { search, status, round } = req.query;
+        return {
+            search: typeof search === 'string' && search.length > 0 ? search : undefined,
+            status: typeof status === 'string' && status.length > 0 ? status : undefined,
+            round: typeof round === 'string' && round.length > 0 ? round : undefined,
+        };
+    }
 
     // Get match by ID
     getMatchById = async (req: Request, res: Response): Promise<void> => {

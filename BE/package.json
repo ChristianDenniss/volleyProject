@@ -13,7 +13,8 @@
     "dev": "NODE_OPTIONS=\"--loader ts-node/esm --experimental-specifier-resolution=node\" nodemon src/index.ts",
     "build": "rm -rf dist && tsc",
     "start:prod": "./start.sh",
-    "start": "NODE_OPTIONS=\"--loader ts-node/esm --experimental-specifier-resolution=node\" ts-node src/index.ts"
+    "start": "NODE_OPTIONS=\"--loader ts-node/esm --experimental-specifier-resolution=node\" ts-node src/index.ts",
+    "seed:reset-user-roles": "node --experimental-specifier-resolution=node reset-user-roles.js"
   },
   "keywords": [],
   "author": "",

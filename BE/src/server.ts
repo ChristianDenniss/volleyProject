@@ -12,6 +12,13 @@ dotenv.config();
 // Force production mode
 process.env.NODE_ENV = 'production';
 
+// Refuse to start with a missing/placeholder JWT secret - jwt.verify() falls back to
+// signing with "" otherwise, which lets anyone forge an admin token
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'your-super-secret-jwt-key-change-this-in-production') {
+  console.error('FATAL: JWT_SECRET environment variable is not set to a secure value.');
+  process.exit(1);
+}
+
 const PORT = process.env.PORT || 3000; // Default to 3000 to match docker-compose
 
 console.log("==========================================");

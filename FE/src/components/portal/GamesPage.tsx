@@ -12,6 +12,9 @@ import "../../styles/PlayersPage.css";     // custom modal styling
 import "../../styles/PortalPlayersPage.css"; // portal-specific styles
 import SearchBar from "../Searchbar";
 import Pagination from "../Pagination";
+import Modal from "../ui/Modal";
+import FilterBar from "../ui/FilterBar";
+import Table from "../ui/Table";
 
 type EditField = "name" | "seasonId" | "stage" | "team1Score" | "team2Score" | "date" | "videoUrl";
 
@@ -19,6 +22,12 @@ interface EditingState {
   id: number;
   field: EditField;
   value: string;
+}
+
+interface GameColumn {
+  key: string;
+  header: string;
+  render?: (row: Game) => React.ReactNode;
 }
 
 interface CreateGameInput {
@@ -243,6 +252,164 @@ const GamesPage: React.FC = () => {
     setCurrentPage(1);
   };
 
+  // Column definitions for the shared Table component
+  const columns: GameColumn[] = [
+    {
+      key: "name",
+      header: "Name",
+      render: (g) =>
+        editing?.id === g.id && editing?.field === "name" ? (
+          <input
+            type="text"
+            value={editing.value}
+            onChange={e => setEditing({ ...editing, value: e.target.value })}
+            onBlur={commitEdit}
+            onKeyDown={e => e.key === 'Enter' && commitEdit()}
+            autoFocus
+          />
+        ) : (
+          <span onClick={() => startEdit(g.id, "name")}>{g.name || 'No Given Name'}</span>
+        ),
+    },
+    {
+      key: "season",
+      header: "Season",
+      render: (g) =>
+        editing?.id === g.id && editing?.field === "seasonId" ? (
+          <input
+            type="number"
+            value={editing.value}
+            onChange={e => setEditing({ ...editing, value: e.target.value })}
+            onBlur={commitEdit}
+            onKeyDown={e => e.key === 'Enter' && commitEdit()}
+            autoFocus
+          />
+        ) : (
+          <span onClick={() => startEdit(g.id, "seasonId")}>{g.season.seasonNumber}</span>
+        ),
+    },
+    {
+      key: "stage",
+      header: "Stage",
+      render: (g) =>
+        editing?.id === g.id && editing?.field === "stage" ? (
+          <input
+            type="text"
+            value={editing.value}
+            onChange={e => setEditing({ ...editing, value: e.target.value })}
+            onBlur={commitEdit}
+            onKeyDown={e => e.key === 'Enter' && commitEdit()}
+            autoFocus
+          />
+        ) : (
+          <span onClick={() => startEdit(g.id, "stage")}>{g.stage}</span>
+        ),
+    },
+    {
+      key: "team1",
+      header: "Team 1",
+      render: (g) => g.teams?.[0]?.name || 'N/A',
+    },
+    {
+      key: "team2",
+      header: "Team 2",
+      render: (g) => g.teams?.[1]?.name || 'N/A',
+    },
+    {
+      key: "team1Score",
+      header: "T1 Score",
+      render: (g) =>
+        editing?.id === g.id && editing?.field === "team1Score" ? (
+          <input
+            type="number"
+            value={editing.value}
+            onChange={e => setEditing({ ...editing, value: e.target.value })}
+            onBlur={commitEdit}
+            onKeyDown={e => e.key === 'Enter' && commitEdit()}
+            autoFocus
+          />
+        ) : (
+          <span onClick={() => startEdit(g.id, "team1Score")}>{g.team1Score}</span>
+        ),
+    },
+    {
+      key: "team2Score",
+      header: "T2 Score",
+      render: (g) =>
+        editing?.id === g.id && editing?.field === "team2Score" ? (
+          <input
+            type="number"
+            value={editing.value}
+            onChange={e => setEditing({ ...editing, value: e.target.value })}
+            onBlur={commitEdit}
+            onKeyDown={e => e.key === 'Enter' && commitEdit()}
+            autoFocus
+          />
+        ) : (
+          <span onClick={() => startEdit(g.id, "team2Score")}>{g.team2Score}</span>
+        ),
+    },
+    {
+      key: "date",
+      header: "Date",
+      render: (g) =>
+        editing?.id === g.id && editing?.field === "date" ? (
+          <input
+            type="date"
+            value={editing.value}
+            onChange={e => setEditing({ ...editing, value: e.target.value })}
+            onBlur={commitEdit}
+            onKeyDown={e => e.key === 'Enter' && commitEdit()}
+            autoFocus
+          />
+        ) : (
+          <span
+            onClick={() => startEdit(g.id, "date")}
+            style={{ cursor: "pointer" }}
+          >
+            {(() => {
+              if (!g.date) return 'No Date';
+              const dateObj = new Date(g.date);
+              return isNaN(dateObj.getTime()) ? 'Invalid Date' : dateObj.toLocaleDateString();
+            })()}
+          </span>
+        ),
+    },
+    {
+      key: "videoUrl",
+      header: "Video",
+      render: (g) =>
+        editing?.id === g.id && editing?.field === "videoUrl" ? (
+          <input
+            type="text"
+            value={editing.value}
+            onChange={e => setEditing({ ...editing, value: e.target.value })}
+            onBlur={commitEdit}
+            onKeyDown={e => e.key === 'Enter' && commitEdit()}
+            autoFocus
+          />
+        ) : (
+          <span onClick={() => startEdit(g.id, "videoUrl")}>{g.videoUrl || 'N/A'}</span>
+        ),
+    },
+    {
+      key: "actions",
+      header: "Actions",
+      render: (g) =>
+        user?.role === "superadmin" ? (
+          <button
+            onClick={() => handleDelete(g.id)}
+            disabled={deleting}
+            className="game-btn-remove"
+          >
+            Delete
+          </button>
+        ) : (
+          <span style={{ color: "#666", fontStyle: "italic" }}>No permissions</span>
+        ),
+    },
+  ];
+
   if (loading) return <p>Loading games…</p>;
   if (error) return <p>Error: {error}</p>;
 
@@ -266,7 +433,7 @@ const GamesPage: React.FC = () => {
       </div>
 
       {/* Filters */}
-      <div className="filters-container">
+      <FilterBar onReset={(searchQuery || seasonFilter || stageFilter) ? clearFilters : undefined}>
         <div className="filter-group">
           <label className="filter-label">Season:</label>
           <select
@@ -298,342 +465,150 @@ const GamesPage: React.FC = () => {
             ))}
           </select>
         </div>
+      </FilterBar>
 
-        {(searchQuery || seasonFilter || stageFilter) && (
-          <button
-            className="clear-filters-button"
-            onClick={clearFilters}
-          >
-            Clear Filters
-          </button>
-        )}
-
-        <div className="results-counter">
-          Showing {((currentPage - 1) * gamesPerPage) + 1}-{Math.min(currentPage * gamesPerPage, filteredGames.length)} of {filteredGames.length} games
-        </div>
+      <div className="results-counter">
+        Showing {((currentPage - 1) * gamesPerPage) + 1}-{Math.min(currentPage * gamesPerPage, filteredGames.length)} of {filteredGames.length} games
       </div>
 
-      {/* Modal Overlay for Creating a New Game */}
-      {isModalOpen && (
-        <div
-          className="modal-overlay"
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000,
-          }}
-        >
-          <div
-            className="modal"
-            style={{
-              background: "#fff",
-              padding: "1.5rem",
-              borderRadius: "0.5rem",
-              width: "90%",
-              maxWidth: "600px",
-              boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
-            }}
+      {/* Modal for Creating a New Game */}
+      <Modal isOpen={isModalOpen} onClose={closeModal} title="New Game">
+        {formError && (
+          <p className="error" style={{ color: "red", marginBottom: "0.5rem" }}>
+            {formError}
+          </p>
+        )}
+
+        {/* Create Game Form */}
+        <form onSubmit={handleCreate}>
+          {/* Name */}
+          <label>
+            Name*
+            <input
+              type="text"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              required
+              style={{ width: "100%", marginBottom: "0.75rem" }}
+            />
+          </label>
+
+          {/* Season Number */}
+          <label>
+            Season Number*
+            <input
+              type="number"
+              value={newSeasonNumber}
+              onChange={(e) => setNewSeasonNumber(e.target.value)}
+              required
+              style={{ width: "100%", marginBottom: "0.75rem" }}
+            />
+          </label>
+
+          {/* Stage */}
+          <label>
+            Stage
+            <input
+              type="text"
+              value={newStage}
+              onChange={(e) => setNewStage(e.target.value)}
+              style={{ width: "100%", marginBottom: "0.75rem" }}
+            />
+          </label>
+
+          {/* Team 1 Name */}
+          <label>
+            Team 1 Name*
+            <input
+              type="text"
+              value={newTeam1Name}
+              onChange={(e) => setNewTeam1Name(e.target.value)}
+              required
+              style={{ width: "100%", marginBottom: "0.75rem" }}
+            />
+          </label>
+
+          {/* Team 1 Score */}
+          <label>
+            Team 1 Score
+            <input
+              type="number"
+              value={newTeam1Score}
+              onChange={(e) => setNewTeam1Score(e.target.value)}
+              style={{ width: "100%", marginBottom: "0.75rem" }}
+            />
+          </label>
+
+          {/* Team 2 Name */}
+          <label>
+            Team 2 Name*
+            <input
+              type="text"
+              value={newTeam2Name}
+              onChange={(e) => setNewTeam2Name(e.target.value)}
+              required
+              style={{ width: "100%", marginBottom: "0.75rem" }}
+            />
+          </label>
+
+          {/* Team 2 Score */}
+          <label>
+            Team 2 Score
+            <input
+              type="number"
+              value={newTeam2Score}
+              onChange={(e) => setNewTeam2Score(e.target.value)}
+              style={{ width: "100%", marginBottom: "0.75rem" }}
+            />
+          </label>
+
+          {/* Date */}
+          <label>
+            Date*
+            <input
+              type="date"
+              value={newDate}
+              onChange={(e) => setNewDate(e.target.value)}
+              required
+              style={{ width: "100%", marginBottom: "0.75rem" }}
+            />
+          </label>
+
+          {/* Video URL */}
+          <label>
+            Video URL
+            <input
+              type="text"
+              value={newVideoUrl}
+              onChange={(e) => setNewVideoUrl(e.target.value)}
+              style={{ width: "100%", marginBottom: "1rem" }}
+            />
+          </label>
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={creating}
+            className="modal-submit-button"
           >
-            {/* Close Modal Button */}
-            <button
-              onClick={closeModal}
-              style={{
-                background: "transparent",
-                border: "none",
-                fontSize: "1.25rem",
-                float: "right",
-                cursor: "pointer",
-              }}
-            >
-              ×
-            </button>
-
-            <h2 style={{ marginTop: 0 }}>New Game</h2>
-
-            {formError && (
-              <p className="error" style={{ color: "red", marginBottom: "0.5rem" }}>
-                {formError}
-              </p>
-            )}
-
-            {/* Create Game Form */}
-            <form onSubmit={handleCreate}>
-              {/* Name */}
-              <label>
-                Name*
-                <input
-                  type="text"
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  required
-                  style={{ width: "100%", marginBottom: "0.75rem" }}
-                />
-              </label>
-
-              {/* Season Number */}
-              <label>
-                Season Number*
-                <input
-                  type="number"
-                  value={newSeasonNumber}
-                  onChange={(e) => setNewSeasonNumber(e.target.value)}
-                  required
-                  style={{ width: "100%", marginBottom: "0.75rem" }}
-                />
-              </label>
-
-              {/* Stage */}
-              <label>
-                Stage
-                <input
-                  type="text"
-                  value={newStage}
-                  onChange={(e) => setNewStage(e.target.value)}
-                  style={{ width: "100%", marginBottom: "0.75rem" }}
-                />
-              </label>
-
-              {/* Team 1 Name */}
-              <label>
-                Team 1 Name*
-                <input
-                  type="text"
-                  value={newTeam1Name}
-                  onChange={(e) => setNewTeam1Name(e.target.value)}
-                  required
-                  style={{ width: "100%", marginBottom: "0.75rem" }}
-                />
-              </label>
-
-              {/* Team 1 Score */}
-              <label>
-                Team 1 Score
-                <input
-                  type="number"
-                  value={newTeam1Score}
-                  onChange={(e) => setNewTeam1Score(e.target.value)}
-                  style={{ width: "100%", marginBottom: "0.75rem" }}
-                />
-              </label>
-
-              {/* Team 2 Name */}
-              <label>
-                Team 2 Name*
-                <input
-                  type="text"
-                  value={newTeam2Name}
-                  onChange={(e) => setNewTeam2Name(e.target.value)}
-                  required
-                  style={{ width: "100%", marginBottom: "0.75rem" }}
-                />
-              </label>
-
-              {/* Team 2 Score */}
-              <label>
-                Team 2 Score
-                <input
-                  type="number"
-                  value={newTeam2Score}
-                  onChange={(e) => setNewTeam2Score(e.target.value)}
-                  style={{ width: "100%", marginBottom: "0.75rem" }}
-                />
-              </label>
-
-              {/* Date */}
-              <label>
-                Date*
-                <input
-                  type="date"
-                  value={newDate}
-                  onChange={(e) => setNewDate(e.target.value)}
-                  required
-                  style={{ width: "100%", marginBottom: "0.75rem" }}
-                />
-              </label>
-
-              {/* Video URL */}
-              <label>
-                Video URL
-                <input
-                  type="text"
-                  value={newVideoUrl}
-                  onChange={(e) => setNewVideoUrl(e.target.value)}
-                  style={{ width: "100%", marginBottom: "1rem" }}
-                />
-              </label>
-
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={creating}
-                className="modal-submit-button"
-              >
-                {creating ? "Creating…" : "Submit"}
-              </button>
-              {createError && (
-                <p className="error" style={{ color: "red", marginTop: "0.5rem" }}>
-                  {createError}
-                </p>
-              )}
-            </form>
-          </div>
-        </div>
-      )}
+            {creating ? "Creating…" : "Submit"}
+          </button>
+          {createError && (
+            <p className="error" style={{ color: "red", marginTop: "0.5rem" }}>
+              {createError}
+            </p>
+          )}
+        </form>
+      </Modal>
 
       {/* Games Table */}
-      <table className="users-table" style={{ marginTop: "1.5rem" }}>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Season</th>
-            <th>Stage</th>
-            <th>Team 1</th>
-            <th>Team 2</th>
-            <th>T1 Score</th>
-            <th>T2 Score</th>
-            <th>Date</th>
-            <th>Video</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {paginatedGames.map((g) => {
-            return (
-              <tr key={g.id}>
-                <td>
-                  {editing?.id === g.id && editing?.field === "name" ? (
-                    <input
-                      type="text"
-                      value={editing.value}
-                      onChange={e => setEditing({ ...editing, value: e.target.value })}
-                      onBlur={commitEdit}
-                      onKeyDown={e => e.key === 'Enter' && commitEdit()}
-                      autoFocus
-                    />
-                  ) : (
-                    <span onClick={() => startEdit(g.id, "name")}>{g.name || 'No Given Name'}</span>
-                  )}
-                </td>
-                <td>
-                  {editing?.id === g.id && editing?.field === "seasonId" ? (
-                    <input
-                      type="number"
-                      value={editing.value}
-                      onChange={e => setEditing({ ...editing, value: e.target.value })}
-                      onBlur={commitEdit}
-                      onKeyDown={e => e.key === 'Enter' && commitEdit()}
-                      autoFocus
-                    />
-                  ) : (
-                    <span onClick={() => startEdit(g.id, "seasonId")}>{g.season.seasonNumber}</span>
-                  )}
-                </td>
-                <td>
-                  {editing?.id === g.id && editing?.field === "stage" ? (
-                    <input
-                      type="text"
-                      value={editing.value}
-                      onChange={e => setEditing({ ...editing, value: e.target.value })}
-                      onBlur={commitEdit}
-                      onKeyDown={e => e.key === 'Enter' && commitEdit()}
-                      autoFocus
-                    />
-                  ) : (
-                    <span onClick={() => startEdit(g.id, "stage")}>{g.stage}</span>
-                  )}
-                </td>
-                <td>{g.teams?.[0]?.name || 'N/A'}</td>
-                <td>{g.teams?.[1]?.name || 'N/A'}</td>
-                <td>
-                  {editing?.id === g.id && editing?.field === "team1Score" ? (
-                    <input
-                      type="number"
-                      value={editing.value}
-                      onChange={e => setEditing({ ...editing, value: e.target.value })}
-                      onBlur={commitEdit}
-                      onKeyDown={e => e.key === 'Enter' && commitEdit()}
-                      autoFocus
-                    />
-                  ) : (
-                    <span onClick={() => startEdit(g.id, "team1Score")}>{g.team1Score}</span>
-                  )}
-                </td>
-                <td>
-                  {editing?.id === g.id && editing?.field === "team2Score" ? (
-                    <input
-                      type="number"
-                      value={editing.value}
-                      onChange={e => setEditing({ ...editing, value: e.target.value })}
-                      onBlur={commitEdit}
-                      onKeyDown={e => e.key === 'Enter' && commitEdit()}
-                      autoFocus
-                    />
-                  ) : (
-                    <span onClick={() => startEdit(g.id, "team2Score")}>{g.team2Score}</span>
-                  )}
-                </td>
-                <td>
-                  {editing?.id === g.id && editing?.field === "date" ? (
-                    <input
-                      type="date"
-                      value={editing.value}
-                      onChange={e => setEditing({ ...editing, value: e.target.value })}
-                      onBlur={commitEdit}
-                      onKeyDown={e => e.key === 'Enter' && commitEdit()}
-                      autoFocus
-                    />
-                  ) : (
-                    <span 
-                      onClick={() => startEdit(g.id, "date")}
-                      style={{ cursor: "pointer" }}
-                    >
-                      {(() => {
-                        if (!g.date) return 'No Date';
-                        const dateObj = new Date(g.date);
-                        return isNaN(dateObj.getTime()) ? 'Invalid Date' : dateObj.toLocaleDateString();
-                      })()}
-                    </span>
-                  )}
-                </td>
-                <td>
-                  {editing?.id === g.id && editing?.field === "videoUrl" ? (
-                    <input
-                      type="text"
-                      value={editing.value}
-                      onChange={e => setEditing({ ...editing, value: e.target.value })}
-                      onBlur={commitEdit}
-                      onKeyDown={e => e.key === 'Enter' && commitEdit()}
-                      autoFocus
-                    />
-                  ) : (
-                    <span onClick={() => startEdit(g.id, "videoUrl")}>{g.videoUrl || 'N/A'}</span>
-                  )}
-                </td>
-                <td>
-                  {user?.role === "superadmin" ? (
-                    <button
-                      onClick={() => handleDelete(g.id)}
-                      disabled={deleting}
-                      className="game-btn-remove"
-                    >
-                      Delete
-                    </button>
-                  ) : (
-                    <span style={{ color: "#666", fontStyle: "italic" }}>No permissions</span>
-                  )}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+      <div className="users-table" style={{ marginTop: "1.5rem" }}>
+        <Table
+          columns={columns as any}
+          rows={paginatedGames as unknown as Record<string, unknown>[]}
+          rowKey={(row) => (row as unknown as Game).id}
+        />
+      </div>
     </div>
   );
 };

@@ -5,6 +5,8 @@ import type { User } from "../../types/interfaces";
 import { useUsers } from "../../hooks/useUsers";
 import SearchBar from "../Searchbar";
 import Pagination from "../Pagination";
+import FilterBar from "../ui/FilterBar";
+import Table from "../ui/Table";
 import "../../styles/UsersPage.css";
 
 const UsersPage: React.FC = () => {
@@ -76,6 +78,83 @@ const UsersPage: React.FC = () => {
 
   const ALL_ROLES: User["role"][] = ["user", "admin", "superadmin"];
 
+  // Table requires rows to satisfy Record<string, unknown>; User has no index
+  // signature, so widen locally for the shared Table component's generic.
+  type UserRow = User & Record<string, unknown>;
+
+  const columns = [
+    {
+      key: "id",
+      header: "ID",
+      render: (u: UserRow) => u.id,
+    },
+    {
+      key: "username",
+      header: "Name",
+      render: (u: UserRow) => u.username,
+    },
+    {
+      key: "role",
+      header: "Role",
+      render: (u: UserRow) => u.role,
+    },
+    {
+      key: "actions",
+      header: "Actions",
+      render: (u: UserRow) => {
+        // 1) If this is the current user:
+        if (u.id === me?.id) {
+          return <span className="text-muted">This is you</span>;
+        }
+
+        // 2) If same role as current user:
+        if (u.role === me?.role) {
+          return (
+            <span className="text-muted">
+              Cannot moderate player of same role
+            </span>
+          );
+        }
+
+        // 3) Otherwise, render dropdown of promotable roles:
+        const options = ALL_ROLES.filter(
+          (r) => u.role !== r && canPromote(u, r)
+        );
+
+        if (options.length === 0) {
+          return <span className="text-muted">No actions available</span>;
+        }
+
+        return (
+          <select
+            defaultValue=""
+            onChange={(e) => {
+              const newRole = e.target.value as User["role"];
+              if (
+                newRole &&
+                window.confirm(
+                  `Are you sure you want to change ${u.username}'s role to "${newRole}"?`
+                )
+              ) {
+                changeRole(u.id, newRole);
+              }
+              e.currentTarget.value = "";
+            }}
+          >
+            <option value="" disabled hidden>
+              Change role…
+            </option>
+            {options.map((r) => (
+              <option key={r} value={r}>
+                {r}
+              </option>
+            ))}
+          </select>
+        );
+      },
+    },
+  ];
+
   if (loading) return <p>Loading users…</p>;
   if (error)   return <p>Error: {error}</p>;
 
@@ -96,7 +175,7 @@ const UsersPage: React.FC = () => {
       </div>
 
       {/* Filters */}
-      <div className="filters-container">
+      <FilterBar onReset={clearFilters}>
         <div className="filter-group">
           <label className="filter-label">Role:</label>
           <select
@@ -112,107 +191,13 @@ const UsersPage: React.FC = () => {
             ))}
           </select>
         </div>
+      </FilterBar>
 
-        {(searchQuery || roleFilter) && (
-          <button
-            className="clear-filters-button"
-            onClick={clearFilters}
-          >
-            Clear Filters
-          </button>
-        )}
-
-        <div className="results-counter">
-          Showing {((currentPage - 1) * usersPerPage) + 1}-{Math.min(currentPage * usersPerPage, filteredUsers.length)} of {filteredUsers.length} users
-        </div>
+      <div className="results-counter">
+        Showing {((currentPage - 1) * usersPerPage) + 1}-{Math.min(currentPage * usersPerPage, filteredUsers.length)} of {filteredUsers.length} users
       </div>
 
-      <table className="users-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Role</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {paginatedUsers.map((u) => {
-            // 1) If this is the current user:
-            if (u.id === me?.id) {
-              return (
-                <tr key={u.id}>
-                  <td>{u.id}</td>
-                  <td>{u.username}</td>
-                  <td>{u.role}</td>
-                  <td>
-                    <span className="text-muted">This is you</span>
-                  </td>
-                </tr>
-              );
-            }
-
-            // 2) If same role as current user:
-            if (u.role === me?.role) {
-              return (
-                <tr key={u.id}>
-                  <td>{u.id}</td>
-                  <td>{u.username}</td>
-                  <td>{u.role}</td>
-                  <td>
-                    <span className="text-muted">
-                      Cannot moderate player of same role
-                    </span>
-                  </td>
-                </tr>
-              );
-            }
-
-            // 3) Otherwise, render dropdown of promotable roles:
-            const options = ALL_ROLES.filter(
-              (r) => u.role !== r && canPromote(u, r)
-            );
-
-            return (
-              <tr key={u.id}>
-                <td>{u.id}</td>
-                <td>{u.username}</td>
-                <td>{u.role}</td>
-                <td>
-                  {options.length > 0 ? (
-                    <select
-                      defaultValue=""
-                      onChange={(e) => {
-                        const newRole = e.target.value as User["role"];
-                        if (
-                          newRole &&
-                          window.confirm(
-                            `Are you sure you want to change ${u.username}'s role to "${newRole}"?`
-                          )
-                        ) {
-                          changeRole(u.id, newRole);
-                        }
-                        e.currentTarget.value = "";
-                      }}
-                    >
-                      <option value="" disabled hidden>
-                        Change role…
-                      </option>
-                      {options.map((r) => (
-                        <option key={r} value={r}>
-                          {r}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <span className="text-muted">No actions available</span>
-                  )}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+      <Table columns={columns} rows={paginatedUsers as UserRow[]} rowKey={(row) => row.id} />
     </div>
   );
 };

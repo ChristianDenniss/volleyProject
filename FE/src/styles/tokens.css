@@ -1,0 +1,64 @@
+/* Shared design tokens — colors, spacing, type, radius, shadow.
+   Imported once in main.tsx before any page CSS. Do not redeclare these
+   names in per-page CSS files; add new tokens here instead. */
+:root {
+  /* Brand colors */
+  --color-brand-primary: #2D3C50;
+  --color-brand-primary-hover: #2a4a7d;
+
+  /* Accent (distinct from brand-primary, not a duplicate) */
+  --color-accent: #a1d2ff;
+  --color-accent-dark: #85c4ff;
+
+  /* Neutrals / surfaces */
+  --color-bg: #ffffff;
+  --color-bg-light: #F5F7FA;
+  --color-text: #333333;
+  --color-text-muted: #5d6673;
+  --color-text-muted-alt: #6b7280;
+  --color-border: #e2e8f0;
+  --color-overlay: rgba(0, 0, 0, 0.5);
+  --color-error: #dc2626;
+  --color-error-bg: #fef2f2;
+  --color-error-border: #fecaca;
+
+  /* Radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  /* Shadow */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-modal: 0 20px 60px rgba(0, 0, 0, 0.3);
+
+  /* Fixed spacing / type scale */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.25rem;
+  --font-size-xl: 1.5rem;
+  --font-size-2xl: 2rem;
+  --font-size-3xl: 2.5rem;
+
+  /* Fluid tokens — scale smoothly between ~320px and ~1440px viewports
+     instead of snapping at a single breakpoint */
+  --space-page: clamp(1rem, 0.6rem + 2vw, 2rem);
+  --space-section: clamp(0.75rem, 0.5rem + 1.2vw, 1.5rem);
+  --font-size-page-title: clamp(1.75rem, 1.4rem + 1.75vw, 2.5rem);
+
+  /* Standardized breakpoint scale (documentation — @media can't consume
+     custom properties, so every @media in the codebase should use one of
+     these literal values rather than inventing a new one) */
+  --bp-xs: 480px;
+  --bp-sm: 600px;
+  --bp-md: 768px;
+  --bp-lg: 900px;
+  --bp-xl: 1200px;
+}

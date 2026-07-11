@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import "../styles/Players.css";
 import SearchBar from "./Searchbar";
 import Pagination from "./Pagination";
+import FilterBar from "./ui/FilterBar";
 
 const Players: React.FC = () => {
   const { data, error } = useMediumPlayers();
@@ -89,7 +90,7 @@ const Players: React.FC = () => {
       <div className="players-controls-wrapper">
         <div className="players-controls-container">
           {/* Filters Row */}
-          <div className="players-filters-row">
+          <FilterBar onReset={clearFilters}>
             <div className="players-season-filter">
               <label htmlFor="season-filter">Season:</label>
               <select
@@ -127,16 +128,7 @@ const Players: React.FC = () => {
                 ))}
               </select>
             </div>
-
-            {(searchQuery || seasonFilter || positionFilter) && (
-              <button
-                className="clear-filters-button"
-                onClick={clearFilters}
-              >
-                Clear Filters
-              </button>
-            )}
-          </div>
+          </FilterBar>
 
           {/* Search and Pagination Row */}
           <div className="players-search-row">
