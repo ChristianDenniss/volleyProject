@@ -803,7 +803,7 @@ const VectorGraphPage: React.FC = () => {
     return buildSeasonVectors(players, selectedSeasonNumber, minSetsPlayed);
   }, [players, selectedSeasonNumber, minSetsPlayed]);
 
-  if (playersLoading || seasonsLoading) {
+  if (playersLoading || seasonsLoading || selectedSeasonNumber === null) {
     return (
       <div className="vector-graph-page">
         <div className="loading-container">

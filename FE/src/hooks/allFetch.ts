@@ -17,12 +17,10 @@ interface SeasonListParams extends Partial<PaginationParams>, RegionListParams {
 interface RecordListParams extends Partial<PaginationParams>, RegionListParams {}
 
 export const usePlayers = (params: PlayerListParams = DEFAULT_PAGINATION) => usePaginatedFetch<Player>("players", params);
-export const useTeams = (params: TeamListParams = DEFAULT_PAGINATION) => usePaginatedFetch<Team>("teams", params);
 export const useSeasons = (params: SeasonListParams = DEFAULT_PAGINATION) => usePaginatedFetch<Season>("seasons", params);
 export const useGames = (params: GameListParams = DEFAULT_PAGINATION) => usePaginatedFetch<Game>("games", params);
 export const useStats = (params: StatListParams = DEFAULT_PAGINATION) => usePaginatedFetch<Stats>("stats", params);
 export const useArticles = (params: PaginationParams = DEFAULT_PAGINATION) => usePaginatedFetch<Article>("articles", params);
-export const useAwards = (params: AwardListParams = DEFAULT_PAGINATION) => usePaginatedFetch<Award>("awards", params);
 
 export const useRecords = (params: RecordListParams = DEFAULT_PAGINATION) => {
     const [refreshTrigger, setRefreshTrigger] = useState<number>(0);

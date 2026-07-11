@@ -158,15 +158,7 @@ interface User
   role: Role; 
 }
 
-interface PublicInterface 
-{
-  id: number,
-  username: string,
-  articles?: Article[];
-  role: Role
-}
-
-interface Records 
+interface Records
 {
   id: number;
   record: string;
@@ -208,7 +200,7 @@ interface Application {
   updatedAt?: string;
 }
 
-export type { Game, Player, Stats, Team, Season, Article, User, Award, Records, AuthContextType, PublicInterface, Role, Application, Region };
+export type { Game, Player, Stats, Team, Season, Article, User, Award, Records, AuthContextType, Role, Application, Region };
 
 export interface PaginatedResponse<T> {
   data: T[];

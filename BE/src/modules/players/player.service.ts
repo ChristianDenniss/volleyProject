@@ -102,7 +102,6 @@ export class PlayerService extends CacheableService
 
         // Extract and return the team names or IDs
         const teamNames = player.teams.map(team => team.name); // If you want names
-        // const teamIds = player.teams.map(team => team.id); // If you want IDs
 
         return teamNames; // or return teamIds for IDs
     }

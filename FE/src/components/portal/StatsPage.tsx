@@ -71,7 +71,7 @@ const StatsPage: React.FC = () =>
         limit: STATS_PER_PAGE,
         search: searchQuery || undefined,
     });
-    const { data: players } = usePlayers({ page: 1, limit: 100 });
+    const { data: players, loading: playersLoading } = usePlayers({ page: 1, limit: 100 });
 
     // Destructure mutation functions for patching stats
     const { patchStats }                 = useStatsMutations();
@@ -188,7 +188,7 @@ const StatsPage: React.FC = () =>
     // Initialize localStats when data is fetched
     useEffect(() =>
     {
-        setLocalStats(stats);
+        setLocalStats(stats ?? []);
     }, [stats]);
 
     // Handle search
@@ -840,7 +840,7 @@ const StatsPage: React.FC = () =>
                                     onChange={(e) => setNewPlayerName(e.target.value)}
                                     required
                                 >
-                                    <option value="">Select a player</option>
+                                    <option value="">{playersLoading ? "Loading players..." : "Select a player"}</option>
                                     {players?.map((player) => (
                                         <option key={player.id} value={player.name}>
                                             {player.name}

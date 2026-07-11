@@ -37,10 +37,16 @@ export const errorHandler = (err: Error, req: Request, res: Response, next: Next
 
     const statusCode = errorCodeMapping[err.constructor.name] || 500;
 
-    const response = {
+    const response: Record<string, unknown> = {
         error: err.message,
         stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
     };
+
+    if (err instanceof BadRequestError && err.errors)
+    {
+        response.message = err.message;
+        response.errors = err.errors;
+    }
 
     res.status(statusCode).json(response);
 };

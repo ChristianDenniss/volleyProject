@@ -1,4 +1,4 @@
-// src/hooks/useMutations.ts
+// src/hooks/allPatch.ts
 import { useCallback } from "react";
 import { usePatch } from "./usePatch";
 import { authFetch } from "./authFetch";
@@ -6,7 +6,6 @@ import { useAuth } from "../context/authContext";
 
 import type {
   Season,
-  User,
   Player,
   Team,
   Article,
@@ -25,15 +24,6 @@ const backendUrl =
 export function useSeasonMutations() {
   const { patch: patchSeason } = usePatch<Season>("seasons");
   return { patchSeason };
-}
-
-/**
- * Hook returning a `patchUser` fn for updating users.
- * Adjust the resource path if your endpoint is under `/api/admin/users`.
- */
-export function useUserMutations() {
-  const { patch: patchUser } = usePatch<User>("users");
-  return { patchUser };
 }
 
 /**

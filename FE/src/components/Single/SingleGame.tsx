@@ -13,6 +13,9 @@ import { useSingleGames } from "../../hooks/allFetch"
 // Import React-Router helper
 import { useParams } from "react-router-dom"
 
+// Import safe-URL check to guard external links
+import { isSafeExternalUrl } from "../../utils/url"
+
 // Import styles
 import "../../styles/SingleGame.css"
 
@@ -247,7 +250,7 @@ const SingleGame: React.FC = () =>
                                         <i className="fas fa-volleyball-ball"></i> Total Sets Played {totalSets}
                                     </p>
                                     {
-                                        game.videoUrl
+                                        isSafeExternalUrl(game.videoUrl)
                                         ? <p className="game-video">
                                             <i className="fas fa-video"></i> Video: <a href={game.videoUrl} target="_blank" rel="noopener noreferrer">Watch Here</a>
                                         </p>

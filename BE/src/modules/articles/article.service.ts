@@ -55,6 +55,7 @@ export class ArticleService {
     async getAllArticles(pagination: PaginationParams): Promise<[Article[], number]> {
         return this.articleRepository.findAndCount({
             relations: ["author"],  // Including the author in the response
+            select: { id: true, title: true, summary: true, content: true, imageUrl: true, createdAt: true, updatedAt: true, approved: true, likes: true, author: { id: true, username: true, role: true } },
             skip: pagination.skip,
             take: pagination.take
         });
@@ -69,6 +70,7 @@ export class ArticleService {
         const article = await this.articleRepository.findOne({
             where: { id },
             relations: ["author"],  // Including author in response
+            select: { id: true, title: true, summary: true, content: true, imageUrl: true, createdAt: true, updatedAt: true, approved: true, likes: true, author: { id: true, username: true, role: true } },
         });
 
         if (!article) throw new NotFoundError(`Article with ID ${id} not found`);
@@ -141,6 +143,7 @@ export class ArticleService {
         return this.articleRepository.findAndCount({
             where: { author: { id: userId } },
             relations: ["author"],  // Including author in response
+            select: { id: true, title: true, summary: true, content: true, imageUrl: true, createdAt: true, updatedAt: true, approved: true, likes: true, author: { id: true, username: true, role: true } },
             skip: pagination.skip,
             take: pagination.take
         });
@@ -155,6 +158,7 @@ export class ArticleService {
         const article = await this.articleRepository.findOne({
             where: { id },
             relations: ["author", "likedBy"],  // Include likedBy relation
+            select: { id: true, title: true, summary: true, content: true, imageUrl: true, createdAt: true, updatedAt: true, approved: true, likes: true, author: { id: true, username: true, role: true }, likedBy: { id: true, username: true } },
         });
 
         if (!article) throw new NotFoundError(`Article with ID ${id} not found`);
@@ -192,6 +196,7 @@ export class ArticleService {
         const article = await this.articleRepository.findOne({
             where: { id },
             relations: ["author", "likedBy"],  // Include likedBy relation
+            select: { id: true, title: true, summary: true, content: true, imageUrl: true, createdAt: true, updatedAt: true, approved: true, likes: true, author: { id: true, username: true, role: true }, likedBy: { id: true, username: true } },
         });
 
         if (!article) throw new NotFoundError(`Article with ID ${id} not found`);

@@ -225,7 +225,7 @@ const AdvancedFilter: React.FC<{
 const StatsLeaderboard: React.FC = () => {
   // The leaderboard needs the full roster in one page to search/sort/filter client-side;
   // the default 100-player limit was silently truncating rosters once they grew past it.
-  const { data: players, error } = usePlayers({ limit: 1000 });
+  const { data: players, loading, error } = usePlayers({ limit: 1000 });
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedSeason, setSelectedSeason] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -924,7 +924,7 @@ const StatsLeaderboard: React.FC = () => {
   ]);
 
   return (
-    <div className={`stats-leaderboard-page ${!players ? 'loading' : ''}`}>
+    <div className={`stats-leaderboard-page ${loading ? 'loading' : ''}`}>
       {/* Records Navigation */}
       <div style={{ textAlign: 'right', margin: 0 }}>
         <button 
@@ -1051,7 +1051,7 @@ const StatsLeaderboard: React.FC = () => {
 
       {error ? (
         <div>Error: {error}</div>
-      ) : !players ? (
+      ) : loading ? (
         <div className="stats-table-wrapper">
           <div className="stats-skeleton-table">
             {/* Skeleton loaders for table */}

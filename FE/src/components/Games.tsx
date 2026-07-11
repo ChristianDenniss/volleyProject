@@ -45,7 +45,7 @@ const gameColumns: TableColumn<Game>[] = [
 
 const Games: React.FC = () => {
   const { regionQuery } = useRegion()
-  const { data, error } = useSkinnyGames({ status: 'completed', limit: 500, page: 1, ...regionQuery })
+  const { data, loading, error } = useSkinnyGames({ status: 'completed', limit: 500, page: 1, ...regionQuery })
   const navigate = useNavigate()
 
   const [searchQuery, setSearchQuery] = useState<string>("")
@@ -95,7 +95,7 @@ const Games: React.FC = () => {
   }
 
   return (
-    <div className={`games-page ${!data ? "loading" : ""}`}>
+    <div className={`games-page ${loading ? "loading" : ""}`}>
       <div className="listing-controls-toolbar">
           <FilterBar onReset={(searchQuery || seasonFilter || stageFilter) ? clearFilters : undefined}>
             <div className="games-season-filter">
@@ -154,7 +154,7 @@ const Games: React.FC = () => {
         <div>Error: {error}</div>
       ) : (
         <div className="listing-content-wrapper">
-          {!data ? (
+          {loading ? (
             <div className="listing-table-wrapper">
               <div className="listing-skeleton-table">
                 {Array.from({ length: 20 }).map((_, index) => (

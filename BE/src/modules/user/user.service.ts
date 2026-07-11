@@ -142,7 +142,10 @@ export class UserService {
     async changePassword(userId: number, currentPassword: string, newPassword: string): Promise<{ user: User; token: string }> {
         validatePasswordStrength(newPassword);
 
-        const user = await this.userRepository.findOne({ where: { id: userId } });
+        const user = await this.userRepository.findOne({
+            where: { id: userId },
+            select: ["id", "username", "email", "password", "role", "tokenVersion", "createdAt", "updatedAt"],
+        });
 
         if (!user) {
             throw new NotFoundError("User not found");

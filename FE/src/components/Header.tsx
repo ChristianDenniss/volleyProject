@@ -5,7 +5,6 @@ import { useAuth } from "../context/authContext";
 import "../styles/Header.css";
 import rvlLogo from "../images/rvlLogo.png";  
 // import blueTexture from "../images/blue_texture_strip.png";  
-import RegionSwitcher from "./RegionSwitcher";
 import pfp from "../images/pfpLogo.png";  
 
 const Header: React.FC = () =>
@@ -49,7 +48,6 @@ const Header: React.FC = () =>
             </div>
 
             <div className="right-section">
-                <RegionSwitcher />
                 {isAuthenticated ? (
                     // when logged in, show username and avatar
                     <div className="profile-info">

@@ -1,12 +1,12 @@
 const SENSITIVE_KEYS = new Set([
     "password",
-    "currentPassword",
-    "newPassword",
-    "confirmPassword",
+    "currentpassword",
+    "newpassword",
+    "confirmpassword",
     "token",
     "authorization",
     "api_key",
-    "apiKey",
+    "apikey",
     "secret",
 ]);
 

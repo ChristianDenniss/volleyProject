@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { REGION_CODES } from '../regions/region.entity.js';
+import { httpUrlSchema } from '../../utils/urlSchema.js';
 
 export const gamePhaseSchema = z.enum(['qualifiers', 'playoffs', 'pre_season']);
 export const gameBracketSchema = z.enum(['winners', 'losers']).nullable().optional();
@@ -13,7 +14,7 @@ export const createGameSchema = z.object({
     team1Score: z.number().int().min(0).nullable().optional(),
     team2Score: z.number().int().min(0).nullable().optional(),
     stats: z.array(z.number().int().positive().optional()).optional(),
-    videoUrl: z.string().optional(),
+    videoUrl: z.union([httpUrlSchema, z.literal(""), z.null()]).optional(),
     stage: z.string().min(1, { message: "stage is required" }),
     status: z.enum(['scheduled', 'completed']).optional(),
     phase: gamePhaseSchema.optional(),
@@ -29,7 +30,7 @@ export const updateGameSchema = z.object({
     team1Score: z.number().int().min(0).nullable().optional(),
     team2Score: z.number().int().min(0).nullable().optional(),
     date: z.coerce.date().optional(),
-    videoUrl: z.string().optional(),
+    videoUrl: z.union([httpUrlSchema, z.literal(""), z.null()]).optional(),
     stage: z.string().optional(),
     status: z.enum(['scheduled', 'completed']).optional(),
     phase: gamePhaseSchema.optional(),

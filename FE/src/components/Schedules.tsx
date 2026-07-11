@@ -6,13 +6,14 @@ import SearchBar from './Searchbar';
 import CalendarModal from './CalendarModal';
 import FilterBar from './ui/FilterBar';
 import { formatGameStage } from '../utils/gameLabels';
+import { isSafeExternalUrl } from '../utils/url';
 import { useRegion } from '../context/regionContext';
 import '../styles/Schedules.css';
 
 const Schedules: React.FC = () => {
   const navigate = useNavigate();
   const { regionQuery } = useRegion();
-  const { data: seasons } = useSeasons(regionQuery);
+  const { data: seasons, loading: seasonsLoading } = useSeasons(regionQuery);
   const [selectedSeason, setSelectedSeason] = useState<number | undefined>();
   const [selectedStage, setSelectedStage] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -22,15 +23,6 @@ const Schedules: React.FC = () => {
   const [isCalendarOpen, setIsCalendarOpen] = useState<boolean>(false);
 
   // Don't auto-select any season - let user choose or show all
-  // useEffect(() => {
-  //   if (seasons && seasons.length > 0 && !selectedSeason) {
-  //     const mostRecentSeason = seasons.reduce((prev, current) => 
-  //       (current.seasonNumber > prev.seasonNumber) ? current : prev
-  //     );
-  //     setSelectedSeason(mostRecentSeason.id);
-  //   }
-  // }, [seasons, selectedSeason]);
-
   const [selectedPhase, setSelectedPhase] = useState<string>('');
   const [selectedTag, setSelectedTag] = useState<string>('');
 
@@ -242,7 +234,7 @@ const Schedules: React.FC = () => {
               setSelectedSeason(e.target.value ? parseInt(e.target.value) : undefined);
             }}
           >
-            <option value="">All Seasons</option>
+            <option value="">{seasonsLoading ? "Loading seasons..." : "All Seasons"}</option>
             {seasons?.map(season => (
               <option key={season.id} value={season.id}>
                 Season {season.seasonNumber}
@@ -480,7 +472,7 @@ const Schedules: React.FC = () => {
                               </span>
                             </div>
                             <div className="match-actions" onClick={stopCardNavigation}>
-                              {game.videoUrl ? (
+                              {isSafeExternalUrl(game.videoUrl) ? (
                                 <a href={game.videoUrl} className="action-button watch" target="_blank" rel="noreferrer">WATCH</a>
                               ) : (
                                 <button type="button" className="action-button watch" disabled>WATCH</button>

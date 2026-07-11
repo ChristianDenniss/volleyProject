@@ -71,7 +71,7 @@ const TeamsPage: React.FC = () => {
     seasonId: seasonFilter || undefined,
     ...regionQuery,
   });
-  const { data: seasons } = useSkinnySeasons({ page: 1, limit: 100, ...regionQuery });
+  const { data: seasons, loading: seasonsLoading } = useSkinnySeasons({ page: 1, limit: 100, ...regionQuery });
   const { patchTeam } = useTeamMutations();
   const { createTeam, loading: creating, error: createError } = useCreateTeams();
   const { deleteItem: deleteTeam, loading: deleting, error: deleteError } = useDeleteTeams();
@@ -89,7 +89,7 @@ const TeamsPage: React.FC = () => {
   const [formError, setFormError] = useState<string>("");
 
   useEffect(() => {
-    setLocalTeams(teams);
+    setLocalTeams(teams ?? []);
   }, [teams]);
 
   // Season filter options come from the full seasons list, not just this page's teams
@@ -410,7 +410,7 @@ const TeamsPage: React.FC = () => {
             value={seasonFilter}
             onChange={(e) => handleSeasonFilterChange(e.target.value)}
           >
-            <option value="">All Seasons</option>
+            <option value="">{seasonsLoading ? "Loading seasons..." : "All Seasons"}</option>
             {uniqueSeasons.map(season => (
               <option key={season} value={season.toString()}>
                 Season {season}
@@ -450,7 +450,7 @@ const TeamsPage: React.FC = () => {
               onChange={(e) => setNewSeasonNumber(Number(e.target.value))}
               required
             >
-              <option value="">Select a Season</option>
+              <option value="">{seasonsLoading ? "Loading seasons..." : "Select a Season"}</option>
               {seasons?.map((season) => (
                 <option key={season.id} value={season.seasonNumber}>
                   Season {season.seasonNumber}

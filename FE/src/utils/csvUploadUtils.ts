@@ -1,4 +1,4 @@
-import { parseCSV, generateCSVTemplate } from './csvParser';
+import { parseCSV } from './csvParser';
 
 export const handleFileUpload = (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -35,16 +35,3 @@ export const handleFileUpload = (
     };
     reader.readAsText(file);
 };
-
-export const downloadTemplate = () => {
-    const template = generateCSVTemplate();
-    const blob = new Blob([template], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'stats_template.csv';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
-}; 

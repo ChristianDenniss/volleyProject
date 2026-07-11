@@ -38,20 +38,7 @@ export const useDeleteGames = () => {
   return useDelete("games");
 };
 
-/**
- * Hook to delete an article by ID:
- *   const { deleteItem, loading, error } = useDeleteArticles();
- *   await deleteItem("3");
- */
-export const useDeleteArticles = () => {
-  return useDelete("articles");
-};
-
-export const useDeleteUsers = () => {
-    return useDelete("users");
-  };
-
-  export const useDeleteStats = () => {
+export const useDeleteStats = () => {
     return useDelete("stats");
   };
 

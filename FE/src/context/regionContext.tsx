@@ -1,5 +1,4 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
 
 export type RegionCode = "na" | "eu" | "as";
 
@@ -19,22 +18,21 @@ interface RegionContextType {
 }
 
 const RegionContext = createContext<RegionContextType | undefined>(undefined);
-const STORAGE_KEY = "rvl-active-region";
 const DEFAULT_REGION_CODE: RegionCode = "na";
 
 export const RegionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [searchParams, setSearchParams] = useSearchParams();
   const [regions, setRegions] = useState<Region[]>([]);
   const [loading, setLoading] = useState(true);
-
-  const urlRegion = searchParams.get("region")?.toLowerCase() as RegionCode | null;
+  const [selectedCode, setSelectedCode] = useState<RegionCode>(DEFAULT_REGION_CODE);
 
   const activeRegion = useMemo(() => {
     if (!regions.length) return null;
-    const stored = (localStorage.getItem(STORAGE_KEY) ?? DEFAULT_REGION_CODE) as RegionCode;
-    const code = urlRegion ?? stored ?? DEFAULT_REGION_CODE;
-    return regions.find((r) => r.code === code) ?? regions[0];
-  }, [regions, urlRegion]);
+    return (
+      regions.find((r) => r.code === selectedCode) ??
+      regions.find((r) => r.code === DEFAULT_REGION_CODE) ??
+      regions[0]
+    );
+  }, [regions, selectedCode]);
 
   useEffect(() => {
     const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
@@ -45,25 +43,9 @@ export const RegionProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       .finally(() => setLoading(false));
   }, []);
 
-  useEffect(() => {
-    if (!activeRegion) return;
-    localStorage.setItem(STORAGE_KEY, activeRegion.code);
-    if (urlRegion !== activeRegion.code) {
-      const next = new URLSearchParams(searchParams);
-      next.set("region", activeRegion.code);
-      setSearchParams(next, { replace: true });
-    }
-  }, [activeRegion, urlRegion, searchParams, setSearchParams]);
-
-  const setActiveRegion = useCallback(
-    (region: Region) => {
-      localStorage.setItem(STORAGE_KEY, region.code);
-      const next = new URLSearchParams(searchParams);
-      next.set("region", region.code);
-      setSearchParams(next, { replace: true });
-    },
-    [searchParams, setSearchParams]
-  );
+  const setActiveRegion = useCallback((region: Region) => {
+    setSelectedCode(region.code);
+  }, []);
 
   const regionQuery = useMemo(
     () => ({

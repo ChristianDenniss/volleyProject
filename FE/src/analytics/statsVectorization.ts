@@ -66,9 +66,6 @@ export const VECTOR_FEATURE_ORDER: VectorFeatureKey[] =
   "miscErrorsPerSet"
 ];
 
-// Optional: if you want to display a version in API/UI.
-export const VECTOR_VERSION = "v2";
-
 // Build z-scored vectors for a given season with a minimum sets-played filter.
 export function buildSeasonVectors(
   players: Player[],
@@ -247,30 +244,6 @@ export function computePCA3D(zVectors: number[][]): { projections: { x: number; 
     projections,
     model: { components, explainedVariance, mean }
   };
-}
-
-/**
- * Project a single z-vector to 3D using a pre-computed PCA model
- */
-export function projectZVectorTo3D(zVector: number[], model: PCAModel): { x: number; y: number; z: number } {
-  if (model.components.length === 0) {
-    // Fallback to simple projection if no model
-    return {
-      x: zVector.length > 0 ? zVector[0] : 0,
-      y: zVector.length > 1 ? zVector[1] : 0,
-      z: zVector.length > 2 ? zVector[2] : 0
-    };
-  }
-
-  // Center the vector
-  const centered = zVector.map((val, idx) => val - (model.mean[idx] || 0));
-
-  // Project onto principal components
-  const x = dotProduct(centered, model.components[0]);
-  const y = model.components.length > 1 ? dotProduct(centered, model.components[1]) : 0;
-  const z = model.components.length > 2 ? dotProduct(centered, model.components[2]) : 0;
-
-  return { x, y, z };
 }
 
 /* --------------------------- PCA Helper Functions -------------------------- */

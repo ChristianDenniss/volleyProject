@@ -12,7 +12,7 @@ import { useRegion } from "../context/regionContext";
 const Teams: React.FC = () =>
 {
     const { regionQuery } = useRegion();
-    const { data, error } = useMediumTeams(regionQuery);
+    const { data, loading, error } = useMediumTeams(regionQuery);
 
     /* Track the currently "opened" team card */
     const [ activeTeam,         setActiveTeam ]         = useState<string | null>(null);
@@ -152,7 +152,7 @@ const Teams: React.FC = () =>
     }
 
     return (
-        <div className={`teams-page ${!data ? 'loading' : ''}`}>
+        <div className={`teams-page ${loading ? 'loading' : ''}`}>
             <div className="listing-controls-toolbar">
                     <FilterBar onReset={(searchQuery || seasonFilter || placementFilter) ? clearFilters : undefined}>
                         <div className="teams-season-filter">
@@ -209,7 +209,7 @@ const Teams: React.FC = () =>
 
             {error ? (
                 <div>Error: {error}</div>
-            ) : !data ? (
+            ) : loading ? (
                 <div className="teams-wrapper">
                     <div className="teams-container">
                         {/* Skeleton loaders */}

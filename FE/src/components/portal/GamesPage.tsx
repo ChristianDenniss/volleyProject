@@ -54,8 +54,8 @@ const GamesPage: React.FC = () => {
     ...regionQuery,
     bracket: bracketFilter || undefined,
   });
-  const { data: seasons } = useSkinnySeasons({ page: 1, limit: 100, ...regionQuery });
-  const { data: gamesSample } = useGames({ page: 1, limit: 100 });
+  const { data: seasons, loading: seasonsLoading } = useSkinnySeasons({ page: 1, limit: 100, ...regionQuery });
+  const { data: gamesSample, loading: gamesSampleLoading } = useGames({ page: 1, limit: 100 });
   const { patchGame } = useGameMutations();
   const { createGame, loading: creating, error: createError } = useCreateGames();
   const { deleteItem: deleteGame, loading: deleting } = useDeleteGames();
@@ -84,7 +84,7 @@ const GamesPage: React.FC = () => {
   const [formError, setFormError] = useState<string>("");
 
   useEffect(() => {
-    setLocalGames(games);
+    setLocalGames(games ?? []);
   }, [games]);
 
   const uniqueSeasons = (seasons ?? [])
@@ -538,7 +538,7 @@ const GamesPage: React.FC = () => {
             value={seasonFilter}
             onChange={(e) => handleSeasonFilterChange(e.target.value)}
           >
-            <option value="">All Seasons</option>
+            <option value="">{seasonsLoading ? "Loading seasons..." : "All Seasons"}</option>
             {uniqueSeasons.map(season => (
               <option key={season} value={season.toString()}>
                 Season {season}
@@ -554,7 +554,7 @@ const GamesPage: React.FC = () => {
             value={stageFilter}
             onChange={(e) => handleStageFilterChange(e.target.value)}
           >
-            <option value="">All Stages</option>
+            <option value="">{gamesSampleLoading ? "Loading stages..." : "All Stages"}</option>
             {uniqueStages.map(stage => (
               <option key={stage} value={stage}>
                 {stage}

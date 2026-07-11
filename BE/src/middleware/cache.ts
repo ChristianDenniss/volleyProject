@@ -98,13 +98,6 @@ export function invalidateCacheMiddleware(entityType: string) {
 }
 
 /**
- * Manual cache invalidation function
- */
-export async function invalidateCache(entityType: string): Promise<void> {
-  await cacheService.invalidateEntity(entityType);
-}
-
-/**
  * Cache health check middleware
  */
 export async function cacheHealthCheck(req: Request, res: Response): Promise<void> {

@@ -52,7 +52,7 @@ const AwardsPage: React.FC = () => {
     seasonNumber: seasonFilter || undefined,
     type: awardTypeFilter || undefined,
   });
-  const { data: seasons } = useSkinnySeasons({ page: 1, limit: 100 });
+  const { data: seasons, loading: seasonsLoading } = useSkinnySeasons({ page: 1, limit: 100 });
   const { patchAward } = useAwardsMutations();
   const { createAwards, loading: creating } = useCreateAwards();
   const { deleteItem: deleteAward, loading: deleting } = useDeleteAwards();
@@ -72,7 +72,7 @@ const AwardsPage: React.FC = () => {
   const [formError, setFormError] = useState<string>("");
 
   useEffect(() => {
-    setLocalAwards(awards);
+    setLocalAwards(awards ?? []);
   }, [awards]);
 
   const uniqueSeasons = (seasons ?? [])
@@ -513,7 +513,7 @@ const AwardsPage: React.FC = () => {
             value={seasonFilter}
             onChange={(e) => handleSeasonFilterChange(e.target.value)}
           >
-            <option value="">All Seasons</option>
+            <option value="">{seasonsLoading ? "Loading seasons..." : "All Seasons"}</option>
             {uniqueSeasons.map(season => (
               <option key={season} value={season.toString()}>
                 Season {season}
@@ -587,7 +587,7 @@ const AwardsPage: React.FC = () => {
                 onChange={(e) => setNewSeasonId(Number(e.target.value))}
                 required
               >
-                <option value="">Select a season</option>
+                <option value="">{seasonsLoading ? "Loading seasons..." : "Select a season"}</option>
                 {seasons?.map((season) => (
                   <option key={season.id} value={season.id}>
                     Season {season.seasonNumber}

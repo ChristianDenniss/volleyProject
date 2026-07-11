@@ -30,10 +30,6 @@ export const createMultiplePlayersByNameSchema = z.array(
     })
 );
 
-// Inferred DTOs
-export type CreatePlayerDto = z.infer<typeof createPlayerSchema>;
-export type CreateMultiplePlayersByNameDto = z.infer<typeof createMultiplePlayersByNameSchema>;
-
 // Update schema (patch-like with required ID)
 export const updatePlayerSchema = z.object({
     name: z.string().min(1, { message: "Player Name is required" }).optional(),
@@ -43,5 +39,3 @@ export const updatePlayerSchema = z.object({
     ).optional(),
     teamIds: z.array(z.number().int().positive()).optional()
 });
-
-export type UpdatePlayerDto = z.infer<typeof updatePlayerSchema>;

@@ -13,6 +13,7 @@ import {
 } from "react-icons/fa";
 import { useApplications } from "../hooks/allFetch";
 import type { Application } from "../types/interfaces";
+import { isSafeExternalUrl } from "../utils/url";
 
 const APPLICATION_ICONS: Record<string, React.ReactNode> = {
     staff: <FaUsers />,
@@ -132,7 +133,7 @@ const Applications: React.FC = () => {
                                             <p className="app-description">
                                                 {app.description}
                                             </p>
-                                            {app.status === "open" && app.url ? (
+                                            {app.status === "open" && isSafeExternalUrl(app.url) ? (
                                                 <a
                                                     href={app.url}
                                                     target="_blank"

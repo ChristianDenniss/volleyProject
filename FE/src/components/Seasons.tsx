@@ -77,14 +77,14 @@ const SeasonCard: React.FC<{ season: Season }> = ({ season }) =>
 const Seasons: React.FC = () =>
 {
     const { regionQuery } = useRegion();
-    const { data, error } = useMediumSeasons(regionQuery)
+    const { data, loading, error } = useMediumSeasons(regionQuery)
     
     if (error) return <div>Error: {error}</div>
     
     return (
-        <div className={`seasons-page ${!data ? 'loading' : ''}`}>
+        <div className={`seasons-page ${loading ? 'loading' : ''}`}>
             <div className="seasons-grid">
-                {!data ? (
+                {loading ? (
                     // Skeleton loaders
                     Array.from({ length: 6 }).map((_, index) => (
                         <div key={index} className="seasons-skeleton"></div>

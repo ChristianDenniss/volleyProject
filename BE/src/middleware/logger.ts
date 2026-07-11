@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { sanitizeForLogging } from '../utils/sanitizeForLogging.js';
 
 // Enhanced logger for comprehensive API tracking
 export function loggerMiddleware(req: Request, res: Response, next: NextFunction): void
@@ -34,7 +35,7 @@ export function loggerMiddleware(req: Request, res: Response, next: NextFunction
     
     // Log request body (for non-GET requests)
     if (method !== 'GET' && Object.keys(req.body).length > 0) {
-        console.log(`📦 Request Body:`, JSON.stringify(req.body, null, 2));
+        console.log(`📦 Request Body:`, JSON.stringify(sanitizeForLogging(req.body), null, 2));
     }
     
     // Track response
@@ -61,31 +62,4 @@ export function loggerMiddleware(req: Request, res: Response, next: NextFunction
     };
     
     next();
-}
-
-// Special logger for database operations
-export function logDatabaseOperation(operation: string, entity: string, data?: any, userId?: number): void {
-    const timestamp = new Date().toISOString();
-    console.log(`\n🗄️  [${timestamp}] DATABASE OPERATION`);
-    console.log(`🔧 Operation: ${operation}`);
-    console.log(`📋 Entity: ${entity}`);
-    if (userId) {
-        console.log(`👤 User ID: ${userId}`);
-    }
-    if (data) {
-        console.log(`📦 Data:`, JSON.stringify(data, null, 2));
-    }
-    console.log(`🔚 [${timestamp}] DB OPERATION END\n`);
-}
-
-// Logger for API key operations
-export function logApiKeyOperation(operation: string, userId: number, keyId?: string): void {
-    const timestamp = new Date().toISOString();
-    console.log(`\n🔑 [${timestamp}] API KEY OPERATION`);
-    console.log(`🔧 Operation: ${operation}`);
-    console.log(`👤 User ID: ${userId}`);
-    if (keyId) {
-        console.log(`🔑 Key ID: ${keyId}`);
-    }
-    console.log(`🔚 [${timestamp}] API KEY OPERATION END\n`);
 }

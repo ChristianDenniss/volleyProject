@@ -56,7 +56,7 @@ const PlayersPage: React.FC = () => {
   const [ formError, setFormError ]       = useState<string>("");
 
   useEffect(() => {
-    setLocalPlayers(players);
+    setLocalPlayers(players ?? []);
   }, [players]);
 
   // Handle search

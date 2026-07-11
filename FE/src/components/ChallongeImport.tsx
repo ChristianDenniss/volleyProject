@@ -11,7 +11,7 @@ interface ChallongeImportProps {
 }
 
 const ChallongeImport: React.FC<ChallongeImportProps> = ({ onImportSuccess, onCancel }) => {
-  const { data: seasons } = useSeasons();
+  const { data: seasons, loading: seasonsLoading } = useSeasons();
   const { token } = useAuth();
   const [formData, setFormData] = useState<Partial<ImportChallongeInput>>({
     challongeUrl: '',
@@ -108,9 +108,10 @@ const ChallongeImport: React.FC<ChallongeImportProps> = ({ onImportSuccess, onCa
                 id="seasonId"
                 value={formData.seasonId || ''}
                 onChange={(e) => handleInputChange('seasonId', parseInt(e.target.value))}
+                disabled={seasonsLoading}
                 required
               >
-                <option value="">Select a season</option>
+                <option value="">{seasonsLoading ? "Loading seasons..." : "Select a season"}</option>
                 {seasons?.map(season => (
                   <option key={season.id} value={season.id}>
                     Season {season.seasonNumber}

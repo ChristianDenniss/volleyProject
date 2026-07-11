@@ -1,5 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { ZodSchema, ZodError } from 'zod';
+import { BadRequestError } from '../errors/BadRequestError.js';
+import { sanitizeForLogging } from '../utils/sanitizeForLogging.js';
 
 // Helper function to convert date strings to Date objects recursively
 function convertDateStrings(obj: any): any {
@@ -37,11 +39,11 @@ export const validate = (schema: ZodSchema<any>) =>
     {
         try
         {
-            console.log('Validation: Received request body:', req.body);
-            
+            console.log('Validation: Received request body:', sanitizeForLogging(req.body));
+
             // Preprocess the body to convert date strings to Date objects
             const processedBody = convertDateStrings(req.body);
-            console.log('Validation: Processed request body:', processedBody);
+            console.log('Validation: Processed request body:', sanitizeForLogging(processedBody));
             
             // Validate the processed body
             req.body = schema.parse(processedBody);
@@ -53,10 +55,7 @@ export const validate = (schema: ZodSchema<any>) =>
             if (error instanceof ZodError)
             {
                 console.error('Validation: Zod validation error:', error.errors);
-                res.status(400).json({
-                    message: "Validation failed",
-                    errors: error.errors,
-                });
+                next(new BadRequestError("Validation failed", error.errors));
             }
             else
             {

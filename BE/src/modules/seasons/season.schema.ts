@@ -15,5 +15,3 @@ export const createSeasonSchema = z.object({
 });
 
 export const updateSeasonSchema = createSeasonSchema.partial();
-
-export type UpdateSeasonDto = z.infer<typeof updateSeasonSchema>;

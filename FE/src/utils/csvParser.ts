@@ -146,13 +146,3 @@ export function parseCSV(csvText: string, mode: 'create' | 'add' = 'create'): Pa
     seasonId: mode === 'create' ? seasonId! : undefined,
   };
 }
-
-export function generateCSVTemplate(): string {
-  return `SEASON: 5,Spikes,,,,,Blocks,Sets,Recieves,,Serves,,Errors,
-Score: 3 - 1,Spiking Errors,Ape Kills,Ape Attempts,Kills,Attempts,Total,Assists,Spike,BFs,Aces,Misc. Errors,Set. Errors,Serve Errors
-Yoru,,,,,,,,,,,,,
-m_ochii3,0,0,0,0,0,0,0,0,0,0,0,0,0
-xavier200iqq,0,0,0,0,0,0,0,0,0,0,0,0,0
-Reaper,,,,,,,,,,,,,
-braynnrr,0,0,0,0,0,0,0,0,0,0,0,0,0`;
-} 

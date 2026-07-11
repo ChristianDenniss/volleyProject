@@ -17,16 +17,3 @@ export function formatGameStage(game: GameStageFields): string {
   if (game.bracket === "losers") return `Losers · ${stage}`;
   return stage;
 }
-
-export function formatGamePhase(phase?: string | null): string {
-  switch (phase) {
-    case "pre_season":
-      return "Pre-Season";
-    case "qualifiers":
-      return "Qualifiers";
-    case "playoffs":
-      return "Playoffs";
-    default:
-      return phase ?? "—";
-  }
-}

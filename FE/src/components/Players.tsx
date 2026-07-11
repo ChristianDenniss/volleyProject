@@ -77,7 +77,7 @@ const playerColumns: TableColumn<Player>[] = [
 
 const Players: React.FC = () => {
   const { regionQuery } = useRegion();
-  const { data, error } = useMediumPlayers(regionQuery);
+  const { data, loading, error } = useMediumPlayers(regionQuery);
   const navigate = useNavigate();
 
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -140,7 +140,7 @@ const Players: React.FC = () => {
   );
 
   return (
-    <div className={`players-page ${!data ? "loading" : ""}`}>
+    <div className={`players-page ${loading ? "loading" : ""}`}>
       <div className="listing-controls-toolbar">
           <FilterBar onReset={clearFilters}>
             <div className="players-season-filter">
@@ -199,7 +199,7 @@ const Players: React.FC = () => {
         <div>Error: {error}</div>
       ) : (
         <div className="listing-content-wrapper">
-          {!data ? (
+          {loading ? (
             <div className="listing-table-wrapper">
               <div className="listing-skeleton-table">
                 {Array.from({ length: 10 }).map((_, index) => (
