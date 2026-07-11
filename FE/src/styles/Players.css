@@ -1,7 +1,8 @@
 /* Players page specific styles */
 .players-page {
-    padding: 20px;
-    max-width: 1200px;
+    padding: 20px clamp(1rem, 2.5vw, 2.5rem);
+    width: min(100%, 1600px);
+    max-width: 1600px;
     margin: 0 auto;
     min-height: 100vh; /* Prevent layout shift by setting minimum height */
     box-sizing: border-box;

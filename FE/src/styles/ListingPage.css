@@ -8,6 +8,8 @@
 
 .listing-table {
   width: 100%;
+  min-width: 100%;
+  table-layout: auto;
   border-collapse: collapse;
   font-size: 0.9375rem;
 }
@@ -56,7 +58,7 @@
 
 .listing-table-teams {
   display: block;
-  max-width: 420px;
+  max-width: none;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
