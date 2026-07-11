@@ -1,15 +1,12 @@
-/* About.css */
-/* Color tokens (--primary, --bg-light, --text-dark, etc.) now come from
-   src/styles/tokens.css, which defines identical values under these same
-   names so no usage sites below needed to change. */
+/* Colors from src/styles/tokens.css */
 
 .about-page-container {
     padding: 2rem;
     width: 80%;
     margin: 0 auto;
     font-family: 'Inter', sans-serif;
-    color: var(--text-dark);
-    background-color: var(--bg-light);
+    color: var(--color-text);
+    background-color: var(--color-bg-light);
 }
 
 .about-title {
@@ -17,7 +14,7 @@
     font-weight: 800;
     margin-bottom: 2rem;
     text-align: center;
-    color: var(--text-dark);
+    color: var(--color-brand-primary);
     position: relative;
     padding-bottom: 1rem;
 }
@@ -30,14 +27,14 @@
     transform: translateX(-50%);
     width: 100px;
     height: 4px;
-    background: var(--primary);
+    background: var(--color-brand-primary);
     border-radius: 2px;
 }
 
 .about-intro {
     font-size: 1.25rem;
     line-height: 1.6;
-    color: var(--text-muted);
+    color: var(--color-text-muted);
     margin-bottom: 3rem;
     text-align: center;
     max-width: 800px;
@@ -46,11 +43,12 @@
 }
 
 .about-section {
-    background: white;
+    background: var(--color-bg);
     border-radius: var(--radius);
     padding: 2rem;
     margin-bottom: 2rem;
     box-shadow: var(--shadow-sm);
+    border: 1px solid var(--color-accent-border);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -59,22 +57,22 @@
     box-shadow: var(--shadow-md);
 }
 
-.section-title {
+.about-page-container .section-title {
     font-size: 1.5rem;
     font-weight: 700;
     margin-bottom: 1.5rem;
-    color: var(--text-dark);
+    color: var(--color-brand-primary);
     display: flex;
     align-items: center;
     gap: 0.75rem;
 }
 
-.section-title::before {
+.about-page-container .section-title::before {
     content: "";
     display: block;
     width: 4px;
     height: 24px;
-    background: var(--primary);
+    background: var(--color-brand-primary);
     border-radius: 2px;
 }
 
@@ -88,24 +86,24 @@
 
 .feature-list li {
     padding: 1rem;
-    background: var(--bg-light);
+    background: var(--color-bg-light);
     border-radius: var(--radius);
-    color: var(--text-dark);
+    color: var(--color-text);
     font-size: 1rem;
     line-height: 1.5;
-    border: 1px solid var(--border-color);
-    transition: transform 0.2s ease;
+    border: 1px solid var(--color-border);
+    transition: transform 0.2s ease, border-color 0.2s ease;
 }
 
 .feature-list li:hover {
     transform: translateX(8px);
-    border-color: var(--primary);
+    border-color: var(--color-brand-primary);
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
     .about-page-container {
         padding: 1rem;
+        width: 95%;
     }
 
     .about-title {
@@ -120,7 +118,7 @@
         padding: 1.5rem;
     }
 
-    .section-title {
+    .about-page-container .section-title {
         font-size: 1.25rem;
     }
 }

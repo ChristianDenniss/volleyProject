@@ -1,5 +1,25 @@
 import { db } from "./db";
-import type { Award, Player, Season, Team } from "../types/interfaces";
+import type { Award, Game, Player, Season, Stats, Team } from "../types/interfaces";
+
+/**
+ * Stats for a game with the `.game` back-reference removed so the enriched
+ * game can be JSON-serialized without a circular structure.
+ */
+function statsForGame(gameId: number): Stats[] {
+  return db.stats
+    .filter((stat) => stat.game?.id === gameId)
+    .map((stat) => {
+      const { game: _game, ...rest } = stat;
+      return rest as Stats;
+    });
+}
+
+export function enrichGame(game: Game): Game {
+  return {
+    ...game,
+    stats: statsForGame(game.id),
+  };
+}
 
 export function getPlayerById(id: number): Player | undefined {
   return db.players.find((player) => player.id === id);
@@ -38,9 +58,9 @@ export function getSeasonDetail(id: number): Season | undefined {
 }
 
 export function enrichTeam(team: Team): Team {
-  const games = db.games.filter((game) =>
-    game.teams?.some((t) => t.id === team.id)
-  );
+  const games = db.games
+    .filter((game) => game.teams?.some((t) => t.id === team.id))
+    .map((game) => enrichGame(game));
 
   return {
     ...team,

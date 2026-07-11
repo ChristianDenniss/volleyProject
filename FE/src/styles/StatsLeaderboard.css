@@ -233,8 +233,6 @@
 {
     width: 100%;
     overflow-x: auto;
-    scrollbar-width: thin;
-    scrollbar-color: #b0b0b0 #f0f0f0;
     border-radius: 4px 4px 0 0; /* Only top corners */
     box-shadow: 0 2px 8px rgba(26, 54, 93, 0.08); /* Lighter shadow */
     margin-top: 0;
@@ -454,17 +452,6 @@
     100% {
         background-position: -200% 0;
     }
-}
-
-.stats-table-wrapper::-webkit-scrollbar {
-    height: 8px;
-}
-.stats-table-wrapper::-webkit-scrollbar-thumb {
-    background: #b0b0b0;
-    border-radius: 4px;
-}
-.stats-table-wrapper::-webkit-scrollbar-track {
-    background: #f0f0f0;
 }
 
 .stats-pill-link {

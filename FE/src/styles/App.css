@@ -8,12 +8,89 @@ html, body, #root {
   box-sizing: border-box;
 }
 
+/* App-wide scrollbars: thumb only — no track box, no arrow buttons */
+*,
+*::before,
+*::after {
+  scrollbar-width: auto;
+  scrollbar-color: var(--color-scroll-thumb) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: var(--scrollbar-size);
+  height: var(--scrollbar-size);
+}
+
+*::-webkit-scrollbar-track,
+*::-webkit-scrollbar-track-piece {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--color-scroll-thumb);
+  border-radius: var(--scrollbar-radius);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  min-height: 40px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--color-scroll-thumb-hover);
+  background-clip: padding-box;
+}
+
+/* Hide all scrollbar arrow buttons (WebKit / legacy Edge) */
+*::-webkit-scrollbar-button,
+*::-webkit-scrollbar-button:single-button,
+*::-webkit-scrollbar-button:double-button,
+*::-webkit-scrollbar-button:vertical:start:decrement,
+*::-webkit-scrollbar-button:vertical:end:increment,
+*::-webkit-scrollbar-button:horizontal:start:decrement,
+*::-webkit-scrollbar-button:horizontal:end:increment,
+*::-webkit-scrollbar-button:vertical:decrement,
+*::-webkit-scrollbar-button:vertical:increment,
+*::-webkit-scrollbar-button:horizontal:decrement,
+*::-webkit-scrollbar-button:horizontal:increment {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  appearance: none;
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Dark surfaces (player profiles, season cards, vector graph, etc.) */
+.dark-scrollbar,
+.dark-scrollbar *,
+.player-profile-container,
+.player-profile-container * {
+  scrollbar-color: var(--color-scroll-thumb-on-dark) transparent;
+}
+
+.dark-scrollbar::-webkit-scrollbar-thumb,
+.dark-scrollbar *::-webkit-scrollbar-thumb,
+.player-profile-container::-webkit-scrollbar-thumb,
+.player-profile-container *::-webkit-scrollbar-thumb {
+  background: var(--color-scroll-thumb-on-dark);
+}
+
+.dark-scrollbar::-webkit-scrollbar-thumb:hover,
+.dark-scrollbar *::-webkit-scrollbar-thumb:hover,
+.player-profile-container::-webkit-scrollbar-thumb:hover,
+.player-profile-container *::-webkit-scrollbar-thumb:hover {
+  background: var(--color-scroll-thumb-on-dark-hover);
+}
+
 /* Ensure body takes up at least the full viewport height */
 body {
   display: flex;
   flex-direction: column;
   min-height: 100vh; /* Full height of the viewport */
-  background-color: white; /* Add white background */
+  background-color: var(--color-bg);
 }
 
 /* Content area that will push the footer to the bottom */

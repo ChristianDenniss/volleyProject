@@ -23,6 +23,7 @@
     font-weight: 800;
     margin-bottom: 2.8rem;
     text-align: center;
+    color: var(--color-brand-primary);
 }
 
 /* ===== Grid ===== */
@@ -51,10 +52,10 @@
 {
     display: flex;
     flex-direction: column;
-    background: #fff;
+    background: var(--color-bg);
     border: 1px solid var(--color-accent-border);
     border-radius: 14px;
-    box-shadow: 0 2px 6px rgba(0,0,0,.05);
+    box-shadow: var(--shadow-sm);
     overflow: hidden;
     min-width: 325px;
     transition: transform .18s ease, box-shadow .18s ease;
@@ -99,6 +100,7 @@
     font-size: 1.6rem;
     font-weight: 700;
     margin: 0;
+    color: var(--color-brand-primary);
 }
 
 .season-dates
@@ -116,11 +118,11 @@
 {
     list-style: none;
     padding: 0;
-    margin: 0;                  /* no gap before footer */
+    margin: 0;
     font-size: 1.1rem;
     font-weight: 600;
     line-height: 1.6;
-    color: #4a4a4a;
+    color: var(--color-text-muted);
 }
 
 .season-stats li + li
@@ -139,13 +141,14 @@
 {
     font-size: .95rem;
     font-weight: 700;
-    color: #78b5fa;
+    color: var(--color-brand-primary);
     text-decoration: none;
     line-height: 1;
 }
 
 .season-footer a:hover
 {
+    color: var(--color-brand-primary-hover);
     text-decoration: underline;
 }
 
@@ -159,9 +162,9 @@
 }
 
 /* ===== Icon color overrides ===== */
-.theme-icon { color: orange; }
-.team-icon { color: blue; }
-.volleyball-icon { color: rgb(193, 193, 193); }
+.theme-icon { color: var(--color-warning); }
+.team-icon { color: var(--color-brand-primary); }
+.volleyball-icon { color: var(--color-text-muted-alt); }
 
 /* ===== Responsive tweaks ===== */
 @media (max-width: 900px)
@@ -208,7 +211,7 @@
 
 /* Skeleton loader for better UX */
 .seasons-skeleton {
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background: var(--skeleton-shimmer);
     background-size: 200% 100%;
     animation: loading 1.5s infinite;
     border-radius: 14px;

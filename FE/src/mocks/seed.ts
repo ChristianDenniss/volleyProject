@@ -90,7 +90,36 @@ const TEAM_NAMES = [
   "Crimson Court",
   "Diamond Diggers",
   "Echo Elite",
+  "Storm Surge",
+  "Titan Force",
+  "Phoenix Rising",
+  "Vortex United",
+  "Nova Knights",
+  "Granite Guard",
+  "Riptide FC",
+  "Summit Stars",
 ] as const;
+
+/** Word pools used to synthesize a large, deterministic pool of player handles. */
+const HANDLE_ADJECTIVES = [
+  "swift", "iron", "shadow", "turbo", "frost", "blaze", "storm", "night", "royal", "cyber",
+  "phantom", "atomic", "laser", "hyper", "mega", "ultra", "nova", "prime", "volt", "ghost",
+  "rapid", "steel", "crimson", "golden", "silent", "savage", "cosmic", "electric", "toxic", "lunar",
+  "solar", "arctic", "venom", "rogue", "vivid", "onyx", "zephyr", "apex", "wild", "grim",
+] as const;
+
+const HANDLE_NOUNS = [
+  "spiker", "setter", "blocker", "digger", "server", "ace", "hammer", "rocket", "tornado", "striker",
+  "smasher", "wall", "libero", "cannon", "bullet", "phoenix", "dragon", "wolf", "hawk", "viper",
+  "titan", "ninja", "samurai", "reaper", "sniper", "bomber", "raptor", "panther", "falcon", "cobra",
+  "jet", "comet", "blitz", "surge", "fang", "claw", "wave", "pulse", "edge", "rush",
+] as const;
+
+/** How many synthetic players to generate on top of the named handles above. */
+const GENERATED_PLAYER_COUNT = 180;
+
+/** Players per team roster. */
+const ROSTER_SIZE = 8;
 
 const PLACEMENTS = [
   "1st Place",
@@ -273,11 +302,36 @@ function buildSeasons(): Season[] {
 }
 
 function buildPlayers(): Player[] {
-  return PLAYER_NAMES.map((name, index) => ({
-    id: index + 1,
-    name,
-    position: pick(POSITIONS, index),
-  }));
+  const players: Player[] = [];
+  const usedNames = new Set<string>();
+
+  const addPlayer = (name: string) => {
+    if (usedNames.has(name)) return;
+    usedNames.add(name);
+    players.push({
+      id: players.length + 1,
+      name,
+      position: pick(POSITIONS, players.length),
+    });
+  };
+
+  // Named handles first (kept for recognizable references elsewhere in the app).
+  PLAYER_NAMES.forEach((name) => addPlayer(name));
+
+  // Synthesize a large deterministic pool of additional handles.
+  const target = PLAYER_NAMES.length + GENERATED_PLAYER_COUNT;
+  let i = 0;
+  while (players.length < target) {
+    const adjective = HANDLE_ADJECTIVES[i % HANDLE_ADJECTIVES.length];
+    const noun =
+      HANDLE_NOUNS[(i * 3 + Math.floor(i / HANDLE_ADJECTIVES.length)) % HANDLE_NOUNS.length];
+    const combos = HANDLE_ADJECTIVES.length * HANDLE_NOUNS.length;
+    const suffix = i >= combos ? `_${Math.floor(i / combos) + 1}` : "";
+    addPlayer(`${adjective}_${noun}${suffix}`);
+    i += 1;
+  }
+
+  return players;
 }
 
 function buildTeams(seasons: Season[], players: Player[]): Team[] {
@@ -285,17 +339,21 @@ function buildTeams(seasons: Season[], players: Player[]): Team[] {
   let teamId = 1;
 
   seasons.forEach((season, seasonIndex) => {
-    const teamCount = season.seasonNumber >= 11 ? 6 : 4;
+    const teamCount = season.seasonNumber >= 11 ? 8 : 6;
 
     for (let i = 0; i < teamCount; i++) {
-      const rosterStart = (seasonIndex * 6 + i * 4) % players.length;
-      const roster = Array.from({ length: 5 }, (_, j) => players[(rosterStart + j) % players.length]);
+      const rosterStart = (seasonIndex * 64 + i * ROSTER_SIZE) % players.length;
+      const roster = Array.from(
+        { length: ROSTER_SIZE },
+        (_, j) => players[(rosterStart + j) % players.length]
+      );
+      const teamName = pick(TEAM_NAMES, seasonIndex * 8 + i);
 
       teams.push({
         id: teamId++,
-        name: pick(TEAM_NAMES, seasonIndex * 4 + i),
+        name: teamName,
         placement: pick(PLACEMENTS, i),
-        logoUrl: `https://placehold.co/64x64/${(200 + teamId * 7).toString(16).slice(0, 3)}/ffffff?text=${encodeURIComponent(pick(TEAM_NAMES, i).slice(0, 2))}`,
+        logoUrl: `https://placehold.co/64x64/${(200 + teamId * 7).toString(16).slice(0, 3)}/ffffff?text=${encodeURIComponent(teamName.slice(0, 2))}`,
         season,
         players: roster,
       });
@@ -311,28 +369,40 @@ function buildGames(seasons: Season[], teams: Team[]): Game[] {
 
   seasons.forEach((season) => {
     const seasonTeams = teams.filter((team) => team.season.id === season.id);
-    const gamesPerSeason = season.seasonNumber >= 11 ? 8 : 5;
+    let matchIndex = 0;
 
-    for (let i = 0; i < gamesPerSeason; i++) {
-      const team1 = seasonTeams[i % seasonTeams.length];
-      const team2 = seasonTeams[(i + 1) % seasonTeams.length];
-      if (!team1 || !team2) continue;
+    // Full round-robin: every team plays every other team once.
+    for (let a = 0; a < seasonTeams.length; a++) {
+      for (let b = a + 1; b < seasonTeams.length; b++) {
+        const team1 = seasonTeams[a];
+        const team2 = seasonTeams[b];
 
-      const month = 1 + (i % 4);
-      const day = 5 + i * 3;
+        const month = 1 + (matchIndex % 4);
+        const day = 1 + ((matchIndex * 3) % 27);
 
-      games.push({
-        id: gameId++,
-        name: `${team1.name} vs ${team2.name}`,
-        season,
-        team1Score: pseudoRandom(gameId, 0, 3),
-        team2Score: pseudoRandom(gameId + 1, 0, 3),
-        videoUrl: i % 3 === 0 ? "https://www.youtube.com/watch?v=jUYJKjPvPoQ" : null,
-        date: new Date(isoDate(2025, month, day, 18 + (i % 3))),
-        stage: pick(STAGES, i + season.id),
-        status: 'completed',
-        teams: [team1, team2],
-      });
+        // Realistic best-of-5 result: winner takes 3 sets, loser 0–2.
+        const team1Wins = pseudoRandom(gameId, 0, 1) === 1;
+        const loserScore = pseudoRandom(gameId + 2, 0, 2);
+        const team1Score = team1Wins ? 3 : loserScore;
+        const team2Score = team1Wins ? loserScore : 3;
+        const winnerTeamId = team1Wins ? team1.id : team2.id;
+
+        games.push({
+          id: gameId++,
+          name: `${team1.name} vs ${team2.name}`,
+          season,
+          team1Score,
+          team2Score,
+          winnerTeamId,
+          videoUrl: matchIndex % 3 === 0 ? "https://www.youtube.com/watch?v=jUYJKjPvPoQ" : null,
+          date: new Date(isoDate(2025, month, day, 18 + (matchIndex % 3))),
+          stage: pick(STAGES, matchIndex + season.id),
+          status: 'completed',
+          teams: [team1, team2],
+        });
+
+        matchIndex += 1;
+      }
     }
   });
 
@@ -659,7 +729,10 @@ export function buildMockDataset() {
   const games = buildGames(seasons, teams);
   const scheduledGames = buildScheduledGames(seasons, teams, games.length + 1);
   const allGames = [...games, ...scheduledGames];
-  const stats = buildStats(games, playersBase);
+  // Generate stats for every completed game (regular round-robin + completed schedule games)
+  // so single-game and team-total views are fully populated.
+  const completedGames = allGames.filter((game) => game.status === "completed");
+  const stats = buildStats(completedGames, playersBase);
   const players = attachPlayerRelations(playersBase, teams, stats);
   const seasonsWithRelations = attachSeasonRelations(seasons, teams, allGames);
   const articles = buildArticles(users);

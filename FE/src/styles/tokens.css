@@ -26,7 +26,12 @@
   --color-text-muted-alt: #6b7280;
   --color-border: #e2e8f0;
   --color-overlay: rgba(0, 0, 0, 0.5);
-  --color-scroll-thumb: rgba(0, 0, 0, 0.2);
+  --color-scroll-thumb: rgba(0, 0, 0, 0.28);
+  --color-scroll-thumb-hover: rgba(0, 0, 0, 0.42);
+  --color-scroll-thumb-on-dark: rgba(255, 255, 255, 0.32);
+  --color-scroll-thumb-on-dark-hover: rgba(255, 255, 255, 0.48);
+  --scrollbar-size: 10px;
+  --scrollbar-radius: 5px;
 
   /* ── Text on brand / de-emphasized ── */
   --color-text-on-brand: #ffffff;

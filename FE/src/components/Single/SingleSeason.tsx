@@ -48,7 +48,7 @@ const TeamCard: React.FC<TeamCardProps> = ( props ) =>
                 </div>
             )}
 
-            <ul className="ss-team-players">
+            <ul className="ss-team-players dark-scrollbar">
                 {team.players?.map(( player: IPlayer, idx: number ) => (
                     <li key={player.id}>
                         <span className="ss-player-index">{idx + 1}.</span>

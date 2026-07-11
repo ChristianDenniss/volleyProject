@@ -553,7 +553,7 @@ function VectorGraph3D({
       {/* Archetype Legend */}
       {archetypeCounts.length > 0 && (
         <>
-          <div className={`archetype-legend ${legendHidden ? 'legend-hidden' : ''}`} ref={legendRef}>
+          <div className={`archetype-legend dark-scrollbar ${legendHidden ? 'legend-hidden' : ''}`} ref={legendRef}>
             {!legendHidden && (
               <>
                 {archetypeCounts.map(({ archetype, count }) => (

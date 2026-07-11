@@ -23,9 +23,10 @@
     text-align: center;
     text-transform: capitalize;
     letter-spacing: 0.5px;
-    margin-top: 3rem; /* Add top margin for better spacing from navbar */
+    margin-top: 3rem;
     margin-bottom: 1.5rem;
-    min-height: 80px; /* Reserve minimum height for title */
+    min-height: 80px;
+    color: var(--color-brand-primary);
 }
 
 /* ===== Metadata block (date • season • sets, video) ===== */
@@ -39,7 +40,14 @@
 }
 
 .meta-block a {
-    color: var(--text-muted);
+    color: var(--color-brand-primary);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.meta-block a:hover {
+    color: var(--color-brand-primary-hover);
+    text-decoration: underline;
 }
 
 /* Game stage block - same layout as meta-block */
@@ -53,9 +61,9 @@
 
 /* Game stage text - styled to match meta but slightly larger */
 .game-stage {
-    font-size: 1.5rem;                 /* Slightly larger than meta-block */
+    font-size: 1.5rem;
     font-weight: 600;
-    color: var(--text-muted);         /* Match the meta-block color */
+    color: var(--color-brand-primary);
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
     text-align: center;
     margin-top: 2rem;
@@ -74,9 +82,10 @@
 .meta-divider {
     width: 400px;
     height: 3px;
-    background: var(--color-accent-pale);
+    background: var(--color-brand-primary);
     border: none;
     margin: 0 auto 3rem;
+    opacity: 0.2;
 }
 
 /* ===== Scoreboard ===== */
@@ -134,11 +143,12 @@
 .vs {
     font-size: 1.2rem;
     font-weight: 700;
-    color: var(--text-muted);
-    background: var(--color-accent-pale);
+    color: var(--color-brand-primary);
+    background: var(--color-bg-light);
+    border: 1px solid var(--color-border);
     padding: 0.4rem 0.9rem;
     border-radius: 999px;
-    box-shadow: 0 0 0 3px var(--color-bg), 0 0 0 6px var(--color-accent-pale);
+    box-shadow: none;
     align-self: center;
 }
 
@@ -203,48 +213,17 @@
 
 .stats-scroll {
     overflow-x: auto;
-    /* make scrollbar overlay content, no default track */
-    scrollbar-width: thin;
-    scrollbar-color: var(--color-scroll-thumb) transparent;
 }
 
-/* WebKit-based browsers */
-.stats-scroll::-webkit-scrollbar {
-    height: 6px;
-}
-.stats-scroll::-webkit-scrollbar-track {
-    background: transparent;
-}
-.stats-scroll::-webkit-scrollbar-thumb {
-    background: var(--color-scroll-thumb);
-    border-radius: 3px;
-}
-
-/* ——— Hide scrollbar arrows ——— */
-.stats-scroll::-webkit-scrollbar-button:horizontal:decrement,
-.stats-scroll::-webkit-scrollbar-button:horizontal:increment,
-.stats-scroll::-webkit-scrollbar-button:vertical:decrement,
-.stats-scroll::-webkit-scrollbar-button:vertical:increment {
-    display: none !important;
-    width: 0 !important;
-    height: 0 !important;
-}
-
-/* ——— Remove the corner where horizontal & vertical bars meet ——— */
-.stats-scroll::-webkit-scrollbar-corner {
-    display: none !important;
-    background: transparent !important;
-}
-
-/* ===== Table styling ===== */
-.stats-table {
+/* ===== Table styling (scoped to single game page) ===== */
+.single-game-container .stats-table {
     width: 100%;
     min-width: 960px;
     border-collapse: collapse;
     font-size: 0.93rem;
 }
 
-.stats-table thead th {
+.single-game-container .stats-table thead th {
     position: sticky;
     top: 0;
     background: var(--color-brand-primary);
@@ -256,42 +235,42 @@
     z-index: 1;
 }
 
-.stats-table tbody tr {
+.single-game-container .stats-table tbody tr {
     transition: background 0.15s ease;
 }
 
-.stats-table tbody tr:hover {
+.single-game-container .stats-table tbody tr:hover {
     background: var(--color-row-hover);
 }
 
-.stats-table td {
+.single-game-container .stats-table td {
     padding: 0.8rem 1.1rem;
     text-align: center;
     white-space: nowrap;
     border-bottom: 1px solid var(--color-table-border);
 }
 
-.stats-table tbody tr:nth-child(even) {
+.single-game-container .stats-table tbody tr:nth-child(even) {
     background: var(--color-row-stripe);
 }
 
 /* ===== Team 2 custom striping ===== */
-.stats-table tbody tr.team2-row:nth-child(even) {
+.single-game-container .stats-table tbody tr.team2-row:nth-child(even) {
     background: var(--color-row-opponent-stripe);
 }
-.stats-table tbody tr.team2-row:nth-child(odd) {
+.single-game-container .stats-table tbody tr.team2-row:nth-child(odd) {
     background: var(--color-bg);
 }
-.stats-table tbody tr.team2-row:hover {
+.single-game-container .stats-table tbody tr.team2-row:hover {
     background: var(--color-row-opponent-hover);
 }
 
 /* ===== Separator styling ===== */
-.stats-table tbody tr.team-separator {
+.single-game-container .stats-table tbody tr.team-separator {
     background-color: var(--color-brand-primary-separator) !important;
     height: 16px;
 }
-.stats-table tbody tr.team-separator td {
+.single-game-container .stats-table tbody tr.team-separator td {
     padding: 0;
     height: 16px;
     border: none;

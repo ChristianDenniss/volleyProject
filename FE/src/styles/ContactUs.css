@@ -1,21 +1,22 @@
-.contact-page
-{
+/* Colors from src/styles/tokens.css */
+
+.contact-page {
     max-width: 1200px;
     margin: 0 auto;
     padding: 4rem 2rem;
     text-align: center;
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--color-text);
 }
 
-.contact-page h1
-{
+.contact-page h1 {
     font-size: 3rem;
     margin-bottom: 3rem;
+    color: var(--color-brand-primary);
+    font-weight: 800;
 }
 
-/* Grid container for the first two */
-.contact-card-grid
-{
+.contact-card-grid {
     display: flex;
     justify-content: center;
     gap: 2rem;
@@ -23,74 +24,73 @@
     margin-bottom: 2rem;
 }
 
-/* Cards that go side by side */
-.contact-card
-{
+.contact-card {
     flex: 1 1 40%;
     max-width: 500px;
     min-width: 300px;
-    background-color: #f9f9f9;
-    border: 1px solid #ddd;
-    border-radius: 12px;
+    background-color: var(--color-bg);
+    border: 1px solid var(--color-accent-border);
+    border-radius: var(--radius-lg);
     padding: 2rem;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+    box-shadow: var(--shadow-sm);
     box-sizing: border-box;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
-.contact-card-center
-{
+.contact-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--color-brand-primary);
+}
+
+.contact-card-center {
     margin: 0 auto;
     max-width: 500px;
 }
 
-.contact-icon
-{
+.contact-icon {
     font-size: 2rem;
     margin-bottom: 1rem;
+    color: var(--color-brand-primary);
 }
 
-.contact-card h2
-{
+.contact-card h2 {
     font-size: 1.5rem;
     font-weight: 600;
     margin-bottom: 1rem;
+    color: var(--color-brand-primary);
 }
 
-.contact-card p
-{
+.contact-card p {
     font-size: 1rem;
-    color: #444;
+    color: var(--color-text-muted);
     margin-bottom: 1.5rem;
 }
 
-.contact-button
-{
+.contact-button {
     display: inline-block;
-    background-color: var(--color-accent-pale);
-    color: #000;
+    background-color: var(--color-brand-primary);
+    color: var(--color-text-on-brand);
     font-weight: 600;
     padding: 0.75rem 2rem;
     border-radius: 999px;
     text-decoration: none;
-    transition: background-color 0.3s ease;
+    border: 1px solid var(--color-brand-primary);
+    transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
-.contact-button:hover
-{
-    background-color: #b8d9f2;
+.contact-button:hover {
+    background-color: var(--color-brand-primary-hover);
+    border-color: var(--color-brand-primary-hover);
 }
 
-/* Responsive fallback */
-@media (max-width: 900px)
-{
-    .contact-card-grid
-    {
+@media (max-width: 900px) {
+    .contact-card-grid {
         flex-direction: column;
         align-items: center;
     }
 
-    .contact-card
-    {
+    .contact-card {
         width: 100%;
         max-width: 100%;
     }

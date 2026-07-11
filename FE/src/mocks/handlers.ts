@@ -4,6 +4,7 @@ import { bumpId, db, getAuthUser } from "./db";
 import { MOCK_AUTH_TOKEN } from "./data";
 import { toPaginatedResult } from "./pagination";
 import {
+  enrichGame,
   enrichTeam,
   getAwardsForPlayer,
   getPlayerDetail,
@@ -210,7 +211,7 @@ export const handlers = [
   http.get(api("games/skinny"), ({ request }) => json(paginated(db.games, request, gameListFilter))),
   http.get(api("games/:id"), ({ params }) => {
     const game = findById(db.games, Number(params.id));
-    return game ? json([game]) : json([], 404);
+    return game ? json([enrichGame(game)]) : json([], 404);
   }),
   http.get(api("games"), ({ request }) => json(paginated(db.games, request, gameListFilter))),
   http.post(api("games/import-challonge"), () =>

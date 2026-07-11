@@ -397,30 +397,6 @@
   opacity: 1; /* Fully visible on hover */
 }
 
-/* Custom scrollbar styling */
-.archetype-legend::-webkit-scrollbar {
-  width: 8px;
-}
-
-.archetype-legend::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.archetype-legend::-webkit-scrollbar-thumb {
-  background-color: #3a3a3a;
-  border-radius: 4px;
-}
-
-.archetype-legend::-webkit-scrollbar-thumb:hover {
-  background-color: #4a4a4a;
-}
-
-/* Firefox scrollbar */
-.archetype-legend {
-  scrollbar-width: thin;
-  scrollbar-color: #3a3a3a transparent;
-}
-
 .archetype-legend-item {
   display: flex;
   align-items: center;
