@@ -378,7 +378,11 @@ const StatsLeaderboard: React.FC = () => {
               {item.seasonNumber != null ? ` (S${item.seasonNumber})` : ""}
             </span>
           ) : (
-            <Link to={`/players/${item.id}`} onClick={(e) => e.stopPropagation()}>
+            <Link
+              to={`/players/${item.id}`}
+              className="stats-pill-link"
+              onClick={(e) => e.stopPropagation()}
+            >
               {item.name}
             </Link>
           ),

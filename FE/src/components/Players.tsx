@@ -138,7 +138,7 @@ const Players: React.FC = () => {
           player.position && player.position !== "N/A" ? (
             <span className="listing-table-position-pill">{player.position}</span>
           ) : (
-            "—"
+            "Unknown"
           ),
       },
       {

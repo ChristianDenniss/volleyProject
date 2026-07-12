@@ -4,6 +4,7 @@ import { createTerminus } from '@godaddy/terminus';
 import dotenv from 'dotenv';
 import createApp from './app.js';
 import { AppDataSource, initializeDataSource } from './db/data-source.js';
+import { seedDevData } from './db/seed-dev.js';
 import { errorHandler } from './middleware/errorHandling.js'; // Import error handler
 
 // Load environment variables
@@ -47,6 +48,10 @@ async function startServer(): Promise<void> {
     // Initialize TypeORM DataSource
     await initializeDataSource();
     console.log("Database connection established");
+
+    if (process.env.NODE_ENV === 'development') {
+      await seedDevData();
+    }
 
     const app = createApp();
 

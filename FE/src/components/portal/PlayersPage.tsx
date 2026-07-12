@@ -228,7 +228,7 @@ const PlayersPage: React.FC = () => {
       render: (p) => (
         <span
           style={{ cursor: "pointer", display: "block", width: "100%" }}
-          onClick={() => setEditing({ id: p.id, field: "position", value: p.position })}
+          onClick={() => setEditing({ id: p.id, field: "position", value: p.position ?? "" })}
         >
           {editing?.id === p.id && editing.field === "position" ? (
             <input
@@ -243,7 +243,7 @@ const PlayersPage: React.FC = () => {
               autoFocus
             />
           ) : (
-            p.position
+            p.position || "Unknown"
           )}
         </span>
       ),
