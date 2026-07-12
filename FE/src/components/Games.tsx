@@ -63,20 +63,22 @@ function formatGameDateParts(date: Date | string) {
 
 
 
-function TeamLogo({ team, name }: { team: Team | null; name: string }) {
+function TeamLogo({ team, name, muted = false }: { team: Team | null; name: string; muted?: boolean }) {
+  const className = muted ? "game-card-team-logo muted" : "game-card-team-logo"
 
   if (team?.logoUrl) {
-
-    return <img src={team.logoUrl} alt="" className="game-card-team-logo" />
-
+    return <img src={team.logoUrl} alt="" className={className} />
   }
 
-
-
   const initials = name.trim().slice(0, 2).toUpperCase() || "?"
-
-  return <span className="game-card-team-logo-fallback" aria-hidden="true">{initials}</span>
-
+  return (
+    <span
+      className={`game-card-team-logo-fallback${muted ? " muted" : ""}`}
+      aria-hidden="true"
+    >
+      {initials}
+    </span>
+  )
 }
 
 
@@ -345,7 +347,7 @@ const Games: React.FC = () => {
 
                           </span>
 
-                          <TeamLogo team={team1} name={team1Name} />
+                          <TeamLogo team={team1} name={team1Name} muted={hasScore && team2Wins} />
 
                         </div>
 
@@ -378,15 +380,10 @@ const Games: React.FC = () => {
 
 
                         <div className="game-card-side game-card-side-away">
-
-                          <TeamLogo team={team2} name={team2Name} />
-
+                          <TeamLogo team={team2} name={team2Name} muted={hasScore && team1Wins} />
                           <span className={`game-card-team-name${team2Wins ? " winner" : ""}`}>
-
                             {team2Name}
-
                           </span>
-
                         </div>
 
                       </div>
