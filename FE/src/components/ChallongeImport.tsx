@@ -132,7 +132,6 @@ const ChallongeImport: React.FC<ChallongeImportProps> = ({ onImportSuccess, onCa
             seasonValue={formRegionSeason.seasonValue}
             onSeasonChange={formRegionSeason.setSeasonValue}
             seasonValueKey="id"
-            style={{ marginBottom: 0 }}
           />
 
           <div className="form-row form-row-3">

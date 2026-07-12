@@ -27,7 +27,7 @@ body {
     padding: 2.5rem 2rem;
     box-sizing: border-box;
     text-align: center;
-    margin: 4rem auto 0;   /* top offset and auto horizontal margin */
+    margin: 4rem auto var(--space-8);
 }
 
 /* Title */
@@ -35,7 +35,7 @@ body {
     margin: 0 0 1.5rem;
     font-size: 1.75rem;
     font-weight: 600;
-    color: var(--primary);
+    color: var(--primary-blue);
     letter-spacing: 1px;
 }
 
@@ -77,8 +77,8 @@ body {
 }
 
 .auth-form input:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 2px var(--color-focus-ring);
 }
 
 /* Submit button */
@@ -87,7 +87,7 @@ body {
     padding: 0.85rem;
     font-size: 1rem;
     font-weight: 600;
-    background-color: var(--primary);
+    background-color: var(--primary-blue);
     color: #FFFFFF;
     border: none;
     border-radius: 6px;
@@ -96,12 +96,12 @@ body {
 }
 
 .auth-form button:disabled {
-    background-color: #AACCEE;
+    background-color: rgba(var(--color-brand-primary-rgb), 0.45);
     cursor: not-allowed;
 }
 
 .auth-form button:not(:disabled):hover {
-    background-color: var(--primary-dark);
+    background-color: var(--primary-blue-hover);
 }
 
 /* Signup link */
@@ -109,7 +109,7 @@ body {
     display: block;
     margin-top: 1.25rem;
     font-size: 0.9rem;
-    color: var(--primary);
+    color: var(--primary-blue);
     text-decoration: none;
     transition: text-decoration 0.2s;
 }
