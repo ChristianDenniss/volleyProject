@@ -15,6 +15,8 @@ import Pagination from "../Pagination";
 import Modal from "../ui/Modal";
 import FilterBar from "../ui/FilterBar";
 import Table, { type TableColumn } from "../ui/Table";
+import RegionSeasonFields from "../ui/RegionSeasonFields";
+import { useFormRegionSeason } from "../../hooks/useFormRegionSeason";
 
 type EditField =
   | "name"
@@ -62,7 +64,8 @@ const TeamsPage: React.FC = () => {
   // Filter state
   const [seasonFilter, setSeasonFilter] = useState<string>("");
 
-  const { regionQuery, activeRegion } = useRegion();
+  const { regionQuery } = useRegion();
+  const formRegionSeason = useFormRegionSeason("seasonNumber");
 
   const { data: teams, total, totalPages, loading, error, refetch } = useSkinnyTeams({
     page: currentPage,
@@ -83,7 +86,6 @@ const TeamsPage: React.FC = () => {
   // Modal state for creating a new team
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [newName, setNewName] = useState<string>("");
-  const [newSeasonNumber, setNewSeasonNumber] = useState<number>(0);
   const [newPlacement, setNewPlacement] = useState<string>("Didnt make playoffs");
   const [newLogoUrl, setNewLogoUrl] = useState<string>("");
   const [formError, setFormError] = useState<string>("");
@@ -94,8 +96,8 @@ const TeamsPage: React.FC = () => {
 
   // Season filter options come from the full seasons list, not just this page's teams
   const uniqueSeasons = (seasons ?? [])
-    .map(season => season.id)
-    .sort((a, b) => a - b);
+    .slice()
+    .sort((a, b) => a.seasonNumber - b.seasonNumber);
 
   // Handle search
   const handleSearch = (query: string) => {
@@ -194,7 +196,7 @@ const TeamsPage: React.FC = () => {
     setIsModalOpen(true);
     setFormError("");
     setNewName("");
-    setNewSeasonNumber(0);
+    formRegionSeason.initFromActiveRegion();
     setNewPlacement("Didnt make playoffs");
     setNewLogoUrl("");
   };
@@ -208,18 +210,17 @@ const TeamsPage: React.FC = () => {
   // Create new team handler
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (newName.trim() === "" || newSeasonNumber <= 0) {
-      setFormError("Name and Season Number are required.");
+    if (newName.trim() === "" || !formRegionSeason.regionId || formRegionSeason.seasonValue === "") {
+      setFormError("Name, region, and season are required.");
       return;
     }
 
     const payload = {
       name: newName,
-      seasonNumber: newSeasonNumber,
+      seasonNumber: formRegionSeason.seasonValue as number,
       placement: newPlacement,
       logoUrl: newLogoUrl.trim() || undefined,
-      regionId: activeRegion?.id,
-      region: activeRegion?.code,
+      ...formRegionSeason.regionPayload,
     };
 
     try {
@@ -411,9 +412,9 @@ const TeamsPage: React.FC = () => {
             onChange={(e) => handleSeasonFilterChange(e.target.value)}
           >
             <option value="">{seasonsLoading ? "Loading seasons..." : "All Seasons"}</option>
-            {uniqueSeasons.map(season => (
-              <option key={season} value={season.toString()}>
-                Season {season}
+            {uniqueSeasons.map((season) => (
+              <option key={season.id} value={season.id.toString()}>
+                Season {season.seasonNumber}
               </option>
             ))}
           </select>
@@ -443,21 +444,17 @@ const TeamsPage: React.FC = () => {
             />
           </label>
 
-          <label>
-            Season*
-            <select
-              value={newSeasonNumber || ""}
-              onChange={(e) => setNewSeasonNumber(Number(e.target.value))}
-              required
-            >
-              <option value="">{seasonsLoading ? "Loading seasons..." : "Select a Season"}</option>
-              {seasons?.map((season) => (
-                <option key={season.id} value={season.seasonNumber}>
-                  Season {season.seasonNumber}
-                </option>
-              ))}
-            </select>
-          </label>
+          <RegionSeasonFields
+            regions={formRegionSeason.regions}
+            regionsLoading={formRegionSeason.regionsLoading}
+            regionId={formRegionSeason.regionId}
+            onRegionChange={formRegionSeason.setRegionId}
+            seasons={formRegionSeason.seasons}
+            seasonsLoading={formRegionSeason.seasonsLoading}
+            seasonValue={formRegionSeason.seasonValue}
+            onSeasonChange={formRegionSeason.setSeasonValue}
+            seasonValueKey="seasonNumber"
+          />
 
           <label>
             Placement

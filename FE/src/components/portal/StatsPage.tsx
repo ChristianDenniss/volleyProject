@@ -7,7 +7,10 @@ import { useCreateStats }            from "../../hooks/allCreate";
 import { useDeleteStats }            from "../../hooks/allDelete";
 import { useCSVUpload, useAddStatsToExistingGame } from "../../hooks/allCreate";
 import { useAuth }                   from "../../context/authContext";
-import { usePlayers }                from "../../hooks/allFetch";
+import { useRegion }                   from "../../context/regionContext";
+import { usePlayers, useSkinnyGames } from "../../hooks/allFetch";
+import { useFormRegionSeason }       from "../../hooks/useFormRegionSeason";
+import RegionSeasonFields            from "../ui/RegionSeasonFields";
 import type { Stats }                from "../../types/interfaces";
 import { handleFileUpload } from "../../utils/csvUploadUtils";
 import SearchBar from "../Searchbar";
@@ -66,12 +69,24 @@ const StatsPage: React.FC = () =>
     const [searchQuery, setSearchQuery] = useState<string>("");
     const [currentPage, setCurrentPage] = useState<number>(1);
 
+    const { regionQuery } = useRegion();
+    const formRegionSeason = useFormRegionSeason("id");
+
     const { data: stats, total, totalPages, loading, error, refetch } = useStats({
         page: currentPage,
         limit: STATS_PER_PAGE,
         search: searchQuery || undefined,
+        ...regionQuery,
     });
-    const { data: players, loading: playersLoading } = usePlayers({ page: 1, limit: 100 });
+    const { data: players, loading: playersLoading } = usePlayers({ page: 1, limit: 100, ...regionQuery });
+    const { data: gamesForSeason, loading: gamesLoading } = useSkinnyGames({
+        page: 1,
+        limit: 100,
+        seasonId: formRegionSeason.seasonValue || undefined,
+        ...(formRegionSeason.selectedRegion
+            ? { region: formRegionSeason.selectedRegion.code, regionId: formRegionSeason.selectedRegion.id }
+            : {}),
+    });
 
     // Destructure mutation functions for patching stats
     const { patchStats }                 = useStatsMutations();
@@ -362,6 +377,7 @@ const StatsPage: React.FC = () =>
         setNewMiscErrors(0);
         setNewPlayerName("");
         setNewGameId(0);
+        formRegionSeason.initFromActiveRegion();
     };
 
     // Close create modal and reset form error
@@ -398,12 +414,16 @@ const StatsPage: React.FC = () =>
         if (!pendingCSV) return;
         
         if (csvUploadMode === 'create') {
-            // Create new game mode
             if (!stageInput.trim()) return;
+            if (!formRegionSeason.regionId || formRegionSeason.seasonValue === "") {
+                alert("Please select a region and season.");
+                return;
+            }
             
             // Prepare gameData
             const gameData = {
                 ...pendingCSV.gameData,
+                seasonId: formRegionSeason.seasonValue as number,
                 stage: stageInput.trim(),
                 name: `${pendingCSV.teamNames[0]} vs. ${pendingCSV.teamNames[1]} S${pendingCSV.seasonId}`,
                 team1Score: pendingCSV.gameData.team1Score || 0,
@@ -468,8 +488,8 @@ const StatsPage: React.FC = () =>
         e.preventDefault();
 
         // Validate required fields
-        if (!newPlayerName || newGameId <= 0) {
-            setFormError("Player name and Game ID are required.");
+        if (!newPlayerName || newGameId <= 0 || !formRegionSeason.regionId || formRegionSeason.seasonValue === "") {
+            setFormError("Region, season, player, and game are required.");
             return;
         }
 
@@ -832,6 +852,24 @@ const StatsPage: React.FC = () =>
                                 />
                             </label>
 
+                            <RegionSeasonFields
+                                regions={formRegionSeason.regions}
+                                regionsLoading={formRegionSeason.regionsLoading}
+                                regionId={formRegionSeason.regionId}
+                                onRegionChange={(id) => {
+                                    formRegionSeason.setRegionId(id);
+                                    setNewGameId(0);
+                                }}
+                                seasons={formRegionSeason.seasons}
+                                seasonsLoading={formRegionSeason.seasonsLoading}
+                                seasonValue={formRegionSeason.seasonValue}
+                                onSeasonChange={(id) => {
+                                    formRegionSeason.setSeasonValue(id);
+                                    setNewGameId(0);
+                                }}
+                                seasonValueKey="id"
+                            />
+
                             {/* Player Name (dropdown) */}
                             <label>
                                 Player Name*
@@ -849,16 +887,30 @@ const StatsPage: React.FC = () =>
                                 </select>
                             </label>
 
-                            {/* Game ID */}
+                            {/* Game */}
                             <label>
-                                Game ID*
-                                <input
-                                    type="number"
-                                    value={newGameId}
+                                Game*
+                                <select
+                                    value={newGameId || ""}
                                     onChange={(e) => setNewGameId(Number(e.target.value))}
-                                    min="1"
+                                    disabled={!formRegionSeason.seasonValue}
                                     required
-                                />
+                                >
+                                    <option value="">
+                                        {!formRegionSeason.seasonValue
+                                            ? "Select a season first"
+                                            : gamesLoading
+                                                ? "Loading games..."
+                                                : (gamesForSeason?.length ?? 0) === 0
+                                                    ? "No games in this season"
+                                                    : "Select a game"}
+                                    </option>
+                                    {(gamesForSeason ?? []).map((game) => (
+                                        <option key={game.id} value={game.id}>
+                                            #{game.id} — {game.name || `${game.teams?.[0]?.name ?? "TBD"} vs ${game.teams?.[1]?.name ?? "TBD"}`}
+                                        </option>
+                                    ))}
+                                </select>
                             </label>
 
                             {/* Submit Button */}
@@ -1023,6 +1075,7 @@ const StatsPage: React.FC = () =>
                                     onClick={() => {
                                         setPendingCSV(csvPreview);
                                         if (csvUploadMode === 'create') {
+                                            formRegionSeason.initFromActiveRegion();
                                             setIsStageModalOpen(true);
                                         } else {
                                             // For add mode, directly submit if game ID is provided
@@ -1049,7 +1102,18 @@ const StatsPage: React.FC = () =>
             {isStageModalOpen && csvUploadMode === 'create' && (
                 <div className="modal-overlay">
                     <div className="modal" style={{ maxWidth: '400px' }}>
-                        <h2 className="modal-title">Select Match Stage</h2>
+                        <h2 className="modal-title">Region, Season &amp; Stage</h2>
+                        <RegionSeasonFields
+                            regions={formRegionSeason.regions}
+                            regionsLoading={formRegionSeason.regionsLoading}
+                            regionId={formRegionSeason.regionId}
+                            onRegionChange={formRegionSeason.setRegionId}
+                            seasons={formRegionSeason.seasons}
+                            seasonsLoading={formRegionSeason.seasonsLoading}
+                            seasonValue={formRegionSeason.seasonValue}
+                            onSeasonChange={formRegionSeason.setSeasonValue}
+                            seasonValueKey="id"
+                        />
                         <label>
                             Stage*
                             <select

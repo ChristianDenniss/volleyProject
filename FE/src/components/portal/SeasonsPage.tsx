@@ -11,6 +11,8 @@ import type { Season }                 from "../../types/interfaces";
 import Modal                           from "../ui/Modal";
 import Table                           from "../ui/Table";
 import Pagination                      from "../Pagination";
+import RegionSeasonFields              from "../ui/RegionSeasonFields";
+import { useFormRegionSeason }         from "../../hooks/useFormRegionSeason";
 import "../../styles/SeasonsPage.css";
 
 type EditField = "theme" | "image" | "startDate" | "endDate";
@@ -39,6 +41,7 @@ const SEASONS_PER_PAGE = 20;
 const SeasonsPage: React.FC = () =>
 {
     const { regionQuery, activeRegion } = useRegion();
+    const formRegionSeason = useFormRegionSeason();
     const [currentPage, setCurrentPage] = useState(1);
     const { data: seasons, totalPages, loading, error } = useSkinnySeasons({
         page: currentPage,
@@ -176,6 +179,7 @@ const SeasonsPage: React.FC = () =>
     {
         setIsModalOpen(true);
         setFormError("");
+        formRegionSeason.initFromActiveRegion();
         setNewSeasonNumber(0);
         setNewTheme("");
         setNewImage("");
@@ -199,10 +203,11 @@ const SeasonsPage: React.FC = () =>
         if (
             newSeasonNumber <= 0 ||
             newTheme.trim() === "" ||
-            newStartDate.trim() === ""
+            newStartDate.trim() === "" ||
+            !formRegionSeason.regionId
         )
         {
-            setFormError("Season number, theme, and start date are required.");
+            setFormError("Region, season number, theme, and start date are required.");
             return;
         }
 
@@ -213,8 +218,7 @@ const SeasonsPage: React.FC = () =>
             image:        newImage !== "" ? newImage : undefined,
             startDate:    new Date(newStartDate).toISOString(),
             endDate:      newEndDate !== "" ? new Date(newEndDate).toISOString() : undefined,
-            regionId:     activeRegion?.id,
-            region:       activeRegion?.code,
+            ...formRegionSeason.regionPayload,
         };
 
         try
@@ -499,6 +503,14 @@ const SeasonsPage: React.FC = () =>
 
                 {/* Create Form */}
                 <form onSubmit={handleCreate} className="season-create-form">
+                    <RegionSeasonFields
+                        regions={formRegionSeason.regions}
+                        regionsLoading={formRegionSeason.regionsLoading}
+                        regionId={formRegionSeason.regionId}
+                        onRegionChange={formRegionSeason.setRegionId}
+                        includeSeason={false}
+                    />
+
                     {/* Season Number */}
                     <label>
                         Season Number*

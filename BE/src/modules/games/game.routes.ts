@@ -3,7 +3,7 @@ import { GameController } from './game.controller.js';
 import { validate } from '../../middleware/validate.js';
 import { authenticateCombined } from '../../middleware/combinedAuth.js';
 import { authorizeRoles } from '../../middleware/authorizeRoles.js';
-import { createGameSchema, updateGameSchema, importChallongeSchema } from './games.schema.js';
+import { createGameSchema, updateGameSchema, importChallongeSchema, createGameByNamesSchema } from './games.schema.js';
 
 export function registerGameRoutes(app: Application): void {
     const router = Router();
@@ -25,7 +25,7 @@ export function registerGameRoutes(app: Application): void {
     router.get('/:id/score', gameController.getGameScoreById); // Get the score by game ID
 
     // Additional protected routes
-    router.post('/createByNames', authenticateCombined, authorizeRoles("admin", "superadmin"), gameController.createGameByNames);
+    router.post('/createByNames', authenticateCombined, authorizeRoles("admin", "superadmin"), validate(createGameByNamesSchema), gameController.createGameByNames);
 
     // UPDATE/DELETE routes - PROTECTED
     router.put('/:id', authenticateCombined, authorizeRoles("admin", "superadmin"), gameController.updateGame); // Update a game (update score if needed)

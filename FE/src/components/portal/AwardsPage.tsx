@@ -4,6 +4,7 @@ import { useAwardsMutations } from "../../hooks/allPatch";
 import { useCreateAwards } from "../../hooks/allCreate";
 import { useDeleteAwards } from "../../hooks/allDelete";
 import { useAuth } from "../../context/authContext";
+import { useRegion } from "../../context/regionContext";
 import type { Award } from "../../types/interfaces";
 import SearchBar from "../Searchbar";
 import Pagination from "../Pagination";
@@ -14,6 +15,8 @@ import "../../styles/UsersPage.css";
 import "../../styles/AwardsPage.css";
 import "../../styles/PortalPlayersPage.css";
 import { AWARD_TYPES } from "../../constants/awardTypes";
+import RegionSeasonFields from "../ui/RegionSeasonFields";
+import { useFormRegionSeason } from "../../hooks/useFormRegionSeason";
 
 type EditField = "type" | "description" | "seasonId" | "playerName" | "imageUrl" | "createdAt";
 
@@ -31,14 +34,18 @@ const AwardsPage: React.FC = () => {
   const [seasonFilter, setSeasonFilter] = useState<string>("");
   const [awardTypeFilter, setAwardTypeFilter] = useState<string>("");
 
+  const { regionQuery } = useRegion();
+  const formRegionSeason = useFormRegionSeason("id");
+
   const { data: awards, total, totalPages, loading, error, refetch } = useSkinnyAwards({
     page: currentPage,
     limit: AWARDS_PER_PAGE,
     search: searchQuery || undefined,
     seasonNumber: seasonFilter || undefined,
     type: awardTypeFilter || undefined,
+    ...regionQuery,
   });
-  const { data: seasons, loading: seasonsLoading } = useSkinnySeasons({ page: 1, limit: 100 });
+  const { data: seasons, loading: seasonsLoading } = useSkinnySeasons({ page: 1, limit: 100, ...regionQuery });
   const { patchAward } = useAwardsMutations();
   const { createAwards, loading: creating } = useCreateAwards();
   const { deleteItem: deleteAward, loading: deleting } = useDeleteAwards();
@@ -52,7 +59,6 @@ const AwardsPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [newType, setNewType] = useState<string>("");
   const [newDescription, setNewDescription] = useState<string>("");
-  const [newSeasonId, setNewSeasonId] = useState<number>(0);
   const [newPlayerName, setNewPlayerName] = useState<string>("");
   const [newImageUrl, setNewImageUrl] = useState<string>("");
   const [formError, setFormError] = useState<string>("");
@@ -181,7 +187,7 @@ const AwardsPage: React.FC = () => {
     setFormError("");
     setNewType("");
     setNewDescription("");
-    setNewSeasonId(0);
+    formRegionSeason.initFromActiveRegion();
     setNewPlayerName("");
     setNewImageUrl("");
   };
@@ -195,15 +201,15 @@ const AwardsPage: React.FC = () => {
   // Create new award handler
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (newType.trim() === "" || newSeasonId <= 0 || newPlayerName.trim() === "" || newDescription.trim() === "") {
-      setFormError("Type, Description, Season, and Player Name are required.");
+    if (newType.trim() === "" || formRegionSeason.seasonValue === "" || newPlayerName.trim() === "" || newDescription.trim() === "") {
+      setFormError("Type, region, season, description, and player name are required.");
       return;
     }
 
     const payload = {
       type: newType,
       description: newDescription,
-      seasonId: newSeasonId,
+      seasonId: formRegionSeason.seasonValue as number,
       playerName: newPlayerName.toLowerCase(),
       imageUrl: newImageUrl,
     };
@@ -547,6 +553,18 @@ const AwardsPage: React.FC = () => {
         {formError && <p className="award-modal-error">{formError}</p>}
 
         <form onSubmit={handleCreate} className="award-create-form">
+          <RegionSeasonFields
+            regions={formRegionSeason.regions}
+            regionsLoading={formRegionSeason.regionsLoading}
+            regionId={formRegionSeason.regionId}
+            onRegionChange={formRegionSeason.setRegionId}
+            seasons={formRegionSeason.seasons}
+            seasonsLoading={formRegionSeason.seasonsLoading}
+            seasonValue={formRegionSeason.seasonValue}
+            onSeasonChange={formRegionSeason.setSeasonValue}
+            seasonValueKey="id"
+          />
+
           <div className="award-form-row award-form-row-2">
             <div className="form-group">
               <label htmlFor="awardType">Type*</label>
@@ -560,23 +578,6 @@ const AwardsPage: React.FC = () => {
                 {AWARD_TYPES.map((type) => (
                   <option key={type} value={type}>
                     {type}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="awardSeason">Season*</label>
-              <select
-                id="awardSeason"
-                value={newSeasonId || ""}
-                onChange={(e) => setNewSeasonId(Number(e.target.value))}
-                required
-              >
-                <option value="">{seasonsLoading ? "Loading seasons..." : "Select a season"}</option>
-                {seasons?.map((season) => (
-                  <option key={season.id} value={season.id}>
-                    Season {season.seasonNumber}
                   </option>
                 ))}
               </select>

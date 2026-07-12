@@ -83,9 +83,18 @@ export class ChallongeImportService {
         const matchesData = await this.fetchChallongeMatches(tournamentId);
         const participants = await this.fetchChallongeParticipants(tournamentId);
 
-        const season = await AppDataSource.getRepository(Seasons).findOne({ where: { id: input.seasonId } });
+        const season = await AppDataSource.getRepository(Seasons).findOne({
+            where: { id: input.seasonId },
+            relations: ['region'],
+        });
         if (!season) {
             return this.failureResult(`Season with ID ${input.seasonId} not found`);
+        }
+
+        if (input.region && season.region?.code && season.region.code !== input.region) {
+            return this.failureResult(
+                `Season ${input.seasonId} belongs to region "${season.region.code}", not "${input.region}"`
+            );
         }
 
         const phase = (input.phase ?? 'qualifiers') as GamePhase;

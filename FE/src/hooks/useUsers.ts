@@ -23,7 +23,7 @@ export const useUsers = (params: UserListParams = DEFAULT_PAGINATION) =>
     const [overrides, setOverrides] = useState<Record<number, User>>({});
     useEffect(() => { setOverrides({}); }, [data]);
 
-    const users = data.map((u) => overrides[u.id] ?? u);
+    const users = (data ?? []).map((u) => overrides[u.id] ?? u);
 
     // Function to patch a user's role and update local state
     const changeRole = useCallback

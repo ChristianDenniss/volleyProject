@@ -90,7 +90,7 @@ const Seasons: React.FC = () =>
                         <div key={index} className="seasons-skeleton"></div>
                     ))
                 ) : (
-                    [...data].sort((a, b) => b.seasonNumber - a.seasonNumber).map(season =>
+                    [...(data ?? [])].sort((a, b) => b.seasonNumber - a.seasonNumber).map(season =>
                         <SeasonCard key={season.id} season={season} />
                     )
                 )}

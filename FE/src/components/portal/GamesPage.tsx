@@ -1,6 +1,6 @@
 // src/pages/GamesPage.tsx
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useGames, useSkinnySeasons, useGameStages } from "../../hooks/allFetch";
 import { useGameMutations } from "../../hooks/allPatch";
 import { useCreateGames } from "../../hooks/allCreate";
@@ -19,6 +19,9 @@ import Modal from "../ui/Modal";
 import FilterBar from "../ui/FilterBar";
 import Table, { type TableColumn } from "../ui/Table";
 import { formatGameStage } from "../../utils/gameLabels";
+import { getStageOptionsForPhase } from "../../constants/gameStages";
+import RegionSeasonFields from "../ui/RegionSeasonFields";
+import { useFormRegionSeason } from "../../hooks/useFormRegionSeason";
 
 type EditField = "name" | "seasonId" | "stage" | "phase" | "bracket" | "team1Score" | "team2Score" | "date" | "videoUrl" | "status";
 
@@ -42,6 +45,7 @@ const GamesPage: React.FC = () => {
   const [bracketFilter, setBracketFilter] = useState<string>("");
 
   const { regionQuery } = useRegion();
+  const formRegionSeason = useFormRegionSeason("id");
 
   const { data: games, total, totalPages, loading, error, refetch } = useGames({
     page: currentPage,
@@ -70,7 +74,6 @@ const GamesPage: React.FC = () => {
   const [importResult, setImportResult] = useState<ChallongeImportResult | null>(null);
   const [statUploadGame, setStatUploadGame] = useState<Game | null>(null);
   const [newName, setNewName] = useState<string>("");
-  const [newSeasonNumber, setNewSeasonNumber] = useState<string>("");
   const [newStage, setNewStage] = useState<string>("Round 1");
   const [newPhase, setNewPhase] = useState<Game["phase"]>("qualifiers");
   const [newBracket, setNewBracket] = useState<Game["bracket"]>(null);
@@ -83,13 +86,18 @@ const GamesPage: React.FC = () => {
   const [newTeam2Name, setNewTeam2Name] = useState<string>("");
   const [formError, setFormError] = useState<string>("");
 
+  const createStageOptions = useMemo(
+    () => getStageOptionsForPhase(newPhase),
+    [newPhase]
+  );
+
   useEffect(() => {
     setLocalGames(games ?? []);
   }, [games]);
 
   const uniqueSeasons = (seasons ?? [])
-    .map((season) => season.id)
-    .sort((a, b) => a - b);
+    .slice()
+    .sort((a, b) => a.seasonNumber - b.seasonNumber);
 
   // Commit inline edits
   const commitEdit = async () => {
@@ -142,8 +150,10 @@ const GamesPage: React.FC = () => {
     setIsModalOpen(true);
     setFormError("");
     setNewName("");
-    setNewSeasonNumber("");
-    setNewStage("");
+    formRegionSeason.initFromActiveRegion();
+    setNewPhase("qualifiers");
+    setNewBracket(null);
+    setNewStage("Round 1");
     setNewTeam1Score("");
     setNewTeam2Score("");
     setNewDate("");
@@ -160,7 +170,7 @@ const GamesPage: React.FC = () => {
 
   // Create new game handler
   const handleCreate = async () => {
-    if (!newName || !newSeasonNumber || !newTeam1Name || !newTeam2Name || !newDate || !newStage) {
+    if (!newName || formRegionSeason.seasonValue === "" || !newTeam1Name || !newTeam2Name || !newDate || !newStage) {
       alert("Please fill in all required fields");
       return;
     }
@@ -168,7 +178,7 @@ const GamesPage: React.FC = () => {
     try {
       await createGame({
         name: newName,
-        seasonId: Number(newSeasonNumber),
+        seasonId: formRegionSeason.seasonValue as number,
         teamNames: [newTeam1Name, newTeam2Name],
         team1Score: newTeam1Score === "" ? null : Number(newTeam1Score),
         team2Score: newTeam2Score === "" ? null : Number(newTeam2Score),
@@ -181,7 +191,7 @@ const GamesPage: React.FC = () => {
       } satisfies CreateGameInput);
       setIsModalOpen(false);
       setNewName("");
-      setNewSeasonNumber("");
+      formRegionSeason.setSeasonValue("");
       setNewTeam1Name("");
       setNewTeam2Name("");
       setNewTeam1Score("");
@@ -536,9 +546,9 @@ const GamesPage: React.FC = () => {
             onChange={(e) => handleSeasonFilterChange(e.target.value)}
           >
             <option value="">{seasonsLoading ? "Loading seasons..." : "All Seasons"}</option>
-            {uniqueSeasons.map(season => (
-              <option key={season} value={season.toString()}>
-                Season {season}
+            {uniqueSeasons.map((season) => (
+              <option key={season.id} value={season.id.toString()}>
+                Season {season.seasonNumber}
               </option>
             ))}
           </select>
@@ -612,17 +622,17 @@ const GamesPage: React.FC = () => {
             />
           </label>
 
-          {/* Season Number */}
-          <label>
-            Season Number*
-            <input
-              type="number"
-              value={newSeasonNumber}
-              onChange={(e) => setNewSeasonNumber(e.target.value)}
-              required
-              style={{ width: "100%", marginBottom: "0.75rem" }}
-            />
-          </label>
+          <RegionSeasonFields
+            regions={formRegionSeason.regions}
+            regionsLoading={formRegionSeason.regionsLoading}
+            regionId={formRegionSeason.regionId}
+            onRegionChange={formRegionSeason.setRegionId}
+            seasons={formRegionSeason.seasons}
+            seasonsLoading={formRegionSeason.seasonsLoading}
+            seasonValue={formRegionSeason.seasonValue}
+            onSeasonChange={formRegionSeason.setSeasonValue}
+            seasonValueKey="id"
+          />
 
           <label>
             Status
@@ -640,6 +650,10 @@ const GamesPage: React.FC = () => {
                 const phase = e.target.value as Game["phase"];
                 setNewPhase(phase);
                 if (phase !== "playoffs") setNewBracket(null);
+                const options = getStageOptionsForPhase(phase);
+                setNewStage((current) =>
+                  options.includes(current) ? current : options[0] ?? ""
+                );
               }}
               style={{ width: "100%", marginBottom: "0.75rem" }}
             >
@@ -665,15 +679,22 @@ const GamesPage: React.FC = () => {
           )}
 
           <label>
-            Stage
-            <input
-              type="text"
+            Stage*
+            <select
               value={newStage}
               onChange={(e) => setNewStage(e.target.value)}
-              placeholder="e.g. Round 1, Round of 16, Finals"
               required
               style={{ width: "100%", marginBottom: "0.75rem" }}
-            />
+            >
+              <option value="" disabled>
+                Select a stage
+              </option>
+              {createStageOptions.map((stage) => (
+                <option key={stage} value={stage}>
+                  {stage}
+                </option>
+              ))}
+            </select>
           </label>
 
           {/* Team 1 Name */}

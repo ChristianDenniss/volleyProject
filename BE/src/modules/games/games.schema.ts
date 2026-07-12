@@ -24,6 +24,23 @@ export const createGameSchema = z.object({
     name: z.string().optional(),
 });
 
+/** Portal game create by team names — same fields as createGameSchema but with teamNames instead of team IDs. */
+export const createGameByNamesSchema = z.object({
+    date: z.coerce.date(),
+    seasonId: z.number().int().positive(),
+    teamNames: z.array(z.string().min(1)).length(2, { message: "Exactly two team names are required" }),
+    team1Score: z.number().int().min(0).nullable().optional(),
+    team2Score: z.number().int().min(0).nullable().optional(),
+    videoUrl: z.union([httpUrlSchema, z.literal(""), z.null()]).optional(),
+    stage: z.string().min(1, { message: "stage is required" }),
+    status: z.enum(['scheduled', 'completed']).optional(),
+    phase: gamePhaseSchema.optional(),
+    bracket: gameBracketSchema,
+    setScores: z.array(z.string()).max(5).optional(),
+    tags: z.array(z.string()).optional(),
+    name: z.string().optional(),
+});
+
 export const updateGameSchema = z.object({
     name: z.string().optional(),
     seasonId: z.number().int().positive().optional(),

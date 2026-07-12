@@ -6,6 +6,7 @@ import { usePlayerMutations }             from "../../hooks/allPatch";
 import { useBatchPlayersByTeamName }      from "../../hooks/useCreatePlayers";
 import { useDeletePlayers }               from "../../hooks/allDelete";
 import { useAuth }                        from "../../context/authContext";
+import { useRegion }                      from "../../context/regionContext";
 import type { Player }                    from "../../types/interfaces";
 import "../../styles/UsersPage.css";       // table & button styling
 import "../../styles/PlayersPage.css";     // custom "submit players" modal styling
@@ -35,10 +36,13 @@ const PlayersPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
 
+  const { regionQuery } = useRegion();
+
   const { data: players, total, totalPages, loading, error, refetch } = usePlayers({
     page: currentPage,
     limit: PLAYERS_PER_PAGE,
     search: searchQuery || undefined,
+    ...regionQuery,
   });
   const { patchPlayer } = usePlayerMutations();
   const { createBatch, loading: batchLoading, error: batchError } = useBatchPlayersByTeamName();

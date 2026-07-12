@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { useSeasons } from '../hooks/allFetch';
+import React, { useEffect, useState } from 'react';
 import { authFetch } from '../hooks/authFetch';
 import { useAuth } from '../context/authContext';
+import { useFormRegionSeason } from '../hooks/useFormRegionSeason';
+import RegionSeasonFields from './ui/RegionSeasonFields';
 import type { ImportChallongeInput, ChallongeImportResult } from '../types/interfaces';
 import '../styles/ChallongeImport.css';
 
@@ -11,22 +12,24 @@ interface ChallongeImportProps {
 }
 
 const ChallongeImport: React.FC<ChallongeImportProps> = ({ onImportSuccess, onCancel }) => {
-  const { data: seasons, loading: seasonsLoading } = useSeasons();
+  const formRegionSeason = useFormRegionSeason('id');
   const { token } = useAuth();
   const [formData, setFormData] = useState<Partial<ImportChallongeInput>>({
     challongeUrl: '',
-    seasonId: 0,
     round: '',
     roundStartDate: '',
     roundEndDate: '',
     matchSpacingMinutes: 30,
     phase: 'qualifiers',
-    region: 'na',
     tags: [],
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<Array<{ participantName: string; reason: string }>>([]);
+
+  useEffect(() => {
+    formRegionSeason.initFromActiveRegion();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,7 +38,13 @@ const ChallongeImport: React.FC<ChallongeImportProps> = ({ onImportSuccess, onCa
     setValidationErrors([]);
 
     try {
-      if (!formData.challongeUrl || !formData.seasonId || !formData.roundStartDate || !formData.roundEndDate) {
+      if (
+        !formData.challongeUrl ||
+        !formRegionSeason.regionId ||
+        formRegionSeason.seasonValue === "" ||
+        !formData.roundStartDate ||
+        !formData.roundEndDate
+      ) {
         throw new Error('Please fill in all required fields');
       }
 
@@ -45,10 +54,22 @@ const ChallongeImport: React.FC<ChallongeImportProps> = ({ onImportSuccess, onCa
         throw new Error('Round start date must be before round end date');
       }
 
+      const payload: ImportChallongeInput = {
+        challongeUrl: formData.challongeUrl,
+        seasonId: formRegionSeason.seasonValue as number,
+        round: formData.round,
+        roundStartDate: formData.roundStartDate,
+        roundEndDate: formData.roundEndDate,
+        matchSpacingMinutes: formData.matchSpacingMinutes ?? 30,
+        phase: formData.phase ?? 'qualifiers',
+        region: formRegionSeason.selectedRegion?.code ?? 'na',
+        tags: formData.tags,
+      };
+
       const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
       const response = await authFetch(`${backendUrl}/api/games/import-challonge`, {
         method: 'POST',
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       }, token);
 
       const result: ChallongeImportResult = await response.json();
@@ -101,25 +122,20 @@ const ChallongeImport: React.FC<ChallongeImportProps> = ({ onImportSuccess, onCa
             />
           </div>
 
-          <div className="form-row form-row-3">
-            <div className="form-group">
-              <label htmlFor="seasonId">Season *</label>
-              <select
-                id="seasonId"
-                value={formData.seasonId || ''}
-                onChange={(e) => handleInputChange('seasonId', parseInt(e.target.value))}
-                disabled={seasonsLoading}
-                required
-              >
-                <option value="">{seasonsLoading ? "Loading seasons..." : "Select a season"}</option>
-                {seasons?.map(season => (
-                  <option key={season.id} value={season.id}>
-                    Season {season.seasonNumber}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <RegionSeasonFields
+            regions={formRegionSeason.regions}
+            regionsLoading={formRegionSeason.regionsLoading}
+            regionId={formRegionSeason.regionId}
+            onRegionChange={formRegionSeason.setRegionId}
+            seasons={formRegionSeason.seasons}
+            seasonsLoading={formRegionSeason.seasonsLoading}
+            seasonValue={formRegionSeason.seasonValue}
+            onSeasonChange={formRegionSeason.setSeasonValue}
+            seasonValueKey="id"
+            style={{ marginBottom: 0 }}
+          />
 
+          <div className="form-row form-row-3">
             <div className="form-group">
               <label htmlFor="phase">Phase *</label>
               <select
@@ -131,20 +147,6 @@ const ChallongeImport: React.FC<ChallongeImportProps> = ({ onImportSuccess, onCa
                 <option value="pre_season">Pre-Season</option>
                 <option value="qualifiers">Qualifiers</option>
                 <option value="playoffs">Playoffs</option>
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="region">Region *</label>
-              <select
-                id="region"
-                value={formData.region || 'na'}
-                onChange={(e) => handleInputChange('region', e.target.value)}
-                required
-              >
-                <option value="na">North American</option>
-                <option value="eu">European</option>
-                <option value="as">Asian</option>
               </select>
             </div>
           </div>

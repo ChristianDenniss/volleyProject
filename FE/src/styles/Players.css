@@ -86,3 +86,45 @@
     opacity: 0.8;
     pointer-events: none;
 }
+
+/* Replace light-blue accent surfaces with brand navy / neutral tokens */
+.players-page .listing-table tbody tr.listing-row-clickable:hover {
+    background: var(--color-bg-muted);
+}
+
+.players-page .listing-table tbody tr.listing-row-expanded,
+.players-page .listing-table tbody tr.listing-row-expanded:hover {
+    background: var(--color-bg-light);
+}
+
+.players-page .listing-table-detail-row td,
+.players-page .listing-table-detail-row:hover td {
+    background: var(--color-bg-light);
+}
+
+.players-page .listing-table-position-pill {
+    color: var(--color-brand-primary);
+    background: rgba(var(--color-brand-primary-rgb), 0.1);
+    border: 1px solid var(--color-brand-primary);
+}
+
+.players-page .ui-overflow-list-trigger {
+    border-color: rgba(var(--color-brand-primary-rgb), 0.25);
+    background: var(--color-bg);
+}
+
+.players-page .ui-overflow-list-trigger:hover,
+.players-page .ui-overflow-list-trigger:focus-visible {
+    background: rgba(var(--color-brand-primary-rgb), 0.08);
+    border-color: var(--color-brand-primary);
+}
+
+.players-page .listing-skeleton-row {
+    background: linear-gradient(
+        90deg,
+        var(--color-bg-muted) 25%,
+        var(--color-bg-light) 50%,
+        var(--color-bg-muted) 75%
+    );
+    background-size: 200% 100%;
+}

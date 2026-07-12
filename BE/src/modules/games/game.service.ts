@@ -288,15 +288,23 @@ export class GameService {
                 throw new InvalidFormatError("Scores cannot be negative.");
             }
     
-            // Fetch teams by names
-            const teams = await this.teamRepository.findBy({ name: In(teamNames) });
+            // Fetch teams scoped to the selected season
+            const teams = await this.teamRepository
+                .createQueryBuilder("team")
+                .innerJoin("team.season", "season")
+                .where("season.id = :seasonId", { seasonId })
+                .andWhere("team.name IN (:...teamNames)", { teamNames })
+                .getMany();
             console.log("Teams fetched from the database:", teams);
     
-            // Ensure we have exactly two teams
+            // Ensure we have exactly two teams in this season
             if (teams.length !== 2) {
-                const missingTeams = teamNames.filter(name => !teams.some(team => team.name === name));
-                console.error("Missing teams:", missingTeams);
-                throw new NotFoundError(`Teams with names ${missingTeams.join(', ')} not found`);
+                const foundNames = new Set(teams.map((team) => team.name));
+                const missingTeams = teamNames.filter((name) => !foundNames.has(name));
+                console.error("Missing teams in season:", missingTeams);
+                throw new NotFoundError(
+                    `Teams with names ${missingTeams.join(", ")} not found in season ${seasonId}`
+                );
             }
     
             // Fetch the season by ID
@@ -308,7 +316,7 @@ export class GameService {
             const teamIds = teamNames.map(teamName => {
                 const team = teams.find(entry => entry.name === teamName);
                 if (!team) {
-                    throw new NotFoundError(`Team with name ${teamName} not found`);
+                    throw new NotFoundError(`Team with name ${teamName} not found in season ${seasonId}`);
                 }
 
                 return team.id;
