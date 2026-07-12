@@ -14,6 +14,8 @@ import {
 } from 'chart.js';
 import { Radar, Bar } from 'react-chartjs-2';
 import { Player, Stats } from '../types/interfaces';
+import { useSinglePlayer, usePlayers, useSkinnySeasons } from '../hooks/allFetch';
+import { useRegion } from '../context/regionContext';
 
 ChartJS.register(
   RadialLinearScale,
@@ -29,16 +31,30 @@ ChartJS.register(
 );
 
 interface PlayerStatsVisualizationProps {
-  player: Player;
-  allPlayers: Player[];
+  playerId: number;
   selectedSeason: number | null;
 }
 
 const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
-  player,
-  allPlayers,
+  playerId,
   selectedSeason
 }) => {
+  const { regionQuery } = useRegion();
+  const { data: player, loading: playerLoading } = useSinglePlayer(String(playerId));
+  const { data: seasons } = useSkinnySeasons({ page: 1, limit: 100, ...regionQuery });
+  const seasonId = selectedSeason == null
+    ? undefined
+    : seasons?.find((s) => s.seasonNumber === selectedSeason)?.id;
+
+  // League / teammate comparisons need other players' stats for the selected season.
+  // Scoped to season when possible so we don't reintroduce the full-roster fetch.
+  const { data: allPlayers = [], loading: peersLoading } = usePlayers({
+    page: 1,
+    limit: 500,
+    seasonId,
+    ...regionQuery,
+  });
+
   // Helper function to normalize stats relative to player's own range
   const normalizeStatsRelative = (playerData: any, ranges: any) => {
     const baseline = 10; // Minimum baseline value to keep shape visible
@@ -160,14 +176,14 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
   };
 
   // Teammate stats
-  const getTeammateStats = () => {
-    if (!player.teams) return [];
-    const currentTeam = player.teams.find(team =>
+  const getTeammateStats = (subject: Player) => {
+    if (!subject.teams) return [];
+    const currentTeam = subject.teams.find(team =>
       selectedSeason === null || team.season?.seasonNumber === selectedSeason
     );
     if (!currentTeam) return [];
     return allPlayers
-      .filter(p => p.id !== player.id && p.teams?.some(team =>
+      .filter(p => p.id !== subject.id && p.teams?.some(team =>
         team.name === currentTeam.name &&
         (selectedSeason === null || team.season?.seasonNumber === selectedSeason)
       ))
@@ -179,12 +195,12 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
   };
 
   // Get player's historical seasons data
-  const getPlayerHistoricalSeasons = () => {
-    if (!player.stats || player.stats.length === 0) return [];
+  const getPlayerHistoricalSeasons = (subject: Player) => {
+    if (!subject.stats || subject.stats.length === 0) return [];
     
     // Group stats by season
     const seasonStats = new Map<number, any[]>();
-    player.stats.forEach(statRecord => {
+    subject.stats.forEach(statRecord => {
       const seasonNumber = statRecord.game?.season?.seasonNumber;
       if (seasonNumber) {
         if (!seasonStats.has(seasonNumber)) {
@@ -257,18 +273,57 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
     return historicalSeasons.sort((a, b) => a.seasonNumber - b.seasonNumber);
   };
 
+  if (playerLoading || peersLoading) {
+    return (
+      <div className="player-visualization">
+        <p>Loading player stats…</p>
+      </div>
+    );
+  }
+
+  if (!player) {
+    return (
+      <div className="player-visualization">
+        <p>Player not found.</p>
+      </div>
+    );
+  }
+
   const playerStats = getPlayerStats(player);
   const leagueAverages = getLeagueAverages();
-  const teammateStats = getTeammateStats();
-  const historicalSeasons = getPlayerHistoricalSeasons();
+  const teammateStats = getTeammateStats(player);
+  const historicalSeasons = getPlayerHistoricalSeasons(player);
 
-  if (!playerStats || !leagueAverages) {
+  if (!playerStats) {
     return (
       <div className="player-visualization">
         <p>No stats available for this player in the selected season.</p>
       </div>
     );
   }
+
+  // Fall back to the player's own stats for radar normalization if peers aren't loaded yet
+  const comparisonAverages = leagueAverages ?? {
+    spikeKills: playerStats.spikeKills,
+    apeKills: playerStats.apeKills,
+    spikeAttempts: playerStats.spikeAttempts,
+    apeAttempts: playerStats.apeAttempts,
+    blocks: playerStats.blocks,
+    assists: playerStats.assists,
+    aces: playerStats.aces,
+    digs: playerStats.digs,
+    blockFollows: playerStats.blockFollows,
+    miscErrors: playerStats.miscErrors,
+    spikingErrors: playerStats.spikingErrors,
+    settingErrors: playerStats.settingErrors,
+    servingErrors: playerStats.servingErrors,
+    PRF: playerStats.PRF,
+    plusMinus: playerStats.plusMinus,
+    gamesPlayed: playerStats.gamesPlayed,
+    totalSets: playerStats.totalSets,
+    totalKills: playerStats.totalKills,
+    totalSpikePct: playerStats.totalSpikePct,
+  };
 
   // Radar chart: player vs league
   const radarLabels = [
@@ -326,7 +381,7 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
 
   const playerPerSetStats = getPlayerPerSetStats(player);
 
-  if (!playerStats || !leagueAverages || !playerPerSetStats) {
+  if (!playerPerSetStats) {
     return (
       <div className="player-visualization">
         <p>No stats available for this player in the selected season.</p>
@@ -335,7 +390,7 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
   }
 
   const playerNormalized = normalizeStats(playerStats);
-  const leagueNormalized = normalizeStats(leagueAverages);
+  const leagueNormalized = normalizeStats(comparisonAverages);
   
   const radarData = {
     labels: radarLabels,
@@ -615,16 +670,16 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
             } else {
               // League average data
               const actualValues = [
-                leagueAverages.spikeKills / leagueAverages.totalSets,
-                leagueAverages.apeKills / leagueAverages.totalSets,
-                leagueAverages.spikeAttempts / leagueAverages.totalSets,
-                leagueAverages.apeAttempts / leagueAverages.totalSets,
-                leagueAverages.blocks / leagueAverages.totalSets,
-                leagueAverages.assists / leagueAverages.totalSets,
-                leagueAverages.aces / leagueAverages.totalSets,
-                leagueAverages.digs / leagueAverages.totalSets,
-                leagueAverages.blockFollows / leagueAverages.totalSets,
-                (leagueAverages.miscErrors + leagueAverages.spikingErrors + leagueAverages.settingErrors + leagueAverages.servingErrors) / leagueAverages.totalSets,
+                comparisonAverages.spikeKills / comparisonAverages.totalSets,
+                comparisonAverages.apeKills / comparisonAverages.totalSets,
+                comparisonAverages.spikeAttempts / comparisonAverages.totalSets,
+                comparisonAverages.apeAttempts / comparisonAverages.totalSets,
+                comparisonAverages.blocks / comparisonAverages.totalSets,
+                comparisonAverages.assists / comparisonAverages.totalSets,
+                comparisonAverages.aces / comparisonAverages.totalSets,
+                comparisonAverages.digs / comparisonAverages.totalSets,
+                comparisonAverages.blockFollows / comparisonAverages.totalSets,
+                (comparisonAverages.miscErrors + comparisonAverages.spikingErrors + comparisonAverages.settingErrors + comparisonAverages.servingErrors) / comparisonAverages.totalSets,
               ];
               actualValue = actualValues[dataIndex];
             }

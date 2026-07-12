@@ -18,6 +18,7 @@ export function registerStatRoutes(app: Application): void {
     
     // GET routes - PUBLIC (for website display) - with caching
     router.get('/', cacheMiddleware({ prefix: 'stats', ttl: 600 }), statController.getStats);
+    router.get('/leaderboard', cacheMiddleware({ prefix: 'stats', ttl: 300 }), statController.getLeaderboard);
     router.get('/player/:playerId', cacheMiddleware({ prefix: 'stats', ttl: 600 }), statController.getStatsByPlayerId);
     router.get('/game/:gameId', cacheMiddleware({ prefix: 'stats', ttl: 600 }), statController.getStatsByGameId);
     router.get('/:id', cacheMiddleware({ prefix: 'stats', ttl: 600 }), statController.getStatById);

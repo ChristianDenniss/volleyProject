@@ -238,7 +238,7 @@ export class GameService {
     ): Promise<[Games[], number]> {
         return this.gameRepository.findAndCount({
             where: this.buildWhere(filters),
-            relations: ["season", "region"],
+            relations: ["season", "region", "teams"],
             order: this.buildOrder(sort), // Defaults to most recent games first
             skip: pagination.skip,
             take: pagination.take

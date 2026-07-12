@@ -36,6 +36,7 @@ export function getPlayersWithRelations(): Player[] {
     ...player,
     teams: teamsForPlayer(player.id),
     stats: db.stats.filter((stat) => stat.playerId === player.id),
+    awards: getAwardsForPlayer(player.id),
   }));
 }
 

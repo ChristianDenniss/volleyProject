@@ -59,6 +59,7 @@ interface Player
   position: string;
   teams?: Team[]; 
   stats?: Stats[];
+  awards?: Award[];
 }
 interface Stats
 {

@@ -84,7 +84,17 @@
   background: var(--color-row-hover);
 }
 
-.listing-table tbody tr.listing-row-expanded {
+.listing-table tbody tr.listing-row-expanded,
+.listing-table tbody tr.listing-row-expanded:hover {
+  background: var(--color-accent-border);
+  border-bottom: none;
+}
+
+.listing-table-detail-row {
+  cursor: default;
+}
+
+.listing-table-detail-row:hover td {
   background: var(--color-accent-border);
 }
 
@@ -105,23 +115,6 @@
   text-decoration: underline;
 }
 
-/* Inline player avatar + position pill (used by the Players roster table) */
-.listing-table-avatar {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.75rem;
-  height: 1.75rem;
-  border-radius: 50%;
-  background: var(--color-brand-primary);
-  color: var(--color-text-on-brand);
-  font-size: 0.6875rem;
-  font-weight: 700;
-  margin-right: 0.6rem;
-  flex-shrink: 0;
-  vertical-align: middle;
-}
-
 .listing-table-position-pill {
   display: inline-block;
   font-size: 0.6875rem;
@@ -132,6 +125,12 @@
   background: var(--color-accent-pale);
   padding: 0.2rem 0.6rem;
   border-radius: 999px;
+}
+
+.listing-table-overflow-list {
+  display: inline-block;
+  max-width: 14rem;
+  font-size: 0.8125rem;
 }
 
 /* Expand chevron + accordion detail panel */
@@ -149,7 +148,7 @@
 
 .listing-table-detail-row td {
   background: var(--color-accent-border);
-  padding: 1rem 1.25rem 1.25rem;
+  padding: 0 1.25rem 1.25rem;
 }
 
 .listing-table-detail {
@@ -159,54 +158,46 @@
   gap: 0.9rem;
 }
 
-.listing-table-detail-teams {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+.listing-table-detail-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+  gap: 0.75rem 1.25rem;
   width: 100%;
+  margin: 0;
 }
 
-.listing-table-detail-team-row {
+.listing-table-detail-stat {
   display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  font-size: 0.875rem;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.listing-table-detail-stat dt {
+  margin: 0;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
+
+.listing-table-detail-stat dd {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
   color: var(--color-text);
 }
 
-.listing-table-detail-team-logo {
-  width: 1.5rem;
-  height: 1.5rem;
-  border-radius: 50%;
-  object-fit: contain;
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
-  flex-shrink: 0;
-}
-
-.listing-table-detail-team-season {
-  color: var(--color-text-muted);
-  font-size: 0.8125rem;
-}
-
-.listing-table-detail-team-placement {
-  margin-left: auto;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--color-brand-primary);
-  background: var(--color-bg);
-  padding: 0.15rem 0.5rem;
-  border-radius: 0.35rem;
-}
-
-.listing-table-detail-empty {
-  font-size: 0.875rem;
-  color: var(--color-text-muted);
-  font-style: italic;
+.listing-table-detail-stat--wide {
+  grid-column: 1 / -1;
 }
 
 .listing-table-detail-profile-btn {
   align-self: flex-start;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.2;
 }
 
 .listing-table-muted {

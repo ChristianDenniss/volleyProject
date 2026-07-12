@@ -14,6 +14,12 @@ import { InvalidFormatError } from '../../errors/InvalidFormatError.js';
 import { Seasons } from '../seasons/season.entity.js';
 import { Teams } from '../teams/team.entity.js';
 import { PaginationParams } from '../../utils/pagination.js';
+import {
+    LeaderboardParams,
+    buildPlayerLeaderboardSql,
+    buildTeamLeaderboardSql,
+    countParamsFrom,
+} from './stat.leaderboard.js';
 
 export interface StatFilters {
     search?: string;
@@ -937,5 +943,24 @@ export class StatService extends CacheableService
             });
             throw error;
         }
+    }
+
+    /**
+     * Aggregated player/team stats leaderboard (sums, ratios, per-game/per-set).
+     * Uses raw SQL — same pattern as trivia.service difficulty scoring.
+     */
+    async getLeaderboard(params: LeaderboardParams): Promise<[Record<string, unknown>[], number]> {
+        const built =
+            params.view === 'team'
+                ? buildTeamLeaderboardSql(params)
+                : buildPlayerLeaderboardSql(params);
+
+        const [rows, countRows] = await Promise.all([
+            this.statRepository.query(built.sql, built.queryParams),
+            this.statRepository.query(built.countSql, countParamsFrom(built.queryParams)),
+        ]);
+
+        const total = Number(countRows?.[0]?.count ?? 0);
+        return [rows as Record<string, unknown>[], total];
     }
 }

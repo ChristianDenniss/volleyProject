@@ -182,7 +182,7 @@ export class PlayerService extends CacheableService
         return this.getCachedQuery('medium', { ...pagination, ...filters, ...sort }, () =>
             this.playerRepository.findAndCount({
                 where: this.buildWhere(filters),
-                relations: ["teams", "teams.season", "teams.region"],
+                relations: ["teams", "teams.season", "teams.season.region", "teams.region", "stats", "awards"],
                 relationLoadStrategy: 'query',
                 order: this.buildOrder(sort),
                 skip: pagination.skip,

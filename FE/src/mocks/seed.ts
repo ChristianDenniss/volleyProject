@@ -21,11 +21,16 @@ const POSITIONS = [
   "N/A",
 ] as const;
 
-const STAGES = [
-  "Regular Season",
+const QUALIFIER_ROUNDS = [
   "Round 1",
   "Round 2",
   "Round 3",
+  "Round 4",
+  "Round 5",
+  "Round 6",
+] as const;
+
+const PLAYOFF_STAGES = [
   "Round of 16",
   "Quarterfinals",
   "Semifinals",
@@ -33,6 +38,11 @@ const STAGES = [
   "Grand Finals",
   "Bracket Reset",
   "3rd Place Match",
+] as const;
+
+const PRE_SEASON_STAGES = [
+  "Exhibition",
+  "Scrimmage",
 ] as const;
 
 const MOCK_REGIONS = {
@@ -195,38 +205,40 @@ const MATCH_TIME_SLOTS = [
   { hour: 21, minute: 30 },
 ] as const;
 
-const MATCH_ROUNDS = [
-  "Round 1",
-  "Round 2",
-  "Round 3",
-  "Round of 16",
-  "Quarterfinals",
-  "Semifinals",
-  "Finals",
-  "Grand Finals",
-] as const;
+function inferSchedulePhase(gameId: number): Game["phase"] {
+  switch (gameId % 6) {
+    case 2:
+      return "pre_season";
+    case 1:
+    case 4:
+      return "qualifiers";
+    default:
+      return "playoffs";
+  }
+}
 
-function buildGameTags(round: string, slotIndex: number, gameId: number): string[] {
+function stageForPhase(phase: Game["phase"], seed: number): string {
+  if (phase === "qualifiers") return pick(QUALIFIER_ROUNDS, seed);
+  if (phase === "pre_season") return pick(PRE_SEASON_STAGES, seed);
+  return pick(PLAYOFF_STAGES, seed);
+}
+
+function buildGameTags(phase: Game["phase"], stage: string, slotIndex: number, gameId: number): string[] {
   const bracket = (slotIndex + gameId) % 3 === 0
     ? "Losers Bracket"
     : "Winners Bracket";
   const region = pick(["NA", "EU", "AS", "SA"] as const, gameId);
   const division = pick(["Invitational", "D-League", "Showcase"] as const, slotIndex);
 
-  switch (gameId % 6) {
-    case 0:
-      return ["RVL", "Playoffs", round, bracket, region, division];
-    case 1:
-      return ["RVL", "Qualifiers", "Round of 16", round, region, "Exhibition"];
-    case 2:
-      return ["RVL", "Pre-Season", "Exhibition", round, region];
-    case 3:
-      return ["RVL", "Playoffs", "Round of 16", bracket, division];
-    case 4:
-      return ["RVL", "Qualifiers", round];
-    default:
-      return ["RVL", "Playoffs", round, bracket];
+  if (phase === "pre_season") {
+    return ["RVL", "Pre-Season", stage, region];
   }
+
+  if (phase === "qualifiers") {
+    return ["RVL", "Qualifiers", stage, region];
+  }
+
+  return ["RVL", "Playoffs", stage, bracket, region, division];
 }
 
 const SEASON_THEMES = [
@@ -345,6 +357,8 @@ function buildTeams(seasons: Season[], players: Player[]): Team[] {
 
   seasons.forEach((season, seasonIndex) => {
     const teamCount = season.seasonNumber >= 11 ? 8 : 6;
+    const regionKey = (["na", "eu", "as"] as const)[seasonIndex % 3];
+    const region = MOCK_REGIONS[regionKey];
 
     for (let i = 0; i < teamCount; i++) {
       const rosterStart = (seasonIndex * 64 + i * ROSTER_SIZE) % players.length;
@@ -359,7 +373,9 @@ function buildTeams(seasons: Season[], players: Player[]): Team[] {
         name: teamName,
         placement: pick(PLACEMENTS, i),
         logoUrl: `https://placehold.co/64x64/${(200 + teamId * 7).toString(16).slice(0, 3)}/ffffff?text=${encodeURIComponent(teamName.slice(0, 2))}`,
-        season,
+        season: { ...season, regionId: region.id, region },
+        regionId: region.id,
+        region,
         players: roster,
       });
     }
@@ -432,10 +448,10 @@ function buildGames(seasons: Season[], teams: Team[]): Game[] {
         const team2Score = team1Wins ? loserScore : 3;
         const winnerTeamId = team1Wins ? team1.id : team2.id;
 
-        const stage = pick(STAGES, matchIndex + season.id);
-        const isPlayoff =
-          stage.includes("Round of") ||
-          ["Quarterfinals", "Semifinals", "Finals", "Grand Finals", "Bracket Reset", "3rd Place Match"].includes(stage);
+        const isPlayoff = (matchIndex + season.id) % 5 === 0;
+        const stage = isPlayoff
+          ? pick(PLAYOFF_STAGES, matchIndex + season.id)
+          : pick(QUALIFIER_ROUNDS, matchIndex + season.id);
 
         games.push({
           id: gameId++,
@@ -634,15 +650,9 @@ function buildScheduleGameEntry(
   completed: boolean,
   slotIndex: number
 ): Game {
-  const round = pick(MATCH_ROUNDS, slotIndex + gameId);
-  const tags = buildGameTags(round, slotIndex, gameId);
-  const isExhibition = tags.includes("Exhibition");
-  const phase: Game["phase"] = isExhibition
-    ? "pre_season"
-    : tags.includes("Qualifiers")
-      ? "qualifiers"
-      : "playoffs";
-  const stage = round;
+  const phase = inferSchedulePhase(gameId);
+  const stage = stageForPhase(phase, slotIndex + gameId);
+  const tags = buildGameTags(phase, stage, slotIndex, gameId);
   const bracket: Game["bracket"] =
     phase === "playoffs" ? inferPlayoffBracket(slotIndex, gameId) : null;
   const team1Score = completed ? pseudoRandom(gameId, 1, 3) : null;

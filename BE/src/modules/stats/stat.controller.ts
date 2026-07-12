@@ -1,10 +1,19 @@
 import { Request, Response } from 'express';
 import { StatService, StatFilters } from './stat.service.js';
-import { parsePagination, toPaginatedResult } from '../../utils/pagination.js';
+import { parsePagination, parseSort, toPaginatedResult } from '../../utils/pagination.js';
 import { parseRegionQuery } from '../../utils/regionQuery.js';
 import { RegionService } from '../regions/region.service.js';
+import {
+    LEADERBOARD_SORT_FIELDS,
+    LEADERBOARD_DEFAULT_SORT,
+    LeaderboardStatType,
+    LeaderboardView,
+    parseLeaderboardFilters,
+} from './stat.leaderboard.js';
+import { STAGE_ROUND_KEYS, StageRound } from '../games/stageRounds.js';
 
 const STATS_DEFAULT_LIMIT = 25;
+const LEADERBOARD_DEFAULT_LIMIT = 25;
 
 export class StatController
 {
@@ -116,6 +125,64 @@ export class StatController
         {
             console.error("Error fetching stats:", error);
             res.status(500).json({ error: "Failed to fetch stats" });
+        }
+    };
+
+    // Aggregated player/team leaderboard
+    getLeaderboard = async (req: Request, res: Response): Promise<void> =>
+    {
+        try
+        {
+            const pagination = parsePagination(req.query, LEADERBOARD_DEFAULT_LIMIT);
+            const sort = parseSort(req.query, LEADERBOARD_SORT_FIELDS, LEADERBOARD_DEFAULT_SORT);
+
+            const viewRaw = typeof req.query.view === 'string' ? req.query.view : 'player';
+            const view: LeaderboardView = viewRaw === 'team' ? 'team' : 'player';
+
+            const statTypeRaw = typeof req.query.statType === 'string' ? req.query.statType : 'total';
+            const statType: LeaderboardStatType =
+                statTypeRaw === 'perGame' || statTypeRaw === 'perSet' ? statTypeRaw : 'total';
+
+            const stageRaw = typeof req.query.stageRound === 'string' ? req.query.stageRound : 'all';
+            const stageRound: StageRound = (STAGE_ROUND_KEYS as readonly string[]).includes(stageRaw)
+                ? (stageRaw as StageRound)
+                : 'all';
+
+            const seasonRaw = req.query.season ?? req.query.seasonNumber;
+            const seasonNumber =
+                seasonRaw !== undefined && seasonRaw !== '' && Number.isFinite(Number(seasonRaw))
+                    ? Number(seasonRaw)
+                    : undefined;
+
+            const search =
+                typeof req.query.search === 'string' && req.query.search.length > 0
+                    ? req.query.search
+                    : undefined;
+
+            const regionFilter = parseRegionQuery(req.query as Record<string, unknown>);
+            const regionId = await this.regionService.resolveRegionId(regionFilter);
+
+            const filters = parseLeaderboardFilters(req.query.filters);
+
+            const [data, total] = await this.statService.getLeaderboard({
+                view,
+                seasonNumber,
+                stageRound,
+                statType,
+                search,
+                regionId,
+                sortBy: sort.sortBy,
+                sortDir: sort.sortDir,
+                filters,
+                pagination,
+            });
+
+            res.json(toPaginatedResult(data, total, pagination));
+        }
+        catch (error)
+        {
+            console.error("Error fetching stats leaderboard:", error);
+            res.status(500).json({ error: "Failed to fetch stats leaderboard" });
         }
     };
 

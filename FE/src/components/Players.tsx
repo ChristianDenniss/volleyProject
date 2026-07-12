@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { useMediumPlayers, useSkinnySeasons } from "../hooks/allFetch";
 import { useNavigate } from "react-router-dom";
-import type { Player, Team } from "../types/interfaces";
+import type { Player, Stats, Team } from "../types/interfaces";
 import Table, { type TableColumn } from "./ui/Table";
 import "../styles/Players.css";
 import "../styles/ListingPage.css";
@@ -10,9 +10,53 @@ import Pagination from "./Pagination";
 import FilterBar from "./ui/FilterBar";
 import { useRegion } from "../context/regionContext";
 import { useDebouncedValue } from "../hooks/useDebouncedValue";
+import OverflowListCell from "./ui/OverflowListCell";
 import { PLAYER_POSITIONS } from "../constants/playerPositions";
 
-/** Team history sorted oldest -> newest season, for the expanded detail panel. */
+const LISTING_OVERFLOW_VISIBLE = 2;
+
+interface PlayerSeasonEntry {
+  seasonId: number;
+  seasonNumber: number;
+  regionCode: string | null;
+}
+
+function getRegionCodeForTeam(team: Team): string | null {
+  return team.season?.region?.code ?? team.region?.code ?? null;
+}
+
+function getPlayerSeasons(player: Player): PlayerSeasonEntry[] {
+  if (!player.teams?.length) return [];
+
+  const seen = new Set<number>();
+  const entries: PlayerSeasonEntry[] = [];
+
+  for (const team of player.teams) {
+    const season = team.season;
+    if (!season?.id || seen.has(season.id)) continue;
+    seen.add(season.id);
+
+    entries.push({
+      seasonId: season.id,
+      seasonNumber: season.seasonNumber,
+      regionCode: getRegionCodeForTeam(team),
+    });
+  }
+
+  return entries.sort((a, b) => a.seasonNumber - b.seasonNumber);
+}
+
+function formatSeasonLabel(entry: PlayerSeasonEntry): string {
+  const regionSuffix = entry.regionCode ? ` [${entry.regionCode.toUpperCase()}]` : "";
+  return `Season ${entry.seasonNumber}${regionSuffix}`;
+}
+
+function formatPlayerSeasons(player: Player): string {
+  const seasons = getPlayerSeasons(player);
+  if (!seasons.length) return "—";
+  return seasons.map(formatSeasonLabel).join(", ");
+}
+
 function getSortedPlayerTeams(player: Player): Team[] {
   if (!player.teams?.length) return [];
   return [...player.teams].sort(
@@ -20,12 +64,35 @@ function getSortedPlayerTeams(player: Player): Team[] {
   );
 }
 
-/** "Jane Doe" -> "JD"; falls back to the first two characters for single/odd names. */
-function getPlayerInitials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "?";
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+function getPlayerTeamLabels(player: Player): string[] {
+  return getSortedPlayerTeams(player).map((team) => team.name);
+}
+
+function getPlayerSeasonLabels(player: Player): string[] {
+  return getPlayerSeasons(player).map(formatSeasonLabel);
+}
+
+function getPlayerCareerTotals(player: Player) {
+  const stats = player.stats ?? [];
+  const sum = (key: keyof Stats) =>
+    stats.reduce(
+      (total, stat) => total + (typeof stat[key] === "number" ? (stat[key] as number) : 0),
+      0
+    );
+
+  return {
+    kills: sum("apeKills") + sum("spikeKills"),
+    assists: sum("assists"),
+    blocks: sum("blocks"),
+    receives: sum("digs") + sum("blockFollows"),
+    aces: sum("aces"),
+  };
+}
+
+function formatAwardsSummary(player: Player): string {
+  const awards = player.awards ?? [];
+  if (!awards.length) return "—";
+  return awards.map((award) => award.type).join(", ");
 }
 
 const Players: React.FC = () => {
@@ -62,14 +129,7 @@ const Players: React.FC = () => {
       {
         key: "name",
         header: "Player",
-        render: (player) => (
-          <>
-            <span className="listing-table-avatar" aria-hidden="true">
-              {getPlayerInitials(player.name)}
-            </span>
-            {player.name}
-          </>
-        ),
+        render: (player) => player.name,
       },
       {
         key: "position",
@@ -82,9 +142,28 @@ const Players: React.FC = () => {
           ),
       },
       {
-        key: "teamsCount",
+        key: "teams",
         header: "Teams",
-        render: (player) => player.teams?.length ?? 0,
+        render: (player) => (
+          <OverflowListCell
+            className="listing-table-overflow-list"
+            items={getPlayerTeamLabels(player)}
+            maxVisible={LISTING_OVERFLOW_VISIBLE}
+            popoverTitle="Teams"
+          />
+        ),
+      },
+      {
+        key: "seasons",
+        header: "Seasons",
+        render: (player) => (
+          <OverflowListCell
+            className="listing-table-overflow-list"
+            items={getPlayerSeasonLabels(player)}
+            maxVisible={LISTING_OVERFLOW_VISIBLE}
+            popoverTitle="Seasons"
+          />
+        ),
       },
       {
         key: "expand",
@@ -197,40 +276,44 @@ const Players: React.FC = () => {
               onRowClick={(player) => toggleRow(player.id)}
               renderAfterRow={(player) => {
                 if (!expandedRows[player.id]) return null;
-                const teams = getSortedPlayerTeams(player);
+
+                const totals = getPlayerCareerTotals(player);
+                const seasonsPlayed = formatPlayerSeasons(player);
 
                 return (
                   <tr className="listing-table-detail-row">
                     <td colSpan={playerColumns.length}>
                       <div className="listing-table-detail">
-                        {teams.length > 0 ? (
-                          <div className="listing-table-detail-teams">
-                            {teams.map((team) => (
-                              <div key={team.id} className="listing-table-detail-team-row">
-                                {team.logoUrl && (
-                                  <img
-                                    className="listing-table-detail-team-logo"
-                                    src={team.logoUrl}
-                                    alt={`${team.name} logo`}
-                                  />
-                                )}
-                                <span>{team.name}</span>
-                                <span className="listing-table-detail-team-season">
-                                  Season {team.season?.seasonNumber ?? "?"}
-                                </span>
-                                {team.placement && (
-                                  <span className="listing-table-detail-team-placement">
-                                    {team.placement}
-                                  </span>
-                                )}
-                              </div>
-                            ))}
+                        <dl className="listing-table-detail-stats">
+                          <div className="listing-table-detail-stat">
+                            <dt>Awards</dt>
+                            <dd>{formatAwardsSummary(player)}</dd>
                           </div>
-                        ) : (
-                          <div className="listing-table-detail-empty">
-                            No team history available.
+                          <div className="listing-table-detail-stat">
+                            <dt>Kills</dt>
+                            <dd>{totals.kills}</dd>
                           </div>
-                        )}
+                          <div className="listing-table-detail-stat">
+                            <dt>Assists</dt>
+                            <dd>{totals.assists}</dd>
+                          </div>
+                          <div className="listing-table-detail-stat">
+                            <dt>Blocks</dt>
+                            <dd>{totals.blocks}</dd>
+                          </div>
+                          <div className="listing-table-detail-stat">
+                            <dt>Receives</dt>
+                            <dd>{totals.receives}</dd>
+                          </div>
+                          <div className="listing-table-detail-stat">
+                            <dt>Aces</dt>
+                            <dd>{totals.aces}</dd>
+                          </div>
+                          <div className="listing-table-detail-stat listing-table-detail-stat--wide">
+                            <dt>Seasons played</dt>
+                            <dd>{seasonsPlayed}</dd>
+                          </div>
+                        </dl>
 
                         <button
                           type="button"
@@ -240,7 +323,7 @@ const Players: React.FC = () => {
                             navigate(`/players/${player.id}`);
                           }}
                         >
-                          View Full Profile →
+                          View profile
                         </button>
                       </div>
                     </td>

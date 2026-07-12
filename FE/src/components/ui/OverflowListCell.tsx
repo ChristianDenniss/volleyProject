@@ -23,6 +23,7 @@ const OverflowListCell: React.FC<OverflowListCellProps> = ({
   const [open, setOpen] = useState(false);
   const [popoverStyle, setPopoverStyle] = useState<React.CSSProperties>({});
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
   const popoverId = useId();
 
   const hiddenCount = Math.max(0, items.length - maxVisible);
@@ -61,6 +62,7 @@ const OverflowListCell: React.FC<OverflowListCellProps> = ({
     const handlePointerDown = (event: MouseEvent) => {
       const target = event.target as Node;
       if (triggerRef.current?.contains(target)) return;
+      if (popoverRef.current?.contains(target)) return;
       close();
     };
 
@@ -92,43 +94,47 @@ const OverflowListCell: React.FC<OverflowListCellProps> = ({
       className={`ui-overflow-list${className ? ` ${className}` : ""}`}
       onClick={(event) => event.stopPropagation()}
     >
-      <span className="ui-overflow-list-text">{visibleText}</span>
-      {hiddenCount > 0 && (
-        <>
-          <button
-            ref={triggerRef}
-            type="button"
-            className="ui-overflow-list-trigger"
-            onClick={toggleOpen}
-            aria-expanded={open}
-            aria-controls={popoverId}
-            aria-label={`Show ${hiddenCount} more item${hiddenCount === 1 ? "" : "s"}`}
+      <span className="ui-overflow-list-text">
+        {visibleText}
+        {hiddenCount > 0 && (
+          <>
+            {" "}
+            <button
+              ref={triggerRef}
+              type="button"
+              className="ui-overflow-list-trigger"
+              onClick={toggleOpen}
+              aria-expanded={open}
+              aria-controls={popoverId}
+              aria-label={`Show ${hiddenCount} more item${hiddenCount === 1 ? "" : "s"}`}
+            >
+              +{hiddenCount}
+            </button>
+          </>
+        )}
+      </span>
+      {open &&
+        createPortal(
+          <div
+            ref={popoverRef}
+            id={popoverId}
+            role="tooltip"
+            className="ui-overflow-list-popover"
+            style={popoverStyle}
+            onClick={(event) => event.stopPropagation()}
+            onMouseDown={(event) => event.stopPropagation()}
           >
-            +{hiddenCount}
-          </button>
-          {open &&
-            createPortal(
-              <div
-                id={popoverId}
-                role="tooltip"
-                className="ui-overflow-list-popover"
-                style={popoverStyle}
-                onClick={(event) => event.stopPropagation()}
-                onMouseDown={(event) => event.stopPropagation()}
-              >
-                {popoverTitle && (
-                  <div className="ui-overflow-list-popover-title">{popoverTitle}</div>
-                )}
-                <ul className="ui-overflow-list-popover-items">
-                  {items.map((item, index) => (
-                    <li key={`${item}-${index}`}>{item}</li>
-                  ))}
-                </ul>
-              </div>,
-              document.body
+            {popoverTitle && (
+              <div className="ui-overflow-list-popover-title">{popoverTitle}</div>
             )}
-        </>
-      )}
+            <ul className="ui-overflow-list-popover-items">
+              {items.map((item, index) => (
+                <li key={`${item}-${index}`}>{item}</li>
+              ))}
+            </ul>
+          </div>,
+          document.body
+        )}
     </span>
   );
 };

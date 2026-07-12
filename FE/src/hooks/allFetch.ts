@@ -18,12 +18,23 @@ interface StatListParams extends Partial<PaginationParams>, RegionListParams, So
 interface AwardListParams extends Partial<PaginationParams>, RegionListParams, SortableListParams { search?: string; seasonNumber?: number | string; type?: string; }
 interface SeasonListParams extends Partial<PaginationParams>, RegionListParams {}
 interface RecordListParams extends Partial<PaginationParams>, RegionListParams { type?: string; recordCategory?: string; }
+interface LeaderboardListParams extends Partial<PaginationParams>, RegionListParams, SortableListParams {
+  search?: string;
+  season?: number | string;
+  seasonNumber?: number | string;
+  stageRound?: string;
+  statType?: string;
+  view?: string;
+  filters?: string;
+}
 interface ArticleListParams extends Partial<PaginationParams> { status?: 'pending' | 'approved' | 'rejected'; }
 
 export const usePlayers = (params: PlayerListParams = DEFAULT_PAGINATION) => usePaginatedFetch<Player>("players", params);
 export const useSeasons = (params: SeasonListParams = DEFAULT_PAGINATION) => usePaginatedFetch<Season>("seasons", params);
 export const useGames = (params: GameListParams = DEFAULT_PAGINATION) => usePaginatedFetch<Game>("games", params);
 export const useStats = (params: StatListParams = DEFAULT_PAGINATION) => usePaginatedFetch<Stats>("stats", params);
+export const useLeaderboard = (params: LeaderboardListParams = DEFAULT_PAGINATION) =>
+    usePaginatedFetch<Record<string, unknown>>("stats/leaderboard", params);
 export const useArticles = (params: ArticleListParams = DEFAULT_PAGINATION) => usePaginatedFetch<Article>("articles", params);
 
 export const useRecords = (params: RecordListParams = DEFAULT_PAGINATION) => {
