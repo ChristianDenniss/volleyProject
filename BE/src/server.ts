@@ -13,9 +13,21 @@ dotenv.config();
 // NODE_ENV=production to enable production-only behavior.
 process.env.NODE_ENV ??= 'development';
 
-if (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'your-super-secret-jwt-key-change-this-in-production') {
+const INSECURE_JWT_SECRETS = new Set([
+  'your-super-secret-jwt-key-change-this-in-production',
+  'replace-with-a-secure-random-secret',
+]);
+
+const jwtSecret = process.env.JWT_SECRET?.trim();
+const hasInsecureJwtSecret = !jwtSecret || INSECURE_JWT_SECRETS.has(jwtSecret);
+
+if (process.env.NODE_ENV === 'production' && hasInsecureJwtSecret) {
   console.error('FATAL: JWT_SECRET environment variable is not set to a secure value.');
   process.exit(1);
+}
+
+if (hasInsecureJwtSecret) {
+  console.warn('WARNING: JWT_SECRET is using a placeholder value. OK for local development only.');
 }
 
 const PORT = process.env.PORT || 3000; // Default to 3000 to match docker-compose
