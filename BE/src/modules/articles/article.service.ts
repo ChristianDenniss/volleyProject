@@ -1,10 +1,15 @@
-import { Repository } from 'typeorm';
+import { Repository, IsNull, FindOptionsWhere } from 'typeorm';
 import { AppDataSource } from '../../db/data-source.js';
 import { Article } from './article.entity.js';
 import { User } from '../user/user.entity.js';
 import { MissingFieldError } from '../../errors/MissingFieldError.js';
 import { NotFoundError } from '../../errors/NotFoundError.js';
 import { PaginationParams } from '../../utils/pagination.js';
+
+export interface ArticleFilters {
+    /** 'pending' = approved IS NULL; 'approved'/'rejected' = boolean match; omit for all */
+    status?: 'pending' | 'approved' | 'rejected';
+}
 
 export class ArticleService {
     private articleRepository: Repository<Article>;
@@ -52,8 +57,14 @@ export class ArticleService {
     /**
      * Get all articles with their author
      */
-    async getAllArticles(pagination: PaginationParams): Promise<[Article[], number]> {
+    async getAllArticles(pagination: PaginationParams, filters: ArticleFilters = {}): Promise<[Article[], number]> {
+        const where: FindOptionsWhere<Article> = {};
+        if (filters.status === 'pending') where.approved = IsNull();
+        else if (filters.status === 'approved') where.approved = true;
+        else if (filters.status === 'rejected') where.approved = false;
+
         return this.articleRepository.findAndCount({
+            where,
             relations: ["author"],  // Including the author in the response
             select: { id: true, title: true, summary: true, content: true, imageUrl: true, createdAt: true, updatedAt: true, approved: true, likes: true, author: { id: true, username: true, role: true } },
             skip: pagination.skip,

@@ -8,9 +8,10 @@ import { ConflictError } from '../../errors/ConflictError.js';
 import { DuplicateError } from '../../errors/DuplicateError.js';
 import { DateError } from '../../errors/DateErrors.js';
 import { InvalidFormatError } from '../../errors/InvalidFormatError.js';
-import { parsePagination, toPaginatedResult } from '../../utils/pagination.js';
+import { parsePagination, parseSort, toPaginatedResult } from '../../utils/pagination.js';
 import { parseRegionQuery } from '../../utils/regionQuery.js';
 import { RegionService } from '../regions/region.service.js';
+import { GAME_SORT_FIELDS, GAME_DEFAULT_SORT } from './game.service.js';
 
 const GAMES_DEFAULT_LIMIT = 10;
 
@@ -188,8 +189,9 @@ export class GameController {
     getGames = async (req: Request, res: Response): Promise<void> => {
         try {
             const pagination = parsePagination(req.query, GAMES_DEFAULT_LIMIT);
+            const sort = parseSort(req.query, GAME_SORT_FIELDS, GAME_DEFAULT_SORT);
             const filters = await this.parseFilters(req);
-            const [data, total] = await this.gameService.getAllGames(pagination, filters);
+            const [data, total] = await this.gameService.getAllGames(pagination, filters, sort);
             res.json(toPaginatedResult(data, total, pagination));
         } catch (error: any) {
             if (error !instanceof MissingFieldError || 
@@ -213,8 +215,9 @@ export class GameController {
     getSkinnyGames = async (req: Request, res: Response): Promise<void> => {
         try {
             const pagination = parsePagination(req.query, GAMES_DEFAULT_LIMIT);
+            const sort = parseSort(req.query, GAME_SORT_FIELDS, GAME_DEFAULT_SORT);
             const filters = await this.parseFilters(req);
-            const [data, total] = await this.gameService.getSkinnyAllGames(pagination, filters);
+            const [data, total] = await this.gameService.getSkinnyAllGames(pagination, filters, sort);
             res.json(toPaginatedResult(data, total, pagination));
         } catch (error: any) {
             if (error !instanceof MissingFieldError || 
@@ -364,6 +367,23 @@ export class GameController {
                 console.error("Unexpected error fetching games by team:", error);
                 res.status(500).json({ error: "Failed to fetch games by team" });
             }
+        }
+    };
+
+    // Get the distinct stage labels currently in use (for filter dropdowns)
+    getDistinctStages = async (req: Request, res: Response): Promise<void> => {
+        try {
+            const { seasonId } = req.query;
+            const regionFilter = parseRegionQuery(req.query as Record<string, unknown>);
+            const regionId = await this.regionService.resolveRegionId(regionFilter);
+            const stages = await this.gameService.getDistinctStages({
+                seasonId: seasonId ? Number(seasonId) : undefined,
+                regionId,
+            });
+            res.json(stages);
+        } catch (error: any) {
+            console.error("Unexpected error fetching distinct game stages:", error);
+            res.status(500).json({ error: "Failed to fetch game stages" });
         }
     };
 

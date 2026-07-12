@@ -11,6 +11,8 @@ import { PaginationParams } from '../../utils/pagination.js';
 
 export interface RecordFilters {
     regionId?: number;
+    type?: 'game' | 'season';
+    recordCategory?: string;
 }
 
 export class RecordService {
@@ -85,12 +87,15 @@ export class RecordService {
      * Get all records
      */
     async getAllRecords(pagination: PaginationParams, filters: RecordFilters = {}): Promise<[Records[], number]> {
-        const where: { regionId?: number } = {};
+        const where: { regionId?: number; type?: string; record?: string } = {};
         if (filters.regionId) where.regionId = filters.regionId;
+        if (filters.type) where.type = filters.type;
+        if (filters.recordCategory) where.record = filters.recordCategory;
 
         return this.recordRepository.findAndCount({
             where,
             relations: ["player", "season", "region"],
+            order: { record: 'ASC', rank: 'ASC' },
             skip: pagination.skip,
             take: pagination.take
         });

@@ -1,8 +1,7 @@
-import React, { useState, useMemo } from "react"
-import { useSkinnyGames } from "../hooks/allFetch"
-import { Link, useNavigate } from "react-router-dom"
+import React, { useState } from "react"
+import { useSkinnyGames, useSkinnySeasons, useGameStages } from "../hooks/allFetch"
+import { useNavigate } from "react-router-dom"
 import type { Game } from "../types/interfaces"
-import Table, { type TableColumn } from "./ui/Table"
 import "../styles/Game.css"
 import "../styles/ListingPage.css"
 import SearchBar from "./Searchbar"
@@ -10,42 +9,20 @@ import Pagination from "./Pagination"
 import FilterBar from "./ui/FilterBar"
 import { formatGameStage } from "../utils/gameLabels"
 import { useRegion } from "../context/regionContext"
+import { useDebouncedValue } from "../hooks/useDebouncedValue"
 
-const gameColumns: TableColumn<Game>[] = [
-  {
-    key: "name",
-    header: "Game",
-    render: (game) => (
-      <Link to={`/games/${game.id}`} onClick={(e) => e.stopPropagation()}>
-        {game.name}
-      </Link>
-    ),
-  },
-  {
-    key: "season",
-    header: "Season",
-    render: (game) => game.season.seasonNumber,
-  },
-  {
-    key: "stage",
-    header: "Stage",
-    render: (game) => formatGameStage(game),
-  },
-  {
-    key: "score",
-    header: "Score",
-    render: (game) => game.team1Score != null && game.team2Score != null ? `${game.team1Score} – ${game.team2Score}` : '—',
-  },
-  {
-    key: "date",
-    header: "Date",
-    render: (game) => new Date(game.date).toLocaleDateString(),
-  },
-]
+/** "Team A vs Team B" -> ["Team A", "Team B"]; falls back to the teams relation if present. */
+function getGameTeamNames(game: Game): [string, string] {
+  if (game.teams && game.teams.length >= 2) {
+    return [game.teams[0].name, game.teams[1].name]
+  }
+  const parts = game.name.split(" vs ")
+  if (parts.length === 2) return [parts[0].trim(), parts[1].trim()]
+  return [game.name, ""]
+}
 
 const Games: React.FC = () => {
   const { regionQuery } = useRegion()
-  const { data, loading, error } = useSkinnyGames({ status: 'completed', limit: 500, page: 1, ...regionQuery })
   const navigate = useNavigate()
 
   const [searchQuery, setSearchQuery] = useState<string>("")
@@ -54,33 +31,22 @@ const Games: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(1)
   const gamesPerPage = 20
 
-  const uniqueSeasons = useMemo(() => {
-    return Array.from(new Set(data?.map((game) => game.season.seasonNumber) ?? []))
-      .sort((a, b) => a - b)
-  }, [data])
+  const debouncedSearch = useDebouncedValue(searchQuery)
 
-  const uniqueStages = useMemo(() => {
-    return Array.from(new Set(data?.map((game) => game.stage).filter(Boolean) ?? []))
-      .sort()
-  }, [data])
+  const { data: paginatedGames, totalPages, loading, error } = useSkinnyGames({
+    status: 'completed',
+    page: currentPage,
+    limit: gamesPerPage,
+    search: debouncedSearch || undefined,
+    seasonId: seasonFilter || undefined,
+    stage: stageFilter || undefined,
+    ...regionQuery,
+  })
 
-  const filteredGames = useMemo(() => {
-    return (
-      data?.filter((g) => {
-        const isCompleted = g.status === 'completed' || g.status === undefined
-        const matchesSearch = g.name.toLowerCase().includes(searchQuery.toLowerCase())
-        const matchesSeason = !seasonFilter || g.season.seasonNumber.toString() === seasonFilter
-        const matchesStage = !stageFilter || g.stage === stageFilter
-        return isCompleted && matchesSearch && matchesSeason && matchesStage
-      }) ?? []
-    )
-  }, [data, searchQuery, seasonFilter, stageFilter])
+  const { data: seasons } = useSkinnySeasons({ page: 1, limit: 100, ...regionQuery })
+  const seasonOptions = [...(seasons ?? [])].sort((a, b) => a.seasonNumber - b.seasonNumber)
 
-  const totalPages = Math.ceil(filteredGames.length / gamesPerPage)
-  const paginatedGames = filteredGames.slice(
-    (currentPage - 1) * gamesPerPage,
-    currentPage * gamesPerPage
-  )
+  const { data: uniqueStages } = useGameStages({ seasonId: seasonFilter || undefined, ...regionQuery })
 
   const clearFilters = () => {
     setSearchQuery("")
@@ -109,9 +75,9 @@ const Games: React.FC = () => {
                 }}
               >
                 <option value="">All Seasons</option>
-                {uniqueSeasons.map((season) => (
-                  <option key={season} value={season.toString()}>
-                    Season {season}
+                {seasonOptions.map((season) => (
+                  <option key={season.id} value={season.id.toString()}>
+                    Season {season.seasonNumber}
                   </option>
                 ))}
               </select>
@@ -155,25 +121,63 @@ const Games: React.FC = () => {
       ) : (
         <div className="listing-content-wrapper">
           {loading ? (
-            <div className="listing-table-wrapper">
-              <div className="listing-skeleton-table">
+            <div className="game-cards-wrapper">
+              <div className="game-cards-list">
                 {Array.from({ length: 20 }).map((_, index) => (
-                  <div key={index} className="listing-skeleton-row" />
+                  <div key={index} className="game-card-skeleton" />
                 ))}
               </div>
             </div>
-          ) : paginatedGames.length === 0 ? (
+          ) : !paginatedGames || paginatedGames.length === 0 ? (
             <div className="listing-table-empty">No games match your filters.</div>
           ) : (
-            <Table
-              columns={gameColumns}
-              rows={paginatedGames}
-              rowKey={(game) => game.id}
-              tableClassName="listing-table"
-              wrapperClassName="listing-table-wrapper"
-              rowClassName={() => "listing-row-clickable"}
-              onRowClick={(game) => navigate(`/games/${game.id}`)}
-            />
+            <div className="game-cards-wrapper">
+              <div className="game-cards-list">
+                {paginatedGames.map((game) => {
+                  const [team1Name, team2Name] = getGameTeamNames(game)
+                  const hasScore = game.team1Score != null && game.team2Score != null
+                  const team1Wins = hasScore && game.team1Score! > game.team2Score!
+                  const team2Wins = hasScore && game.team2Score! > game.team1Score!
+
+                  return (
+                    <div
+                      key={game.id}
+                      className="game-card"
+                      onClick={() => navigate(`/games/${game.id}`)}
+                    >
+                      <div className="game-card-meta">
+                        <span className="game-card-season-chip">S{game.season.seasonNumber}</span>
+                        <span className="game-card-stage-chip">{formatGameStage(game)}</span>
+                      </div>
+
+                      <div className="game-card-matchup">
+                        <div className="game-card-team game-card-team-left">
+                          <span className="game-card-team-name">{team1Name}</span>
+                        </div>
+
+                        <div className="game-card-score">
+                          <span className={`game-card-score-value${team1Wins ? " winner" : ""}`}>
+                            {hasScore ? game.team1Score : "–"}
+                          </span>
+                          <span className="game-card-score-sep">:</span>
+                          <span className={`game-card-score-value${team2Wins ? " winner" : ""}`}>
+                            {hasScore ? game.team2Score : "–"}
+                          </span>
+                        </div>
+
+                        <div className="game-card-team game-card-team-right">
+                          <span className="game-card-team-name">{team2Name}</span>
+                        </div>
+                      </div>
+
+                      <div className="game-card-footer">
+                        <span>{new Date(game.date).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
           )}
         </div>
       )}

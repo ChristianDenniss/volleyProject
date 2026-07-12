@@ -10,7 +10,7 @@ import { MultiplePlayersNotFoundError } from '../../errors/MultiplePlayersNotFou
 import { DuplicateError } from '../../errors/DuplicateError.js';
 import { NotFoundError } from '../../errors/NotFoundError.js';
 import { CreateTeamDto, UpdateTeamDto, CreateMultipleTeamsDto } from './teams.schema.js';
-import { PaginationParams } from '../../utils/pagination.js';
+import { PaginationParams, SortParams } from '../../utils/pagination.js';
 import { RegionService } from '../regions/region.service.js';
 import { RegionCode } from '../regions/region.entity.js';
 
@@ -18,6 +18,38 @@ export interface TeamFilters {
     search?: string;
     seasonId?: number;
     regionId?: number;
+    placement?: string;
+}
+
+export const TEAM_SORT_FIELDS = ['name', 'placement'] as const;
+export type TeamSortField = typeof TEAM_SORT_FIELDS[number];
+export const TEAM_DEFAULT_SORT: TeamSortField = 'name';
+
+// Curated placement rank, mirrored from the FE's placementOrder list - determines ORDER BY
+// when sorting by placement (plain alphabetical would put "1st Place" after "Top 16").
+const PLACEMENT_ORDER = [
+    '1st Place',
+    '2nd Place',
+    '3rd Place',
+    'Top 4',
+    'Top 6',
+    'Top 8',
+    'Top 12',
+    'Top 16',
+    'TBD',
+    'Didnt make playoffs',
+    'G.O.A.T.',
+];
+
+// Team placements sometimes carry a "(D#)" division suffix (e.g. "Top 8 (D2)"); both filtering
+// and curated-order sorting need to compare/rank the normalized value, not the raw column.
+const NORMALIZE_PLACEMENT_SQL = `regexp_replace(team.placement, '\\s*\\([Dd]\\d\\)$', '')`;
+
+function placementRankCaseExpr(): string {
+    const whens = PLACEMENT_ORDER
+        .map((p, i) => `WHEN ${NORMALIZE_PLACEMENT_SQL} = '${p.replace(/'/g, "''")}' THEN ${i}`)
+        .join(' ');
+    return `CASE ${whens} ELSE ${PLACEMENT_ORDER.length} END`;
 }
 
 export class TeamService {
@@ -208,7 +240,8 @@ export class TeamService {
     }
 
     /**
-     * Build a TypeORM where clause from team filters
+     * Build a TypeORM where clause from team filters (covers the plain-column filters;
+     * placement needs a raw expression, so it's applied separately in buildFilteredIdQuery).
      */
     private buildWhere(filters: TeamFilters): FindOptionsWhere<Teams> {
         const where: FindOptionsWhere<Teams> = {};
@@ -219,57 +252,97 @@ export class TeamService {
     }
 
     /**
+     * Resolve the page of team IDs (in the correct filtered/sorted order) via a query builder,
+     * since placement filtering/sorting need raw SQL (normalizing the "(D#)" suffix, curated
+     * rank order) that plain FindOptionsWhere/order can't express.
+     */
+    private async getFilteredTeamIdsPage(
+        pagination: PaginationParams,
+        filters: TeamFilters,
+        sort?: SortParams<TeamSortField>
+    ): Promise<{ ids: number[]; total: number }> {
+        const qb = this.teamRepository.createQueryBuilder('team');
+        if (filters.search) qb.andWhere('team.name ILIKE :search', { search: `%${filters.search}%` });
+        if (filters.seasonId) qb.andWhere('team.seasonId = :seasonId', { seasonId: filters.seasonId });
+        if (filters.regionId) qb.andWhere('team.regionId = :regionId', { regionId: filters.regionId });
+        if (filters.placement) qb.andWhere(`${NORMALIZE_PLACEMENT_SQL} = :placement`, { placement: filters.placement });
+
+        const total = await qb.getCount();
+
+        const sortBy = sort?.sortBy ?? TEAM_DEFAULT_SORT;
+        const sortDir = sort?.sortDir ?? 'ASC';
+        if (sortBy === 'placement') {
+            qb.orderBy(placementRankCaseExpr(), sortDir).addOrderBy('team.name', 'ASC');
+        } else {
+            qb.orderBy('team.name', sortDir);
+        }
+
+        const rows = await qb
+            .select('team.id', 'id')
+            .skip(pagination.skip)
+            .take(pagination.take)
+            .getRawMany<{ id: number }>();
+
+        return { ids: rows.map(row => row.id), total };
+    }
+
+    /** Re-hydrate full entities for a page of IDs, preserving the order `ids` was given in. */
+    private async hydrateTeamsInOrder(ids: number[], relations: string[]): Promise<Teams[]> {
+        if (ids.length === 0) return [];
+        const teams = await this.teamRepository.find({
+            where: { id: In(ids) },
+            relations,
+            relationLoadStrategy: 'query',
+        });
+        const byId = new Map(teams.map(team => [team.id, team]));
+        return ids.map(id => byId.get(id)).filter((team): team is Teams => team !== undefined);
+    }
+
+    /**
      * Get all teams
      */
-    async getAllTeams(pagination: PaginationParams, filters: TeamFilters = {}): Promise<[Teams[], number]> {
-        return this.teamRepository.findAndCount({
-            where: this.buildWhere(filters),
-            relations: [
-                "season",
-                "region",
-                "players",
-                "players.stats",
-                "players.stats.game",
-                "games",
-                "games.stats",
-                "games.season"
-            ],
-            // Nested to-many relations (players.stats, games.stats) would otherwise be loaded via
-            // a single mega-JOIN, so skip/take applies to the joined row count instead of distinct
-            // teams and can silently return fewer/duplicated teams per page. Loading relations via
-            // separate queries avoids the row-multiplication and fixes pagination correctness.
-            relationLoadStrategy: 'query',
-            skip: pagination.skip,
-            take: pagination.take
-        });
+    async getAllTeams(
+        pagination: PaginationParams,
+        filters: TeamFilters = {},
+        sort?: SortParams<TeamSortField>
+    ): Promise<[Teams[], number]> {
+        const { ids, total } = await this.getFilteredTeamIdsPage(pagination, filters, sort);
+        const teams = await this.hydrateTeamsInOrder(ids, [
+            "season",
+            "region",
+            "players",
+            "players.stats",
+            "players.stats.game",
+            "games",
+            "games.stats",
+            "games.season"
+        ]);
+        return [teams, total];
     }
     /**
      * Get all teams without relations / minimal data
      */
-    async getSkinnyAllTeams(pagination: PaginationParams, filters: TeamFilters = {}): Promise<[Teams[], number]> {
-        return this.teamRepository.findAndCount({
-            where: this.buildWhere(filters),
-            relations: [
-                "season"
-            ],
-            skip: pagination.skip,
-            take: pagination.take
-        });
+    async getSkinnyAllTeams(
+        pagination: PaginationParams,
+        filters: TeamFilters = {},
+        sort?: SortParams<TeamSortField>
+    ): Promise<[Teams[], number]> {
+        const { ids, total } = await this.getFilteredTeamIdsPage(pagination, filters, sort);
+        const teams = await this.hydrateTeamsInOrder(ids, ["season"]);
+        return [teams, total];
     }
 
     /**
      * Get all teams without relations / minimal data (players, season)
      */
-    async getMediumAllTeams(pagination: PaginationParams, filters: TeamFilters = {}): Promise<[Teams[], number]> {
-        return this.teamRepository.findAndCount({
-            where: this.buildWhere(filters),
-            relations: [
-                "season", "players"
-            ],
-            relationLoadStrategy: 'query',
-            skip: pagination.skip,
-            take: pagination.take
-        });
+    async getMediumAllTeams(
+        pagination: PaginationParams,
+        filters: TeamFilters = {},
+        sort?: SortParams<TeamSortField>
+    ): Promise<[Teams[], number]> {
+        const { ids, total } = await this.getFilteredTeamIdsPage(pagination, filters, sort);
+        const teams = await this.hydrateTeamsInOrder(ids, ["season", "players"]);
+        return [teams, total];
     }
 
     /**

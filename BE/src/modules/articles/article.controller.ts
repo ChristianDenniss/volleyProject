@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { ArticleService } from './article.service.js';
+import { ArticleService, ArticleFilters } from './article.service.js';
 import { MissingFieldError } from '../../errors/MissingFieldError.js';
 import { NotFoundError } from '../../errors/NotFoundError.js';
 import { parsePagination, toPaginatedResult } from '../../utils/pagination.js';
@@ -44,7 +44,8 @@ export class ArticleController {
         try {
             console.log(`[${new Date().toISOString()}] Incoming request to fetch all articles.`);
             const pagination = parsePagination(req.query, ARTICLES_DEFAULT_LIMIT);
-            const [data, total] = await this.articleService.getAllArticles(pagination);
+            const filters = this.parseFilters(req);
+            const [data, total] = await this.articleService.getAllArticles(pagination, filters);
             console.log(`[${new Date().toISOString()}] Articles fetched successfully:`, data);
             res.status(200).json(toPaginatedResult(data, total, pagination));
         } catch (error) {
@@ -207,4 +208,12 @@ export class ArticleController {
             }
         }
     };
+
+    private parseFilters(req: Request): ArticleFilters {
+        const raw = typeof req.query.status === 'string' ? req.query.status : undefined;
+        if (raw === 'pending' || raw === 'approved' || raw === 'rejected') {
+            return { status: raw };
+        }
+        return {};
+    }
 }

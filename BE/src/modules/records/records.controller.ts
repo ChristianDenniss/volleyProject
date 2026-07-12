@@ -7,6 +7,10 @@ import { parseRegionQuery } from '../../utils/regionQuery.js';
 import { RegionService } from '../regions/region.service.js';
 
 const RECORDS_DEFAULT_LIMIT = 10;
+// calculateAllRecords() keeps a fixed top-10 per record-type × type-variant (game/season),
+// so the table is structurally bounded — raise the max so a single request can return the
+// full filtered board set rather than silently truncating groups at the default 100.
+const RECORDS_MAX_LIMIT = 1000;
 
 export class RecordController {
     private recordService: RecordService;
@@ -43,7 +47,7 @@ export class RecordController {
     // Get all records
     getRecords = async (req: Request, res: Response): Promise<void> => {
         try {
-            const pagination = parsePagination(req.query, RECORDS_DEFAULT_LIMIT);
+            const pagination = parsePagination(req.query, RECORDS_DEFAULT_LIMIT, RECORDS_MAX_LIMIT);
             const filters = await this.parseFilters(req);
             const [data, total] = await this.recordService.getAllRecords(pagination, filters);
             res.json(toPaginatedResult(data, total, pagination));
@@ -216,8 +220,14 @@ export class RecordController {
     };
 
     private async parseFilters(req: Request): Promise<RecordFilters> {
+        const { type, recordCategory } = req.query;
         const regionFilter = parseRegionQuery(req.query as Record<string, unknown>);
         const regionId = await this.regionService.resolveRegionId(regionFilter);
-        return { regionId };
+        const typeValue = typeof type === 'string' && (type === 'game' || type === 'season') ? type : undefined;
+        return {
+            regionId,
+            type: typeValue,
+            recordCategory: typeof recordCategory === 'string' && recordCategory.length > 0 ? recordCategory : undefined,
+        };
     }
 }

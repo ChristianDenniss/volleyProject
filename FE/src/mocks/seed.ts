@@ -368,6 +368,42 @@ function buildTeams(seasons: Season[], players: Player[]): Team[] {
   return teams;
 }
 
+/** How many named handles get a team in every season (for +N overflow UI testing). */
+const VETERAN_PLAYER_COUNT = 8;
+
+/**
+ * Place veteran players on a different team each season so the public Players table
+ * and portal overflow cells (+N) have enough seasons / team history to expand.
+ */
+function assignVeteranHistories(seasons: Season[], teams: Team[], players: Player[]): void {
+  const veterans = players.slice(0, VETERAN_PLAYER_COUNT);
+  if (veterans.length === 0 || seasons.length === 0) return;
+
+  seasons.forEach((season, seasonIndex) => {
+    const seasonTeams = teams.filter((team) => team.season.id === season.id);
+    if (seasonTeams.length === 0) return;
+
+    veterans.forEach((player, veteranIndex) => {
+      const team = seasonTeams[(veteranIndex + seasonIndex) % seasonTeams.length];
+      const roster = team.players ?? [];
+      if (!roster.some((p) => p.id === player.id)) {
+        team.players = [...roster, player];
+      }
+    });
+  });
+
+  // Latest season: first three veterans also transfer mid-season to a second team.
+  const latestSeasonTeams = teams.filter((team) => team.season.id === seasons[0]?.id);
+  veterans.slice(0, 3).forEach((player) => {
+    const extraTeam = latestSeasonTeams.find(
+      (team) => !(team.players ?? []).some((p) => p.id === player.id)
+    );
+    if (extraTeam) {
+      extraTeam.players = [...(extraTeam.players ?? []), player];
+    }
+  });
+}
+
 function inferPlayoffBracket(slotIndex: number, gameId: number): Game["bracket"] {
   return (slotIndex + gameId) % 3 === 0 ? "losers" : "winners";
 }
@@ -966,6 +1002,7 @@ export function buildMockDataset() {
   const seasons = buildSeasons();
   const playersBase = buildPlayers();
   const teams = buildTeams(seasons, playersBase);
+  assignVeteranHistories(seasons, teams, playersBase);
   const games = buildGames(seasons, teams);
   const scheduledGames = buildScheduledGames(seasons, teams, games.length + 1);
   const allGames = [...games, ...scheduledGames];

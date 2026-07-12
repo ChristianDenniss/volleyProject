@@ -1,4 +1,4 @@
-import { Repository, In, ILike, FindOptionsWhere } from 'typeorm';
+import { Repository, In, ILike, FindOptionsWhere, FindOptionsOrder } from 'typeorm';
 import { AppDataSource } from '../../db/data-source.js';
 import { Players } from './player.entity.js';
 import { Teams } from '../teams/team.entity.js';
@@ -6,12 +6,18 @@ import { Stats } from '../stats/stat.entity.js';
 import { MissingFieldError } from '../../errors/MissingFieldError.js';
 import { NotFoundError } from '../../errors/NotFoundError.js';
 import { CacheableService } from '../../utils/cacheService.js';
-import { PaginationParams } from '../../utils/pagination.js';
+import { PaginationParams, SortParams } from '../../utils/pagination.js';
 
 export interface PlayerFilters {
     search?: string;
     regionId?: number;
+    seasonId?: number;
+    position?: string;
 }
+
+export const PLAYER_SORT_FIELDS = ['name', 'position'] as const;
+export type PlayerSortField = typeof PLAYER_SORT_FIELDS[number];
+export const PLAYER_DEFAULT_SORT: PlayerSortField = 'name';
 
 export class PlayerService extends CacheableService
 {
@@ -110,7 +116,13 @@ export class PlayerService extends CacheableService
     private buildWhere(filters: PlayerFilters): FindOptionsWhere<Players> {
         const where: FindOptionsWhere<Players> = {};
         if (filters.search) where.name = ILike(`%${filters.search}%`);
-        if (filters.regionId) where.teams = { regionId: filters.regionId } as any;
+        if (filters.position) where.position = filters.position;
+
+        const teamsWhere: Record<string, unknown> = {};
+        if (filters.regionId) teamsWhere.regionId = filters.regionId;
+        if (filters.seasonId) teamsWhere.season = { id: filters.seasonId };
+        if (Object.keys(teamsWhere).length > 0) where.teams = teamsWhere as any;
+
         return where;
     }
 
@@ -128,12 +140,22 @@ export class PlayerService extends CacheableService
         return player;
     }
 
+    private buildOrder(sort?: SortParams<PlayerSortField>): FindOptionsOrder<Players> {
+        const sortBy = sort?.sortBy ?? PLAYER_DEFAULT_SORT;
+        const sortDir = sort?.sortDir ?? 'ASC';
+        return { [sortBy]: sortDir } as FindOptionsOrder<Players>;
+    }
+
     /**
      * Get all players
      */
-    async getAllPlayers(pagination: PaginationParams, filters: PlayerFilters = {}): Promise<[Players[], number]>
+    async getAllPlayers(
+        pagination: PaginationParams,
+        filters: PlayerFilters = {},
+        sort?: SortParams<PlayerSortField>
+    ): Promise<[Players[], number]>
     {
-        return this.getCachedQuery('all', { ...pagination, ...filters }, () =>
+        return this.getCachedQuery('all', { ...pagination, ...filters, ...sort }, () =>
             this.playerRepository.findAndCount({
                 where: this.buildWhere(filters),
                 relations: ["teams", "teams.season", "teams.region", "stats", "stats.game", "stats.game.season", "stats.game.teams"],
@@ -141,6 +163,7 @@ export class PlayerService extends CacheableService
                 // would apply skip/take to the joined row count instead of distinct players, so
                 // load relations via separate queries to keep pagination correct.
                 relationLoadStrategy: 'query',
+                order: this.buildOrder(sort),
                 skip: pagination.skip,
                 take: pagination.take
             })
@@ -150,13 +173,18 @@ export class PlayerService extends CacheableService
     /**
      * Get all players with medium relations / minimal data
      */
-    async getMediumAllPlayers(pagination: PaginationParams, filters: PlayerFilters = {}): Promise<[Players[], number]>
+    async getMediumAllPlayers(
+        pagination: PaginationParams,
+        filters: PlayerFilters = {},
+        sort?: SortParams<PlayerSortField>
+    ): Promise<[Players[], number]>
     {
-        return this.getCachedQuery('medium', { ...pagination, ...filters }, () =>
+        return this.getCachedQuery('medium', { ...pagination, ...filters, ...sort }, () =>
             this.playerRepository.findAndCount({
                 where: this.buildWhere(filters),
                 relations: ["teams", "teams.season", "teams.region"],
                 relationLoadStrategy: 'query',
+                order: this.buildOrder(sort),
                 skip: pagination.skip,
                 take: pagination.take
             })

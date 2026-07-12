@@ -43,8 +43,13 @@
 .listing-table-wrapper {
   width: 100%;
   overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
 }
 
+/* Flush, classic table — kept deliberately plain (no card/box treatment,
+   that's what the Games scoreboard rows already do). The accordion
+   interaction is what makes this one distinct. */
 .listing-table {
   width: 100%;
   min-width: 100%;
@@ -54,15 +59,16 @@
 }
 
 .listing-table thead th {
-  background: var(--color-brand-primary);
-  color: #fff;
-  font-weight: 600;
-  padding: 0.75rem 1rem;
+  background: var(--color-bg-muted);
+  color: var(--color-brand-primary);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.75rem;
+  padding: 0.75rem 1.1rem;
   text-align: left;
   white-space: nowrap;
-  position: sticky;
-  top: 0;
-  z-index: 1;
+  border-bottom: 2px solid var(--color-brand-primary);
 }
 
 .listing-table tbody tr {
@@ -75,11 +81,15 @@
 }
 
 .listing-table tbody tr.listing-row-clickable:hover {
-  background: var(--color-accent-hover-bg);
+  background: var(--color-row-hover);
+}
+
+.listing-table tbody tr.listing-row-expanded {
+  background: var(--color-accent-border);
 }
 
 .listing-table td {
-  padding: 0.75rem 1rem;
+  padding: 0.85rem 1.1rem;
   color: var(--color-text);
   vertical-align: middle;
 }
@@ -93,6 +103,110 @@
 .listing-table td a:hover {
   color: var(--color-brand-primary-hover);
   text-decoration: underline;
+}
+
+/* Inline player avatar + position pill (used by the Players roster table) */
+.listing-table-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background: var(--color-brand-primary);
+  color: var(--color-text-on-brand);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  margin-right: 0.6rem;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+.listing-table-position-pill {
+  display: inline-block;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-brand-primary);
+  background: var(--color-accent-pale);
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+}
+
+/* Expand chevron + accordion detail panel */
+.listing-table-expand-toggle {
+  display: inline-block;
+  font-size: 0.6875rem;
+  color: var(--color-text-subtle);
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.listing-table-expand-toggle.expanded {
+  transform: rotate(90deg);
+  color: var(--color-brand-primary);
+}
+
+.listing-table-detail-row td {
+  background: var(--color-accent-border);
+  padding: 1rem 1.25rem 1.25rem;
+}
+
+.listing-table-detail {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.9rem;
+}
+
+.listing-table-detail-teams {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.listing-table-detail-team-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-size: 0.875rem;
+  color: var(--color-text);
+}
+
+.listing-table-detail-team-logo {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  object-fit: contain;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.listing-table-detail-team-season {
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+}
+
+.listing-table-detail-team-placement {
+  margin-left: auto;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-brand-primary);
+  background: var(--color-bg);
+  padding: 0.15rem 0.5rem;
+  border-radius: 0.35rem;
+}
+
+.listing-table-detail-empty {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.listing-table-detail-profile-btn {
+  align-self: flex-start;
 }
 
 .listing-table-muted {

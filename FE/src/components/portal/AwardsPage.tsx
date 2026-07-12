@@ -13,21 +13,7 @@ import Table from "../ui/Table";
 import "../../styles/UsersPage.css";
 import "../../styles/AwardsPage.css";
 import "../../styles/PortalPlayersPage.css";
-
-const AWARD_TYPES = [
-  "MVP",
-  "Best Spiker",
-  "Best Server",
-  "Best Blocker",
-  "Best Libero",
-  "Best Setter",
-  "MIP",
-  "Best Aper",
-  "FMVP",
-  "DPOS",
-  "Best Receiver",
-  "LuvLate Award"
-] as const;
+import { AWARD_TYPES } from "../../constants/awardTypes";
 
 type EditField = "type" | "description" | "seasonId" | "playerName" | "imageUrl" | "createdAt";
 

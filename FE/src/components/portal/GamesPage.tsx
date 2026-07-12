@@ -1,7 +1,7 @@
 // src/pages/GamesPage.tsx
 
 import React, { useState, useEffect } from "react";
-import { useGames, useSkinnySeasons } from "../../hooks/allFetch";
+import { useGames, useSkinnySeasons, useGameStages } from "../../hooks/allFetch";
 import { useGameMutations } from "../../hooks/allPatch";
 import { useCreateGames } from "../../hooks/allCreate";
 import { useDeleteGames } from "../../hooks/allDelete";
@@ -55,7 +55,7 @@ const GamesPage: React.FC = () => {
     bracket: bracketFilter || undefined,
   });
   const { data: seasons, loading: seasonsLoading } = useSkinnySeasons({ page: 1, limit: 100, ...regionQuery });
-  const { data: gamesSample, loading: gamesSampleLoading } = useGames({ page: 1, limit: 100 });
+  const { data: uniqueStages, loading: stagesLoading } = useGameStages({ seasonId: seasonFilter || undefined, ...regionQuery });
   const { patchGame } = useGameMutations();
   const { createGame, loading: creating, error: createError } = useCreateGames();
   const { deleteItem: deleteGame, loading: deleting } = useDeleteGames();
@@ -90,9 +90,6 @@ const GamesPage: React.FC = () => {
   const uniqueSeasons = (seasons ?? [])
     .map((season) => season.id)
     .sort((a, b) => a - b);
-  const uniqueStages = Array.from(
-    new Set((gamesSample ?? []).map((game) => game.stage).filter((stage) => stage))
-  ).sort();
 
   // Commit inline edits
   const commitEdit = async () => {
@@ -554,7 +551,7 @@ const GamesPage: React.FC = () => {
             value={stageFilter}
             onChange={(e) => handleStageFilterChange(e.target.value)}
           >
-            <option value="">{gamesSampleLoading ? "Loading stages..." : "All Stages"}</option>
+            <option value="">{stagesLoading ? "Loading stages..." : "All Stages"}</option>
             {uniqueStages.map(stage => (
               <option key={stage} value={stage}>
                 {stage}

@@ -8,7 +8,7 @@ import { NotFoundError } from '../../errors/NotFoundError.js';
 import { DuplicateError } from '../../errors/DuplicateError.js';
 import { MultiplePlayersNotFoundError } from '../../errors/MultiplePlayersNotFoundError.js';
 import { CreateAwardDto, CreateMultipleAwardsDto, UpdateAwardDto } from "./awards.schema.js";
-import { PaginationParams } from '../../utils/pagination.js';
+import { PaginationParams, SortParams } from '../../utils/pagination.js';
 
 export interface AwardFilters {
     search?: string;
@@ -16,6 +16,16 @@ export interface AwardFilters {
     type?: string;
     regionId?: number;
 }
+
+export const AWARD_SORT_FIELDS = ['createdAt', 'seasonNumber', 'type'] as const;
+export type AwardSortField = typeof AWARD_SORT_FIELDS[number];
+export const AWARD_DEFAULT_SORT: AwardSortField = 'createdAt';
+
+const AWARD_ORDER_MAP: Record<AwardSortField, string> = {
+    createdAt: 'award.createdAt',
+    seasonNumber: 'season.seasonNumber',
+    type: 'award.type',
+};
 
 export class AwardService {
     private awardRepository: Repository<Awards>;
@@ -95,7 +105,12 @@ export class AwardService {
      * Build a filtered, paginated award query. `extraRelations` are joined (but not selected)
      * in addition to players/season so filters like search can join through to player names.
      */
-    private buildFilteredQuery(pagination: PaginationParams, filters: AwardFilters, includeTeams: boolean) {
+    private buildFilteredQuery(
+        pagination: PaginationParams,
+        filters: AwardFilters,
+        includeTeams: boolean,
+        sort?: SortParams<AwardSortField>
+    ) {
         const qb = this.awardRepository.createQueryBuilder('award')
             .leftJoinAndSelect('award.players', 'players')
             .leftJoinAndSelect('award.season', 'season');
@@ -117,6 +132,10 @@ export class AwardService {
             qb.andWhere('award.regionId = :regionId', { regionId: filters.regionId });
         }
 
+        const sortBy = sort?.sortBy ?? AWARD_DEFAULT_SORT;
+        const sortDir = sort?.sortDir ?? 'DESC';
+        qb.orderBy(AWARD_ORDER_MAP[sortBy], sortDir);
+
         return qb.skip(pagination.skip).take(pagination.take);
     }
 
@@ -124,15 +143,23 @@ export class AwardService {
      * Find all awards
      * @returns Array of all awards
      */
-    async findAllAwards(pagination: PaginationParams, filters: AwardFilters = {}): Promise<[Awards[], number]> {
-        return this.buildFilteredQuery(pagination, filters, true).getManyAndCount();
+    async findAllAwards(
+        pagination: PaginationParams,
+        filters: AwardFilters = {},
+        sort?: SortParams<AwardSortField>
+    ): Promise<[Awards[], number]> {
+        return this.buildFilteredQuery(pagination, filters, true, sort).getManyAndCount();
     }
 
     /**
      * Find all awards without relations / minimal data
      */
-    async findSkinnyAllAwards(pagination: PaginationParams, filters: AwardFilters = {}): Promise<[Awards[], number]> {
-        return this.buildFilteredQuery(pagination, filters, false).getManyAndCount();
+    async findSkinnyAllAwards(
+        pagination: PaginationParams,
+        filters: AwardFilters = {},
+        sort?: SortParams<AwardSortField>
+    ): Promise<[Awards[], number]> {
+        return this.buildFilteredQuery(pagination, filters, false, sort).getManyAndCount();
     }
 
     /**

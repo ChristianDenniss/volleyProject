@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
-import { TeamService, TeamFilters } from './team.service.js';
+import { TeamService, TeamFilters, TEAM_SORT_FIELDS, TEAM_DEFAULT_SORT } from './team.service.js';
 import { MissingFieldError } from '../../errors/MissingFieldError.js';
 import { NotFoundError } from '../../errors/NotFoundError.js';
 import { CreateTeamDto, UpdateTeamDto } from './teams.schema.js';
-import { parsePagination, toPaginatedResult } from '../../utils/pagination.js';
+import { parsePagination, parseSort, toPaginatedResult } from '../../utils/pagination.js';
 import { parseRegionQuery } from '../../utils/regionQuery.js';
 import { RegionService } from '../regions/region.service.js';
 
@@ -115,8 +115,9 @@ export class TeamController {
     getTeams = async (req: Request, res: Response): Promise<void> => {
         try {
             const pagination = parsePagination(req.query, TEAMS_DEFAULT_LIMIT);
+            const sort = parseSort(req.query, TEAM_SORT_FIELDS, TEAM_DEFAULT_SORT, 'ASC');
             const filters = await this.parseFilters(req);
-            const [data, total] = await this.teamService.getAllTeams(pagination, filters);
+            const [data, total] = await this.teamService.getAllTeams(pagination, filters, sort);
             res.json(toPaginatedResult(data, total, pagination));
         } catch (error) {
             console.error("Error fetching teams:", error);
@@ -128,8 +129,9 @@ export class TeamController {
     getSkinnyTeams = async (req: Request, res: Response): Promise<void> => {
         try {
             const pagination = parsePagination(req.query, TEAMS_DEFAULT_LIMIT);
+            const sort = parseSort(req.query, TEAM_SORT_FIELDS, TEAM_DEFAULT_SORT, 'ASC');
             const filters = await this.parseFilters(req);
-            const [data, total] = await this.teamService.getSkinnyAllTeams(pagination, filters);
+            const [data, total] = await this.teamService.getSkinnyAllTeams(pagination, filters, sort);
             res.json(toPaginatedResult(data, total, pagination));
         } catch (error) {
             console.error("Error fetching teams with skinny relations:", error);
@@ -141,8 +143,9 @@ export class TeamController {
     getMediumTeams = async (req: Request, res: Response): Promise<void> => {
         try {
             const pagination = parsePagination(req.query, TEAMS_DEFAULT_LIMIT);
+            const sort = parseSort(req.query, TEAM_SORT_FIELDS, TEAM_DEFAULT_SORT, 'ASC');
             const filters = await this.parseFilters(req);
-            const [data, total] = await this.teamService.getMediumAllTeams(pagination, filters);
+            const [data, total] = await this.teamService.getMediumAllTeams(pagination, filters, sort);
             res.json(toPaginatedResult(data, total, pagination));
         } catch (error) {
             console.error("Error fetching teams with medium relations:", error);
@@ -151,12 +154,13 @@ export class TeamController {
     };
 
     private async parseFilters(req: Request): Promise<TeamFilters> {
-        const { search, seasonId } = req.query;
+        const { search, seasonId, placement } = req.query;
         const regionFilter = parseRegionQuery(req.query as Record<string, unknown>);
         const regionId = await this.regionService.resolveRegionId(regionFilter);
         return {
             search: typeof search === 'string' && search.length > 0 ? search : undefined,
             seasonId: seasonId ? Number(seasonId) : undefined,
+            placement: typeof placement === 'string' && placement.length > 0 ? placement : undefined,
             regionId,
         };
     }

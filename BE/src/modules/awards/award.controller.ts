@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
 import { MissingFieldError } from '../../errors/MissingFieldError.js';
 import { NotFoundError } from '../../errors/NotFoundError.js';
-import { AwardService, AwardFilters } from './award.service.js';
+import { AwardService, AwardFilters, AWARD_SORT_FIELDS, AWARD_DEFAULT_SORT } from './award.service.js';
 import { CreateAwardDto, CreateMultipleAwardsDto, UpdateAwardDto } from './awards.schema.js';
-import { parsePagination, toPaginatedResult } from '../../utils/pagination.js';
+import { parsePagination, parseSort, toPaginatedResult } from '../../utils/pagination.js';
 import { parseRegionQuery } from '../../utils/regionQuery.js';
 import { RegionService } from '../regions/region.service.js';
 
@@ -66,8 +66,9 @@ export class AwardController {
     getAwards = async (req: Request, res: Response): Promise<void> => {
         try {
             const pagination = parsePagination(req.query, AWARDS_DEFAULT_LIMIT);
+            const sort = parseSort(req.query, AWARD_SORT_FIELDS, AWARD_DEFAULT_SORT);
             const filters = await this.parseFilters(req);
-            const [data, total] = await this.awardService.findAllAwards(pagination, filters);
+            const [data, total] = await this.awardService.findAllAwards(pagination, filters, sort);
             res.json(toPaginatedResult(data, total, pagination));
         } catch (error) {
             console.error("Error fetching awards:", error);
@@ -79,8 +80,9 @@ export class AwardController {
     getSkinnyAwards = async (req: Request, res: Response): Promise<void> => {
         try {
             const pagination = parsePagination(req.query, AWARDS_DEFAULT_LIMIT);
+            const sort = parseSort(req.query, AWARD_SORT_FIELDS, AWARD_DEFAULT_SORT);
             const filters = await this.parseFilters(req);
-            const [data, total] = await this.awardService.findSkinnyAllAwards(pagination, filters);
+            const [data, total] = await this.awardService.findSkinnyAllAwards(pagination, filters, sort);
             res.json(toPaginatedResult(data, total, pagination));
         } catch (error) {
             console.error("Error fetching awards without player-team relations:", error);

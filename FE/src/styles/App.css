@@ -89,6 +89,9 @@ html, body, #root {
 body {
   min-height: 100vh; /* Full height of the viewport */
   background-color: var(--color-bg);
+  /* Sitewide default so pages/components that don't set their own font-family
+     (e.g. Players/Games/Stats tables) don't fall back to the browser serif default. */
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 #root {

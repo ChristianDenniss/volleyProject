@@ -1,18 +1,19 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 /* Bring in the navigate helper from React Router */
 import { useNavigate }                          from "react-router-dom";
-import { useMediumTeams }                             from "../hooks/allFetch";
+import { useMediumTeams, useSkinnySeasons }                             from "../hooks/allFetch";
 import "../styles/Teams.css";
 import "../styles/ListingPage.css";
 import SearchBar                                from "./Searchbar";
 import Pagination                               from "./Pagination";
 import FilterBar                                from "./ui/FilterBar";
 import { useRegion } from "../context/regionContext";
+import { useDebouncedValue } from "../hooks/useDebouncedValue";
+import { TEAM_PLACEMENTS } from "../constants/teamPlacements";
 
 const Teams: React.FC = () =>
 {
     const { regionQuery } = useRegion();
-    const { data, loading, error } = useMediumTeams(regionQuery);
 
     /* Track the currently "opened" team card */
     const [ activeTeam,         setActiveTeam ]         = useState<string | null>(null);
@@ -28,6 +29,20 @@ const Teams: React.FC = () =>
     /* Pagination state */
     const [ currentPage, setCurrentPage ] = useState<number>(1);
     const teamsPerPage = 12;
+
+    const debouncedSearch = useDebouncedValue(searchQuery);
+
+    const { data: paginatedTeams, totalPages, loading, error } = useMediumTeams({
+        page: currentPage,
+        limit: teamsPerPage,
+        search: debouncedSearch || undefined,
+        seasonId: seasonFilter || undefined,
+        placement: placementFilter || undefined,
+        ...regionQuery,
+    });
+
+    const { data: seasons } = useSkinnySeasons({ page: 1, limit: 100, ...regionQuery });
+    const seasonOptions = [...(seasons ?? [])].sort((a, b) => a.seasonNumber - b.seasonNumber);
 
     /* Hook for programmatic navigation */
     const navigate = useNavigate();
@@ -62,80 +77,6 @@ const Teams: React.FC = () =>
         navigate(slugify(teamName));
     };
 
-    /* Get unique seasons and placements for filter options */
-    const uniqueSeasons = useMemo(() => {
-        return Array.from(new Set(data?.map(team => team.season.seasonNumber) ?? []))
-            .sort((a, b) => a - b)
-    }, [data])
-
-    const uniquePlacements = useMemo(() => {
-        const normalizedPlacements = new Set<string>();
-        data?.forEach(team => {
-            if (team.placement) {
-                // Remove (D#) from placements like "Top 8 (D2)"
-                const normalized = team.placement.replace(/\s*\([Dd]\d\)$/, '').trim();
-                normalizedPlacements.add(normalized);
-            }
-        });
-
-        const placementOrder = [
-            '1st Place',
-            '2nd Place',
-            '3rd Place',
-            'Top 4',
-            'Top 6',
-            'Top 8',
-            'Top 12',
-            'Top 16',
-            'TBD',
-            'Didnt make playoffs',
-            'G.O.A.T.'
-        ];
-        
-        const placementsArray = Array.from(normalizedPlacements);
-
-        placementsArray.sort((a, b) => {
-            const indexA = placementOrder.indexOf(a);
-            const indexB = placementOrder.indexOf(b);
-
-            // If an item isn't in our custom order, give it a high index
-            const effectiveIndexA = indexA === -1 ? Infinity : indexA;
-            const effectiveIndexB = indexB === -1 ? Infinity : indexB;
-
-            if (effectiveIndexA !== effectiveIndexB) {
-                // Sort by custom order
-                return effectiveIndexA - effectiveIndexB;
-            }
-            
-            // If both have the same custom order index (or are both not in the list), sort alphabetically
-            return a.localeCompare(b);
-        });
-
-        return placementsArray;
-    }, [data])
-
-    /* Filter list according to search box and filters */
-    const filteredTeams = useMemo(() =>
-    {
-        return data?.filter(team => {
-            const matchesSearch = team.name.toLowerCase().includes(searchQuery.toLowerCase());
-            const matchesSeason = !seasonFilter || team.season.seasonNumber.toString() === seasonFilter;
-            
-            // Normalize the team's placement before comparing
-            const normalizedTeamPlacement = team.placement.replace(/\s*\([Dd]\d\)$/, '').trim();
-            const matchesPlacement = !placementFilter || normalizedTeamPlacement === placementFilter;
-            
-            return matchesSearch && matchesSeason && matchesPlacement;
-        }) ?? [];
-    }, [ data, searchQuery, seasonFilter, placementFilter ]);
-
-    /* Calculate pagination */
-    const totalPages = Math.ceil(filteredTeams.length / teamsPerPage)
-    const paginatedTeams = filteredTeams.slice(
-        (currentPage - 1) * teamsPerPage,
-        currentPage * teamsPerPage
-    )
-
     /* Update search box state */
     const handleSearch = (query: string): void =>
     {
@@ -166,9 +107,9 @@ const Teams: React.FC = () =>
                                 }}
                             >
                                 <option value="">All Seasons</option>
-                                {uniqueSeasons.map(season => (
-                                    <option key={season} value={season.toString()}>
-                                        Season {season}
+                                {seasonOptions.map(season => (
+                                    <option key={season.id} value={season.id.toString()}>
+                                        Season {season.seasonNumber}
                                     </option>
                                 ))}
                             </select>
@@ -185,7 +126,7 @@ const Teams: React.FC = () =>
                                 }}
                             >
                                 <option value="">All Placements</option>
-                                {uniquePlacements.map(placement => (
+                                {TEAM_PLACEMENTS.map(placement => (
                                     <option key={placement} value={placement}>
                                         {placement}
                                     </option>
@@ -221,7 +162,7 @@ const Teams: React.FC = () =>
             ) : (
                 <div className="teams-wrapper">
                     <div className="teams-container">
-                        {paginatedTeams.map(team => (
+                        {(paginatedTeams ?? []).map(team => (
                             <div
                                 key={team.id}
                                 className={`team-card ${activeTeam === team.name ? "active" : ""}`}

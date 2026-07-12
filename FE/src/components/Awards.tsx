@@ -1,71 +1,127 @@
-import React, { useMemo, useState, useEffect } from "react";
-import { useSkinnyAwards } from "../hooks/allFetch";
+import React, { useState, useEffect } from "react";
+import { useSkinnyAwards, useSkinnySeasons } from "../hooks/allFetch";
 import { Link, useLocation } from "react-router-dom";
 import "../styles/Awards.css";
-import SeasonFilter from "./SeasonFilterBar";
+import "../styles/ListingPage.css";
+import SearchBar from "./Searchbar";
+import Pagination from "./Pagination";
+import FilterBar from "./ui/FilterBar";
 import { useRegion } from "../context/regionContext";
+import { useDebouncedValue } from "../hooks/useDebouncedValue";
+import { AWARD_TYPES } from "../constants/awardTypes";
 
 const Awards: React.FC = () => {
   const { regionQuery } = useRegion();
-  const { data, loading, error } = useSkinnyAwards(regionQuery);
-  const awards = data || [];
-  const [selectedSeason, setSelectedSeason] = useState<number | null>(null);
-  const [selectedType, setSelectedType] = useState<string>("");
   const location = useLocation();
 
-  // Handle pre-selected season from URL state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [seasonFilter, setSeasonFilter] = useState("");
+  const [typeFilter, setTypeFilter] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const awardsPerPage = 12;
+
+  const debouncedSearch = useDebouncedValue(searchQuery);
+
+  // Handle pre-selected season from URL state (season number)
   useEffect(() => {
-    if (location.state?.selectedSeason) {
-      setSelectedSeason(location.state.selectedSeason);
+    if (location.state?.selectedSeason != null) {
+      setSeasonFilter(String(location.state.selectedSeason));
+      setCurrentPage(1);
     }
   }, [location.state]);
 
-  // Extract unique award types from the data
-  const uniqueTypes = useMemo(() => {
-    const types = awards.map((a: any) => a.type).filter(Boolean);
-    return Array.from(new Set(types)).sort();
-  }, [awards]);
+  const { data: awards, totalPages, loading, error } = useSkinnyAwards({
+    page: currentPage,
+    limit: awardsPerPage,
+    search: debouncedSearch || undefined,
+    seasonNumber: seasonFilter || undefined,
+    type: typeFilter || undefined,
+    ...regionQuery,
+  });
 
-  // Filter awards by selected season and type
-  const filteredAwards = useMemo(() => {
-    return awards.filter((award: any) => {
-      const matchesSeason = selectedSeason === null || award.season?.seasonNumber === selectedSeason;
-      const matchesType = !selectedType || award.type === selectedType;
-      return matchesSeason && matchesType;
-    });
-  }, [awards, selectedSeason, selectedType]);
+  const { data: seasons } = useSkinnySeasons({ page: 1, limit: 100, ...regionQuery });
+  const seasonOptions = [...(seasons ?? [])]
+    .map((s) => s.seasonNumber)
+    .sort((a, b) => a - b);
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    setCurrentPage(1);
+  };
+
+  const clearFilters = () => {
+    setSearchQuery("");
+    setSeasonFilter("");
+    setTypeFilter("");
+    setCurrentPage(1);
+  };
 
   return (
-    <div className={`volley-awards-container ${loading ? 'loading' : ''}`}>
-      <div className="volley-awards-controls">
-        <SeasonFilter selectedSeason={selectedSeason} onSeasonChange={setSelectedSeason} />
-        <label htmlFor="award-type-select" style={{ marginRight: 8 }}>Award Type:</label>
-        <select
-          id="award-type-select"
-          value={selectedType}
-          onChange={e => setSelectedType(e.target.value)}
-        >
-          <option value="">All Types</option>
-          {uniqueTypes.map(type => (
-            <option key={type} value={type}>{type}</option>
-          ))}
-        </select>
+    <div className={`volley-awards-container ${loading ? "loading" : ""}`}>
+      <div className="listing-controls-toolbar">
+        <FilterBar onReset={(searchQuery || seasonFilter || typeFilter) ? clearFilters : undefined}>
+          <div className="awards-season-filter">
+            <select
+              id="award-season-filter"
+              aria-label="Season"
+              value={seasonFilter}
+              onChange={(e) => {
+                setSeasonFilter(e.target.value);
+                setCurrentPage(1);
+              }}
+            >
+              <option value="">All Seasons</option>
+              {seasonOptions.map((seasonNumber) => (
+                <option key={seasonNumber} value={seasonNumber.toString()}>
+                  Season {seasonNumber}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="awards-type-filter">
+            <select
+              id="award-type-filter"
+              aria-label="Award Type"
+              value={typeFilter}
+              onChange={(e) => {
+                setTypeFilter(e.target.value);
+                setCurrentPage(1);
+              }}
+            >
+              <option value="">All Types</option>
+              {AWARD_TYPES.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </select>
+          </div>
+        </FilterBar>
+
+        <div className="listing-search-row">
+          <SearchBar onSearch={handleSearch} placeholder="Search awards by player..." />
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        </div>
       </div>
-      
+
       {loading ? (
         <div className="volley-awards-grid">
-          {/* Skeleton loaders */}
           {Array.from({ length: 8 }).map((_, index) => (
             <div key={index} className="awards-skeleton"></div>
           ))}
         </div>
       ) : error ? (
         <p>Error: {error}</p>
-      ) : filteredAwards.length === 0 ? (
+      ) : (awards ?? []).length === 0 ? (
         <p>No awards found.</p>
       ) : (
         <div className="volley-awards-grid">
-          {filteredAwards.map((award: any) => (
+          {(awards ?? []).map((award) => (
             <Link to={`/awards/${award.id}`} key={award.id} className="volley-award-item-link">
               <div className="volley-award-item" style={{ backgroundImage: `url(${award.imageUrl})` }}>
                 <div className="volley-award-category">{award.type}</div>
@@ -84,4 +140,4 @@ const Awards: React.FC = () => {
   );
 };
 
-export default Awards; 
+export default Awards;

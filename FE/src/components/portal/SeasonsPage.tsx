@@ -10,6 +10,7 @@ import { useRegion } from "../../context/regionContext";
 import type { Season }                 from "../../types/interfaces";
 import Modal                           from "../ui/Modal";
 import Table                           from "../ui/Table";
+import Pagination                      from "../Pagination";
 import "../../styles/SeasonsPage.css";
 
 type EditField = "theme" | "image" | "startDate" | "endDate";
@@ -33,11 +34,17 @@ const SeasonTable = Table as unknown as React.ComponentType<{
     rowKey: (row: Season) => string | number;
 }>;
 
+const SEASONS_PER_PAGE = 20;
+
 const SeasonsPage: React.FC = () =>
 {
-    // Fetch existing seasons
     const { regionQuery, activeRegion } = useRegion();
-    const { data: seasons, loading, error } = useSkinnySeasons({ page: 1, limit: 100, ...regionQuery });
+    const [currentPage, setCurrentPage] = useState(1);
+    const { data: seasons, totalPages, loading, error } = useSkinnySeasons({
+        page: currentPage,
+        limit: SEASONS_PER_PAGE,
+        ...regionQuery,
+    });
 
     // Patch (edit) existing seasons
     const { patchSeason }                   = useSeasonMutations();
@@ -77,6 +84,11 @@ const SeasonsPage: React.FC = () =>
             setLocalSeasons(seasons);
         }
     }, [seasons]);
+
+    // Reset to first page when the active region changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [activeRegion]);
 
     // Commit inline edits for existing seasons
     const commitEdit = async () =>
@@ -459,12 +471,19 @@ const SeasonsPage: React.FC = () =>
     return (
         <div className="portal-main">
             {/* Create Season Button */}
-            <button
-                onClick={openModal}
-                className="create-button"
-            >
-                Create Season
-            </button>
+            <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1rem", flexWrap: "wrap" }}>
+                <button
+                    onClick={openModal}
+                    className="create-button"
+                >
+                    Create Season
+                </button>
+                <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                />
+            </div>
 
             {/* Create Season Modal */}
             <Modal isOpen={isModalOpen} onClose={closeModal} title="New Season">

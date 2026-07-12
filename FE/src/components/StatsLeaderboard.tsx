@@ -800,6 +800,19 @@ const StatsLeaderboard: React.FC = () => {
     setExpandedRows(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
+  // Shape of the skeleton bar rendered per column while loading — mirrors what
+  // actually renders in that column (pill links for name/team, numeric bars for stats)
+  // so the skeleton is never a different size/shape than the real content.
+  const getSkeletonBarClass = (columnKey: string, variantSeed: number): string => {
+    if (columnKey === "rank") return "stats-skeleton-bar stats-skeleton-bar--rank";
+    if (columnKey === "name" || columnKey === "team") return "stats-skeleton-bar stats-skeleton-bar--pill";
+    const sizeClass = columnKey.includes("%")
+      ? "stats-skeleton-bar--percentage"
+      : "stats-skeleton-bar--stat";
+    const widthVariant = `stats-skeleton-bar--w${(variantSeed % 3) + 1}`;
+    return `stats-skeleton-bar ${sizeClass} ${widthVariant}`;
+  };
+
   const leaderboardColumns: TableColumn<DisplayData>[] = useMemo(() => {
     const cols: TableColumn<DisplayData>[] = [
       {
@@ -925,10 +938,9 @@ const StatsLeaderboard: React.FC = () => {
 
   return (
     <div className={`stats-leaderboard-page ${loading ? 'loading' : ''}`}>
-      {/* Records Navigation */}
-      <div style={{ textAlign: 'right', margin: 0 }}>
-        <button 
-          className="create-button" 
+      <div className="stats-records-nav">
+        <button
+          className="stats-records-button"
           onClick={() => window.location.href = '/records'}
         >
           View Stat Records
@@ -1052,27 +1064,33 @@ const StatsLeaderboard: React.FC = () => {
       {error ? (
         <div>Error: {error}</div>
       ) : loading ? (
-        <div className="stats-table-wrapper">
-          <div className="stats-skeleton-table">
-            {/* Skeleton loaders for table */}
-            {Array.from({ length: 15 }).map((_, index) => (
-              <div key={index} className="stats-skeleton-row">
-                <div className="stats-skeleton-cell rank"></div>
-                <div className="stats-skeleton-cell name"></div>
-                {selectedSeason !== null && viewType === 'player' && (
-                  <div className="stats-skeleton-cell team"></div>
-                )}
-                {Array.from({ length: Math.min(visibleStatCategories.length, 8) }).map((_, cellIndex) => (
-                  <div 
-                    key={cellIndex} 
-                    className={`stats-skeleton-cell ${
-                      visibleStatCategories[cellIndex]?.includes('%') ? 'percentage' : 'stat'
-                    }`}
-                  ></div>
+        <div className="stats-table-wrapper loading">
+          <table className="stats-table stats-skeleton-table">
+            <thead>
+              <tr>
+                {leaderboardColumns.map((col) => (
+                  <th key={col.key} className={col.headerClassName}>
+                    {col.header}
+                  </th>
                 ))}
-              </div>
-            ))}
-          </div>
+              </tr>
+            </thead>
+            <tbody>
+              {Array.from({ length: playersPerPage }).map((_, rowIndex) => (
+                <tr
+                  key={rowIndex}
+                  className="stats-skeleton-row"
+                  style={{ "--row-delay": `${(rowIndex % 5) * 0.06}s` } as React.CSSProperties}
+                >
+                  {leaderboardColumns.map((col, colIndex) => (
+                    <td key={col.key}>
+                      <span className={getSkeletonBarClass(col.key, rowIndex + colIndex)} />
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       ) : (
         <Table

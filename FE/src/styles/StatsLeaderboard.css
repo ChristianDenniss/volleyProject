@@ -53,6 +53,13 @@
     min-width: 0;
 }
 
+.stats-records-nav {
+    display: flex;
+    justify-content: flex-end;
+    margin: 0;
+    padding-bottom: 12px;
+}
+
 .stats-search-controls .search-bar {
     flex: 1 1 12rem;
     min-width: 0;
@@ -380,77 +387,71 @@
     width: 100%;
 }
 
-/* Skeleton loader for better UX */
-.stats-skeleton-table {
-    width: 100%;
-    min-width: 100%;
-    border-collapse: collapse;
-    border: 1px solid #e2e8f0;
-    border-radius: 4px;
-    overflow: hidden;
+/* -----------------------------------------------------------
+   Skeleton loader
+   Rendered as the *real* <table> with the *real* <thead> (see
+   StatsLeaderboard.tsx) so column count, header labels and widths can
+   never drift from the loaded table — only the body cells are placeholders.
+----------------------------------------------------------- */
+.stats-skeleton-table tbody tr.stats-skeleton-row:hover {
+    background-color: transparent;
 }
 
-.stats-skeleton-row {
-    display: flex;
-    gap: 0;
-    margin-bottom: 0;
+.stats-skeleton-row td {
     height: 48px;
-    border-bottom: 1px solid #e2e8f0;
 }
 
-.stats-skeleton-row:last-child {
-    border-bottom: none;
-}
-
-.stats-skeleton-cell {
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+.stats-skeleton-bar {
+    --bar-w: 44px;
+    display: inline-block;
+    width: var(--bar-w);
+    height: 14px;
+    border-radius: var(--radius-sm);
+    background: var(--skeleton-shimmer);
     background-size: 200% 100%;
-    animation: loading 1.5s infinite;
-    border-right: 1px solid #e2e8f0;
-    flex: 1;
-    height: 100%;
-    min-width: 80px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    animation: stats-skeleton-shimmer 1.6s ease-in-out infinite;
+    animation-delay: var(--row-delay, 0s);
+    vertical-align: middle;
 }
 
-.stats-skeleton-cell:last-child {
-    border-right: none;
+.stats-skeleton-bar--rank {
+    --bar-w: 18px;
 }
 
-/* Specific column widths to match actual table */
-.stats-skeleton-cell.rank {
-    flex: 0 0 60px;
-    min-width: 60px;
+.stats-skeleton-bar--stat {
+    --bar-w: 44px;
 }
 
-.stats-skeleton-cell.name {
-    flex: 0 0 200px;
-    min-width: 200px;
+.stats-skeleton-bar--percentage {
+    --bar-w: 58px;
 }
 
-.stats-skeleton-cell.team {
-    flex: 0 0 150px;
-    min-width: 150px;
+/* Mirrors .stats-pill-link so the name/team columns pulse in the same pill shape they render in */
+.stats-skeleton-bar--pill {
+    --bar-w: 120px;
+    width: var(--bar-w);
+    height: 26px;
+    border-radius: 999px;
 }
 
-.stats-skeleton-cell.stat {
-    flex: 0 0 100px;
-    min-width: 100px;
-}
+/* Slight width variance per row so a column of bars doesn't read as one flat blob */
+.stats-skeleton-bar--w1 { width: calc(var(--bar-w) * 0.7); }
+.stats-skeleton-bar--w2 { width: var(--bar-w); }
+.stats-skeleton-bar--w3 { width: calc(var(--bar-w) * 0.85); }
 
-.stats-skeleton-cell.percentage {
-    flex: 0 0 120px;
-    min-width: 120px;
-}
-
-@keyframes loading {
+@keyframes stats-skeleton-shimmer {
     0% {
         background-position: 200% 0;
     }
     100% {
         background-position: -200% 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .stats-skeleton-bar {
+        animation: none;
+        opacity: 0.7;
     }
 }
 
@@ -507,6 +508,26 @@
     color: #ffffff;
 }
 
+.stats-records-button {
+    font-size: 15px;
+    padding: 8px 16px;
+    border: 1px solid var(--primary-blue);
+    border-radius: 4px;
+    background-color: var(--primary-blue);
+    color: #ffffff;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.stats-records-button:hover,
+.stats-records-button:focus {
+    background-color: var(--primary-blue-hover);
+    border-color: var(--primary-blue-hover);
+}
+
 .advanced-filter-button.active {
     background-color: var(--primary-blue);
     color: #ffffff;
@@ -518,6 +539,7 @@
     border-radius: 4px;
     box-shadow: 0 2px 8px var(--color-focus-ring);
     margin-top: 10px;
+    margin-bottom: 12px;
     padding: 20px;
     max-width: 800px;
     animation: slideDown 0.3s ease-out;

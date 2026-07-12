@@ -1,4 +1,4 @@
-import { Repository, In, ILike, FindOptionsWhere } from 'typeorm';
+import { Repository, In, ILike, FindOptionsWhere, FindOptionsOrder } from 'typeorm';
 import { AppDataSource } from '../../db/data-source.js';
 import { Games, GameStatus, GamePhase, GameBracket } from './game.entity.js';
 import { Teams } from '../teams/team.entity.js';
@@ -8,7 +8,7 @@ import { NotFoundError } from '../../errors/NotFoundError.js';
 import { ConflictError } from '../../errors/ConflictError.js';
 import { DuplicateError } from '../../errors/DuplicateError.js';
 import { InvalidFormatError } from '../../errors/InvalidFormatError.js';
-import { PaginationParams } from '../../utils/pagination.js';
+import { PaginationParams, SortParams } from '../../utils/pagination.js';
 import { orderTeamsByIds, applyWinnerToGame } from './gameWinner.js';
 import { resolveGameBracket } from './gameBracket.js';
 
@@ -21,6 +21,10 @@ export interface GameFilters {
     regionId?: number;
     bracket?: string;
 }
+
+export const GAME_SORT_FIELDS = ['date', 'name', 'stage', 'team1Score', 'team2Score'] as const;
+export type GameSortField = typeof GAME_SORT_FIELDS[number];
+export const GAME_DEFAULT_SORT: GameSortField = 'date';
 
 export class GameService {
     private gameRepository: Repository<Games>;
@@ -201,14 +205,24 @@ export class GameService {
         return where;
     }
 
+    private buildOrder(sort?: SortParams<GameSortField>): FindOptionsOrder<Games> {
+        const sortBy = sort?.sortBy ?? GAME_DEFAULT_SORT;
+        const sortDir = sort?.sortDir ?? 'DESC';
+        return { [sortBy]: sortDir } as FindOptionsOrder<Games>;
+    }
+
     /**
      * Get all games
      */
-    async getAllGames(pagination: PaginationParams, filters: GameFilters = {}): Promise<[Games[], number]> {
+    async getAllGames(
+        pagination: PaginationParams,
+        filters: GameFilters = {},
+        sort?: SortParams<GameSortField>
+    ): Promise<[Games[], number]> {
         return this.gameRepository.findAndCount({
             where: this.buildWhere(filters),
             relations: ["season", "teams", "winner", "stats", "region"],
-            order: { date: "DESC" }, // Most recent games first
+            order: this.buildOrder(sort), // Defaults to most recent games first
             skip: pagination.skip,
             take: pagination.take
         });
@@ -217,14 +231,34 @@ export class GameService {
     /**
      * Get all games without relations / minimal data
      */
-    async getSkinnyAllGames(pagination: PaginationParams, filters: GameFilters = {}): Promise<[Games[], number]> {
+    async getSkinnyAllGames(
+        pagination: PaginationParams,
+        filters: GameFilters = {},
+        sort?: SortParams<GameSortField>
+    ): Promise<[Games[], number]> {
         return this.gameRepository.findAndCount({
             where: this.buildWhere(filters),
             relations: ["season", "region"],
-            order: { date: "DESC" }, // Most recent games first
+            order: this.buildOrder(sort), // Defaults to most recent games first
             skip: pagination.skip,
             take: pagination.take
         });
+    }
+
+    /**
+     * Get the distinct stage labels currently in use, matching the given filters.
+     * Backs the Games/GamesPage stage-filter dropdown without fetching a page of games.
+     */
+    async getDistinctStages(filters: Pick<GameFilters, 'seasonId' | 'regionId'> = {}): Promise<string[]> {
+        const qb = this.gameRepository.createQueryBuilder('game')
+            .select('DISTINCT game.stage', 'stage')
+            .where('game.stage IS NOT NULL');
+
+        if (filters.seasonId) qb.andWhere('game.seasonId = :seasonId', { seasonId: filters.seasonId });
+        if (filters.regionId) qb.andWhere('game.regionId = :regionId', { regionId: filters.regionId });
+
+        const rows = await qb.orderBy('game.stage', 'ASC').getRawMany<{ stage: string }>();
+        return rows.map(row => row.stage);
     }
 
 

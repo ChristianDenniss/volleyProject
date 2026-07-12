@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 import { MissingFieldError } from '../../errors/MissingFieldError.js';
 import { NotFoundError } from '../../errors/NotFoundError.js';
-import { PlayerService, PlayerFilters } from './player.service.js';
-import { parsePagination, toPaginatedResult } from '../../utils/pagination.js';
+import { PlayerService, PlayerFilters, PLAYER_SORT_FIELDS, PLAYER_DEFAULT_SORT } from './player.service.js';
+import { parsePagination, parseSort, toPaginatedResult } from '../../utils/pagination.js';
 import { parseRegionQuery } from '../../utils/regionQuery.js';
 import { RegionService } from '../regions/region.service.js';
 
@@ -197,8 +197,9 @@ export class PlayerController {
             // in one page to search/sort/filter client-side, and player counts are naturally
             // bounded (rosters), unlike games/stats which grow unboundedly.
             const pagination = parsePagination(req.query, PLAYERS_DEFAULT_LIMIT, 1000);
+            const sort = parseSort(req.query, PLAYER_SORT_FIELDS, PLAYER_DEFAULT_SORT, 'ASC');
             const filters = await this.parseFilters(req);
-            const [data, total] = await this.playerService.getAllPlayers(pagination, filters);
+            const [data, total] = await this.playerService.getAllPlayers(pagination, filters, sort);
             res.json(toPaginatedResult(data, total, pagination));
         } catch (error) {
             console.error("Error fetching players:", error);
@@ -210,8 +211,9 @@ export class PlayerController {
     getMediumPlayers = async (req: Request, res: Response): Promise<void> => {
         try {
             const pagination = parsePagination(req.query, PLAYERS_DEFAULT_LIMIT);
+            const sort = parseSort(req.query, PLAYER_SORT_FIELDS, PLAYER_DEFAULT_SORT, 'ASC');
             const filters = await this.parseFilters(req);
-            const [data, total] = await this.playerService.getMediumAllPlayers(pagination, filters);
+            const [data, total] = await this.playerService.getMediumAllPlayers(pagination, filters, sort);
             res.json(toPaginatedResult(data, total, pagination));
         } catch (error) {
             console.error("Error fetching players with medium relations:", error);
@@ -220,11 +222,13 @@ export class PlayerController {
     };
 
     private async parseFilters(req: Request): Promise<PlayerFilters> {
-        const { search } = req.query;
+        const { search, seasonId, position } = req.query;
         const regionFilter = parseRegionQuery(req.query as Record<string, unknown>);
         const regionId = await this.regionService.resolveRegionId(regionFilter);
         return {
             search: typeof search === 'string' && search.length > 0 ? search : undefined,
+            seasonId: seasonId ? Number(seasonId) : undefined,
+            position: typeof position === 'string' && position.length > 0 ? position : undefined,
             regionId,
         };
     }

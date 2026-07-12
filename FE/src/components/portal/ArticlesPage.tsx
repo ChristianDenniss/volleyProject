@@ -2,16 +2,25 @@ import React, { useState, useEffect } from 'react';
 import { useArticles } from '../../hooks/allFetch';
 import { useArticleMutations } from '../../hooks/allPatch';
 import Table, { type TableColumn } from '../ui/Table';
+import Pagination from '../Pagination';
+import type { Article } from '../../types/interfaces';
 import '../../styles/ArticlesPage.css';
 
-const ArticlesPage: React.FC = () => {
-    const { data: fetchedArticles, loading, error } = useArticles({ page: 1, limit: 100 });
-    const { patchArticle } = useArticleMutations();
-    const [filter, setFilter] = useState<'all' | 'pending'>('pending');
-    const [expandedArticleId, setExpandedArticleId] = useState<number | null>(null);
-    const [articles, setArticles] = useState(fetchedArticles || []);
+const ARTICLES_PER_PAGE = 10;
 
-    // Update local state when fetched articles change
+const ArticlesPage: React.FC = () => {
+    const [filter, setFilter] = useState<'all' | 'pending'>('pending');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [expandedArticleId, setExpandedArticleId] = useState<number | null>(null);
+
+    const { data: fetchedArticles, totalPages, loading, error } = useArticles({
+        page: currentPage,
+        limit: ARTICLES_PER_PAGE,
+        status: filter === 'pending' ? 'pending' : undefined,
+    });
+    const { patchArticle } = useArticleMutations();
+    const [articles, setArticles] = useState<Article[]>([]);
+
     useEffect(() => {
         if (fetchedArticles) {
             setArticles(fetchedArticles);
@@ -22,10 +31,13 @@ const ArticlesPage: React.FC = () => {
         try {
             const updatedArticle = await patchArticle(articleId, { approved: true });
             if (updatedArticle) {
-                setArticles(prevArticles => 
-                    prevArticles.map(article => 
-                        article.id === articleId ? { ...article, approved: true } : article
-                    )
+                // Pending view: drop the row once approved; all view: update in place
+                setArticles(prevArticles =>
+                    filter === 'pending'
+                        ? prevArticles.filter(article => article.id !== articleId)
+                        : prevArticles.map(article =>
+                            article.id === articleId ? { ...article, approved: true } : article
+                        )
                 );
             }
         } catch (error) {
@@ -37,10 +49,12 @@ const ArticlesPage: React.FC = () => {
         try {
             const updatedArticle = await patchArticle(articleId, { approved: false });
             if (updatedArticle) {
-                setArticles(prevArticles => 
-                    prevArticles.map(article => 
-                        article.id === articleId ? { ...article, approved: false } : article
-                    )
+                setArticles(prevArticles =>
+                    filter === 'pending'
+                        ? prevArticles.filter(article => article.id !== articleId)
+                        : prevArticles.map(article =>
+                            article.id === articleId ? { ...article, approved: false } : article
+                        )
                 );
             }
         } catch (error) {
@@ -52,12 +66,7 @@ const ArticlesPage: React.FC = () => {
         setExpandedArticleId(expandedArticleId === articleId ? null : articleId);
     };
 
-    // Only show pending articles by default, or all articles if filter is 'all'
-    const filteredArticles = articles?.filter(article =>
-        filter === 'all' ? true : article.approved === null
-    ) || [];
-
-    const columns: TableColumn<typeof filteredArticles[number]>[] = [
+    const columns: TableColumn<Article>[] = [
         {
             key: 'title',
             header: 'Title',
@@ -119,25 +128,36 @@ const ArticlesPage: React.FC = () => {
         <div className="articles-page">
             <div className="page-header">
                 <div className="filter-controls">
-                    <button 
+                    <button
                         className={`filter-btn ${filter === 'all' ? 'active' : ''}`}
-                        onClick={() => setFilter('all')}
+                        onClick={() => {
+                            setFilter('all');
+                            setCurrentPage(1);
+                        }}
                     >
                         All Articles
                     </button>
-                    <button 
+                    <button
                         className={`filter-btn ${filter === 'pending' ? 'active' : ''}`}
-                        onClick={() => setFilter('pending')}
+                        onClick={() => {
+                            setFilter('pending');
+                            setCurrentPage(1);
+                        }}
                     >
                         Pending Approval
                     </button>
                 </div>
+                <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                />
             </div>
 
             <div className="articles-table">
                 <Table
                     columns={columns}
-                    rows={filteredArticles}
+                    rows={articles}
                     rowKey={(article) => article.id}
                     rowClassName={(article) =>
                         `article-row${expandedArticleId === article.id ? ' expanded' : ''}`

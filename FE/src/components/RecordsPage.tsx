@@ -10,18 +10,21 @@ import Table, { type TableColumn } from "./ui/Table";
 import "../styles/RecordsPage.css";
 
 const RecordsPage: React.FC = () => {
-    // Retrieve records list from API
     const { regionQuery } = useRegion();
-    const { data: records, loading, error, refetch } = useRecords(regionQuery);
-
-    // Retrieve current user (for permission checks)
     const { user } = useAuth();
+
+    // Switch bar state: 'game' or 'season' — forwarded as a server-side type filter
+    const [recordTypeView, setRecordTypeView] = useState<'game' | 'season'>('game');
+
+    const { data: records, loading, error, refetch } = useRecords({
+        type: recordTypeView,
+        limit: 1000,
+        page: 1,
+        ...regionQuery,
+    });
 
     // Local copy of records for immediate UI updates
     const [localRecords, setLocalRecords] = useState<Records[]>([]);
-
-    // Switch bar state: 'game' or 'season'
-    const [recordTypeView, setRecordTypeView] = useState<'game' | 'season'>('game');
 
     // Calculate records hook
     const { calculateRecords, loading: calculating } = useCalculateRecords(showErrorModal);
@@ -46,13 +49,8 @@ const RecordsPage: React.FC = () => {
         }
     }, [records]);
 
-    // Filter records based on selected type
-    const filteredRecords = localRecords.filter(record => {
-        return record.type === recordTypeView;
-    });
-
-    // Group records by record type
-    const groupedRecords = filteredRecords.reduce((groups, record) => {
+    // Group records by record type (already filtered server-side by type=game|season)
+    const groupedRecords = localRecords.reduce((groups, record) => {
         const recordType = record.record;
         if (!groups[recordType]) {
             groups[recordType] = [];
