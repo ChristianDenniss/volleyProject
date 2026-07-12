@@ -2,7 +2,7 @@
 set -e  # Exit on error
 
 echo "=========================================="
-echo "Starting application in production mode..."
+echo "Starting application (NODE_ENV=${NODE_ENV:-development})..."
 echo "Node version: $(node --version)"
 echo "Current directory: $(pwd)"
 echo "Directory contents:"
@@ -21,13 +21,17 @@ if [ -n "$COOLIFY_URL" ]; then
 fi
 echo "=========================================="
 
-# Run migrations
-echo "Running database migrations..."
-if ! node --es-module-specifier-resolution=node dist/migrations/run-migrations.js; then
-    echo "Error: Database migrations failed!"
-    exit 1
+# Run migrations in production only; local docker dev syncs schema on startup
+if [ "$NODE_ENV" = "production" ]; then
+    echo "Running database migrations..."
+    if ! node --es-module-specifier-resolution=node dist/migrations/run-migrations.js; then
+        echo "Error: Database migrations failed!"
+        exit 1
+    fi
+    echo "Database migrations completed successfully."
+else
+    echo "Skipping migrations in development (schema syncs on startup)."
 fi
-echo "Database migrations completed successfully."
 
 # Start the application
 echo "Starting application..."

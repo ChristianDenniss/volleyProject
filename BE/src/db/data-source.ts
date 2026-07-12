@@ -53,7 +53,7 @@ export const AppDataSource = new DataSource({
             database: process.env.DB_NAME || "volleyball",
         }
     ),
-    synchronize: false,
+    synchronize: process.env.NODE_ENV === "development",
     logging: process.env.NODE_ENV === "production" ? ["error"] : ["error", "warn", "migration"],
     maxQueryExecutionTime: 1000,
     entities: entities,

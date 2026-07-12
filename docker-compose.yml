@@ -3,44 +3,45 @@ services:
     build:
       context: ./BE
       dockerfile: Dockerfile
-    volumes:
-      - ./BE/dist:/app/dist
     ports:
-      - "3000:3000"
+      - "${PORT:-3000}:3000"
     env_file:
       - ./BE/.env
     environment:
       - NODE_ENV=${NODE_ENV:-development}
-      - PORT=3000
-      - JWT_SECRET=${JWT_SECRET:-dev-secret}
       - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASS:-password}@db:5432/${DB_NAME:-volleyball}?sslmode=disable
-      - REDIS_URL=
-      - ALLOW_REGISTRATION=${ALLOW_REGISTRATION:-true}
-      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:5173,http://localhost:8080}
+      - REDIS_DISABLED=${REDIS_DISABLED:-true}
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   frontend:
     build:
       context: ./FE
       dockerfile: Dockerfile
       args:
-        VITE_BACKEND_URL: http://localhost:3000
+        VITE_BACKEND_URL: ${VITE_BACKEND_URL:-http://localhost:3000}
     ports:
-      - "8080:80"
+      - "${DOCKER_FE_PORT:-8080}:80"
     depends_on:
       - backend
 
   db:
-    image: postgres:16-alpine
+    image: postgres:17-alpine
     environment:
       - POSTGRES_USER=${DB_USER:-postgres}
       - POSTGRES_PASSWORD=${DB_PASS:-password}
       - POSTGRES_DB=${DB_NAME:-volleyball}
     ports:
-      - "5432:5432"
+      - "${DOCKER_DB_PORT:-5433}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
 volumes:
   postgres_data:
