@@ -89,8 +89,7 @@
   font-size: 0.875rem;
 }
 
-.form-group input,
-.form-group select {
+.form-group input {
   width: 100%;
   max-width: 100%;
   min-width: 0;
@@ -102,15 +101,14 @@
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.challonge-import-modal #tags {
-  max-width: 520px;
-}
-
-.form-group input:focus,
-.form-group select:focus {
+.form-group input:focus {
   outline: none;
   border-color: var(--primary-blue);
   box-shadow: 0 0 0 3px rgba(45, 60, 80, 0.1);
+}
+
+.challonge-import-modal #tags {
+  max-width: 520px;
 }
 
 .form-group small {

@@ -16,19 +16,22 @@ export const createPlayerSchema = basePlayerSchema.refine(data => data.teamId ||
     path: ["teamId"]
 });
 
-// Batch variant using teamNames: string[]
-export const createMultiplePlayersByNameSchema = z.array(
-    z.object({
-        name: z.string().min(1, { message: "Player Name is required" }),
-        position: z.enum(
-            ["N/A", "Setter", "Spiker", "Libero", "Defensive Specialist", "Pinch Server"],
-            { message: "Invalid position, please match the enum values" }
-        ),
-        teamNames: z.array(
-            z.string().min(1, { message: "Team name must be a non-empty string" })
-        ).min(1, { message: "At least one team name is required" })
-    })
-);
+// Batch variant using teamNames: string[], scoped to a season
+export const createMultiplePlayersByNameSchema = z.object({
+    seasonId: z.number().int().positive({ message: "Season ID is required" }),
+    players: z.array(
+        z.object({
+            name: z.string().min(1, { message: "Player Name is required" }),
+            position: z.enum(
+                ["N/A", "Setter", "Spiker", "Libero", "Defensive Specialist", "Pinch Server"],
+                { message: "Invalid position, please match the enum values" }
+            ),
+            teamNames: z.array(
+                z.string().min(1, { message: "Team name must be a non-empty string" })
+            ).min(1, { message: "At least one team name is required" })
+        })
+    ).min(1, { message: "At least one player is required" }),
+});
 
 // Update schema (patch-like with required ID)
 export const updatePlayerSchema = z.object({

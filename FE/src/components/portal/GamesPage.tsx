@@ -540,7 +540,7 @@ const GamesPage: React.FC = () => {
       <FilterBar onReset={(searchQuery || seasonFilter || stageFilter || statusFilter || phaseFilter || bracketFilter) ? clearFilters : undefined}>
         <div className="filter-group">
           <select
-            className="filter-select"
+            className="filter-select ui-filter-select"
             aria-label="Season"
             value={seasonFilter}
             onChange={(e) => handleSeasonFilterChange(e.target.value)}
@@ -556,7 +556,7 @@ const GamesPage: React.FC = () => {
 
         <div className="filter-group">
           <select
-            className="filter-select"
+            className="filter-select ui-filter-select"
             aria-label="Stage"
             value={stageFilter}
             onChange={(e) => handleStageFilterChange(e.target.value)}
@@ -571,7 +571,7 @@ const GamesPage: React.FC = () => {
         </div>
 
         <div className="filter-group">
-          <select className="filter-select" aria-label="Status" value={statusFilter} onChange={(e) => handleStatusFilterChange(e.target.value)}>
+          <select className="filter-select ui-filter-select" aria-label="Status" value={statusFilter} onChange={(e) => handleStatusFilterChange(e.target.value)}>
             <option value="">All Statuses</option>
             <option value="scheduled">Scheduled</option>
             <option value="completed">Completed</option>
@@ -579,7 +579,7 @@ const GamesPage: React.FC = () => {
         </div>
 
         <div className="filter-group">
-          <select className="filter-select" aria-label="Phase" value={phaseFilter} onChange={(e) => handlePhaseFilterChange(e.target.value)}>
+          <select className="filter-select ui-filter-select" aria-label="Phase" value={phaseFilter} onChange={(e) => handlePhaseFilterChange(e.target.value)}>
             <option value="">All Phases</option>
             <option value="pre_season">Pre-Season</option>
             <option value="qualifiers">Qualifiers</option>
@@ -588,7 +588,7 @@ const GamesPage: React.FC = () => {
         </div>
 
         <div className="filter-group">
-          <select className="filter-select" aria-label="Bracket" value={bracketFilter} onChange={(e) => handleBracketFilterChange(e.target.value)}>
+          <select className="filter-select ui-filter-select" aria-label="Bracket" value={bracketFilter} onChange={(e) => handleBracketFilterChange(e.target.value)}>
             <option value="">All Brackets</option>
             <option value="winners">Winners</option>
             <option value="losers">Losers</option>
@@ -636,7 +636,7 @@ const GamesPage: React.FC = () => {
 
           <label>
             Status
-            <select value={newStatus} onChange={(e) => setNewStatus(e.target.value)} style={{ width: "100%", marginBottom: "0.75rem" }}>
+            <select value={newStatus} onChange={(e) => setNewStatus(e.target.value)}>
               <option value="scheduled">Scheduled</option>
               <option value="completed">Completed</option>
             </select>
@@ -655,7 +655,6 @@ const GamesPage: React.FC = () => {
                   options.includes(current) ? current : options[0] ?? ""
                 );
               }}
-              style={{ width: "100%", marginBottom: "0.75rem" }}
             >
               <option value="pre_season">Pre-Season</option>
               <option value="qualifiers">Qualifiers</option>
@@ -669,7 +668,6 @@ const GamesPage: React.FC = () => {
               <select
                 value={newBracket ?? ""}
                 onChange={(e) => setNewBracket(e.target.value === "" ? null : e.target.value as Game["bracket"])}
-                style={{ width: "100%", marginBottom: "0.75rem" }}
               >
                 <option value="">Auto (from stage)</option>
                 <option value="winners">Winners</option>
@@ -684,7 +682,6 @@ const GamesPage: React.FC = () => {
               value={newStage}
               onChange={(e) => setNewStage(e.target.value)}
               required
-              style={{ width: "100%", marginBottom: "0.75rem" }}
             >
               <option value="" disabled>
                 Select a stage

@@ -177,6 +177,146 @@
   margin-bottom: var(--space-section);
 }
 
+.ui-filter-bar .filter-group {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  white-space: nowrap;
+}
+
+/* Navy pill filter selects — shared by public list pages and admin portal */
+:root {
+  --ui-select-chevron: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
+}
+
+.ui-filter-select,
+.portal-main select,
+.ui-modal select,
+.challonge-import-modal select,
+.stat-create-modal select,
+.csv-modal select {
+  font-size: 15px;
+  padding: 8px 16px;
+  padding-right: 32px;
+  min-width: 120px;
+  max-width: 100%;
+  border: 1px solid var(--color-brand-primary);
+  border-radius: 4px;
+  background: var(--color-brand-primary) var(--ui-select-chevron) no-repeat right 8px center / 20px;
+  color: #ffffff;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  box-shadow: none;
+  box-sizing: border-box;
+}
+
+.ui-filter-select:hover:not(:disabled),
+.portal-main select:hover:not(:disabled),
+.ui-modal select:hover:not(:disabled),
+.challonge-import-modal select:hover:not(:disabled),
+.stat-create-modal select:hover:not(:disabled),
+.csv-modal select:hover:not(:disabled) {
+  background-color: var(--color-brand-primary-hover);
+  border-color: var(--color-brand-primary-hover);
+  background-image: var(--ui-select-chevron);
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 20px;
+}
+
+.ui-filter-select:focus,
+.portal-main select:focus,
+.ui-modal select:focus,
+.challonge-import-modal select:focus,
+.stat-create-modal select:focus,
+.csv-modal select:focus {
+  background-color: var(--color-brand-primary-hover);
+  border-color: var(--color-brand-primary-hover);
+  background-image: var(--ui-select-chevron);
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 20px;
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-focus-ring, rgba(45, 60, 80, 0.2));
+}
+
+.ui-filter-select:disabled,
+.portal-main select:disabled,
+.ui-modal select:disabled,
+.challonge-import-modal select:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.ui-filter-select-block,
+.portal-main label select,
+.ui-modal label select,
+.ui-form-field select,
+.challonge-import-modal .form-group select,
+.team-create-form select,
+.season-create-form select,
+.award-create-form select,
+.player-form select {
+  width: 100%;
+  min-width: 0;
+}
+
+.portal-main table select,
+.portal-main .ui-table select,
+.ui-modal table select {
+  font-size: 13px;
+  padding: 6px 12px;
+  padding-right: 28px;
+  min-width: 5rem;
+}
+
+.ui-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  margin-bottom: 0.75rem;
+}
+
+.ui-form-field > label,
+.ui-form-field > span {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.portal-main form label,
+.ui-modal form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.portal-main form label input,
+.ui-modal form label input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  background: #fff;
+  color: var(--color-text);
+}
+
+.portal-main form label input:focus,
+.ui-modal form label input:focus {
+  outline: none;
+  border-color: var(--color-brand-primary);
+  box-shadow: 0 0 0 2px var(--color-focus-ring, rgba(45, 60, 80, 0.12));
+}
+
 /* Table */
 .ui-table-wrapper {
   width: 100%;

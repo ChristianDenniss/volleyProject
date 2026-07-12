@@ -157,7 +157,7 @@ const UsersPage: React.FC = () => {
       <FilterBar onReset={clearFilters}>
         <div className="filter-group">
           <select
-            className="filter-select"
+            className="filter-select ui-filter-select"
             aria-label="Role"
             value={roleFilter}
             onChange={(e) => handleRoleFilterChange(e.target.value)}

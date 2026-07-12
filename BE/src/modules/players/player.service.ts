@@ -2,6 +2,7 @@ import { Repository, In, ILike, FindOptionsWhere, FindOptionsOrder } from 'typeo
 import { AppDataSource } from '../../db/data-source.js';
 import { Players } from './player.entity.js';
 import { Teams } from '../teams/team.entity.js';
+import { Seasons } from '../seasons/season.entity.js';
 import { Stats } from '../stats/stat.entity.js';
 import { MissingFieldError } from '../../errors/MissingFieldError.js';
 import { NotFoundError } from '../../errors/NotFoundError.js';
@@ -23,12 +24,14 @@ export class PlayerService extends CacheableService
 {
     private playerRepository: Repository<Players>;
     private teamRepository: Repository<Teams>;
+    private seasonRepository: Repository<Seasons>;
 
     constructor() 
     {
         super({ entityType: 'players', defaultTTL: 600 }); // 10 minutes TTL for players
         this.playerRepository = AppDataSource.getRepository(Players);
         this.teamRepository = AppDataSource.getRepository(Teams);
+        this.seasonRepository = AppDataSource.getRepository(Seasons);
     }
 
     /**
@@ -337,9 +340,17 @@ export class PlayerService extends CacheableService
     /**
      * Create multiple players at once using team name with validation, including duplicate check
      */
-    async createMultiplePlayersByName(playersData: { name: string, position: string, teamNames: string[] }[]): Promise<Players[]> 
+    async createMultiplePlayersByName(
+        seasonId: number,
+        playersData: { name: string, position: string, teamNames: string[] }[]
+    ): Promise<Players[]> 
     {
-        console.log('Received players data:', playersData);
+        console.log('Received players data:', { seasonId, playersData });
+
+        const season = await this.seasonRepository.findOne({ where: { id: seasonId } });
+        if (!season) {
+            throw new NotFoundError(`Season with ID ${seasonId} not found`);
+        }
 
         // Validate input
         playersData.forEach(playerData => {
@@ -356,10 +367,12 @@ export class PlayerService extends CacheableService
         ];
         console.log('Normalized team names to search:', allTeamNames);
 
-        // Fetch all matching teams from the database (case-insensitive)
+        // Fetch matching teams within the selected season only
         const allTeams = await this.teamRepository
             .createQueryBuilder("team")
-            .where("LOWER(team.name) IN (:...names)", { names: allTeamNames })
+            .innerJoin("team.season", "season")
+            .where("season.id = :seasonId", { seasonId })
+            .andWhere("LOWER(team.name) IN (:...names)", { names: allTeamNames })
             .getMany();
 
         console.log('Fetched teams:', allTeams.map(t => t.name));
@@ -381,7 +394,7 @@ export class PlayerService extends CacheableService
             if (playerTeams.length !== normalizedTeamNames.length) 
             {
                 console.log('Error: Some teams not found for player:', playerData.name);
-                throw new NotFoundError(`One or more teams not found for player "${playerData.name}"`);
+                throw new NotFoundError(`One or more teams not found in season ${seasonId} for player "${playerData.name}"`);
             }
 
             // Check if player already exists

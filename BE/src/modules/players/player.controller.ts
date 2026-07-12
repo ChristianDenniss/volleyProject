@@ -136,55 +136,22 @@ export class PlayerController {
     // Create multiple players at once using team name
     createMultiplePlayersByName = async (req: Request, res: Response): Promise<void> => {
         try {
-            const playersData = req.body;
+            const { seasonId, players: playersData } = req.body;
 
-            // Log the incoming request data
-            console.log('Request Body:', playersData);
-            
-            // Ensure the request body is an array
-            if (!Array.isArray(playersData)) {
-                console.log('Error: Request body is not an array');
-                res.status(400).json({ error: "Request body must be an array of player objects" });
-                return;
-            }
+            console.log('Request Body:', { seasonId, playersData });
 
-            // Validate player structure (check for 'name' and 'teamNames' array)
-            if (!playersData.every(player => player.name && Array.isArray(player.teamNames) && player.teamNames.length > 0)) {
-                console.log('Error: Validation failed - Some players are missing "name" or "teamNames"');
-                res.status(400).json({ error: "Each player must have a name and at least one team name in teamNames" });
-                return;
-            }
-
-            console.log('All players have a valid structure, proceeding to creation...');
-
-            // Create multiple players by name
-            const createdPlayers = await this.playerService.createMultiplePlayersByName(playersData);
+            const createdPlayers = await this.playerService.createMultiplePlayersByName(seasonId, playersData);
 
             console.log('Created players:', createdPlayers);
 
-            // Respond with success and number of players created
-            res.status(201).json({
-                message: `${createdPlayers.length} players created successfully`,
-                players: createdPlayers
-            });
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to create multiple players by name";
-
-            console.error('Error occurred:', errorMessage);
-
-            if (errorMessage.includes("required") || errorMessage.includes("not found") || errorMessage.includes("already exists")) {
-                // Check if it's a duplicate error
-                if (errorMessage.includes("already exists")) {
-                    console.log('Conflict error: Duplicate player(s)');
-                    res.status(409).json({ error: errorMessage }); // 409 Conflict for duplicates
-                } else {
-                    console.log('Bad request error: Validation error');
-                    res.status(400).json({ error: errorMessage }); // 400 for other validation errors
-                }
-            } else {
-                console.error("Error creating multiple players by name:", error);
-                res.status(500).json({ error: "Failed to create multiple players by name" });
+            res.status(201).json(createdPlayers);
+        } catch (error: unknown) {
+            if (error instanceof MissingFieldError || error instanceof NotFoundError) {
+                res.status(400).json({ error: error.message });
+                return;
             }
+            console.error("Error creating multiple players by name:", error);
+            res.status(500).json({ error: "Failed to create multiple players" });
         }
     };
 

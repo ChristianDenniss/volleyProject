@@ -15,13 +15,8 @@ interface RegionSeasonFieldsProps {
   seasonValueKey?: SeasonValueKey;
   includeSeason?: boolean;
   required?: boolean;
-  style?: React.CSSProperties;
+  className?: string;
 }
-
-const fieldStyle: React.CSSProperties = {
-  width: "100%",
-  marginBottom: "0.75rem",
-};
 
 const RegionSeasonFields: React.FC<RegionSeasonFieldsProps> = ({
   regions,
@@ -35,20 +30,23 @@ const RegionSeasonFields: React.FC<RegionSeasonFieldsProps> = ({
   seasonValueKey = "id",
   includeSeason = true,
   required = true,
-  style,
+  className,
 }) => {
   const getSeasonOptionValue = (season: Season) =>
     seasonValueKey === "seasonNumber" ? season.seasonNumber : season.id;
 
   return (
-    <>
-      <label style={style}>
-        Region{required ? "*" : ""}
+    <div className={className}>
+      <div className="ui-form-field">
+        <label htmlFor="region-season-region">
+          Region{required ? "*" : ""}
+        </label>
         <select
+          id="region-season-region"
+          className="ui-filter-select ui-filter-select-block"
           value={regionId || ""}
           onChange={(e) => onRegionChange(Number(e.target.value))}
           required={required}
-          style={fieldStyle}
         >
           <option value="">
             {regionsLoading ? "Loading regions..." : "Select a region"}
@@ -59,17 +57,20 @@ const RegionSeasonFields: React.FC<RegionSeasonFieldsProps> = ({
             </option>
           ))}
         </select>
-      </label>
+      </div>
 
       {includeSeason && onSeasonChange && (
-        <label style={style}>
-          Season{required ? "*" : ""}
+        <div className="ui-form-field">
+          <label htmlFor="region-season-season">
+            Season{required ? "*" : ""}
+          </label>
           <select
+            id="region-season-season"
+            className="ui-filter-select ui-filter-select-block"
             value={seasonValue || ""}
             onChange={(e) => onSeasonChange(Number(e.target.value))}
             required={required}
             disabled={!regionId}
-            style={fieldStyle}
           >
             <option value="">
               {!regionId
@@ -86,9 +87,9 @@ const RegionSeasonFields: React.FC<RegionSeasonFieldsProps> = ({
               </option>
             ))}
           </select>
-        </label>
+        </div>
       )}
-    </>
+    </div>
   );
 };
 

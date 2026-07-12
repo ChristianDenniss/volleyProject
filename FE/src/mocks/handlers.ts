@@ -155,8 +155,12 @@ export const handlers = [
     const player = getPlayerDetail(Number(params.id));
     return player ? json(player) : json({ message: "Not found" }, 404);
   }),
-  http.get(api("players"), ({ request }) => json(paginated(getPlayersWithRelations(), request))),  http.post(api("players/batch/by-team-name"), async ({ request }) => {
-    const body = (await request.json()) as { players?: Array<{ name: string; position: string }> };
+  http.get(api("players"), ({ request }) => json(paginated(getPlayersWithRelations(), request))),
+  http.post(api("players/batch/by-team-name"), async ({ request }) => {
+    const body = (await request.json()) as {
+      seasonId: number;
+      players: Array<{ name: string; position: string; teamNames?: string[] }>;
+    };
     const created = (body.players ?? []).map((player) => ({
       id: bumpId("players"),
       name: player.name,

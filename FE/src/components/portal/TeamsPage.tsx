@@ -406,7 +406,7 @@ const TeamsPage: React.FC = () => {
       <FilterBar onReset={clearFilters}>
         <div className="filter-group">
           <select
-            className="filter-select"
+            className="filter-select ui-filter-select"
             aria-label="Season"
             value={seasonFilter}
             onChange={(e) => handleSeasonFilterChange(e.target.value)}

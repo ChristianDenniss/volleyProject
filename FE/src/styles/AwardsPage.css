@@ -68,7 +68,6 @@
 }
 
 .ui-modal.award-create-modal .form-group input,
-.ui-modal.award-create-modal .form-group select,
 .ui-modal.award-create-modal .form-group textarea {
   width: 100%;
   max-width: 100%;
@@ -90,7 +89,6 @@
 }
 
 .ui-modal.award-create-modal .form-group input:focus,
-.ui-modal.award-create-modal .form-group select:focus,
 .ui-modal.award-create-modal .form-group textarea:focus {
   outline: none;
   border-color: var(--color-brand-primary);

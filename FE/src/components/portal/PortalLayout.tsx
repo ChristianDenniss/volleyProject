@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import "../ui/ui.css";
 import "../../styles/PortalLayout.css";
 
 const PortalLayout: React.FC = () => {

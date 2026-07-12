@@ -156,18 +156,6 @@
   gap: 0.5rem;
 }
 
-.filter-label {
-  font-weight: bold;
-  min-width: 80px;
-}
-
-.filter-select {
-  padding: 0.5rem;
-  border-radius: 0.25rem;
-  border: 1px solid #ccc;
-  min-width: 120px;
-}
-
 .clear-filters-button {
   padding: 0.5rem 1rem;
   border-radius: 0.25rem;

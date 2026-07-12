@@ -13,11 +13,14 @@ import type { Player } from "../types/interfaces";
  *   ...
  * ]
  */
-export type BatchPlayerByNameInput = Array<{
-  name: string;
-  position: string;
-  teamNames: string[];
-}>;
+export type BatchPlayerByNameInput = {
+  seasonId: number;
+  players: Array<{
+    name: string;
+    position: string;
+    teamNames: string[];
+  }>;
+};
 
 /**
  * Hook to POST a batch of players (matched by team name) to:

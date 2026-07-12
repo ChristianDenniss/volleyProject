@@ -16,6 +16,8 @@ import Pagination                         from "../Pagination";
 import Modal                              from "../ui/Modal";
 import Table, { type TableColumn }        from "../ui/Table";
 import OverflowListCell                   from "../ui/OverflowListCell";
+import RegionSeasonFields                 from "../ui/RegionSeasonFields";
+import { useFormRegionSeason }            from "../../hooks/useFormRegionSeason";
 
 type EditField = "name" | "position";
 interface EditingState {
@@ -37,6 +39,7 @@ const PlayersPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
 
   const { regionQuery } = useRegion();
+  const formRegionSeason = useFormRegionSeason("id");
 
   const { data: players, total, totalPages, loading, error, refetch } = usePlayers({
     page: currentPage,
@@ -148,19 +151,26 @@ const PlayersPage: React.FC = () => {
       }
     }
 
-    // Build the payload array for the API
-    const payload = batchRows.map((row) => {
-      const teamNamesArray = row.teamNamesCSV
-        .split(",")
-        .map((s) => s.trim().toLowerCase())
-        .filter((s) => s.length > 0);
+    if (!formRegionSeason.regionId || formRegionSeason.seasonValue === "") {
+      setFormError("Region and season are required.");
+      return;
+    }
 
-      return {
-        name:      row.name.trim(),
-        position:  row.position.trim(),
-        teamNames: teamNamesArray,
-      };
-    });
+    const payload = {
+      seasonId: formRegionSeason.seasonValue as number,
+      players: batchRows.map((row) => {
+        const teamNamesArray = row.teamNamesCSV
+          .split(",")
+          .map((s) => s.trim().toLowerCase())
+          .filter((s) => s.length > 0);
+
+        return {
+          name:      row.name.trim(),
+          position:  row.position.trim(),
+          teamNames: teamNamesArray,
+        };
+      }),
+    };
 
     try {
       const created = await createBatch(payload);
@@ -291,7 +301,10 @@ const PlayersPage: React.FC = () => {
     <div className="portal-main">
       {/* Search and Controls */}
       <div className="players-controls">
-        <button className="create-button" onClick={() => setIsModalOpen(true)}>
+        <button className="create-button" onClick={() => {
+          formRegionSeason.initFromActiveRegion();
+          setIsModalOpen(true);
+        }}>
           Create Players
         </button>
         <div className="players-controls-right">
@@ -327,6 +340,18 @@ const PlayersPage: React.FC = () => {
         )}
 
         <form onSubmit={handleBatchCreate} className="player-form">
+          <RegionSeasonFields
+            regions={formRegionSeason.regions}
+            regionsLoading={formRegionSeason.regionsLoading}
+            regionId={formRegionSeason.regionId}
+            onRegionChange={formRegionSeason.setRegionId}
+            seasons={formRegionSeason.seasons}
+            seasonsLoading={formRegionSeason.seasonsLoading}
+            seasonValue={formRegionSeason.seasonValue}
+            onSeasonChange={formRegionSeason.setSeasonValue}
+            seasonValueKey="id"
+          />
+
           <div className="player-form-header" aria-hidden="true">
             <span>Name*</span>
             <span>Position*</span>

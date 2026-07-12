@@ -500,7 +500,7 @@ const AwardsPage: React.FC = () => {
       <FilterBar onReset={clearFilters}>
         <div className="filter-group">
           <select
-            className="filter-select"
+            className="filter-select ui-filter-select"
             aria-label="Season"
             value={seasonFilter}
             onChange={(e) => handleSeasonFilterChange(e.target.value)}
@@ -516,7 +516,7 @@ const AwardsPage: React.FC = () => {
 
         <div className="filter-group">
           <select
-            className="filter-select"
+            className="filter-select ui-filter-select"
             aria-label="Award type"
             value={awardTypeFilter}
             onChange={(e) => handleAwardTypeFilterChange(e.target.value)}

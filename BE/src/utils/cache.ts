@@ -26,7 +26,11 @@ export class CacheService {
 
   constructor() {
     // Use REDIS_URL for production (like DATABASE_URL) or fallback to localhost for development
-    const redisUrl = process.env.REDIS_URL || (process.env.NODE_ENV === 'production' ? null : 'redis://localhost:6379');
+    const configuredRedisUrl = process.env.REDIS_URL;
+    const redisUrl =
+      configuredRedisUrl === undefined
+        ? (process.env.NODE_ENV === 'production' ? null : 'redis://localhost:6379')
+        : configuredRedisUrl || null;
     
     logger.info(`=== REDIS CONNECTION DEBUG ===`);
     logger.info(`NODE_ENV: ${process.env.NODE_ENV}`);

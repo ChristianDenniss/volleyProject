@@ -288,6 +288,12 @@ export class GameService {
                 throw new InvalidFormatError("Scores cannot be negative.");
             }
     
+            // Fetch the season first — region is inherited from it
+            const season = await this.seasonRepository.findOneBy({ id: seasonId });
+            if (!season) {
+                throw new NotFoundError(`Season with ID ${seasonId} not found`);
+            }
+
             // Fetch teams scoped to the selected season
             const teams = await this.teamRepository
                 .createQueryBuilder("team")
@@ -305,12 +311,6 @@ export class GameService {
                 throw new NotFoundError(
                     `Teams with names ${missingTeams.join(", ")} not found in season ${seasonId}`
                 );
-            }
-    
-            // Fetch the season by ID
-            const season = await this.seasonRepository.findOneBy({ id: seasonId });
-            if (!season) {
-                throw new NotFoundError(`Season with ID ${seasonId} not found`);
             }
     
             const teamIds = teamNames.map(teamName => {

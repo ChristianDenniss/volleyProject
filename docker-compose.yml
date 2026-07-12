@@ -1,14 +1,14 @@
 services:
   backend:
     build:
-      context: .
+      context: ./BE
       dockerfile: Dockerfile
     volumes:
-      - ./dist:/app/dist
+      - ./BE/dist:/app/dist
     ports:
       - "3000:3000"
     env_file:
-      - .env
+      - ./BE/.env
     environment:
       - NODE_ENV=${NODE_ENV:-development}
       - PORT=3000
@@ -16,9 +16,20 @@ services:
       - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASS:-password}@db:5432/${DB_NAME:-volleyball}?sslmode=disable
       - REDIS_URL=
       - ALLOW_REGISTRATION=${ALLOW_REGISTRATION:-true}
-      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:5173}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:5173,http://localhost:8080}
     depends_on:
       - db
+
+  frontend:
+    build:
+      context: ./FE
+      dockerfile: Dockerfile
+      args:
+        VITE_BACKEND_URL: http://localhost:3000
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
 
   db:
     image: postgres:16-alpine
