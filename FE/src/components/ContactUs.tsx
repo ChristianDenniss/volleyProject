@@ -36,7 +36,7 @@ const Contact: React.FC = () =>
                 <h2>Help Center</h2>
                 <p>Still not sure who to contact? Browse our help center and find quick answers.</p>
                 <a
-                    href="/help"
+                    href="/faq"
                     className="contact-button"
                 >
                     Visit Help Center
