@@ -1,7 +1,6 @@
 import { Application, Router } from 'express';
 import { TriviaController } from './trivia.controller.js';
-import { cacheMiddleware } from '../../middleware/cache.js';
-import { authenticateCombined } from '../../middleware/combinedAuth.js';
+import { triviaRateLimiter } from '../../middleware/rateLimit.js';
 
 /**
  * Register trivia routes with the Express application
@@ -9,6 +8,8 @@ import { authenticateCombined } from '../../middleware/combinedAuth.js';
 export function registerTriviaRoutes(app: Application): void {
     const router = Router();
     const triviaController = new TriviaController();
+
+    router.use(triviaRateLimiter);
 
     // GET routes - PUBLIC (for testing) - NO CACHING for random trivia
     router.get('/player', triviaController.getRandomTriviaPlayer);
@@ -20,4 +21,4 @@ export function registerTriviaRoutes(app: Application): void {
 
     // Register router with prefix
     app.use('/api/trivia', router);
-} 
+}
