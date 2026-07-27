@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { ArticleService, ArticleFilters } from './article.service.js';
 import { MissingFieldError } from '../../errors/MissingFieldError.js';
 import { NotFoundError } from '../../errors/NotFoundError.js';
+import { ConflictError } from '../../errors/ConflictError.js';
 import { parsePagination, toPaginatedResult } from '../../utils/pagination.js';
 
 const ARTICLES_DEFAULT_LIMIT = 10;
@@ -161,7 +162,7 @@ export class ArticleController {
         } catch (error) {
             if (error instanceof MissingFieldError || error instanceof NotFoundError) {
                 res.status(400).json({ message: error.message });
-            } else if (error instanceof Error && error.message.includes("already liked")) {
+            } else if (error instanceof ConflictError) {
                 res.status(409).json({ message: error.message });
             } else {
                 res.status(500).json({ message: 'Internal server error' });
@@ -182,7 +183,7 @@ export class ArticleController {
         } catch (error) {
             if (error instanceof MissingFieldError || error instanceof NotFoundError) {
                 res.status(400).json({ message: error.message });
-            } else if (error instanceof Error && error.message.includes("not liked")) {
+            } else if (error instanceof ConflictError) {
                 res.status(409).json({ message: error.message });
             } else {
                 res.status(500).json({ message: 'Internal server error' });

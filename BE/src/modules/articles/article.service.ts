@@ -4,6 +4,7 @@ import { Article } from './article.entity.js';
 import { User } from '../user/user.entity.js';
 import { MissingFieldError } from '../../errors/MissingFieldError.js';
 import { NotFoundError } from '../../errors/NotFoundError.js';
+import { ConflictError } from '../../errors/ConflictError.js';
 import { PaginationParams } from '../../utils/pagination.js';
 
 export interface ArticleFilters {
@@ -182,7 +183,7 @@ export class ArticleService {
             // Check if user already liked this article
             const hasLiked = article.likedBy?.some(likedUser => likedUser.id === userId);
             if (hasLiked) {
-                throw new Error("User has already liked this article");
+                throw new ConflictError("User has already liked this article");
             }
 
             // Add user to likedBy array
@@ -220,7 +221,7 @@ export class ArticleService {
             // Check if user has liked this article
             const hasLiked = article.likedBy?.some(likedUser => likedUser.id === userId);
             if (!hasLiked) {
-                throw new Error("User has not liked this article");
+                throw new ConflictError("User has not liked this article");
             }
 
             // Remove user from likedBy array
