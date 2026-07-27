@@ -9,30 +9,8 @@ import { authorizeRoles } from "./authorizeRoles.js";
 import { adminRateLimiter } from "./rateLimit.js";
 import { csrfProtection } from "./csrfProtection.js";
 import { adminIpAllowlist } from "./adminIpAllowlist.js";
+import { getAllowedOrigins } from "../utils/allowedOrigins.js";
 
-const PRODUCTION_ORIGINS = ['https://volleyball4-2.com'];
-const DEVELOPMENT_ORIGINS = [
-    'http://localhost:3000',
-    'http://localhost:5173',
-    'http://localhost:5174',
-    'http://localhost:8080',
-    'http://127.0.0.1:3000',
-    'http://127.0.0.1:5173',
-    'http://127.0.0.1:5174',
-    'http://127.0.0.1:8080',
-];
-
-function getAllowedOrigins(): string[] {
-    if (process.env.CORS_ORIGINS) {
-        return process.env.CORS_ORIGINS.split(',').map((origin) => origin.trim()).filter(Boolean);
-    }
-
-    if (process.env.NODE_ENV === 'production') {
-        return PRODUCTION_ORIGINS;
-    }
-
-    return [...PRODUCTION_ORIGINS, ...DEVELOPMENT_ORIGINS];
-}
 
 /**
  * Register all global middleware to the Express application

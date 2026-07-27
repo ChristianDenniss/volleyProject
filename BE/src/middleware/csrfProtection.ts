@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { CSRF_COOKIE_NAME, AUTH_COOKIE_NAME } from "./authCookie.js";
 import { UnauthorizedError } from "../errors/UnauthorizedError.js";
+import { getAllowedOrigins } from "../utils/allowedOrigins.js";
 
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 const CSRF_EXEMPT_PATHS = new Set([
@@ -9,27 +10,6 @@ const CSRF_EXEMPT_PATHS = new Set([
     "/api/users/logout",
 ]);
 
-function getAllowedOrigins(): string[] {
-    if (process.env.CORS_ORIGINS) {
-        return process.env.CORS_ORIGINS.split(",").map((origin) => origin.trim()).filter(Boolean);
-    }
-
-    if (process.env.NODE_ENV === "production") {
-        return ["https://volleyball4-2.com"];
-    }
-
-    return [
-        "https://volleyball4-2.com",
-        "http://localhost:3000",
-        "http://localhost:5173",
-        "http://localhost:5174",
-        "http://localhost:8080",
-        "http://127.0.0.1:3000",
-        "http://127.0.0.1:5173",
-        "http://127.0.0.1:5174",
-        "http://127.0.0.1:8080",
-    ];
-}
 
 export function csrfProtection(req: Request, res: Response, next: NextFunction): void {
     if (SAFE_METHODS.has(req.method) || CSRF_EXEMPT_PATHS.has(req.path)) {
