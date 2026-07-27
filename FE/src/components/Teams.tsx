@@ -159,6 +159,8 @@ const Teams: React.FC = () =>
                         ))}
                     </div>
                 </div>
+            ) : (paginatedTeams ?? []).length === 0 ? (
+                <div className="listing-table-empty">No teams match your filters.</div>
             ) : (
                 <div className="teams-wrapper">
                     <div className="teams-container">

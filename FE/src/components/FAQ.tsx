@@ -260,12 +260,13 @@ const FAQ: React.FC = () => {
                                             className="faq-question"
                                             onClick={() => toggleItem(item.id)}
                                             aria-expanded={openItems.has(item.id)}
+                                            aria-controls={`faq-answer-${item.id}`}
                                         >
                                             <span>{item.question}</span>
                                             {openItems.has(item.id) ? <FaChevronUp /> : <FaChevronDown />}
                                         </button>
                                         {openItems.has(item.id) && (
-                                            <div className="faq-answer">
+                                            <div className="faq-answer" id={`faq-answer-${item.id}`}>
                                                 {item.answer}
                                             </div>
                                         )}

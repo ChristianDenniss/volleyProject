@@ -22,6 +22,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, placeholder = "Search..
             <input
                 type="text"
                 placeholder={placeholder}
+                aria-label={placeholder}
                 value={query}
                 onChange={handleInputChange}
             />

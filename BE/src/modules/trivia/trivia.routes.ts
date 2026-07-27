@@ -1,6 +1,5 @@
 import { Application, Router } from 'express';
 import { TriviaController } from './trivia.controller.js';
-import { triviaRateLimiter } from '../../middleware/rateLimit.js';
 
 /**
  * Register trivia routes with the Express application
