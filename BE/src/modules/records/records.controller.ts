@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { MissingFieldError } from '../../errors/MissingFieldError.js';
 import { NotFoundError } from '../../errors/NotFoundError.js';
+import { OutOfBoundsError } from '../../errors/OutOfBoundsError.js';
+import { DuplicateError } from '../../errors/DuplicateError.js';
 import { RecordService, RecordFilters } from './records.service.js';
 import { parsePagination, toPaginatedResult } from '../../utils/pagination.js';
 import { parseRegionQuery } from '../../utils/regionQuery.js';
@@ -29,14 +31,13 @@ export class RecordController {
             
             res.status(201).json(savedRecord);
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to create record";
-            
-            if (errorMessage.includes("required") || 
-                errorMessage.includes("not found") || 
-                errorMessage.includes("already exists") ||
-                errorMessage.includes("must be") ||
-                errorMessage.includes("between")) {
-                res.status(400).json({ error: errorMessage });
+            if (
+                error instanceof MissingFieldError ||
+                error instanceof NotFoundError ||
+                error instanceof OutOfBoundsError ||
+                error instanceof DuplicateError
+            ) {
+                res.status(error.statusCode).json({ error: error.message });
             } else {
                 console.error("Error creating record:", error);
                 res.status(500).json({ error: "Failed to create record" });
@@ -146,14 +147,12 @@ export class RecordController {
             const updatedRecord = await this.recordService.updateRecord(id, updateData);
             res.json(updatedRecord);
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to update record";
-            
-            if (error instanceof MissingFieldError) {
-                res.status(400).json({ error: errorMessage });
-            } else if (error instanceof NotFoundError) {
-                res.status(404).json({ error: errorMessage });
-            } else if (errorMessage.includes("must be between")) {
-                res.status(400).json({ error: errorMessage });
+            if (
+                error instanceof MissingFieldError ||
+                error instanceof NotFoundError ||
+                error instanceof OutOfBoundsError
+            ) {
+                res.status(error.statusCode).json({ error: error.message });
             } else {
                 console.error("Error updating record:", error);
                 res.status(500).json({ error: "Failed to update record" });
@@ -208,10 +207,8 @@ export class RecordController {
             const result = await this.recordService.calculateAllRecords();
             res.json(result);
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to calculate records";
-            
-            if (errorMessage.includes("No stats found")) {
-                res.status(400).json({ error: errorMessage });
+            if (error instanceof NotFoundError) {
+                res.status(error.statusCode).json({ error: error.message });
             } else {
                 console.error("Error calculating records:", error);
                 res.status(500).json({ error: "Failed to calculate records" });
