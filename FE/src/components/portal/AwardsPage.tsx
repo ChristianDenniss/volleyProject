@@ -17,6 +17,7 @@ import "../../styles/PortalPlayersPage.css";
 import { AWARD_TYPES } from "../../constants/awardTypes";
 import RegionSeasonFields from "../ui/RegionSeasonFields";
 import { useFormRegionSeason } from "../../hooks/useFormRegionSeason";
+import { useDebouncedValue } from "../../hooks/useDebouncedValue";
 
 type EditField = "type" | "description" | "seasonId" | "playerName" | "imageUrl" | "createdAt";
 
@@ -30,6 +31,7 @@ const AWARDS_PER_PAGE = 10;
 
 const AwardsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const debouncedSearch = useDebouncedValue(searchQuery, 300);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [seasonFilter, setSeasonFilter] = useState<string>("");
   const [awardTypeFilter, setAwardTypeFilter] = useState<string>("");
@@ -40,7 +42,7 @@ const AwardsPage: React.FC = () => {
   const { data: awards, total, totalPages, loading, error, refetch } = useSkinnyAwards({
     page: currentPage,
     limit: AWARDS_PER_PAGE,
-    search: searchQuery || undefined,
+    search: debouncedSearch || undefined,
     seasonNumber: seasonFilter || undefined,
     type: awardTypeFilter || undefined,
     ...regionQuery,
