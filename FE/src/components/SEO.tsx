@@ -1,5 +1,6 @@
 import React from 'react';
 import { Helmet } from '@dr.pogodin/react-helmet';
+import { DEFAULT_OG_IMAGE, DEFAULT_SITE_TITLE, DISCORD_INVITE_URL, ROBLOX_GAME_URL, SITE_URL } from '../constants/site';
 
 interface SEOProps {
   title?: string;
@@ -17,11 +18,11 @@ interface SEOProps {
 }
 
 const SEO: React.FC<SEOProps> = ({
-  title = 'Volleyball 4-2 - Official Roblox Volleyball League',
+  title = DEFAULT_SITE_TITLE,
   description = 'Join the official Roblox Volleyball League (RVL). Watch matches, track player stats, view team rankings, and stay updated with the latest volleyball news and events.',
   keywords = 'volleyball, roblox, RVL, volleyball league, volleyball 4-2, roblox volleyball, competitive volleyball, volleyball stats, volleyball teams, volleyball players',
-  image = 'https://volleyball4-2.com/rvlLogo.png',
-  url = 'https://volleyball4-2.com',
+  image = DEFAULT_OG_IMAGE,
+  url = SITE_URL,
   type = 'website',
   publishedTime,
   modifiedTime,
@@ -30,7 +31,7 @@ const SEO: React.FC<SEOProps> = ({
   tags = [],
   structuredData
 }) => {
-  const fullTitle = title === 'Volleyball 4-2 - Official Roblox Volleyball League' 
+  const fullTitle = title === DEFAULT_SITE_TITLE
     ? title 
     : `${title} | Volleyball 4-2`;
 
@@ -39,14 +40,14 @@ const SEO: React.FC<SEOProps> = ({
     "@type": "SportsOrganization",
     "name": "Roblox Volleyball League",
     "alternateName": "RVL",
-    "url": "https://volleyball4-2.com",
-    "logo": "https://volleyball4-2.com/rvlLogo.png",
+    "url": SITE_URL,
+    "logo": DEFAULT_OG_IMAGE,
     "description": "Official Roblox Volleyball League - Competitive volleyball gaming community",
     "sport": "Volleyball",
     "foundingDate": "2023",
     "sameAs": [
-      "https://discord.gg/volleyball",
-      "https://www.roblox.com/games/3840352284/Volleyball-4-2"
+      DISCORD_INVITE_URL,
+      ROBLOX_GAME_URL
     ]
   };
 
