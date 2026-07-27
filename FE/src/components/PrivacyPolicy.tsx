@@ -105,7 +105,7 @@ const PrivacyPolicy: React.FC = () =>
             <section className="privacy-section">
                 <h2 className="section-title">Contact Us</h2>
                 <p>
-                    If you have any questions about this Privacy Policy or our data practices, please contact us through our contact page in hte footer below. We will respond to your inquiry as soon as possible.
+                    If you have any questions about this Privacy Policy or our data practices, please contact us through our contact page in the footer below. We will respond to your inquiry as soon as possible.
                 </p>
             </section>
         </div>
