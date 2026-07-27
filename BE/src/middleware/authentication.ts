@@ -26,7 +26,7 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
                 throw new UnauthorizedError("Invalid or expired token");
             }
 
-            (req as any).user = await validateJwtPayload(decoded as jwt.JwtPayload);
+            req.user = await validateJwtPayload(decoded as jwt.JwtPayload);
             next();
         }
         catch (err)
