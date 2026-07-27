@@ -25,7 +25,7 @@ export function useLikeArticle(): UseLikeArticleReturn {
         return false;
       }
 
-      const response = await axios.post(
+      await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/api/articles/${articleId}/like`,
         {},
         {
@@ -35,8 +35,6 @@ export function useLikeArticle(): UseLikeArticleReturn {
           }
         }
       );
-      
-      console.log('Article liked successfully:', response.data);
       
       return true;
     } catch (err: any) {
@@ -72,9 +70,7 @@ export function useLikeArticle(): UseLikeArticleReturn {
         return false;
       }
 
-      console.log('Sending unlike request:', { articleId, token: token.substring(0, 10) + '...' });
-
-      const response = await axios.delete(
+      await axios.delete(
         `${import.meta.env.VITE_BACKEND_URL}/api/articles/${articleId}/like`,
         {
           headers: {
@@ -84,11 +80,8 @@ export function useLikeArticle(): UseLikeArticleReturn {
         }
       );
       
-      console.log('Article unliked successfully:', response.data);
-      
       return true;
     } catch (err: any) {
-      console.error('Unlike error details:', err.response?.data || err.message);
       let errorMessage = 'Failed to unlike article';
       
       if (err.response) {
@@ -126,4 +119,4 @@ export function useLikeArticle(): UseLikeArticleReturn {
     isLiking,
     error
   };
-} 
+}
