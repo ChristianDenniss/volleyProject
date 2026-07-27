@@ -1,7 +1,5 @@
 import { Application, Router } from 'express';
 import { TriviaController } from './trivia.controller.js';
-import { cacheMiddleware } from '../../middleware/cache.js';
-import { authenticateCombined } from '../../middleware/combinedAuth.js';
 
 /**
  * Register trivia routes with the Express application
@@ -20,4 +18,4 @@ export function registerTriviaRoutes(app: Application): void {
 
     // Register router with prefix
     app.use('/api/trivia', router);
-} 
+}
