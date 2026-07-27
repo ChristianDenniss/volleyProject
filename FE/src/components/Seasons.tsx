@@ -4,6 +4,7 @@ import { Season } from "../types/interfaces"
 import { useMediumSeasons } from "../hooks/allFetch"
 import { useRegion } from "../context/regionContext"
 import "../styles/Season.css"
+import "../styles/ListingPage.css"
 import defaultBanner from "../images/callToAction.png"
 import {
     FaRegCalendarAlt,
@@ -89,6 +90,8 @@ const Seasons: React.FC = () =>
                     Array.from({ length: 6 }).map((_, index) => (
                         <div key={index} className="seasons-skeleton"></div>
                     ))
+                ) : (data ?? []).length === 0 ? (
+                    <div className="listing-table-empty">No seasons found.</div>
                 ) : (
                     [...(data ?? [])].sort((a, b) => b.seasonNumber - a.seasonNumber).map(season =>
                         <SeasonCard key={season.id} season={season} />
