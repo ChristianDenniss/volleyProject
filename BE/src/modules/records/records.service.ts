@@ -6,6 +6,8 @@ import { Seasons } from '../seasons/season.entity.js';
 import { Stats } from '../stats/stat.entity.js';
 import { MissingFieldError } from '../../errors/MissingFieldError.js';
 import { NotFoundError } from '../../errors/NotFoundError.js';
+import { OutOfBoundsError } from '../../errors/OutOfBoundsError.js';
+import { DuplicateError } from '../../errors/DuplicateError.js';
 import { CreateRecordDto, UpdateRecordDto } from './records.schema.js';
 import { PaginationParams } from '../../utils/pagination.js';
 
@@ -42,7 +44,7 @@ export class RecordService {
 
         // Validate rank range
         if (recordData.rank < 1 || recordData.rank > 10) {
-            throw new Error("Rank must be between 1 and 10");
+            throw new OutOfBoundsError("Rank must be between 1 and 10");
         }
 
         // Fetch the player
@@ -66,7 +68,7 @@ export class RecordService {
         });
 
         if (existingRecord) {
-            throw new Error(`Record already exists for ${recordData.record} (${recordData.type}) at rank ${recordData.rank} in season ${recordData.seasonId}`);
+            throw new DuplicateError(`Record already exists for ${recordData.record} (${recordData.type}) at rank ${recordData.rank} in season ${recordData.seasonId}`);
         }
 
         // Create new record
@@ -186,7 +188,7 @@ export class RecordService {
         if (updateData.type !== undefined) record.type = updateData.type;
         if (updateData.rank !== undefined) {
             if (updateData.rank < 1 || updateData.rank > 10) {
-                throw new Error("Rank must be between 1 and 10");
+                throw new OutOfBoundsError("Rank must be between 1 and 10");
             }
             record.rank = updateData.rank;
         }
@@ -254,7 +256,7 @@ export class RecordService {
         });
 
         if (stats.length === 0) {
-            throw new Error("No stats found in the database");
+            throw new NotFoundError("No stats found in the database");
         }
 
         let recordsCreated = 0;
