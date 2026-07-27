@@ -38,3 +38,11 @@ export const robloxRateLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
 });
+
+export const triviaRateLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 60,
+    message: { error: "Too many trivia requests. Please try again later." },
+    standardHeaders: true,
+    legacyHeaders: false,
+});

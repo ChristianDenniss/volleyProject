@@ -8,6 +8,8 @@ export function registerTriviaRoutes(app: Application): void {
     const router = Router();
     const triviaController = new TriviaController();
 
+    router.use(triviaRateLimiter);
+
     // GET routes - PUBLIC (for testing) - NO CACHING for random trivia
     router.get('/player', triviaController.getRandomTriviaPlayer);
     router.get('/team', triviaController.getRandomTriviaTeam);
