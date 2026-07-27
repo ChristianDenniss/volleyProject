@@ -1,7 +1,7 @@
 import { Application, Router } from 'express';
 import { UserController } from './user.controller.js';
 import { validate } from '../../middleware/validate.js';
-import { createUserSchema, changeUserRoleSchema, changePasswordSchema } from './user.schema.js';
+import { createUserSchema, changeUserRoleSchema, changePasswordSchema, loginUserSchema } from './user.schema.js';
 import { authenticateToken } from '../../middleware/authentication.js';
 import { authorizeRoles } from '../../middleware/authorizeRoles.js';
 import { loginRateLimiter, registerRateLimiter } from '../../middleware/rateLimit.js';
@@ -12,7 +12,7 @@ export function registerUserRoutes(app: Application): void {
     const userController = new UserController();
 
     router.post('/api/users/register', registerRateLimiter, requireRegistrationEnabled, validate(createUserSchema), userController.register);
-    router.post('/api/users/login', loginRateLimiter, userController.login);
+    router.post('/api/users/login', loginRateLimiter, validate(loginUserSchema), userController.login);
     router.post('/api/users/logout', userController.logout);
 
     router.get('/api/users', authenticateToken, authorizeRoles("admin", "superadmin"), userController.getPublicUsers);
