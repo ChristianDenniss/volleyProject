@@ -1,6 +1,6 @@
 // src/pages/SignupPage.tsx
 import React, { useState } from "react";
-import { useNavigate }        from "react-router-dom";
+import { Link, useNavigate }        from "react-router-dom";
 import { useSignup }          from "../hooks/useSignUp";
 import "../styles/Login.css";
 
@@ -98,12 +98,9 @@ const SignupPage: React.FC = () =>
 
             <p>
                 Already have an account?{' '}
-                <span
-                    className="auth-link"
-                    onClick={() => navigate("/login")}
-                >
+                <Link className="auth-link" to="/login">
                     Log in
-                </span>
+                </Link>
             </p>
         </div>
     );

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useLogin } from "../hooks/useLogin";
 import "../styles/Login.css";
 
@@ -57,9 +57,9 @@ const LoginPage: React.FC = () =>
             </form>
             <p>
                 Don’t have an account?{" "}
-                <span className="auth-link" onClick={() => navigate("/signup")}>
+                <Link className="auth-link" to="/signup">
                     Sign up
-                </span>
+                </Link>
             </p>
         </div>
     );
