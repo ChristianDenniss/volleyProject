@@ -17,6 +17,7 @@ import FilterBar from "../ui/FilterBar";
 import Table, { type TableColumn } from "../ui/Table";
 import RegionSeasonFields from "../ui/RegionSeasonFields";
 import { useFormRegionSeason } from "../../hooks/useFormRegionSeason";
+import { TEAM_PLACEMENT_OPTIONS } from "../../constants/teamPlacements";
 
 type EditField =
   | "name"
@@ -33,29 +34,6 @@ interface EditingState {
 interface TeamTableColumn extends TableColumn<Team> {}
 
 const TEAMS_PER_PAGE = 10;
-
-const TEAM_PLACEMENT_OPTIONS = [
-  "Didnt make playoffs",
-  "TBD",
-  "1st Place",
-  "1st Place (D1)",
-  "1st Place (D2)",
-  "1st Place (D3)",
-  "2nd Place",
-  "2nd Place (D1)",
-  "2nd Place (D2)",
-  "2nd Place (D3)",
-  "3rd Place",
-  "3rd Place (D1)",
-  "3rd Place (D2)",
-  "3rd Place (D3)",
-  "Top 4",
-  "Top 6",
-  "Top 8",
-  "Top 12",
-  "Top 16",
-  "G.O.A.T.",
-] as const;
 
 const TeamsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
