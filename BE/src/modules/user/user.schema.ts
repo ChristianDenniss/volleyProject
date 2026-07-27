@@ -13,6 +13,11 @@ export const createUserSchema = z.object({
     email: z.string().email({ message: "Invalid email address" }),
 });
 
+export const loginUserSchema = z.object({
+    username: z.string().min(1, { message: "Username is required" }),
+    password: z.string().min(1, { message: "Password is required" }),
+});
+
 export const changePasswordSchema = z.object({
     currentPassword: z.string().min(1, { message: "Current password is required" }),
     newPassword: passwordSchema,
