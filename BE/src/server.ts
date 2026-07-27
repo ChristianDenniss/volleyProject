@@ -60,9 +60,18 @@ async function startServer(): Promise<void> {
 
     const server = createServer(app);
 
-    // Handle server graceful shutdown
+    // Handle server graceful shutdown + liveness/readiness probes
     createTerminus(server, {
       signal: 'SIGTERM',
+      healthChecks: {
+        '/health': async () => {
+          if (!AppDataSource.isInitialized) {
+            throw new Error('Database not initialized');
+          }
+          await AppDataSource.query('SELECT 1');
+          return { status: 'ok' };
+        },
+      },
       onSignal: async () => {
         // Cleanup logic before shutdown
         console.log('Server is shutting down');
