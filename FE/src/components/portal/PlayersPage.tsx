@@ -18,6 +18,7 @@ import Table, { type TableColumn }        from "../ui/Table";
 import OverflowListCell                   from "../ui/OverflowListCell";
 import RegionSeasonFields                 from "../ui/RegionSeasonFields";
 import { useFormRegionSeason }            from "../../hooks/useFormRegionSeason";
+import { useDebouncedValue }              from "../../hooks/useDebouncedValue";
 
 type EditField = "name" | "position";
 interface EditingState {
@@ -36,6 +37,7 @@ const PLAYERS_PER_PAGE = 10;
 
 const PlayersPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const debouncedSearch = useDebouncedValue(searchQuery, 300);
   const [currentPage, setCurrentPage] = useState<number>(1);
 
   const { regionQuery } = useRegion();
@@ -44,7 +46,7 @@ const PlayersPage: React.FC = () => {
   const { data: players, total, totalPages, loading, error, refetch } = usePlayers({
     page: currentPage,
     limit: PLAYERS_PER_PAGE,
-    search: searchQuery || undefined,
+    search: debouncedSearch || undefined,
     ...regionQuery,
   });
   const { patchPlayer } = usePlayerMutations();
