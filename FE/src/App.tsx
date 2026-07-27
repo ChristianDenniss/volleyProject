@@ -60,7 +60,7 @@ const App: React.FC = () => (
       <Navbar />
 
       <div className="main-content">
-        <Suspense fallback={<div className="page-loading" />}>
+        <Suspense fallback={<div className="page-loading" role="status">Loading…</div>}>
         <Routes>
           {/* public site */}
           <Route path="/" element={<Home />} />
