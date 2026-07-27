@@ -132,17 +132,30 @@ volley-project/
 ## Getting Started
 
 ### Prerequisites
-- Node.js
-- Docker and Docker Compose
-- PostgreSQL
+- Node.js 20+
+- Docker and Docker Compose (recommended) or a local PostgreSQL
 - npm
 
-### Installation
+### Installation (local)
+
 1. Clone the repository
-2. Set up environment variables
-3. Install dependencies
-4. Run database migrations
-5. Start the development servers
+2. Backend env: `cd BE && cp .env.example .env` (Windows: copy `.env.example` `.env`)
+3. Backend deps: `cd BE && npm install`
+4. Frontend env: `cd FE && cp .env.example .env` (set `VITE_BACKEND_URL` if needed)
+5. Frontend deps: `cd FE && npm install`
+6. Start Postgres (e.g. root `docker compose up -d db` or your local instance)
+7. Start API: `cd BE && npm run dev`
+8. Start FE: `cd FE && npm run dev`
+
+### Docker Compose
+
+From the repo root:
+
+```bash
+docker compose up --build
+```
+
+See `docker-compose.yml` for ports (`BE` 3000, `FE` via `DOCKER_FE_PORT`, DB via `DOCKER_DB_PORT`).
 
 ### Development
 - Backend: `cd BE && npm run dev`
@@ -153,8 +166,8 @@ volley-project/
 - Frontend: `cd FE && npm test`
 
 ### Production
-- Build: `npm run build`
-- Start: `npm start`
+- Backend: `cd BE && npm run build` then deploy/`npm run start:prod`
+- Frontend: `cd FE && npm run build`
 
 ## License
 ISC 
