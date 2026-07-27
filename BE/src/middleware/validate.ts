@@ -39,27 +39,23 @@ export const validate = (schema: ZodSchema<any>) =>
     {
         try
         {
-            console.log('Validation: Received request body:', sanitizeForLogging(req.body));
-
             // Preprocess the body to convert date strings to Date objects
             const processedBody = convertDateStrings(req.body);
-            console.log('Validation: Processed request body:', sanitizeForLogging(processedBody));
             
             // Validate the processed body
             req.body = schema.parse(processedBody);
-            console.log('Validation: Successfully validated request body');
             next();
         }
         catch (error)
         {
             if (error instanceof ZodError)
             {
-                console.error('Validation: Zod validation error:', error.errors);
+                console.error('Validation failed:', sanitizeForLogging(error.errors));
                 next(new BadRequestError("Validation failed", error.errors));
             }
             else
             {
-                console.error('Validation: Unexpected error:', error);
+                console.error('Unexpected validation middleware error:', error);
                 next(error);
             }
         }
