@@ -8,6 +8,7 @@ import FilterBar from './ui/FilterBar';
 import { formatGameStage } from '../utils/gameLabels';
 import { isSafeExternalUrl } from '../utils/url';
 import { useRegion } from '../context/regionContext';
+import { useDebouncedValue } from '../hooks/useDebouncedValue';
 import '../styles/Schedules.css';
 
 const Schedules: React.FC = () => {
@@ -17,6 +18,7 @@ const Schedules: React.FC = () => {
   const [selectedSeason, setSelectedSeason] = useState<number | undefined>();
   const [selectedStage, setSelectedStage] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const debouncedSearch = useDebouncedValue(searchQuery, 300);
   const [currentDateRange, setCurrentDateRange] = useState<Date>(new Date());
   const [showLocalTime, setShowLocalTime] = useState<boolean>(false);
   const [collapsedDates, setCollapsedDates] = useState<Set<string>>(new Set());
@@ -30,7 +32,7 @@ const Schedules: React.FC = () => {
     page: 1,
     limit: 500,
     seasonId: selectedSeason,
-    search: searchQuery || undefined,
+    search: debouncedSearch || undefined,
     stage: selectedStage || undefined,
     status: 'scheduled',
     phase: selectedPhase || undefined,
