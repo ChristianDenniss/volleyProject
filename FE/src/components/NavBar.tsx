@@ -13,13 +13,13 @@ const Navbar: React.FC = () =>
                 {/* Left-aligned nav list */}
                 <ul className="navbar-links">
                     <li>
-                        {/* External link to the RVL game */}
+                        {/* External link to the Discord server */}
                         <a href="https://discord.gg/volleyball" target="_blank" rel="noopener noreferrer">
-                            Roblox Volleyball League
+                            Join Discord
                         </a>
                     </li>
                     <li>
-                        {/* External link to the Discord server */}
+                        {/* External link to the RVL game */}
                         <a href="https://www.roblox.com/games/3840352284/Volleyball-4-2" target="_blank" rel="noopener noreferrer">
                             Play Now
                         </a>
