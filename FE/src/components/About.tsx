@@ -1,10 +1,16 @@
 import React from "react";
+import SEO from "./SEO";
 import "../styles/About.css";
 
 const About: React.FC = () =>
 {
     return (
         <div className="about-page-container">
+            <SEO
+                title="About"
+                description="Learn about Volleyball 4.2 and the Roblox Volleyball League platform for teams, players, and fans."
+                url="https://volleyball4-2.com/about"
+            />
             <h1 className="about-title">About Volleyball 4.2</h1>
 
             <p className="about-intro">
