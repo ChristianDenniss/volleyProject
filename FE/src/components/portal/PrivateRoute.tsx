@@ -14,7 +14,7 @@ interface PrivateRouteProps {
 export default function PrivateRoute({ roles, children }: PrivateRouteProps) {
   const { user, isAuthenticated, loading } = useAuth();
 
-  if (loading) return null;
+  if (loading) return <div className="page-loading" role="status">Loading…</div>;
   if (!isAuthenticated || !user) return <Navigate to="/login" replace />;
   if (!roles.includes(user.role as AllowedRole)) return <Navigate to="/" replace />;
 
