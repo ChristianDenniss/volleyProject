@@ -345,7 +345,7 @@ export class PlayerService extends CacheableService
         playersData: { name: string, position: string, teamNames: string[] }[]
     ): Promise<Players[]> 
     {
-        console.log('Received players data:', { seasonId, playersData });
+        
 
         const season = await this.seasonRepository.findOne({ where: { id: seasonId } });
         if (!season) {
@@ -365,7 +365,7 @@ export class PlayerService extends CacheableService
         const allTeamNames = [
             ...new Set(playersData.flatMap(p => p.teamNames.map(n => n.trim().toLowerCase())))
         ];
-        console.log('Normalized team names to search:', allTeamNames);
+        
 
         // Fetch matching teams within the selected season only
         const allTeams = await this.teamRepository
@@ -375,13 +375,13 @@ export class PlayerService extends CacheableService
             .andWhere("LOWER(team.name) IN (:...names)", { names: allTeamNames })
             .getMany();
 
-        console.log('Fetched teams:', allTeams.map(t => t.name));
+        
 
         const createdOrUpdatedPlayers: Players[] = [];
 
         for (const playerData of playersData) 
         {
-            console.log('Processing player:', playerData.name);
+            
 
             // Normalize incoming names
             const normalizedTeamNames = playerData.teamNames.map(n => n.trim().toLowerCase());
@@ -393,7 +393,7 @@ export class PlayerService extends CacheableService
 
             if (playerTeams.length !== normalizedTeamNames.length) 
             {
-                console.log('Error: Some teams not found for player:', playerData.name);
+                
                 throw new NotFoundError(`One or more teams not found in season ${seasonId} for player "${playerData.name}"`);
             }
 
@@ -411,12 +411,12 @@ export class PlayerService extends CacheableService
 
                 if (newTeams.length === 0) 
                 {
-                    console.log('No new teams to add for player:', playerData.name);
+                    
                     continue;
                 }
 
                 player.teams.push(...newTeams);
-                console.log('Updated player with new teams:', playerData.name);
+                
                 createdOrUpdatedPlayers.push(await this.playerRepository.save(player));
             } 
             else 
@@ -426,12 +426,12 @@ export class PlayerService extends CacheableService
                 newPlayer.position = playerData.position;
                 newPlayer.teams = playerTeams;
 
-                console.log('Creating new player:', newPlayer.name);
+                
                 createdOrUpdatedPlayers.push(await this.playerRepository.save(newPlayer));
             }
         }
 
-        console.log('Created or updated players:', createdOrUpdatedPlayers);
+        
         return createdOrUpdatedPlayers;
     }
 
