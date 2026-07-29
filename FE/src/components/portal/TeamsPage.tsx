@@ -18,6 +18,7 @@ import Table, { type TableColumn } from "../ui/Table";
 import RegionSeasonFields from "../ui/RegionSeasonFields";
 import { useFormRegionSeason } from "../../hooks/useFormRegionSeason";
 import { TEAM_PLACEMENT_OPTIONS } from "../../constants/teamPlacements";
+import { useDebouncedValue } from "../../hooks/useDebouncedValue";
 
 type EditField =
   | "name"
@@ -37,6 +38,7 @@ const TEAMS_PER_PAGE = 10;
 
 const TeamsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const debouncedSearch = useDebouncedValue(searchQuery, 300);
   const [currentPage, setCurrentPage] = useState<number>(1);
 
   // Filter state
@@ -48,7 +50,7 @@ const TeamsPage: React.FC = () => {
   const { data: teams, total, totalPages, loading, error, refetch } = useSkinnyTeams({
     page: currentPage,
     limit: TEAMS_PER_PAGE,
-    search: searchQuery || undefined,
+    search: debouncedSearch || undefined,
     seasonId: seasonFilter || undefined,
     ...regionQuery,
   });
