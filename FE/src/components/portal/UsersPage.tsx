@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "../../context/authContext";
 import type { User } from "../../types/interfaces";
 import { useUsers } from "../../hooks/useUsers";
+import { useDebouncedValue } from "../../hooks/useDebouncedValue";
 import SearchBar from "../Searchbar";
 import Pagination from "../Pagination";
 import FilterBar from "../ui/FilterBar";
@@ -16,13 +17,14 @@ const ALL_ROLES: User["role"][] = ["user", "admin", "superadmin"];
 const UsersPage: React.FC = () => {
   const { user: me } = useAuth();
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const debouncedSearch = useDebouncedValue(searchQuery, 300);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [roleFilter, setRoleFilter] = useState<string>("");
 
   const { users, total, totalPages, loading, error, changeRole } = useUsers({
     page: currentPage,
     limit: USERS_PER_PAGE,
-    search: searchQuery || undefined,
+    search: debouncedSearch || undefined,
     role: roleFilter || undefined,
   });
 
