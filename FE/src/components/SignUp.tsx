@@ -1,5 +1,5 @@
 // src/pages/SignupPage.tsx
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate }        from "react-router-dom";
 import { useSignup }          from "../hooks/useSignUp";
 import "../styles/Login.css";
@@ -18,6 +18,15 @@ const SignupPage: React.FC = () =>
     const [password, setPassword] = useState("");
     const [confirm,  setConfirm]  = useState("");
     const [success,  setSuccess]  = useState<string | null>(null);
+    const redirectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    useEffect(() => {
+        return () => {
+            if (redirectTimeoutRef.current) {
+                clearTimeout(redirectTimeoutRef.current);
+            }
+        };
+    }, []);
 
     // form submit handler
     const handleSubmit = async (e: React.FormEvent) =>
@@ -41,7 +50,7 @@ const SignupPage: React.FC = () =>
         {
             // show success and redirect
             setSuccess("Account created successfully! Redirecting to login…");
-            setTimeout(() => navigate("/login"), 2000);
+            redirectTimeoutRef.current = setTimeout(() => navigate("/login"), 2000);
         }
     };
 
