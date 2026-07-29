@@ -33,15 +33,10 @@ if (hasInsecureJwtSecret) {
 
 const PORT = process.env.PORT || 3000; // Default to 3000 to match docker-compose
 
-console.log("==========================================");
-console.log("SERVER STARTING");
-console.log("==========================================");
-console.log("Environment:", process.env.NODE_ENV);
-console.log("Node Version:", process.version);
-console.log("Current Directory:", process.cwd());
-console.log("Database URL:", process.env.DATABASE_URL ? "***URL REDACTED***" : "NOT SET");
-console.log("Port:", PORT);
-console.log("==========================================");
+console.log(
+  `Starting server (${process.env.NODE_ENV}) on port ${PORT}` +
+    (process.env.DATABASE_URL ? ' with DATABASE_URL' : ' without DATABASE_URL')
+);
 
 async function startServer(): Promise<void> {
   try {
@@ -84,7 +79,6 @@ async function startServer(): Promise<void> {
 
     server.listen(PORT, () => {
       console.log(`Server running at http://localhost:${PORT}`);
-      console.log("==========================================");
     });
   } catch (error) {
     console.error('Error during startup:', error);
