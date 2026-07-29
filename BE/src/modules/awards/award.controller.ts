@@ -201,14 +201,10 @@ export class AwardController {
 
     // Create award with player name
     createAwardWithPlayerNames = async (req: Request, res: Response): Promise<void> => {
-        console.log('Controller: Received request to create award with player names');
-        console.log('Controller: Request body:', req.body);
         try {
             const { description, type, seasonId, playerName, imageUrl } = req.body;
-            console.log('Controller: Extracted data:', { description, type, seasonId, playerName, imageUrl });
             
             if (!description || !type || !seasonId || !playerName) {
-                console.error('Controller: Missing required fields');
                 res.status(400).json({ error: 'Missing required fields' });
                 return;
             }
@@ -221,25 +217,21 @@ export class AwardController {
                 imageUrl
             );
             
-            console.log('Controller: Successfully created award:', savedAward);
             res.status(201).json(savedAward);
         } catch (error) {
-            console.error('Controller: Error in createAwardWithPlayerNames:', error);
             const errorMessage = error instanceof Error ? error.message : "Failed to create award";
             
             if (errorMessage.includes("required") || 
                 errorMessage.includes("not found") || 
                 errorMessage.includes("already in use") ||
                 errorMessage.includes("must be")) {
-                console.error('Controller: Client error:', errorMessage);
                 res.status(400).json({ error: errorMessage });
             } else {
-                console.error("Controller: Server error:", error);
+                console.error("Error creating award with player names:", error);
                 res.status(500).json({ error: errorMessage });
             }
         }
     };
-
     /**
      * Get all awards for a specific player
      * @param req - Express request object
