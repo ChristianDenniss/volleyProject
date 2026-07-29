@@ -65,8 +65,6 @@ const Teams: React.FC = () =>
     /* Handle a card click */
     const handleCardClick = (teamName: string): void =>
     {
-        console.log("Team card clicked:", teamName);
-
         /* Save current active for comparison */
         setPreviousActiveTeam(activeTeam);
 
@@ -75,6 +73,15 @@ const Teams: React.FC = () =>
 
         /* Navigate to /teams/<team-name> (relative path) */
         navigate(slugify(teamName));
+    };
+
+    const handleCardKeyDown = (event: React.KeyboardEvent, teamName: string): void =>
+    {
+        if (event.key === "Enter" || event.key === " ")
+        {
+            event.preventDefault();
+            handleCardClick(teamName);
+        }
     };
 
     /* Update search box state */
@@ -168,7 +175,11 @@ const Teams: React.FC = () =>
                             <div
                                 key={team.id}
                                 className={`team-card ${activeTeam === team.name ? "active" : ""}`}
+                                role="link"
+                                tabIndex={0}
                                 onClick={() => handleCardClick(team.name)}
+                                onKeyDown={(event) => handleCardKeyDown(event, team.name)}
+                                aria-label={`View team ${team.name}`}
                             >
                                 {team.logoUrl && (
                                     <div 
