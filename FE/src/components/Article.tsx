@@ -5,6 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useArticles } from "../hooks/allFetch";
 import { useAuth } from "../context/authContext";
 import type { Article } from "../types/interfaces";
+import SEO from "./SEO";
 import "../styles/Article.css";
 
 const Articles: React.FC = () =>
@@ -119,6 +120,11 @@ const Articles: React.FC = () =>
 
     return (
         <div className="article-list-container">
+            <SEO
+                title="Articles"
+                description="News, recaps, and community writing from the Roblox Volleyball League."
+                url="https://volleyball4-2.com/articles"
+            />
             {showAuthMessage && (
                 <div className="article-list-auth-message">
                     {!isAuthenticated 
