@@ -1,9 +1,11 @@
-import { JwtPayload } from "jsonwebtoken";
+import type { VerifiedJwtUser } from "./src/middleware/authValidation.js";
 
 declare global {
   namespace Express {
     interface Request {
-      user?: JwtPayload & { id?: number, username?: string, role?: string }
+      user?: VerifiedJwtUser;
     }
   }
 }
+
+export {};
