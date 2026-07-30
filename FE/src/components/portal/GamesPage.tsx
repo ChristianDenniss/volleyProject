@@ -22,6 +22,7 @@ import { formatGameStage } from "../../utils/gameLabels";
 import { getStageOptionsForPhase } from "../../constants/gameStages";
 import RegionSeasonFields from "../ui/RegionSeasonFields";
 import { useFormRegionSeason } from "../../hooks/useFormRegionSeason";
+import { useDebouncedValue } from "../../hooks/useDebouncedValue";
 
 type EditField = "name" | "seasonId" | "stage" | "phase" | "bracket" | "team1Score" | "team2Score" | "date" | "videoUrl" | "status";
 
@@ -37,6 +38,7 @@ const GAMES_PER_PAGE = 10;
 
 const GamesPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const debouncedSearch = useDebouncedValue(searchQuery, 300);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [seasonFilter, setSeasonFilter] = useState<string>("");
   const [stageFilter, setStageFilter] = useState<string>("");
@@ -50,7 +52,7 @@ const GamesPage: React.FC = () => {
   const { data: games, total, totalPages, loading, error, refetch } = useGames({
     page: currentPage,
     limit: GAMES_PER_PAGE,
-    search: searchQuery || undefined,
+    search: debouncedSearch || undefined,
     seasonId: seasonFilter || undefined,
     stage: stageFilter || undefined,
     status: statusFilter || undefined,
