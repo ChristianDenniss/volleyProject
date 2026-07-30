@@ -10,6 +10,7 @@ import { useAuth }                   from "../../context/authContext";
 import { useRegion }                   from "../../context/regionContext";
 import { usePlayers, useSkinnyGames } from "../../hooks/allFetch";
 import { useFormRegionSeason }       from "../../hooks/useFormRegionSeason";
+import { useDebouncedValue }         from "../../hooks/useDebouncedValue";
 import RegionSeasonFields            from "../ui/RegionSeasonFields";
 import type { Stats }                from "../../types/interfaces";
 import { handleFileUpload } from "../../utils/csvUploadUtils";
@@ -67,6 +68,7 @@ const STATS_PER_PAGE = 10;
 const StatsPage: React.FC = () =>
 {
     const [searchQuery, setSearchQuery] = useState<string>("");
+    const debouncedSearch = useDebouncedValue(searchQuery, 300);
     const [currentPage, setCurrentPage] = useState<number>(1);
 
     const { regionQuery } = useRegion();
@@ -75,7 +77,7 @@ const StatsPage: React.FC = () =>
     const { data: stats, total, totalPages, loading, error, refetch } = useStats({
         page: currentPage,
         limit: STATS_PER_PAGE,
-        search: searchQuery || undefined,
+        search: debouncedSearch || undefined,
         ...regionQuery,
     });
     const { data: players, loading: playersLoading } = usePlayers({ page: 1, limit: 100, ...regionQuery });
