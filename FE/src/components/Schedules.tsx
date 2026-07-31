@@ -8,6 +8,7 @@ import FilterBar from './ui/FilterBar';
 import { formatGameStage } from '../utils/gameLabels';
 import { isSafeExternalUrl } from '../utils/url';
 import { useRegion } from '../context/regionContext';
+import SEO from './SEO';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
 import '../styles/Schedules.css';
 
@@ -193,6 +194,11 @@ const Schedules: React.FC = () => {
 
   return (
     <>
+      <SEO
+        title="Schedules"
+        description="Upcoming Roblox Volleyball League match schedules, dates, and stages."
+        url="https://volleyball4-2.com/schedules"
+      />
       <div className="schedules-page">
         {/* VNL-Style Header */}
         <div className="vnl-header">
