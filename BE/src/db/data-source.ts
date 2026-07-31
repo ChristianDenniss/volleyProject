@@ -70,7 +70,11 @@ export async function initializeDataSource(): Promise<DataSource> {
         if (!AppDataSource.isInitialized) {
             await AppDataSource.initialize();
             console.log("Database connection established");
-            console.log("TypeORM logging enabled for: error, warn, query, schema, migration, info");
+            const logging = AppDataSource.options.logging;
+            console.log(
+              "TypeORM logging enabled for:",
+              Array.isArray(logging) ? logging.join(", ") : String(logging)
+            );
         }
         return AppDataSource;
     } catch (error) {

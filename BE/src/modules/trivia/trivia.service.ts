@@ -40,10 +40,8 @@ export class TriviaService {
      * Get a random trivia player with all relations - ULTRA OPTIMIZED VERSION
      */
     async getRandomTriviaPlayer(difficulty: 'easy' | 'medium' | 'hard' | 'impossible'): Promise<TriviaPlayer> {
-        console.log('🎯 [TriviaService] getRandomTriviaPlayer called with difficulty:', difficulty);
         
         // Step 1: Use raw SQL to get difficulty scores efficiently
-        console.log('🎯 [TriviaService] Step 1: Calculating difficulty scores with raw SQL...');
         
         const difficultyQuery = `
             SELECT 
@@ -64,7 +62,6 @@ export class TriviaService {
         `;
         
         const playersWithScores = await this.playerRepository.query(difficultyQuery);
-        console.log('✅ [TriviaService] Calculated scores for', playersWithScores.length, 'players');
         
         // Step 2: Filter by difficulty using the scoring algorithm
         const candidates = playersWithScores.filter((player: any) => {
@@ -77,7 +74,6 @@ export class TriviaService {
             }
         });
         
-        console.log('✅ [TriviaService] Found', candidates.length, 'candidates for difficulty:', difficulty);
         
         if (candidates.length === 0) {
             console.error('❌ [TriviaService] No players found for difficulty:', difficulty);
@@ -86,10 +82,8 @@ export class TriviaService {
         
         // Step 3: Pick a random candidate
         const randomPlayer = candidates[Math.floor(Math.random() * candidates.length)];
-        console.log('🎯 [TriviaService] Step 3: Selected random player:', randomPlayer.name);
         
         // Step 4: Fetch the full player with all relations (only for the selected one)
-        console.log('🎯 [TriviaService] Step 4: Fetching full player data...');
         const fullPlayer = await this.playerRepository.findOne({
             where: { id: randomPlayer.id },
             relations: ['teams', 'awards', 'stats', 'records']
@@ -100,14 +94,6 @@ export class TriviaService {
             throw new Error(`Failed to fetch player with ID ${randomPlayer.id}`);
         }
         
-        console.log('✅ [TriviaService] Successfully fetched player:', {
-            id: fullPlayer.id,
-            name: fullPlayer.name,
-            teams: fullPlayer.teams?.length || 0,
-            awards: fullPlayer.awards?.length || 0,
-            stats: fullPlayer.stats?.length || 0,
-            records: fullPlayer.records?.length || 0
-        });
         
         const triviaPlayer = {
             id: fullPlayer.id,
@@ -122,9 +108,7 @@ export class TriviaService {
         };
         
         // Validate with Zod schema
-        console.log('🎯 [TriviaService] Validating with Zod schema...');
         const validatedPlayer = TriviaPlayerSchema.parse(triviaPlayer);
-        console.log('✅ [TriviaService] Validation successful, returning trivia player');
         return validatedPlayer;
     }
 
@@ -132,10 +116,8 @@ export class TriviaService {
      * Get a random trivia team with all relations - ULTRA OPTIMIZED VERSION
      */
     async getRandomTriviaTeam(difficulty: 'easy' | 'medium' | 'hard' | 'impossible'): Promise<TriviaTeam> {
-        console.log('🎯 [TriviaService] getRandomTriviaTeam called with difficulty:', difficulty);
         
         // Step 1: Use raw SQL to get difficulty scores efficiently
-        console.log('🎯 [TriviaService] Step 1: Calculating difficulty scores with raw SQL...');
         
         const difficultyQuery = `
             SELECT 
@@ -152,7 +134,6 @@ export class TriviaService {
         `;
         
         const teamsWithScores = await this.teamRepository.query(difficultyQuery);
-        console.log('✅ [TriviaService] Calculated scores for', teamsWithScores.length, 'teams');
         
         // Step 2: Filter by difficulty using the scoring algorithm
         const candidates = teamsWithScores.filter((team: any) => {
@@ -169,7 +150,6 @@ export class TriviaService {
                                          placement.toLowerCase().includes("didn't make playoffs");
                 
                 if (didntMakePlayoffs && difficulty === 'medium') {
-                    console.log(`🚫 [TriviaService] Excluding team ${team.name} from medium difficulty - didn't make playoffs`);
                     return false;
                 }
                 
@@ -180,7 +160,6 @@ export class TriviaService {
             }
         });
         
-        console.log('✅ [TriviaService] Found', candidates.length, 'candidates for difficulty:', difficulty);
         
         if (candidates.length === 0) {
             console.error('❌ [TriviaService] No teams found for difficulty:', difficulty);
@@ -189,10 +168,8 @@ export class TriviaService {
         
         // Step 3: Pick a random candidate
         const randomTeam = candidates[Math.floor(Math.random() * candidates.length)];
-        console.log('🎯 [TriviaService] Step 3: Selected random team:', randomTeam.name);
         
         // Step 4: Fetch the full team with all relations (only for the selected one)
-        console.log('🎯 [TriviaService] Step 4: Fetching full team data...');
         const fullTeam = await this.teamRepository.findOne({
             where: { id: randomTeam.id },
             relations: ['players', 'games', 'season']
@@ -222,21 +199,17 @@ export class TriviaService {
      * Get a random trivia season with all relations - ULTRA FAST VERSION
      */
     async getRandomTriviaSeason(difficulty: 'easy' | 'medium' | 'hard' | 'impossible'): Promise<TriviaSeason> {
-        console.log('🎯 [TriviaService] getRandomTriviaSeason called with difficulty:', difficulty);
         
         // Seasons don't have impossible difficulty - convert to hard
         if (difficulty === 'impossible') {
-            console.log('🎯 [TriviaService] Converting impossible to hard for seasons');
             difficulty = 'hard';
         }
         
         // Step 1: Get ONLY season numbers (super fast)
-        console.log('🎯 [TriviaService] Step 1: Fetching season numbers only...');
         const seasonNumbers = await this.seasonRepository.find({
             select: ['id', 'seasonNumber']
         });
         
-        console.log('✅ [TriviaService] Found', seasonNumbers.length, 'seasons');
         
         // Step 2: Filter by difficulty using simple season number logic
         const candidates = seasonNumbers.filter((season) => {
@@ -247,11 +220,9 @@ export class TriviaService {
             else if (seasonNum >= 5) seasonDifficulty = 'medium'; // Seasons 8-5
             else seasonDifficulty = 'hard';                      // Seasons 4-1
             
-            console.log(`🎯 [TriviaService] Season ${seasonNum} -> ${seasonDifficulty}`);
             return seasonDifficulty === difficulty;
         });
         
-        console.log('✅ [TriviaService] Found', candidates.length, 'candidates for difficulty:', difficulty);
         
         if (candidates.length === 0) {
             console.error('❌ [TriviaService] No seasons found for difficulty:', difficulty);
@@ -260,10 +231,8 @@ export class TriviaService {
         
         // Step 3: Pick a random candidate
         const randomSeasonId = candidates[Math.floor(Math.random() * candidates.length)].id;
-        console.log('🎯 [TriviaService] Step 3: Selected random season ID:', randomSeasonId);
         
         // Step 4: Fetch ONLY the selected season with all relations
-        console.log('🎯 [TriviaService] Step 4: Fetching full season data...');
         const fullSeason = await this.seasonRepository.findOne({
             where: { id: randomSeasonId },
             relations: ['teams', 'games', 'awards', 'records']
@@ -361,16 +330,6 @@ export class TriviaService {
         // Records (records = very famous)
         score += Math.min((player.records?.length || 0), 1); // Cap at 1 record
 
-        console.log(`🎯 [TriviaService] Player ${player.name} difficulty calculation:`, {
-            name: player.name,
-            nameLength,
-            teams: player.teams?.length || 0,
-            awards: player.awards?.length || 0,
-            stats: player.stats?.length || 0,
-            records: player.records?.length || 0,
-            score,
-            difficulty: score >= 6 ? 'easy' : score >= 3 ? 'medium' : 'hard'
-        });
 
         if (score >= 6) return 'easy';
         if (score >= 3) return 'medium';
@@ -388,15 +347,6 @@ export class TriviaService {
         const recordCount = parseInt(player.record_count) || 0;
         const totalRelations = teamCount + awardCount + statCount + recordCount;
         
-        console.log(`🎯 [TriviaService] Player ${player.name} difficulty calculation:`, {
-            name: player.name,
-            team_count: teamCount,
-            award_count: awardCount,
-            stat_count: statCount,
-            record_count: recordCount,
-            totalRelations,
-            difficulty: totalRelations >= 20 ? 'easy' : totalRelations >= 12 ? 'medium' : totalRelations >= 6 ? 'hard' : 'impossible'
-        });
 
         if (totalRelations >= 20) return 'easy';
         if (totalRelations >= 12) return 'medium';
@@ -431,15 +381,6 @@ export class TriviaService {
             }
         }
 
-        console.log(`🎯 [TriviaService] Team ${team.name} difficulty calculation:`, {
-            name: team.name,
-            nameLength,
-            players: team.players?.length || 0,
-            games: team.games?.length || 0,
-            placement: team.placement,
-            score,
-            difficulty: score >= 6 ? 'easy' : score >= 3 ? 'medium' : 'hard'
-        });
 
         if (score >= 6) return 'easy';
         if (score >= 3) return 'medium';
@@ -464,17 +405,6 @@ export class TriviaService {
                                  placement.toLowerCase().includes('didnt make playoffs') ||
                                  placement.toLowerCase().includes("didn't make playoffs");
         
-        console.log(`🎯 [TriviaService] Team ${team.name} difficulty calculation:`, {
-            name: team.name,
-            placement: placement,
-            didntMakePlayoffs: didntMakePlayoffs,
-            player_count: playerCount,
-            game_count: gameCount,
-            totalRelations,
-            difficulty: didntMakePlayoffs ? 
-                (totalRelations >= 15 ? 'easy' : totalRelations >= 5 ? 'hard' : 'impossible') :
-                (totalRelations >= 15 ? 'easy' : totalRelations >= 10 ? 'medium' : totalRelations >= 5 ? 'hard' : 'impossible')
-        });
 
         // If team didn't make playoffs, they can only be easy, hard, or impossible (never medium)
         if (didntMakePlayoffs) {
@@ -520,15 +450,6 @@ export class TriviaService {
         else if (yearsAgo <= 5) score += 1; // Recent
         // Older seasons get no bonus = harder
 
-        console.log(`🎯 [TriviaService] Season ${seasonNum} difficulty calculation:`, {
-            seasonNumber: seasonNum,
-            teams: season.teams?.length || 0,
-            games: season.games?.length || 0,
-            awards: season.awards?.length || 0,
-            yearsAgo,
-            score,
-            difficulty: score >= 6 ? 'easy' : score >= 3 ? 'medium' : 'hard'
-        });
 
         if (score >= 6) return 'easy';
         if (score >= 3) return 'medium';
@@ -541,10 +462,6 @@ export class TriviaService {
     private calculateSeasonDifficultyFromScores(season: any): 'easy' | 'medium' | 'hard' {
         const seasonNum = parseInt(season.seasonNumber) || 0;
         
-        console.log(`🎯 [TriviaService] Season ${seasonNum} difficulty calculation:`, {
-            seasonNumber: seasonNum,
-            difficulty: seasonNum >= 9 ? 'easy' : seasonNum >= 5 ? 'medium' : 'hard'
-        });
 
         // Simple season number-based difficulty
         if (seasonNum >= 9) return 'easy';      // Seasons 14-9

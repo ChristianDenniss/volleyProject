@@ -8,6 +8,7 @@ import Header         from "./components/Header";
 import Navbar         from "./components/NavBar";
 import Footer         from "./components/Footer";
 import PrivateRoute   from "./components/portal/PrivateRoute";      // ← NEW import
+import ErrorBoundary  from "./components/ErrorBoundary";
 
 // Route-level code splitting: each page (and its exclusive dependencies, e.g. three.js
 // for VectorGraphPage) only downloads when a visitor actually navigates to it.
@@ -60,6 +61,7 @@ const App: React.FC = () => (
       <Navbar />
 
       <div className="main-content">
+        <ErrorBoundary>
         <Suspense fallback={<div className="page-loading" role="status">Loading…</div>}>
         <Routes>
           {/* public site */}
@@ -118,6 +120,7 @@ const App: React.FC = () => (
           </Route>
         </Routes>
         </Suspense>
+        </ErrorBoundary>
       </div>
 
       <Footer />

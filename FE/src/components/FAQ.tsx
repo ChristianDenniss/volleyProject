@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import SEO from "./SEO";
 import "../styles/FAQ.css";
 import { 
     FaChevronDown, 
@@ -211,6 +212,11 @@ const FAQ: React.FC = () => {
 
     return (
         <div className="faq-page">
+            <SEO
+                title="FAQ"
+                description="Frequently asked questions about the Roblox Volleyball League (RVL), applications, rules, and support."
+                url="https://volleyball4-2.com/faq"
+            />
             <div className="faq-header">
                 <h1>Frequently Asked Questions</h1>
                 <p>Find answers to common questions about RVL and quick links to important pages</p>

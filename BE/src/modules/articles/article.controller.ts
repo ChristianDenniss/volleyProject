@@ -43,20 +43,15 @@ export class ArticleController {
      */
     public getAllArticles = async (req: Request, res: Response): Promise<void> => {
         try {
-            console.log(`[${new Date().toISOString()}] Incoming request to fetch all articles.`);
             const pagination = parsePagination(req.query, ARTICLES_DEFAULT_LIMIT);
             const filters = this.parseFilters(req);
             const [data, total] = await this.articleService.getAllArticles(pagination, filters);
-            console.log(`[${new Date().toISOString()}] Articles fetched successfully:`, data);
             res.status(200).json(toPaginatedResult(data, total, pagination));
         } catch (error) {
-            console.error(
-                `[${new Date().toISOString()}] Error occurred while fetching articles:`,
-                error
-            );
+            console.error('Error fetching articles:', error);
             res
                 .status(500)
-                .json({ message: 'Internal server error', error: error instanceof Error ? error.message : 'Unknown error' });
+                .json({ message: 'Internal server error' });
         }
     };
 
@@ -128,23 +123,17 @@ export class ArticleController {
      */
     public getArticlesByAuthorId = async (req: Request, res: Response): Promise<void> => {
         const { userId } = req.params;
-        console.log(`[${new Date().toISOString()}] Attempting to fetch articles for user ID:`, userId);
 
         try {
             const pagination = parsePagination(req.query, ARTICLES_DEFAULT_LIMIT);
             const [data, total] = await this.articleService.getArticlesByUserId(Number(userId), pagination);
-            console.log(`[${new Date().toISOString()}] Successfully fetched articles:`, data);
             res.status(200).json(toPaginatedResult(data, total, pagination));
         } catch (error) {
-            console.error(`[${new Date().toISOString()}] Error in getArticlesByAuthorId:`, error);
+            console.error('Error fetching articles by author:', error);
             if (error instanceof MissingFieldError || error instanceof NotFoundError) {
                 res.status(400).json({ message: error.message });
             } else {
-                res.status(500).json({ 
-                    message: 'Internal server error', 
-                    error: error instanceof Error ? error.message : 'Unknown error',
-                    stack: error instanceof Error ? error.stack : undefined
-                });
+                res.status(500).json({ message: 'Internal server error' });
             }
         }
     };

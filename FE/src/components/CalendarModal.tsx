@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import '../styles/CalendarModal.css';
 
 interface CalendarModalProps {
@@ -15,6 +15,19 @@ const CalendarModal: React.FC<CalendarModalProps> = ({
   onDateRangeChange
 }) => {
   const [selectedMonth, setSelectedMonth] = useState(new Date(currentDateRange));
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [isOpen, onClose]);
   
   if (!isOpen) return null;
 
@@ -72,6 +85,13 @@ const CalendarModal: React.FC<CalendarModalProps> = ({
     onClose();
   };
 
+  const handleDateKeyDown = (event: React.KeyboardEvent, date: Date) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      handleDateClick(date);
+    }
+  };
+
   const goToPreviousMonth = () => {
     const newMonth = new Date(selectedMonth);
     newMonth.setMonth(newMonth.getMonth() - 1);
@@ -94,15 +114,21 @@ const CalendarModal: React.FC<CalendarModalProps> = ({
 
   return (
     <div className="calendar-modal-overlay" onClick={onClose}>
-      <div className="calendar-modal" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="calendar-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Choose schedule date range"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="calendar-header">
-          <button className="calendar-nav-btn" onClick={goToPreviousMonth}>
+          <button type="button" className="calendar-nav-btn" onClick={goToPreviousMonth} aria-label="Previous month">
             ‹
           </button>
           <h3 className="calendar-title">
             {selectedMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
           </h3>
-          <button className="calendar-nav-btn" onClick={goToNextMonth}>
+          <button type="button" className="calendar-nav-btn" onClick={goToNextMonth} aria-label="Next month">
             ›
           </button>
         </div>
@@ -121,12 +147,16 @@ const CalendarModal: React.FC<CalendarModalProps> = ({
           {days.map((day, index) => (
             <div
               key={index}
-                             className={`calendar-day ${!day ? 'empty' : ''} ${
+              className={`calendar-day ${!day ? 'empty' : ''} ${
                  day && isInCurrentRange(day) ? 'in-range' : ''
                } ${day && isWeekday(day) ? 'weekday' : ''} ${
                  day && day.toDateString() === new Date().toDateString() ? 'today' : ''
                }`}
+              role={day ? 'button' : undefined}
+              tabIndex={day ? 0 : undefined}
+              aria-label={day ? day.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) : undefined}
               onClick={() => day && handleDateClick(day)}
+              onKeyDown={(event) => day && handleDateKeyDown(event, day)}
             >
               {day ? day.getDate() : ''}
             </div>
@@ -134,7 +164,7 @@ const CalendarModal: React.FC<CalendarModalProps> = ({
         </div>
 
         <div className="calendar-footer">
-          <button className="today-btn" onClick={goToToday}>
+          <button type="button" className="today-btn" onClick={goToToday}>
             Today
           </button>
           <div className="range-info">
@@ -146,4 +176,4 @@ const CalendarModal: React.FC<CalendarModalProps> = ({
   );
 };
 
-export default CalendarModal; 
+export default CalendarModal;

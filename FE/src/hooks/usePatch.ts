@@ -19,17 +19,11 @@ export function usePatch<T = any>(resource: string)
 
             const url = `${backendUrl}/api/${resource}/${id}`;
 
-            // Log the URL and outgoing payload
-            console.log("usePatch: PATCH →", url, "payload:", data);
-
             const res = await authFetch(url, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(data),
             }, token);
-
-            // Log the raw status
-            console.log(`usePatch: received status ${res.status} for PATCH ${url}`);
 
             if (!res.ok)
             {
@@ -37,19 +31,8 @@ export function usePatch<T = any>(resource: string)
 
                 try
                 {
-                    // Parse and log full error body
                     body = await res.json();
                     console.error("usePatch: error body:", body);
-
-                    // If Zod returned multiple issues, log each one
-                    if (Array.isArray(body.errors))
-                    {
-                        body.errors.forEach((issue: any) =>
-                            console.error(
-                                `usePatch: Validation issue at ${issue.path.join(".")}: ${issue.message}`
-                            )
-                        );
-                    }
                 }
                 catch (parseErr)
                 {
@@ -62,10 +45,7 @@ export function usePatch<T = any>(resource: string)
                 );
             }
 
-            // On success, parse and log the response payload
             const json = await res.json();
-            console.log("usePatch: success:", json);
-
             return json as T;
         },
         [resource]
