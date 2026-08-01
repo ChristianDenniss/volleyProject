@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
 import { useAuth } from '../context/authContext';
+import { authFetch } from './authFetch';
 
 interface UseLikeStatusReturn {
   hasLiked: boolean;
@@ -9,35 +9,38 @@ interface UseLikeStatusReturn {
   refetch: () => void;
 }
 
+const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+
 export function useLikeStatus(articleId: number): UseLikeStatusReturn {
   const [hasLiked, setHasLiked] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { token } = useAuth();
+  const { token, isAuthenticated } = useAuth();
 
   const fetchLikeStatus = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      if (!token) {
+      if (!isAuthenticated) {
         setHasLiked(false);
         setLoading(false);
         return;
       }
 
-      const response = await axios.get(
-        `${import.meta.env.VITE_BACKEND_URL}/api/articles/${articleId}/like-status`,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        }
+      const response = await authFetch(
+        `${backendUrl}/api/articles/${articleId}/like-status`,
+        { method: 'GET' },
+        token
       );
-      
-      setHasLiked((response.data as { hasLiked: boolean }).hasLiked);
-    } catch (err: any) {
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch like status');
+      }
+
+      const data = await response.json() as { hasLiked: boolean };
+      setHasLiked(data.hasLiked);
+    } catch (err: unknown) {
       console.error('Error fetching like status:', err);
       setError('Failed to fetch like status');
       setHasLiked(false);
@@ -48,7 +51,7 @@ export function useLikeStatus(articleId: number): UseLikeStatusReturn {
 
   useEffect(() => {
     fetchLikeStatus();
-  }, [articleId, token]);
+  }, [articleId, isAuthenticated]);
 
   const refetch = () => {
     fetchLikeStatus();
@@ -60,4 +63,4 @@ export function useLikeStatus(articleId: number): UseLikeStatusReturn {
     error,
     refetch
   };
-} 
+}

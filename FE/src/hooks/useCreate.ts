@@ -17,13 +17,13 @@ import { useAuth } from "../context/authContext";
 export const useCreate = <T, U>(endpoint: string) => {
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError]     = useState<string | null>(null);
-    const { token } = useAuth();
+    const { token, isAuthenticated } = useAuth();
 
     async function createItem(payload: U): Promise<T | null> {
         setLoading(true);
         setError(null);
 
-        if (!token) {
+        if (!isAuthenticated) {
             setError("You must be logged in to create items");
             return null;
         }
