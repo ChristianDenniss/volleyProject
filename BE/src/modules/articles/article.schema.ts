@@ -4,7 +4,8 @@ export const createArticleSchema = z.object({
     title: z.string().min(1, { message: "Title is required" }),
     content: z.string().min(240, { message: "Content is required, min 240 characters" }),
     imageUrl: z.string().url({ message: "Image URL is required and must be a valid URL" }),
-    userId: z.number().int().positive(),  // Changed from authorId to userId
+    // Author comes from the authenticated user; body userId is ignored if present
+    userId: z.number().int().positive().optional(),
     summary: z.string().min(50, { message: "Summary is required, min 50 characters" }),
     likes: z.number().int().positive().default(0).optional(),
     approved: z.boolean().nullable().optional(),

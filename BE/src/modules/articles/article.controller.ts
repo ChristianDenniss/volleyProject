@@ -18,9 +18,15 @@ export class ArticleController {
      * Create a new article
      */
     public createArticle = async (req: Request, res: Response): Promise<void> => {
-        const { title, content, userId, summary, imageUrl } = req.body;
+        const { title, content, summary, imageUrl } = req.body;
+        const userId = req.user?.id;
 
         try {
+            if (!userId) {
+                res.status(401).json({ message: 'Authentication required' });
+                return;
+            }
+
             const newArticle = await this.articleService.createArticle(
                 title,
                 content,
