@@ -16,13 +16,14 @@ export function registerGameRoutes(app: Application): void {
     router.post('/import-challonge', authenticateCombined, authorizeRoles("admin", "superadmin"), validate(importChallongeSchema), gameController.importFromChallonge);
 
     // GET routes - PUBLIC (for website display)
+    // Static path segments must be registered before /:id or they are swallowed.
     router.get('/', gameController.getGames); // Get all games
     router.get('/skinny', gameController.getSkinnyGames); // Get all games without relations / minimal data
     router.get('/stages', gameController.getDistinctStages); // Get distinct stage labels (for filter dropdowns)
-    router.get('/:id', gameController.getGameById); // Get game by ID
     router.get('/season/:seasonId', gameController.getGamesBySeasonId); // Get games by season ID
     router.get('/team/:teamId', gameController.getGamesByTeamId); // Get games by team ID
     router.get('/:id/score', gameController.getGameScoreById); // Get the score by game ID
+    router.get('/:id', gameController.getGameById); // Get game by ID
 
     // Additional protected routes
     router.post('/createByNames', authenticateCombined, authorizeRoles("admin", "superadmin"), validate(createGameByNamesSchema), gameController.createGameByNames);
