@@ -1,4 +1,4 @@
-import { Repository, In, ILike, FindOptionsWhere } from 'typeorm';
+import { Repository, In, ILike, FindOptionsWhere, EntityManager } from 'typeorm';
 import { AppDataSource } from '../../db/data-source.js';
 import { Teams } from './team.entity.js';
 import { Players } from '../players/player.entity.js';
@@ -84,7 +84,12 @@ export class TeamService {
     /**
      * Create a new team with validation
      */
-    async createTeam(teamData: CreateTeamDto): Promise<Teams> {
+    async createTeam(teamData: CreateTeamDto, manager?: EntityManager): Promise<Teams> {
+        const teamRepository = manager ? manager.getRepository(Teams) : this.teamRepository;
+        const playerRepository = manager ? manager.getRepository(Players) : this.playerRepository;
+        const seasonRepository = manager ? manager.getRepository(Seasons) : this.seasonRepository;
+        const gameRepository = manager ? manager.getRepository(Games) : this.gameRepository;
+
         const { name, seasonNumber, placement, playerIds, gameIds, logoUrl, regionId, region } = teamData;
 
         // Validation for missing name
@@ -100,7 +105,7 @@ export class TeamService {
         // Fetch the season to associate with the team
         const resolvedRegionId = await this.resolveRegionId(regionId, region);
 
-        const season = await this.seasonRepository.findOne({
+        const season = await seasonRepository.findOne({
             where: { seasonNumber, regionId: resolvedRegionId },
             relations: ["teams"]
         });
@@ -108,7 +113,7 @@ export class TeamService {
             throw new NotFoundError(`Season ${seasonNumber} not found in this region`);
         }
 
-        const existingTeam = await this.teamRepository.findOne({
+        const existingTeam = await teamRepository.findOne({
             where: { name, season: { seasonNumber, regionId: resolvedRegionId } }
         });
 
@@ -134,7 +139,7 @@ export class TeamService {
 
         // Add players relationships
         if (playerIds && playerIds.length > 0) {
-            const players = await this.playerRepository.find({
+            const players = await playerRepository.find({
                 where: { id: In(playerIds) },
                 relations: ["teams", "teams.season"]
             });
@@ -152,7 +157,7 @@ export class TeamService {
 
         // Add games relationships
         if (gameIds && gameIds.length > 0) {
-            const games = await this.gameRepository.find({
+            const games = await gameRepository.find({
                 where: { id: In(gameIds) },
                 relations: ["teams", "season"]
             });
@@ -168,7 +173,7 @@ export class TeamService {
             newTeam.games = games;
         }
 
-        return this.teamRepository.save(newTeam);
+        return teamRepository.save(newTeam);
     }
 
     /**
@@ -215,14 +220,25 @@ export class TeamService {
      * Create multiple teams
      */
     async createMultipleTeams(teamsData: CreateMultipleTeamsDto): Promise<Teams[]> {
-        const createdTeams: Teams[] = [];
+        const queryRunner = AppDataSource.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
 
-        for (const data of teamsData) {
-            const team = await this.createTeam(data);
-            createdTeams.push(team);
+        try {
+            const createdTeams: Teams[] = [];
+
+            for (const data of teamsData) {
+                createdTeams.push(await this.createTeam(data, queryRunner.manager));
+            }
+
+            await queryRunner.commitTransaction();
+            return createdTeams;
+        } catch (err) {
+            await queryRunner.rollbackTransaction();
+            throw err;
+        } finally {
+            await queryRunner.release();
         }
-
-        return createdTeams;
     }
 
     /**

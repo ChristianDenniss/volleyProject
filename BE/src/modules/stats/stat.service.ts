@@ -637,11 +637,12 @@ export class StatService extends CacheableService
 
             // Start transaction
             const queryRunner = AppDataSource.createQueryRunner();
+            await queryRunner.connect();
             await queryRunner.startTransaction();
 
             try {
                 // Fetch season
-                const season = await this.seasonRepository.findOne({
+                const season = await queryRunner.manager.findOne(Seasons, {
                     where: { id: gameData.seasonId },
                     relations: ["teams"]
                 });
@@ -650,7 +651,7 @@ export class StatService extends CacheableService
                 }
                 console.log('Found season:', { id: season.id });
 
-                const teams = await this.teamRepository.find({
+                const teams = await queryRunner.manager.find(Teams, {
                     where: {
                         name: In(gameData.teamNames),
                         season: { id: gameData.seasonId },
@@ -683,13 +684,13 @@ export class StatService extends CacheableService
                 const savedGame = await queryRunner.manager.save(newGame);
 
                 const playerNames = [...new Set(statsData.map((s: { playerName?: string }) => s.playerName).filter(Boolean))];
-                const players = await this.playerRepository.find({
+                const players = await queryRunner.manager.find(Players, {
                     where: { name: In(playerNames) },
                     relations: ["teams"],
                 });
                 const playersByName = new Map(players.map(p => [p.name, p]));
 
-                const existingStats = await this.statRepository.find({
+                const existingStats = await queryRunner.manager.find(Stats, {
                     where: { game: { id: savedGame.id } },
                     relations: ["player"],
                 });
@@ -800,30 +801,28 @@ export class StatService extends CacheableService
             }
 
             // Fetch the existing game with teams
-            const game = await this.gameRepository.findOne({
-                where: { id: gameId },
-                relations: ["teams"]
-            });
-
-            if (!game) {
-                throw new NotFoundError(`Game with ID ${gameId} not found`);
-            }
-
-            console.log('Found game:', { id: game.id, name: game.name, teams: game.teams.map(t => t.name) });
-
-            // Start transaction
             const queryRunner = AppDataSource.createQueryRunner();
+            await queryRunner.connect();
             await queryRunner.startTransaction();
 
             try {
+                const game = await queryRunner.manager.findOne(Games, {
+                    where: { id: gameId },
+                    relations: ["teams"]
+                });
+
+                if (!game) {
+                    throw new NotFoundError(`Game with ID ${gameId} not found`);
+                }
+
                 const playerNames = [...new Set(statsData.map(s => s.playerName).filter(Boolean))];
-                const players = await this.playerRepository.find({
+                const players = await queryRunner.manager.find(Players, {
                     where: { name: In(playerNames) },
                     relations: ["teams"],
                 });
                 const playersByName = new Map(players.map(p => [p.name, p]));
 
-                const existingStats = await this.statRepository.find({
+                const existingStats = await queryRunner.manager.find(Stats, {
                     where: { game: { id: game.id } },
                     relations: ["player"],
                 });

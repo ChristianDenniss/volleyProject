@@ -1,4 +1,4 @@
-import { Repository, In } from 'typeorm';
+import { Repository, In, EntityManager } from 'typeorm';
 import { AppDataSource } from '../../db/data-source.js';
 import { Awards } from './award.entity.js';
 import { Seasons } from '../seasons/season.entity.js';
@@ -45,17 +45,21 @@ export class AwardService {
      * @throws {NotFoundError} If the season is not found
      * @throws {DuplicateError} If an award of the same type already exists in the season
      */
-    async createAward(awardData: CreateAwardDto): Promise<Awards> {
+    async createAward(awardData: CreateAwardDto, manager?: EntityManager): Promise<Awards> {
+        const awardRepository = manager ? manager.getRepository(Awards) : this.awardRepository;
+        const seasonRepository = manager ? manager.getRepository(Seasons) : this.seasonRepository;
+        const playerRepository = manager ? manager.getRepository(Players) : this.playerRepository;
+
         const { description, type, imageUrl, seasonId, playerIds } = awardData;
 
         // Check if season exists
-        const season = await this.seasonRepository.findOne({ where: { id: seasonId } });
+        const season = await seasonRepository.findOne({ where: { id: seasonId } });
         if (!season) {
             throw new NotFoundError(`Season with ID ${seasonId} not found`);
         }
 
         // Check if award of same type exists in the season
-        const existingTypeAward = await this.awardRepository.findOne({
+        const existingTypeAward = await awardRepository.findOne({
             where: { type, season: { id: seasonId } }
         });
         if (existingTypeAward) {
@@ -63,7 +67,7 @@ export class AwardService {
         }
 
         // Create new award
-        const award = this.awardRepository.create({
+        const award = awardRepository.create({
             description,
             type,
             imageUrl,
@@ -73,7 +77,7 @@ export class AwardService {
 
         // Add players if provided
         if (playerIds && playerIds.length > 0) {
-            const players = await this.playerRepository.findBy({ id: In(playerIds) });
+            const players = await playerRepository.findBy({ id: In(playerIds) });
             if (players.length !== playerIds.length) {
                 const foundIds = players.map(p => p.id);
                 const missingIds = playerIds.filter(id => !foundIds.includes(id));
@@ -82,7 +86,7 @@ export class AwardService {
             award.players = players;
         }
 
-        return this.awardRepository.save(award);
+        return awardRepository.save(award);
     }
 
     /**
@@ -91,14 +95,25 @@ export class AwardService {
      * @returns Array of created awards
      */
     async createMultipleAwards(awardsData: CreateMultipleAwardsDto): Promise<Awards[]> {
-        const awards: Awards[] = [];
+        const queryRunner = AppDataSource.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
 
-        for (const awardData of awardsData) {
-            const award = await this.createAward(awardData);
-            awards.push(award);
+        try {
+            const awards: Awards[] = [];
+
+            for (const awardData of awardsData) {
+                awards.push(await this.createAward(awardData, queryRunner.manager));
+            }
+
+            await queryRunner.commitTransaction();
+            return awards;
+        } catch (err) {
+            await queryRunner.rollbackTransaction();
+            throw err;
+        } finally {
+            await queryRunner.release();
         }
-
-        return awards;
     }
 
     /**
