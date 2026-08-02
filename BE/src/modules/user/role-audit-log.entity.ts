@@ -2,10 +2,13 @@ import {
     Column,
     CreateDateColumn,
     Entity,
+    Index,
     PrimaryGeneratedColumn,
 } from "typeorm";
 
-@Entity()
+@Entity("role_audit_log")
+@Index("IDX_role_audit_log_targetId", ["targetId"])
+@Index("IDX_role_audit_log_actorId", ["actorId"])
 export class RoleAuditLog {
     @PrimaryGeneratedColumn()
     id!: number;
