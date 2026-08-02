@@ -665,8 +665,10 @@ export class StatService extends CacheableService
                     throw new NotFoundError(`Teams not found in season ${gameData.seasonId}: ${missingTeams.join(', ')}`);
                 }
 
-                const teamsByName = new Map(teams.map(t => [t.name, t]));
-                const orderedTeams = gameData.teamNames.map((name: string) => teamsByName.get(name)!);
+                const teamsByName = new Map(teams.map((t: Teams) => [t.name, t]));
+                const orderedTeams: Teams[] = (gameData.teamNames as string[]).map(
+                    (name: string) => teamsByName.get(name)!
+                );
 
                 // Create game
                 const newGame = new Games();
