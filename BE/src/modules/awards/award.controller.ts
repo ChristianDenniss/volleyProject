@@ -1,6 +1,4 @@
-import { Request, Response } from 'express';
-import { MissingFieldError } from '../../errors/MissingFieldError.js';
-import { NotFoundError } from '../../errors/NotFoundError.js';
+import { Request, Response, NextFunction } from 'express';
 import { AwardService, AwardFilters, AWARD_SORT_FIELDS, AWARD_DEFAULT_SORT } from './award.service.js';
 import { CreateAwardDto, CreateMultipleAwardsDto, UpdateAwardDto } from './awards.schema.js';
 import { parsePagination, parseSort, toPaginatedResult } from '../../utils/pagination.js';
@@ -18,52 +16,27 @@ export class AwardController {
         this.regionService = new RegionService();
     }
 
-    // Create a new award
-    createAward = async (req: Request, res: Response): Promise<void> => {
+    createAward = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const awardData: CreateAwardDto = req.body;
             const savedAward = await this.awardService.createAward(awardData);
-            
             res.status(201).json(savedAward);
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to create award";
-            
-            if (errorMessage.includes("required") || 
-                errorMessage.includes("not found") || 
-                errorMessage.includes("already in use") ||
-                errorMessage.includes("must be")) {
-                res.status(400).json({ error: errorMessage });
-            } else {
-                console.error("Error creating award:", error);
-                res.status(500).json({ error: "Failed to create award" });
-            }
+            next(error);
         }
     };
 
-    // Create multiple awards
-    createMultipleAwards = async (req: Request, res: Response): Promise<void> => {
+    createMultipleAwards = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const awardsData: CreateMultipleAwardsDto = req.body;
             const savedAwards = await this.awardService.createMultipleAwards(awardsData);
-            
             res.status(201).json(savedAwards);
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to create multiple awards";
-            
-            if (errorMessage.includes("required") || 
-                errorMessage.includes("not found") || 
-                errorMessage.includes("already in use") ||
-                errorMessage.includes("must be")) {
-                res.status(400).json({ error: errorMessage });
-            } else {
-                console.error("Error creating multiple awards:", error);
-                res.status(500).json({ error: "Failed to create multiple awards" });
-            }
+            next(error);
         }
     };
 
-    // Get all awards
-    getAwards = async (req: Request, res: Response): Promise<void> => {
+    getAwards = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const pagination = parsePagination(req.query, AWARDS_DEFAULT_LIMIT);
             const sort = parseSort(req.query, AWARD_SORT_FIELDS, AWARD_DEFAULT_SORT);
@@ -71,13 +44,11 @@ export class AwardController {
             const [data, total] = await this.awardService.findAllAwards(pagination, filters, sort);
             res.json(toPaginatedResult(data, total, pagination));
         } catch (error) {
-            console.error("Error fetching awards:", error);
-            res.status(500).json({ error: "Failed to fetch awards" });
+            next(error);
         }
     };
 
-    // Get all awards without relations / minimal data
-    getSkinnyAwards = async (req: Request, res: Response): Promise<void> => {
+    getSkinnyAwards = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const pagination = parsePagination(req.query, AWARDS_DEFAULT_LIMIT);
             const sort = parseSort(req.query, AWARD_SORT_FIELDS, AWARD_DEFAULT_SORT);
@@ -85,8 +56,7 @@ export class AwardController {
             const [data, total] = await this.awardService.findSkinnyAllAwards(pagination, filters, sort);
             res.json(toPaginatedResult(data, total, pagination));
         } catch (error) {
-            console.error("Error fetching awards without player-team relations:", error);
-            res.status(500).json({ error: "Failed to fetch awards without player-team relations" });
+            next(error);
         }
     };
 
@@ -102,108 +72,63 @@ export class AwardController {
         };
     }
 
-    // Get award by ID
-    getAwardById = async (req: Request, res: Response): Promise<void> => {
+    getAwardById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const { id } = req.params;
             const award = await this.awardService.findAwardById(parseInt(id));
             res.json(award);
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to fetch award";
-            
-            if (errorMessage.includes("not found")) {
-                res.status(404).json({ error: errorMessage });
-            } else {
-                console.error("Error fetching award by ID:", error);
-                res.status(500).json({ error: "Failed to fetch award" });
-            }
+            next(error);
         }
     };
 
-    // Get awards by type
-    getAwardsByType = async (req: Request, res: Response): Promise<void> => {
+    getAwardsByType = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const { type } = req.params;
             const pagination = parsePagination(req.query, AWARDS_DEFAULT_LIMIT);
             const [data, total] = await this.awardService.findAwardsByType(type, pagination);
             res.json(toPaginatedResult(data, total, pagination));
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to fetch awards by type";
-            
-            if (errorMessage.includes("not found")) {
-                res.status(404).json({ error: errorMessage });
-            } else {
-                console.error("Error fetching awards by type:", error);
-                res.status(500).json({ error: "Failed to fetch awards by type" });
-            }
+            next(error);
         }
     };
 
-    // Get awards by season
-    getAwardsBySeason = async (req: Request, res: Response): Promise<void> => {
+    getAwardsBySeason = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const { seasonNumber } = req.params;
             const pagination = parsePagination(req.query, AWARDS_DEFAULT_LIMIT);
             const [data, total] = await this.awardService.findAwardsBySeason(parseInt(seasonNumber), pagination);
             res.json(toPaginatedResult(data, total, pagination));
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to fetch awards by season";
-            
-            if (errorMessage.includes("not found")) {
-                res.status(404).json({ error: errorMessage });
-            } else {
-                console.error("Error fetching awards by season:", error);
-                res.status(500).json({ error: "Failed to fetch awards by season" });
-            }
+            next(error);
         }
     };
 
-    // Update an award
-    updateAward = async (req: Request, res: Response): Promise<void> => {
+    updateAward = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const { id } = req.params;
-            const awardData: UpdateAwardDto = req.body;  // Don't add ID to payload
+            const awardData: UpdateAwardDto = req.body;
             const updatedAward = await this.awardService.updateAward(parseInt(id), awardData);
             res.json(updatedAward);
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to update award";
-            
-            if (errorMessage.includes("not found")) {
-                res.status(404).json({ error: errorMessage });
-            } else if (errorMessage.includes("required") || 
-                      errorMessage.includes("already in use") ||
-                      errorMessage.includes("must be")) {
-                res.status(400).json({ error: errorMessage });
-            } else {
-                console.error("Error updating award:", error);
-                res.status(500).json({ error: "Failed to update award" });
-            }
+            next(error);
         }
     };
 
-    // Delete an award
-    deleteAward = async (req: Request, res: Response): Promise<void> => {
+    deleteAward = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const { id } = req.params;
             await this.awardService.removeAward(parseInt(id));
             res.status(204).send();
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to delete award";
-            
-            if (errorMessage.includes("not found")) {
-                res.status(404).json({ error: errorMessage });
-            } else {
-                console.error("Error deleting award:", error);
-                res.status(500).json({ error: "Failed to delete award" });
-            }
+            next(error);
         }
     };
 
-    // Create award with player name
-    createAwardWithPlayerNames = async (req: Request, res: Response): Promise<void> => {
+    createAwardWithPlayerNames = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const { description, type, seasonId, playerName, imageUrl } = req.body;
-            
+
             if (!description || !type || !seasonId || !playerName) {
                 res.status(400).json({ error: 'Missing required fields' });
                 return;
@@ -216,28 +141,14 @@ export class AwardController {
                 playerName,
                 imageUrl
             );
-            
+
             res.status(201).json(savedAward);
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to create award";
-            
-            if (errorMessage.includes("required") || 
-                errorMessage.includes("not found") || 
-                errorMessage.includes("already in use") ||
-                errorMessage.includes("must be")) {
-                res.status(400).json({ error: errorMessage });
-            } else {
-                console.error("Error creating award with player names:", error);
-                res.status(500).json({ error: errorMessage });
-            }
+            next(error);
         }
     };
-    /**
-     * Get all awards for a specific player
-     * @param req - Express request object
-     * @param res - Express response object
-     */
-    getAwardsByPlayerId = async (req: Request, res: Response): Promise<void> => {
+
+    getAwardsByPlayerId = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const playerId = parseInt(req.params.playerId);
 
@@ -250,12 +161,7 @@ export class AwardController {
             const [data, total] = await this.awardService.getAwardsByPlayerId(playerId, pagination);
             res.json(toPaginatedResult(data, total, pagination));
         } catch (error) {
-            if (error instanceof NotFoundError) {
-                res.status(404).json({ error: error.message });
-            } else {
-                console.error('Error getting awards by player ID:', error);
-                res.status(500).json({ error: 'Internal server error' });
-            }
+            next(error);
         }
-    }
-} 
+    };
+}

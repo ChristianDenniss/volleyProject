@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { SeasonService, SeasonFilters } from "./season.service.js";
 import { parsePagination, toPaginatedResult } from "../../utils/pagination.js";
 import { parseRegionQuery } from "../../utils/regionQuery.js";
@@ -18,10 +18,7 @@ export class SeasonController
         this.regionService = new RegionService();
     }
 
-    /* ------------------------------------------------------------
-       Create a new season
-    ------------------------------------------------------------ */
-    createSeason = async (req: Request, res: Response): Promise<void> =>
+    createSeason = async (req: Request, res: Response, next: NextFunction): Promise<void> =>
     {
         try
         {
@@ -29,7 +26,7 @@ export class SeasonController
                 seasonNumber,
                 startDate,
                 endDate,
-                theme,        
+                theme,
                 image,
                 regionId,
                 region,
@@ -47,98 +44,58 @@ export class SeasonController
 
             res.status(201).json(savedSeason);
         }
-        catch (error: unknown)
+        catch (error)
         {
-            this.handleError(error, res, "creating");
+            next(error);
         }
     };
 
-    /* ------------------------------------------------------------
-       Get all seasons
-    ------------------------------------------------------------ */
-    getAllSeasons = async (req: Request, res: Response): Promise<void> =>
+    getAllSeasons = async (req: Request, res: Response, next: NextFunction): Promise<void> =>
     {
         try
         {
-            console.log('Attempting to fetch all seasons...');
             const pagination = parsePagination(req.query, SEASONS_DEFAULT_LIMIT);
             const filters = await this.parseFilters(req);
             const [data, total] = await this.seasonService.getAllSeasons(pagination, filters);
-            console.log(`Successfully fetched ${data.length} seasons`);
             res.status(200).json(toPaginatedResult(data, total, pagination));
         }
-        catch (error: unknown)
+        catch (error)
         {
-            console.error('Error in getAllSeasons:', {
-                error: error instanceof Error ? {
-                    message: error.message,
-                    stack: error.stack,
-                    name: error.name
-                } : error,
-                timestamp: new Date().toISOString()
-            });
-            this.handleError(error, res, "fetching seasons");
+            next(error);
         }
     };
 
-
-    getSkinnyAllSeasons = async (req: Request, res: Response): Promise<void> =>
-        {
-            try
-            {
-                console.log('Attempting to fetch all seasons...');
-                const pagination = parsePagination(req.query, SEASONS_DEFAULT_LIMIT);
-                const filters = await this.parseFilters(req);
-                const [data, total] = await this.seasonService.getSkinnyAllSeasons(pagination, filters);
-                console.log(`Successfully fetched ${data.length} seasons`);
-                res.status(200).json(toPaginatedResult(data, total, pagination));
-            }
-            catch (error: unknown)
-            {
-                console.error('Error in getSkinnyAllSeasons:', {
-                    error: error instanceof Error ? {
-                        message: error.message,
-                        stack: error.stack,
-                        name: error.name
-                    } : error,
-                    timestamp: new Date().toISOString()
-                });
-                this.handleError(error, res, "fetching seasons");
-            }
-        };
-
-
-    getMediumAllSeasons = async (req: Request, res: Response): Promise<void> =>
+    getSkinnyAllSeasons = async (req: Request, res: Response, next: NextFunction): Promise<void> =>
     {
         try
         {
-            console.log('Attempting to fetch all seasons...');
+            const pagination = parsePagination(req.query, SEASONS_DEFAULT_LIMIT);
+            const filters = await this.parseFilters(req);
+            const [data, total] = await this.seasonService.getSkinnyAllSeasons(pagination, filters);
+            res.status(200).json(toPaginatedResult(data, total, pagination));
+        }
+        catch (error)
+        {
+            next(error);
+        }
+    };
+
+    getMediumAllSeasons = async (req: Request, res: Response, next: NextFunction): Promise<void> =>
+    {
+        try
+        {
             const pagination = parsePagination(req.query, SEASONS_DEFAULT_LIMIT);
             const filters = await this.parseFilters(req);
             const [data, total] = await this.seasonService.getMediumAllSeasons(pagination, filters);
-            console.log(`Successfully fetched ${data.length} seasons`);
             res.status(200).json(toPaginatedResult(data, total, pagination));
         }
-        catch (error: unknown)
+        catch (error)
         {
-            console.error('Error in getMediumAllSeasons:',
-            {
-                error: error instanceof Error ?
-                {
-                    message: error.message,
-                    stack: error.stack,
-                    name: error.name
-                } : error,
-                    timestamp: new Date().toISOString()
-            });
-                this.handleError(error, res, "fetching seasons");
-            }
+            next(error);
+        }
     };
 
-    /* ------------------------------------------------------------
-       Get season by ID
-    ------------------------------------------------------------ */
-    getSeasonById = async (req: Request, res: Response): Promise<void> =>
+    getSeasonById = async (req: Request, res: Response, next: NextFunction): Promise<void> =>
     {
         try
         {
@@ -146,16 +103,13 @@ export class SeasonController
             const season  = await this.seasonService.getSeasonById(id);
             res.status(200).json(season);
         }
-        catch (error: unknown)
+        catch (error)
         {
-            this.handleError(error, res, "fetching season");
+            next(error);
         }
     };
 
-    /* ------------------------------------------------------------
-       Update a season
-    ------------------------------------------------------------ */
-    updateSeason = async (req: Request, res: Response): Promise<void> =>
+    updateSeason = async (req: Request, res: Response, next: NextFunction): Promise<void> =>
     {
         try
         {
@@ -164,8 +118,8 @@ export class SeasonController
                 seasonNumber,
                 startDate,
                 endDate,
-                theme,       // NEW – may be supplied
-                image        // NEW – may be supplied
+                theme,
+                image
             } = req.body;
 
             const updated = await this.seasonService.updateSeason(
@@ -179,16 +133,13 @@ export class SeasonController
 
             res.status(200).json(updated);
         }
-        catch (error: unknown)
+        catch (error)
         {
-            this.handleError(error, res, "updating season");
+            next(error);
         }
     };
 
-    /* ------------------------------------------------------------
-       Delete a season
-    ------------------------------------------------------------ */
-    deleteSeason = async (req: Request, res: Response): Promise<void> =>
+    deleteSeason = async (req: Request, res: Response, next: NextFunction): Promise<void> =>
     {
         try
         {
@@ -196,9 +147,9 @@ export class SeasonController
             await this.seasonService.deleteSeason(id);
             res.status(204).send();
         }
-        catch (error: unknown)
+        catch (error)
         {
-            this.handleError(error, res, "deleting season");
+            next(error);
         }
     };
 
@@ -206,35 +157,5 @@ export class SeasonController
         const regionFilter = parseRegionQuery(req.query as Record<string, unknown>);
         const regionId = await this.regionService.resolveRegionId(regionFilter);
         return { regionId };
-    }
-
-    /* ------------------------------------------------------------
-       Shared error-handling helper
-    ------------------------------------------------------------ */
-    private handleError(
-        error: unknown,
-        res: Response,
-        action: string
-    ): void
-    {
-        const message =
-            error instanceof Error ? error.message : `Failed while ${action}`;
-
-        if (
-            message.includes("required") ||
-            message.includes("already exists") ||
-            message.includes("out of bounds") ||
-            message.includes("Cannot delete") ||
-            message.includes("not found") ||
-            message.includes("must be between")
-        )
-        {
-            res.status(400).json({ error: message });
-        }
-        else
-        {
-            console.error(`Error ${action}:`, error);
-            res.status(500).json({ error: `Failed while ${action}` });
-        }
     }
 }

@@ -24,6 +24,9 @@ jobs:
       - run: npm run build
         env:
           NODE_ENV: production
+      - run: npm test
+        env:
+          NODE_ENV: test
 
   frontend:
     name: Frontend build
