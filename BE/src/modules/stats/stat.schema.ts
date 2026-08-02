@@ -30,3 +30,7 @@ export const createStatByNameSchema = createStatSchema
     playerName: z.string().min(1, "Player name is required"),
   });
 
+export type CreateStatDto = z.infer<typeof createStatSchema>;
+export type UpdateStatDto = z.infer<typeof createStatSchema.partial()>;
+export type CreateStatByNameDto = z.infer<typeof createStatByNameSchema>;
+

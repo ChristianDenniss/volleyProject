@@ -20,6 +20,7 @@ import {
     buildTeamLeaderboardSql,
     countParamsFrom,
 } from './stat.leaderboard.js';
+import { CreateStatDto, UpdateStatDto, CreateStatByNameDto } from './stat.schema.js';
 
 export interface StatFilters {
     search?: string;
@@ -47,30 +48,26 @@ export class StatService extends CacheableService
     /**
      * Create a new stat entry with validation
      */
-    async createStat(
-        spikingErrors: number,
-        apeKills: number,
-        apeAttempts: number,
-        spikeKills: number,
-        spikeAttempts: number,
-        assists: number,
-
-        // new: setting errors count
-        settingErrors: number,
-
-        blocks: number,
-        digs: number,
-        blockFollows: number,
-        aces: number,
-
-        // new: serving errors count
-        servingErrors: number,
-
-        miscErrors: number,
-        playerId: number,
-        gameId: number
-    ): Promise<Stats>
+    async createStat(dto: CreateStatDto): Promise<Stats>
     {
+        const {
+            spikingErrors,
+            apeKills,
+            apeAttempts,
+            spikeKills,
+            spikeAttempts,
+            assists,
+            settingErrors,
+            blocks,
+            digs,
+            blockFollows,
+            aces,
+            servingErrors,
+            miscErrors,
+            playerId,
+            gameId,
+        } = dto;
+
         // Validation for required fields
         if (spikingErrors === undefined) throw new MissingFieldError("Spiking Errors");
         if (apeKills === undefined)      throw new MissingFieldError("Ape kills");
@@ -174,31 +171,26 @@ export class StatService extends CacheableService
     /**
      * Update a stat entry with validation
      */
-    async updateStat(
-        id: number,
-        spikingErrors?: number,
-        apeKills?: number,
-        apeAttempts?: number,
-        spikeKills?: number,
-        spikeAttempts?: number,
-        assists?: number,
-
-        // new: setting errors
-        settingErrors?: number,
-
-        blocks?: number,
-        digs?: number,
-        blockFollows?: number,
-        aces?: number,
-
-        // new: serving errors
-        servingErrors?: number,
-
-        miscErrors?: number,
-        playerId?: number,
-        gameId?: number
-    ): Promise<Stats>
+    async updateStat(id: number, dto: UpdateStatDto): Promise<Stats>
     {
+        const {
+            spikingErrors,
+            apeKills,
+            apeAttempts,
+            spikeKills,
+            spikeAttempts,
+            assists,
+            settingErrors,
+            blocks,
+            digs,
+            blockFollows,
+            aces,
+            servingErrors,
+            miscErrors,
+            playerId,
+            gameId,
+        } = dto;
+
         if (!id) throw new MissingFieldError("Stat ID");
 
         const stat = await this.statRepository.findOne({
@@ -490,31 +482,26 @@ export class StatService extends CacheableService
     /**
      * Create a new stat entry by player username (instead of ID), with validation
      */
-    async createStatByUsername
-    (
-        spikingErrors: number,
-        apeKills: number,
-        apeAttempts: number,
-        spikeKills: number,
-        spikeAttempts: number,
-        assists: number,
-
-        // new: setting errors count
-        settingErrors: number,
-
-        blocks: number,
-        digs: number,
-        blockFollows: number,
-        aces: number,
-
-        // new: serving errors count
-        servingErrors: number,
-
-        miscErrors: number,
-        username: string,
-        gameId: number
-    ): Promise<Stats>
+    async createStatByUsername(dto: CreateStatByNameDto): Promise<Stats>
     {
+        const {
+            spikingErrors,
+            apeKills,
+            apeAttempts,
+            spikeKills,
+            spikeAttempts,
+            assists,
+            settingErrors,
+            blocks,
+            digs,
+            blockFollows,
+            aces,
+            servingErrors,
+            miscErrors,
+            playerName: username,
+            gameId,
+        } = dto;
+
         // Required-field validation
         if (spikingErrors === undefined)      throw new MissingFieldError("Spiking Errors");
         if (apeKills === undefined)           throw new MissingFieldError("Ape kills");

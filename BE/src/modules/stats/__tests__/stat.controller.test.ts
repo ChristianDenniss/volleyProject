@@ -74,7 +74,7 @@ describe('StatController', () => {
 
             await statController.createStat(mockRequest, mockResponse, next);
 
-            expect(statController.statService.createStat).toHaveBeenCalled();
+            expect(statController.statService.createStat).toHaveBeenCalledWith(mockStat);
             expect(statusMock).toHaveBeenCalledWith(201);
             expect(jsonMock).toHaveBeenCalledWith(mockStat);
             expect(next).not.toHaveBeenCalled();
