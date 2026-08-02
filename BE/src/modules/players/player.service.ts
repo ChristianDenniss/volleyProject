@@ -97,22 +97,22 @@ export class PlayerService extends CacheableService
     /**
      * Get the list of team names or IDs associated with a player by their name
      */
-    async getTeamsByPlayerName(playerName: string): Promise<string[]> 
+    async getTeamsByPlayerName(playerName: string, pagination: PaginationParams): Promise<[string[], number]> 
     {
         if (!playerName) throw new MissingFieldError("Player name");
 
-        // Find the player by name with related teams
         const player = await this.playerRepository.findOne({
             where: { name: playerName.toLowerCase() },
-            relations: ["teams"], // Fetch related teams
+            relations: ["teams"],
         });
 
         if (!player) throw new NotFoundError(`Player with name "${playerName.toLowerCase()}" not found`);
 
-        // Extract and return the team names or IDs
-        const teamNames = player.teams.map(team => team.name); // If you want names
+        const teamNames = player.teams.map(team => team.name);
+        const total = teamNames.length;
+        const data = teamNames.slice(pagination.skip, pagination.skip + pagination.take);
 
-        return teamNames; // or return teamIds for IDs
+        return [data, total];
     }
 
 

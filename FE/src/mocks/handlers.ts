@@ -355,7 +355,7 @@ export const handlers = [
   http.post(api("records/calculate"), () => json({ updated: db.records.length, records: db.records })),
 
   // Applications
-  http.get(api("applications"), () => json(db.applications)),
+  http.get(api("applications"), ({ request }) => json(paginated(db.applications, request))),
   http.patch(api("applications/:slug"), async ({ params, request }) => {
     const body = (await request.json()) as {
       url?: string | null;

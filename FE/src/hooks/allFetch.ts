@@ -45,7 +45,7 @@ export const useRecords = (params: RecordListParams = DEFAULT_PAGINATION) => {
     return { ...result, refetch };
 };
 
-export const useApplications = () => useFetch<Application>("applications");
+export const useApplications = () => useFetch<Application>("applications?limit=100");
 
 export const useSkinnyTeams = (params: TeamListParams = DEFAULT_PAGINATION) => usePaginatedFetch<Team>("teams/skinny", params);
 export const useMediumTeams = (params: TeamListParams = DEFAULT_PAGINATION) => usePaginatedFetch<Team>("teams/medium", params);
