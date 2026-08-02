@@ -30,42 +30,7 @@ export class StatController
     {
         try
         {
-            const
-            {
-                spikingErrors,
-                apeKills,
-                apeAttempts,
-                spikeKills,
-                spikeAttempts,
-                assists,
-                settingErrors,
-                blocks,
-                digs,
-                blockFollows,
-                aces,
-                servingErrors,
-                miscErrors,
-                playerId,
-                gameId
-            } = req.body;
-
-            const savedStat = await this.statService.createStat(
-                spikingErrors,
-                apeKills,
-                apeAttempts,
-                spikeKills,
-                spikeAttempts,
-                assists,
-                settingErrors,
-                blocks,
-                digs,
-                blockFollows,
-                aces,
-                servingErrors,
-                miscErrors,
-                playerId,
-                gameId
-            );
+            const savedStat = await this.statService.createStat(req.body);
 
             res.status(201).json(savedStat);
         }
@@ -171,44 +136,7 @@ export class StatController
         try
         {
             const { id } = req.params;
-
-            const
-            {
-                spikingErrors,
-                apeKills,
-                apeAttempts,
-                spikeKills,
-                spikeAttempts,
-                assists,
-                settingErrors,
-                blocks,
-                digs,
-                blockFollows,
-                aces,
-                servingErrors,
-                miscErrors,
-                playerId,
-                gameId
-            } = req.body;
-
-            const updatedStat = await this.statService.updateStat(
-                parseInt(id),
-                spikingErrors,
-                apeKills,
-                apeAttempts,
-                spikeKills,
-                spikeAttempts,
-                assists,
-                settingErrors,
-                blocks,
-                digs,
-                blockFollows,
-                aces,
-                servingErrors,
-                miscErrors,
-                playerId,
-                gameId
-            );
+            const updatedStat = await this.statService.updateStat(parseInt(id), req.body);
 
             res.json(updatedStat);
         }
@@ -280,42 +208,7 @@ export class StatController
     {
         try
         {
-            const
-            {
-                spikingErrors,
-                apeKills,
-                apeAttempts,
-                spikeKills,
-                spikeAttempts,
-                assists,
-                settingErrors,
-                blocks,
-                digs,
-                blockFollows,
-                aces,
-                servingErrors,
-                miscErrors,
-                playerName,
-                gameId
-            } = req.body;
-
-            const savedStat = await this.statService.createStatByUsername(
-                spikingErrors,
-                apeKills,
-                apeAttempts,
-                spikeKills,
-                spikeAttempts,
-                assists,
-                settingErrors,
-                blocks,
-                digs,
-                blockFollows,
-                aces,
-                servingErrors,
-                miscErrors,
-                playerName,
-                gameId
-            );
+            const savedStat = await this.statService.createStatByUsername(req.body);
 
             res.status(201).json(savedStat);
         }
