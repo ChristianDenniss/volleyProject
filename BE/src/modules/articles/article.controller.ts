@@ -1,8 +1,5 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { ArticleService, ArticleFilters } from './article.service.js';
-import { MissingFieldError } from '../../errors/MissingFieldError.js';
-import { NotFoundError } from '../../errors/NotFoundError.js';
-import { ConflictError } from '../../errors/ConflictError.js';
 import { parsePagination, toPaginatedResult } from '../../utils/pagination.js';
 
 const ARTICLES_DEFAULT_LIMIT = 10;
@@ -14,10 +11,7 @@ export class ArticleController {
         this.articleService = new ArticleService();
     }
 
-    /**
-     * Create a new article
-     */
-    public createArticle = async (req: Request, res: Response): Promise<void> => {
+    public createArticle = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         const { title, content, summary, imageUrl } = req.body;
         const userId = req.user?.id;
 
@@ -36,53 +30,33 @@ export class ArticleController {
             );
             res.status(201).json(newArticle);
         } catch (error) {
-            if (error instanceof MissingFieldError || error instanceof NotFoundError) {
-                res.status(400).json({ message: error.message });
-            } else {
-                res.status(500).json({ message: 'Internal server error' });
-            }
+            next(error);
         }
     };
 
-    /**
-     * Get all articles
-     */
-    public getAllArticles = async (req: Request, res: Response): Promise<void> => {
+    public getAllArticles = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const pagination = parsePagination(req.query, ARTICLES_DEFAULT_LIMIT);
             const filters = this.parseFilters(req);
             const [data, total] = await this.articleService.getAllArticles(pagination, filters);
             res.status(200).json(toPaginatedResult(data, total, pagination));
         } catch (error) {
-            console.error('Error fetching articles:', error);
-            res
-                .status(500)
-                .json({ message: 'Internal server error' });
+            next(error);
         }
     };
 
-    /**
-     * Get an article by ID
-     */
-    public getArticleById = async (req: Request, res: Response): Promise<void> => {
+    public getArticleById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         const { id } = req.params;
 
         try {
             const article = await this.articleService.getArticleById(Number(id));
             res.status(200).json(article);
         } catch (error) {
-            if (error instanceof MissingFieldError || error instanceof NotFoundError) {
-                res.status(400).json({ message: error.message });
-            } else {
-                res.status(500).json({ message: 'Internal server error' });
-            }
+            next(error);
         }
     };
 
-    /**
-     * Update an article
-     */
-    public updateArticle = async (req: Request, res: Response): Promise<void> => {
+    public updateArticle = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         const { id } = req.params;
         const { title, content, userId, summary, imageUrl, approved } = req.body;
 
@@ -98,36 +72,22 @@ export class ArticleController {
             );
             res.status(200).json(updatedArticle);
         } catch (error) {
-            if (error instanceof MissingFieldError || error instanceof NotFoundError) {
-                res.status(400).json({ message: error.message });
-            } else {
-                res.status(500).json({ message: 'Internal server error' });
-            }
+            next(error);
         }
     };
 
-    /**
-     * Delete an article
-     */
-    public deleteArticle = async (req: Request, res: Response): Promise<void> => {
+    public deleteArticle = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         const { id } = req.params;
 
         try {
             await this.articleService.deleteArticle(Number(id));
-            res.status(204).send(); // No content
+            res.status(204).send();
         } catch (error) {
-            if (error instanceof MissingFieldError || error instanceof NotFoundError) {
-                res.status(400).json({ message: error.message });
-            } else {
-                res.status(500).json({ message: 'Internal server error' });
-            }
+            next(error);
         }
     };
 
-    /**
-     * Get all articles by user ID (author)
-     */
-    public getArticlesByAuthorId = async (req: Request, res: Response): Promise<void> => {
+    public getArticlesByAuthorId = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         const { userId } = req.params;
 
         try {
@@ -135,73 +95,43 @@ export class ArticleController {
             const [data, total] = await this.articleService.getArticlesByUserId(Number(userId), pagination);
             res.status(200).json(toPaginatedResult(data, total, pagination));
         } catch (error) {
-            console.error('Error fetching articles by author:', error);
-            if (error instanceof MissingFieldError || error instanceof NotFoundError) {
-                res.status(400).json({ message: error.message });
-            } else {
-                res.status(500).json({ message: 'Internal server error' });
-            }
+            next(error);
         }
     };
 
-    /**
-     * Like an article
-     */
-    public likeArticle = async (req: Request, res: Response): Promise<void> => {
+    public likeArticle = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         const { id } = req.params;
-        const userId = (req as any).user?.id; // Get user ID from authenticated request
+        const userId = (req as any).user?.id;
 
         try {
             const updatedArticle = await this.articleService.likeArticle(Number(id), userId);
             res.status(200).json(updatedArticle);
         } catch (error) {
-            if (error instanceof MissingFieldError || error instanceof NotFoundError) {
-                res.status(400).json({ message: error.message });
-            } else if (error instanceof ConflictError) {
-                res.status(409).json({ message: error.message });
-            } else {
-                res.status(500).json({ message: 'Internal server error' });
-            }
+            next(error);
         }
     };
 
-    /**
-     * Unlike an article
-     */
-    public unlikeArticle = async (req: Request, res: Response): Promise<void> => {
+    public unlikeArticle = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         const { id } = req.params;
-        const userId = (req as any).user?.id; // Get user ID from authenticated request
+        const userId = (req as any).user?.id;
 
         try {
             const updatedArticle = await this.articleService.unlikeArticle(Number(id), userId);
             res.status(200).json(updatedArticle);
         } catch (error) {
-            if (error instanceof MissingFieldError || error instanceof NotFoundError) {
-                res.status(400).json({ message: error.message });
-            } else if (error instanceof ConflictError) {
-                res.status(409).json({ message: error.message });
-            } else {
-                res.status(500).json({ message: 'Internal server error' });
-            }
+            next(error);
         }
     };
 
-    /**
-     * Check if current user has liked an article
-     */
-    public checkUserLikeStatus = async (req: Request, res: Response): Promise<void> => {
+    public checkUserLikeStatus = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         const { id } = req.params;
-        const userId = (req as any).user?.id; // Get user ID from authenticated request
+        const userId = (req as any).user?.id;
 
         try {
             const hasLiked = await this.articleService.hasUserLikedArticle(Number(id), userId);
             res.status(200).json({ hasLiked });
         } catch (error) {
-            if (error instanceof MissingFieldError || error instanceof NotFoundError) {
-                res.status(400).json({ message: error.message });
-            } else {
-                res.status(500).json({ message: 'Internal server error' });
-            }
+            next(error);
         }
     };
 
