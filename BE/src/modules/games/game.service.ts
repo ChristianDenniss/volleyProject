@@ -134,6 +134,7 @@ export class GameService {
         });
 
         const queryRunner = AppDataSource.createQueryRunner();
+        await queryRunner.connect();
         await queryRunner.startTransaction();
 
         try {
