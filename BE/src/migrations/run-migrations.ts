@@ -1,14 +1,7 @@
 import { DataSource } from "typeorm";
-import { config } from "dotenv";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
-
-// Load environment variables
-config();
-
-// Default to local development unless the environment explicitly selects
-// production (for example, NODE_ENV=production in the deployment platform).
-process.env.NODE_ENV ??= 'development';
+import { env, getPostgresConnectionOptions } from "../config/env.js";
 
 // Get current directory for ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -17,42 +10,24 @@ const __dirname = dirname(__filename);
 console.log("==========================================");
 console.log("MIGRATION PROCESS STARTING");
 console.log("==========================================");
-console.log("Environment:", process.env.NODE_ENV);
+console.log("Environment:", env.NODE_ENV);
 console.log("Node Version:", process.version);
 console.log("Current Directory:", process.cwd());
 
-// Enforce DATABASE_URL in production
-if (process.env.NODE_ENV === 'production') {
-    if (!process.env.DATABASE_URL) {
-        console.error("DATABASE_URL must be set in production!");
-        process.exit(1);
-    }
-}
-
-if (process.env.DATABASE_URL) {
+if (env.DATABASE_URL) {
     console.log("Using DATABASE_URL (redacted)");
 } else {
     console.log("Using individual DB parameters:");
-    console.log("Database Host:", process.env.DB_HOST);
-    console.log("Database Name:", process.env.DB_NAME);
-    console.log("Database Port:", process.env.DB_PORT);
+    console.log("Database Host:", env.DB_HOST);
+    console.log("Database Name:", env.DB_NAME);
+    console.log("Database Port:", env.DB_PORT);
 }
 console.log("==========================================");
 
 // Initialize the DataSource
 const AppDataSource = new DataSource({
     type: "postgres",
-    ...(process.env.DATABASE_URL
-        ? { url: process.env.DATABASE_URL }
-        : {
-            host: process.env.DB_HOST || (process.env.NODE_ENV !== 'production' ? "localhost" : undefined),
-            port: Number(process.env.DB_PORT) || (process.env.NODE_ENV !== 'production' ? 5432 : undefined),
-            username: process.env.DB_USER || (process.env.NODE_ENV !== 'production' ? "postgres" : undefined),
-            password: process.env.DB_PASS || (process.env.NODE_ENV !== 'production' ? "password" : undefined),
-            database: process.env.DB_NAME || (process.env.NODE_ENV !== 'production' ? "volleyball" : undefined),
-        }
-    ),
-    ssl: false, // Disable SSL by default, let the connection URL handle SSL settings
+    ...getPostgresConnectionOptions(env),
     entities: [join(__dirname, "..", "modules", "**", "*.entity.{js,ts}")],
     migrations: [join(__dirname, "*.{js,ts}")],
     migrationsTransactionMode: "each",
@@ -85,4 +60,4 @@ AppDataSource.initialize()
     .catch((error) => {
         console.error("Error during Data Source initialization:", error);
         process.exit(1);
-    }); 
+    });

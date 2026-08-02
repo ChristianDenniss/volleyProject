@@ -4,28 +4,16 @@
 
 import { DataSource } from "typeorm";
 import bcrypt from "bcryptjs";
-import dotenv from "dotenv";
-
-dotenv.config();
+import { getPostgresConnectionOptions } from "./db-config.js";
 
 import { User } from "./src/modules/user/user.entity.js";
 
 const AppDataSource = new DataSource({
     type: "postgres",
-    ...(process.env.DATABASE_URL
-        ? { url: process.env.DATABASE_URL }
-        : {
-            host: process.env.DB_HOST || "localhost",
-            port: Number(process.env.DB_PORT) || 5432,
-            username: process.env.DB_USER || "postgres",
-            password: process.env.DB_PASS || "password",
-            database: process.env.DB_NAME || "volleyball",
-        }
-    ),
+    ...getPostgresConnectionOptions(),
     synchronize: false,
     logging: true,
     entities: [User],
-    ssl: false,
 });
 
 async function createAdminUser() {
