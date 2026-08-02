@@ -2,9 +2,9 @@
 import { useCallback } from "react";
 import { authFetch }   from "./authFetch";
 import { useAuth } from "../context/authContext";
+import { BACKEND_URL } from "../constants/api";
 
-const backendUrl =
-  import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+const backendUrl = BACKEND_URL;
 
 export function usePatch<T = any>(resource: string)
 {

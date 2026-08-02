@@ -1,4 +1,4 @@
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { AppDataSource } from '../../db/data-source.js';
 import { Stats } from './stat.entity.js';
 import { Players } from '../players/player.entity.js';
@@ -651,61 +651,54 @@ export class StatService extends CacheableService
                 }
                 console.log('Found season:', { id: season.id });
 
-                // Fetch teams by names within the season (following established pattern)
-                console.log('Searching for teams:', gameData.teamNames, 'in season:', gameData.seasonId);
-                
-                // Let's also check what teams exist in this season
-                const allTeamsInSeason = await queryRunner.manager.find(Teams, {
-                    where: { season: { id: gameData.seasonId } },
-                    relations: ["season"]
+                const teams = await queryRunner.manager.find(Teams, {
+                    where: {
+                        name: In(gameData.teamNames),
+                        season: { id: gameData.seasonId },
+                    },
+                    relations: ["players", "season"],
                 });
-                console.log('All teams in season', gameData.seasonId, ':', allTeamsInSeason.map(t => ({ name: t.name, id: t.id })));
-                
-                // Search for each team individually (following the pattern from TeamService)
-                const teams: any[] = [];
-                for (const teamName of gameData.teamNames) {
-                    const team = await queryRunner.manager.findOne(Teams, {
-                        where: { 
-                            name: teamName,
-                            season: { id: gameData.seasonId }
-                        },
-                        relations: ["players", "season"]
-                    });
-                    if (team) {
-                        teams.push(team);
-                    }
-                }
-
-                console.log('Found teams:', teams.map(t => ({ name: t.name, seasonId: t.season?.id || 'no season relation' })));
 
                 if (teams.length !== 2) {
                     const foundTeamNames = teams.map(t => t.name);
                     const missingTeams = gameData.teamNames.filter((name: string) => !foundTeamNames.includes(name));
-                    console.log('Missing teams:', missingTeams);
-                    console.log('Found team names:', foundTeamNames);
-                    console.log('Searched for team names:', gameData.teamNames);
-                    console.log('=== END CSV UPLOAD DEBUG ===');
                     throw new NotFoundError(`Teams not found in season ${gameData.seasonId}: ${missingTeams.join(', ')}`);
                 }
+
+                const teamsByName = new Map(teams.map(t => [t.name, t]));
+                const orderedTeams = gameData.teamNames.map((name: string) => teamsByName.get(name)!);
 
                 // Create game
                 const newGame = new Games();
                 newGame.date = new Date(gameData.date);
                 newGame.season = season;
-                newGame.teams = teams;
+                newGame.teams = orderedTeams;
                 newGame.team1Score = gameData.team1Score;
                 newGame.team2Score = gameData.team2Score;
                 newGame.stage = gameData.stage;
                 newGame.videoUrl = gameData.videoUrl || '';
                 newGame.status = GameStatus.COMPLETED;
-                newGame.name = gameData.name || `${teams[0].name} vs. ${teams[1].name} S${gameData.seasonId}`;
+                newGame.name = gameData.name || `${orderedTeams[0].name} vs. ${orderedTeams[1].name} S${gameData.seasonId}`;
                 applyWinnerToGame(newGame);
 
                 const savedGame = await queryRunner.manager.save(newGame);
 
+                const playerNames = [...new Set(statsData.map((s: { playerName?: string }) => s.playerName).filter(Boolean))];
+                const players = await queryRunner.manager.find(Players, {
+                    where: { name: In(playerNames) },
+                    relations: ["teams"],
+                });
+                const playersByName = new Map(players.map(p => [p.name, p]));
+
+                const existingStats = await queryRunner.manager.find(Stats, {
+                    where: { game: { id: savedGame.id } },
+                    relations: ["player"],
+                });
+                const existingPlayerIds = new Set(existingStats.map(s => s.player.id));
+                const batchPlayerIds = new Set<number>();
+
                 // Create stats records
                 const statsToCreate: Stats[] = [];
-                const createdStats: Stats[] = [];
 
                 for (const statData of statsData) {
                     // Validate stat data
@@ -713,11 +706,7 @@ export class StatService extends CacheableService
                         throw new MissingFieldError("Player name is required for all stats");
                     }
 
-                    // Find player by name
-                    const player = await queryRunner.manager.findOne(Players, {
-                        where: { name: statData.playerName },
-                        relations: ["teams"]
-                    });
+                    const player = playersByName.get(statData.playerName);
 
                     if (!player) {
                         throw new NotFoundError(`Player "${statData.playerName}" not found`);
@@ -725,7 +714,7 @@ export class StatService extends CacheableService
 
                     // Check if player is on one of the game's teams
                     const playerTeamIds = player.teams.map(t => t.id);
-                    const gameTeamIds = teams.map(t => t.id);
+                    const gameTeamIds = orderedTeams.map(t => t.id);
                     const isPlayerInGame = playerTeamIds.some(id => gameTeamIds.includes(id));
 
                     if (!isPlayerInGame) {
@@ -734,17 +723,10 @@ export class StatService extends CacheableService
                         );
                     }
 
-                    // Check for duplicate stats
-                    const existingStat = await queryRunner.manager.findOne(Stats, {
-                        where: {
-                            player: { id: player.id },
-                            game: { id: savedGame.id }
-                        }
-                    });
-
-                    if (existingStat) {
+                    if (existingPlayerIds.has(player.id) || batchPlayerIds.has(player.id)) {
                         throw new DuplicateError(`Stats already exist for player "${statData.playerName}" in this game`);
                     }
+                    batchPlayerIds.add(player.id);
 
                     // Create stat record
                     const newStat = new Stats();
@@ -833,7 +815,19 @@ export class StatService extends CacheableService
                     throw new NotFoundError(`Game with ID ${gameId} not found`);
                 }
 
-                console.log('Found game:', { id: game.id, name: game.name, teams: game.teams.map(t => t.name) });
+                const playerNames = [...new Set(statsData.map(s => s.playerName).filter(Boolean))];
+                const players = await queryRunner.manager.find(Players, {
+                    where: { name: In(playerNames) },
+                    relations: ["teams"],
+                });
+                const playersByName = new Map(players.map(p => [p.name, p]));
+
+                const existingStats = await queryRunner.manager.find(Stats, {
+                    where: { game: { id: game.id } },
+                    relations: ["player"],
+                });
+                const existingPlayerIds = new Set(existingStats.map(s => s.player.id));
+                const batchPlayerIds = new Set<number>();
 
                 // Create stats records
                 const statsToCreate: Stats[] = [];
@@ -846,11 +840,7 @@ export class StatService extends CacheableService
                         continue;
                     }
 
-                    // Find player by name
-                    const player = await queryRunner.manager.findOne(Players, {
-                        where: { name: statData.playerName },
-                        relations: ["teams"]
-                    });
+                    const player = playersByName.get(statData.playerName);
 
                     if (!player) {
                         missingPlayers.push(statData.playerName);
@@ -868,17 +858,10 @@ export class StatService extends CacheableService
                         );
                     }
 
-                    // Check for duplicate stats
-                    const existingStat = await queryRunner.manager.findOne(Stats, {
-                        where: {
-                            player: { id: player.id },
-                            game: { id: game.id }
-                        }
-                    });
-
-                    if (existingStat) {
+                    if (existingPlayerIds.has(player.id) || batchPlayerIds.has(player.id)) {
                         throw new DuplicateError(`Stats already exist for player "${statData.playerName}" in this game`);
                     }
+                    batchPlayerIds.add(player.id);
 
                     // Create stat record
                     const newStat = new Stats();

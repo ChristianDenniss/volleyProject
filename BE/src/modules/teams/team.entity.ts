@@ -1,10 +1,13 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, ManyToMany, JoinTable, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, ManyToMany, JoinTable, JoinColumn, Index } from 'typeorm';
 import type { Seasons } from '../seasons/season.entity.js';
 import type { Players } from '../players/player.entity.js';
 import type { Games } from '../games/game.entity.js';
 import type { Region } from '../regions/region.entity.js';
 
 @Entity()
+@Index('IDX_teams_regionId', ['regionId'])
+@Index('IDX_teams_seasonId', ['season'])
+@Index('IDX_teams_name', ['name'])
 export class Teams 
 {
     @PrimaryGeneratedColumn()

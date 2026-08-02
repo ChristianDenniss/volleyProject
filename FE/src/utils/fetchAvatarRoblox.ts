@@ -1,8 +1,10 @@
+import { BACKEND_URL } from "../constants/api";
+
 export async function getRobloxAvatarUrl(username: string): Promise<string | null>
 {
     try
     {
-        const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+        const backendUrl = BACKEND_URL;
         
         const url = `${backendUrl}/api/roblox/avatar/${encodeURIComponent(username)}`;
         const res = await fetch(url);

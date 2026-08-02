@@ -259,7 +259,13 @@ export class RecordService {
             throw new NotFoundError("No stats found in the database");
         }
 
+        const qr = AppDataSource.createQueryRunner();
+        await qr.connect();
+        await qr.startTransaction();
+
         let recordsCreated = 0;
+
+        try {
         const recordTypes = [
             'most spike kills', 'most assists', 'most ape kills', 'most digs', 'most block follows', 
             'most blocks', 'most aces', 'most serve errors', 'most misc errors', 'most set errors', 
@@ -271,7 +277,7 @@ export class RecordService {
             const top10Stats = this.calculateTop10ForRecordType(stats, recordType);
 
             // Clear existing records for this type and game type
-            await this.recordRepository.delete({ record: recordType, type: 'game' });
+            await qr.manager.delete(Records, { record: recordType, type: 'game' });
 
             // Build and batch-save new records
             const newRecords = top10Stats.map((stat, i) => {
@@ -288,7 +294,7 @@ export class RecordService {
             });
 
             if (newRecords.length > 0) {
-                await this.recordRepository.save(newRecords);
+                await qr.manager.save(Records, newRecords);
                 recordsCreated += newRecords.length;
             }
         }
@@ -302,7 +308,7 @@ export class RecordService {
             const top10Stats = this.calculateTop10ForAggregatedRecordType(stats, recordType);
 
             // Clear existing records for this type and game type
-            await this.recordRepository.delete({ record: recordType, type: 'game' });
+            await qr.manager.delete(Records, { record: recordType, type: 'game' });
 
             const newRecords = top10Stats.map((stat, i) => {
                 const newRecord = new Records();
@@ -318,7 +324,7 @@ export class RecordService {
             });
 
             if (newRecords.length > 0) {
-                await this.recordRepository.save(newRecords);
+                await qr.manager.save(Records, newRecords);
                 recordsCreated += newRecords.length;
             }
         }
@@ -328,7 +334,7 @@ export class RecordService {
             const top10SeasonStats = this.calculateTop10SeasonStats(stats, recordType);
 
             // Clear existing records for this type and season type
-            await this.recordRepository.delete({ record: recordType, type: 'season' });
+            await qr.manager.delete(Records, { record: recordType, type: 'season' });
 
             const newRecords = top10SeasonStats.map((seasonStat, i) => {
                 const newRecord = new Records();
@@ -343,7 +349,7 @@ export class RecordService {
             });
 
             if (newRecords.length > 0) {
-                await this.recordRepository.save(newRecords);
+                await qr.manager.save(Records, newRecords);
                 recordsCreated += newRecords.length;
             }
         }
@@ -353,7 +359,7 @@ export class RecordService {
             const top10SeasonStats = this.calculateTop10SeasonAggregatedStats(stats, recordType);
 
             // Clear existing records for this type and season type
-            await this.recordRepository.delete({ record: recordType, type: 'season' });
+            await qr.manager.delete(Records, { record: recordType, type: 'season' });
 
             const newRecords = top10SeasonStats.map((seasonStat, i) => {
                 const newRecord = new Records();
@@ -368,7 +374,7 @@ export class RecordService {
             });
 
             if (newRecords.length > 0) {
-                await this.recordRepository.save(newRecords);
+                await qr.manager.save(Records, newRecords);
                 recordsCreated += newRecords.length;
             }
         }
@@ -389,7 +395,7 @@ export class RecordService {
                 const top10Stats = this.calculateTop10TotalSpikingPercentage(eligibleStats, recordType);
 
                 // Clear existing records for this type and game type
-                await this.recordRepository.delete({ record: recordType, type: 'game' });
+                await qr.manager.delete(Records, { record: recordType, type: 'game' });
 
                 const newRecords = top10Stats.map((stat, i) => {
                     const newRecord = new Records();
@@ -405,7 +411,7 @@ export class RecordService {
                 });
 
                 if (newRecords.length > 0) {
-                    await this.recordRepository.save(newRecords);
+                    await qr.manager.save(Records, newRecords);
                     recordsCreated += newRecords.length;
                 }
             }
@@ -431,7 +437,7 @@ export class RecordService {
                 const top10SeasonStats = this.calculateTop10SeasonSpikingPercentage(eligibleSeasonStats, recordType);
 
                 // Clear existing records for this type and season type
-                await this.recordRepository.delete({ record: recordType, type: 'season' });
+                await qr.manager.delete(Records, { record: recordType, type: 'season' });
 
                 const newRecords = top10SeasonStats.map((seasonStat, i) => {
                     const newRecord = new Records();
@@ -446,10 +452,18 @@ export class RecordService {
                 });
 
                 if (newRecords.length > 0) {
-                    await this.recordRepository.save(newRecords);
+                    await qr.manager.save(Records, newRecords);
                     recordsCreated += newRecords.length;
                 }
             }
+        }
+
+        await qr.commitTransaction();
+        } catch (err) {
+            await qr.rollbackTransaction();
+            throw err;
+        } finally {
+            await qr.release();
         }
 
         return {

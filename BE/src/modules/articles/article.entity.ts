@@ -1,7 +1,9 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, ManyToMany, JoinTable } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, ManyToMany, JoinTable, Index } from "typeorm";
 import { User } from "../user/user.entity.js";
 
 @Entity()
+@Index("IDX_article_approved", ["approved"])
+@Index("IDX_article_authorId", ["author"])
 export class Article
 {
     @PrimaryGeneratedColumn()

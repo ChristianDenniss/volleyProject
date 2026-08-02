@@ -188,14 +188,14 @@ export class TeamService {
         return team;  // Return the team (with players) if found, or null if not found
     }
 
-    async getTeamsByName(name: string): Promise<Teams[]> {
+    async getTeamsByName(name: string, pagination: PaginationParams): Promise<[Teams[], number]> {
         if (!name) {
             throw new MissingFieldError("Team name");
         }
 
         const lookupName = decodeURIComponent(name).replace(/-/g, " ").trim();
 
-        const teams = await this.teamRepository
+        const [teams, total] = await this.teamRepository
             .createQueryBuilder("team")
             .leftJoinAndSelect("team.season", "season")
             .leftJoinAndSelect("team.players", "players")
@@ -205,13 +205,15 @@ export class TeamService {
             .leftJoinAndSelect("games.stats", "gameStats")
             .leftJoinAndSelect("games.season", "gameSeason")
             .where("LOWER(team.name) = LOWER(:name)", { name: lookupName })
-            .getMany();
+            .skip(pagination.skip)
+            .take(pagination.take)
+            .getManyAndCount();
 
-        if (teams.length === 0) {
+        if (total === 0) {
             throw new NotFoundError(`No teams found with name: ${name}`);
         }
 
-        return teams;
+        return [teams, total];
     }
 
     /**
@@ -390,21 +392,17 @@ export class TeamService {
     /**
      * Get all teams by season ID
      */
-    async getTeamsBySeasonId(seasonId: number): Promise<Teams[]> {
+    async getTeamsBySeasonId(seasonId: number, pagination: PaginationParams): Promise<[Teams[], number]> {
         if (!seasonId) {
             throw new MissingFieldError("Season ID");
         }
 
-        const season = await this.seasonRepository.findOne({
-            where: { id: seasonId },
-            relations: ["teams"]
-        });
-
+        const season = await this.seasonRepository.findOneBy({ id: seasonId });
         if (!season) {
             throw new NotFoundError(`Season with ID ${seasonId} not found`);
         }
 
-        return this.teamRepository.find({
+        return this.teamRepository.findAndCount({
             where: { season: { id: seasonId } },
             relations: [
                 "season",
@@ -416,7 +414,9 @@ export class TeamService {
                 "games.stats",
                 "games.season"
             ],
-            relationLoadStrategy: 'query'
+            relationLoadStrategy: 'query',
+            skip: pagination.skip,
+            take: pagination.take,
         });
     }
 

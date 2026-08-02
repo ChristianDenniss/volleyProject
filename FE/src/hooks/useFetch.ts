@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { authFetch } from "./authFetch";
+import { BACKEND_URL } from "../constants/api";
 import { TriviaPlayer, TriviaTeam, TriviaSeason, GuessResult } from "../types/interfaces";
 
 
@@ -15,7 +16,7 @@ export const useFetch = <T>(endpoint: string) =>
         const [loading, setLoading] = useState<boolean>(true);
     
         // Base URL (from env or fallback)
-        const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+const backendUrl = BACKEND_URL;
     
         // Fetch data on mount or when endpoint changes
         useEffect(() =>
@@ -34,8 +35,9 @@ export const useFetch = <T>(endpoint: string) =>
                         throw new Error("Network response was not ok");
                     }
     
-                    const result: T[] = await response.json(); // Always assume it's an array
-                    setData(result);
+                    const result = await response.json();
+                    const items: T[] = Array.isArray(result) ? result : result.data;
+                    setData(items);
                 }
                 catch (err: any)
                 {
@@ -58,7 +60,7 @@ export const useFetch = <T>(endpoint: string) =>
 // Specific hook to fetch a team by name
 export const useFetchTeamByName = <T>(teamName: string) =>
 {
-    return useFetch<T>(`teams/name/${encodeURIComponent(teamName)}`);  // Always treats result as an array
+    return useFetch<T>(`teams/name/${encodeURIComponent(teamName)}?limit=100`);
 };
 
 export const useFetchGameById = <T>(gameId: string) =>
@@ -94,7 +96,7 @@ export const useObjectFetch = <T>(endpoint: string) =>
     const [loading, setLoading] = useState<boolean>(true);
 
     // Base URL
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+    const backendUrl = BACKEND_URL;
 
     // Fetch on mount / endpoint change
     useEffect(() =>
@@ -139,7 +141,7 @@ export const useTriviaPlayer = (difficulty: 'easy' | 'medium' | 'hard' | 'imposs
   const [error, setError] = useState<string | null>(null);
 
   // Base URL (from env or fallback)
-  const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+  const backendUrl = BACKEND_URL;
 
   const fetchTriviaPlayer = async () => {
     if (!difficulty) {
@@ -191,7 +193,7 @@ export const useTriviaTeam = (difficulty: 'easy' | 'medium' | 'hard' | 'impossib
   const [error, setError] = useState<string | null>(null);
 
   // Base URL (from env or fallback)
-  const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+  const backendUrl = BACKEND_URL;
 
   const fetchTriviaTeam = async () => {
     if (!difficulty) {
@@ -243,7 +245,7 @@ export const useTriviaSeason = (difficulty: 'easy' | 'medium' | 'hard' | 'imposs
   const [error, setError] = useState<string | null>(null);
 
   // Base URL (from env or fallback)
-  const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+  const backendUrl = BACKEND_URL;
 
   const fetchTriviaSeason = async () => {
     if (!difficulty) {
@@ -295,7 +297,7 @@ export const useSubmitTriviaGuess = () => {
   const [error, setError] = useState<string | null>(null);
 
   // Base URL (from env or fallback)
-  const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+  const backendUrl = BACKEND_URL;
 
   const submitGuess = async (
     type: 'player' | 'team' | 'season',

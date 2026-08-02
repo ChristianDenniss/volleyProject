@@ -19,7 +19,7 @@ export function registerArticleRoutes(app: Application): void
     router.get('/:id', articleController.getArticleById);
 
     // UPDATE/DELETE routes - PROTECTED
-    router.put('/:id', authenticateCombined, authorizeRoles("admin", "superadmin"), articleController.updateArticle);
+    router.put('/:id', authenticateCombined, authorizeRoles("admin", "superadmin"), validate(updateArticleSchema), articleController.updateArticle);
     router.patch('/:id', authenticateCombined, authorizeRoles("admin", "superadmin"), validate(updateArticleSchema), articleController.updateArticle);
     router.delete('/:id', authenticateCombined, authorizeRoles("admin", "superadmin"), articleController.deleteArticle);
 

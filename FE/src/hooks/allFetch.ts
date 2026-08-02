@@ -2,6 +2,7 @@ import { useFetchTeamByName, useFetchGameById, useFetchSeasonById, useFetchArtic
 import { usePaginatedFetch, PaginationParams, DEFAULT_PAGINATION } from "./usePaginatedFetch";
 import { authFetch } from "./authFetch";
 import { useAuth } from "../context/authContext";
+import { BACKEND_URL } from "../constants/api";
 import { Player, Team, Season, Game, Article, Stats, Award, Records, Application, RegionCode } from "../types/interfaces";
 import { useCallback, useEffect, useState } from "react";
 
@@ -72,7 +73,7 @@ export const useGameStages = (params: GameStagesParams = {}) => {
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const { token } = useAuth();
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+    const backendUrl = BACKEND_URL;
     const paramsKey = JSON.stringify(params);
 
     const fetchStages = useCallback(async () => {

@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { FaVolleyballBall, FaUserAlt, FaChartBar, FaNewspaper, FaUsers, FaCalendarAlt, FaTrophy, FaClock } from 'react-icons/fa';
 import LuvLateAvatar from '../../images/LuvLate.png';
 import '../../styles/Dashboard.css';
+import { BACKEND_URL } from '../../constants/api';
 
-const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+const backendUrl = BACKEND_URL;
 
 const parseJson = async (response: Response) => {
   const contentType = response.headers.get('content-type') ?? '';

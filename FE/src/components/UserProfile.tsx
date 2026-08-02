@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { authFetch } from "../hooks/authFetch";
 import { useAuth } from "../context/authContext";
+import { BACKEND_URL } from "../constants/api";
 import "../styles/UserProfile.css";
 
 interface Article {
@@ -52,7 +53,7 @@ const ProfilePage: React.FC = () =>
             try
             {
                 const res = await authFetch(
-                    `${import.meta.env.VITE_BACKEND_URL || "http://localhost:3000"}/api/users/profile`,
+                    `${BACKEND_URL}/api/users/profile`,
                     { method: "GET" },
                     token
                 );

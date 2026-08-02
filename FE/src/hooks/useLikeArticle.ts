@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../context/authContext';
 import { authFetch } from './authFetch';
+import { BACKEND_URL } from '../constants/api';
 
 interface UseLikeArticleReturn {
   likeArticle: (articleId: number) => Promise<boolean>;
@@ -10,7 +11,7 @@ interface UseLikeArticleReturn {
   error: string | null;
 }
 
-const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+const backendUrl = BACKEND_URL;
 
 export function useLikeArticle(): UseLikeArticleReturn {
   const [isLiking, setIsLiking] = useState(false);

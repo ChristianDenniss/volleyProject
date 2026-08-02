@@ -1,8 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, RelationId } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, RelationId, Index } from 'typeorm';
 import type { Players } from '../players/player.entity.js';
 import type { Games } from '../games/game.entity.js';
 
 @Entity()
+@Index('IDX_stats_playerId', ['player'])
+@Index('IDX_stats_gameId', ['game'])
+@Index('IDX_stats_gameId_playerId', ['game', 'player'])
 export class Stats {
     @PrimaryGeneratedColumn()
     id!: number;

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { authFetch } from "./authFetch";
+import { BACKEND_URL } from "../constants/api";
 import type { Player, Season } from "../types/interfaces";
 
 /**
@@ -13,7 +14,7 @@ export const useFetchPlayersWithStats = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
-  const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+  const backendUrl = BACKEND_URL;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -51,7 +52,7 @@ export const useFetchSeasons = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
-  const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+  const backendUrl = BACKEND_URL;
 
   useEffect(() => {
     const fetchData = async () => {

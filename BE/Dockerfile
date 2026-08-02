@@ -1,36 +1,33 @@
-# Use official Node.js v20 image with security updates
-FROM node:20-slim
+# Build stage — install devDependencies and compile TypeScript
+FROM node:20-slim AS build
 
-# Set working directory
 WORKDIR /app
 
-# Copy package files for dependency installation
 COPY package.json package-lock.json ./
+RUN npm ci
 
-# Install all dependencies (including dev) for building
-# Override NODE_ENV to ensure devDependencies are installed (needed for TypeScript compilation)
-RUN NODE_ENV=development npm ci && npm cache clean --force
-
-# Copy the source code
 COPY . .
-
-# Verify and prepare start script
-RUN echo "Verifying start script..." && \
-    ls -la start.sh && \
-    cat start.sh && \
-    sed -i 's/\r$//' start.sh && \
-    chmod +x start.sh && \
-    echo "Script permissions:" && \
-    ls -la start.sh
-
-# Build the application
 RUN npm run build
 
-# Expose the application port 
-EXPOSE 3000
+# Production stage — prod dependencies + compiled output only
+FROM node:20-slim AS production
 
-# Set NODE_ENV to production
+WORKDIR /app
+
 ENV NODE_ENV=production
 
-# Start the application in production mode
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev && npm cache clean --force
+
+COPY --from=build /app/dist ./dist
+COPY start.sh ./start.sh
+RUN sed -i 's/\r$//' start.sh && chmod +x start.sh && chown -R node:node /app
+
+USER node
+
+EXPOSE 3000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+  CMD node -e "fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+
 ENTRYPOINT ["./start.sh"]

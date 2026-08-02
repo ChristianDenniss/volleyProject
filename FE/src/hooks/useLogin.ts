@@ -2,6 +2,7 @@
 import { useState, useRef } from "react";
 import { useAuth } from "../context/authContext";
 import { isMockMode } from "../utils/authStorage";
+import { BACKEND_URL } from "../constants/api";
 
 export function useLogin() {
   const auth = useAuth?.();
@@ -22,7 +23,7 @@ export function useLogin() {
 
     try {
       const res = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL || "http://localhost:3000"}/api/users/login`,
+        `${BACKEND_URL}/api/users/login`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

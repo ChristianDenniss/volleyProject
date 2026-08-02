@@ -1,9 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToMany, JoinTable, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToMany, JoinTable, ManyToOne, JoinColumn, Index } from 'typeorm';
 import { Players } from '../players/player.entity.js';
 import { Seasons } from '../seasons/season.entity.js';
 import type { Region } from '../regions/region.entity.js';
 
 @Entity()
+@Index('IDX_awards_seasonId', ['seasonId'])
+@Index('IDX_awards_regionId', ['regionId'])
 export class Awards {
     @PrimaryGeneratedColumn()
     id!: number;

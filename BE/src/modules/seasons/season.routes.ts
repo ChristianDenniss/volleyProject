@@ -19,7 +19,7 @@ export function registerSeasonRoutes(app: Application): void {
     router.get('/:id', seasonController.getSeasonById);
     
     // UPDATE/DELETE routes - PROTECTED
-    router.put('/:id', authenticateCombined, authorizeRoles("admin", "superadmin"), seasonController.updateSeason);
+    router.put('/:id', authenticateCombined, authorizeRoles("admin", "superadmin"), validate(updateSeasonSchema), seasonController.updateSeason);
     router.patch('/:id', authenticateCombined, authorizeRoles("admin", "superadmin"), validate(updateSeasonSchema), seasonController.updateSeason);
     router.delete('/:id', authenticateCombined, authorizeRoles("admin", "superadmin"), seasonController.deleteSeason);
 

@@ -264,20 +264,25 @@ describe('PlayerController', () => {
 
   describe('getPlayersByTeamId', () => {
     it('should return players by team ID', async () => {
-      mockGetPlayersByTeamId.mockResolvedValue(mockPlayers);
+      mockGetPlayersByTeamId.mockResolvedValue([mockPlayers, mockPlayers.length]);
 
-      req = { params: { teamId: '1' } };
+      req = { params: { teamId: '1' }, query: {} };
 
       await playerController.getPlayersByTeamId(req as Request, res as Response);
 
-      expect(mockGetPlayersByTeamId).toHaveBeenCalledWith(1);
-      expect(res.json).toHaveBeenCalledWith(mockPlayers);
+      expect(mockGetPlayersByTeamId).toHaveBeenCalledWith(1, expect.objectContaining({ page: 1, limit: 25 }));
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+        data: mockPlayers,
+        total: mockPlayers.length,
+        page: 1,
+        limit: 25,
+      }));
     });
 
     it('should return 404 if no players are found for the team', async () => {
-      mockGetPlayersByTeamId.mockResolvedValue([]);
+      mockGetPlayersByTeamId.mockResolvedValue([[], 0]);
 
-      req = { params: { teamId: '999' } };
+      req = { params: { teamId: '999' }, query: {} };
 
       await playerController.getPlayersByTeamId(req as Request, res as Response);
 

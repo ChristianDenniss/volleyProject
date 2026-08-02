@@ -200,48 +200,57 @@ describe('GameService', () => {
   });
 
   describe('getGamesBySeasonId', () => {
+    const pagination = { page: 1, limit: 10, skip: 0, take: 10 };
+
     it('should return games by season ID', async () => {
-      mockRepository.find.mockResolvedValueOnce(mockGames);
+      mockRepository.findAndCount = jest.fn().mockResolvedValueOnce([mockGames, mockGames.length]);
       mockRepository.findOneBy.mockResolvedValueOnce(mockSeason);
 
-      const result = await gameService.getGamesBySeasonId(1);
+      const result = await gameService.getGamesBySeasonId(1, pagination);
 
-      expect(mockRepository.find).toHaveBeenCalledWith({
+      expect(mockRepository.findAndCount).toHaveBeenCalledWith({
         where: { season: { id: 1 } },
         relations: ['teams', 'stats'],
         order: { date: 'DESC' },
+        skip: 0,
+        take: 10,
       });
-      expect(result).toEqual(mockGames);
+      expect(result).toEqual([mockGames, mockGames.length]);
     });
 
     it('should throw error if season not found', async () => {
       mockRepository.findOneBy.mockResolvedValueOnce(null);
 
-      await expect(gameService.getGamesBySeasonId(999)).rejects.toThrow(
+      await expect(gameService.getGamesBySeasonId(999, pagination)).rejects.toThrow(
         new NotFoundError('Season with ID 999 not found'),
       );
     });
   });
 
   describe('getGamesByTeamId', () => {
+    const pagination = { page: 1, limit: 10, skip: 0, take: 10 };
+
     it('should return games by team ID', async () => {
-      mockRepository.find.mockResolvedValueOnce(mockGames);
-      mockRepository.findOne.mockResolvedValueOnce(mockTeam);
+      mockRepository.findAndCount = jest.fn().mockResolvedValueOnce([mockGames, mockGames.length]);
+      mockRepository.findOneBy.mockResolvedValueOnce(mockTeam);
 
-      const result = await gameService.getGamesByTeamId(1);
+      const result = await gameService.getGamesByTeamId(1, pagination);
 
-      expect(mockRepository.find).toHaveBeenCalledWith({
-        where: { id: { $in: [1] } },
-        relations: ['season', 'teams', 'stats'],
+      expect(mockRepository.findOneBy).toHaveBeenCalledWith({ id: 1 });
+      expect(mockRepository.findAndCount).toHaveBeenCalledWith({
+        where: { teams: { id: 1 } },
+        relations: ['season', 'teams', 'winner', 'stats', 'region'],
         order: { date: 'DESC' },
+        skip: 0,
+        take: 10,
       });
-      expect(result).toEqual(mockGames);
+      expect(result).toEqual([mockGames, mockGames.length]);
     });
 
     it('should throw error if team not found', async () => {
-      mockRepository.findOne.mockResolvedValueOnce(null);
+      mockRepository.findOneBy.mockResolvedValueOnce(null);
 
-      await expect(gameService.getGamesByTeamId(999)).rejects.toThrow(
+      await expect(gameService.getGamesByTeamId(999, pagination)).rejects.toThrow(
         new NotFoundError('Team with ID 999 not found'),
       );
     });
