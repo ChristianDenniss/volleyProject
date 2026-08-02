@@ -36,7 +36,7 @@ export abstract class CacheableService {
     try {
       // Try to get from cache first
       const cached = await cacheService.get<T>(cacheKey, this.cachePrefix);
-      if (cached) {
+      if (cached !== null && cached !== undefined) {
         return cached;
       }
 
