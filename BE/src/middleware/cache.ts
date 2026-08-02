@@ -42,7 +42,7 @@ export function cacheMiddleware(options: CacheMiddlewareOptions = {}) {
       // Try to get cached response
       const cached = await cacheService.get(cacheKey, options.prefix);
       
-      if (cached) {
+      if (cached !== null && cached !== undefined) {
         // Return cached response
         res.json(cached);
         return;
