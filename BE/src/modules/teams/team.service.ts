@@ -179,13 +179,20 @@ export class TeamService {
     /**
      * Get players for a team by name
      */
-    async getTeamPlayersByName(name: string): Promise<Teams | null> {
+    async getTeamPlayersByName(name: string, pagination: PaginationParams): Promise<[Players[], number] | null> {
         const team = await this.teamRepository.findOne({
             where: { name },
-            relations: ["players"],  // Load players for the specific team
         });
 
-        return team;  // Return the team (with players) if found, or null if not found
+        if (!team) {
+            return null;
+        }
+
+        return this.playerRepository.findAndCount({
+            where: { teams: { id: team.id } },
+            skip: pagination.skip,
+            take: pagination.take,
+        });
     }
 
     async getTeamsByName(name: string, pagination: PaginationParams): Promise<[Teams[], number]> {
@@ -244,17 +251,18 @@ export class TeamService {
     /**
      * Get players for a team by team ID
      */
-    async getTeamPlayers(teamId: number): Promise<Players[]> {
-        const team = await this.teamRepository.findOne({
-            where: { id: teamId },
-            relations: ["players"],  // Only load players for the specific team
-        });
+    async getTeamPlayers(teamId: number, pagination: PaginationParams): Promise<[Players[], number]> {
+        const team = await this.teamRepository.findOneBy({ id: teamId });
 
         if (!team) {
-            throw new Error("Team not found");
+            throw new NotFoundError(`Team with ID ${teamId} not found`);
         }
 
-        return team.players; // Return the players associated with the team
+        return this.playerRepository.findAndCount({
+            where: { teams: { id: teamId } },
+            skip: pagination.skip,
+            take: pagination.take,
+        });
     }
 
     /**

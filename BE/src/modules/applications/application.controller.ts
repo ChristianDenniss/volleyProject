@@ -1,13 +1,17 @@
 import { Request, Response, NextFunction } from "express";
 import { ApplicationService } from "./application.service.js";
+import { parsePagination, toPaginatedResult } from "../../utils/pagination.js";
+
+const APPLICATIONS_DEFAULT_LIMIT = 25;
 
 export class ApplicationController {
     private service = new ApplicationService();
 
-    public getAll = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
+    public getAll = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-            const applications = await this.service.getAll();
-            res.status(200).json(applications);
+            const pagination = parsePagination(req.query, APPLICATIONS_DEFAULT_LIMIT);
+            const [data, total] = await this.service.getAll(pagination);
+            res.status(200).json(toPaginatedResult(data, total, pagination));
         } catch (error) {
             next(error);
         }

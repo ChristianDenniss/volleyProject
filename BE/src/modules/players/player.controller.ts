@@ -52,12 +52,17 @@ export class PlayerController {
 
         try
         {
-            const teamNames = await this.playerService.getTeamsByPlayerName(playerName);
+            const pagination = parsePagination(req.query, PLAYERS_DEFAULT_LIMIT);
+            const [data, total] = await this.playerService.getTeamsByPlayerName(playerName, pagination);
+
+            if (total === 0) {
+                res.status(404).json({ message: `No teams found for player ${playerName}` });
+                return;
+            }
 
             res.status(200).json({
-                success: true,
-                playerName: playerName,
-                teams: teamNames
+                ...toPaginatedResult(data, total, pagination),
+                playerName,
             });
         }
         catch (error)

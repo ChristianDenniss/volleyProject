@@ -1,5 +1,6 @@
 import { AppDataSource } from "../../db/data-source.js";
 import { NotFoundError } from "../../errors/NotFoundError.js";
+import { PaginationParams } from "../../utils/pagination.js";
 import {
     Application,
     ApplicationStatus,
@@ -102,10 +103,12 @@ export class ApplicationService {
         await this.repository.save(DEFAULT_APPLICATIONS);
     }
 
-    async getAll(): Promise<Application[]> {
+    async getAll(pagination: PaginationParams): Promise<[Application[], number]> {
         await this.ensureSeeded();
-        return this.repository.find({
+        return this.repository.findAndCount({
             order: { sortOrder: "ASC", id: "ASC" },
+            skip: pagination.skip,
+            take: pagination.take,
         });
     }
 

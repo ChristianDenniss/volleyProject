@@ -8,6 +8,7 @@ import { RegionService } from '../regions/region.service.js';
 
 const TEAMS_DEFAULT_LIMIT = 10;
 const TEAMS_BY_NAME_DEFAULT_LIMIT = 100;
+const TEAM_PLAYERS_DEFAULT_LIMIT = 25;
 
 export class TeamController {
     private teamService: TeamService;
@@ -45,14 +46,22 @@ export class TeamController {
     getTeamPlayersByName = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const { name } = req.params;
-            const team = await this.teamService.getTeamPlayersByName(name);
+            const pagination = parsePagination(req.query, TEAM_PLAYERS_DEFAULT_LIMIT);
+            const result = await this.teamService.getTeamPlayersByName(name, pagination);
 
-            if (!team) {
+            if (!result) {
                 res.status(404).json({ error: "Team not found" });
                 return;
             }
 
-            res.json(team.players);
+            const [data, total] = result;
+
+            if (total === 0) {
+                res.status(404).json({ message: `No players found for team with name ${name}` });
+                return;
+            }
+
+            res.json(toPaginatedResult(data, total, pagination));
         } catch (error) {
             next(error);
         }
@@ -61,14 +70,15 @@ export class TeamController {
     getTeamPlayers = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const { teamId } = req.params;
-            const players = await this.teamService.getTeamPlayers(parseInt(teamId));
+            const pagination = parsePagination(req.query, TEAM_PLAYERS_DEFAULT_LIMIT);
+            const [data, total] = await this.teamService.getTeamPlayers(parseInt(teamId), pagination);
 
-            if (players.length === 0) {
+            if (total === 0) {
                 res.status(404).json({ message: `No players found for team with ID ${teamId}` });
                 return;
             }
 
-            res.json(players);
+            res.json(toPaginatedResult(data, total, pagination));
         } catch (error) {
             next(error);
         }
