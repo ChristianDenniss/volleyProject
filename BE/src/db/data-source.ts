@@ -53,7 +53,9 @@ export const AppDataSource = new DataSource({
             database: process.env.DB_NAME || "volleyball",
         }
     ),
-    synchronize: process.env.NODE_ENV === "development",
+    // Never auto-sync from NODE_ENV — opt in explicitly for throwaway local DBs only.
+    // Schema changes ship via migrations (see src/migrations).
+    synchronize: process.env.TYPEORM_SYNCHRONIZE === "true",
     logging: process.env.NODE_ENV === "production" ? ["error"] : ["error", "warn", "migration"],
     maxQueryExecutionTime: 1000,
     entities: entities,

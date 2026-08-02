@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, ManyToMany, JoinTable, OneToMany, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, ManyToMany, JoinTable, OneToMany, JoinColumn, Index } from 'typeorm';
 import type { Seasons } from '../seasons/season.entity.js';
 import type { Teams } from '../teams/team.entity.js';
 import type { Stats } from '../stats/stat.entity.js';
@@ -22,6 +22,14 @@ export enum GameBracket {
 }
 
 @Entity()
+@Index('IDX_games_regionId_seasonId_date', ['regionId', 'season', 'date'])
+@Index('IDX_games_seasonId_regionId_stage', ['season', 'regionId', 'stage'])
+@Index('IDX_games_seasonId', ['season'])
+@Index('IDX_games_stage', ['stage'])
+@Index('IDX_games_status', ['status'])
+@Index('IDX_games_phase', ['phase'])
+@Index('IDX_games_bracket', ['bracket'])
+@Index('IDX_games_winnerTeamId', ['winnerTeamId'])
 export class Games {
     @PrimaryGeneratedColumn()
     id!: number;
