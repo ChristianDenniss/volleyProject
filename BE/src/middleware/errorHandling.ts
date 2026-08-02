@@ -36,9 +36,11 @@ export const errorHandler = (err: Error, req: Request, res: Response, next: Next
     console.error(err.message);
 
     const statusCode = errorCodeMapping[err.constructor.name] || 500;
+    const isOperational = statusCode < 500;
 
     const response: Record<string, unknown> = {
-        error: err.message,
+        // Never leak driver/internal messages on unexpected 500s
+        error: isOperational ? err.message : "Internal server error",
         stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
     };
 
