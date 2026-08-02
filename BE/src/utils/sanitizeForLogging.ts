@@ -4,10 +4,18 @@ const SENSITIVE_KEYS = new Set([
     "newpassword",
     "confirmpassword",
     "token",
+    "accesstoken",
+    "refreshtoken",
     "authorization",
     "api_key",
     "apikey",
     "secret",
+    "email",
+    "username",
+    "cookie",
+    "csrf",
+    "csrftoken",
+    "x-csrf-token",
 ]);
 
 export function sanitizeForLogging(value: unknown): unknown {
