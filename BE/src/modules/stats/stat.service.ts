@@ -637,11 +637,12 @@ export class StatService extends CacheableService
 
             // Start transaction
             const queryRunner = AppDataSource.createQueryRunner();
+            await queryRunner.connect();
             await queryRunner.startTransaction();
 
             try {
                 // Fetch season
-                const season = await this.seasonRepository.findOne({
+                const season = await queryRunner.manager.findOne(Seasons, {
                     where: { id: gameData.seasonId },
                     relations: ["teams"]
                 });
@@ -654,7 +655,7 @@ export class StatService extends CacheableService
                 console.log('Searching for teams:', gameData.teamNames, 'in season:', gameData.seasonId);
                 
                 // Let's also check what teams exist in this season
-                const allTeamsInSeason = await this.teamRepository.find({
+                const allTeamsInSeason = await queryRunner.manager.find(Teams, {
                     where: { season: { id: gameData.seasonId } },
                     relations: ["season"]
                 });
@@ -663,7 +664,7 @@ export class StatService extends CacheableService
                 // Search for each team individually (following the pattern from TeamService)
                 const teams: any[] = [];
                 for (const teamName of gameData.teamNames) {
-                    const team = await this.teamRepository.findOne({
+                    const team = await queryRunner.manager.findOne(Teams, {
                         where: { 
                             name: teamName,
                             season: { id: gameData.seasonId }
@@ -713,7 +714,7 @@ export class StatService extends CacheableService
                     }
 
                     // Find player by name
-                    const player = await this.playerRepository.findOne({
+                    const player = await queryRunner.manager.findOne(Players, {
                         where: { name: statData.playerName },
                         relations: ["teams"]
                     });
@@ -734,7 +735,7 @@ export class StatService extends CacheableService
                     }
 
                     // Check for duplicate stats
-                    const existingStat = await this.statRepository.findOne({
+                    const existingStat = await queryRunner.manager.findOne(Stats, {
                         where: {
                             player: { id: player.id },
                             game: { id: savedGame.id }
@@ -818,22 +819,22 @@ export class StatService extends CacheableService
             }
 
             // Fetch the existing game with teams
-            const game = await this.gameRepository.findOne({
-                where: { id: gameId },
-                relations: ["teams"]
-            });
-
-            if (!game) {
-                throw new NotFoundError(`Game with ID ${gameId} not found`);
-            }
-
-            console.log('Found game:', { id: game.id, name: game.name, teams: game.teams.map(t => t.name) });
-
-            // Start transaction
             const queryRunner = AppDataSource.createQueryRunner();
+            await queryRunner.connect();
             await queryRunner.startTransaction();
 
             try {
+                const game = await queryRunner.manager.findOne(Games, {
+                    where: { id: gameId },
+                    relations: ["teams"]
+                });
+
+                if (!game) {
+                    throw new NotFoundError(`Game with ID ${gameId} not found`);
+                }
+
+                console.log('Found game:', { id: game.id, name: game.name, teams: game.teams.map(t => t.name) });
+
                 // Create stats records
                 const statsToCreate: Stats[] = [];
                 const missingPlayers: string[] = [];
@@ -846,7 +847,7 @@ export class StatService extends CacheableService
                     }
 
                     // Find player by name
-                    const player = await this.playerRepository.findOne({
+                    const player = await queryRunner.manager.findOne(Players, {
                         where: { name: statData.playerName },
                         relations: ["teams"]
                     });
@@ -868,7 +869,7 @@ export class StatService extends CacheableService
                     }
 
                     // Check for duplicate stats
-                    const existingStat = await this.statRepository.findOne({
+                    const existingStat = await queryRunner.manager.findOne(Stats, {
                         where: {
                             player: { id: player.id },
                             game: { id: game.id }

@@ -215,25 +215,39 @@ export class UserService {
         const oldRole = target.role;
         target.role = desired;
         target.tokenVersion += 1;
-        const saved = await this.userRepository.save(target);
 
-        const auditEntry = new RoleAuditLog();
-        auditEntry.actorId = requester.id;
-        auditEntry.targetId = targetId;
-        auditEntry.oldRole = oldRole;
-        auditEntry.newRole = desired;
-        auditEntry.ip = audit?.ip ?? null;
-        await this.auditLogRepository.save(auditEntry);
+        const queryRunner = AppDataSource.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
 
-        console.info("[AUDIT] role_change", {
-            actorId: requester.id,
-            targetId,
-            oldRole,
-            newRole: desired,
-            ip: audit?.ip ?? null,
-            timestamp: new Date().toISOString(),
-        });
+        try {
+            const saved = await queryRunner.manager.save(target);
 
-        return saved;
+            const auditEntry = new RoleAuditLog();
+            auditEntry.actorId = requester.id;
+            auditEntry.targetId = targetId;
+            auditEntry.oldRole = oldRole;
+            auditEntry.newRole = desired;
+            auditEntry.ip = audit?.ip ?? null;
+            await queryRunner.manager.save(auditEntry);
+
+            await queryRunner.commitTransaction();
+
+            console.info("[AUDIT] role_change", {
+                actorId: requester.id,
+                targetId,
+                oldRole,
+                newRole: desired,
+                ip: audit?.ip ?? null,
+                timestamp: new Date().toISOString(),
+            });
+
+            return saved;
+        } catch (err) {
+            await queryRunner.rollbackTransaction();
+            throw err;
+        } finally {
+            await queryRunner.release();
+        }
     }
 }

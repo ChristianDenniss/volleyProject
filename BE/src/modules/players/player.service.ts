@@ -307,34 +307,49 @@ export class PlayerService extends CacheableService
             if (!playerData.teamIds || playerData.teamIds.length === 0) throw new MissingFieldError("Team IDs");
         });
 
-        // Fetch teams by their ids (for batch efficiency)
-        const teamIds = playersData.flatMap(playerData => playerData.teamIds);
-        const teams = await this.teamRepository.findBy({ id: In(teamIds) });
+        const queryRunner = AppDataSource.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
 
-        // Check for duplicate players (same name, same teams)
-        for (const playerData of playersData) {
-            const existingPlayer = await this.playerRepository.findOne({
-                where: { name: playerData.name, teams: { id: In(playerData.teamIds) } },
-            });
-            if (existingPlayer) {
-                throw new Error(`Player with name "${playerData.name}" already exists on one of the teams`);
+        try {
+            const playerRepository = queryRunner.manager.getRepository(Players);
+            const teamRepository = queryRunner.manager.getRepository(Teams);
+
+            // Fetch teams by their ids (for batch efficiency)
+            const teamIds = playersData.flatMap(playerData => playerData.teamIds);
+            const teams = await teamRepository.findBy({ id: In(teamIds) });
+
+            // Check for duplicate players (same name, same teams)
+            for (const playerData of playersData) {
+                const existingPlayer = await playerRepository.findOne({
+                    where: { name: playerData.name, teams: { id: In(playerData.teamIds) } },
+                });
+                if (existingPlayer) {
+                    throw new Error(`Player with name "${playerData.name}" already exists on one of the teams`);
+                }
             }
+
+            // Create players
+            const newPlayers = playersData.map(data => {
+                const playerTeams = teams.filter(team => data.teamIds.includes(team.id));
+
+                const newPlayer = new Players();
+                newPlayer.name = data.name;
+                newPlayer.position = data.position;
+                newPlayer.teams = playerTeams;
+
+                return newPlayer;
+            });
+
+            const saved = await playerRepository.save(newPlayers);
+            await queryRunner.commitTransaction();
+            return saved;
+        } catch (err) {
+            await queryRunner.rollbackTransaction();
+            throw err;
+        } finally {
+            await queryRunner.release();
         }
-
-        // Create players
-        const newPlayers = playersData.map(data => {
-            const playerTeams = teams.filter(team => data.teamIds.includes(team.id));
-
-            const newPlayer = new Players();
-            newPlayer.name = data.name;
-            newPlayer.position = data.position;
-            newPlayer.teams = playerTeams; // Associate player with multiple teams
-
-            return newPlayer;
-        });
-
-        // Save all new players at once
-        return this.playerRepository.save(newPlayers);
     }
 
     /**
@@ -345,13 +360,6 @@ export class PlayerService extends CacheableService
         playersData: { name: string, position: string, teamNames: string[] }[]
     ): Promise<Players[]> 
     {
-        
-
-        const season = await this.seasonRepository.findOne({ where: { id: seasonId } });
-        if (!season) {
-            throw new NotFoundError(`Season with ID ${seasonId} not found`);
-        }
-
         // Validate input
         playersData.forEach(playerData => {
             if (!playerData.name) throw new MissingFieldError("Player name");
@@ -361,78 +369,86 @@ export class PlayerService extends CacheableService
             }
         });
 
-        // Normalize and collect all unique team names (lowercased and trimmed)
-        const allTeamNames = [
-            ...new Set(playersData.flatMap(p => p.teamNames.map(n => n.trim().toLowerCase())))
-        ];
-        
+        const queryRunner = AppDataSource.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
 
-        // Fetch matching teams within the selected season only
-        const allTeams = await this.teamRepository
-            .createQueryBuilder("team")
-            .innerJoin("team.season", "season")
-            .where("season.id = :seasonId", { seasonId })
-            .andWhere("LOWER(team.name) IN (:...names)", { names: allTeamNames })
-            .getMany();
+        try {
+            const playerRepository = queryRunner.manager.getRepository(Players);
+            const teamRepository = queryRunner.manager.getRepository(Teams);
+            const seasonRepository = queryRunner.manager.getRepository(Seasons);
 
-        
-
-        const createdOrUpdatedPlayers: Players[] = [];
-
-        for (const playerData of playersData) 
-        {
-            
-
-            // Normalize incoming names
-            const normalizedTeamNames = playerData.teamNames.map(n => n.trim().toLowerCase());
-
-            // Match fetched teams
-            const playerTeams = allTeams.filter(team =>
-                normalizedTeamNames.includes(team.name.trim().toLowerCase())
-            );
-
-            if (playerTeams.length !== normalizedTeamNames.length) 
-            {
-                
-                throw new NotFoundError(`One or more teams not found in season ${seasonId} for player "${playerData.name}"`);
+            const season = await seasonRepository.findOne({ where: { id: seasonId } });
+            if (!season) {
+                throw new NotFoundError(`Season with ID ${seasonId} not found`);
             }
 
-            // Check if player already exists
-            let player = await this.playerRepository.findOne({
-                where: { name: playerData.name.toLowerCase() },
-                relations: ["teams"],
-            });
+            // Normalize and collect all unique team names (lowercased and trimmed)
+            const allTeamNames = [
+                ...new Set(playersData.flatMap(p => p.teamNames.map(n => n.trim().toLowerCase())))
+            ];
 
-            if (player) 
+            // Fetch matching teams within the selected season only
+            const allTeams = await teamRepository
+                .createQueryBuilder("team")
+                .innerJoin("team.season", "season")
+                .where("season.id = :seasonId", { seasonId })
+                .andWhere("LOWER(team.name) IN (:...names)", { names: allTeamNames })
+                .getMany();
+
+            const createdOrUpdatedPlayers: Players[] = [];
+
+            for (const playerData of playersData) 
             {
-                const newTeams = playerTeams.filter(team =>
-                    !player.teams.some(existing => existing.id === team.id)
+                const normalizedTeamNames = playerData.teamNames.map(n => n.trim().toLowerCase());
+
+                const playerTeams = allTeams.filter(team =>
+                    normalizedTeamNames.includes(team.name.trim().toLowerCase())
                 );
 
-                if (newTeams.length === 0) 
+                if (playerTeams.length !== normalizedTeamNames.length) 
                 {
-                    
-                    continue;
+                    throw new NotFoundError(`One or more teams not found in season ${seasonId} for player "${playerData.name}"`);
                 }
 
-                player.teams.push(...newTeams);
-                
-                createdOrUpdatedPlayers.push(await this.playerRepository.save(player));
-            } 
-            else 
-            {
-                const newPlayer = new Players();
-                newPlayer.name = playerData.name.toLowerCase();
-                newPlayer.position = playerData.position;
-                newPlayer.teams = playerTeams;
+                let player = await playerRepository.findOne({
+                    where: { name: playerData.name.toLowerCase() },
+                    relations: ["teams"],
+                });
 
-                
-                createdOrUpdatedPlayers.push(await this.playerRepository.save(newPlayer));
+                if (player) 
+                {
+                    const newTeams = playerTeams.filter(team =>
+                        !player.teams.some(existing => existing.id === team.id)
+                    );
+
+                    if (newTeams.length === 0) 
+                    {
+                        continue;
+                    }
+
+                    player.teams.push(...newTeams);
+                    createdOrUpdatedPlayers.push(await playerRepository.save(player));
+                } 
+                else 
+                {
+                    const newPlayer = new Players();
+                    newPlayer.name = playerData.name.toLowerCase();
+                    newPlayer.position = playerData.position;
+                    newPlayer.teams = playerTeams;
+
+                    createdOrUpdatedPlayers.push(await playerRepository.save(newPlayer));
+                }
             }
-        }
 
-        
-        return createdOrUpdatedPlayers;
+            await queryRunner.commitTransaction();
+            return createdOrUpdatedPlayers;
+        } catch (err) {
+            await queryRunner.rollbackTransaction();
+            throw err;
+        } finally {
+            await queryRunner.release();
+        }
     }
 
 
