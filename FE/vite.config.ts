@@ -14,7 +14,7 @@ export default defineConfig(({ mode }) => {
       strictPort: true,
     },
     build: {
-      sourcemap: true,
+      sourcemap: mode === 'production' ? 'hidden' : true,
       chunkSizeWarningLimit: 1000,
       rollupOptions: {
         output: {
