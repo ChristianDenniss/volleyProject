@@ -610,12 +610,6 @@ export class StatService extends CacheableService
      */
     async batchUploadFromCSV(gameData: any, statsData: any[]): Promise<{ game: Games, stats: Stats[] }> {
         try {
-            console.log('=== CSV UPLOAD DEBUG ===');
-            console.log('Raw gameData:', JSON.stringify(gameData, null, 2));
-            console.log('Raw teamNames:', gameData.teamNames);
-            console.log('Team names type:', typeof gameData.teamNames);
-            console.log('Team names length:', gameData.teamNames?.length);
-            console.log('Season ID:', gameData.seasonId, 'Type:', typeof gameData.seasonId);
             
             // Validate game data
             if (!gameData.date || !gameData.seasonId || !gameData.teamNames || !gameData.stage) {
@@ -649,7 +643,6 @@ export class StatService extends CacheableService
                 if (!season) {
                     throw new NotFoundError(`Season with ID ${gameData.seasonId} not found`);
                 }
-                console.log('Found season:', { id: season.id });
 
                 const teams = await queryRunner.manager.find(Teams, {
                     where: {
@@ -769,7 +762,6 @@ export class StatService extends CacheableService
                 throw error;
             } finally {
                 // Release query runner
-                console.log("Releasing query runner");
                 await queryRunner.release();
             }
 
@@ -789,9 +781,6 @@ export class StatService extends CacheableService
      */
     async addStatsToExistingGame(gameId: number, statsData: any[]): Promise<Stats[]> {
         try {
-            console.log('=== ADD STATS TO EXISTING GAME DEBUG ===');
-            console.log('Game ID:', gameId);
-            console.log('Stats data length:', statsData.length);
             
             // Validate input
             if (!gameId) {
@@ -906,7 +895,6 @@ export class StatService extends CacheableService
                 // Commit transaction
                 await queryRunner.commitTransaction();
 
-                console.log('Successfully added', savedStats.length, 'stats to game', gameId);
                 return savedStats;
 
             } catch (error) {
@@ -916,7 +904,6 @@ export class StatService extends CacheableService
                 throw error;
             } finally {
                 // Release query runner
-                console.log("Releasing query runner");
                 await queryRunner.release();
             }
 
