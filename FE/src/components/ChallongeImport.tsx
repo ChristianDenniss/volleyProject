@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { authFetch } from '../hooks/authFetch';
 import { useAuth } from '../context/authContext';
+import { BACKEND_URL } from '../constants/api';
 import { useFormRegionSeason } from '../hooks/useFormRegionSeason';
 import RegionSeasonFields from './ui/RegionSeasonFields';
 import type { ImportChallongeInput, ChallongeImportResult } from '../types/interfaces';
@@ -66,7 +67,7 @@ const ChallongeImport: React.FC<ChallongeImportProps> = ({ onImportSuccess, onCa
         tags: formData.tags,
       };
 
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+      const backendUrl = BACKEND_URL;
       const response = await authFetch(`${backendUrl}/api/games/import-challonge`, {
         method: 'POST',
         body: JSON.stringify(payload),

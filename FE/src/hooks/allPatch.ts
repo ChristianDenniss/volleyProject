@@ -14,9 +14,9 @@ import type {
   Award,
   Application,
 } from "../types/interfaces";
+import { BACKEND_URL } from "../constants/api";
 
-const backendUrl =
-  import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+const backendUrl = BACKEND_URL;
 
 /**
  * Hook returning a `patchSeason` fn for updating seasons.

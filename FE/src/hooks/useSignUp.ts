@@ -1,5 +1,6 @@
 // src/hooks/useSignup.ts
 import { useState } from "react";
+import { BACKEND_URL } from "../constants/api";
 
 export function useSignup()
 {
@@ -11,7 +12,7 @@ export function useSignup()
     const clearError = () => setError(null);
 
     // base URL (env or fallback)
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+    const backendUrl = BACKEND_URL;
 
     // signup function
     async function signup(username: string, password: string, email: string)

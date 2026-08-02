@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/authContext';
 import { authFetch } from './authFetch';
+import { BACKEND_URL } from '../constants/api';
 
 interface UseLikeStatusReturn {
   hasLiked: boolean;
@@ -9,7 +10,7 @@ interface UseLikeStatusReturn {
   refetch: () => void;
 }
 
-const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+const backendUrl = BACKEND_URL;
 
 export function useLikeStatus(articleId: number): UseLikeStatusReturn {
   const [hasLiked, setHasLiked] = useState(false);

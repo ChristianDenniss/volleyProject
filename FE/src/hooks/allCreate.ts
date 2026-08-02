@@ -6,6 +6,7 @@ import { Game,Player,Stats,Team,Season,Article,CreateGameInput,Award, CreateAwar
 import { useState } from "react";
 import { authFetch } from "./authFetch";
 import { useAuth } from "../context/authContext";
+import { BACKEND_URL } from "../constants/api";
 
 /**
  * useCreatePlayers
@@ -133,7 +134,7 @@ export const useCSVUpload = (showErrorModal?: (err: any) => void) => {
       return null;
     }
 
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+    const backendUrl = BACKEND_URL;
     try {
       const response = await authFetch(
         `${backendUrl}/api/stats/batch-csv`,
@@ -201,7 +202,7 @@ export const useAddStatsToExistingGame = (showErrorModal?: (err: any) => void) =
       return null;
     }
 
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+    const backendUrl = BACKEND_URL;
     try {
       const response = await authFetch(
         `${backendUrl}/api/stats/add-to-game`,
@@ -269,7 +270,7 @@ export const useCalculateRecords = (showErrorModal?: (err: any) => void) => {
       return false;
     }
 
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+    const backendUrl = BACKEND_URL;
     try {
       const response = await authFetch(
         `${backendUrl}/api/records/calculate`,
