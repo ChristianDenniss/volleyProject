@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { authFetch } from "./authFetch";
 import { useAuth } from "../context/authContext";
+import { BACKEND_URL } from "../constants/api";
 import type { PaginatedResponse } from "../types/interfaces";
 
 export interface PaginationParams {
@@ -27,7 +28,7 @@ export const usePaginatedFetch = <T>(
     const [error, setError] = useState<string | null>(null);
     const { token } = useAuth();
 
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+    const backendUrl = BACKEND_URL;
 
     // Stable key so the effect only re-runs when a param value actually changes
     const paramsKey = JSON.stringify(params);

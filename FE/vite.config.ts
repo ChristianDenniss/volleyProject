@@ -7,6 +7,10 @@ export default defineConfig(({ mode }) => {
     throw new Error('FATAL: VITE_USE_MSW must not be enabled in production builds.');
   }
 
+  if (mode === 'production' && !process.env.VITE_BACKEND_URL) {
+    throw new Error('FATAL: VITE_BACKEND_URL must be set for production builds.');
+  }
+
   return {
     plugins: [react()],
     server: {
@@ -14,7 +18,7 @@ export default defineConfig(({ mode }) => {
       strictPort: true,
     },
     build: {
-      sourcemap: true,
+      sourcemap: mode === 'production' ? 'hidden' : true,
       chunkSizeWarningLimit: 1000,
       rollupOptions: {
         output: {

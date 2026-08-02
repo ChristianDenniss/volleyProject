@@ -1,6 +1,7 @@
 // src/hooks/useUsers.ts
 import { useState, useCallback, useEffect } from "react";
 import { authFetch }             from "./authFetch";
+import { BACKEND_URL } from "../constants/api";
 import type { User } from "../types/interfaces";
 import { useAuth } from "../context/authContext";
 import { usePaginatedFetch, PaginationParams, DEFAULT_PAGINATION } from "./usePaginatedFetch";
@@ -14,7 +15,7 @@ export interface UserListParams extends PaginationParams {
 export const useUsers = (params: UserListParams = DEFAULT_PAGINATION) =>
 {
     const { token, isAuthenticated } = useAuth();
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+    const backendUrl = BACKEND_URL;
 
     const { data, total, totalPages, page, limit, loading, error } =
         usePaginatedFetch<User>("users", params);
