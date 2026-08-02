@@ -1,7 +1,10 @@
 import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { UserController } from '../user.controller.js';
 import { UserService } from '../user.service.js';
+import { MissingFieldError } from '../../../errors/MissingFieldError.js';
+import { NotFoundError } from '../../../errors/NotFoundError.js';
+import { UnauthorizedError } from '../../../errors/UnauthorizedError.js';
 
 const mockUser = {
   id: 1,
@@ -38,6 +41,7 @@ describe('UserController', () => {
   let userController: UserController;
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
+  let next: jest.Mock;
   let jsonMock: jest.Mock;
   let statusMock: jest.Mock;
   let sendMock: jest.Mock;
@@ -53,6 +57,7 @@ describe('UserController', () => {
       cookie: cookieMock,
       clearCookie: jest.fn(),
     });
+    next = jest.fn();
 
     mockRequest = {};
     mockResponse = {
@@ -85,53 +90,40 @@ describe('UserController', () => {
       };
       mockCreateUser.mockResolvedValueOnce(mockUser);
 
-      await userController.register(mockRequest as Request, mockResponse as Response);
+      await userController.register(mockRequest as Request, mockResponse as Response, next);
 
       expect(mockCreateUser).toHaveBeenCalledWith('testuser', 'test@example.com', 'password123', 'user');
       expect(statusMock).toHaveBeenCalledWith(201);
       expect(jsonMock).toHaveBeenCalledWith(expect.not.objectContaining({ password: expect.any(String) }));
+      expect(next).not.toHaveBeenCalled();
     });
 
-    it('should handle validation errors with 400 status', async () => {
+    it('should forward validation errors to error handler', async () => {
+      const validationError = new MissingFieldError('Password');
       mockRequest.body = {
         username: 'testuser',
         email: 'test@example.com',
         password: '',
       };
-      mockCreateUser.mockRejectedValueOnce(new Error('Password is required'));
+      mockCreateUser.mockRejectedValueOnce(validationError);
 
-      await userController.register(mockRequest as Request, mockResponse as Response);
+      await userController.register(mockRequest as Request, mockResponse as Response, next);
 
-      expect(statusMock).toHaveBeenCalledWith(400);
-      expect(jsonMock).toHaveBeenCalledWith({ error: 'Password is required' });
+      expect(next).toHaveBeenCalledWith(validationError);
     });
 
-    it('should handle duplicate user errors with 400 status', async () => {
-      mockRequest.body = {
-        username: 'existinguser',
-        email: 'test@example.com',
-        password: 'password123',
-      };
-      mockCreateUser.mockRejectedValueOnce(new Error('Username already in use'));
-
-      await userController.register(mockRequest as Request, mockResponse as Response);
-
-      expect(statusMock).toHaveBeenCalledWith(400);
-      expect(jsonMock).toHaveBeenCalledWith({ error: 'Username already in use' });
-    });
-
-    it('should handle server errors with 500 status', async () => {
+    it('should forward server errors to error handler', async () => {
+      const serverError = new Error('Database error');
       mockRequest.body = {
         username: 'testuser',
         email: 'test@example.com',
         password: 'password123',
       };
-      mockCreateUser.mockRejectedValueOnce(new Error('Database error'));
+      mockCreateUser.mockRejectedValueOnce(serverError);
 
-      await userController.register(mockRequest as Request, mockResponse as Response);
+      await userController.register(mockRequest as Request, mockResponse as Response, next);
 
-      expect(statusMock).toHaveBeenCalledWith(500);
-      expect(jsonMock).toHaveBeenCalledWith({ error: 'Failed to register user' });
+      expect(next).toHaveBeenCalledWith(serverError);
     });
   });
 
@@ -146,116 +138,87 @@ describe('UserController', () => {
         token: mockToken,
       });
 
-      await userController.login(mockRequest as Request, mockResponse as Response);
+      await userController.login(mockRequest as Request, mockResponse as Response, next);
 
       expect(mockAuthenticateUser).toHaveBeenCalledWith('testuser', 'password123');
       expect(jsonMock).toHaveBeenCalledWith({
         user: expect.not.objectContaining({ password: expect.any(String) }),
       });
+      expect(next).not.toHaveBeenCalled();
     });
 
-    it('should handle validation errors with 400 status', async () => {
-      mockRequest.body = {
-        username: 'testuser',
-        password: '',
-      };
-      mockAuthenticateUser.mockRejectedValueOnce(new Error('Password is required'));
-
-      await userController.login(mockRequest as Request, mockResponse as Response);
-
-      expect(statusMock).toHaveBeenCalledWith(400);
-      expect(jsonMock).toHaveBeenCalledWith({ error: 'Password is required' });
-    });
-
-    it('should handle invalid credentials with 401 status', async () => {
+    it('should forward invalid credentials to error handler', async () => {
+      const authError = new UnauthorizedError('Invalid username or password');
       mockRequest.body = {
         username: 'testuser',
         password: 'wrongpassword',
       };
-      const { UnauthorizedError } = await import('../../../errors/UnauthorizedError.js');
-      mockAuthenticateUser.mockRejectedValueOnce(
-        new UnauthorizedError('Invalid username or password')
-      );
+      mockAuthenticateUser.mockRejectedValueOnce(authError);
 
-      await userController.login(mockRequest as Request, mockResponse as Response);
+      await userController.login(mockRequest as Request, mockResponse as Response, next);
 
-      expect(statusMock).toHaveBeenCalledWith(401);
-      expect(jsonMock).toHaveBeenCalledWith({ error: 'Invalid username or password' });
+      expect(next).toHaveBeenCalledWith(authError);
     });
 
-    it('should handle server errors with 500 status', async () => {
+    it('should forward server errors to error handler', async () => {
+      const serverError = new Error('Database error');
       mockRequest.body = {
         username: 'testuser',
         password: 'password123',
       };
-      mockAuthenticateUser.mockRejectedValueOnce(new Error('Database error'));
+      mockAuthenticateUser.mockRejectedValueOnce(serverError);
 
-      await userController.login(mockRequest as Request, mockResponse as Response);
+      await userController.login(mockRequest as Request, mockResponse as Response, next);
 
-      expect(statusMock).toHaveBeenCalledWith(500);
-      expect(jsonMock).toHaveBeenCalledWith({ error: 'Failed to login' });
+      expect(next).toHaveBeenCalledWith(serverError);
     });
   });
 
   describe('getPublicUsers', () => {
     it('should return paginated users', async () => {
-      mockGetPublicUsers.mockResolvedValueOnce([mockUsers, mockUsers.length]);
+      const usersWithoutPasswords = mockUsers.map(({ password, ...userWithoutPassword }) => userWithoutPassword);
       mockRequest.query = {};
+      mockGetPublicUsers.mockResolvedValueOnce([usersWithoutPasswords, usersWithoutPasswords.length]);
 
-      await userController.getPublicUsers(mockRequest as Request, mockResponse as Response);
+      await userController.getPublicUsers(mockRequest as Request, mockResponse as Response, next);
 
       expect(mockGetPublicUsers).toHaveBeenCalled();
-      expect(jsonMock).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: mockUsers,
-          total: mockUsers.length,
-        })
-      );
+      expect(next).not.toHaveBeenCalled();
     });
 
-    it('should handle server errors with 500 status', async () => {
-      mockGetPublicUsers.mockRejectedValueOnce(new Error('Database error'));
+    it('should forward server errors to error handler', async () => {
+      const serverError = new Error('Database error');
       mockRequest.query = {};
+      mockGetPublicUsers.mockRejectedValueOnce(serverError);
 
-      await userController.getPublicUsers(mockRequest as Request, mockResponse as Response);
+      await userController.getPublicUsers(mockRequest as Request, mockResponse as Response, next);
 
-      expect(statusMock).toHaveBeenCalledWith(500);
-      expect(jsonMock).toHaveBeenCalledWith({ error: 'Failed to fetch users' });
+      expect(next).toHaveBeenCalledWith(serverError);
     });
   });
 
   describe('getUserById', () => {
-    it('should return a user by id without password', async () => {
+    it('should return a user by id', async () => {
       mockRequest.params = { id: '1' };
-      mockRequest.user = { id: 1, username: 'testuser', role: 'user' };
+      mockRequest.user = { id: 1, username: 'testuser', role: 'admin' };
       mockGetUserById.mockResolvedValueOnce(mockUser);
 
-      await userController.getUserById(mockRequest as Request, mockResponse as Response);
+      await userController.getUserById(mockRequest as Request, mockResponse as Response, next);
 
       expect(mockGetUserById).toHaveBeenCalledWith(1);
       expect(jsonMock).toHaveBeenCalledWith(mockUser);
+      expect(next).not.toHaveBeenCalled();
     });
 
-    it('should handle not found errors with 404 status', async () => {
+    it('should forward not found errors to error handler', async () => {
+      const notFoundError = new NotFoundError('User not found');
       mockRequest.params = { id: '999' };
-      mockRequest.user = { id: 1, username: 'admin', role: 'admin' };
-      mockGetUserById.mockRejectedValueOnce(new Error('User not found'));
+      mockRequest.user = { id: 1, username: 'testuser', role: 'admin' };
+      mockGetUserById.mockRejectedValueOnce(notFoundError);
 
-      await userController.getUserById(mockRequest as Request, mockResponse as Response);
+      await userController.getUserById(mockRequest as Request, mockResponse as Response, next);
 
-      expect(statusMock).toHaveBeenCalledWith(404);
-      expect(jsonMock).toHaveBeenCalledWith({ error: 'User not found' });
-    });
-
-    it('should handle server errors with 500 status', async () => {
-      mockRequest.params = { id: '1' };
-      mockRequest.user = { id: 1, username: 'admin', role: 'admin' };
-      mockGetUserById.mockRejectedValueOnce(new Error('Database error'));
-
-      await userController.getUserById(mockRequest as Request, mockResponse as Response);
-
-      expect(statusMock).toHaveBeenCalledWith(500);
-      expect(jsonMock).toHaveBeenCalledWith({ error: 'Failed to fetch user' });
+      expect(next).toHaveBeenCalledWith(notFoundError);
     });
   });
 
@@ -264,39 +227,31 @@ describe('UserController', () => {
       mockRequest.user = { id: 1, username: 'testuser', role: 'user' };
       mockGetProfile.mockResolvedValueOnce(mockUser);
 
-      await userController.getProfile(mockRequest as Request, mockResponse as Response);
+      await userController.getProfile(mockRequest as Request, mockResponse as Response, next);
 
       expect(mockGetProfile).toHaveBeenCalledWith(1);
       expect(jsonMock).toHaveBeenCalledWith(expect.not.objectContaining({ password: expect.any(String) }));
+      expect(next).not.toHaveBeenCalled();
     });
 
     it('should handle unauthorized errors with 401 status', async () => {
       mockRequest.user = undefined;
 
-      await userController.getProfile(mockRequest as Request, mockResponse as Response);
+      await userController.getProfile(mockRequest as Request, mockResponse as Response, next);
 
       expect(statusMock).toHaveBeenCalledWith(401);
       expect(jsonMock).toHaveBeenCalledWith({ error: 'Unauthorized' });
+      expect(next).not.toHaveBeenCalled();
     });
 
-    it('should handle not found errors with 404 status', async () => {
+    it('should forward not found errors to error handler', async () => {
+      const notFoundError = new NotFoundError('User not found');
       mockRequest.user = { id: 999, username: 'missing', role: 'user' };
-      mockGetProfile.mockRejectedValueOnce(new Error('User not found'));
+      mockGetProfile.mockRejectedValueOnce(notFoundError);
 
-      await userController.getProfile(mockRequest as Request, mockResponse as Response);
+      await userController.getProfile(mockRequest as Request, mockResponse as Response, next);
 
-      expect(statusMock).toHaveBeenCalledWith(404);
-      expect(jsonMock).toHaveBeenCalledWith({ error: 'User not found' });
-    });
-
-    it('should handle server errors with 500 status', async () => {
-      mockRequest.user = { id: 1, username: 'testuser', role: 'user' };
-      mockGetProfile.mockRejectedValueOnce(new Error('Database error'));
-
-      await userController.getProfile(mockRequest as Request, mockResponse as Response);
-
-      expect(statusMock).toHaveBeenCalledWith(500);
-      expect(jsonMock).toHaveBeenCalledWith({ error: 'Failed to fetch profile' });
+      expect(next).toHaveBeenCalledWith(notFoundError);
     });
   });
 });

@@ -20,6 +20,7 @@ import {
     buildTeamLeaderboardSql,
     countParamsFrom,
 } from './stat.leaderboard.js';
+import { CreateStatDto, UpdateStatDto, CreateStatByNameDto } from './stat.schema.js';
 
 export interface StatFilters {
     search?: string;
@@ -47,30 +48,26 @@ export class StatService extends CacheableService
     /**
      * Create a new stat entry with validation
      */
-    async createStat(
-        spikingErrors: number,
-        apeKills: number,
-        apeAttempts: number,
-        spikeKills: number,
-        spikeAttempts: number,
-        assists: number,
-
-        // new: setting errors count
-        settingErrors: number,
-
-        blocks: number,
-        digs: number,
-        blockFollows: number,
-        aces: number,
-
-        // new: serving errors count
-        servingErrors: number,
-
-        miscErrors: number,
-        playerId: number,
-        gameId: number
-    ): Promise<Stats>
+    async createStat(dto: CreateStatDto): Promise<Stats>
     {
+        const {
+            spikingErrors,
+            apeKills,
+            apeAttempts,
+            spikeKills,
+            spikeAttempts,
+            assists,
+            settingErrors,
+            blocks,
+            digs,
+            blockFollows,
+            aces,
+            servingErrors,
+            miscErrors,
+            playerId,
+            gameId,
+        } = dto;
+
         // Validation for required fields
         if (spikingErrors === undefined) throw new MissingFieldError("Spiking Errors");
         if (apeKills === undefined)      throw new MissingFieldError("Ape kills");
@@ -174,31 +171,26 @@ export class StatService extends CacheableService
     /**
      * Update a stat entry with validation
      */
-    async updateStat(
-        id: number,
-        spikingErrors?: number,
-        apeKills?: number,
-        apeAttempts?: number,
-        spikeKills?: number,
-        spikeAttempts?: number,
-        assists?: number,
-
-        // new: setting errors
-        settingErrors?: number,
-
-        blocks?: number,
-        digs?: number,
-        blockFollows?: number,
-        aces?: number,
-
-        // new: serving errors
-        servingErrors?: number,
-
-        miscErrors?: number,
-        playerId?: number,
-        gameId?: number
-    ): Promise<Stats>
+    async updateStat(id: number, dto: UpdateStatDto): Promise<Stats>
     {
+        const {
+            spikingErrors,
+            apeKills,
+            apeAttempts,
+            spikeKills,
+            spikeAttempts,
+            assists,
+            settingErrors,
+            blocks,
+            digs,
+            blockFollows,
+            aces,
+            servingErrors,
+            miscErrors,
+            playerId,
+            gameId,
+        } = dto;
+
         if (!id) throw new MissingFieldError("Stat ID");
 
         const stat = await this.statRepository.findOne({
@@ -490,31 +482,26 @@ export class StatService extends CacheableService
     /**
      * Create a new stat entry by player username (instead of ID), with validation
      */
-    async createStatByUsername
-    (
-        spikingErrors: number,
-        apeKills: number,
-        apeAttempts: number,
-        spikeKills: number,
-        spikeAttempts: number,
-        assists: number,
-
-        // new: setting errors count
-        settingErrors: number,
-
-        blocks: number,
-        digs: number,
-        blockFollows: number,
-        aces: number,
-
-        // new: serving errors count
-        servingErrors: number,
-
-        miscErrors: number,
-        username: string,
-        gameId: number
-    ): Promise<Stats>
+    async createStatByUsername(dto: CreateStatByNameDto): Promise<Stats>
     {
+        const {
+            spikingErrors,
+            apeKills,
+            apeAttempts,
+            spikeKills,
+            spikeAttempts,
+            assists,
+            settingErrors,
+            blocks,
+            digs,
+            blockFollows,
+            aces,
+            servingErrors,
+            miscErrors,
+            playerName: username,
+            gameId,
+        } = dto;
+
         // Required-field validation
         if (spikingErrors === undefined)      throw new MissingFieldError("Spiking Errors");
         if (apeKills === undefined)           throw new MissingFieldError("Ape kills");
@@ -610,12 +597,6 @@ export class StatService extends CacheableService
      */
     async batchUploadFromCSV(gameData: any, statsData: any[]): Promise<{ game: Games, stats: Stats[] }> {
         try {
-            console.log('=== CSV UPLOAD DEBUG ===');
-            console.log('Raw gameData:', JSON.stringify(gameData, null, 2));
-            console.log('Raw teamNames:', gameData.teamNames);
-            console.log('Team names type:', typeof gameData.teamNames);
-            console.log('Team names length:', gameData.teamNames?.length);
-            console.log('Season ID:', gameData.seasonId, 'Type:', typeof gameData.seasonId);
             
             // Validate game data
             if (!gameData.date || !gameData.seasonId || !gameData.teamNames || !gameData.stage) {
@@ -649,7 +630,6 @@ export class StatService extends CacheableService
                 if (!season) {
                     throw new NotFoundError(`Season with ID ${gameData.seasonId} not found`);
                 }
-                console.log('Found season:', { id: season.id });
 
                 const teams = await queryRunner.manager.find(Teams, {
                     where: {
@@ -769,7 +749,6 @@ export class StatService extends CacheableService
                 throw error;
             } finally {
                 // Release query runner
-                console.log("Releasing query runner");
                 await queryRunner.release();
             }
 
@@ -789,9 +768,6 @@ export class StatService extends CacheableService
      */
     async addStatsToExistingGame(gameId: number, statsData: any[]): Promise<Stats[]> {
         try {
-            console.log('=== ADD STATS TO EXISTING GAME DEBUG ===');
-            console.log('Game ID:', gameId);
-            console.log('Stats data length:', statsData.length);
             
             // Validate input
             if (!gameId) {
@@ -906,7 +882,6 @@ export class StatService extends CacheableService
                 // Commit transaction
                 await queryRunner.commitTransaction();
 
-                console.log('Successfully added', savedStats.length, 'stats to game', gameId);
                 return savedStats;
 
             } catch (error) {
@@ -916,7 +891,6 @@ export class StatService extends CacheableService
                 throw error;
             } finally {
                 // Release query runner
-                console.log("Releasing query runner");
                 await queryRunner.release();
             }
 

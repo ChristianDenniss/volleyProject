@@ -13,10 +13,12 @@ const mockStat = {
     spikeKills: 8,
     spikeAttempts: 15,
     assists: 3,
+    settingErrors: 0,
     blocks: 4,
     digs: 6,
     blockFollows: 2,
     aces: 1,
+    servingErrors: 0,
     miscErrors: 0,
     playerId: 1,
     gameId: 1,
@@ -76,7 +78,7 @@ describe('StatController', () => {
 
             await statController.createStat(mockRequest, mockResponse, next);
 
-            expect(mockCreateStat).toHaveBeenCalled();
+            expect(mockCreateStat).toHaveBeenCalledWith(mockStat);
             expect(statusMock).toHaveBeenCalledWith(201);
             expect(jsonMock).toHaveBeenCalledWith(mockStat);
             expect(next).not.toHaveBeenCalled();
