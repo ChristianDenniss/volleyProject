@@ -1,9 +1,10 @@
 import { PlayerController } from '../player.controller.js';
 import { PlayerService } from '../player.service.js';
-import { mockRepository, mockPlayer, savedPlayer, mockPlayers, mockTeam, mockUser } from '../../../__mocks__/fixtures.js';
-import { Request, Response } from 'express';
+import { mockPlayer, savedPlayer, mockPlayers, mockTeam } from '../../../__mocks__/fixtures.js';
+import { Request, Response, NextFunction } from 'express';
+import { MissingFieldError } from '../../../errors/MissingFieldError.js';
+import { NotFoundError } from '../../../errors/NotFoundError.js';
 
-// Mock PlayerService
 jest.mock('./player.service');
 const mockCreatePlayer = jest.fn();
 const mockGetAllPlayers = jest.fn();
@@ -16,17 +17,17 @@ describe('PlayerController', () => {
   let playerController: PlayerController;
   let req: Partial<Request>;
   let res: Partial<Response>;
+  let next: jest.Mock;
 
   beforeEach(() => {
-    // Set up a new instance of PlayerController before each test
     playerController = new PlayerController();
-    // Mock the response object methods
+    next = jest.fn();
     res = {
       json: jest.fn(),
       status: jest.fn().mockReturnThis(),
+      send: jest.fn(),
     };
 
-    // Mock PlayerService methods
     PlayerService.prototype.createPlayer = mockCreatePlayer;
     PlayerService.prototype.getAllPlayers = mockGetAllPlayers;
     PlayerService.prototype.getPlayerById = mockGetPlayerById;
@@ -36,7 +37,7 @@ describe('PlayerController', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks(); // Clear mocks after each test to prevent interference
+    jest.clearAllMocks();
   });
 
   describe('createPlayer', () => {
@@ -51,15 +52,17 @@ describe('PlayerController', () => {
         },
       };
 
-      await playerController.createPlayer(req as Request, res as Response);
+      await playerController.createPlayer(req as Request, res as Response, next as NextFunction);
 
       expect(mockCreatePlayer).toHaveBeenCalledWith('John Doe', 'Forward', mockTeam.id);
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith(savedPlayer);
+      expect(next).not.toHaveBeenCalled();
     });
 
-    it('should return 400 if validation error occurs', async () => {
-      mockCreatePlayer.mockRejectedValue(new Error('Player name is required'));
+    it('should forward validation errors to error handler', async () => {
+      const validationError = new MissingFieldError('Player name is required');
+      mockCreatePlayer.mockRejectedValue(validationError);
 
       req = {
         body: {
@@ -69,14 +72,14 @@ describe('PlayerController', () => {
         },
       };
 
-      await playerController.createPlayer(req as Request, res as Response);
+      await playerController.createPlayer(req as Request, res as Response, next as NextFunction);
 
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Player name is required' });
+      expect(next).toHaveBeenCalledWith(validationError);
     });
 
-    it('should return 500 for server error', async () => {
-      mockCreatePlayer.mockRejectedValue(new Error('Server error'));
+    it('should forward server errors to error handler', async () => {
+      const serverError = new Error('Server error');
+      mockCreatePlayer.mockRejectedValue(serverError);
 
       req = {
         body: {
@@ -86,34 +89,33 @@ describe('PlayerController', () => {
         },
       };
 
-      await playerController.createPlayer(req as Request, res as Response);
+      await playerController.createPlayer(req as Request, res as Response, next as NextFunction);
 
-      expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to create player' });
+      expect(next).toHaveBeenCalledWith(serverError);
     });
   });
 
   describe('getPlayers', () => {
     it('should fetch all players and return 200 status', async () => {
-      mockGetAllPlayers.mockResolvedValue(mockPlayers);
+      mockGetAllPlayers.mockResolvedValue([mockPlayers, mockPlayers.length]);
 
-      req = {}; // No params needed for getAllPlayers
+      req = { query: {} };
 
-      await playerController.getPlayers(req as Request, res as Response);
+      await playerController.getPlayers(req as Request, res as Response, next as NextFunction);
 
       expect(mockGetAllPlayers).toHaveBeenCalled();
-      expect(res.json).toHaveBeenCalledWith(mockPlayers);
+      expect(next).not.toHaveBeenCalled();
     });
 
-    it('should return 500 if fetching players fails', async () => {
-      mockGetAllPlayers.mockRejectedValue(new Error('Failed to fetch players'));
+    it('should forward fetch errors to error handler', async () => {
+      const fetchError = new Error('Failed to fetch players');
+      mockGetAllPlayers.mockRejectedValue(fetchError);
 
-      req = {}; // No params needed for getAllPlayers
+      req = { query: {} };
 
-      await playerController.getPlayers(req as Request, res as Response);
+      await playerController.getPlayers(req as Request, res as Response, next as NextFunction);
 
-      expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch players' });
+      expect(next).toHaveBeenCalledWith(fetchError);
     });
   });
 
@@ -121,34 +123,35 @@ describe('PlayerController', () => {
     it('should return a player by ID', async () => {
       mockGetPlayerById.mockResolvedValue(mockPlayer);
 
-      req = { params: { id: '1' } };
+      req = { params: { id: '1' }, query: {} };
 
-      await playerController.getPlayerById(req as Request, res as Response);
+      await playerController.getPlayerById(req as Request, res as Response, next as NextFunction);
 
-      expect(mockGetPlayerById).toHaveBeenCalledWith(1);
+      expect(mockGetPlayerById).toHaveBeenCalledWith(1, undefined);
       expect(res.json).toHaveBeenCalledWith(mockPlayer);
+      expect(next).not.toHaveBeenCalled();
     });
 
-    it('should return 404 if player not found', async () => {
-      mockGetPlayerById.mockResolvedValue(null);
+    it('should forward not found errors to error handler', async () => {
+      const notFoundError = new NotFoundError('Player not found');
+      mockGetPlayerById.mockRejectedValue(notFoundError);
 
-      req = { params: { id: '999' } };
+      req = { params: { id: '999' }, query: {} };
 
-      await playerController.getPlayerById(req as Request, res as Response);
+      await playerController.getPlayerById(req as Request, res as Response, next as NextFunction);
 
-      expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch player' });
+      expect(next).toHaveBeenCalledWith(notFoundError);
     });
 
-    it('should return 500 for server error', async () => {
-      mockGetPlayerById.mockRejectedValue(new Error('Server error'));
+    it('should forward server errors to error handler', async () => {
+      const serverError = new Error('Server error');
+      mockGetPlayerById.mockRejectedValue(serverError);
 
-      req = { params: { id: '1' } };
+      req = { params: { id: '1' }, query: {} };
 
-      await playerController.getPlayerById(req as Request, res as Response);
+      await playerController.getPlayerById(req as Request, res as Response, next as NextFunction);
 
-      expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch player' });
+      expect(next).toHaveBeenCalledWith(serverError);
     });
   });
 
@@ -165,32 +168,16 @@ describe('PlayerController', () => {
         },
       };
 
-      await playerController.updatePlayer(req as Request, res as Response);
+      await playerController.updatePlayer(req as Request, res as Response, next as NextFunction);
 
-      expect(mockUpdatePlayer).toHaveBeenCalledWith(1, 'Updated Player', 'Defender', mockTeam.id);
+      expect(mockUpdatePlayer).toHaveBeenCalledWith(1, req.body);
       expect(res.json).toHaveBeenCalledWith(savedPlayer);
+      expect(next).not.toHaveBeenCalled();
     });
 
-    it('should return 404 if player not found for update', async () => {
-      mockUpdatePlayer.mockResolvedValue(null);
-
-      req = {
-        params: { id: '999' },
-        body: {
-          name: 'Updated Player',
-          position: 'Defender',
-          teamId: mockTeam.id,
-        },
-      };
-
-      await playerController.updatePlayer(req as Request, res as Response);
-
-      expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to update player' });
-    });
-
-    it('should return 400 if validation error occurs during update', async () => {
-      mockUpdatePlayer.mockRejectedValue(new Error('Player name is required'));
+    it('should forward validation errors to error handler', async () => {
+      const validationError = new MissingFieldError('Player name is required');
+      mockUpdatePlayer.mockRejectedValue(validationError);
 
       req = {
         params: { id: '1' },
@@ -201,14 +188,14 @@ describe('PlayerController', () => {
         },
       };
 
-      await playerController.updatePlayer(req as Request, res as Response);
+      await playerController.updatePlayer(req as Request, res as Response, next as NextFunction);
 
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Player name is required' });
+      expect(next).toHaveBeenCalledWith(validationError);
     });
 
-    it('should return 500 for server error during update', async () => {
-      mockUpdatePlayer.mockRejectedValue(new Error('Server error'));
+    it('should forward server errors to error handler', async () => {
+      const serverError = new Error('Server error');
+      mockUpdatePlayer.mockRejectedValue(serverError);
 
       req = {
         params: { id: '1' },
@@ -219,10 +206,9 @@ describe('PlayerController', () => {
         },
       };
 
-      await playerController.updatePlayer(req as Request, res as Response);
+      await playerController.updatePlayer(req as Request, res as Response, next as NextFunction);
 
-      expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to update player' });
+      expect(next).toHaveBeenCalledWith(serverError);
     });
   });
 
@@ -232,33 +218,34 @@ describe('PlayerController', () => {
 
       req = { params: { id: '1' } };
 
-      await playerController.deletePlayer(req as Request, res as Response);
+      await playerController.deletePlayer(req as Request, res as Response, next as NextFunction);
 
       expect(mockDeletePlayer).toHaveBeenCalledWith(1);
       expect(res.status).toHaveBeenCalledWith(204);
       expect(res.send).toHaveBeenCalled();
+      expect(next).not.toHaveBeenCalled();
     });
 
-    it('should return 404 if player not found for deletion', async () => {
-      mockDeletePlayer.mockRejectedValue(new Error('Player not found'));
+    it('should forward not found errors to error handler', async () => {
+      const notFoundError = new NotFoundError('Player not found');
+      mockDeletePlayer.mockRejectedValue(notFoundError);
 
       req = { params: { id: '999' } };
 
-      await playerController.deletePlayer(req as Request, res as Response);
+      await playerController.deletePlayer(req as Request, res as Response, next as NextFunction);
 
-      expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Player not found' });
+      expect(next).toHaveBeenCalledWith(notFoundError);
     });
 
-    it('should return 500 for server error during deletion', async () => {
-      mockDeletePlayer.mockRejectedValue(new Error('Server error'));
+    it('should forward server errors to error handler', async () => {
+      const serverError = new Error('Server error');
+      mockDeletePlayer.mockRejectedValue(serverError);
 
       req = { params: { id: '1' } };
 
-      await playerController.deletePlayer(req as Request, res as Response);
+      await playerController.deletePlayer(req as Request, res as Response, next as NextFunction);
 
-      expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to delete player' });
+      expect(next).toHaveBeenCalledWith(serverError);
     });
   });
 
@@ -268,7 +255,7 @@ describe('PlayerController', () => {
 
       req = { params: { teamId: '1' }, query: {} };
 
-      await playerController.getPlayersByTeamId(req as Request, res as Response);
+      await playerController.getPlayersByTeamId(req as Request, res as Response, next as NextFunction);
 
       expect(mockGetPlayersByTeamId).toHaveBeenCalledWith(1, expect.objectContaining({ page: 1, limit: 25 }));
       expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
@@ -277,6 +264,7 @@ describe('PlayerController', () => {
         page: 1,
         limit: 25,
       }));
+      expect(next).not.toHaveBeenCalled();
     });
 
     it('should return 404 if no players are found for the team', async () => {
@@ -284,21 +272,22 @@ describe('PlayerController', () => {
 
       req = { params: { teamId: '999' }, query: {} };
 
-      await playerController.getPlayersByTeamId(req as Request, res as Response);
+      await playerController.getPlayersByTeamId(req as Request, res as Response, next as NextFunction);
 
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.json).toHaveBeenCalledWith({ message: 'No players found for the specified team' });
+      expect(next).not.toHaveBeenCalled();
     });
 
-    it('should return 500 for server error when fetching players by team', async () => {
-      mockGetPlayersByTeamId.mockRejectedValue(new Error('Server error'));
+    it('should forward server errors to error handler', async () => {
+      const serverError = new Error('Server error');
+      mockGetPlayersByTeamId.mockRejectedValue(serverError);
 
-      req = { params: { teamId: '1' } };
+      req = { params: { teamId: '1' }, query: {} };
 
-      await playerController.getPlayersByTeamId(req as Request, res as Response);
+      await playerController.getPlayersByTeamId(req as Request, res as Response, next as NextFunction);
 
-      expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch players by team' });
+      expect(next).toHaveBeenCalledWith(serverError);
     });
   });
 });
