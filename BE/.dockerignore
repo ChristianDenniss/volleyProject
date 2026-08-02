@@ -1,3 +1,12 @@
 node_modules
 dist
 .env
+.env.*
+*.log
+coverage
+.git
+.gitignore
+**/__tests__
+**/*.test.ts
+**/*.spec.ts
+npm-debug.log*
