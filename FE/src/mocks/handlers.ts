@@ -188,9 +188,9 @@ export const handlers = [
   // Teams
   http.get(api("teams/skinny"), ({ request }) => json(paginated(db.teams, request))),
   http.get(api("teams/medium"), ({ request }) => json(paginated(db.teams, request))),
-  http.get(api("teams/name/:name"), ({ params }) => {
+  http.get(api("teams/name/:name"), ({ params, request }) => {
     const name = decodeURIComponent(String(params.name));
-    return json(getTeamsByName(name));
+    return json(toPaginatedResult(getTeamsByName(name), new URL(request.url).searchParams));
   }),
   http.get(api("teams/:id"), ({ params }) => {
     const team = findById(db.teams, Number(params.id));

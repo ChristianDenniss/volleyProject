@@ -281,7 +281,7 @@ export class PlayerService extends CacheableService
     /**
      * Get players by team ID with validation
      */
-    async getPlayersByTeamId(teamId: number): Promise<Players[]> 
+    async getPlayersByTeamId(teamId: number, pagination: PaginationParams): Promise<[Players[], number]> 
     {
         if (!teamId) throw new MissingFieldError("Team ID");
 
@@ -289,9 +289,11 @@ export class PlayerService extends CacheableService
         const team = await this.teamRepository.findOneBy({ id: teamId });
         if (!team) throw new NotFoundError(`Team with ID ${teamId} not found`);
 
-        return this.playerRepository.find({
+        return this.playerRepository.findAndCount({
             where: { teams: { id: teamId } },
-            relations: ["stats"], // Fetch related stats
+            relations: ["stats"],
+            skip: pagination.skip,
+            take: pagination.take,
         });
     }
 
@@ -311,11 +313,17 @@ export class PlayerService extends CacheableService
         const teamIds = playersData.flatMap(playerData => playerData.teamIds);
         const teams = await this.teamRepository.findBy({ id: In(teamIds) });
 
-        // Check for duplicate players (same name, same teams)
+        const playerNames = [...new Set(playersData.map(p => p.name))];
+        const existingPlayers = await this.playerRepository.find({
+            where: { name: In(playerNames) },
+            relations: ["teams"],
+        });
+
         for (const playerData of playersData) {
-            const existingPlayer = await this.playerRepository.findOne({
-                where: { name: playerData.name, teams: { id: In(playerData.teamIds) } },
-            });
+            const existingPlayer = existingPlayers.find(p =>
+                p.name === playerData.name &&
+                p.teams.some(team => playerData.teamIds.includes(team.id))
+            );
             if (existingPlayer) {
                 throw new Error(`Player with name "${playerData.name}" already exists on one of the teams`);
             }

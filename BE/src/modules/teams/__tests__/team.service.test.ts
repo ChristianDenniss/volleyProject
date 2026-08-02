@@ -173,28 +173,26 @@ describe('TeamService', () => {
   });
 
   describe('getTeamsBySeasonId', () => {
+    const pagination = { page: 1, limit: 10, skip: 0, take: 10 };
+
     it('should return teams by season id', async () => {
       mockRepository.findOneBy.mockResolvedValueOnce(mockSeason);
-      mockRepository.find.mockResolvedValueOnce(mockTeams);
+      mockRepository.findAndCount = jest.fn().mockResolvedValueOnce([mockTeams, mockTeams.length]);
 
-      const result = await teamService.getTeamsBySeasonId(1);
+      const result = await teamService.getTeamsBySeasonId(1, pagination);
 
       expect(mockRepository.findOneBy).toHaveBeenCalledWith({ id: 1 });
-      expect(mockRepository.find).toHaveBeenCalledWith({
-        where: { season: { id: 1 } },
-        relations: ["players", "games"],
-      });
-      expect(result).toEqual(mockTeams);
+      expect(result).toEqual([mockTeams, mockTeams.length]);
     });
 
     it('should throw error if seasonId is not provided', async () => {
-      await expect(teamService.getTeamsBySeasonId(0)).rejects.toThrow('Season ID is required');
+      await expect(teamService.getTeamsBySeasonId(0, pagination)).rejects.toThrow('Season ID is required');
     });
 
     it('should throw error if season is not found', async () => {
       mockRepository.findOneBy.mockResolvedValueOnce(null);
 
-      await expect(teamService.getTeamsBySeasonId(999)).rejects.toThrow('Season not found');
+      await expect(teamService.getTeamsBySeasonId(999, pagination)).rejects.toThrow('Season not found');
     });
   });
 });

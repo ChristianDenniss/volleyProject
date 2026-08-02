@@ -318,14 +318,15 @@ export class GameController {
     getGamesBySeasonId = async (req: Request, res: Response): Promise<void> => {
         try {
             const { seasonId } = req.params;
-            const games = await this.gameService.getGamesBySeasonId(parseInt(seasonId));
+            const pagination = parsePagination(req.query, GAMES_DEFAULT_LIMIT);
+            const [data, total] = await this.gameService.getGamesBySeasonId(parseInt(seasonId), pagination);
 
-            if (games.length === 0) {
+            if (data.length === 0) {
                 res.status(404).json({ message: "No games found for the specified season" });
                 return;
             }
 
-            res.json(games);
+            res.json(toPaginatedResult(data, total, pagination));
         } catch (error: any) {
             if (error instanceof MissingFieldError || 
                 error instanceof NotFoundError || 
@@ -346,14 +347,15 @@ export class GameController {
     getGamesByTeamId = async (req: Request, res: Response): Promise<void> => {
         try {
             const { teamId } = req.params;
-            const games = await this.gameService.getGamesByTeamId(parseInt(teamId));
+            const pagination = parsePagination(req.query, GAMES_DEFAULT_LIMIT);
+            const [data, total] = await this.gameService.getGamesByTeamId(parseInt(teamId), pagination);
 
-            if (games.length === 0) {
+            if (data.length === 0) {
                 res.status(404).json({ message: "No games found for the specified team" });
                 return;
             }
 
-            res.json(games);
+            res.json(toPaginatedResult(data, total, pagination));
         } catch (error: any) {
             if (error instanceof MissingFieldError || 
                 error instanceof NotFoundError || 

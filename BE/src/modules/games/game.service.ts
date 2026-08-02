@@ -145,8 +145,13 @@ export class GameService {
             const teamIds = gamesData.flatMap(game => game.teamIds);
             const teams = await this.teamRepository.findBy({ id: In(teamIds) });
 
+            const existingGames = await this.gameRepository.find({
+                where: { season: { id: In(seasonIds) } },
+                relations: ["teams", "season"],
+            });
+
             // Create the games
-            const newGames = await Promise.all(gamesData.map(async (data) => {
+            const newGames = gamesData.map((data) => {
                 const season = seasons.find(season => season.id === data.seasonId);
                 if (!season) throw new NotFoundError(`Season with ID ${data.seasonId} not found`);
 
@@ -158,13 +163,10 @@ export class GameService {
                     throw new NotFoundError(`Both teams with IDs ${data.teamIds} must be valid`);
                 }
 
-                // Check if the game already exists with the same teams and season
-                const existingGame = await this.gameRepository.findOne({
-                    where: {
-                        season: { id: data.seasonId },
-                        teams: { id: In(data.teamIds) },
-                    }
-                });
+                const existingGame = existingGames.find(game =>
+                    game.season.id === data.seasonId &&
+                    game.teams.some(team => data.teamIds.includes(team.id))
+                );
                 if (existingGame) {
                     throw new DuplicateError(`A game between these teams already exists for the season on ${data.date}`);
                 }
@@ -178,7 +180,7 @@ export class GameService {
                 newGame.regionId = season.regionId;
 
                 return newGame;
-            }));
+            });
 
             // Save all new games at once
             await queryRunner.manager.save(newGames);
@@ -499,17 +501,19 @@ export class GameService {
     /**
      * Get games by season ID with validation
      */
-    async getGamesBySeasonId(seasonId: number): Promise<Games[]> {
+    async getGamesBySeasonId(seasonId: number, pagination: PaginationParams): Promise<[Games[], number]> {
         if (!seasonId) throw new MissingFieldError("Season ID");
 
         // Check if season exists
         const season = await this.seasonRepository.findOneBy({ id: seasonId });
         if (!season) throw new NotFoundError(`Season with ID ${seasonId} not found`);
 
-        return this.gameRepository.find({
+        return this.gameRepository.findAndCount({
             where: { season: { id: seasonId } },
             relations: ["teams", "stats"],
-            order: { date: "DESC" } // Most recent games first
+            order: { date: "DESC" },
+            skip: pagination.skip,
+            take: pagination.take,
         });
     }
 
@@ -518,30 +522,18 @@ export class GameService {
     /**
      * Get games by team ID with validation
      */
-    async getGamesByTeamId(teamId: number): Promise<Games[]> {
+    async getGamesByTeamId(teamId: number, pagination: PaginationParams): Promise<[Games[], number]> {
         if (!teamId) throw new MissingFieldError("Team ID");
 
-        // Check if team exists
-        const team = await this.teamRepository.findOne({
-            where: { id: teamId },
-            relations: ["games"],
-        });
-
+        const team = await this.teamRepository.findOneBy({ id: teamId });
         if (!team) throw new NotFoundError(`Team with ID ${teamId} not found`);
 
-        // Extract game IDs from the team's games
-        const gameIds = team.games.map(game => game.id);
-
-        // Return early if no games
-        if (gameIds.length === 0) {
-            return [];
-        }
-
-        // Fetch full game data with relations using TypeORM's In()
-        return this.gameRepository.find({
-            where: { id: In(gameIds) },
+        return this.gameRepository.findAndCount({
+            where: { teams: { id: teamId } },
             relations: ["season", "teams", "winner", "stats", "region"],
-            order: { date: "DESC" }
+            order: { date: "DESC" },
+            skip: pagination.skip,
+            take: pagination.take,
         });
     }
 
