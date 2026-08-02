@@ -120,13 +120,13 @@ export const useCreateAwards = () => {
 export const useCSVUpload = (showErrorModal?: (err: any) => void) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const { token } = useAuth();
+  const { token, isAuthenticated } = useAuth();
 
   const uploadCSV = async (payload: CSVUploadPayload): Promise<CSVUploadResult | null> => {
     setLoading(true);
     setError(null);
 
-    if (!token) {
+    if (!isAuthenticated) {
       const errorMsg = "You must be logged in to upload CSV files";
       setError(errorMsg);
       if (showErrorModal) showErrorModal({ message: errorMsg });
@@ -188,13 +188,13 @@ export const useCSVUpload = (showErrorModal?: (err: any) => void) => {
 export const useAddStatsToExistingGame = (showErrorModal?: (err: any) => void) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const { token } = useAuth();
+  const { token, isAuthenticated } = useAuth();
 
   const addStatsToGame = async (gameId: number, statsData: any[]): Promise<Stats[] | null> => {
     setLoading(true);
     setError(null);
 
-    if (!token) {
+    if (!isAuthenticated) {
       const errorMsg = "You must be logged in to add stats to games";
       setError(errorMsg);
       if (showErrorModal) showErrorModal({ message: errorMsg });
@@ -256,13 +256,13 @@ export const useAddStatsToExistingGame = (showErrorModal?: (err: any) => void) =
 export const useCalculateRecords = (showErrorModal?: (err: any) => void) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const { token } = useAuth();
+  const { token, isAuthenticated } = useAuth();
 
   const calculateRecords = async (): Promise<boolean> => {
     setLoading(true);
     setError(null);
 
-    if (!token) {
+    if (!isAuthenticated) {
       const errorMsg = "You must be logged in to calculate records";
       setError(errorMsg);
       if (showErrorModal) showErrorModal({ message: errorMsg });

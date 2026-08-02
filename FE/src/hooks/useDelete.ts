@@ -11,7 +11,7 @@ import { useAuth } from "../context/authContext";
 export const useDelete = (endpoint: string) => {
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError]     = useState<string | null>(null);
-    const { token } = useAuth();
+    const { token, isAuthenticated } = useAuth();
 
     /**
      * Sends a DELETE to `/api/${endpoint}/${id}`.
@@ -22,7 +22,7 @@ export const useDelete = (endpoint: string) => {
         setLoading(true);
         setError(null);
 
-        if (!token) {
+        if (!isAuthenticated) {
             setError("You must be logged in to delete items");
             return null;
         }

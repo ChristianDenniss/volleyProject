@@ -37,7 +37,7 @@ export type BatchPlayerByNameInput = {
 export function useBatchPlayersByTeamName() {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError]     = useState<string | null>(null);
-  const { token } = useAuth();
+  const { token, isAuthenticated } = useAuth();
 
   async function createBatch(
     payload: BatchPlayerByNameInput
@@ -45,7 +45,7 @@ export function useBatchPlayersByTeamName() {
     setLoading(true);
     setError(null);
 
-    if (!token) {
+    if (!isAuthenticated) {
       setError("You must be logged in to create players");
       return null;
     }

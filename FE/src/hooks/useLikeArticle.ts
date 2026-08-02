@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import axios from 'axios';
 import { useAuth } from '../context/authContext';
+import { authFetch } from './authFetch';
 
 interface UseLikeArticleReturn {
   likeArticle: (articleId: number) => Promise<boolean>;
@@ -10,48 +10,44 @@ interface UseLikeArticleReturn {
   error: string | null;
 }
 
+const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+
 export function useLikeArticle(): UseLikeArticleReturn {
   const [isLiking, setIsLiking] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { token } = useAuth();
+  const { token, isAuthenticated } = useAuth();
 
   const likeArticle = async (articleId: number): Promise<boolean> => {
     setIsLiking(true);
     setError(null);
 
     try {
-      if (!token) {
+      if (!isAuthenticated) {
         setError('You must be logged in to like articles');
         return false;
       }
 
-      await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/api/articles/${articleId}/like`,
-        {},
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        }
+      const response = await authFetch(
+        `${backendUrl}/api/articles/${articleId}/like`,
+        { method: 'POST', body: JSON.stringify({}) },
+        token
       );
-      
-      return true;
-    } catch (err: any) {
-      let errorMessage = 'Failed to like article';
-      
-      if (err.response) {
-        if (err.response.status === 409) {
-          errorMessage = 'You have already liked this article';
-        } else if (err.response.status === 401) {
-          errorMessage = 'You must be logged in to like articles';
-        } else if (err.response.data?.message) {
-          errorMessage = err.response.data.message;
+
+      if (!response.ok) {
+        if (response.status === 409) {
+          setError('You have already liked this article');
+        } else if (response.status === 401) {
+          setError('You must be logged in to like articles');
+        } else {
+          const data = await response.json().catch(() => ({}));
+          setError(data.message || 'Failed to like article');
         }
-      } else if (err.message) {
-        errorMessage = err.message;
+        return false;
       }
-      
+
+      return true;
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to like article';
       setError(errorMessage);
       console.error('Error liking article:', err);
       return false;
@@ -65,37 +61,32 @@ export function useLikeArticle(): UseLikeArticleReturn {
     setError(null);
 
     try {
-      if (!token) {
+      if (!isAuthenticated) {
         setError('You must be logged in to unlike articles');
         return false;
       }
 
-      await axios.delete(
-        `${import.meta.env.VITE_BACKEND_URL}/api/articles/${articleId}/like`,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        }
+      const response = await authFetch(
+        `${backendUrl}/api/articles/${articleId}/like`,
+        { method: 'DELETE' },
+        token
       );
-      
-      return true;
-    } catch (err: any) {
-      let errorMessage = 'Failed to unlike article';
-      
-      if (err.response) {
-        if (err.response.status === 409) {
-          errorMessage = 'You have not liked this article';
-        } else if (err.response.status === 401) {
-          errorMessage = 'You must be logged in to unlike articles';
-        } else if (err.response.data?.message) {
-          errorMessage = err.response.data.message;
+
+      if (!response.ok) {
+        if (response.status === 409) {
+          setError('You have not liked this article');
+        } else if (response.status === 401) {
+          setError('You must be logged in to unlike articles');
+        } else {
+          const data = await response.json().catch(() => ({}));
+          setError(data.message || 'Failed to unlike article');
         }
-      } else if (err.message) {
-        errorMessage = err.message;
+        return false;
       }
-      
+
+      return true;
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to unlike article';
       setError(errorMessage);
       console.error('Error unliking article:', err);
       return false;

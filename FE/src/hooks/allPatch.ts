@@ -72,14 +72,14 @@ export function useAwardsMutations() {
 }
 
 export function useApplicationMutations() {
-  const { token } = useAuth();
+  const { token, isAuthenticated } = useAuth();
 
   const patchApplication = useCallback(
     async (
       slug: string,
       data: Pick<Application, "url" | "status">
     ): Promise<Application> => {
-      if (!token) {
+      if (!isAuthenticated) {
         throw new Error("You must be logged in to update applications");
       }
 
@@ -100,7 +100,7 @@ export function useApplicationMutations() {
 
       return res.json() as Promise<Application>;
     },
-    [token]
+    [token, isAuthenticated]
   );
 
   return { patchApplication };

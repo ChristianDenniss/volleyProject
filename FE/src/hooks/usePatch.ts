@@ -8,12 +8,12 @@ const backendUrl =
 
 export function usePatch<T = any>(resource: string)
 {
-    const { token } = useAuth();
+    const { token, isAuthenticated } = useAuth();
     
     const patch = useCallback(
         async (id: number, data: Partial<T>): Promise<T> =>
         {
-            if (!token) {
+            if (!isAuthenticated) {
                 throw new Error("You must be logged in to update items");
             }
 
@@ -48,7 +48,7 @@ export function usePatch<T = any>(resource: string)
             const json = await res.json();
             return json as T;
         },
-        [resource]
+        [resource, token, isAuthenticated]
     );
 
     return { patch };
