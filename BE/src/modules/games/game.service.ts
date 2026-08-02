@@ -145,8 +145,13 @@ export class GameService {
             const teamIds = gamesData.flatMap(game => game.teamIds);
             const teams = await this.teamRepository.findBy({ id: In(teamIds) });
 
+            const existingGames = await this.gameRepository.find({
+                where: { season: { id: In(seasonIds) } },
+                relations: ["teams", "season"],
+            });
+
             // Create the games
-            const newGames = await Promise.all(gamesData.map(async (data) => {
+            const newGames = gamesData.map((data) => {
                 const season = seasons.find(season => season.id === data.seasonId);
                 if (!season) throw new NotFoundError(`Season with ID ${data.seasonId} not found`);
 
@@ -158,13 +163,10 @@ export class GameService {
                     throw new NotFoundError(`Both teams with IDs ${data.teamIds} must be valid`);
                 }
 
-                // Check if the game already exists with the same teams and season
-                const existingGame = await this.gameRepository.findOne({
-                    where: {
-                        season: { id: data.seasonId },
-                        teams: { id: In(data.teamIds) },
-                    }
-                });
+                const existingGame = existingGames.find(game =>
+                    game.season.id === data.seasonId &&
+                    game.teams.some(team => data.teamIds.includes(team.id))
+                );
                 if (existingGame) {
                     throw new DuplicateError(`A game between these teams already exists for the season on ${data.date}`);
                 }
@@ -178,7 +180,7 @@ export class GameService {
                 newGame.regionId = season.regionId;
 
                 return newGame;
-            }));
+            });
 
             // Save all new games at once
             await queryRunner.manager.save(newGames);

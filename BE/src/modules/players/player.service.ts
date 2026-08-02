@@ -311,11 +311,17 @@ export class PlayerService extends CacheableService
         const teamIds = playersData.flatMap(playerData => playerData.teamIds);
         const teams = await this.teamRepository.findBy({ id: In(teamIds) });
 
-        // Check for duplicate players (same name, same teams)
+        const playerNames = [...new Set(playersData.map(p => p.name))];
+        const existingPlayers = await this.playerRepository.find({
+            where: { name: In(playerNames) },
+            relations: ["teams"],
+        });
+
         for (const playerData of playersData) {
-            const existingPlayer = await this.playerRepository.findOne({
-                where: { name: playerData.name, teams: { id: In(playerData.teamIds) } },
-            });
+            const existingPlayer = existingPlayers.find(p =>
+                p.name === playerData.name &&
+                p.teams.some(team => playerData.teamIds.includes(team.id))
+            );
             if (existingPlayer) {
                 throw new Error(`Player with name "${playerData.name}" already exists on one of the teams`);
             }
