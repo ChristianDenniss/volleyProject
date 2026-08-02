@@ -1,4 +1,4 @@
-import { Repository } from 'typeorm';
+import { Repository, QueryRunner } from 'typeorm';
 import { AppDataSource } from '../../db/data-source.js';
 import { Records } from './records.entity.js';
 import { Players } from '../players/player.entity.js';
@@ -16,6 +16,71 @@ export interface RecordFilters {
     type?: 'game' | 'season';
     recordCategory?: string;
 }
+
+interface GameRecordRow {
+    playerId: number;
+    gameId: number;
+    seasonId: number;
+    regionId: number;
+    gameDate: Date;
+    value: string | number;
+}
+
+interface SeasonRecordRow {
+    playerId: number;
+    seasonId: number;
+    regionId: number;
+    seasonStartDate: Date;
+    value: string | number;
+}
+
+const GAME_STAT_COLUMNS: Record<string, string> = {
+    'most spike kills': 's."spikeKills"',
+    'most assists': 's."assists"',
+    'most ape kills': 's."apeKills"',
+    'most digs': 's."digs"',
+    'most block follows': 's."blockFollows"',
+    'most blocks': 's."blocks"',
+    'most aces': 's."aces"',
+    'most serve errors': 's."servingErrors"',
+    'most misc errors': 's."miscErrors"',
+    'most set errors': 's."settingErrors"',
+    'most spike errors': 's."spikingErrors"',
+    'most spike attempts': 's."spikeAttempts"',
+    'most ape attempts': 's."apeAttempts"',
+};
+
+const GAME_AGGREGATED_EXPRESSIONS: Record<string, string> = {
+    'most total kills': '(s."spikeKills" + s."apeKills")',
+    'most total attempts': '(s."spikeAttempts" + s."apeAttempts")',
+    'most total errors': '(s."spikingErrors" + s."servingErrors" + s."settingErrors" + s."miscErrors")',
+};
+
+const SEASON_STAT_EXPRESSIONS: Record<string, string> = {
+    'most spike kills': 'SUM(s."spikeKills")',
+    'most assists': 'SUM(s."assists")',
+    'most ape kills': 'SUM(s."apeKills")',
+    'most digs': 'SUM(s."digs")',
+    'most block follows': 'SUM(s."blockFollows")',
+    'most blocks': 'SUM(s."blocks")',
+    'most aces': 'SUM(s."aces")',
+    'most serve errors': 'SUM(s."servingErrors")',
+    'most misc errors': 'SUM(s."miscErrors")',
+    'most set errors': 'SUM(s."settingErrors")',
+    'most spike errors': 'SUM(s."spikingErrors")',
+    'most spike attempts': 'SUM(s."spikeAttempts")',
+    'most ape attempts': 'SUM(s."apeAttempts")',
+};
+
+const SEASON_AGGREGATED_EXPRESSIONS: Record<string, string> = {
+    'most total kills': '(SUM(s."spikeKills") + SUM(s."apeKills"))',
+    'most total attempts': '(SUM(s."spikeAttempts") + SUM(s."apeAttempts"))',
+    'most total errors': '(SUM(s."spikingErrors") + SUM(s."servingErrors") + SUM(s."settingErrors") + SUM(s."miscErrors"))',
+};
+
+const GAME_TOTAL_SPIKING_PCT = `((s."spikeKills" + s."apeKills")::decimal / NULLIF(s."spikeAttempts" + s."apeAttempts", 0)) * 100`;
+
+const SEASON_TOTAL_SPIKING_PCT = `((SUM(s."spikeKills") + SUM(s."apeKills"))::decimal / NULLIF(SUM(s."spikeAttempts") + SUM(s."apeAttempts"), 0)) * 100`;
 
 export class RecordService {
     private recordRepository: Repository<Records>;
@@ -250,12 +315,8 @@ export class RecordService {
      * Calculate and update all records across all seasons
      */
     async calculateAllRecords(): Promise<{ message: string; recordsCreated: number }> {
-        // Get all stats from all seasons with player and game relations
-        const stats = await this.statRepository.find({
-            relations: ["player", "game", "game.season"],
-        });
-
-        if (stats.length === 0) {
+        const statCount = await this.statRepository.count();
+        if (statCount === 0) {
             throw new NotFoundError("No stats found in the database");
         }
 
@@ -266,199 +327,94 @@ export class RecordService {
         let recordsCreated = 0;
 
         try {
-        const recordTypes = [
-            'most spike kills', 'most assists', 'most ape kills', 'most digs', 'most block follows', 
-            'most blocks', 'most aces', 'most serve errors', 'most misc errors', 'most set errors', 
-            'most spike errors', 'most spike attempts', 'most ape attempts'
-        ];
+            const recordTypes = [
+                'most spike kills', 'most assists', 'most ape kills', 'most digs', 'most block follows',
+                'most blocks', 'most aces', 'most serve errors', 'most misc errors', 'most set errors',
+                'most spike errors', 'most spike attempts', 'most ape attempts'
+            ];
 
-        // Calculate single game records
-        for (const recordType of recordTypes) {
-            const top10Stats = this.calculateTop10ForRecordType(stats, recordType);
-
-            // Clear existing records for this type and game type
-            await qr.manager.delete(Records, { record: recordType, type: 'game' });
-
-            // Build and batch-save new records
-            const newRecords = top10Stats.map((stat, i) => {
-                const newRecord = new Records();
-                newRecord.record = recordType;
-                newRecord.type = 'game';
-                newRecord.rank = i + 1;
-                newRecord.value = this.getStatValue(stat, recordType);
-                newRecord.date = stat.game.date;
-                newRecord.season = stat.game.season;
-                newRecord.player = stat.player;
-                newRecord.gameId = stat.game.id; // Set the game ID
-                return newRecord;
-            });
-
-            if (newRecords.length > 0) {
-                await qr.manager.save(Records, newRecords);
-                recordsCreated += newRecords.length;
-            }
-        }
-
-        // Calculate aggregated records (total kills, attempts, errors) - game type
-        const aggregatedRecordTypes = [
-            'most total kills', 'most total attempts', 'most total errors'
-        ];
-
-        for (const recordType of aggregatedRecordTypes) {
-            const top10Stats = this.calculateTop10ForAggregatedRecordType(stats, recordType);
-
-            // Clear existing records for this type and game type
-            await qr.manager.delete(Records, { record: recordType, type: 'game' });
-
-            const newRecords = top10Stats.map((stat, i) => {
-                const newRecord = new Records();
-                newRecord.record = recordType;
-                newRecord.type = 'game';
-                newRecord.rank = i + 1;
-                newRecord.value = this.getAggregatedStatValue(stat, recordType);
-                newRecord.date = stat.game.date;
-                newRecord.season = stat.game.season;
-                newRecord.player = stat.player;
-                newRecord.gameId = stat.game.id; // Set the game ID
-                return newRecord;
-            });
-
-            if (newRecords.length > 0) {
-                await qr.manager.save(Records, newRecords);
-                recordsCreated += newRecords.length;
-            }
-        }
-
-        // Calculate season aggregate records (same record types but season type)
-        for (const recordType of recordTypes) {
-            const top10SeasonStats = this.calculateTop10SeasonStats(stats, recordType);
-
-            // Clear existing records for this type and season type
-            await qr.manager.delete(Records, { record: recordType, type: 'season' });
-
-            const newRecords = top10SeasonStats.map((seasonStat, i) => {
-                const newRecord = new Records();
-                newRecord.record = recordType;
-                newRecord.type = 'season';
-                newRecord.rank = i + 1;
-                newRecord.value = this.getSeasonStatValue(seasonStat, recordType);
-                newRecord.date = seasonStat.season.startDate;
-                newRecord.season = seasonStat.season;
-                newRecord.player = seasonStat.player;
-                return newRecord;
-            });
-
-            if (newRecords.length > 0) {
-                await qr.manager.save(Records, newRecords);
-                recordsCreated += newRecords.length;
-            }
-        }
-
-        // Calculate season aggregated records (total kills, attempts, errors) - season type
-        for (const recordType of aggregatedRecordTypes) {
-            const top10SeasonStats = this.calculateTop10SeasonAggregatedStats(stats, recordType);
-
-            // Clear existing records for this type and season type
-            await qr.manager.delete(Records, { record: recordType, type: 'season' });
-
-            const newRecords = top10SeasonStats.map((seasonStat, i) => {
-                const newRecord = new Records();
-                newRecord.record = recordType;
-                newRecord.type = 'season';
-                newRecord.rank = i + 1;
-                newRecord.value = this.getSeasonAggregatedStatValue(seasonStat, recordType);
-                newRecord.date = seasonStat.season.startDate;
-                newRecord.season = seasonStat.season;
-                newRecord.player = seasonStat.player;
-                return newRecord;
-            });
-
-            if (newRecords.length > 0) {
-                await qr.manager.save(Records, newRecords);
-                recordsCreated += newRecords.length;
-            }
-        }
-
-
-
-        // Calculate single game total spiking percentage records (10+ to 60+ attempts)
-        const singleGamePercentageRecordTypes = [
-            'best total spiking % with 10+ attempts', 'best total spiking % with 20+ attempts', 'best total spiking % with 30+ attempts',
-            'best total spiking % with 40+ attempts', 'best total spiking % with 50+ attempts', 'best total spiking % with 60+ attempts'
-        ];
-
-        for (const recordType of singleGamePercentageRecordTypes) {
-            const minAttempts = this.extractMinAttempts(recordType);
-            const eligibleStats = stats.filter(stat => this.getTotalAttempts(stat) >= minAttempts);
-            
-            if (eligibleStats.length > 0) {
-                const top10Stats = this.calculateTop10TotalSpikingPercentage(eligibleStats, recordType);
-
-                // Clear existing records for this type and game type
+            for (const recordType of recordTypes) {
+                const top10 = await this.fetchTop10GameStatRecords(qr, recordType);
                 await qr.manager.delete(Records, { record: recordType, type: 'game' });
-
-                const newRecords = top10Stats.map((stat, i) => {
-                    const newRecord = new Records();
-                    newRecord.record = recordType;
-                    newRecord.type = 'game';
-                    newRecord.rank = i + 1;
-                    newRecord.value = this.calculateTotalSpikingPercentage(stat);
-                    newRecord.date = stat.game.date;
-                    newRecord.season = stat.game.season;
-                    newRecord.player = stat.player;
-                    newRecord.gameId = stat.game.id; // Set the game ID
-                    return newRecord;
-                });
-
+                const newRecords = top10.map((row, i) => this.buildGameRecord(recordType, i + 1, row));
                 if (newRecords.length > 0) {
                     await qr.manager.save(Records, newRecords);
                     recordsCreated += newRecords.length;
                 }
             }
-        }
 
-        // Calculate season total spiking percentage records (60+ to 250+ attempts)
-        const seasonPercentageRecordTypes = [
-            'best total spiking % with 60+ attempts', 'best total spiking % with 70+ attempts', 'best total spiking % with 80+ attempts',
-            'best total spiking % with 90+ attempts', 'best total spiking % with 100+ attempts', 'best total spiking % with 110+ attempts',
-            'best total spiking % with 120+ attempts', 'best total spiking % with 130+ attempts', 'best total spiking % with 140+ attempts',
-            'best total spiking % with 150+ attempts', 'best total spiking % with 160+ attempts', 'best total spiking % with 170+ attempts',
-            'best total spiking % with 180+ attempts', 'best total spiking % with 190+ attempts', 'best total spiking % with 200+ attempts',
-            'best total spiking % with 210+ attempts', 'best total spiking % with 220+ attempts', 'best total spiking % with 230+ attempts',
-            'best total spiking % with 240+ attempts', 'best total spiking % with 250+ attempts'
-        ];
+            const aggregatedRecordTypes = [
+                'most total kills', 'most total attempts', 'most total errors'
+            ];
 
-        for (const recordType of seasonPercentageRecordTypes) {
-            const minAttempts = this.extractMinAttempts(recordType);
-            const seasonAggregatedStats = this.aggregateStatsBySeason(stats);
-            const eligibleSeasonStats = seasonAggregatedStats.filter(stat => stat.totalAttempts >= minAttempts);
-            
-            if (eligibleSeasonStats.length > 0) {
-                const top10SeasonStats = this.calculateTop10SeasonSpikingPercentage(eligibleSeasonStats, recordType);
+            for (const recordType of aggregatedRecordTypes) {
+                const top10 = await this.fetchTop10GameAggregatedRecords(qr, recordType);
+                await qr.manager.delete(Records, { record: recordType, type: 'game' });
+                const newRecords = top10.map((row, i) => this.buildGameRecord(recordType, i + 1, row));
+                if (newRecords.length > 0) {
+                    await qr.manager.save(Records, newRecords);
+                    recordsCreated += newRecords.length;
+                }
+            }
 
-                // Clear existing records for this type and season type
+            for (const recordType of recordTypes) {
+                const top10 = await this.fetchTop10SeasonStatRecords(qr, recordType);
                 await qr.manager.delete(Records, { record: recordType, type: 'season' });
-
-                const newRecords = top10SeasonStats.map((seasonStat, i) => {
-                    const newRecord = new Records();
-                    newRecord.record = recordType;
-                    newRecord.type = 'season';
-                    newRecord.rank = i + 1;
-                    newRecord.value = seasonStat.totalSpikingPercentage;
-                    newRecord.date = seasonStat.season.startDate;
-                    newRecord.season = seasonStat.season;
-                    newRecord.player = seasonStat.player;
-                    return newRecord;
-                });
-
+                const newRecords = top10.map((row, i) => this.buildSeasonRecord(recordType, i + 1, row));
                 if (newRecords.length > 0) {
                     await qr.manager.save(Records, newRecords);
                     recordsCreated += newRecords.length;
                 }
             }
-        }
 
-        await qr.commitTransaction();
+            for (const recordType of aggregatedRecordTypes) {
+                const top10 = await this.fetchTop10SeasonAggregatedRecords(qr, recordType);
+                await qr.manager.delete(Records, { record: recordType, type: 'season' });
+                const newRecords = top10.map((row, i) => this.buildSeasonRecord(recordType, i + 1, row));
+                if (newRecords.length > 0) {
+                    await qr.manager.save(Records, newRecords);
+                    recordsCreated += newRecords.length;
+                }
+            }
+
+            const singleGamePercentageRecordTypes = [
+                'best total spiking % with 10+ attempts', 'best total spiking % with 20+ attempts', 'best total spiking % with 30+ attempts',
+                'best total spiking % with 40+ attempts', 'best total spiking % with 50+ attempts', 'best total spiking % with 60+ attempts'
+            ];
+
+            for (const recordType of singleGamePercentageRecordTypes) {
+                const minAttempts = this.extractMinAttempts(recordType);
+                const top10 = await this.fetchTop10GameSpikingPercentageRecords(qr, minAttempts);
+                if (top10.length === 0) continue;
+
+                await qr.manager.delete(Records, { record: recordType, type: 'game' });
+                const newRecords = top10.map((row, i) => this.buildGameRecord(recordType, i + 1, row));
+                await qr.manager.save(Records, newRecords);
+                recordsCreated += newRecords.length;
+            }
+
+            const seasonPercentageRecordTypes = [
+                'best total spiking % with 60+ attempts', 'best total spiking % with 70+ attempts', 'best total spiking % with 80+ attempts',
+                'best total spiking % with 90+ attempts', 'best total spiking % with 100+ attempts', 'best total spiking % with 110+ attempts',
+                'best total spiking % with 120+ attempts', 'best total spiking % with 130+ attempts', 'best total spiking % with 140+ attempts',
+                'best total spiking % with 150+ attempts', 'best total spiking % with 160+ attempts', 'best total spiking % with 170+ attempts',
+                'best total spiking % with 180+ attempts', 'best total spiking % with 190+ attempts', 'best total spiking % with 200+ attempts',
+                'best total spiking % with 210+ attempts', 'best total spiking % with 220+ attempts', 'best total spiking % with 230+ attempts',
+                'best total spiking % with 240+ attempts', 'best total spiking % with 250+ attempts'
+            ];
+
+            for (const recordType of seasonPercentageRecordTypes) {
+                const minAttempts = this.extractMinAttempts(recordType);
+                const top10 = await this.fetchTop10SeasonSpikingPercentageRecords(qr, minAttempts);
+                if (top10.length === 0) continue;
+
+                await qr.manager.delete(Records, { record: recordType, type: 'season' });
+                const newRecords = top10.map((row, i) => this.buildSeasonRecord(recordType, i + 1, row));
+                await qr.manager.save(Records, newRecords);
+                recordsCreated += newRecords.length;
+            }
+
+            await qr.commitTransaction();
         } catch (err) {
             await qr.rollbackTransaction();
             throw err;
@@ -472,54 +428,118 @@ export class RecordService {
         };
     }
 
-    /**
-     * Calculate top 10 stats for a specific record type
-     */
-    private calculateTop10ForRecordType(stats: Stats[], recordType: string): Stats[] {
-        return stats
-            .filter(stat => this.getStatValue(stat, recordType) > 0)
-            .sort((a, b) => this.getStatValue(b, recordType) - this.getStatValue(a, recordType))
-            .slice(0, 10);
+    private buildGameRecord(recordType: string, rank: number, row: GameRecordRow): Records {
+        const record = new Records();
+        record.record = recordType;
+        record.type = 'game';
+        record.rank = rank;
+        record.value = Number(row.value);
+        record.date = row.gameDate;
+        record.seasonId = row.seasonId;
+        record.playerId = row.playerId;
+        record.regionId = row.regionId;
+        record.gameId = row.gameId;
+        return record;
     }
 
-    /**
-     * Calculate top 10 percentage stats
-     */
-    private calculateTop10Percentage(stats: Stats[], recordType: string): Stats[] {
-        return stats
-            .filter(stat => this.calculateSpikePercentage(stat) > 0)
-            .sort((a, b) => this.calculateSpikePercentage(b) - this.calculateSpikePercentage(a))
-            .slice(0, 10);
+    private buildSeasonRecord(recordType: string, rank: number, row: SeasonRecordRow): Records {
+        const record = new Records();
+        record.record = recordType;
+        record.type = 'season';
+        record.rank = rank;
+        record.value = Number(row.value);
+        record.date = row.seasonStartDate;
+        record.seasonId = row.seasonId;
+        record.playerId = row.playerId;
+        record.regionId = row.regionId;
+        return record;
     }
 
-    /**
-     * Get the appropriate stat value for a record type
-     */
-    private getStatValue(stat: Stats, recordType: string): number {
-        switch (recordType) {
-            case 'most spike kills': return stat.spikeKills;
-            case 'most assists': return stat.assists;
-            case 'most ape kills': return stat.apeKills;
-            case 'most digs': return stat.digs;
-            case 'most block follows': return stat.blockFollows;
-            case 'most blocks': return stat.blocks;
-            case 'most aces': return stat.aces;
-            case 'most serve errors': return stat.servingErrors;
-            case 'most misc errors': return stat.miscErrors;
-            case 'most set errors': return stat.settingErrors;
-            case 'most spike errors': return stat.spikingErrors;
-            case 'most spike attempts': return stat.spikeAttempts;
-            case 'most ape attempts': return stat.apeAttempts;
-            default: return 0;
-        }
+    private async fetchTop10GameStatRecords(qr: QueryRunner, recordType: string): Promise<GameRecordRow[]> {
+        const column = GAME_STAT_COLUMNS[recordType];
+        return qr.manager.query(`
+            SELECT s."playerId", s."gameId", g."seasonId", se."regionId", g.date AS "gameDate",
+                   ${column} AS value
+            FROM stats s
+            INNER JOIN games g ON g.id = s."gameId"
+            INNER JOIN seasons se ON se.id = g."seasonId"
+            WHERE ${column} > 0
+            ORDER BY value DESC
+            LIMIT 10
+        `);
     }
 
-    /**
-     * Calculate spike percentage
-     */
-    private calculateSpikePercentage(stat: Stats): number {
-        if (stat.spikeAttempts === 0) return 0;
-        return (stat.spikeKills / stat.spikeAttempts) * 100;
+    private async fetchTop10GameAggregatedRecords(qr: QueryRunner, recordType: string): Promise<GameRecordRow[]> {
+        const expression = GAME_AGGREGATED_EXPRESSIONS[recordType];
+        return qr.manager.query(`
+            SELECT s."playerId", s."gameId", g."seasonId", se."regionId", g.date AS "gameDate",
+                   ${expression} AS value
+            FROM stats s
+            INNER JOIN games g ON g.id = s."gameId"
+            INNER JOIN seasons se ON se.id = g."seasonId"
+            WHERE ${expression} > 0
+            ORDER BY value DESC
+            LIMIT 10
+        `);
+    }
+
+    private async fetchTop10SeasonStatRecords(qr: QueryRunner, recordType: string): Promise<SeasonRecordRow[]> {
+        const expression = SEASON_STAT_EXPRESSIONS[recordType];
+        return qr.manager.query(`
+            SELECT s."playerId", g."seasonId", se."regionId", se."startDate" AS "seasonStartDate",
+                   ${expression} AS value
+            FROM stats s
+            INNER JOIN games g ON g.id = s."gameId"
+            INNER JOIN seasons se ON se.id = g."seasonId"
+            GROUP BY s."playerId", g."seasonId", se."regionId", se."startDate"
+            HAVING ${expression} > 0
+            ORDER BY value DESC
+            LIMIT 10
+        `);
+    }
+
+    private async fetchTop10SeasonAggregatedRecords(qr: QueryRunner, recordType: string): Promise<SeasonRecordRow[]> {
+        const expression = SEASON_AGGREGATED_EXPRESSIONS[recordType];
+        return qr.manager.query(`
+            SELECT s."playerId", g."seasonId", se."regionId", se."startDate" AS "seasonStartDate",
+                   ${expression} AS value
+            FROM stats s
+            INNER JOIN games g ON g.id = s."gameId"
+            INNER JOIN seasons se ON se.id = g."seasonId"
+            GROUP BY s."playerId", g."seasonId", se."regionId", se."startDate"
+            HAVING ${expression} > 0
+            ORDER BY value DESC
+            LIMIT 10
+        `);
+    }
+
+    private async fetchTop10GameSpikingPercentageRecords(qr: QueryRunner, minAttempts: number): Promise<GameRecordRow[]> {
+        return qr.manager.query(`
+            SELECT s."playerId", s."gameId", g."seasonId", se."regionId", g.date AS "gameDate",
+                   ${GAME_TOTAL_SPIKING_PCT} AS value
+            FROM stats s
+            INNER JOIN games g ON g.id = s."gameId"
+            INNER JOIN seasons se ON se.id = g."seasonId"
+            WHERE (s."spikeAttempts" + s."apeAttempts") >= $1
+              AND (s."spikeKills" + s."apeKills") > 0
+            ORDER BY value DESC
+            LIMIT 10
+        `, [minAttempts]);
+    }
+
+    private async fetchTop10SeasonSpikingPercentageRecords(qr: QueryRunner, minAttempts: number): Promise<SeasonRecordRow[]> {
+        return qr.manager.query(`
+            SELECT s."playerId", g."seasonId", se."regionId", se."startDate" AS "seasonStartDate",
+                   ${SEASON_TOTAL_SPIKING_PCT} AS value
+            FROM stats s
+            INNER JOIN games g ON g.id = s."gameId"
+            INNER JOIN seasons se ON se.id = g."seasonId"
+            GROUP BY s."playerId", g."seasonId", se."regionId", se."startDate"
+            HAVING SUM(s."spikeAttempts") + SUM(s."apeAttempts") >= $1
+               AND SUM(s."spikeKills") + SUM(s."apeKills") > 0
+            ORDER BY value DESC
+            LIMIT 10
+        `, [minAttempts]);
     }
 
     /**
@@ -528,335 +548,5 @@ export class RecordService {
     private extractMinAttempts(recordType: string): number {
         const match = recordType.match(/(\d+)\+ attempts/);
         return match ? parseInt(match[1]) : 0;
-    }
-
-    /**
-     * Calculate top 10 stats for aggregated record types
-     */
-    private calculateTop10ForAggregatedRecordType(stats: Stats[], recordType: string): Stats[] {
-        return stats
-            .filter(stat => this.getAggregatedStatValue(stat, recordType) > 0)
-            .sort((a, b) => this.getAggregatedStatValue(b, recordType) - this.getAggregatedStatValue(a, recordType))
-            .slice(0, 10);
-    }
-
-    /**
-     * Get the appropriate aggregated stat value for a record type
-     */
-    private getAggregatedStatValue(stat: Stats, recordType: string): number {
-        switch (recordType) {
-            case 'most total kills': return stat.spikeKills + stat.apeKills;
-            case 'most total attempts': return stat.spikeAttempts + stat.apeAttempts;
-            case 'most total errors': return stat.spikingErrors + stat.servingErrors + stat.settingErrors + stat.miscErrors;
-            default: return 0;
-        }
-    }
-
-    /**
-     * Get total attempts (spike + ape)
-     */
-    private getTotalAttempts(stat: Stats): number {
-        return stat.spikeAttempts + stat.apeAttempts;
-    }
-
-    /**
-     * Calculate top 10 total spiking percentage stats
-     */
-    private calculateTop10TotalSpikingPercentage(stats: Stats[], recordType: string): Stats[] {
-        return stats
-            .filter(stat => this.calculateTotalSpikingPercentage(stat) > 0)
-            .sort((a, b) => this.calculateTotalSpikingPercentage(b) - this.calculateTotalSpikingPercentage(a))
-            .slice(0, 10);
-    }
-
-    /**
-     * Calculate total spiking percentage (spike kills + ape kills) / (spike attempts + ape attempts)
-     */
-    private calculateTotalSpikingPercentage(stat: Stats): number {
-        const totalAttempts = this.getTotalAttempts(stat);
-        if (totalAttempts === 0) return 0;
-        const totalKills = stat.spikeKills + stat.apeKills;
-        return (totalKills / totalAttempts) * 100;
-    }
-
-    /**
-     * Aggregate stats by season for each player
-     */
-    private aggregateStatsBySeason(stats: Stats[]): Array<{
-        player: Players;
-        season: Seasons;
-        totalSpikeKills: number;
-        totalApeKills: number;
-        totalSpikeAttempts: number;
-        totalApeAttempts: number;
-        totalAttempts: number;
-        totalSpikingPercentage: number;
-    }> {
-        const seasonAggregates = new Map<string, {
-            player: Players;
-            season: Seasons;
-            totalSpikeKills: number;
-            totalApeKills: number;
-            totalSpikeAttempts: number;
-            totalApeAttempts: number;
-        }>();
-
-        // Aggregate stats by player and season
-        for (const stat of stats) {
-            const key = `${stat.player.id}-${stat.game.season.id}`;
-            
-            if (!seasonAggregates.has(key)) {
-                seasonAggregates.set(key, {
-                    player: stat.player,
-                    season: stat.game.season,
-                    totalSpikeKills: 0,
-                    totalApeKills: 0,
-                    totalSpikeAttempts: 0,
-                    totalApeAttempts: 0,
-                });
-            }
-
-            const aggregate = seasonAggregates.get(key)!;
-            aggregate.totalSpikeKills += stat.spikeKills;
-            aggregate.totalApeKills += stat.apeKills;
-            aggregate.totalSpikeAttempts += stat.spikeAttempts;
-            aggregate.totalApeAttempts += stat.apeAttempts;
-        }
-
-        // Convert to array and calculate percentages
-        return Array.from(seasonAggregates.values()).map(aggregate => ({
-            ...aggregate,
-            totalAttempts: aggregate.totalSpikeAttempts + aggregate.totalApeAttempts,
-            totalSpikingPercentage: this.calculateSeasonSpikingPercentage(aggregate)
-        }));
-    }
-
-    /**
-     * Calculate season spiking percentage
-     */
-    private calculateSeasonSpikingPercentage(aggregate: {
-        totalSpikeKills: number;
-        totalApeKills: number;
-        totalSpikeAttempts: number;
-        totalApeAttempts: number;
-    }): number {
-        const totalAttempts = aggregate.totalSpikeAttempts + aggregate.totalApeAttempts;
-        if (totalAttempts === 0) return 0;
-        const totalKills = aggregate.totalSpikeKills + aggregate.totalApeKills;
-        return (totalKills / totalAttempts) * 100;
-    }
-
-    /**
-     * Calculate top 10 season spiking percentage stats
-     */
-    private calculateTop10SeasonSpikingPercentage(seasonStats: Array<{
-        player: Players;
-        season: Seasons;
-        totalAttempts: number;
-        totalSpikingPercentage: number;
-    }>, recordType: string): Array<{
-        player: Players;
-        season: Seasons;
-        totalAttempts: number;
-        totalSpikingPercentage: number;
-    }> {
-        return seasonStats
-            .filter(stat => stat.totalSpikingPercentage > 0)
-            .sort((a, b) => b.totalSpikingPercentage - a.totalSpikingPercentage)
-            .slice(0, 10);
-    }
-
-    /**
-     * Aggregate stats by season for each player (for regular stats, not just spiking)
-     */
-    private aggregateStatsBySeasonForRegularStats(stats: Stats[]): Array<{
-        player: Players;
-        season: Seasons;
-        totalSpikeKills: number;
-        totalApeKills: number;
-        totalAssists: number;
-        totalDigs: number;
-        totalBlockFollows: number;
-        totalBlocks: number;
-        totalAces: number;
-        totalServingErrors: number;
-        totalMiscErrors: number;
-        totalSettingErrors: number;
-        totalSpikingErrors: number;
-        totalSpikeAttempts: number;
-        totalApeAttempts: number;
-    }> {
-        const seasonAggregates = new Map<string, {
-            player: Players;
-            season: Seasons;
-            totalSpikeKills: number;
-            totalApeKills: number;
-            totalAssists: number;
-            totalDigs: number;
-            totalBlockFollows: number;
-            totalBlocks: number;
-            totalAces: number;
-            totalServingErrors: number;
-            totalMiscErrors: number;
-            totalSettingErrors: number;
-            totalSpikingErrors: number;
-            totalSpikeAttempts: number;
-            totalApeAttempts: number;
-        }>();
-
-        // Aggregate stats by player and season
-        for (const stat of stats) {
-            const key = `${stat.player.id}-${stat.game.season.id}`;
-            
-            if (!seasonAggregates.has(key)) {
-                seasonAggregates.set(key, {
-                    player: stat.player,
-                    season: stat.game.season,
-                    totalSpikeKills: 0,
-                    totalApeKills: 0,
-                    totalAssists: 0,
-                    totalDigs: 0,
-                    totalBlockFollows: 0,
-                    totalBlocks: 0,
-                    totalAces: 0,
-                    totalServingErrors: 0,
-                    totalMiscErrors: 0,
-                    totalSettingErrors: 0,
-                    totalSpikingErrors: 0,
-                    totalSpikeAttempts: 0,
-                    totalApeAttempts: 0,
-                });
-            }
-
-            const aggregate = seasonAggregates.get(key)!;
-            aggregate.totalSpikeKills += stat.spikeKills;
-            aggregate.totalApeKills += stat.apeKills;
-            aggregate.totalAssists += stat.assists;
-            aggregate.totalDigs += stat.digs;
-            aggregate.totalBlockFollows += stat.blockFollows;
-            aggregate.totalBlocks += stat.blocks;
-            aggregate.totalAces += stat.aces;
-            aggregate.totalServingErrors += stat.servingErrors;
-            aggregate.totalMiscErrors += stat.miscErrors;
-            aggregate.totalSettingErrors += stat.settingErrors;
-            aggregate.totalSpikingErrors += stat.spikingErrors;
-            aggregate.totalSpikeAttempts += stat.spikeAttempts;
-            aggregate.totalApeAttempts += stat.apeAttempts;
-        }
-
-        return Array.from(seasonAggregates.values());
-    }
-
-    /**
-     * Calculate top 10 season stats for regular record types
-     */
-    private calculateTop10SeasonStats(stats: Stats[], recordType: string): Array<{
-        player: Players;
-        season: Seasons;
-        totalSpikeKills: number;
-        totalApeKills: number;
-        totalAssists: number;
-        totalDigs: number;
-        totalBlockFollows: number;
-        totalBlocks: number;
-        totalAces: number;
-        totalServingErrors: number;
-        totalMiscErrors: number;
-        totalSettingErrors: number;
-        totalSpikingErrors: number;
-        totalSpikeAttempts: number;
-        totalApeAttempts: number;
-    }> {
-        const seasonAggregatedStats = this.aggregateStatsBySeasonForRegularStats(stats);
-        
-        return seasonAggregatedStats
-            .filter(stat => this.getSeasonStatValue(stat, recordType) > 0)
-            .sort((a, b) => this.getSeasonStatValue(b, recordType) - this.getSeasonStatValue(a, recordType))
-            .slice(0, 10);
-    }
-
-    /**
-     * Get the appropriate season stat value for a record type
-     */
-    private getSeasonStatValue(seasonStat: {
-        totalSpikeKills: number;
-        totalApeKills: number;
-        totalAssists: number;
-        totalDigs: number;
-        totalBlockFollows: number;
-        totalBlocks: number;
-        totalAces: number;
-        totalServingErrors: number;
-        totalMiscErrors: number;
-        totalSettingErrors: number;
-        totalSpikingErrors: number;
-        totalSpikeAttempts: number;
-        totalApeAttempts: number;
-    }, recordType: string): number {
-        switch (recordType) {
-            case 'most spike kills': return seasonStat.totalSpikeKills;
-            case 'most assists': return seasonStat.totalAssists;
-            case 'most ape kills': return seasonStat.totalApeKills;
-            case 'most digs': return seasonStat.totalDigs;
-            case 'most block follows': return seasonStat.totalBlockFollows;
-            case 'most blocks': return seasonStat.totalBlocks;
-            case 'most aces': return seasonStat.totalAces;
-            case 'most serve errors': return seasonStat.totalServingErrors;
-            case 'most misc errors': return seasonStat.totalMiscErrors;
-            case 'most set errors': return seasonStat.totalSettingErrors;
-            case 'most spike errors': return seasonStat.totalSpikingErrors;
-            case 'most spike attempts': return seasonStat.totalSpikeAttempts;
-            case 'most ape attempts': return seasonStat.totalApeAttempts;
-            default: return 0;
-        }
-    }
-
-    /**
-     * Calculate top 10 season aggregated stats (total kills, attempts, errors)
-     */
-    private calculateTop10SeasonAggregatedStats(stats: Stats[], recordType: string): Array<{
-        player: Players;
-        season: Seasons;
-        totalSpikeKills: number;
-        totalApeKills: number;
-        totalAssists: number;
-        totalDigs: number;
-        totalBlockFollows: number;
-        totalBlocks: number;
-        totalAces: number;
-        totalServingErrors: number;
-        totalMiscErrors: number;
-        totalSettingErrors: number;
-        totalSpikingErrors: number;
-        totalSpikeAttempts: number;
-        totalApeAttempts: number;
-    }> {
-        const seasonAggregatedStats = this.aggregateStatsBySeasonForRegularStats(stats);
-        
-        return seasonAggregatedStats
-            .filter(stat => this.getSeasonAggregatedStatValue(stat, recordType) > 0)
-            .sort((a, b) => this.getSeasonAggregatedStatValue(b, recordType) - this.getSeasonAggregatedStatValue(a, recordType))
-            .slice(0, 10);
-    }
-
-    /**
-     * Get the appropriate season aggregated stat value for a record type
-     */
-    private getSeasonAggregatedStatValue(seasonStat: {
-        totalSpikeKills: number;
-        totalApeKills: number;
-        totalServingErrors: number;
-        totalMiscErrors: number;
-        totalSettingErrors: number;
-        totalSpikingErrors: number;
-        totalSpikeAttempts: number;
-        totalApeAttempts: number;
-    }, recordType: string): number {
-        switch (recordType) {
-            case 'most total kills': return seasonStat.totalSpikeKills + seasonStat.totalApeKills;
-            case 'most total attempts': return seasonStat.totalSpikeAttempts + seasonStat.totalApeAttempts;
-            case 'most total errors': return seasonStat.totalSpikingErrors + seasonStat.totalServingErrors + seasonStat.totalSettingErrors + seasonStat.totalMiscErrors;
-            default: return 0;
-        }
     }
 }
