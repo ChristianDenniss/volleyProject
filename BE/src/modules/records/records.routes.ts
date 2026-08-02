@@ -24,7 +24,7 @@ export function registerRecordRoutes(app: Application): void {
     router.get('/:id', recordController.getRecordById);
     
     // UPDATE/DELETE routes - PROTECTED
-    router.put('/:id', authenticateCombined, authorizeRoles("admin", "superadmin"), recordController.updateRecord);
+    router.put('/:id', authenticateCombined, authorizeRoles("admin", "superadmin"), validate(updateRecordSchema), recordController.updateRecord);
     router.patch('/:id', authenticateCombined, authorizeRoles("admin", "superadmin"), validate(updateRecordSchema), recordController.updateRecord);
     router.delete('/:id', authenticateCombined, authorizeRoles("admin", "superadmin"), recordController.deleteRecord);
 
