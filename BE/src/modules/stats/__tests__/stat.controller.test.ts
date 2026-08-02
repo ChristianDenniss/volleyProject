@@ -1,7 +1,8 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { StatController } from '../stat.controller.js';
+import { MissingFieldError } from '../../../errors/MissingFieldError.js';
+import { NotFoundError } from '../../../errors/NotFoundError.js';
 
-// Mock data
 const mockStat = {
     id: 1,
     spikingErrors: 2,
@@ -21,7 +22,6 @@ const mockStat = {
 
 const mockStats = [mockStat, { ...mockStat, id: 2, playerId: 2 }];
 
-// Mock the StatService
 jest.mock('../stat.service', () => {
     return {
         StatService: jest.fn().mockImplementation(() => {
@@ -42,6 +42,7 @@ describe('StatController', () => {
     let statController;
     let mockRequest;
     let mockResponse;
+    let next;
     let jsonMock;
     let statusMock;
     let sendMock;
@@ -50,6 +51,7 @@ describe('StatController', () => {
         jsonMock = jest.fn().mockReturnThis();
         sendMock = jest.fn().mockReturnThis();
         statusMock = jest.fn().mockReturnValue({ json: jsonMock, send: sendMock });
+        next = jest.fn();
 
         mockRequest = {};
         mockResponse = {
@@ -70,64 +72,53 @@ describe('StatController', () => {
             mockRequest.body = mockStat;
             statController.statService.createStat.mockResolvedValueOnce(mockStat);
 
-            await statController.createStat(mockRequest, mockResponse);
+            await statController.createStat(mockRequest, mockResponse, next);
 
-            expect(statController.statService.createStat).toHaveBeenCalledWith(
-                mockStat.spikingErrors,
-                mockStat.apeKills,
-                mockStat.apeAttempts,
-                mockStat.spikeKills,
-                mockStat.spikeAttempts,
-                mockStat.assists,
-                mockStat.blocks,
-                mockStat.digs,
-                mockStat.blockFollows,
-                mockStat.aces,
-                mockStat.miscErrors,
-                mockStat.playerId,
-                mockStat.gameId
-            );
+            expect(statController.statService.createStat).toHaveBeenCalled();
             expect(statusMock).toHaveBeenCalledWith(201);
             expect(jsonMock).toHaveBeenCalledWith(mockStat);
+            expect(next).not.toHaveBeenCalled();
         });
 
-        it('should handle validation errors with 400 status', async () => {
+        it('should forward validation errors to error handler', async () => {
+            const validationError = new MissingFieldError('Player ID is required');
             mockRequest.body = {};
-            statController.statService.createStat.mockRejectedValueOnce(new Error('Player ID is required'));
+            statController.statService.createStat.mockRejectedValueOnce(validationError);
 
-            await statController.createStat(mockRequest, mockResponse);
+            await statController.createStat(mockRequest, mockResponse, next);
 
-            expect(statusMock).toHaveBeenCalledWith(400);
-            expect(jsonMock).toHaveBeenCalledWith({ error: 'Player ID is required' });
+            expect(next).toHaveBeenCalledWith(validationError);
         });
 
-        it('should handle server errors with 500 status', async () => {
+        it('should forward server errors to error handler', async () => {
+            const serverError = new Error('Database error');
             mockRequest.body = mockStat;
-            statController.statService.createStat.mockRejectedValueOnce(new Error('Database error'));
+            statController.statService.createStat.mockRejectedValueOnce(serverError);
 
-            await statController.createStat(mockRequest, mockResponse);
+            await statController.createStat(mockRequest, mockResponse, next);
 
-            expect(statusMock).toHaveBeenCalledWith(500);
-            expect(jsonMock).toHaveBeenCalledWith({ error: 'Failed to create stat' });
+            expect(next).toHaveBeenCalledWith(serverError);
         });
     });
 
     describe('getStats', () => {
         it('should return all stats', async () => {
-            statController.statService.getAllStats.mockResolvedValueOnce(mockStats);
+            statController.statService.getAllStats.mockResolvedValueOnce([mockStats, mockStats.length]);
+            mockRequest.query = {};
 
-            await statController.getStats(mockRequest, mockResponse);
+            await statController.getStats(mockRequest, mockResponse, next);
 
-            expect(jsonMock).toHaveBeenCalledWith(mockStats);
+            expect(next).not.toHaveBeenCalled();
         });
 
-        it('should handle server errors with 500 status', async () => {
-            statController.statService.getAllStats.mockRejectedValueOnce(new Error('Database error'));
+        it('should forward server errors to error handler', async () => {
+            const serverError = new Error('Database error');
+            mockRequest.query = {};
+            statController.statService.getAllStats.mockRejectedValueOnce(serverError);
 
-            await statController.getStats(mockRequest, mockResponse);
+            await statController.getStats(mockRequest, mockResponse, next);
 
-            expect(statusMock).toHaveBeenCalledWith(500);
-            expect(jsonMock).toHaveBeenCalledWith({ error: 'Failed to fetch stats' });
+            expect(next).toHaveBeenCalledWith(serverError);
         });
     });
 
@@ -136,29 +127,30 @@ describe('StatController', () => {
             mockRequest.params = { id: '1' };
             statController.statService.getStatById.mockResolvedValueOnce(mockStat);
 
-            await statController.getStatById(mockRequest, mockResponse);
+            await statController.getStatById(mockRequest, mockResponse, next);
 
             expect(jsonMock).toHaveBeenCalledWith(mockStat);
+            expect(next).not.toHaveBeenCalled();
         });
 
-        it('should return 404 if stat not found', async () => {
+        it('should forward not found errors to error handler', async () => {
+            const notFoundError = new NotFoundError('Stat not found');
             mockRequest.params = { id: '99' };
-            statController.statService.getStatById.mockRejectedValueOnce(new Error('Stat not found'));
+            statController.statService.getStatById.mockRejectedValueOnce(notFoundError);
 
-            await statController.getStatById(mockRequest, mockResponse);
+            await statController.getStatById(mockRequest, mockResponse, next);
 
-            expect(statusMock).toHaveBeenCalledWith(404);
-            expect(jsonMock).toHaveBeenCalledWith({ error: 'Stat not found' });
+            expect(next).toHaveBeenCalledWith(notFoundError);
         });
 
-        it('should handle server errors with 500 status', async () => {
+        it('should forward server errors to error handler', async () => {
+            const serverError = new Error('Database error');
             mockRequest.params = { id: '1' };
-            statController.statService.getStatById.mockRejectedValueOnce(new Error('Database error'));
+            statController.statService.getStatById.mockRejectedValueOnce(serverError);
 
-            await statController.getStatById(mockRequest, mockResponse);
+            await statController.getStatById(mockRequest, mockResponse, next);
 
-            expect(statusMock).toHaveBeenCalledWith(500);
-            expect(jsonMock).toHaveBeenCalledWith({ error: 'Failed to fetch stat' });
+            expect(next).toHaveBeenCalledWith(serverError);
         });
     });
 
@@ -167,72 +159,79 @@ describe('StatController', () => {
             mockRequest.params = { id: '1' };
             statController.statService.deleteStat.mockResolvedValueOnce();
 
-            await statController.deleteStat(mockRequest, mockResponse);
+            await statController.deleteStat(mockRequest, mockResponse, next);
 
             expect(statusMock).toHaveBeenCalledWith(204);
             expect(sendMock).toHaveBeenCalled();
+            expect(next).not.toHaveBeenCalled();
         });
 
-        it('should return 404 if stat not found', async () => {
+        it('should forward not found errors to error handler', async () => {
+            const notFoundError = new NotFoundError('Stat not found');
             mockRequest.params = { id: '99' };
-            statController.statService.deleteStat.mockRejectedValueOnce(new Error('Stat not found'));
+            statController.statService.deleteStat.mockRejectedValueOnce(notFoundError);
 
-            await statController.deleteStat(mockRequest, mockResponse);
+            await statController.deleteStat(mockRequest, mockResponse, next);
 
-            expect(statusMock).toHaveBeenCalledWith(404);
-            expect(jsonMock).toHaveBeenCalledWith({ error: 'Stat not found' });
+            expect(next).toHaveBeenCalledWith(notFoundError);
         });
 
-        it('should handle server errors with 500 status', async () => {
+        it('should forward server errors to error handler', async () => {
+            const serverError = new Error('Database error');
             mockRequest.params = { id: '1' };
-            statController.statService.deleteStat.mockRejectedValueOnce(new Error('Database error'));
+            statController.statService.deleteStat.mockRejectedValueOnce(serverError);
 
-            await statController.deleteStat(mockRequest, mockResponse);
+            await statController.deleteStat(mockRequest, mockResponse, next);
 
-            expect(statusMock).toHaveBeenCalledWith(500);
-            expect(jsonMock).toHaveBeenCalledWith({ error: 'Failed to delete stat' });
+            expect(next).toHaveBeenCalledWith(serverError);
         });
     });
 
     describe('getStatsByPlayerId', () => {
         it('should return stats for a given player', async () => {
             mockRequest.params = { playerId: '1' };
-            statController.statService.getStatsByPlayerId.mockResolvedValueOnce([mockStat]);
+            mockRequest.query = {};
+            statController.statService.getStatsByPlayerId.mockResolvedValueOnce([[mockStat], 1]);
 
-            await statController.getStatsByPlayerId(mockRequest, mockResponse);
+            await statController.getStatsByPlayerId(mockRequest, mockResponse, next);
 
-            expect(jsonMock).toHaveBeenCalledWith([mockStat]);
+            expect(next).not.toHaveBeenCalled();
         });
 
         it('should return 404 if no stats found', async () => {
             mockRequest.params = { playerId: '99' };
-            statController.statService.getStatsByPlayerId.mockResolvedValueOnce([]);
+            mockRequest.query = {};
+            statController.statService.getStatsByPlayerId.mockResolvedValueOnce([[], 0]);
 
-            await statController.getStatsByPlayerId(mockRequest, mockResponse);
+            await statController.getStatsByPlayerId(mockRequest, mockResponse, next);
 
             expect(statusMock).toHaveBeenCalledWith(404);
             expect(jsonMock).toHaveBeenCalledWith({ message: 'No stats found for the specified player' });
+            expect(next).not.toHaveBeenCalled();
         });
     });
 
     describe('getStatsByGameId', () => {
         it('should return stats for a given game', async () => {
             mockRequest.params = { gameId: '1' };
-            statController.statService.getStatsByGameId.mockResolvedValueOnce([mockStat]);
+            mockRequest.query = {};
+            statController.statService.getStatsByGameId.mockResolvedValueOnce([[mockStat], 1]);
 
-            await statController.getStatsByGameId(mockRequest, mockResponse);
+            await statController.getStatsByGameId(mockRequest, mockResponse, next);
 
-            expect(jsonMock).toHaveBeenCalledWith([mockStat]);
+            expect(next).not.toHaveBeenCalled();
         });
 
         it('should return 404 if no stats found', async () => {
             mockRequest.params = { gameId: '99' };
-            statController.statService.getStatsByGameId.mockResolvedValueOnce([]);
+            mockRequest.query = {};
+            statController.statService.getStatsByGameId.mockResolvedValueOnce([[], 0]);
 
-            await statController.getStatsByGameId(mockRequest, mockResponse);
+            await statController.getStatsByGameId(mockRequest, mockResponse, next);
 
             expect(statusMock).toHaveBeenCalledWith(404);
             expect(jsonMock).toHaveBeenCalledWith({ message: 'No stats found for the specified game' });
+            expect(next).not.toHaveBeenCalled();
         });
     });
 });

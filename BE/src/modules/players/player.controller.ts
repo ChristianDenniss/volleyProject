@@ -1,6 +1,4 @@
-import { Request, Response } from 'express';
-import { MissingFieldError } from '../../errors/MissingFieldError.js';
-import { NotFoundError } from '../../errors/NotFoundError.js';
+import { Request, Response, NextFunction } from 'express';
 import { PlayerService, PlayerFilters, PLAYER_SORT_FIELDS, PLAYER_DEFAULT_SORT } from './player.service.js';
 import { parsePagination, parseSort, toPaginatedResult } from '../../utils/pagination.js';
 import { parseRegionQuery } from '../../utils/regionQuery.js';
@@ -17,34 +15,22 @@ export class PlayerController {
         this.regionService = new RegionService();
     }
 
-    // Create a new player
-    createPlayer = async (req: Request, res: Response): Promise<void> => {
+    createPlayer = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const { name, position, teamId } = req.body;
             const savedPlayer = await this.playerService.createPlayer(
-                name, 
-                position, 
+                name,
+                position,
                 teamId
             );
-            
+
             res.status(201).json(savedPlayer);
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to create player";
-            
-            if (errorMessage.includes("required") || 
-                errorMessage.includes("not found") || 
-                errorMessage.includes("already in use") ||
-                errorMessage.includes("must be")) {
-                res.status(400).json({ error: errorMessage });
-            } else {
-                console.error("Error creating player:", error);
-                res.status(500).json({ error: "Failed to create player" });
-            }
+            next(error);
         }
     };
 
-    // Create a new player using team name
-    createPlayerByName = async (req: Request, res: Response): Promise<void> => {
+    createPlayerByName = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const { name, position, teamName } = req.body;
 
@@ -56,125 +42,70 @@ export class PlayerController {
 
             res.status(201).json(savedPlayer);
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to create player";
-
-            if (errorMessage.includes("required") || 
-                errorMessage.includes("not found") || 
-                errorMessage.includes("already exists")) {
-                res.status(400).json({ error: errorMessage });
-            } else {
-                console.error("Error creating player:", error);
-                res.status(500).json({ error: "Failed to create player" });
-            }
+            next(error);
         }
     };
 
-    /**
-     * Controller to handle the request to get teams by player name
-     */
-    getTeamsByPlayerName = async (req: Request, res: Response): Promise<void> =>
+    getTeamsByPlayerName = async (req: Request, res: Response, next: NextFunction): Promise<void> =>
     {
         const { playerName } = req.params;
-        console.log("Received request for playerName:", playerName); // 👈 Log incoming value
 
-        try 
+        try
         {
             const teamNames = await this.playerService.getTeamsByPlayerName(playerName);
-            console.log("Found team names:", teamNames); // 👈 Log what service returns
 
             res.status(200).json({
                 success: true,
                 playerName: playerName,
                 teams: teamNames
             });
-        } 
-        catch (error) 
-        {
-            console.error("Error occurred:", error); // 👈 Log actual error
-
-            if (error instanceof MissingFieldError) 
-            {
-                res.status(400).json({ success: false, message: error.message });
-            } 
-            else if (error instanceof NotFoundError) 
-            {
-                res.status(404).json({ success: false, message: error.message });
-            } 
-            else 
-            {
-                res.status(500).json({ success: false, message: "Internal Server Error" });
-            }
         }
-    }
+        catch (error)
+        {
+            next(error);
+        }
+    };
 
-     // Create multiple players at once
-     createMultiplePlayers = async (req: Request, res: Response): Promise<void> => {
+    createMultiplePlayers = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const playersData = req.body;
-            
-            // Ensure the request body is an array
+
             if (!Array.isArray(playersData)) {
                 res.status(400).json({ error: "Request body must be an array of player objects" });
                 return;
             }
 
-            // Create multiple players
             const createdPlayers = await this.playerService.createMultiplePlayers(playersData);
             res.status(201).json(createdPlayers);
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to create multiple players";
-            
-            if (errorMessage.includes("required") || errorMessage.includes("not found")) {
-                res.status(400).json({ error: errorMessage });
-            } else {
-                console.error("Error creating multiple players:", error);
-                res.status(500).json({ error: "Failed to create multiple players" });
-            }
+            next(error);
         }
     };
 
-    // Create multiple players at once using team name
-    createMultiplePlayersByName = async (req: Request, res: Response): Promise<void> => {
+    createMultiplePlayersByName = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const { seasonId, players: playersData } = req.body;
 
-            console.log('Request Body:', { seasonId, playersData });
-
             const createdPlayers = await this.playerService.createMultiplePlayersByName(seasonId, playersData);
-
-            console.log('Created players:', createdPlayers);
-
             res.status(201).json(createdPlayers);
-        } catch (error: unknown) {
-            if (error instanceof MissingFieldError || error instanceof NotFoundError) {
-                res.status(400).json({ error: error.message });
-                return;
-            }
-            console.error("Error creating multiple players by name:", error);
-            res.status(500).json({ error: "Failed to create multiple players" });
+        } catch (error) {
+            next(error);
         }
     };
 
-
-
-    // Get all players
-    getPlayers = async (req: Request, res: Response): Promise<void> => {
+    getPlayers = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-    // Peer roster for PlayerStatsVisualization league/teammate charts — naturally bounded
-            // by season when filtered, but still larger than the default list-page max.
             const pagination = parsePagination(req.query, PLAYERS_DEFAULT_LIMIT, 500);
             const sort = parseSort(req.query, PLAYER_SORT_FIELDS, PLAYER_DEFAULT_SORT, 'ASC');
             const filters = await this.parseFilters(req);
             const [data, total] = await this.playerService.getAllPlayers(pagination, filters, sort);
             res.json(toPaginatedResult(data, total, pagination));
         } catch (error) {
-            console.error("Error fetching players:", error);
-            res.status(500).json({ error: "Failed to fetch players" });
+            next(error);
         }
     };
 
-    // Get all players with medium relations / minimal data
-    getMediumPlayers = async (req: Request, res: Response): Promise<void> => {
+    getMediumPlayers = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const pagination = parsePagination(req.query, PLAYERS_DEFAULT_LIMIT);
             const sort = parseSort(req.query, PLAYER_SORT_FIELDS, PLAYER_DEFAULT_SORT, 'ASC');
@@ -182,8 +113,7 @@ export class PlayerController {
             const [data, total] = await this.playerService.getMediumAllPlayers(pagination, filters, sort);
             res.json(toPaginatedResult(data, total, pagination));
         } catch (error) {
-            console.error("Error fetching players with medium relations:", error);
-            res.status(500).json({ error: "Failed to fetch players with medium relations" });
+            next(error);
         }
     };
 
@@ -199,8 +129,7 @@ export class PlayerController {
         };
     }
 
-    // Get player by ID
-    getPlayerById = async (req: Request, res: Response): Promise<void> => {
+    getPlayerById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const { id } = req.params;
             const regionFilter = parseRegionQuery(req.query as Record<string, unknown>);
@@ -208,19 +137,11 @@ export class PlayerController {
             const player = await this.playerService.getPlayerById(parseInt(id), regionId);
             res.json(player);
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to fetch player";
-            
-            if (errorMessage.includes("not found")) {
-                res.status(404).json({ error: errorMessage });
-            } else {
-                console.error("Error fetching player by ID:", error);
-                res.status(500).json({ error: "Failed to fetch player" });
-            }
+            next(error);
         }
     };
 
-    // Update a player
-    updatePlayer = async (req: Request, res: Response): Promise<void> => {
+    updatePlayer = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const { id } = req.params;
             const updateData = req.body;
@@ -230,91 +151,48 @@ export class PlayerController {
             );
             res.json(updatedPlayer);
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to update player";
-            
-            if (errorMessage.includes("not found")) {
-                res.status(404).json({ error: errorMessage });
-            } else if (errorMessage.includes("required") || 
-                      errorMessage.includes("already in use") ||
-                      errorMessage.includes("must be")) {
-                res.status(400).json({ error: errorMessage });
-            } else {
-                console.error("Error updating player:", error);
-                res.status(500).json({ error: "Failed to update player" });
-            }
+            next(error);
         }
     };
 
-    // Delete a player
-    deletePlayer = async (req: Request, res: Response): Promise<void> => {
+    deletePlayer = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const { id } = req.params;
             await this.playerService.deletePlayer(parseInt(id));
             res.status(204).send();
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to delete player";
-            
-            if (errorMessage.includes("not found")) {
-                res.status(404).json({ error: errorMessage });
-            } else {
-                console.error("Error deleting player:", error);
-                res.status(500).json({ error: "Failed to delete player" });
-            }
+            next(error);
         }
     };
 
-    // Get players by team ID
-    getPlayersByTeamId = async (req: Request, res: Response): Promise<void> => {
+    getPlayersByTeamId = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const { teamId } = req.params;
             const pagination = parsePagination(req.query, PLAYERS_DEFAULT_LIMIT);
             const [data, total] = await this.playerService.getPlayersByTeamId(parseInt(teamId), pagination);
-            
+
             if (data.length === 0) {
                 res.status(404).json({ message: "No players found for the specified team" });
                 return;
             }
-            
+
             res.json(toPaginatedResult(data, total, pagination));
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to fetch players by team";
-            
-            if (errorMessage.includes("not found") || errorMessage.includes("required")) {
-                res.status(400).json({ error: errorMessage });
-            } else {
-                console.error("Error fetching players by team ID:", error);
-                res.status(500).json({ error: "Failed to fetch players by team" });
-            }
+            next(error);
         }
     };
 
-    // Merge one player into another
-    mergePlayers = async (req: Request, res: Response): Promise<void> =>
+    mergePlayers = async (req: Request, res: Response, next: NextFunction): Promise<void> =>
     {
         try
         {
             const { targetId, mergedId } = req.body;
             await this.playerService.mergePlayers(targetId, mergedId);
             res.sendStatus(204);
-         }
+        }
         catch (error)
         {
-            const msg = error instanceof Error ? error.message : 'Failed to merge players';
-    
-            if (error instanceof MissingFieldError) 
-            {
-                res.status(400).json({ error: msg });
-            }
-            else if (error instanceof NotFoundError) 
-            {
-                    res.status(404).json({ error: msg });
-            }
-            else 
-            {
-                    console.error('Error merging players:', error);
-                    res.status(500).json({ error: 'Internal Server Error' });
-            }
+            next(error);
         }
     };
-    
 }
