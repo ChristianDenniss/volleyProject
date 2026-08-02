@@ -162,31 +162,35 @@ describe('PlayerService', () =>
 
     describe('getPlayersByTeamId', () => 
     {
+        const pagination = { page: 1, limit: 10, skip: 0, take: 10 };
+
         it('should return players by team ID', async () => 
         {
             mockRepository.findOneBy.mockResolvedValueOnce(mockTeam);
-            mockRepository.find.mockResolvedValueOnce(mockPlayers);
+            mockRepository.findAndCount = jest.fn().mockResolvedValueOnce([mockPlayers, mockPlayers.length]);
 
-            const result = await playerService.getPlayersByTeamId(1);
+            const result = await playerService.getPlayersByTeamId(1, pagination);
 
             expect(mockRepository.findOneBy).toHaveBeenCalledWith({ id: 1 });
-            expect(mockRepository.find).toHaveBeenCalledWith({
-                where: { team: { id: 1 } },
+            expect(mockRepository.findAndCount).toHaveBeenCalledWith({
+                where: { teams: { id: 1 } },
                 relations: ["stats"],
+                skip: 0,
+                take: 10,
             });
-            expect(result).toEqual(mockPlayers);
+            expect(result).toEqual([mockPlayers, mockPlayers.length]);
         });
 
         it('should throw error if team ID is missing', async () => 
         {
-            await expect(playerService.getPlayersByTeamId(0)).rejects.toThrow('Team ID is required');
+            await expect(playerService.getPlayersByTeamId(0, pagination)).rejects.toThrow('Team ID is required');
         });
 
         it('should throw error if team does not exist', async () => 
         {
             mockRepository.findOneBy.mockResolvedValueOnce(null);
 
-            await expect(playerService.getPlayersByTeamId(999)).rejects.toThrow('Team with ID 999 not found');
+            await expect(playerService.getPlayersByTeamId(999, pagination)).rejects.toThrow('Team with ID 999 not found');
         });
     });
 });

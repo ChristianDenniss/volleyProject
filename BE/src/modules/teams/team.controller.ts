@@ -8,6 +8,7 @@ import { parseRegionQuery } from '../../utils/regionQuery.js';
 import { RegionService } from '../regions/region.service.js';
 
 const TEAMS_DEFAULT_LIMIT = 10;
+const TEAMS_BY_NAME_DEFAULT_LIMIT = 100;
 
 export class TeamController {
     private teamService: TeamService;
@@ -237,9 +238,10 @@ export class TeamController {
             if (!name) {
                 throw new MissingFieldError("Team name is required");
             }
-        
-            const teams = await this.teamService.getTeamsByName(name);
-            res.status(200).json(teams);
+
+            const pagination = parsePagination(req.query, TEAMS_BY_NAME_DEFAULT_LIMIT);
+            const [data, total] = await this.teamService.getTeamsByName(name, pagination);
+            res.status(200).json(toPaginatedResult(data, total, pagination));
         } catch (error: unknown) {
             console.error('Error in getTeamsByName:', error);
             
@@ -260,14 +262,15 @@ export class TeamController {
     getTeamsBySeasonId = async (req: Request, res: Response): Promise<void> => {
         try {
             const { seasonId } = req.params;
-            const teams = await this.teamService.getTeamsBySeasonId(parseInt(seasonId));
+            const pagination = parsePagination(req.query, TEAMS_DEFAULT_LIMIT);
+            const [data, total] = await this.teamService.getTeamsBySeasonId(parseInt(seasonId), pagination);
             
-            if (teams.length === 0) {
+            if (data.length === 0) {
                 res.status(404).json({ message: "No teams found for the specified season" });
                 return;
             }
             
-            res.json(teams);
+            res.json(toPaginatedResult(data, total, pagination));
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : "Failed to fetch teams by season";
             if (errorMessage.includes("not found") || errorMessage.includes("required")) {

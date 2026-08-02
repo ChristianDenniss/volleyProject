@@ -284,26 +284,30 @@ describe('GameController', () => {
 
   describe('getGamesByTeamId', () => {
     it('should return all games for a specific team', async () => {
-      mockGetGamesByTeamId.mockResolvedValue(mockGames);
+      mockGetGamesByTeamId.mockResolvedValue([mockGames, mockGames.length]);
 
-      // Convert teamId to string
-      req = { params: { teamId: '1' } };
+      req = { params: { teamId: '1' }, query: {} };
 
       await gameController.getGamesByTeamId(req as Request, res as Response);
 
-      expect(mockGetGamesByTeamId).toHaveBeenCalledWith(1);
-      expect(res.json).toHaveBeenCalledWith(mockGames);
+      expect(mockGetGamesByTeamId).toHaveBeenCalledWith(1, expect.objectContaining({ page: 1, limit: 10 }));
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+        data: mockGames,
+        total: mockGames.length,
+        page: 1,
+        limit: 10,
+      }));
     });
 
     it('should return 404 if no games are found for team', async () => {
-      mockGetGamesByTeamId.mockResolvedValue([]);
+      mockGetGamesByTeamId.mockResolvedValue([[], 0]);
 
-      req = { params: { teamId: '1' } };
+      req = { params: { teamId: '1' }, query: {} };
 
       await gameController.getGamesByTeamId(req as Request, res as Response);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'No games found for team' });
+      expect(res.json).toHaveBeenCalledWith({ message: 'No games found for the specified team' });
     });
 
     it('should return 500 for server error', async () => {

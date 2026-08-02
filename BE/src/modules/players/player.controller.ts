@@ -267,14 +267,15 @@ export class PlayerController {
     getPlayersByTeamId = async (req: Request, res: Response): Promise<void> => {
         try {
             const { teamId } = req.params;
-            const players = await this.playerService.getPlayersByTeamId(parseInt(teamId));
+            const pagination = parsePagination(req.query, PLAYERS_DEFAULT_LIMIT);
+            const [data, total] = await this.playerService.getPlayersByTeamId(parseInt(teamId), pagination);
             
-            if (players.length === 0) {
+            if (data.length === 0) {
                 res.status(404).json({ message: "No players found for the specified team" });
                 return;
             }
             
-            res.json(players);
+            res.json(toPaginatedResult(data, total, pagination));
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : "Failed to fetch players by team";
             

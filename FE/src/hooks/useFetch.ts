@@ -34,8 +34,9 @@ export const useFetch = <T>(endpoint: string) =>
                         throw new Error("Network response was not ok");
                     }
     
-                    const result: T[] = await response.json(); // Always assume it's an array
-                    setData(result);
+                    const result = await response.json();
+                    const items: T[] = Array.isArray(result) ? result : result.data;
+                    setData(items);
                 }
                 catch (err: any)
                 {
@@ -58,7 +59,7 @@ export const useFetch = <T>(endpoint: string) =>
 // Specific hook to fetch a team by name
 export const useFetchTeamByName = <T>(teamName: string) =>
 {
-    return useFetch<T>(`teams/name/${encodeURIComponent(teamName)}`);  // Always treats result as an array
+    return useFetch<T>(`teams/name/${encodeURIComponent(teamName)}?limit=100`);
 };
 
 export const useFetchGameById = <T>(gameId: string) =>
