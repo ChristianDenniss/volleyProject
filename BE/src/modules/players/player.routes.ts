@@ -32,7 +32,7 @@ export function registerPlayerRoutes(app: Application): void
     router.get('/:id', cacheMiddleware({ prefix: 'players', ttl: 600 }), playerController.getPlayerById);
 
     // UPDATE/DELETE routes - PROTECTED - with cache invalidation
-    router.put('/:id', authenticateCombined, authorizeRoles("admin", "superadmin"), invalidateCacheMiddleware('players'), playerController.updatePlayer);
+    router.put('/:id', authenticateCombined, authorizeRoles("admin", "superadmin"), validate(updatePlayerSchema), invalidateCacheMiddleware('players'), playerController.updatePlayer);
     router.patch('/:id', authenticateCombined, authorizeRoles("admin", "superadmin"), validate(updatePlayerSchema), invalidateCacheMiddleware('players'), playerController.updatePlayer);
     router.delete('/:id', authenticateCombined, authorizeRoles("admin", "superadmin"), invalidateCacheMiddleware('players'), playerController.deletePlayer);
     router.get('/team/:teamId', cacheMiddleware({ prefix: 'players', ttl: 600 }), playerController.getPlayersByTeamId);

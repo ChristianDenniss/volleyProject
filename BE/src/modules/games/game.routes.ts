@@ -29,7 +29,7 @@ export function registerGameRoutes(app: Application): void {
     router.post('/createByNames', authenticateCombined, authorizeRoles("admin", "superadmin"), validate(createGameByNamesSchema), gameController.createGameByNames);
 
     // UPDATE/DELETE routes - PROTECTED
-    router.put('/:id', authenticateCombined, authorizeRoles("admin", "superadmin"), gameController.updateGame); // Update a game (update score if needed)
+    router.put('/:id', authenticateCombined, authorizeRoles("admin", "superadmin"), validate(updateGameSchema), gameController.updateGame); // Update a game (update score if needed)
     router.patch('/:id', authenticateCombined, authorizeRoles("admin", "superadmin"), validate(updateGameSchema), gameController.updateGame); // Only update given fields
     router.delete('/:id', authenticateCombined, authorizeRoles("admin", "superadmin"), gameController.deleteGame); // Delete a game
 
