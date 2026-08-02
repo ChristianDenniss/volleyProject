@@ -57,7 +57,7 @@ export const AppDataSource = new DataSource({
     logging: process.env.NODE_ENV === "production" ? ["error"] : ["error", "warn", "migration"],
     maxQueryExecutionTime: 1000,
     entities: entities,
-    migrations: [join(__dirname, "..", "..", "migrations", "*.{js,ts}")], // Point to dist/migrations in production
+    migrations: [join(__dirname, "..", "migrations", "*.{js,ts}")], // src/migrations (or dist/migrations after build)
     migrationsTableName: "migrations", // Explicitly set migrations table name
     migrationsTransactionMode: "each",
     subscribers: [],
