@@ -14,8 +14,9 @@ import type {
 } from "../types/interfaces"
 import { MOCK_AUTH_TOKEN, mockAuthUser } from "../mocks/data"
 import { isMockMode, clearClientAuthState } from "../utils/authStorage"
+import { BACKEND_URL } from "../constants/api"
 
-const API_BASE = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000"
+const API_BASE = BACKEND_URL
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 

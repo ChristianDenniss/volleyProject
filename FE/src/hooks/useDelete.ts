@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { authFetch } from "./authFetch";
 import { useAuth } from "../context/authContext";
+import { BACKEND_URL } from "../constants/api";
 
 /**
  * Generic hook to DELETE a resource at `${endpoint}/{id}`.
@@ -27,7 +28,7 @@ export const useDelete = (endpoint: string) => {
             return null;
         }
 
-        const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+        const backendUrl = BACKEND_URL;
         try {
             const response = await authFetch(
                 `${backendUrl}/api/${endpoint}/${id}`,
