@@ -1,3 +1,4 @@
+import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { PlayerController } from '../player.controller.js';
 import { PlayerService } from '../player.service.js';
 import { mockPlayer, savedPlayer, mockPlayers, mockTeam } from '../../../__mocks__/fixtures.js';
@@ -5,7 +6,6 @@ import { Request, Response, NextFunction } from 'express';
 import { MissingFieldError } from '../../../errors/MissingFieldError.js';
 import { NotFoundError } from '../../../errors/NotFoundError.js';
 
-jest.mock('./player.service');
 const mockCreatePlayer = jest.fn();
 const mockGetAllPlayers = jest.fn();
 const mockGetPlayerById = jest.fn();

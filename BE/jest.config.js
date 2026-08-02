@@ -9,4 +9,6 @@ export default {
     '^(\\.{1,2}/.*)\\.js$': '$1'
   },
   extensionsToTreatAsEsm: ['.ts'],
+  injectGlobals: true,
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
 };

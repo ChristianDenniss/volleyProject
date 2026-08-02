@@ -5,8 +5,8 @@ import { fileURLToPath } from "url";
 import { env, getPostgresConnectionOptions } from "../config/env.js";
 
 // Get the current file's directory in ESM
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const currentFile = fileURLToPath(import.meta.url);
+const currentDir = dirname(currentFile);
 
 // Entities from modules
 import { Teams } from "../modules/teams/team.entity.js";
@@ -48,7 +48,7 @@ export const AppDataSource = new DataSource({
     logging: env.NODE_ENV === "production" ? ["error"] : ["error", "warn", "migration"],
     maxQueryExecutionTime: 1000,
     entities: entities,
-    migrations: [join(__dirname, "..", "migrations", "*.{js,ts}")], // src/migrations (or dist/migrations after build)
+    migrations: [join(currentDir, "..", "migrations", "*.{js,ts}")], // src/migrations (or dist/migrations after build)
     migrationsTableName: "migrations", // Explicitly set migrations table name
     migrationsTransactionMode: "each",
     subscribers: [],

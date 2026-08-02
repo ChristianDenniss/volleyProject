@@ -1,3 +1,5 @@
+import { jest } from '@jest/globals';
+
 // Mock repository
 export const mockRepository = {
   find: jest.fn(),

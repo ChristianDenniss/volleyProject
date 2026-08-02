@@ -1,10 +1,10 @@
+import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { GameController } from '../game.controller.js';
 import { GameService } from '../game.service.js';
 import { mockGame, savedGame, mockGames, mockTeam } from '../../../__mocks__/fixtures.js';
 import { Request, Response, NextFunction } from 'express';
 import { MissingFieldError } from '../../../errors/MissingFieldError.js';
 
-jest.mock('./game.service');
 const mockCreateGame = jest.fn();
 const mockGetAllGames = jest.fn();
 const mockGetGameById = jest.fn();

@@ -3,43 +3,39 @@ import { RoleAuditLog } from '../role-audit-log.entity.js';
 import { UserService } from '../user.service.js';
 import { UnauthorizedError } from '../../../errors/UnauthorizedError.js';
 import { NotFoundError } from '../../../errors/NotFoundError.js';
+import { AppDataSource } from '../../../db/data-source.js';
 
 const mockUserRepo = {
   findOne: jest.fn(),
-  save: jest.fn(),
 };
 
-const mockAuditRepo = {
-  save: jest.fn(),
+const mockQueryRunner = {
+  connect: jest.fn().mockResolvedValue(undefined),
+  startTransaction: jest.fn().mockResolvedValue(undefined),
+  commitTransaction: jest.fn().mockResolvedValue(undefined),
+  rollbackTransaction: jest.fn().mockResolvedValue(undefined),
+  release: jest.fn().mockResolvedValue(undefined),
+  manager: {
+    save: jest.fn().mockImplementation(async (entity: unknown) => entity),
+  },
 };
 
 const getRepositoryMock = jest.fn((entity: unknown) => {
   if (entity === RoleAuditLog) {
-    return mockAuditRepo;
+    return {};
   }
   return mockUserRepo;
 });
-
-jest.unstable_mockModule('../../../db/data-source.js', () => ({
-  AppDataSource: {
-    getRepository: getRepositoryMock,
-  },
-}));
-
-const { UserService: UserServiceClass } = await import('../user.service.js');
 
 describe('UserService.changeUserRole', () => {
   let userService: UserService;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    getRepositoryMock.mockImplementation((entity: unknown) => {
-      if (entity === RoleAuditLog) {
-        return mockAuditRepo;
-      }
-      return mockUserRepo;
-    });
-    userService = new UserServiceClass();
+    mockQueryRunner.manager.save.mockImplementation(async (entity: unknown) => entity);
+    (AppDataSource.getRepository as jest.Mock).mockImplementation(getRepositoryMock);
+    (AppDataSource.createQueryRunner as jest.Mock).mockReturnValue(mockQueryRunner);
+    userService = new UserService();
   });
 
   it('rejects non-superadmin requesters', async () => {
@@ -65,8 +61,6 @@ describe('UserService.changeUserRole', () => {
     };
 
     mockUserRepo.findOne.mockResolvedValueOnce(target);
-    mockUserRepo.save.mockImplementation(async (user: typeof target) => user);
-    mockAuditRepo.save.mockResolvedValue(undefined);
 
     const result = await userService.changeUserRole(
       { id: 1, role: 'superadmin' },
@@ -77,7 +71,7 @@ describe('UserService.changeUserRole', () => {
 
     expect(result.role).toBe('admin');
     expect(result.tokenVersion).toBe(1);
-    expect(mockAuditRepo.save).toHaveBeenCalledWith(
+    expect(mockQueryRunner.manager.save).toHaveBeenCalledWith(
       expect.objectContaining({
         actorId: 1,
         targetId: 3,
@@ -86,6 +80,7 @@ describe('UserService.changeUserRole', () => {
         ip: '127.0.0.1',
       })
     );
+    expect(mockQueryRunner.commitTransaction).toHaveBeenCalled();
   });
 
   it('prevents demoting another superadmin', async () => {
@@ -100,8 +95,7 @@ describe('UserService.changeUserRole', () => {
       userService.changeUserRole({ id: 1, role: 'superadmin' }, 4, 'admin')
     ).rejects.toThrow('Cannot modify another superadmin');
 
-    expect(mockUserRepo.save).not.toHaveBeenCalled();
-    expect(mockAuditRepo.save).not.toHaveBeenCalled();
+    expect(mockQueryRunner.manager.save).not.toHaveBeenCalled();
   });
 
   it('allows a superadmin no-op on another superadmin', async () => {
@@ -113,8 +107,6 @@ describe('UserService.changeUserRole', () => {
     };
 
     mockUserRepo.findOne.mockResolvedValueOnce(target);
-    mockUserRepo.save.mockImplementation(async (user: typeof target) => user);
-    mockAuditRepo.save.mockResolvedValue(undefined);
 
     const result = await userService.changeUserRole(
       { id: 1, role: 'superadmin' },
@@ -124,7 +116,7 @@ describe('UserService.changeUserRole', () => {
 
     expect(result.role).toBe('superadmin');
     expect(result.tokenVersion).toBe(3);
-    expect(mockAuditRepo.save).toHaveBeenCalled();
+    expect(mockQueryRunner.manager.save).toHaveBeenCalled();
   });
 
   it('throws when target user does not exist', async () => {
