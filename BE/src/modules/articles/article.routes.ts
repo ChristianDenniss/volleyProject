@@ -10,8 +10,8 @@ export function registerArticleRoutes(app: Application): void
     const router = Router();
     const articleController = new ArticleController();
 
-    // Create a new article - PROTECTED
-    router.post('/', authenticateCombined, authorizeRoles("admin", "superadmin"), validate(createArticleSchema), articleController.createArticle);
+    // Create a new article - any authenticated user; starts as pending approval
+    router.post('/', authenticateCombined, validate(createArticleSchema), articleController.createArticle);
 
     // GET routes - PUBLIC (for website display)
     router.get('/', articleController.getAllArticles);
