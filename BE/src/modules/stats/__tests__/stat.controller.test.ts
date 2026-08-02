@@ -1,4 +1,6 @@
+import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { Request, Response, NextFunction } from 'express';
+import { StatService } from '../stat.service.js';
 import { StatController } from '../stat.controller.js';
 import { MissingFieldError } from '../../../errors/MissingFieldError.js';
 import { NotFoundError } from '../../../errors/NotFoundError.js';
@@ -11,10 +13,12 @@ const mockStat = {
     spikeKills: 8,
     spikeAttempts: 15,
     assists: 3,
+    settingErrors: 0,
     blocks: 4,
     digs: 6,
     blockFollows: 2,
     aces: 1,
+    servingErrors: 0,
     miscErrors: 0,
     playerId: 1,
     gameId: 1,
@@ -22,21 +26,13 @@ const mockStat = {
 
 const mockStats = [mockStat, { ...mockStat, id: 2, playerId: 2 }];
 
-jest.mock('../stat.service', () => {
-    return {
-        StatService: jest.fn().mockImplementation(() => {
-            return {
-                createStat: jest.fn(),
-                getAllStats: jest.fn(),
-                getStatById: jest.fn(),
-                updateStat: jest.fn(),
-                deleteStat: jest.fn(),
-                getStatsByPlayerId: jest.fn(),
-                getStatsByGameId: jest.fn(),
-            };
-        }),
-    };
-});
+const mockCreateStat = jest.fn();
+const mockGetAllStats = jest.fn();
+const mockGetStatById = jest.fn();
+const mockUpdateStat = jest.fn();
+const mockDeleteStat = jest.fn();
+const mockGetStatsByPlayerId = jest.fn();
+const mockGetStatsByGameId = jest.fn();
 
 describe('StatController', () => {
     let statController;
@@ -60,6 +56,14 @@ describe('StatController', () => {
             send: sendMock,
         };
 
+        StatService.prototype.createStat = mockCreateStat;
+        StatService.prototype.getAllStats = mockGetAllStats;
+        StatService.prototype.getStatById = mockGetStatById;
+        StatService.prototype.updateStat = mockUpdateStat;
+        StatService.prototype.deleteStat = mockDeleteStat;
+        StatService.prototype.getStatsByPlayerId = mockGetStatsByPlayerId;
+        StatService.prototype.getStatsByGameId = mockGetStatsByGameId;
+
         statController = new StatController();
     });
 
@@ -70,11 +74,11 @@ describe('StatController', () => {
     describe('createStat', () => {
         it('should create a stat and return 201 status', async () => {
             mockRequest.body = mockStat;
-            statController.statService.createStat.mockResolvedValueOnce(mockStat);
+            mockCreateStat.mockResolvedValueOnce(mockStat);
 
             await statController.createStat(mockRequest, mockResponse, next);
 
-            expect(statController.statService.createStat).toHaveBeenCalledWith(mockStat);
+            expect(mockCreateStat).toHaveBeenCalledWith(mockStat);
             expect(statusMock).toHaveBeenCalledWith(201);
             expect(jsonMock).toHaveBeenCalledWith(mockStat);
             expect(next).not.toHaveBeenCalled();
@@ -83,7 +87,7 @@ describe('StatController', () => {
         it('should forward validation errors to error handler', async () => {
             const validationError = new MissingFieldError('Player ID is required');
             mockRequest.body = {};
-            statController.statService.createStat.mockRejectedValueOnce(validationError);
+            mockCreateStat.mockRejectedValueOnce(validationError);
 
             await statController.createStat(mockRequest, mockResponse, next);
 
@@ -93,7 +97,7 @@ describe('StatController', () => {
         it('should forward server errors to error handler', async () => {
             const serverError = new Error('Database error');
             mockRequest.body = mockStat;
-            statController.statService.createStat.mockRejectedValueOnce(serverError);
+            mockCreateStat.mockRejectedValueOnce(serverError);
 
             await statController.createStat(mockRequest, mockResponse, next);
 
@@ -103,7 +107,7 @@ describe('StatController', () => {
 
     describe('getStats', () => {
         it('should return all stats', async () => {
-            statController.statService.getAllStats.mockResolvedValueOnce([mockStats, mockStats.length]);
+            mockGetAllStats.mockResolvedValueOnce([mockStats, mockStats.length]);
             mockRequest.query = {};
 
             await statController.getStats(mockRequest, mockResponse, next);
@@ -114,7 +118,7 @@ describe('StatController', () => {
         it('should forward server errors to error handler', async () => {
             const serverError = new Error('Database error');
             mockRequest.query = {};
-            statController.statService.getAllStats.mockRejectedValueOnce(serverError);
+            mockGetAllStats.mockRejectedValueOnce(serverError);
 
             await statController.getStats(mockRequest, mockResponse, next);
 
@@ -125,7 +129,7 @@ describe('StatController', () => {
     describe('getStatById', () => {
         it('should return a single stat by ID', async () => {
             mockRequest.params = { id: '1' };
-            statController.statService.getStatById.mockResolvedValueOnce(mockStat);
+            mockGetStatById.mockResolvedValueOnce(mockStat);
 
             await statController.getStatById(mockRequest, mockResponse, next);
 
@@ -136,7 +140,7 @@ describe('StatController', () => {
         it('should forward not found errors to error handler', async () => {
             const notFoundError = new NotFoundError('Stat not found');
             mockRequest.params = { id: '99' };
-            statController.statService.getStatById.mockRejectedValueOnce(notFoundError);
+            mockGetStatById.mockRejectedValueOnce(notFoundError);
 
             await statController.getStatById(mockRequest, mockResponse, next);
 
@@ -146,7 +150,7 @@ describe('StatController', () => {
         it('should forward server errors to error handler', async () => {
             const serverError = new Error('Database error');
             mockRequest.params = { id: '1' };
-            statController.statService.getStatById.mockRejectedValueOnce(serverError);
+            mockGetStatById.mockRejectedValueOnce(serverError);
 
             await statController.getStatById(mockRequest, mockResponse, next);
 
@@ -157,7 +161,7 @@ describe('StatController', () => {
     describe('deleteStat', () => {
         it('should delete a stat and return 204', async () => {
             mockRequest.params = { id: '1' };
-            statController.statService.deleteStat.mockResolvedValueOnce();
+            mockDeleteStat.mockResolvedValueOnce(undefined);
 
             await statController.deleteStat(mockRequest, mockResponse, next);
 
@@ -169,7 +173,7 @@ describe('StatController', () => {
         it('should forward not found errors to error handler', async () => {
             const notFoundError = new NotFoundError('Stat not found');
             mockRequest.params = { id: '99' };
-            statController.statService.deleteStat.mockRejectedValueOnce(notFoundError);
+            mockDeleteStat.mockRejectedValueOnce(notFoundError);
 
             await statController.deleteStat(mockRequest, mockResponse, next);
 
@@ -179,7 +183,7 @@ describe('StatController', () => {
         it('should forward server errors to error handler', async () => {
             const serverError = new Error('Database error');
             mockRequest.params = { id: '1' };
-            statController.statService.deleteStat.mockRejectedValueOnce(serverError);
+            mockDeleteStat.mockRejectedValueOnce(serverError);
 
             await statController.deleteStat(mockRequest, mockResponse, next);
 
@@ -191,7 +195,7 @@ describe('StatController', () => {
         it('should return stats for a given player', async () => {
             mockRequest.params = { playerId: '1' };
             mockRequest.query = {};
-            statController.statService.getStatsByPlayerId.mockResolvedValueOnce([[mockStat], 1]);
+            mockGetStatsByPlayerId.mockResolvedValueOnce([[mockStat], 1]);
 
             await statController.getStatsByPlayerId(mockRequest, mockResponse, next);
 
@@ -201,7 +205,7 @@ describe('StatController', () => {
         it('should return 404 if no stats found', async () => {
             mockRequest.params = { playerId: '99' };
             mockRequest.query = {};
-            statController.statService.getStatsByPlayerId.mockResolvedValueOnce([[], 0]);
+            mockGetStatsByPlayerId.mockResolvedValueOnce([[], 0]);
 
             await statController.getStatsByPlayerId(mockRequest, mockResponse, next);
 
@@ -215,7 +219,7 @@ describe('StatController', () => {
         it('should return stats for a given game', async () => {
             mockRequest.params = { gameId: '1' };
             mockRequest.query = {};
-            statController.statService.getStatsByGameId.mockResolvedValueOnce([[mockStat], 1]);
+            mockGetStatsByGameId.mockResolvedValueOnce([[mockStat], 1]);
 
             await statController.getStatsByGameId(mockRequest, mockResponse, next);
 
@@ -225,7 +229,7 @@ describe('StatController', () => {
         it('should return 404 if no stats found', async () => {
             mockRequest.params = { gameId: '99' };
             mockRequest.query = {};
-            statController.statService.getStatsByGameId.mockResolvedValueOnce([[], 0]);
+            mockGetStatsByGameId.mockResolvedValueOnce([[], 0]);
 
             await statController.getStatsByGameId(mockRequest, mockResponse, next);
 

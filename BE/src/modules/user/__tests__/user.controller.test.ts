@@ -1,4 +1,7 @@
+import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { Request, Response, NextFunction } from 'express';
 import { UserController } from '../user.controller.js';
+import { UserService } from '../user.service.js';
 import { MissingFieldError } from '../../../errors/MissingFieldError.js';
 import { NotFoundError } from '../../../errors/NotFoundError.js';
 import { UnauthorizedError } from '../../../errors/UnauthorizedError.js';
@@ -10,7 +13,7 @@ const mockUser = {
   password: 'hashedpassword',
   role: 'user',
   createdAt: new Date(),
-  updatedAt: new Date()
+  updatedAt: new Date(),
 };
 
 const mockUsers = [
@@ -22,41 +25,38 @@ const mockUsers = [
     password: 'hashedpassword',
     role: 'user',
     createdAt: new Date(),
-    updatedAt: new Date()
-  }
+    updatedAt: new Date(),
+  },
 ];
 
 const mockToken = 'mock.jwt.token';
 
-jest.mock('../user.service', () => {
-  return {
-    UserService: jest.fn().mockImplementation(() => {
-      return {
-        createUser: jest.fn(),
-        getPublicUsers: jest.fn(),
-        getUserById: jest.fn(),
-        authenticateUser: jest.fn(),
-        getProfile: jest.fn(),
-        getUserByUsername: jest.fn(),
-        changePassword: jest.fn(),
-      };
-    })
-  };
-});
+const mockCreateUser = jest.fn();
+const mockGetPublicUsers = jest.fn();
+const mockGetUserById = jest.fn();
+const mockAuthenticateUser = jest.fn();
+const mockGetProfile = jest.fn();
 
 describe('UserController', () => {
-  let userController;
-  let mockRequest;
-  let mockResponse;
-  let next;
-  let jsonMock;
-  let statusMock;
-  let sendMock;
+  let userController: UserController;
+  let mockRequest: Partial<Request>;
+  let mockResponse: Partial<Response>;
+  let next: jest.Mock;
+  let jsonMock: jest.Mock;
+  let statusMock: jest.Mock;
+  let sendMock: jest.Mock;
+  let cookieMock: jest.Mock;
 
   beforeEach(() => {
     jsonMock = jest.fn().mockReturnThis();
     sendMock = jest.fn().mockReturnThis();
-    statusMock = jest.fn().mockReturnValue({ json: jsonMock, send: sendMock, cookie: jest.fn(), clearCookie: jest.fn() });
+    cookieMock = jest.fn().mockReturnThis();
+    statusMock = jest.fn().mockReturnValue({
+      json: jsonMock,
+      send: sendMock,
+      cookie: cookieMock,
+      clearCookie: jest.fn(),
+    });
     next = jest.fn();
 
     mockRequest = {};
@@ -64,9 +64,15 @@ describe('UserController', () => {
       json: jsonMock,
       status: statusMock,
       send: sendMock,
-      cookie: jest.fn(),
+      cookie: cookieMock,
       clearCookie: jest.fn(),
     };
+
+    UserService.prototype.createUser = mockCreateUser;
+    UserService.prototype.getPublicUsers = mockGetPublicUsers;
+    UserService.prototype.getUserById = mockGetUserById;
+    UserService.prototype.authenticateUser = mockAuthenticateUser;
+    UserService.prototype.getProfile = mockGetProfile;
 
     userController = new UserController();
   });
@@ -82,11 +88,11 @@ describe('UserController', () => {
         email: 'test@example.com',
         password: 'password123',
       };
-      userController.userService.createUser.mockResolvedValueOnce(mockUser);
+      mockCreateUser.mockResolvedValueOnce(mockUser);
 
-      await userController.register(mockRequest, mockResponse, next);
+      await userController.register(mockRequest as Request, mockResponse as Response, next);
 
-      expect(userController.userService.createUser).toHaveBeenCalledWith('testuser', 'test@example.com', 'password123', 'user');
+      expect(mockCreateUser).toHaveBeenCalledWith('testuser', 'test@example.com', 'password123', 'user');
       expect(statusMock).toHaveBeenCalledWith(201);
       expect(jsonMock).toHaveBeenCalledWith(expect.not.objectContaining({ password: expect.any(String) }));
       expect(next).not.toHaveBeenCalled();
@@ -99,9 +105,9 @@ describe('UserController', () => {
         email: 'test@example.com',
         password: '',
       };
-      userController.userService.createUser.mockRejectedValueOnce(validationError);
+      mockCreateUser.mockRejectedValueOnce(validationError);
 
-      await userController.register(mockRequest, mockResponse, next);
+      await userController.register(mockRequest as Request, mockResponse as Response, next);
 
       expect(next).toHaveBeenCalledWith(validationError);
     });
@@ -113,9 +119,9 @@ describe('UserController', () => {
         email: 'test@example.com',
         password: 'password123',
       };
-      userController.userService.createUser.mockRejectedValueOnce(serverError);
+      mockCreateUser.mockRejectedValueOnce(serverError);
 
-      await userController.register(mockRequest, mockResponse, next);
+      await userController.register(mockRequest as Request, mockResponse as Response, next);
 
       expect(next).toHaveBeenCalledWith(serverError);
     });
@@ -127,14 +133,14 @@ describe('UserController', () => {
         username: 'testuser',
         password: 'password123',
       };
-      userController.userService.authenticateUser.mockResolvedValueOnce({
+      mockAuthenticateUser.mockResolvedValueOnce({
         user: mockUser,
         token: mockToken,
       });
 
-      await userController.login(mockRequest, mockResponse, next);
+      await userController.login(mockRequest as Request, mockResponse as Response, next);
 
-      expect(userController.userService.authenticateUser).toHaveBeenCalledWith('testuser', 'password123');
+      expect(mockAuthenticateUser).toHaveBeenCalledWith('testuser', 'password123');
       expect(jsonMock).toHaveBeenCalledWith({
         user: expect.not.objectContaining({ password: expect.any(String) }),
       });
@@ -147,9 +153,9 @@ describe('UserController', () => {
         username: 'testuser',
         password: 'wrongpassword',
       };
-      userController.userService.authenticateUser.mockRejectedValueOnce(authError);
+      mockAuthenticateUser.mockRejectedValueOnce(authError);
 
-      await userController.login(mockRequest, mockResponse, next);
+      await userController.login(mockRequest as Request, mockResponse as Response, next);
 
       expect(next).toHaveBeenCalledWith(authError);
     });
@@ -160,9 +166,9 @@ describe('UserController', () => {
         username: 'testuser',
         password: 'password123',
       };
-      userController.userService.authenticateUser.mockRejectedValueOnce(serverError);
+      mockAuthenticateUser.mockRejectedValueOnce(serverError);
 
-      await userController.login(mockRequest, mockResponse, next);
+      await userController.login(mockRequest as Request, mockResponse as Response, next);
 
       expect(next).toHaveBeenCalledWith(serverError);
     });
@@ -172,21 +178,20 @@ describe('UserController', () => {
     it('should return paginated users', async () => {
       const usersWithoutPasswords = mockUsers.map(({ password, ...userWithoutPassword }) => userWithoutPassword);
       mockRequest.query = {};
+      mockGetPublicUsers.mockResolvedValueOnce([usersWithoutPasswords, usersWithoutPasswords.length]);
 
-      userController.userService.getPublicUsers.mockResolvedValueOnce([usersWithoutPasswords, usersWithoutPasswords.length]);
+      await userController.getPublicUsers(mockRequest as Request, mockResponse as Response, next);
 
-      await userController.getPublicUsers(mockRequest, mockResponse, next);
-
-      expect(userController.userService.getPublicUsers).toHaveBeenCalled();
+      expect(mockGetPublicUsers).toHaveBeenCalled();
       expect(next).not.toHaveBeenCalled();
     });
 
     it('should forward server errors to error handler', async () => {
       const serverError = new Error('Database error');
       mockRequest.query = {};
-      userController.userService.getPublicUsers.mockRejectedValueOnce(serverError);
+      mockGetPublicUsers.mockRejectedValueOnce(serverError);
 
-      await userController.getPublicUsers(mockRequest, mockResponse, next);
+      await userController.getPublicUsers(mockRequest as Request, mockResponse as Response, next);
 
       expect(next).toHaveBeenCalledWith(serverError);
     });
@@ -196,11 +201,11 @@ describe('UserController', () => {
     it('should return a user by id', async () => {
       mockRequest.params = { id: '1' };
       mockRequest.user = { id: 1, username: 'testuser', role: 'admin' };
-      userController.userService.getUserById.mockResolvedValueOnce(mockUser);
+      mockGetUserById.mockResolvedValueOnce(mockUser);
 
-      await userController.getUserById(mockRequest, mockResponse, next);
+      await userController.getUserById(mockRequest as Request, mockResponse as Response, next);
 
-      expect(userController.userService.getUserById).toHaveBeenCalledWith(1);
+      expect(mockGetUserById).toHaveBeenCalledWith(1);
       expect(jsonMock).toHaveBeenCalledWith(mockUser);
       expect(next).not.toHaveBeenCalled();
     });
@@ -209,9 +214,9 @@ describe('UserController', () => {
       const notFoundError = new NotFoundError('User not found');
       mockRequest.params = { id: '999' };
       mockRequest.user = { id: 1, username: 'testuser', role: 'admin' };
-      userController.userService.getUserById.mockRejectedValueOnce(notFoundError);
+      mockGetUserById.mockRejectedValueOnce(notFoundError);
 
-      await userController.getUserById(mockRequest, mockResponse, next);
+      await userController.getUserById(mockRequest as Request, mockResponse as Response, next);
 
       expect(next).toHaveBeenCalledWith(notFoundError);
     });
@@ -220,11 +225,11 @@ describe('UserController', () => {
   describe('getProfile', () => {
     it('should return the current user profile without password', async () => {
       mockRequest.user = { id: 1, username: 'testuser', role: 'user' };
-      userController.userService.getProfile.mockResolvedValueOnce(mockUser);
+      mockGetProfile.mockResolvedValueOnce(mockUser);
 
-      await userController.getProfile(mockRequest, mockResponse, next);
+      await userController.getProfile(mockRequest as Request, mockResponse as Response, next);
 
-      expect(userController.userService.getProfile).toHaveBeenCalledWith(1);
+      expect(mockGetProfile).toHaveBeenCalledWith(1);
       expect(jsonMock).toHaveBeenCalledWith(expect.not.objectContaining({ password: expect.any(String) }));
       expect(next).not.toHaveBeenCalled();
     });
@@ -232,7 +237,7 @@ describe('UserController', () => {
     it('should handle unauthorized errors with 401 status', async () => {
       mockRequest.user = undefined;
 
-      await userController.getProfile(mockRequest, mockResponse, next);
+      await userController.getProfile(mockRequest as Request, mockResponse as Response, next);
 
       expect(statusMock).toHaveBeenCalledWith(401);
       expect(jsonMock).toHaveBeenCalledWith({ error: 'Unauthorized' });
@@ -242,9 +247,9 @@ describe('UserController', () => {
     it('should forward not found errors to error handler', async () => {
       const notFoundError = new NotFoundError('User not found');
       mockRequest.user = { id: 999, username: 'missing', role: 'user' };
-      userController.userService.getProfile.mockRejectedValueOnce(notFoundError);
+      mockGetProfile.mockRejectedValueOnce(notFoundError);
 
-      await userController.getProfile(mockRequest, mockResponse, next);
+      await userController.getProfile(mockRequest as Request, mockResponse as Response, next);
 
       expect(next).toHaveBeenCalledWith(notFoundError);
     });

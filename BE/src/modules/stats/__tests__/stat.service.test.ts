@@ -1,3 +1,4 @@
+import { jest, describe, it, expect, beforeEach } from '@jest/globals';
 import { StatService } from '../stat.service.js';
 import { Repository } from 'typeorm';
 import { Stats } from '../stat.entity.js';
@@ -28,7 +29,6 @@ const validCreateStatDto: CreateStatDto = {
     gameId: 1,
 };
 
-// Mock TypeORM's Repository
 const mockStatRepository = {
     findOne: jest.fn(),
     save: jest.fn(),
@@ -49,13 +49,13 @@ describe('StatService', () => {
     let statService: StatService;
 
     beforeEach(() => {
-        // Reset mocks before each test
         jest.clearAllMocks();
 
         statService = new StatService();
         (statService as any).statRepository = mockStatRepository as unknown as Repository<Stats>;
         (statService as any).playerRepository = mockPlayerRepository as unknown as Repository<Players>;
         (statService as any).gameRepository = mockGameRepository as unknown as Repository<Games>;
+        (statService as any).invalidateEntityCache = jest.fn().mockResolvedValue(undefined);
     });
 
     describe('createStat', () => {
@@ -90,7 +90,7 @@ describe('StatService', () => {
             mockPlayerRepository.findOne.mockResolvedValue({ id: 1, teams: [{ id: 10 }] });
             mockGameRepository.findOne.mockResolvedValue({
                 id: 1,
-                teams: [{ id: 20 }]
+                teams: [{ id: 99 }],
             });
 
             await expect(statService.createStat(validCreateStatDto)).rejects.toThrow(ConflictError);
@@ -100,7 +100,7 @@ describe('StatService', () => {
             mockPlayerRepository.findOne.mockResolvedValue({ id: 1, teams: [{ id: 10 }] });
             mockGameRepository.findOne.mockResolvedValue({
                 id: 1,
-                teams: [{ id: 10 }]
+                teams: [{ id: 10 }],
             });
             mockStatRepository.findOne.mockResolvedValue({ id: 1 });
 
@@ -111,14 +111,14 @@ describe('StatService', () => {
             mockPlayerRepository.findOne.mockResolvedValue({ id: 1, teams: [{ id: 10 }] });
             mockGameRepository.findOne.mockResolvedValue({
                 id: 1,
-                teams: [{ id: 10 }]
+                teams: [{ id: 10 }],
             });
             mockStatRepository.findOne.mockResolvedValue(null);
             mockStatRepository.save.mockResolvedValue({
                 id: 1,
                 spikingErrors: 0,
                 player: { id: 1 },
-                game: { id: 1 }
+                game: { id: 1 },
             });
 
             const result = await statService.createStat(validCreateStatDto);
@@ -134,7 +134,7 @@ describe('StatService', () => {
                 id: 1,
                 spikingErrors: 2,
                 player: { id: 1 },
-                game: { id: 1 }
+                game: { id: 1 },
             });
 
             const result = await statService.getStatById(1);
@@ -150,7 +150,11 @@ describe('StatService', () => {
 
     describe('deleteStat', () => {
         it('should delete a stat entry if it exists', async () => {
-            mockStatRepository.findOne.mockResolvedValue({ id: 1 });
+            mockStatRepository.findOne.mockResolvedValue({
+                id: 1,
+                player: { id: 1 },
+                game: { id: 1 },
+            });
 
             await statService.deleteStat(1);
 
