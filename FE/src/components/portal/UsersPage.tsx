@@ -12,7 +12,7 @@ import "../../styles/UsersPage.css";
 import "../../styles/PortalPlayersPage.css";
 
 const USERS_PER_PAGE = 10;
-const ALL_ROLES: User["role"][] = ["user", "admin", "superadmin"];
+const ALL_ROLES: User["role"][] = ["user", "captain", "vice_captain", "court_captain", "admin", "superadmin"];
 
 const UsersPage: React.FC = () => {
   const { user: me } = useAuth();

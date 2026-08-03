@@ -52,14 +52,104 @@ interface Award
   updatedAt: Date;
 }
 
+type Role = "user" | "captain" | "vice_captain" | "court_captain" | "admin" | "superadmin"
+
+interface User 
+{
+  id: number;
+  username: string;
+  email: string | null;
+  articles?: Article[]; 
+  role: Role;
+  robloxUserId?: string | null;
+  robloxUsername?: string | null;
+  hasPassword?: boolean;
+}
+
 interface Player 
 {
   id: number;
   name: string;
   position: string;
+  robloxUsername?: string | null;
+  robloxUserId?: string | null;
+  discordUsername?: string | null;
+  userId?: number | null;
   teams?: Team[]; 
   stats?: Stats[];
   awards?: Award[];
+}
+
+interface Team 
+{
+  id: number;
+  placement: string;
+  name: string;
+  logoUrl?: string;
+  hexColor?: string | null;
+  brickColor?: string | null;
+  captainEditEnabled?: boolean;
+  captainUserId?: number | null;
+  viceCaptainUserId?: number | null;
+  courtCaptainUserId?: number | null;
+  captainCanEdit?: boolean;
+  staffRole?: "captain" | "vice_captain" | "court_captain" | null;
+  season: Season;
+  regionId?: number;
+  region?: Region;
+  games?: Game[]; 
+  players?: Player[]; 
+}
+
+interface Season 
+{
+  id: number;
+  seasonNumber: number;
+  games?: Game[]; 
+  teams?: Team[]; 
+  startDate: Date; 
+  endDate?: Date; 
+  image?: string;
+  theme: string;
+  regionId?: number;
+  region?: Region;
+  registrationsOpen?: boolean;
+  captainEditEnabled?: boolean;
+  maxTeams?: number | null;
+}
+
+export type TeamRegistrationStatus = "pending" | "conflict" | "accepted" | "denied";
+
+export interface TeamRegistrationRosterEntry {
+  discord: string;
+  roblox: string;
+}
+
+export interface TeamRegistration {
+  id: number;
+  teamName: string;
+  captainDiscord: string;
+  captainRoblox: string;
+  viceDiscord?: string;
+  viceRoblox?: string;
+  hexColor?: string;
+  brickColor?: string;
+  roster?: TeamRegistrationRosterEntry[];
+  status: TeamRegistrationStatus;
+  regionId: number;
+  seasonId: number;
+  region?: Region;
+  season?: Partial<Season>;
+  agreeCivilScheduling?: boolean;
+  confidentWillParticipate?: boolean;
+  priorLeagueExperience?: string | null;
+  logoJerseyAck?: boolean;
+  createdTeamId?: number | null;
+  captainLinkPending?: boolean;
+  conflictPayload?: { conflicts?: Array<Record<string, unknown>> } | null;
+  submittedByUserId?: number;
+  submittedBy?: { id: number; username: string };
+  createdAt?: string;
 }
 interface Stats
 {
@@ -108,33 +198,6 @@ interface Stats
     plusMinus?: number;
 }
 
-interface Team 
-{
-  id: number;
-  placement: string;
-  name: string;
-  logoUrl?: string;
-  season: Season;
-  regionId?: number;
-  region?: Region;
-  games?: Game[]; 
-  players?: Player[]; 
-}
-
-interface Season 
-{
-  id: number;
-  seasonNumber: number;
-  games?: Game[]; 
-  teams?: Team[]; 
-  startDate: Date; 
-  endDate?: Date; 
-  image?: string;
-  theme: string;
-  regionId?: number;
-  region?: Region;
-}
-
 interface Article 
 {
   id: number;
@@ -146,17 +209,6 @@ interface Article
   imageUrl: string; 
   likes: number;
   approved: boolean | null;
-}
-
-type Role = "user" | "admin" | "superadmin"
-
-interface User 
-{
-  id: number;
-  username: string;
-  email: string;
-  articles?: Article[]; 
-  role: Role; 
 }
 
 interface Records

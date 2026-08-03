@@ -24,7 +24,7 @@ export const changePasswordSchema = z.object({
 });
 
 export const changeUserRoleSchema = z.object({
-    role: z.enum(['user', 'admin', 'superadmin'], {
-        message: "Role must be user, admin, or superadmin",
+    role: z.enum(['user', 'captain', 'vice_captain', 'court_captain', 'admin', 'superadmin'], {
+        message: "Role must be user, captain, vice_captain, court_captain, admin, or superadmin",
     }),
 });
