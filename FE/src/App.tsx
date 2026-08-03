@@ -45,6 +45,10 @@ const AwardsPage        = lazy(() => import("./components/portal/AwardsPage"));
 const CreateArticle     = lazy(() => import("./components/CreateArticle"));
 const ArticlesPage      = lazy(() => import("./components/portal/ArticlesPage"));
 const ApplicationsPage  = lazy(() => import("./components/portal/ApplicationsPage"));
+const RegistrationsHubPage = lazy(() => import("./components/portal/RegistrationsHubPage"));
+const TeamRegistrations = lazy(() => import("./components/TeamRegistrations"));
+const TeamRegister = lazy(() => import("./components/TeamRegister"));
+const TeamRegistrationDetail = lazy(() => import("./components/TeamRegistrationDetail"));
 const StatsLeaderboard  = lazy(() => import("./components/StatsLeaderboard"));
 const FAQ               = lazy(() => import("./components/FAQ"));
 const RecordsPage       = lazy(() => import("./components/RecordsPage"));
@@ -69,6 +73,9 @@ const App: React.FC = () => (
           <Route path="/about" element={<About />} />
           <Route path="/players" element={<Players />} />
           <Route path="/teams" element={<Teams />} />
+          <Route path="/teams/registrations" element={<TeamRegistrations />} />
+          <Route path="/teams/registrations/:id" element={<TeamRegistrationDetail />} />
+          <Route path="/teams/register" element={<TeamRegister />} />
           <Route path="/teams/:teamName" element={<SingleTeam />} />
           <Route path="/games" element={<Games />} />
           <Route path="/games/:id" element={<SingleGame />} />
@@ -117,6 +124,7 @@ const App: React.FC = () => (
             <Route path="awards" element={<AwardsPage />} />
             <Route path="articles" element={<ArticlesPage />} />
             <Route path="applications" element={<ApplicationsPage />} />
+            <Route path="registrations" element={<RegistrationsHubPage />} />
           </Route>
         </Routes>
         </Suspense>

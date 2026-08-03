@@ -1,0 +1,152 @@
+.team-regs-page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
+
+.team-regs-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.95rem;
+}
+
+.team-regs-nav a {
+  color: var(--color-accent, #4a90c8);
+}
+
+.team-regs-nav-active {
+  font-weight: 600;
+}
+
+.team-regs-header h1 {
+  margin: 0 0 0.35rem;
+}
+
+.team-regs-spots {
+  color: var(--color-text-muted, #5a6a7a);
+}
+
+.team-regs-region-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin: 1.25rem 0;
+}
+
+.team-regs-region-tabs button {
+  border: 1px solid #c5d0dc;
+  background: #fff;
+  padding: 0.45rem 0.9rem;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.team-regs-region-tabs button.active {
+  background: #2d3c50;
+  color: #fff;
+  border-color: #2d3c50;
+}
+
+.team-regs-table-wrap {
+  overflow-x: auto;
+}
+
+.team-regs-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.team-regs-table th,
+.team-regs-table td {
+  text-align: left;
+  padding: 0.75rem 0.85rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.team-regs-table tbody tr {
+  cursor: pointer;
+  background: #fff;
+}
+
+.team-regs-table tbody tr.status-accepted {
+  background: #d8f3dc;
+}
+
+.team-regs-table tbody tr.status-denied {
+  background: #f8d7da;
+}
+
+.team-regs-table tbody tr.status-pending,
+.team-regs-table tbody tr.status-conflict {
+  background: #fff;
+}
+
+.team-regs-table tbody tr.selected {
+  outline: 2px solid #2d3c50;
+}
+
+.team-regs-detail {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.team-regs-error {
+  color: #b00020;
+}
+
+.team-reg-form {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
+
+.team-reg-form fieldset {
+  border: 1px solid #d0d7de;
+  margin: 0 0 1.25rem;
+  padding: 1rem;
+}
+
+.team-reg-form legend {
+  font-weight: 600;
+  padding: 0 0.35rem;
+}
+
+.team-reg-form label {
+  display: block;
+  margin-bottom: 0.75rem;
+}
+
+.team-reg-form input[type="text"],
+.team-reg-form input[type="url"],
+.team-reg-form textarea,
+.team-reg-form select {
+  display: block;
+  width: 100%;
+  margin-top: 0.25rem;
+  padding: 0.45rem 0.55rem;
+}
+
+.roster-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.form-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.form-error {
+  color: #b00020;
+  margin-bottom: 1rem;
+}
+
+.form-success {
+  color: #1b7a3d;
+  margin-bottom: 1rem;
+}
