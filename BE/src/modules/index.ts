@@ -12,6 +12,7 @@ import { registerRecordRoutes } from './records/records.routes.js';
 import { registerTriviaRoutes } from './trivia/trivia.routes.js';
 import { registerApplicationRoutes } from './applications/application.routes.js';
 import { registerRegionRoutes } from './regions/region.routes.js';
+import { registerTeamRegistrationRoutes } from './team-registrations/team-registration.routes.js';
 import { cacheHealthCheck } from '../middleware/cache.js';
 import { authenticateToken } from '../middleware/authentication.js';
 import { authorizeRoles } from '../middleware/authorizeRoles.js';
@@ -35,6 +36,7 @@ export function registerModules(app: Application): void
     registerRecordRoutes(app);
     registerTriviaRoutes(app);
     registerApplicationRoutes(app);
+    registerTeamRegistrationRoutes(app);
 
     // Cache health check route (admin only)
     app.get('/api/cache/health', authenticateToken, authorizeRoles("admin", "superadmin"), cacheHealthCheck);

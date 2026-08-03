@@ -184,7 +184,10 @@ export class SeasonService
         startDate?: Date,
         endDate?: Date,
         theme?: string,
-        image?: string
+        image?: string,
+        registrationsOpen?: boolean,
+        captainEditEnabled?: boolean,
+        maxTeams?: number | null
     ): Promise<Seasons>
     {
         if (!id) throw new MissingFieldError("Season ID");
@@ -227,6 +230,18 @@ export class SeasonService
         if (image !== undefined)
         {
             season.image = image;
+        }
+
+        if (registrationsOpen !== undefined) {
+            season.registrationsOpen = registrationsOpen;
+        }
+
+        if (captainEditEnabled !== undefined) {
+            season.captainEditEnabled = captainEditEnabled;
+        }
+
+        if (maxTeams !== undefined) {
+            season.maxTeams = maxTeams;
         }
 
         if (season.startDate && season.endDate && season.startDate > season.endDate)

@@ -9,10 +9,15 @@ import { MultipleGamesNotFoundError } from '../../errors/MultipleGamesNotFoundEr
 import { MultiplePlayersNotFoundError } from '../../errors/MultiplePlayersNotFoundError.js';
 import { DuplicateError } from '../../errors/DuplicateError.js';
 import { NotFoundError } from '../../errors/NotFoundError.js';
+import { ConflictError } from '../../errors/ConflictError.js';
+import { UnauthorizedError } from '../../errors/UnauthorizedError.js';
 import { CreateTeamDto, UpdateTeamDto, CreateMultipleTeamsDto } from './teams.schema.js';
 import { PaginationParams, SortParams } from '../../utils/pagination.js';
 import { RegionService } from '../regions/region.service.js';
 import { RegionCode } from '../regions/region.entity.js';
+import { User } from '../user/user.entity.js';
+import { UserService } from '../user/user.service.js';
+import { normalizeRobloxUsername } from '../../middleware/authValidation.js';
 
 export interface TeamFilters {
     search?: string;
@@ -507,5 +512,180 @@ export class TeamService {
         }
 
         await this.teamRepository.remove(team);
+    }
+
+    async getTeamForStaff(id: number): Promise<Teams> {
+        const team = await this.teamRepository.findOne({
+            where: { id },
+            relations: ["season", "players", "captainUser", "viceCaptainUser", "courtCaptainUser", "region"],
+        });
+        if (!team) throw new NotFoundError(`Team with ID ${id} not found`);
+        return team;
+    }
+
+    canStaffEdit(team: Teams, userId: number): {
+        allowed: boolean;
+        role: "captain" | "vice_captain" | "court_captain" | null;
+        reason?: string;
+    } {
+        if (!team.season?.captainEditEnabled) {
+            return { allowed: false, role: null, reason: "Captain editing is disabled for this season" };
+        }
+        if (!team.captainEditEnabled) {
+            return { allowed: false, role: null, reason: "Captain editing is disabled for this team" };
+        }
+        if (team.captainUserId === userId) return { allowed: true, role: "captain" };
+        if (team.viceCaptainUserId === userId) return { allowed: true, role: "vice_captain" };
+        if (team.courtCaptainUserId === userId) return { allowed: true, role: "court_captain" };
+        return { allowed: false, role: null, reason: "You are not staff on this team" };
+    }
+
+    private async assertLinkedRosterUser(team: Teams, userId: number): Promise<User> {
+        const userRepo = AppDataSource.getRepository(User);
+        const user = await userRepo.findOne({ where: { id: userId } });
+        if (!user?.robloxUsername) {
+            throw new ConflictError("Target user must have a linked Roblox account");
+        }
+        const onRoster = (team.players || []).some(
+            (p) => p.robloxUsername === user.robloxUsername || p.userId === userId
+        );
+        if (!onRoster) {
+            throw new ConflictError("Target user must be on the team roster with a linked Roblox account");
+        }
+        return user;
+    }
+
+    async staffUpdateTeam(
+        teamId: number,
+        actorId: number,
+        body: {
+            name?: string;
+            hexColor?: string | null;
+            brickColor?: string | null;
+            logoUrl?: string | null;
+            roster?: { discord: string; roblox: string }[];
+            captainUserId?: number | null;
+            viceCaptainUserId?: number | null;
+            courtCaptainUserId?: number | null;
+        }
+    ): Promise<Teams> {
+        const team = await this.getTeamForStaff(teamId);
+        const gate = this.canStaffEdit(team, actorId);
+        if (!gate.allowed || !gate.role) {
+            throw new UnauthorizedError(gate.reason || "Forbidden");
+        }
+
+        const role = gate.role;
+
+        if (body.name !== undefined) {
+            if (role !== "captain") throw new UnauthorizedError("Only the captain can rename the team");
+            const clash = await this.teamRepository.findOne({
+                where: { name: body.name.trim(), regionId: team.regionId, season: { id: team.season.id } },
+            });
+            if (clash && clash.id !== team.id) {
+                throw new ConflictError(`A team named "${body.name}" already exists in this season`);
+            }
+            team.name = body.name.trim();
+        }
+
+        if (body.hexColor !== undefined || body.brickColor !== undefined || body.logoUrl !== undefined) {
+            if (body.hexColor !== undefined) team.hexColor = body.hexColor;
+            if (body.brickColor !== undefined) team.brickColor = body.brickColor;
+            if (body.logoUrl !== undefined) team.logoUrl = body.logoUrl ?? undefined;
+        }
+
+        if (body.roster !== undefined) {
+            if (body.roster.length < 10) throw new ConflictError("Roster must have at least 10 players");
+            const players: Players[] = [];
+            for (const entry of body.roster) {
+                const roblox = normalizeRobloxUsername(entry.roblox);
+                const existing = await this.playerRepository.findOne({
+                    where: { robloxUsername: roblox },
+                    relations: ["teams", "teams.season"],
+                });
+                if (existing?.teams?.some((t) => t.season?.id === team.season.id && t.id !== team.id)) {
+                    throw new ConflictError(`Player ${roblox} is already on another team this season`);
+                }
+                let player = existing;
+                if (!player) {
+                    player = new Players();
+                    player.name = roblox;
+                    player.robloxUsername = roblox;
+                    player.discordUsername = entry.discord.trim();
+                    player.position = "N/A";
+                    player.teams = [];
+                } else {
+                    player.discordUsername = entry.discord.trim();
+                }
+                players.push(await this.playerRepository.save(player));
+            }
+            team.players = players;
+        }
+
+        const userService = new UserService();
+
+        if (body.captainUserId !== undefined) {
+            if (role !== "captain") throw new UnauthorizedError("Only the captain can transfer captaincy");
+            if (body.captainUserId != null) {
+                await this.assertLinkedRosterUser(team, body.captainUserId);
+                team.captainUserId = body.captainUserId;
+                await userService.promoteRoleIfUser(body.captainUserId, "captain", actorId);
+            }
+        }
+
+        if (body.viceCaptainUserId !== undefined) {
+            if (role !== "captain") throw new UnauthorizedError("Only the captain can assign vice captain");
+            if (body.viceCaptainUserId != null) {
+                await this.assertLinkedRosterUser(team, body.viceCaptainUserId);
+                team.viceCaptainUserId = body.viceCaptainUserId;
+                await userService.promoteRoleIfUser(body.viceCaptainUserId, "vice_captain", actorId);
+            } else {
+                team.viceCaptainUserId = null;
+            }
+        }
+
+        if (body.courtCaptainUserId !== undefined) {
+            if (role !== "captain" && role !== "vice_captain") {
+                throw new UnauthorizedError("Only captain or vice captain can assign court captain");
+            }
+            if (body.courtCaptainUserId != null) {
+                await this.assertLinkedRosterUser(team, body.courtCaptainUserId);
+                team.courtCaptainUserId = body.courtCaptainUserId;
+                await userService.promoteRoleIfUser(body.courtCaptainUserId, "court_captain", actorId);
+            } else {
+                team.courtCaptainUserId = null;
+            }
+        }
+
+        await this.teamRepository.save(team);
+        return this.getTeamForStaff(teamId);
+    }
+
+    async adminPatchTeamFlags(
+        teamId: number,
+        body: {
+            captainEditEnabled?: boolean;
+            hexColor?: string | null;
+            brickColor?: string | null;
+            captainUserId?: number | null;
+            viceCaptainUserId?: number | null;
+            courtCaptainUserId?: number | null;
+        }
+    ): Promise<Teams> {
+        const team = await this.getTeamForStaff(teamId);
+        if (body.captainEditEnabled !== undefined) team.captainEditEnabled = body.captainEditEnabled;
+        if (body.hexColor !== undefined) team.hexColor = body.hexColor;
+        if (body.brickColor !== undefined) team.brickColor = body.brickColor;
+        if (body.captainUserId !== undefined) team.captainUserId = body.captainUserId;
+        if (body.viceCaptainUserId !== undefined) team.viceCaptainUserId = body.viceCaptainUserId;
+        if (body.courtCaptainUserId !== undefined) team.courtCaptainUserId = body.courtCaptainUserId;
+        await this.teamRepository.save(team);
+        return this.getTeamForStaff(teamId);
+    }
+
+    enrichTeamWithCanEdit(team: Teams, userId?: number) {
+        if (!userId) return { ...team, captainCanEdit: false, staffRole: null };
+        const gate = this.canStaffEdit(team, userId);
+        return { ...team, captainCanEdit: gate.allowed, staffRole: gate.role };
     }
 }
