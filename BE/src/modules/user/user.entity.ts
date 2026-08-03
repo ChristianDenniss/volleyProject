@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany, Index } from 'typeorm';
 import type { Article } from "../articles/article.entity.js";
 
 @Entity()
@@ -10,11 +10,11 @@ export class User
     @Column()
     username!: string;
 
-    @Column()
-    email!: string;
+    @Column({ nullable: true, type: 'varchar' })
+    email!: string | null;
 
-    @Column({ select: false })
-    password!: string;
+    @Column({ select: false, nullable: true, type: 'varchar' })
+    password!: string | null;
 
     @Column({ default: 'user' })
     role!: string;
@@ -22,13 +22,20 @@ export class User
     @Column({ default: 0 })
     tokenVersion!: number;
 
+    @Index({ unique: true, where: '"robloxUserId" IS NOT NULL' })
+    @Column({ type: 'varchar', nullable: true })
+    robloxUserId!: string | null;
+
+    @Index({ unique: true, where: '"robloxUsername" IS NOT NULL' })
+    @Column({ type: 'varchar', nullable: true })
+    robloxUsername!: string | null;
+
     @CreateDateColumn({ type: 'timestamp' })
     createdAt!: Date;
 
     @UpdateDateColumn({ type: 'timestamp' })
     updatedAt!: Date;
 
-    // No circular issue here — we use the string reference!
     @OneToMany('Article', 'author')
     articles!: Article[];
 }
