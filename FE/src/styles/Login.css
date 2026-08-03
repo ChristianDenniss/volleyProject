@@ -138,3 +138,24 @@ body {
     margin-bottom: 1rem;         /* same spacing */
     font-size: 0.9rem;           /* same font size */
 }
+
+.auth-sso-btn {
+  display: block;
+  width: 100%;
+  margin-top: 0.75rem;
+  padding: 0.65rem 1rem;
+  background: #fff;
+  border: 1px solid #2d3c50;
+  color: #2d3c50;
+  cursor: pointer;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.auth-sso-btn:hover {
+  background: #f3f6f9;
+}
+
+.profile-roblox-actions {
+  margin: 0.5rem 0 1rem;
+}

@@ -2,6 +2,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate }        from "react-router-dom";
 import { useSignup }          from "../hooks/useSignUp";
+import { startRobloxOAuth } from "../hooks/useTeamRegistrations";
 import "../styles/Login.css";
 
 const SignupPage: React.FC = () =>
@@ -104,6 +105,14 @@ const SignupPage: React.FC = () =>
                     {loading ? "Signing up…" : "Sign Up"}
                 </button>
             </form>
+
+            <button
+                type="button"
+                className="auth-sso-btn"
+                onClick={() => void startRobloxOAuth("signup").catch((e) => alert(String(e.message || e)))}
+            >
+                Sign up with Roblox
+            </button>
 
             <p>
                 Already have an account?{' '}
