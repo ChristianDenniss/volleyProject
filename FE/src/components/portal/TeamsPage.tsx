@@ -19,6 +19,8 @@ import RegionSeasonFields from "../ui/RegionSeasonFields";
 import { useFormRegionSeason } from "../../hooks/useFormRegionSeason";
 import { TEAM_PLACEMENT_OPTIONS } from "../../constants/teamPlacements";
 import { useDebouncedValue } from "../../hooks/useDebouncedValue";
+import { authFetch } from "../../hooks/authFetch";
+import { BACKEND_URL } from "../../constants/api";
 
 type EditField =
   | "name"
@@ -327,6 +329,32 @@ const TeamsPage: React.FC = () => {
             t.logoUrl || "N/A"
           )}
         </div>
+      ),
+    },
+    {
+      key: "captainEditEnabled",
+      header: "Staff Edit",
+      render: (t) => (
+        <input
+          type="checkbox"
+          checked={t.captainEditEnabled !== false}
+          onChange={async (e) => {
+            try {
+              const res = await authFetch(`${BACKEND_URL}/api/teams/${t.id}/flags`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ captainEditEnabled: e.target.checked }),
+              });
+              if (!res.ok) throw new Error("Failed");
+              const updated = await res.json();
+              setLocalTeams((prev) =>
+                prev.map((x) => (x.id === t.id ? { ...x, ...updated } : x))
+              );
+            } catch (err) {
+              console.error(err);
+            }
+          }}
+        />
       ),
     },
     {
