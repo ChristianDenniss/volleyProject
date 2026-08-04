@@ -33,6 +33,15 @@ export class Seasons {
     @JoinColumn({ name: 'regionId' })
     region!: Region;
 
+    @Column({ default: false })
+    registrationsOpen!: boolean;
+
+    @Column({ default: true })
+    captainEditEnabled!: boolean;
+
+    @Column({ type: 'int', nullable: true })
+    maxTeams!: number | null;
+
     @CreateDateColumn({ type: 'timestamp' })
     createdAt!: Date;
 

@@ -21,6 +21,7 @@ import { Awards } from "../modules/awards/award.entity.js";
 import { Records } from "../modules/records/records.entity.js";
 import { Application } from "../modules/applications/application.entity.js";
 import { Region } from "../modules/regions/region.entity.js";
+import { TeamRegistration } from "../modules/team-registrations/team-registration.entity.js";
 
 // Define entities
 const entities = [
@@ -35,7 +36,8 @@ const entities = [
     Awards,
     Records,
     Application,
-    Region
+    Region,
+    TeamRegistration,
 ];
 
 // Configure AppDataSource

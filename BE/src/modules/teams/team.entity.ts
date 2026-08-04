@@ -3,6 +3,7 @@ import type { Seasons } from '../seasons/season.entity.js';
 import type { Players } from '../players/player.entity.js';
 import type { Games } from '../games/game.entity.js';
 import type { Region } from '../regions/region.entity.js';
+import type { User } from '../user/user.entity.js';
 
 @Entity()
 @Index('IDX_teams_regionId', ['regionId'])
@@ -18,6 +19,36 @@ export class Teams
 
     @Column({ nullable: true, default: null })
     logoUrl?: string;
+
+    @Column({ type: 'varchar', nullable: true })
+    hexColor!: string | null;
+
+    @Column({ type: 'varchar', nullable: true })
+    brickColor!: string | null;
+
+    @Column({ default: true })
+    captainEditEnabled!: boolean;
+
+    @Column({ type: 'int', nullable: true })
+    captainUserId!: number | null;
+
+    @ManyToOne('User', { nullable: true })
+    @JoinColumn({ name: 'captainUserId' })
+    captainUser!: User | null;
+
+    @Column({ type: 'int', nullable: true })
+    viceCaptainUserId!: number | null;
+
+    @ManyToOne('User', { nullable: true })
+    @JoinColumn({ name: 'viceCaptainUserId' })
+    viceCaptainUser!: User | null;
+
+    @Column({ type: 'int', nullable: true })
+    courtCaptainUserId!: number | null;
+
+    @ManyToOne('User', { nullable: true })
+    @JoinColumn({ name: 'courtCaptainUserId' })
+    courtCaptainUser!: User | null;
 
     @CreateDateColumn({ type: 'timestamp' })
     createdAt!: Date;
@@ -36,6 +67,7 @@ export class Teams
     region!: Region;
 
     @ManyToOne('Seasons', 'teams')
+    @JoinColumn({ name: 'seasonId' })
     season!: Seasons;
 
     @ManyToMany('Players', 'teams')

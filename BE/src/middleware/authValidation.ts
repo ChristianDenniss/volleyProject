@@ -3,8 +3,18 @@ import { AppDataSource } from "../db/data-source.js";
 import { UnauthorizedError } from "../errors/UnauthorizedError.js";
 import { User } from "../modules/user/user.entity.js";
 
-export const ALLOWED_JWT_ROLES = ["user", "admin", "superadmin"] as const;
+export const ALLOWED_JWT_ROLES = [
+    "user",
+    "captain",
+    "vice_captain",
+    "court_captain",
+    "admin",
+    "superadmin",
+] as const;
+
 export type AllowedJwtRole = (typeof ALLOWED_JWT_ROLES)[number];
+
+export const STAFF_SITE_ROLES = ["captain", "vice_captain", "court_captain"] as const;
 
 export interface VerifiedJwtUser {
     id: number;
@@ -59,4 +69,26 @@ export async function validateJwtPayload(decoded: jwt.JwtPayload): Promise<Verif
         role: user.role as AllowedJwtRole,
         tokenVersion: user.tokenVersion,
     };
+}
+
+export function signUserToken(user: {
+    id: number;
+    username: string;
+    role: string;
+    tokenVersion: number;
+}): string {
+    return jwt.sign(
+        {
+            id: user.id,
+            username: user.username,
+            role: user.role,
+            tokenVersion: user.tokenVersion,
+        },
+        getJwtSecret(),
+        { expiresIn: "7d" }
+    );
+}
+
+export function normalizeRobloxUsername(username: string): string {
+    return username.trim().toLowerCase();
 }
