@@ -4,6 +4,8 @@ import { useTeamRegistrations, useRegistrationSummary } from "../../hooks/useTea
 import { authFetch } from "../../hooks/authFetch";
 import { BACKEND_URL } from "../../constants/api";
 import type { RegionCode, TeamRegistration } from "../../types/interfaces";
+import { RegStatusBadge } from "../RegStatusBadge";
+import Modal from "../ui/Modal";
 import "../../styles/TeamRegistrations.css";
 
 type Conflict = {
@@ -65,13 +67,25 @@ const RegistrationsHubPage: React.FC = () => {
     await act(conflictId, "resolve", { teamName: rename || undefined, players });
   };
 
+  const closeConflicts = () => {
+    setConflicts(null);
+    setConflictId(null);
+  };
+
   return (
     <div className="team-regs-page">
-      <h1>Registrations</h1>
-      <p>
-        Manage team applications. Other registration types can be added here later.{" "}
-        <Link to="/portal/teams">League teams CRUD</Link>
-      </p>
+      <header className="team-regs-header">
+        <div className="team-regs-header-body">
+          <h1>Registrations</h1>
+          <p>
+            Manage team applications. Other registration types can be added here later.{" "}
+            <Link to="/portal/teams">League teams CRUD</Link>
+          </p>
+          <p className="team-regs-spots">
+            Teams · {region.toUpperCase()} · {header}
+          </p>
+        </div>
+      </header>
 
       <div className="team-regs-region-tabs">
         {(["na", "eu", "as"] as RegionCode[]).map((r) => (
@@ -89,10 +103,8 @@ const RegistrationsHubPage: React.FC = () => {
         ))}
       </div>
 
-      <h2>Teams · {region.toUpperCase()}</h2>
-      <p>{header}</p>
-      {msg && <p>{msg}</p>}
-      {loading && <p>Loading…</p>}
+      {msg && <p className={msg === "Updated" ? "form-success" : "form-error"}>{msg}</p>}
+      {loading && <p className="team-regs-muted">Loading…</p>}
       {error && <p className="form-error">{error}</p>}
 
       <div className="team-regs-table-wrap">
@@ -106,113 +118,173 @@ const RegistrationsHubPage: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {data.map((row: TeamRegistration) => (
-              <React.Fragment key={row.id}>
-                <tr
-                  className={`status-${row.status}`}
-                  onClick={() => setExpanded(expanded === row.id ? null : row.id)}
-                >
-                  <td>{row.teamName}</td>
-                  <td>{row.submittedBy?.username || row.submittedByUserId}</td>
-                  <td>
-                    {row.captainDiscord} / {row.captainRoblox}
-                  </td>
-                  <td>{row.status}</td>
-                </tr>
-                {expanded === row.id && (
-                  <tr className={`status-${row.status}`}>
-                    <td colSpan={4}>
-                      <div className="team-regs-detail">
-                        <p>
-                          Hex {row.hexColor} · Brick {row.brickColor}
-                        </p>
-                        <p>
-                          Vice: {row.viceDiscord} / {row.viceRoblox}
-                        </p>
-                        <ul>
-                          {(row.roster || []).map((p, i) => (
-                            <li key={i}>
-                              {p.discord} — {p.roblox}
-                            </li>
-                          ))}
-                        </ul>
-                        <div className="form-actions">
-                          {(row.status === "pending" || row.status === "conflict") && (
-                            <>
-                              <button type="button" onClick={() => void act(row.id, "accept")}>
-                                Accept
-                              </button>
-                              <button type="button" onClick={() => void act(row.id, "deny")}>
-                                Deny
-                              </button>
-                            </>
-                          )}
-                          {row.status === "accepted" && (
-                            <button type="button" onClick={() => void act(row.id, "revoke")}>
-                              Revoke (while apps open)
-                            </button>
-                          )}
-                        </div>
-                      </div>
+            {data.map((row: TeamRegistration) => {
+              const isOpen = expanded === row.id;
+              return (
+                <React.Fragment key={row.id}>
+                  <tr
+                    className={`listing-row-clickable ${isOpen ? "selected listing-row-expanded" : ""}`}
+                    onClick={() => setExpanded(isOpen ? null : row.id)}
+                  >
+                    <td className="team-name-cell">{row.teamName}</td>
+                    <td>{row.submittedBy?.username || row.submittedByUserId}</td>
+                    <td>
+                      {row.captainDiscord} / {row.captainRoblox}
+                    </td>
+                    <td>
+                      <RegStatusBadge status={row.status} />
                     </td>
                   </tr>
-                )}
-              </React.Fragment>
-            ))}
+                  {isOpen && (
+                    <tr className="listing-table-detail-row">
+                      <td colSpan={4}>
+                        <div className="team-regs-detail">
+                          <dl className="team-regs-detail-stats">
+                            <div className="team-regs-detail-stat">
+                              <dt>Colors</dt>
+                              <dd>
+                                {row.hexColor && (
+                                  <span
+                                    className="team-regs-color-swatch"
+                                    style={{ background: row.hexColor }}
+                                    aria-hidden
+                                  />
+                                )}
+                                {row.hexColor} · {row.brickColor}
+                              </dd>
+                            </div>
+                            <div className="team-regs-detail-stat">
+                              <dt>Vice</dt>
+                              <dd>
+                                {row.viceDiscord} / {row.viceRoblox}
+                              </dd>
+                            </div>
+                          </dl>
+                          <ul className="team-regs-roster">
+                            {(row.roster || []).map((p, i) => (
+                              <li key={i}>
+                                <span className="team-regs-roster-label">P{i + 1}</span>
+                                <span>{p.discord}</span>
+                                <span className="team-regs-muted">·</span>
+                                <span>{p.roblox}</span>
+                              </li>
+                            ))}
+                          </ul>
+                          <div className="form-actions" style={{ justifyContent: "flex-start" }}>
+                            {(row.status === "pending" || row.status === "conflict") && (
+                              <>
+                                <button
+                                  type="button"
+                                  className="team-regs-cta"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    void act(row.id, "accept");
+                                  }}
+                                >
+                                  Accept
+                                </button>
+                                <button
+                                  type="button"
+                                  className="team-regs-cta team-regs-cta--danger"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    void act(row.id, "deny");
+                                  }}
+                                >
+                                  Deny
+                                </button>
+                              </>
+                            )}
+                            {row.status === "accepted" && (
+                              <button
+                                type="button"
+                                className="team-regs-cta team-regs-cta--secondary"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  void act(row.id, "revoke");
+                                }}
+                              >
+                                Revoke (while apps open)
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
+              );
+            })}
+            {data.length === 0 && !loading && (
+              <tr>
+                <td colSpan={4} className="listing-table-empty">
+                  No registrations for this region.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
 
-      {conflicts && conflictId && (
-        <div className="ui-modal-backdrop" style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.4)", display: "grid", placeItems: "center", zIndex: 50 }}>
-          <div className="ui-modal" style={{ background: "#fff", padding: "1.25rem", maxWidth: 520, width: "90%" }}>
-            <h3>Resolve conflicts</h3>
-            <label>
-              Team name
-              <input value={rename} onChange={(e) => setRename(e.target.value)} />
-            </label>
-            <ul>
-              {conflicts.map((c, i) => (
-                <li key={i}>
-                  {c.type === "name" && <>Name clash: {c.teamName}</>}
-                  {c.type === "player" && (
-                    <>
-                      Player {c.roblox} on {c.existingTeamName}{" "}
-                      <select
-                        value={playerActions[c.roblox!] || ""}
-                        onChange={(e) =>
-                          setPlayerActions((prev) => ({
-                            ...prev,
-                            [c.roblox!]: e.target.value as "transfer" | "exclude",
-                          }))
-                        }
-                      >
-                        <option value="">Choose…</option>
-                        <option value="transfer">Transfer</option>
-                        <option value="exclude">Exclude</option>
-                      </select>
-                    </>
-                  )}
-                </li>
-              ))}
-            </ul>
-            <div className="form-actions">
-              <button type="button" onClick={() => void resolve()}>
-                Apply &amp; accept
-              </button>
-              <button type="button" onClick={() => void resolve("pending")}>
-                Revert pending
-              </button>
-              <button type="button" onClick={() => void resolve("denied")}>
-                Deny
-              </button>
-              <button type="button" onClick={() => { setConflicts(null); setConflictId(null); }}>
-                Close
-              </button>
-            </div>
+      <Modal
+        isOpen={Boolean(conflicts && conflictId)}
+        onClose={closeConflicts}
+        title="Resolve conflicts"
+      >
+        <div className="team-regs-conflict-modal">
+          <label>
+            Team name
+            <input value={rename} onChange={(e) => setRename(e.target.value)} />
+          </label>
+          <ul className="team-regs-conflict-list">
+            {(conflicts || []).map((c, i) => (
+              <li key={i}>
+                {c.type === "name" && <>Name clash: {c.teamName}</>}
+                {c.type === "player" && (
+                  <>
+                    Player {c.roblox} on {c.existingTeamName}{" "}
+                    <select
+                      value={playerActions[c.roblox!] || ""}
+                      onChange={(e) =>
+                        setPlayerActions((prev) => ({
+                          ...prev,
+                          [c.roblox!]: e.target.value as "transfer" | "exclude",
+                        }))
+                      }
+                    >
+                      <option value="">Choose…</option>
+                      <option value="transfer">Transfer</option>
+                      <option value="exclude">Exclude</option>
+                    </select>
+                  </>
+                )}
+              </li>
+            ))}
+          </ul>
+          <div className="form-actions">
+            <button type="button" className="team-regs-cta" onClick={() => void resolve()}>
+              Apply &amp; accept
+            </button>
+            <button
+              type="button"
+              className="team-regs-cta team-regs-cta--secondary"
+              onClick={() => void resolve("pending")}
+            >
+              Revert pending
+            </button>
+            <button
+              type="button"
+              className="team-regs-cta team-regs-cta--danger"
+              onClick={() => void resolve("denied")}
+            >
+              Deny
+            </button>
+            <button type="button" className="team-regs-cta team-regs-cta--secondary" onClick={closeConflicts}>
+              Close
+            </button>
           </div>
         </div>
-      )}
+      </Modal>
     </div>
   );
 };

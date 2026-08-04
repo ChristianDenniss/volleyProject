@@ -25,15 +25,15 @@ function getFrontendUrl(): string {
     return process.env.FRONTEND_URL || process.env.CORS_ORIGINS?.split(",")[0]?.trim() || "http://localhost:5173";
 }
 
-function getRobloxConfig(): { clientId: string; clientSecret: string; redirectUri: string } {
-    const clientId = process.env.ROBLOX_OAUTH_CLIENT_ID;
-    const clientSecret = process.env.ROBLOX_OAUTH_CLIENT_SECRET;
+function getRobloxConfig(): { clientId: string; clientSecret: string; redirectUri: string } | null {
+    const clientId = process.env.ROBLOX_OAUTH_CLIENT_ID?.trim();
+    const clientSecret = process.env.ROBLOX_OAUTH_CLIENT_SECRET?.trim();
     const redirectUri =
-        process.env.ROBLOX_OAUTH_REDIRECT_URI ||
+        process.env.ROBLOX_OAUTH_REDIRECT_URI?.trim() ||
         `${process.env.BACKEND_PUBLIC_URL || "http://localhost:3000"}/api/auth/roblox/callback`;
 
     if (!clientId || !clientSecret) {
-        throw new Error("Roblox OAuth is not configured (ROBLOX_OAUTH_CLIENT_ID / ROBLOX_OAUTH_CLIENT_SECRET)");
+        return null;
     }
 
     return { clientId, clientSecret, redirectUri };
@@ -73,7 +73,15 @@ export class RobloxAuthController {
                 return;
             }
 
-            const { clientId, redirectUri } = getRobloxConfig();
+            const config = getRobloxConfig();
+            if (!config) {
+                res.status(503).json({
+                    error:
+                        "Roblox OAuth is not configured. Set ROBLOX_OAUTH_CLIENT_ID and ROBLOX_OAUTH_CLIENT_SECRET (and register redirect URI http://localhost:3000/api/auth/roblox/callback).",
+                });
+                return;
+            }
+            const { clientId, redirectUri } = config;
             const payload: OAuthStatePayload = {
                 intent,
                 userId: intent === "connect" ? req.user!.id : undefined,
@@ -120,7 +128,14 @@ export class RobloxAuthController {
             }
 
             const payload = verifyState(state);
-            const { clientId, clientSecret, redirectUri } = getRobloxConfig();
+            const config = getRobloxConfig();
+            if (!config) {
+                res.redirect(
+                    `${frontend}/login?roblox=error&message=${encodeURIComponent("Roblox OAuth is not configured")}`
+                );
+                return;
+            }
+            const { clientId, clientSecret, redirectUri } = config;
 
             const tokenRes = await fetch(TOKEN_URL, {
                 method: "POST",

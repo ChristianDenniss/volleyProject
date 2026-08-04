@@ -46,16 +46,38 @@ const TeamRegister: React.FC = () => {
     return "TBD";
   }, [summary?.startDate]);
 
-  if (authLoading) return <div className="team-reg-form">Loading…</div>;
+  if (authLoading) {
+    return (
+      <div className="team-reg-form">
+        <div className="team-reg-card team-reg-gate">
+          <p className="team-regs-muted">Loading…</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return (
       <div className="team-reg-form">
-        <h1>Register a team</h1>
-        <p>
-          You must be logged in to submit a team application.{" "}
-          <Link to="/login">Log in</Link> or <Link to="/signup">sign up</Link>.
-        </p>
+        <div className="team-regs-nav">
+          <Link to="/teams">League teams</Link>
+          <span aria-hidden="true">·</span>
+          <Link to="/teams/registrations">Team registrations</Link>
+          <span aria-hidden="true">·</span>
+          <span className="team-regs-nav-active">Register a team</span>
+        </div>
+        <div className="team-reg-card team-reg-gate">
+          <h1>Register a team</h1>
+          <p>You must be logged in to submit a team application.</p>
+          <div className="team-reg-gate-links">
+            <Link className="team-regs-cta" to="/login">
+              Log in
+            </Link>
+            <Link className="team-regs-cta team-regs-cta--secondary" to="/signup">
+              Sign up
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }
@@ -117,120 +139,201 @@ const TeamRegister: React.FC = () => {
     }
   };
 
+  const normalizedHex = hexColor.startsWith("#") ? hexColor : `#${hexColor}`;
+
   return (
     <div className="team-reg-form">
       <div className="team-regs-nav">
         <Link to="/teams">League teams</Link>
-        <span>·</span>
+        <span aria-hidden="true">·</span>
         <Link to="/teams/registrations">Team registrations</Link>
-        <span>·</span>
+        <span aria-hidden="true">·</span>
         <span className="team-regs-nav-active">Register a team</span>
       </div>
 
-      <h1>Register your team</h1>
-      <p>Anyone with a site account can submit. Season start: {startLabel}.</p>
-      {error && <p className="form-error">{error}</p>}
-      {success && <p className="form-success">{success}</p>}
+      <div className="team-reg-card">
+        <h1>Register your team</h1>
+        <p className="team-regs-muted">
+          Anyone with a site account can submit. Season start: <strong>{startLabel}</strong>.
+        </p>
 
-      <form onSubmit={handleSubmit}>
-        <fieldset>
-          <legend>Eligibility</legend>
-          <label>
-            <input type="checkbox" checked={agreeCivil} onChange={(e) => setAgreeCivil(e.target.checked)} /> Do
-            you understand and agree to be civil and accommodating when scheduling matches?
-          </label>
-          <label>
-            <input type="checkbox" checked={confident} onChange={(e) => setConfident(e.target.checked)} /> This
-            season is set to start on {startLabel}. Are you confident the team will still participate by then?
-          </label>
-          <label>
-            Region
-            <select value={regionCode} onChange={(e) => setRegionCode(e.target.value as RegionCode)}>
-              <option value="na">NA</option>
-              <option value="eu">EU</option>
-              <option value="as">AS</option>
-            </select>
-          </label>
-          <label>
-            Prior competitive Roblox Volleyball leagues (optional)
-            <textarea value={experience} onChange={(e) => setExperience(e.target.value)} rows={3} />
-          </label>
-        </fieldset>
+        {error && <p className="form-error">{error}</p>}
+        {success && <p className="form-success">{success}</p>}
 
-        <fieldset>
-          <legend>Team</legend>
-          <label>
-            Team name
-            <input value={teamName} onChange={(e) => setTeamName(e.target.value)} required />
-          </label>
-          <label>
-            Hex color
-            <input value={hexColor} onChange={(e) => setHexColor(e.target.value)} required pattern="#?[0-9A-Fa-f]{6}" />
-          </label>
-          <label>
-            Brick color
-            <input value={brickColor} onChange={(e) => setBrickColor(e.target.value)} required />
-          </label>
-          <label>
-            <input type="checkbox" checked={logoAck} onChange={(e) => setLogoAck(e.target.checked)} /> I will
-            prepare a logo &amp; jerseys if accepted to RVL
-          </label>
-        </fieldset>
-
-        <fieldset>
-          <legend>Captain &amp; Vice</legend>
-          <label>
-            Captain Discord
-            <input value={captainDiscord} onChange={(e) => setCaptainDiscord(e.target.value)} required />
-          </label>
-          <label>
-            Captain Roblox
-            <input value={captainRoblox} onChange={(e) => setCaptainRoblox(e.target.value)} required />
-          </label>
-          <label>
-            Vice Discord
-            <input value={viceDiscord} onChange={(e) => setViceDiscord(e.target.value)} required />
-          </label>
-          <label>
-            Vice Roblox
-            <input value={viceRoblox} onChange={(e) => setViceRoblox(e.target.value)} required />
-          </label>
-        </fieldset>
-
-        <fieldset>
-          <legend>Roster (minimum 10, including captain &amp; vice)</legend>
-          {roster.map((row, i) => (
-            <div className="roster-row" key={i}>
-              <input
-                placeholder={`Player ${i + 1} Discord`}
-                value={row.discord}
-                onChange={(e) => updateRoster(i, "discord", e.target.value)}
-                required
-              />
-              <input
-                placeholder={`Player ${i + 1} Roblox`}
-                value={row.roblox}
-                onChange={(e) => updateRoster(i, "roblox", e.target.value)}
-                required
-              />
-              {i >= 10 && (
-                <button type="button" onClick={() => setRoster((r) => r.filter((_, idx) => idx !== i))}>
-                  Remove
-                </button>
-              )}
+        <form onSubmit={handleSubmit}>
+          <section className="team-reg-section">
+            <h2>Eligibility</h2>
+            <label className="form-check">
+              <input type="checkbox" checked={agreeCivil} onChange={(e) => setAgreeCivil(e.target.checked)} />
+              <span>I understand and agree to be civil and accommodating when scheduling matches.</span>
+            </label>
+            <label className="form-check">
+              <input type="checkbox" checked={confident} onChange={(e) => setConfident(e.target.checked)} />
+              <span>
+                This season is set to start on {startLabel}. I am confident the team will still participate by then.
+              </span>
+            </label>
+            <div className="form-group">
+              <label htmlFor="team-reg-region">Region</label>
+              <select
+                id="team-reg-region"
+                value={regionCode}
+                onChange={(e) => setRegionCode(e.target.value as RegionCode)}
+              >
+                <option value="na">North American (NA)</option>
+                <option value="eu">European (EU)</option>
+                <option value="as">Asian (AS)</option>
+              </select>
             </div>
-          ))}
-          <button type="button" onClick={() => setRoster((r) => [...r, { discord: "", roblox: "" }])}>
-            Add player
-          </button>
-        </fieldset>
+            <div className="form-group">
+              <label htmlFor="team-reg-experience">Prior competitive Roblox Volleyball leagues (optional)</label>
+              <textarea
+                id="team-reg-experience"
+                value={experience}
+                onChange={(e) => setExperience(e.target.value)}
+                rows={3}
+                placeholder="e.g. previous RVL seasons, other leagues…"
+              />
+            </div>
+          </section>
 
-        <div className="form-actions">
-          <button type="submit" disabled={submitting}>
-            {submitting ? "Submitting…" : "Submit application"}
-          </button>
-        </div>
-      </form>
+          <section className="team-reg-section">
+            <h2>Team</h2>
+            <div className="form-group">
+              <label htmlFor="team-reg-name">Team name</label>
+              <input
+                id="team-reg-name"
+                value={teamName}
+                onChange={(e) => setTeamName(e.target.value)}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="team-reg-hex">Hex color</label>
+              <div className="team-reg-color-row">
+                <input
+                  type="color"
+                  aria-label="Pick hex color"
+                  value={/^#[0-9A-Fa-f]{6}$/.test(normalizedHex) ? normalizedHex : "#2D3C50"}
+                  onChange={(e) => setHexColor(e.target.value)}
+                />
+                <input
+                  id="team-reg-hex"
+                  value={hexColor}
+                  onChange={(e) => setHexColor(e.target.value)}
+                  required
+                  pattern="#?[0-9A-Fa-f]{6}"
+                  placeholder="#2D3C50"
+                />
+              </div>
+            </div>
+            <div className="form-group">
+              <label htmlFor="team-reg-brick">Brick color</label>
+              <input
+                id="team-reg-brick"
+                value={brickColor}
+                onChange={(e) => setBrickColor(e.target.value)}
+                required
+                placeholder="Roblox brick color name"
+              />
+            </div>
+            <label className="form-check">
+              <input type="checkbox" checked={logoAck} onChange={(e) => setLogoAck(e.target.checked)} />
+              <span>I will prepare a logo &amp; jerseys if accepted to RVL</span>
+            </label>
+          </section>
+
+          <section className="team-reg-section">
+            <h2>Captain &amp; Vice</h2>
+            <div className="form-group">
+              <label htmlFor="team-reg-cap-discord">Captain Discord</label>
+              <input
+                id="team-reg-cap-discord"
+                value={captainDiscord}
+                onChange={(e) => setCaptainDiscord(e.target.value)}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="team-reg-cap-roblox">Captain Roblox</label>
+              <input
+                id="team-reg-cap-roblox"
+                value={captainRoblox}
+                onChange={(e) => setCaptainRoblox(e.target.value)}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="team-reg-vice-discord">Vice Discord</label>
+              <input
+                id="team-reg-vice-discord"
+                value={viceDiscord}
+                onChange={(e) => setViceDiscord(e.target.value)}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="team-reg-vice-roblox">Vice Roblox</label>
+              <input
+                id="team-reg-vice-roblox"
+                value={viceRoblox}
+                onChange={(e) => setViceRoblox(e.target.value)}
+                required
+              />
+            </div>
+          </section>
+
+          <section className="team-reg-section">
+            <h2>Roster</h2>
+            <p className="team-regs-muted" style={{ marginBottom: "1rem" }}>
+              Minimum 10 players, including captain &amp; vice (rows 1–2).
+            </p>
+            {roster.map((row, i) => (
+              <div className="roster-row" key={i}>
+                <input
+                  placeholder={`Player ${i + 1} Discord`}
+                  aria-label={`Player ${i + 1} Discord`}
+                  value={row.discord}
+                  onChange={(e) => updateRoster(i, "discord", e.target.value)}
+                  required
+                />
+                <input
+                  placeholder={`Player ${i + 1} Roblox`}
+                  aria-label={`Player ${i + 1} Roblox`}
+                  value={row.roblox}
+                  onChange={(e) => updateRoster(i, "roblox", e.target.value)}
+                  required
+                />
+                {i >= 10 && (
+                  <button
+                    type="button"
+                    className="roster-row-remove"
+                    onClick={() => setRoster((r) => r.filter((_, idx) => idx !== i))}
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+            ))}
+            <button
+              type="button"
+              className="team-regs-cta team-regs-cta--secondary"
+              onClick={() => setRoster((r) => [...r, { discord: "", roblox: "" }])}
+            >
+              Add player
+            </button>
+          </section>
+
+          <div className="form-actions">
+            <Link className="team-regs-cta team-regs-cta--secondary" to="/teams/registrations">
+              Cancel
+            </Link>
+            <button className="team-regs-cta" type="submit" disabled={submitting}>
+              {submitting ? "Submitting…" : "Submit application"}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };

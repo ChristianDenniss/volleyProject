@@ -6,6 +6,7 @@ import { env, getPostgresConnectionOptions } from "../config/env.js";
 // Get current directory for ES modules
 const currentFile = fileURLToPath(import.meta.url);
 const currentDir = dirname(currentFile);
+const migrationsDir = join(currentDir, "..", "migrations");
 
 console.log("==========================================");
 console.log("MIGRATION PROCESS STARTING");
@@ -29,7 +30,7 @@ const AppDataSource = new DataSource({
     type: "postgres",
     ...getPostgresConnectionOptions(env),
     entities: [join(currentDir, "..", "modules", "**", "*.entity.{js,ts}")],
-    migrations: [join(currentDir, "*.{js,ts}")],
+    migrations: [join(migrationsDir, "*.{js,ts}")],
     migrationsTransactionMode: "each",
     synchronize: false,
     logging: true,

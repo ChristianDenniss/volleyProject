@@ -4,7 +4,9 @@ import { useRegion } from "../context/regionContext";
 import { useAuth } from "../context/authContext";
 import { useTeamRegistrations, useRegistrationSummary } from "../hooks/useTeamRegistrations";
 import type { RegionCode, TeamRegistration } from "../types/interfaces";
+import { RegStatusBadge, REGISTRATION_STATUSES } from "./RegStatusBadge";
 import "../styles/TeamRegistrations.css";
+import "../styles/ListingPage.css";
 
 const REGIONS: { code: RegionCode; label: string }[] = [
   { code: "na", label: "NA" },
@@ -30,7 +32,7 @@ const TeamRegistrations: React.FC = () => {
 
   const spotsLine =
     summary?.spotsLeft != null
-      ? `${summary.spotsLeft} team spot${summary.spotsLeft === 1 ? "" : "s"} left…`
+      ? `${summary.spotsLeft} team spot${summary.spotsLeft === 1 ? "" : "s"} left`
       : null;
 
   return (
@@ -44,12 +46,30 @@ const TeamRegistrations: React.FC = () => {
       </div>
 
       <header className="team-regs-header">
-        <h1>Team registrations</h1>
-        <p>{header}</p>
-        {spotsLine && <p className="team-regs-spots">{spotsLine}</p>}
+        <div className="team-regs-header-body">
+          <h1>Team registrations</h1>
+          <p>
+            Public applications for the current registration window. Select a row for a quick
+            preview, or open full details.
+          </p>
+          <p className="team-regs-spots">{header}</p>
+          {spotsLine && <p className="team-regs-muted">{spotsLine}</p>}
+        </div>
+        <div className="team-regs-header-actions">
+          <Link className="team-regs-cta" to="/teams/register">
+            {isAuthenticated ? "Register a team" : "Log in to register"}
+          </Link>
+          <div className="team-regs-legend" aria-label="Status legend">
+            {REGISTRATION_STATUSES.map((status) => (
+              <div className="team-regs-legend-item" key={status}>
+                <RegStatusBadge status={status} />
+              </div>
+            ))}
+          </div>
+        </div>
       </header>
 
-      <div className="team-regs-region-tabs" role="tablist">
+      <div className="team-regs-region-tabs" role="tablist" aria-label="Region">
         {REGIONS.map((r) => (
           <button
             key={r.code}
@@ -68,7 +88,7 @@ const TeamRegistrations: React.FC = () => {
         ))}
       </div>
 
-      {loading && <p>Loading…</p>}
+      {loading && <p className="team-regs-muted">Loading registrations…</p>}
       {error && <p className="team-regs-error">{error}</p>}
 
       {!loading && !error && (
@@ -83,38 +103,72 @@ const TeamRegistrations: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {data.map((row) => (
-                <tr
-                  key={row.id}
-                  className={`status-${row.status} ${selected?.id === row.id ? "selected" : ""}`}
-                  onClick={() => setSelected(selected?.id === row.id ? null : row)}
-                >
-                  <td>{row.teamName}</td>
-                  <td>{row.captainDiscord}</td>
-                  <td>{row.captainRoblox}</td>
-                  <td>{row.status}</td>
-                </tr>
-              ))}
+              {data.map((row) => {
+                const isSelected = selected?.id === row.id;
+                return (
+                  <React.Fragment key={row.id}>
+                    <tr
+                      className={`listing-row-clickable ${isSelected ? "selected listing-row-expanded" : ""}`}
+                      onClick={() => setSelected(isSelected ? null : row)}
+                    >
+                      <td className="team-name-cell">{row.teamName}</td>
+                      <td>{row.captainDiscord}</td>
+                      <td>{row.captainRoblox}</td>
+                      <td>
+                        <RegStatusBadge status={row.status} />
+                      </td>
+                    </tr>
+                    {isSelected && (
+                      <tr className="listing-table-detail-row">
+                        <td colSpan={4}>
+                          <div className="team-regs-detail">
+                            <dl className="team-regs-detail-stats">
+                              <div className="team-regs-detail-stat">
+                                <dt>Status</dt>
+                                <dd>
+                                  <RegStatusBadge status={row.status} />
+                                </dd>
+                              </div>
+                              <div className="team-regs-detail-stat">
+                                <dt>Captain</dt>
+                                <dd>
+                                  {row.captainDiscord} / {row.captainRoblox}
+                                </dd>
+                              </div>
+                              {row.hexColor && (
+                                <div className="team-regs-detail-stat">
+                                  <dt>Colors</dt>
+                                  <dd>
+                                    <span
+                                      className="team-regs-color-swatch"
+                                      style={{ background: row.hexColor }}
+                                      aria-hidden
+                                    />
+                                    {row.hexColor}
+                                    {row.brickColor ? ` · ${row.brickColor}` : ""}
+                                  </dd>
+                                </div>
+                              )}
+                            </dl>
+                            <Link className="team-regs-cta team-regs-cta--secondary" to={`/teams/registrations/${row.id}`}>
+                              View full details
+                            </Link>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                );
+              })}
               {data.length === 0 && (
                 <tr>
-                  <td colSpan={4}>No registrations yet for this region.</td>
+                  <td colSpan={4} className="listing-table-empty">
+                    No registrations yet for this region.
+                  </td>
                 </tr>
               )}
             </tbody>
           </table>
-        </div>
-      )}
-
-      {selected && (
-        <div className="team-regs-detail">
-          <h2>{selected.teamName}</h2>
-          <p>
-            Status: <strong>{selected.status}</strong>
-          </p>
-          <p>
-            Captain: {selected.captainDiscord} / {selected.captainRoblox}
-          </p>
-          <Link to={`/teams/registrations/${selected.id}`}>View full details</Link>
         </div>
       )}
     </div>

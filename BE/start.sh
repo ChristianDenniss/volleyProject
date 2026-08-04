@@ -21,16 +21,16 @@ if [ -n "$COOLIFY_URL" ]; then
 fi
 echo "=========================================="
 
-# Run migrations in production only; local docker dev syncs schema on startup
-if [ "$NODE_ENV" = "production" ]; then
+# Migrations for real DBs; local Docker may opt into TYPEORM_SYNCHRONIZE=true instead.
+if [ "$TYPEORM_SYNCHRONIZE" = "true" ]; then
+    echo "Skipping migrations (TYPEORM_SYNCHRONIZE=true — schema syncs on startup)."
+else
     echo "Running database migrations..."
-    if ! node --es-module-specifier-resolution=node dist/migrations/run-migrations.js; then
+    if ! node --es-module-specifier-resolution=node dist/scripts/run-migrations.js; then
         echo "Error: Database migrations failed!"
         exit 1
     fi
     echo "Database migrations completed successfully."
-else
-    echo "Skipping migrations in development (schema syncs on startup)."
 fi
 
 # Start the application
