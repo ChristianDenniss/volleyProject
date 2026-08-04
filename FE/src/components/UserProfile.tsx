@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import { authFetch } from "../hooks/authFetch";
 import { useAuth } from "../context/authContext";
 import { BACKEND_URL } from "../constants/api";
+import { startRobloxOAuth } from "../hooks/useTeamRegistrations";
 import "../styles/UserProfile.css";
 
 interface Article {
@@ -17,10 +18,13 @@ interface Article {
 interface UserProfile {
     id:        number;
     username:  string;
-    email:     string;
+    email:     string | null;
     role:      string;
     createdAt: string;
     updatedAt: string;
+    robloxUsername?: string | null;
+    robloxUserId?: string | null;
+    hasPassword?: boolean;
     articles?: Article[];
 }
 
@@ -113,11 +117,42 @@ const ProfilePage: React.FC = () =>
 
             <div className="profile-card">
                 <p><strong>Username:</strong> {profile.username}</p>
-                <p><strong>Email:</strong>    {profile.email}</p>
+                <p><strong>Email:</strong>    {profile.email || "—"}</p>
                 <p>
                     <strong>Role / Permissions level:</strong>{" "}
                     {profile.role}
                 </p>
+                <p>
+                    <strong>Roblox:</strong>{" "}
+                    {profile.robloxUsername ? `@${profile.robloxUsername}` : "Not connected"}
+                </p>
+                <div className="profile-roblox-actions">
+                    {!profile.robloxUsername ? (
+                        <button type="button" onClick={() => void startRobloxOAuth("connect")}>
+                            Connect Roblox
+                        </button>
+                    ) : (
+                        <button
+                            type="button"
+                            onClick={async () => {
+                                const res = await authFetch(
+                                    `${BACKEND_URL}/api/auth/roblox/unlink`,
+                                    { method: "POST" },
+                                    token
+                                );
+                                if (res.ok) {
+                                    const data = await res.json();
+                                    setProfile((p) => (p ? { ...p, ...data } : p));
+                                } else {
+                                    const data = await res.json().catch(() => ({}));
+                                    alert(data.error || "Failed to unlink");
+                                }
+                            }}
+                        >
+                            Disconnect Roblox
+                        </button>
+                    )}
+                </div>
                 <p>
                     <strong>Join Date:</strong>{" "}
                     {new Date(profile.createdAt).toLocaleDateString()}

@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useLogin } from "../hooks/useLogin";
+import { startRobloxOAuth } from "../hooks/useTeamRegistrations";
 import "../styles/Login.css";
 
 const LoginPage: React.FC = () =>
@@ -14,6 +15,17 @@ const LoginPage: React.FC = () =>
     // form state
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
+    const [oauthError, setOauthError] = useState<string | null>(null);
+
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("roblox") === "error") {
+            setOauthError(params.get("message") || "Roblox login failed");
+        }
+        if (params.get("roblox") === "need_signup") {
+            setOauthError("No account linked to that Roblox user. Sign up with Roblox instead.");
+        }
+    }, []);
 
     // on form submit
     const handleSubmit = async (e: React.FormEvent) =>
@@ -31,7 +43,7 @@ const LoginPage: React.FC = () =>
     return (
         <div className="auth-container">
             <h2>Login</h2>
-            {error && <div className="auth-error">{error}</div>}
+            {(error || oauthError) && <div className="auth-error">{error || oauthError}</div>}
             <form onSubmit={handleSubmit} className="auth-form">
                 <label>
                     Username
@@ -55,6 +67,13 @@ const LoginPage: React.FC = () =>
                     {loading ? "Logging in…" : "Login"}
                 </button>
             </form>
+            <button
+                type="button"
+                className="auth-sso-btn"
+                onClick={() => void startRobloxOAuth("login").catch((e) => setOauthError(String(e.message || e)))}
+            >
+                Log in with Roblox
+            </button>
             <p>
                 Don’t have an account?{" "}
                 <Link className="auth-link" to="/signup">
