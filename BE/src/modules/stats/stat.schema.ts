@@ -31,6 +31,6 @@ export const createStatByNameSchema = createStatSchema
   });
 
 export type CreateStatDto = z.infer<typeof createStatSchema>;
-export type UpdateStatDto = z.infer<typeof createStatSchema.partial()>;
+export type UpdateStatDto = z.infer<typeof updateStatSchema>;
 export type CreateStatByNameDto = z.infer<typeof createStatByNameSchema>;
 
