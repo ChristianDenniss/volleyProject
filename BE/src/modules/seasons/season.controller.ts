@@ -119,7 +119,10 @@ export class SeasonController
                 startDate,
                 endDate,
                 theme,
-                image
+                image,
+                registrationsOpen,
+                captainEditEnabled,
+                maxTeams,
             } = req.body;
 
             const updated = await this.seasonService.updateSeason(
@@ -128,7 +131,10 @@ export class SeasonController
                 startDate ? new Date(startDate) : undefined,
                 endDate   ? new Date(endDate)   : undefined,
                 theme,
-                image
+                image,
+                registrationsOpen,
+                captainEditEnabled,
+                maxTeams
             );
 
             res.status(200).json(updated);
