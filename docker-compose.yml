@@ -9,9 +9,16 @@ services:
       - ./BE/.env
     environment:
       - NODE_ENV=${NODE_ENV:-development}
+      # Local compose uses sync so a fresh volume works; production relies on migrations.
+      - TYPEORM_SYNCHRONIZE=true
       # ${DB_PASS:-password} is for local Docker Compose only — set DB_PASS explicitly in production
       - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASS:-password}@db:5432/${DB_NAME:-volleyball}?sslmode=disable
       - REDIS_DISABLED=${REDIS_DISABLED:-true}
+      # Roblox SSO + redirects come from BE/.env (env_file). Do not blank them here with ${VAR:-}.
+      - FRONTEND_URL=http://localhost:5173
+      - BACKEND_PUBLIC_URL=http://localhost:3000
+      - ROBLOX_OAUTH_REDIRECT_URI=http://localhost:3000/api/auth/roblox/callback
+      - CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
     depends_on:
       db:
         condition: service_healthy
@@ -23,7 +30,7 @@ services:
       args:
         VITE_BACKEND_URL: ${VITE_BACKEND_URL:-http://localhost:3000}
     ports:
-      - "${DOCKER_FE_PORT:-5173}:80"
+      - "${DOCKER_FE_PORT:-5173}:8080"
     depends_on:
       - backend
 

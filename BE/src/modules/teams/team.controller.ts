@@ -200,4 +200,26 @@ export class TeamController {
             next(error);
         }
     };
+
+    staffUpdate = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            if (!req.user?.id) {
+                res.status(401).json({ error: "Unauthorized" });
+                return;
+            }
+            const team = await this.teamService.staffUpdateTeam(parseInt(req.params.id), req.user.id, req.body);
+            res.json(this.teamService.enrichTeamWithCanEdit(team, req.user.id));
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    adminFlags = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            const team = await this.teamService.adminPatchTeamFlags(parseInt(req.params.id), req.body);
+            res.json(team);
+        } catch (error) {
+            next(error);
+        }
+    };
 }

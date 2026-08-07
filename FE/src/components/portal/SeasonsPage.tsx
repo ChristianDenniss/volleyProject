@@ -310,6 +310,75 @@ const SeasonsPage: React.FC = () =>
             ),
         },
         {
+            key: "registrationsOpen",
+            header: "Apps Open",
+            render: (row: Season) => (
+                <input
+                    type="checkbox"
+                    checked={Boolean(row.registrationsOpen)}
+                    onChange={async (e) => {
+                        try {
+                            const updated = await patchSeason(row.id, {
+                                registrationsOpen: e.target.checked,
+                            });
+                            setLocalSeasons((prev) =>
+                                prev.map((s) => (s.id === row.id ? { ...s, ...updated } : s))
+                            );
+                        } catch (err) {
+                            console.error(err);
+                        }
+                    }}
+                />
+            ),
+        },
+        {
+            key: "captainEditEnabled",
+            header: "Staff Edit",
+            render: (row: Season) => (
+                <input
+                    type="checkbox"
+                    checked={row.captainEditEnabled !== false}
+                    onChange={async (e) => {
+                        try {
+                            const updated = await patchSeason(row.id, {
+                                captainEditEnabled: e.target.checked,
+                            });
+                            setLocalSeasons((prev) =>
+                                prev.map((s) => (s.id === row.id ? { ...s, ...updated } : s))
+                            );
+                        } catch (err) {
+                            console.error(err);
+                        }
+                    }}
+                />
+            ),
+        },
+        {
+            key: "maxTeams",
+            header: "Max Teams",
+            render: (row: Season) => (
+                <input
+                    type="number"
+                    min={1}
+                    style={{ width: "4.5rem" }}
+                    defaultValue={row.maxTeams ?? undefined}
+                    placeholder="—"
+                    onBlur={async (e) => {
+                        const raw = e.target.value.trim();
+                        const maxTeams = raw === "" ? null : Number(raw);
+                        try {
+                            const updated = await patchSeason(row.id, { maxTeams });
+                            setLocalSeasons((prev) =>
+                                prev.map((s) => (s.id === row.id ? { ...s, ...updated } : s))
+                            );
+                        } catch (err) {
+                            console.error(err);
+                        }
+                    }}
+                />
+            ),
+        },
+        {
             key:    "image",
             header: "Image URL",
             render: (row: Season) => (

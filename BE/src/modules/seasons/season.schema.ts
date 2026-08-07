@@ -14,4 +14,8 @@ export const createSeasonSchema = z.object({
     region: z.enum(REGION_CODES).optional(),
 });
 
-export const updateSeasonSchema = createSeasonSchema.partial();
+export const updateSeasonSchema = createSeasonSchema.partial().extend({
+    registrationsOpen: z.boolean().optional(),
+    captainEditEnabled: z.boolean().optional(),
+    maxTeams: z.number().int().positive().nullable().optional(),
+});

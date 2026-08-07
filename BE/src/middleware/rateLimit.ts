@@ -1,4 +1,4 @@
-import rateLimit from "express-rate-limit";
+import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 
 export const loginRateLimiter = rateLimit({
     windowMs: 60 * 1000,
@@ -24,7 +24,7 @@ export const adminRateLimiter = rateLimit({
         if (user?.id) {
             return `admin-user-${user.id}`;
         }
-        return req.ip ?? "unknown";
+        return ipKeyGenerator(req.ip ?? "unknown");
     },
     message: { error: "Too many admin requests. Please try again later." },
     standardHeaders: true,
