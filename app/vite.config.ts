@@ -8,12 +8,14 @@ const r = (p: string) => fileURLToPath(new URL(p, import.meta.url));
 
 export default defineConfig({
   resolve: {
-    alias: {
-      "@db": r("./server/db"),
-      "@server": r("./server"),
-      "@components": r("./components"),
-      "@": r("./"),
-    },
+    alias: [
+      { find: /^@db$/, replacement: r("./server/db") },
+      { find: /^@db\//, replacement: `${r("./server/db")}/` },
+      { find: /^@server$/, replacement: r("./server") },
+      { find: /^@server\//, replacement: `${r("./server")}/` },
+      { find: /^@components\//, replacement: `${r("./components")}/` },
+      { find: /^@\//, replacement: `${r("./")}/` },
+    ],
   },
   plugins: [
     vinext({

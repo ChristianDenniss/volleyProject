@@ -4,19 +4,21 @@ import { cloudflareTest, readD1Migrations } from "@cloudflare/vitest-pool-worker
 
 const r = (p: string) => fileURLToPath(new URL(p, import.meta.url));
 
-const alias = {
-  "@db": r("./server/db"),
-  "@server": r("./server"),
-  "@components": r("./components"),
-  "@": r("./"),
-};
+const alias = [
+  { find: /^@db$/, replacement: r("./server/db") },
+  { find: /^@db\//, replacement: `${r("./server/db")}/` },
+  { find: /^@server$/, replacement: r("./server") },
+  { find: /^@server\//, replacement: `${r("./server")}/` },
+  { find: /^@components\//, replacement: `${r("./components")}/` },
+  { find: /^@\//, replacement: `${r("./")}/` },
+];
 
 export default defineConfig({
   test: {
     projects: [
       {
         resolve: {
-          alias: { ...alias, "next/cache": r("./tests/helpers/next-cache-stub.ts") },
+          alias: [{ find: /^next\/cache$/, replacement: r("./tests/helpers/next-cache-stub.ts") }, ...alias],
         },
         plugins: [
           cloudflareTest(async () => ({

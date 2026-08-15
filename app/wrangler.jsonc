@@ -21,7 +21,7 @@
     {
       "binding": "DB",
       "database_name": "volley-project",
-      "database_id": "f7d45881-b8c7-4bb5-809b-bd7cf318f8ac",
+      "database_id": "REPLACE_WITH_D1_DATABASE_ID",
       "migrations_dir": "drizzle"
     }
   ],
