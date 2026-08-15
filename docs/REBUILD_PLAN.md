@@ -1,158 +1,215 @@
-# Rebuild Plan — BE + FE → single Cloudflare Worker
+# Rebuild Plan — Agent Handoff
 
-Status: **scaffold committed, phase 1 next**
-Branch: `migrate/cloudflare-vinext`. **Commits only, never push.**
-
-**Framing:** this is a **full rebuild, not a migration.** No cutover, no REST parity, no data carried across, no rollback path to the old stack. `BE/` and `FE/` stay in the tree as reference until the end, then get deleted.
-
-**Consequence, stated once:** the existing league data — seasons, teams, players, games, stats, awards, records, articles — does not come across. The Postgres instance survives as a backup and the new schema will exist, so an import can be written later if that changes. Until then, portal CRUD and the stats CSV upload are the only ways data enters the system, which makes them day-one critical rather than admin conveniences.
+You are picking up a rebuild in progress. Read this document fully before touching anything. It is written to be self-contained: every fact below was verified against the source, and every claim cites where it came from. Where something is unknown, it says so — **do not fill gaps with assumptions.**
 
 ---
 
-## 1. What exists today (reference only)
+## 0. Hard rules
 
-**`BE/`** — Express 4 on Node (ESM, `ts-node`), ~15k LOC / 120 files.
+These are non-negotiable and were stated directly by the repo owner.
 
-| Concern | Current |
-|---|---|
-| HTTP | Express 4, hand-rolled `register*Routes(app)` per module |
-| ORM | TypeORM 0.3, 10 entities, 17 migrations |
-| DB | Postgres on Fly.io |
-| Auth | `jsonwebtoken` HS256 + `bcryptjs`; roles `user` / `admin` / `superadmin` |
-| Machine auth | `apiKeyAuth.ts` + `API_SECRET_KEY` |
-| Cache | `ioredis`, TTL 600 on `players` and `stats` reads |
-| Validation | Zod 3 via a `validate()` middleware |
-| Tests | Jest 29 + `@swc/jest` + supertest |
-| Deploy | Fly.io `volley-project-backend`, region `yyz` |
-| Dead weight | `@nestjs/*` installed but unused; both `redis` and `ioredis` installed; `src/modules/strategy/` is an empty directory |
+1. **Never `git push`.** Never `gh pr create`. Never any remote-writing git command. Commit freely on the working branch and stop; the owner pushes manually after review.
+2. **Never write code comments.** Not in `.ts`, `.tsx`, `.css`, `.yaml`, `.jsonc`, not docblocks, not section banners. Explanations belong in this document or in your reply, never in the file. This rule governs what you write; leave comments in pre-existing `BE/` and `FE/` files alone.
+3. **Do not re-litigate settled decisions.** §5 lists them. If you think one is wrong, say so once and proceed as decided.
+4. **Do not invent answers to §6.** Ask.
 
-**`FE/`** — Vite 6 + React 19 SPA, ~18k LOC / 76 files. `react-router-dom` v6 with all 38 routes declared in `src/App.tsx`. Data via generic hooks (`useFetch<T>(endpoint)` → `${VITE_BACKEND_URL}/api/${endpoint}`). SCSS. JWT in `context/authContext`, injected by `hooks/authFetch.ts`. Netlify, with a `meta-tags.js` function that sniffs `User-Agent` for ~9 crawler bots to serve OG tags.
+Working branch: `migrate/cloudflare-vinext`, cut from `fix_overlooks`.
 
 ---
 
-## 2. Target
+## 1. What this project is
 
-| Concern | Target |
+A volleyball league site — seasons, teams, players, games, per-game stats, awards, records, tournament matches, and articles — with a public site and an admin portal.
+
+It is currently two separately deployed applications. It is being rebuilt as **one Cloudflare Worker**.
+
+**This is a rebuild, not a migration.** No cutover, no REST parity, no data carried across, no rollback path. `BE/` and `FE/` remain in the tree as reference and are deleted in the final phase.
+
+> **Consequence, understood and accepted by the owner:** the league's existing data does not come across. D1 starts empty. The Postgres instance survives as a backup and the new schema will exist, so an import can be written later if that changes. Until then, portal CRUD and the stats CSV upload are the only ways data enters the system — which makes them day-one critical, not admin conveniences.
+
+---
+
+## 2. State: what is done, what is not
+
+### Done and committed
+
+| Commit | What |
 |---|---|
-| Framework | **vinext** — Next.js App Router on Vite, Cloudflare Workers target |
+| `ae3bb57` | vinext app scaffolded at `app/`, Cloudflare Workers target, pnpm |
+| `6c4d5cf` | shadcn/ui initialized on Radix primitives |
+
+`app/` currently contains only the scaffold plus shadcn:
+
+```
+app/
+  app/layout.tsx  app/page.tsx  app/globals.css  app/api/hello/route.ts
+  components/ui/button.tsx
+  lib/utils.ts
+  components.json  next.config.ts  package.json  pnpm-workspace.yaml
+  postcss.config.mjs  tsconfig.json  vite.config.ts  wrangler.jsonc
+```
+
+`pnpm run build` passes across all five vinext environments. That is the entire extent of the new application — no schema, no auth, no routes, no services.
+
+### Not started
+
+Everything else. Phases 1 through 11 in §9.
+
+---
+
+## 3. Target architecture
+
+| Concern | Choice |
+|---|---|
+| Framework | **vinext** — Next.js App Router on Vite, Cloudflare Workers target, maintained by Cloudflare (`github.com/cloudflare/vinext`) |
 | Runtime | **One Worker** serving SSR HTML, tRPC, and static assets |
 | ORM | **Drizzle** (`drizzle-orm` + `drizzle-kit`) |
-| DB | **Cloudflare D1**, starting empty |
-| Auth | **better-auth**, **Roblox OAuth only** — no passwords |
+| Database | **Cloudflare D1**, starting empty |
+| Auth | **better-auth**, **Roblox OAuth only** — no passwords, no email |
 | Writes | **tRPC v11**, mutations only |
+| Reads | Service functions called directly in RSC — never over the wire |
 | Background | **Cloudflare Queues** for record recalculation |
-| Cache | None. No Redis, no KV, no cache service |
+| Cache | **None.** No Redis, no KV, no cache service |
+| Styling | **Tailwind v4** + **shadcn/ui on Radix** |
 | Tests | **vitest** + `@cloudflare/vitest-pool-workers` |
 | Package manager | **pnpm** |
 
-### vinext status
+### vinext gaps that matter
 
-Maintained by Cloudflare (`github.com/cloudflare/vinext`). Reimplements the Next.js API surface on Vite rather than wrapping `next build`.
+Supported and relied on: App Router, RSC, Server Actions, route handlers, middleware, ISR, `next/link`, `next/image`, `next/navigation`, `next/headers`, `next/cache`, the Metadata API, Workers bindings.
 
-Supported and relevant to us: App Router, RSC, Server Actions, route handlers, middleware, ISR, `next/link` / `next/image` / `next/navigation` / `next/headers` / `next/cache`, the Metadata API, Workers deployment with bindings.
+Known gaps, none of which this project hits: `"use cache"` / Cache Components / PPR incomplete; build-time image and font optimization partial; native modules (`sharp`, `satori`, `@napi-rs/canvas`) can fail in dev; `runtime` and `preferredRegion` route config ignored.
 
-Known gaps, none of which we hit: `"use cache"` / Cache Components / PPR incomplete; build-time image and font optimization partial; native modules (`sharp`, `satori`, `@napi-rs/canvas`) can fail in dev; `runtime` and `preferredRegion` route config ignored.
+Upstream's own words: *"not yet a drop-in replacement for every application or production workload."*
 
-Upstream's own caveat: *"not yet a drop-in replacement for every application or production workload."* Mitigated by §3's framework-free service layer.
+**Mitigation — treat this as a standing architectural rule.** Everything under `server/services/` is a plain function taking `(db, args)`. No `next/*` imports, no request objects, no `cookies()`. RSC pages and tRPC procedures both call these. If vinext hits a wall, the service layer, schema, routers, auth, and tests survive a swap to React Router v7 or OpenNext; only `app/app/` is lost.
 
-### Scaffold, done
+### Layout to build toward
 
 ```
-pnpm dlx create-vinext-app@latest app \
-  --platform cloudflare --data-cache none --cdn-cache workers-cache \
-  --image-optimization none --disable-git --yes
+app/
+  app/                 App Router (vinext auto-detects this path)
+    (site)/            public pages
+    portal/            admin, session-gated
+    api/auth/[...all]/route.ts
+    api/trpc/[trpc]/route.ts
+    not-found.tsx
+  server/
+    db/{schema.ts,index.ts}
+    services/
+    trpc/{init.ts,routers/}
+    auth.ts
+    queue.ts
+  components/          ui/ is shadcn-owned
+  tooling/             inventory extractors, §8
+  tests/
+  drizzle/
 ```
 
-`--data-cache none` matches the no-cache decision; `--image-optimization none` matches images living on an external host. `pnpm run build` passes across all five environments.
+Aliases to add in `tsconfig.json` `paths`, mirrored in `vite.config.ts` and `vitest.config.ts`: `@db` → `server/db`, `@server` → `server`, `@components` → `components`. The scaffold's `@/*` → `./*` stays (shadcn depends on it).
 
-Two scaffolder notes: it invokes `pnpm` regardless of `--use-npm`, and it ships **Tailwind** (`@tailwindcss/postcss`, `app/globals.css`). The existing frontend is SCSS. Recommend stripping Tailwind so components port 1:1 — open item in §12.
+**Enforce with ESLint `no-restricted-imports` scoped to `"use client"` files: a client component may never import `@db` or `@server`.** Without this, a stray import leaks the D1 binding into a browser bundle and it will not be obvious.
 
 ---
 
-## 3. Layout and aliases
+## 4. The old system — verified facts
 
-vinext auto-detects the `app/` directory, and the scaffold put routes at `app/app/`. Keeping that rather than forcing `src/`:
+Measured, not estimated.
 
-```
-volleyProject/
-  BE/  FE/               # reference, deleted at the end
-  docs/REBUILD_PLAN.md
-  app/
-    app/                 # App Router
-      (site)/
-      portal/
-      api/auth/[...all]/route.ts
-      api/trpc/[trpc]/route.ts
-    server/
-      db/{schema.ts,index.ts}
-      services/
-      trpc/{init.ts,routers/}
-      auth.ts
-      queue.ts
-    components/
-    styles/
-    tooling/             # inventory extractors, §7
-    tests/
-    drizzle/
-    wrangler.jsonc  vite.config.ts  vitest.config.ts  drizzle.config.ts
-```
+**`BE/`** — Express 4, ESM, `ts-node`. 120 TypeScript files, 14,812 lines. TypeORM 0.3 with 10 entities and 17 migrations against Postgres on Fly.io (`volley-project-backend`, region `yyz`). Auth is `jsonwebtoken` HS256 + `bcryptjs` with roles `user` / `admin` / `superadmin`. A second auth path exists via `apiKeyAuth.ts` + `API_SECRET_KEY`. Caching is `ioredis`, TTL 600, on `players` and `stats` reads only. Validation is Zod 3 behind a `validate()` middleware. Tests are Jest 29 + `@swc/jest` + supertest.
 
-Aliases, declared in `tsconfig.json` `paths` and mirrored in `vite.config.ts` and `vitest.config.ts`:
+Modules: `articles`, `awards`, `games`, `matches`, `players`, `records`, `roblox`, `seasons`, `stats`, `teams`, `trivia`, `user`.
 
-| Alias | Resolves to |
+**`FE/`** — Vite 6 + React 19 SPA. 76 files, 17,976 lines. `react-router-dom` v6, all 38 routes declared in `src/App.tsx`. Data flows through generic hooks — `useFetch<T>(endpoint)` builds `${VITE_BACKEND_URL}/api/${endpoint}` and `hooks/authFetch.ts` injects the JWT. Deployed on Netlify.
+
+**Styling** — 47 plain `.css` files totalling 13,261 lines, applied across 1,251 `className` sites. Despite `sass` being a dependency there is **not one `.scss` file**; it is unused.
+
+### Dead weight confirmed
+
+- `@nestjs/common` and `@nestjs/core` are installed and never imported.
+- Both `redis` and `ioredis` are installed.
+- `BE/src/modules/strategy/` is an **empty directory**. The only other matches for "strategy" are TypeORM naming-strategy references inside migrations.
+
+### Defects found in the old code
+
+Recorded so the rebuild does not reproduce them.
+
+1. **Double `@JoinTable`.** `Teams.players` declares `@JoinTable({name:'teams_players'})` *and* `Players.teams` declares `@JoinTable()`. TypeORM permits exactly one owning side, so the live database very likely holds two unrelated join tables with code writing one and reading the other. Same pattern to distrust on `Teams.games`, `Awards.players`, `Article.likedBy`. **Irrelevant to the rebuild** — nothing is imported — but do not copy the entity relations verbatim.
+
+2. **`calculateAllRecords()` cannot run on a Worker.** In `BE/src/modules/records/records.service.ts:227`, it loads *every* `Stats` row with `player`, `game`, and `game.season` joined into memory, then runs six loop groups over the record-type lists, each performing a `DELETE` followed by **one `save()` per row** for the top 10. A full table scan in JavaScript plus several hundred sequential round trips inside one HTTP request. Slow on Fly; over CPU and round-trip limits on Workers. See §9 phase 9.
+
+3. **`Records.record` is a 41-value enum**, roughly 30 of which are a generated `best total spiking % with N+ attempts` series.
+
+4. **No 404 route.** `App.tsx` declares no catch-all. Netlify's SPA fallback serves `index.html`, so unknown URLs return **HTTP 200** with an empty `main-content`.
+
+5. **`/profile` and `/articles/create` have no client-side guard.** Only `/portal` is wrapped in `PrivateRoute` (`FE/src/App.tsx:90`, `roles={["admin","superadmin"]}`). The server does reject unauthenticated article creation, so today an anonymous visitor opens the create page and only discovers the problem on submit.
+
+6. **`/teams/:teamName` keys on name** while `/games/:id`, `/seasons/:id`, `/players/:id`, `/articles/:id`, and `/awards/:id` key on id.
+
+### The 38 routes
+
+Source of truth is `FE/src/App.tsx`. Do not retype this list from here — §8 generates it.
+
+Public (24): `/`, `/about`, `/players`, `/players/:id`, `/teams`, `/teams/:teamName`, `/games`, `/games/:id`, `/seasons`, `/seasons/:id`, `/articles`, `/articles/:id`, `/articles/create`, `/awards`, `/awards/:id`, `/contact`, `/privacy-policy`, `/credits`, `/stats`, `/schedules`, `/applications`, `/faq`, `/records`, `/trivia`
+
+Auth (3): `/profile`, `/login`, `/signup`
+
+Portal (11), gated `["admin","superadmin"]`: `/portal` (index → Dashboard), plus `/portal/{users,players,teams,seasons,games,stats,awards,articles,matches}`
+
+`/articles/create` is declared *after* `/articles/:id`. react-router v6 ranks by specificity and App Router prefers static over dynamic, so behavior is identical. **This is not a bug — do not "fix" it.**
+
+### The ~104 endpoints
+
+Roughly 60 reads and 40 writes across the 12 modules. Full inventory is generated in §8 phase 2 — do not hand-transcribe it.
+
+Two need special handling:
+
+- `POST /api/records/calculate` → queue (§9 phase 9).
+- `POST /api/stats/batch-csv` → the frontend already has `utils/csvParser.ts` and `utils/csvUploadUtils.ts`, so parse client-side and send rows through a tRPC mutation rather than uploading a file.
+
+---
+
+## 5. Decisions already made — do not re-litigate
+
+| Decision | Detail |
 |---|---|
-| `@db` | `server/db` |
-| `@server` | `server` |
-| `@components` | `components` |
-| `@styles` | `styles` |
+| **Existing data** | Nothing comes across. Fresh empty D1. |
+| **Auth** | Roblox OAuth only. No passwords, no email/password, no reset flow, no mail provider. |
+| **Writes** | tRPC mutations. Reads stay server-side in RSC. |
+| **Cache** | Removed entirely. No Redis, no KV, no cache binding. |
+| **`Records.record`** | Split into `(metric, min_attempts)` instead of a 41-value enum. |
+| **Styling** | Tailwind. All 47 `.css` files dropped. `sass` removed. |
+| **Component library** | shadcn/ui on **Radix** (`--base radix`), not Base UI. |
+| **404** | Added — see §7. |
+| **`/profile`, `/articles/create`** | Guarded, `auth: "session"` — see §7. |
+| **`API_SECRET_KEY` machine auth** | Deleted. No replacement. |
+| **Images** | Stay on their existing external host. No R2. |
+| **`records/calculate`** | Manual trigger from the portal → queue. No cron. |
+| **`strategy` module** | Dropped, it is an empty directory. |
+| **Package manager** | pnpm. |
+| **REST API** | Not ported. The only two route handlers in the new app are better-auth's and tRPC's. |
 
-The scaffold's default `@/*` → `./*` stays for anything not covered.
+### What deleting the REST layer costs
 
-**Rule:** client components may never import `@db` or `@server`. Enforced by an ESLint `no-restricted-imports` rule scoped to `"use client"` files, so a stray import fails lint rather than leaking the D1 binding into a browser bundle.
+No HTTP surface remains for an external integration. The owner accepted this: `API_SECRET_KEY` is being deleted, whether anything external ever called `/api/*` is unknown and moot since the old origin disappears. If a public API is wanted later it returns as a deliberate versioned surface, not as a side effect of internal implementation.
 
-**Portability rule:** everything in `@server/services` is a plain function taking `(db, args)` — no `next/*`, no request objects, no `cookies()`. RSC pages and tRPC procedures both call these. If vinext hits a wall, the service layer, schema, routers, auth, and tests survive a swap; only `app/app/` is lost.
-
----
-
-## 4. Schema
-
-Designed clean for SQLite. No prod schema to match, so the TypeORM entities are a *reference for intent*, not a spec — and their known defects are not reproduced.
-
-### 4.1 Types
-
-| Old | New |
-|---|---|
-| `@PrimaryGeneratedColumn()` serial | `integer().primaryKey({autoIncrement:true})` |
-| `@CreateDateColumn` / `@UpdateDateColumn` | `integer({mode:'timestamp_ms'})` |
-| `@Column('date')` | `text` ISO `YYYY-MM-DD` |
-| `@Column({type:'enum'})` | `text({enum:[...]})` + SQL `CHECK` |
-| `decimal(10,2)` | `real` |
-| `simple-array` | `text({mode:'json'})` |
-| nullable `boolean` | `integer({mode:'boolean'})` nullable |
-
-### 4.2 Records reshaped
-
-`Records.record` was a 41-value enum, ~30 of which were a generated `best total spiking % with N+ attempts` series. **Split into `(metric, min_attempts)`** — two columns, no 41-arm CHECK, and §9's recalculation collapses from 41 hardcoded branches to one parameterized query family.
-
-### 4.3 Join tables done right
-
-The old entities declared `@JoinTable` on **both** sides of `Teams ↔ Players`, which TypeORM does not allow and which likely produced two unrelated join tables in the old database. Since nothing is imported, this defect simply does not exist in the new schema: one owning side per relation, explicit names, composite primary keys, and `ON DELETE CASCADE`.
-
-Relations to define: `teams↔players`, `teams↔games`, `awards↔players`, `articles↔users` (likes), plus `teams→seasons`, `games→seasons`, `matches→seasons`, `awards→seasons`, `records→seasons`, `records→players`, `stats→players`, `stats→games`, `articles→users` (author).
-
-### 4.4 Migrations
-
-`drizzle-kit generate` from `schema.ts`. One baseline, applied to an empty D1. The 17 TypeORM migrations are not ported.
-
-### 4.5 Fixtures
-
-Because the database starts empty, seeded fixtures are load-bearing — dev needs something to render and §7's route tests need real ids to hit dynamic segments. `tests/fixtures/seed.ts` creates a minimal but complete graph: 2 seasons, 4 teams, 8 players, 4 games, stats rows, 2 matches, 2 awards, records, 2 users (one `user`, one `admin`), 2 articles.
+Also deleted for the same reason: the `/skinny` and `/medium` endpoint families (`teams/skinny`, `teams/medium`, `seasons/skinny`, `seasons/medium`, `players/medium`, `games/skinny`, `awards/skinny`) existed only to trim SPA payloads and have no purpose under RSC; and the `PUT` duplicate of every `PATCH` route, since both already pointed at the same controller method.
 
 ---
 
-## 5. Auth — Roblox only
+## 6. Open questions — ask, do not assume
 
-No email/password. No password hashing, no reset flow, no verification email, no mail provider. better-auth configured with a single social provider:
+1. **Domain** for the Worker.
+2. **`/teams/:teamName`** — preserve name-keying, or normalize to id like its siblings?
+3. **Cloudflare account id + API token** (or an interactive `wrangler login`).
+4. **Roblox OAuth app** — must be registered by the owner; does not exist yet. Needed: client id, client secret, and both callback URLs registered.
+5. **`CHALLONGE_API_KEY`** — carry over only if the Challonge match import survives the rebuild.
+
+---
+
+## 7. Auth design
+
+No email/password. better-auth with one social provider:
 
 ```typescript
 export const auth = betterAuth({
@@ -166,78 +223,77 @@ export const auth = betterAuth({
 })
 ```
 
-Client: `authClient.signIn.social({ provider: "roblox" })`. Callback `{origin}/api/auth/callback/roblox` — register both production and `http://localhost:3000/...` on the Roblox OAuth app.
+Client: `authClient.signIn.social({ provider: "roblox" })`. Callback is `{origin}/api/auth/callback/roblox` — register production and `http://localhost:3000/...` both.
 
-**Roblox returns no email address.** better-auth fills `user.email` with `preferred_username`. Consequences:
+### Roblox returns no email address
 
-- The `email` column holds a username. Nothing may validate it as an email or attempt to send mail to it.
-- **Key everything on `user.id`, never on email or username.** A user who renames on Roblox keeps the same provider account id, so identity survives — but only if nothing joined on the username.
-- Account linking is moot with a single provider, which removes the takeover surface entirely.
+better-auth fills `user.email` with `preferred_username`. Three consequences that will cause bugs if forgotten:
 
-**Roles:** better-auth `admin` plugin carries `user` / `admin` / `superadmin`.
+- The `email` column holds a **username**. Nothing may validate it as an email or attempt to send mail to it.
+- **Key everything on `user.id`.** Never join or look up by email or username. A user who renames on Roblox keeps the same provider account id, so identity survives a rename only if nothing depended on the name.
+- Account linking is moot with a single provider, which removes the takeover surface that email-based auto-linking would otherwise create.
 
-**Admin bootstrap — a real step, not an assumption.** A fresh database has no admin, and with Roblox-only sign-in there is no seeded credential to create one. Sequence: deploy → sign in once via Roblox → read the generated id → promote by hand:
+### Admin bootstrap — a real step
+
+A fresh database has no admin, and with Roblox-only sign-in there is no seeded credential to create one. The portal is unreachable until this is done:
 
 ```
-wrangler d1 execute <db> --remote --command \
-  "UPDATE user SET role='superadmin' WHERE id='<id>'"
+wrangler d1 execute <db> --remote --command "UPDATE user SET role='superadmin' WHERE id='<id>'"
 ```
 
-Documented in the runbook and rehearsed on preview before production. Everything else in the portal depends on this working.
+Sequence: deploy → sign in once via Roblox → read the generated id → run the above. **Rehearse on preview before production.**
 
-Deleted with the old stack: `jsonwebtoken`, `bcryptjs`, `authentication.ts`, `combinedAuth.ts`, `apiKeyAuth.ts`, `API_SECRET_KEY`, `JWT_SECRET`, `authFetch.ts`, `useLogin.ts`, `useSignUp.ts`, and `SignUp.tsx`.
+### Route auth values
+
+| Route | Old | New |
+|---|---|---|
+| `/profile` | unguarded | `auth: "session"` |
+| `/articles/create` | unguarded | `auth: "session"` |
+| `/portal/*` | `["admin","superadmin"]` | unchanged |
+
+`session`, not `admin`, for the two fixes: the old server used `authenticateCombined` on `POST /api/articles`, which accepts any authenticated user, and articles carry a nullable `approved` column implying moderation rather than authorship restriction.
+
+Enforce via redirect from a shared layout segment, not a per-page check — same reasoning as putting authorization in tRPC middleware.
+
+### The 404
+
+`app/not-found.tsx`. Two behaviors, the second more important:
+
+1. Unmatched URLs render it with a real **HTTP 404**, replacing today's 200-with-empty-shell.
+2. **Resolvable routes with missing records call `notFound()`.** `/players/999999`, `/teams/does-not-exist`, and every other dynamic segment must 404 rather than render a page shaped around `undefined`. With data fetched server-side, a missing row is knowable before render — something the client-fetching SPA could never do cleanly.
+
+### Deleted with the old stack
+
+`jsonwebtoken`, `bcryptjs`, `authentication.ts`, `combinedAuth.ts`, `apiKeyAuth.ts`, `API_SECRET_KEY`, `JWT_SECRET`, `authFetch.ts`, `useLogin.ts`, `useSignUp.ts`, `SignUp.tsx`, and the `/signup` route.
 
 ---
 
-## 6. tRPC
+## 8. Route completeness — the anti-omission machinery
 
-Mutations only. Reads never leave the server — a page calls its service function directly during SSR, so there is no client data fetching and no query cache to keep in sync.
+38 routes and ~104 endpoints is past the size where hand-porting is trustworthy. Two failure modes to design against: **omission** (a route silently never gets built) and **invention** (behavior assumed rather than read). This makes both build failures.
 
-- **Adapter:** `@trpc/server` v11 fetch adapter at `api/trpc/[trpc]`.
-- **Context:** `{ db, session }` — the D1 binding plus the better-auth session from request headers.
-- **Procedures:** `publicProcedure`, `protectedProcedure`, `adminProcedure`. Authorization lives in middleware.
-- **Routers:** one per domain, composed into `appRouter`.
-- **Inputs:** the existing `BE/src/modules/**/*.schema.ts` Zod schemas drop into `.input()`. The `validate()` middleware disappears; the schemas survive.
-- **Client:** `@trpc/client` + `@trpc/react-query` in portal components, replacing the untyped `useCreate` / `usePatch` / `useDelete` hooks.
-- **Revalidation:** a successful mutation calls `revalidatePath` / `revalidateTag` before returning.
+### 8.1 Inventories are extracted, never hand-written
 
-tRPC over Server Actions specifically because authorization becomes structural: `adminProcedure` enforces once, and a mutation cannot silently ship unguarded.
-
-The new app has exactly **two** hand-written route handlers: better-auth's catch-all and tRPC's.
-
-### What this deletes
-
-~60 GET endpoints become in-process service calls. ~40 write endpoints become tRPC mutations. The `/skinny` and `/medium` families (`teams/skinny`, `teams/medium`, `seasons/skinny`, `seasons/medium`, `players/medium`, `games/skinny`, `awards/skinny`) existed only to trim SPA payloads and have no reason to exist under RSC. The `PUT` duplicate of every `PATCH` route goes too — both already pointed at the same controller method.
-
-**Cost:** no HTTP surface remains for an external integration. If one is wanted later it returns as a deliberate versioned API, not as a side effect of the internal implementation.
-
----
-
-## 7. Route completeness — no omissions, no assumptions
-
-38 routes and ~104 endpoints is past the size where hand-porting is trustworthy. Two failure modes to design against: **omission** (a route silently never gets built) and **invention** (behavior assumed rather than read from the source). The mechanism below makes both build failures.
-
-### 7.1 Inventories are extracted, never hand-written
-
-Three scripts under `app/tooling/`, each parsing the old source with the TypeScript compiler API and emitting JSON. Nothing on this list comes from anyone's reading of the code:
+Three scripts under `app/tooling/`, each parsing the old source with the TypeScript compiler API and emitting JSON. **Nothing on this list may come from anyone's reading of the code, including this document's §4.**
 
 | Script | Reads | Emits |
 |---|---|---|
 | `extract-routes.ts` | `FE/src/App.tsx` JSX `<Route>` elements | `route-inventory.json` — `{path, component, componentFile, sourceLine, parentPath, roles}` |
 | `extract-endpoints.ts` | `BE/src/modules/**/*.routes.ts` | `endpoint-inventory.json` — `{method, path, controllerMethod, middleware[], sourceFile, sourceLine}` |
-| `extract-data-deps.ts` | each component named in the route inventory | `route-data-deps.json` — which data hooks it calls, resolved against the endpoint inventory |
+| `extract-data-deps.ts` | each component named in the route inventory | `route-data-deps.json` — data hooks called, resolved against the endpoint inventory |
 
-`middleware[]` captures `authenticateCombined`, `validate(schema)`, `cacheMiddleware` — so **auth requirements are extracted from the old source, not assumed**.
+`middleware[]` capturing `authenticateCombined`, `validate(schema)`, and `cacheMiddleware` is what makes **auth requirements extracted rather than assumed**.
 
-`extract-data-deps.ts` is the anti-assumption core. Whether `/faq`, `/credits`, `/about`, or `/applications` are static or data-driven gets answered by walking their call expressions, not by guessing from the name.
+`extract-data-deps.ts` is the core of the whole approach. Whether `/faq`, `/credits`, `/about`, or `/applications` is static or data-driven gets answered by walking call expressions — not guessed from the route name.
 
-### 7.2 The manifest
+### 8.2 The manifest
 
 `app/route-manifest.ts`, one entry per inventory route, every field traceable:
 
-```
+```typescript
 {
   path: "/teams/:teamName",
+  origin: "ported",
   source: "FE/src/App.tsx:61",
   target: "app/(site)/teams/[teamName]/page.tsx",
   rendering: "ssr",
@@ -248,138 +304,137 @@ Three scripts under `app/tooling/`, each parsing the old source with the TypeScr
 }
 ```
 
-`status` starts `todo` for all 38. `TODO` is a legal value only mid-phase.
+`origin` is `"ported"` (has a line in `App.tsx`) or `"new"` (`not-found.tsx`, the reshaped `/login`). A `"new"` entry requires a one-line `rationale`. Without `origin`, T2 would flag every intentional addition as an orphan and the temptation would be to loosen T2 — which is exactly the check worth keeping strict.
 
-### 7.3 Four conformance tests
+`status` starts `todo` for all 38.
+
+### 8.3 Four conformance tests
 
 All in vitest, all failing until satisfied:
 
-- **T1 — completeness.** Every entry in `route-inventory.json` has a manifest entry. Failure lists the missing paths. A route cannot be forgotten, because the list is generated from `App.tsx` rather than remembered.
-- **T2 — no orphans.** Every `page.tsx` under `app/app/` maps back to a manifest entry. Catches invented routes.
-- **T3 — reachability.** For each `done` entry, SSR-fetch a concrete URL (dynamic segments filled from §4.5 fixture ids) and assert: HTTP 200, non-empty `<main>`, a `<title>`, and OG tags present. Auth-gated paths must redirect when unauthenticated and return 200 under a seeded admin session.
-- **T4 — no TODO at the gate.** A phase completes only when zero entries are `todo` and no manifest field is `TODO`. This is what turns "I think that's all of them" into a failing build.
+- **T1 — completeness.** Every entry in `route-inventory.json` has a manifest entry; failure lists the missing paths. A route cannot be forgotten because the list is generated, not remembered.
+- **T2 — no orphans.** Every `page.tsx` under `app/app/` maps back to a manifest entry, and every `origin: "new"` entry carries a rationale.
+- **T3 — reachability.** For each `done` entry, SSR-fetch a concrete URL with dynamic segments filled from fixture ids, asserting HTTP 200, non-empty `<main>`, a `<title>`, and OG tags. Auth-gated paths must redirect when unauthenticated and return 200 under a seeded session. Every dynamic route also gets a **negative case** asserting 404 for a known-absent id.
+- **T4 — no TODO at the gate.** A phase completes only at zero `todo` and zero `TODO` fields. This is what turns "I think that's all of them" into a red build.
 
-The same pattern covers writes: `trpc-manifest.ts` generated from `endpoint-inventory.json`, with a bidirectional test asserting every write endpoint maps to a real procedure on `appRouter` and every procedure maps back to an endpoint or is explicitly marked new.
+Mutations get the same treatment: `trpc-manifest.ts` generated from `endpoint-inventory.json`, with a bidirectional test asserting every write endpoint maps to a real procedure on `appRouter` and every procedure maps back to an endpoint or is explicitly marked new.
 
-### 7.4 The 38 routes
+### 8.4 What this cannot check
 
-Public (24): `/`, `/about`, `/players`, `/players/:id`, `/teams`, `/teams/:teamName`, `/games`, `/games/:id`, `/seasons`, `/seasons/:id`, `/articles`, `/articles/:id`, `/articles/create`, `/awards`, `/awards/:id`, `/contact`, `/privacy-policy`, `/credits`, `/stats`, `/schedules`, `/applications`, `/faq`, `/records`, `/trivia`
+**Visual correctness.** Everything else has a mechanical gate — schema has migrations, routes have T1–T4, mutations have the authorization sweep, services have unit tests. Visual intent has none. T3 proves a page returns 200 with content and metadata; it can never prove the page looks right.
 
-Auth (3): `/profile`, `/login`, `/signup`
+13,261 lines of CSS encode spacing, breakpoints, and hover states that no extractor can read out. Restyling in Tailwind is genuine re-design work, not translation. Mitigations, all of which must happen **before `FE/` is deleted**:
 
-Portal (11), gated `roles={["admin","superadmin"]}` at `App.tsx:90`: `/portal` (index → Dashboard), `/portal/users`, `/portal/players`, `/portal/teams`, `/portal/seasons`, `/portal/games`, `/portal/stats`, `/portal/awards`, `/portal/articles`, `/portal/matches`
-
-### 7.5 Findings recorded as decisions, not silently carried
-
-Facts read from the source, each needing an explicit call rather than a default:
-
-- **There is no 404 route.** `App.tsx` declares no catch-all; Netlify's SPA fallback serves `index.html`, so an unknown URL today renders the shell with an empty `main-content`. The new app needs `not-found.tsx`. This is new behavior, flagged as such.
-- **`/teams/:teamName` keys on name** while `/games/:id`, `/seasons/:id`, `/players/:id`, `/articles/:id` and `/awards/:id` key on id. Preserved unless you say otherwise — recorded so it stays a decision.
-- **`/articles/create` and `/profile` have no client-side guard.** Only `/portal` is wrapped in `PrivateRoute`. The server rejects unauthenticated article creation (`authenticateCombined` on `POST /api/articles`), so today an anonymous visitor can open the create page and only fail on submit. Worth fixing in the rebuild; calling it out rather than quietly changing it.
-- **`/articles/create` is declared after `/articles/:id`.** react-router v6 ranks by specificity, and App Router prefers static over dynamic, so behavior is identical. Noted so nobody "fixes" a non-bug.
-- **`/signup` disappears** under Roblox-only auth; `/login` becomes a single sign-in button. Both are manifest entries with a deliberate non-1:1 target.
+- **Screenshot baselines per route**, captured from the live site while it still runs, at desktop and mobile widths, committed as reference images. Compared by eye at review. Not a pixel diff — layouts will legitimately differ — but it makes drift visible instead of remembered.
+- **Design tokens first.** Extract palette, spacing scale, font stack, and breakpoints from the existing CSS into the Tailwind theme before restyling any component, so the rebuild has one source of truth rather than 47 files of ad-hoc values.
+- **`FE/src/styles/` stays until phase 11**, so any component's original rules are one file away during the port.
 
 ---
 
-## 8. Frontend port
+## 9. Phases
 
-1. **Shell** — `App.tsx`'s route table becomes the file tree; `Header`, `NavBar`, `Footer`, `main-content` become `app/layout.tsx`.
-2. **Public pages, server-rendered**, data from `@server/services`.
-3. **Interactive leaves stay client components** — `CalendarModal`, `SeasonSelectModal`, `FilterBar`, `Searchbar`, `Pagination`, `PlayerStatsVisualization` (chart.js), `TriviaPage`, `react-select`, `simplebar-react`.
-4. **Auth surfaces** — `Login` becomes a Roblox button; `UserProfile` reads the server session; `PrivateRoute` becomes a session check in `portal/layout.tsx`.
-5. **Portal last** — 9 admin pages on tRPC mutations.
-6. **Deleted** — `SEO.tsx`, `@dr.pogodin/react-helmet`, `scripts/generate-meta-tags.js`, `netlify/`, the whole generic-hook layer, `axios`, `node-fetch`, `clear-cache.js`.
-
-SEO comes from the Metadata API. The crawler-sniffing function is not ported.
-
----
-
-## 9. Record recalculation
-
-`RecordsService.calculateAllRecords()` today loads **every** `Stats` row with `player`, `game`, `game.season` joined into memory, then runs six loop groups over the record-type lists, each doing a `DELETE` followed by **one `save()` per row** for the top 10. A full table scan in JavaScript plus several hundred sequential round trips inside one HTTP request. Slow on Fly; over CPU and round-trip limits on a Worker.
-
-Replacement:
-
-- An `adminProcedure` mutation validates and enqueues a **Cloudflare Queue** message, returning a job id immediately.
-- The consumer works in SQL: one `ROW_NUMBER() OVER (PARTITION BY … ORDER BY … DESC)` query per record family, writes via `db.batch()`. With §4.2's `(metric, min_attempts)` split, the percentage families collapse to a single parameterized query.
-- Job status in a `job_runs` table so the portal can show progress; the queue's native retry handles failure.
-
-Triggered by hand from the portal. No cron.
-
----
-
-## 10. No cache
-
-**No Redis. No KV. No cache service. No cache binding.**
-
-The TTL-600 layer on `players` and `stats` existed to hide a Fly→Postgres round-trip that no longer exists once server components query the D1 binding in-process. Where freshness control is genuinely wanted, `next/cache` revalidation covers it, invalidated by the tRPC mutation that wrote the data. If a third-party call ever needs a TTL — the Roblox avatar lookup is the only candidate — `caches.default` handles it inline. Not building it up front.
-
----
-
-## 11. Testing
-
-`vitest` + `@cloudflare/vitest-pool-workers`, running inside `workerd` against a real, per-test-isolated D1.
-
-- **Service layer** is the main surface, against the §4.5 seed.
-- **tRPC authorization sweep** — walk `appRouter`, assert every mutation rejects an unauthenticated caller and every admin mutation rejects a plain user. Because authorization is middleware, this also catches a procedure declared on the wrong base, which is the one way a mutation ends up unguarded.
-- **Route conformance** — the four tests in §7.3.
-- **Auth** — Roblox callback creates a user, rename keeps identity stable, role enforcement on every admin path, admin bootstrap works.
-- **Ported** — the Jest suites under `BE/src/modules/**/__tests__/` for their assertions. `@swc/jest`, `supertest`, and `BE/src/__mocks__` are dropped; mocking a database is pointless when a real one is available per test.
-
----
-
-## 12. Decisions
-
-| Question | Answer |
-|---|---|
-| Existing data | **Nothing comes across.** Fresh empty D1. |
-| Auth | **Roblox OAuth only.** No passwords, no email, no reset flow. |
-| `Records.record` | **Split into `(metric, min_attempts)`.** |
-| Cache | **Removed entirely.** No Redis, no KV. |
-| Writes | **tRPC mutations.** Reads stay server-side. |
-| `API_SECRET_KEY` machine auth | **Deleted.** |
-| Images | External host. No R2. |
-| `records/calculate` | Manual trigger → queue. |
-| In-flight JWTs | None to honor. |
-| `strategy` module | Empty directory. Dropped. |
-| Package manager | **pnpm.** |
-
-Open:
-
-- **Tailwind** — the scaffold ships it; the frontend is SCSS. Strip it, or keep both?
-- **`not-found.tsx`** — confirm adding a real 404 (§7.5).
-- **`/profile` and `/articles/create` guards** — add the client-side gate that is missing today?
-- **Domain** for the Worker.
-
-Needed from you: Cloudflare account id + API token (or `wrangler login`), a registered **Roblox OAuth app** (client id + secret), and `CHALLONGE_API_KEY` if the Challonge import survives.
-
----
-
-## 13. Deployment
-
-Single Worker. `wrangler.jsonc` bindings: `d1_databases`, `queues` (producer + consumer), `assets`, custom domain route. No KV, no cache binding.
-
-Secrets via `wrangler secret put`, none in the repo: `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `ROBLOX_CLIENT_ID`, `ROBLOX_CLIENT_SECRET`, `CHALLONGE_API_KEY`.
-
-Gone: `JWT_SECRET`, `API_SECRET_KEY`, `REDIS_URL`, `DATABASE_URL`, the `DB_*` family.
-
-Go-live: deploy → bootstrap the first admin (§5) → enter data → DNS. Fly and Netlify are decommissioned after, not run alongside.
-
----
-
-## 14. Sequencing
+Each phase is one or more commits. Nothing is pushed.
 
 | # | Phase | Gate |
 |---|---|---|
-| 0 | ✅ Scaffold `app/`, pnpm, Workers target | `pnpm run build` passes |
-| 1 | Aliases, ESLint import rule, vitest + pool-workers, drizzle config, Tailwind decision | empty test suite runs in `workerd` |
-| 2 | `tooling/` extractors; generate all three inventories; author both manifests | T1 and T2 pass with everything `todo` |
-| 3 | Drizzle schema + baseline migration + fixtures | seed applies to a local D1; fixture test green |
+| 0 | ✅ Scaffold, pnpm, Workers target, shadcn on Radix | `pnpm run build` passes |
+| 1 | Aliases, ESLint client-import rule, vitest + pool-workers, drizzle config, Tailwind theme tokens extracted from the old CSS | an empty suite runs inside `workerd` |
+| 2 | `tooling/` extractors; generate all three inventories; author both manifests; capture screenshot baselines | T1 and T2 pass with everything `todo`; one baseline per route |
+| 3 | Drizzle schema, baseline migration, fixtures | seed applies to a local D1; fixture test green |
 | 4 | Service layer, domain by domain | per-domain suites green |
 | 5 | better-auth + Roblox + admin bootstrap | auth suite green; bootstrap rehearsed on preview |
 | 6 | tRPC routers | authorization sweep passes over every mutation |
-| 7 | Public pages + Metadata API | T3 green for public routes |
-| 8 | Portal | T3 green for `/portal/*`; T4 passes — zero `todo` |
+| 7 | Public pages + Metadata API + `not-found.tsx` | T3 green for public routes including 404 negatives |
+| 8 | Portal + session guards | T3 green for `/portal/*`, `/profile`, `/articles/create`; T4 passes |
 | 9 | Queue consumer for record recalculation | full recalc completes inside limits |
 | 10 | Deploy, bootstrap admin, DNS | — |
 | 11 | Delete `BE/` and `FE/` | one commit, after sign-off |
+
+### Phase 3 notes — schema
+
+Type mapping from the old Postgres shapes:
+
+| Old | New |
+|---|---|
+| `@PrimaryGeneratedColumn()` serial | `integer().primaryKey({autoIncrement:true})` |
+| `@CreateDateColumn` / `@UpdateDateColumn` | `integer({mode:'timestamp_ms'})` |
+| `@Column('date')` | `text` ISO `YYYY-MM-DD` |
+| `@Column({type:'enum'})` | `text({enum:[...]})` + SQL `CHECK` |
+| `decimal(10,2)` | `real` |
+| `simple-array` | `text({mode:'json'})` |
+| nullable `boolean` | `integer({mode:'boolean'})` nullable |
+
+Relations: `teams↔players`, `teams↔games`, `awards↔players`, `articles↔users` (likes), plus `teams→seasons`, `games→seasons`, `matches→seasons`, `awards→seasons`, `records→seasons`, `records→players`, `stats→players`, `stats→games`, `articles→users` (author). One owning side per many-to-many, explicit names, composite primary keys, `ON DELETE CASCADE`.
+
+Enums needing CHECK constraints: `Awards.type` (12 values), `Records.type` (`game`|`season`), `Matches.status` (`scheduled`|`completed`), `Matches.phase` (`qualifiers`|`playoffs`), `Matches.region` (`na`|`eu`|`as`|`sa`). `Records.record` does **not** get one — it becomes `(metric, min_attempts)`.
+
+**Fixtures are load-bearing** because the database starts empty: dev needs something to render and T3 needs real ids for dynamic segments. `tests/fixtures/seed.ts` builds a minimal complete graph — 2 seasons, 4 teams, 8 players, 4 games, stats rows, 2 matches, 2 awards, records, 2 users (one `user`, one `admin`), 2 articles.
+
+### Phase 6 notes — tRPC
+
+- `@trpc/server` v11 fetch adapter at `api/trpc/[trpc]`.
+- Context: `{ db, session }` — D1 binding plus the better-auth session from request headers.
+- Procedures: `publicProcedure`, `protectedProcedure`, `adminProcedure`. **Authorization lives in middleware**, never in individual handlers.
+- One router per domain, composed into `appRouter`.
+- The existing `BE/src/modules/**/*.schema.ts` Zod schemas drop into `.input()`. The `validate()` middleware disappears; the schemas survive nearly untouched. Bump to Zod v4.
+- Client: `@trpc/client` + `@trpc/react-query`, replacing the untyped `useCreate` / `usePatch` / `useDelete` hooks.
+- A successful mutation calls `revalidatePath` / `revalidateTag` before returning.
+
+tRPC over Server Actions specifically because authorization becomes structural — `adminProcedure` enforces once and a mutation cannot silently ship unguarded.
+
+### Phase 9 notes — the queue
+
+Replacing `calculateAllRecords()` (§4 defect 2):
+
+- An `adminProcedure` mutation validates and enqueues a Cloudflare Queue message, returning a job id immediately.
+- The consumer works **in SQL, not JavaScript**: one `ROW_NUMBER() OVER (PARTITION BY … ORDER BY … DESC)` query per record family, writes via `db.batch()`. With the `(metric, min_attempts)` split, the percentage families collapse into a single parameterized query.
+- Job status in a `job_runs` table so the portal can show progress. The queue's native retry handles failure.
+
+---
+
+## 10. Testing
+
+`vitest` + `@cloudflare/vitest-pool-workers`, running inside `workerd` against a real, per-test-isolated D1.
+
+- **Service layer** is the main surface, tested against the seed.
+- **tRPC authorization sweep** — walk `appRouter`, assert every mutation rejects an unauthenticated caller and every admin mutation rejects a plain user. Because authorization is middleware, this also catches a procedure declared on the wrong base, which is the one way a mutation ends up unguarded.
+- **Route conformance** — T1–T4 from §8.3.
+- **Auth** — Roblox callback creates a user, rename keeps identity stable, role enforcement on every admin path, admin bootstrap works.
+- **Ported** — the Jest suites under `BE/src/modules/**/__tests__/` for their assertions only. `@swc/jest`, `supertest`, and `BE/src/__mocks__` are dropped; mocking a database is pointless when a real one is available per test.
+
+---
+
+## 11. Pitfalls already hit
+
+Do not rediscover these.
+
+1. **`create-vinext-app` invokes `pnpm` regardless of `--use-npm`.** It writes `packageManager: "npm@x"` into `package.json`, then shells out to `pnpm add`, which refuses with `This project is configured to use npm`. All files are written correctly; only the install step fails.
+2. **A wrong `packageManager` field blocks pnpm entirely** — every `pnpm` command in the directory errors until it is corrected.
+3. **pnpm blocks build scripts by default.** `esbuild` and `workerd` both ship native binaries fetched by install scripts, and **workerd is the Workers runtime** used by `wrangler dev` and `vitest-pool-workers` — neither is optional. Handled in `pnpm-workspace.yaml` via `allowBuilds`.
+4. **shadcn v4 defaults to Base UI, not Radix.** A plain `init` installs `@base-ui/react`. Radix requires `--base radix` (the flag takes `base | radix | aria`). Correct result: `radix-ui` in dependencies and `"style": "radix-nova"` in `components.json`.
+5. **The shadcn CLI installs itself into `dependencies`.** It is tooling; it belongs in `devDependencies`.
+6. **`vinext check`** exists and should be run before assuming a Next.js feature works.
+
+---
+
+## 12. Commands
+
+```
+cd app
+pnpm install
+pnpm run dev
+pnpm run build
+pnpm run start
+pnpm run deploy
+
+pnpm dlx shadcn@latest add <component>
+npx wrangler d1 execute <db> --remote --command "<sql>"
+```
+
+Bindings for `wrangler.jsonc`: `d1_databases`, `queues` (producer + consumer), `assets`, custom domain route. **No KV, no cache binding.**
+
+Secrets via `wrangler secret put`, never in the repo: `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `ROBLOX_CLIENT_ID`, `ROBLOX_CLIENT_SECRET`, `CHALLONGE_API_KEY`.
+
+Gone: `JWT_SECRET`, `API_SECRET_KEY`, `REDIS_URL`, `DATABASE_URL`, the `DB_*` family.
+
+Go-live: deploy → bootstrap the first admin (§7) → enter data → DNS. Fly and Netlify are decommissioned after, not run alongside.
