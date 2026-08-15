@@ -1,0 +1,1259 @@
+{
+  "count": 38,
+  "static": [
+    "/about",
+    "/contact",
+    "/privacy-policy",
+    "/credits",
+    "/applications",
+    "/faq",
+    "/portal"
+  ],
+  "unresolved": [
+    "GET /api/:param (useMatches)"
+  ],
+  "routes": [
+    {
+      "path": "/",
+      "component": "Home",
+      "componentFile": "FE/src/components/Home.tsx",
+      "filesWalked": [
+        "FE/src/components/Home.tsx",
+        "FE/src/components/SEO.tsx"
+      ],
+      "calls": [
+        {
+          "hook": "useArticles",
+          "method": "GET",
+          "endpoint": "/api/articles",
+          "matchedEndpoint": "GET /api/articles",
+          "calledIn": "FE/src/components/Home.tsx",
+          "sourceLine": 14
+        }
+      ],
+      "endpoints": [
+        "GET /api/articles"
+      ],
+      "dataDriven": true
+    },
+    {
+      "path": "/about",
+      "component": "About",
+      "componentFile": "FE/src/components/About.tsx",
+      "filesWalked": [
+        "FE/src/components/About.tsx"
+      ],
+      "calls": [],
+      "endpoints": [],
+      "dataDriven": false
+    },
+    {
+      "path": "/players",
+      "component": "Players",
+      "componentFile": "FE/src/components/Players.tsx",
+      "filesWalked": [
+        "FE/src/components/Players.tsx",
+        "FE/src/components/Searchbar.tsx",
+        "FE/src/components/Pagination.tsx"
+      ],
+      "calls": [
+        {
+          "hook": "useMediumPlayers",
+          "method": "GET",
+          "endpoint": "/api/players/medium",
+          "matchedEndpoint": "GET /api/players/medium",
+          "calledIn": "FE/src/components/Players.tsx",
+          "sourceLine": 9
+        }
+      ],
+      "endpoints": [
+        "GET /api/players/medium"
+      ],
+      "dataDriven": true
+    },
+    {
+      "path": "/teams",
+      "component": "Teams",
+      "componentFile": "FE/src/components/Teams.tsx",
+      "filesWalked": [
+        "FE/src/components/Teams.tsx",
+        "FE/src/components/Searchbar.tsx",
+        "FE/src/components/Pagination.tsx"
+      ],
+      "calls": [
+        {
+          "hook": "useMediumTeams",
+          "method": "GET",
+          "endpoint": "/api/teams/medium",
+          "matchedEndpoint": "GET /api/teams/medium",
+          "calledIn": "FE/src/components/Teams.tsx",
+          "sourceLine": 12
+        }
+      ],
+      "endpoints": [
+        "GET /api/teams/medium"
+      ],
+      "dataDriven": true
+    },
+    {
+      "path": "/teams/:teamName",
+      "component": "SingleTeam",
+      "componentFile": "FE/src/components/Single/SingleTeam.tsx",
+      "filesWalked": [
+        "FE/src/components/Single/SingleTeam.tsx",
+        "FE/src/types/interfaces.ts",
+        "FE/src/components/SEO.tsx"
+      ],
+      "calls": [
+        {
+          "hook": "useSingleTeam",
+          "method": "GET",
+          "endpoint": "/api/teams/name/:param",
+          "matchedEndpoint": "GET /api/teams/name/:name",
+          "calledIn": "FE/src/components/Single/SingleTeam.tsx",
+          "sourceLine": 16
+        }
+      ],
+      "endpoints": [
+        "GET /api/teams/name/:name"
+      ],
+      "dataDriven": true
+    },
+    {
+      "path": "/games",
+      "component": "Games",
+      "componentFile": "FE/src/components/Games.tsx",
+      "filesWalked": [
+        "FE/src/components/Games.tsx",
+        "FE/src/components/Searchbar.tsx",
+        "FE/src/components/Pagination.tsx"
+      ],
+      "calls": [
+        {
+          "hook": "useSkinnyGames",
+          "method": "GET",
+          "endpoint": "/api/games/skinny",
+          "matchedEndpoint": "GET /api/games/skinny",
+          "calledIn": "FE/src/components/Games.tsx",
+          "sourceLine": 19
+        }
+      ],
+      "endpoints": [
+        "GET /api/games/skinny"
+      ],
+      "dataDriven": true
+    },
+    {
+      "path": "/games/:id",
+      "component": "SingleGame",
+      "componentFile": "FE/src/components/Single/SingleGame.tsx",
+      "filesWalked": [
+        "FE/src/components/Single/SingleGame.tsx",
+        "FE/src/types/interfaces.ts",
+        "FE/src/components/SEO.tsx"
+      ],
+      "calls": [
+        {
+          "hook": "useSingleGames",
+          "method": "GET",
+          "endpoint": "/api/games/:param",
+          "matchedEndpoint": "GET /api/games/:id",
+          "calledIn": "FE/src/components/Single/SingleGame.tsx",
+          "sourceLine": 32
+        }
+      ],
+      "endpoints": [
+        "GET /api/games/:id"
+      ],
+      "dataDriven": true
+    },
+    {
+      "path": "/seasons",
+      "component": "Seasons",
+      "componentFile": "FE/src/components/Seasons.tsx",
+      "filesWalked": [
+        "FE/src/components/Seasons.tsx",
+        "FE/src/types/interfaces.ts"
+      ],
+      "calls": [
+        {
+          "hook": "useMediumSeasons",
+          "method": "GET",
+          "endpoint": "/api/seasons/medium",
+          "matchedEndpoint": "GET /api/seasons/medium",
+          "calledIn": "FE/src/components/Seasons.tsx",
+          "sourceLine": 78
+        }
+      ],
+      "endpoints": [
+        "GET /api/seasons/medium"
+      ],
+      "dataDriven": true
+    },
+    {
+      "path": "/seasons/:id",
+      "component": "SingleSeason",
+      "componentFile": "FE/src/components/Single/SingleSeason.tsx",
+      "filesWalked": [
+        "FE/src/components/Single/SingleSeason.tsx",
+        "FE/src/types/interfaces.ts",
+        "FE/src/components/SEO.tsx"
+      ],
+      "calls": [
+        {
+          "hook": "useSingleSeason",
+          "method": "GET",
+          "endpoint": "/api/seasons/:param",
+          "matchedEndpoint": "GET /api/seasons/:id",
+          "calledIn": "FE/src/components/Single/SingleSeason.tsx",
+          "sourceLine": 77
+        }
+      ],
+      "endpoints": [
+        "GET /api/seasons/:id"
+      ],
+      "dataDriven": true
+    },
+    {
+      "path": "/articles",
+      "component": "Articles",
+      "componentFile": "FE/src/components/Article.tsx",
+      "filesWalked": [
+        "FE/src/components/Article.tsx",
+        "FE/src/context/authContext.tsx",
+        "FE/src/types/interfaces.ts"
+      ],
+      "calls": [
+        {
+          "hook": "useArticles",
+          "method": "GET",
+          "endpoint": "/api/articles",
+          "matchedEndpoint": "GET /api/articles",
+          "calledIn": "FE/src/components/Article.tsx",
+          "sourceLine": 25
+        }
+      ],
+      "endpoints": [
+        "GET /api/articles"
+      ],
+      "dataDriven": true
+    },
+    {
+      "path": "/articles/:id",
+      "component": "SingleArticle",
+      "componentFile": "FE/src/components/Single/SingleArticle.tsx",
+      "filesWalked": [
+        "FE/src/components/Single/SingleArticle.tsx",
+        "FE/src/types/interfaces.ts",
+        "FE/src/components/SEO.tsx"
+      ],
+      "calls": [
+        {
+          "hook": "useSingleArticles",
+          "method": "GET",
+          "endpoint": "/api/articles/:param",
+          "matchedEndpoint": "GET /api/articles/:id",
+          "calledIn": "FE/src/components/Single/SingleArticle.tsx",
+          "sourceLine": 20
+        }
+      ],
+      "endpoints": [
+        "GET /api/articles/:id"
+      ],
+      "dataDriven": true
+    },
+    {
+      "path": "/contact",
+      "component": "Contact",
+      "componentFile": "FE/src/components/ContactUs.tsx",
+      "filesWalked": [
+        "FE/src/components/ContactUs.tsx"
+      ],
+      "calls": [],
+      "endpoints": [],
+      "dataDriven": false
+    },
+    {
+      "path": "/privacy-policy",
+      "component": "PrivacyPolicy",
+      "componentFile": "FE/src/components/PrivacyPolicy.tsx",
+      "filesWalked": [
+        "FE/src/components/PrivacyPolicy.tsx"
+      ],
+      "calls": [],
+      "endpoints": [],
+      "dataDriven": false
+    },
+    {
+      "path": "/credits",
+      "component": "Credits",
+      "componentFile": "FE/src/components/Credits.tsx",
+      "filesWalked": [
+        "FE/src/components/Credits.tsx"
+      ],
+      "calls": [],
+      "endpoints": [],
+      "dataDriven": false
+    },
+    {
+      "path": "/players/:id",
+      "component": "SinglePlayer",
+      "componentFile": "FE/src/components/Single/SinglePlayer.tsx",
+      "filesWalked": [
+        "FE/src/components/Single/SinglePlayer.tsx",
+        "FE/src/utils/fetchAvatarRoblox.ts",
+        "FE/src/components/SEO.tsx"
+      ],
+      "calls": [
+        {
+          "hook": "useSinglePlayer",
+          "method": "GET",
+          "endpoint": "/api/players/:param",
+          "matchedEndpoint": "GET /api/players/:id",
+          "calledIn": "FE/src/components/Single/SinglePlayer.tsx",
+          "sourceLine": 230
+        },
+        {
+          "hook": "useAwardsByPlayerID",
+          "method": "GET",
+          "endpoint": "/api/awards/player/:param",
+          "matchedEndpoint": "GET /api/awards/player/:playerId",
+          "calledIn": "FE/src/components/Single/SinglePlayer.tsx",
+          "sourceLine": 233
+        },
+        {
+          "hook": "fetch",
+          "method": "GET",
+          "endpoint": "/api/roblox/avatar/:param",
+          "matchedEndpoint": "GET /api/roblox/avatar/:username",
+          "calledIn": "FE/src/utils/fetchAvatarRoblox.ts",
+          "sourceLine": 10
+        }
+      ],
+      "endpoints": [
+        "GET /api/awards/player/:playerId",
+        "GET /api/players/:id",
+        "GET /api/roblox/avatar/:username"
+      ],
+      "dataDriven": true
+    },
+    {
+      "path": "/awards/:id",
+      "component": "SingleAward",
+      "componentFile": "FE/src/components/Single/SingleAward.tsx",
+      "filesWalked": [
+        "FE/src/components/Single/SingleAward.tsx",
+        "FE/src/components/SEO.tsx"
+      ],
+      "calls": [
+        {
+          "hook": "useSingleAward",
+          "method": "GET",
+          "endpoint": "/api/awards/:param",
+          "matchedEndpoint": "GET /api/awards/:id",
+          "calledIn": "FE/src/components/Single/SingleAward.tsx",
+          "sourceLine": 45
+        }
+      ],
+      "endpoints": [
+        "GET /api/awards/:id"
+      ],
+      "dataDriven": true
+    },
+    {
+      "path": "/awards",
+      "component": "Awards",
+      "componentFile": "FE/src/components/Awards.tsx",
+      "filesWalked": [
+        "FE/src/components/Awards.tsx",
+        "FE/src/components/SeasonFilterBar.tsx"
+      ],
+      "calls": [
+        {
+          "hook": "useSkinnyAwards",
+          "method": "GET",
+          "endpoint": "/api/awards/skinny",
+          "matchedEndpoint": "GET /api/awards/skinny",
+          "calledIn": "FE/src/components/Awards.tsx",
+          "sourceLine": 8
+        }
+      ],
+      "endpoints": [
+        "GET /api/awards/skinny"
+      ],
+      "dataDriven": true
+    },
+    {
+      "path": "/articles/create",
+      "component": "CreateArticle",
+      "componentFile": "FE/src/components/CreateArticle.tsx",
+      "filesWalked": [
+        "FE/src/components/CreateArticle.tsx",
+        "FE/src/context/authContext.tsx",
+        "FE/src/types/interfaces.ts"
+      ],
+      "calls": [
+        {
+          "hook": "useCreateArticles",
+          "method": "POST",
+          "endpoint": "/api/articles",
+          "matchedEndpoint": "POST /api/articles",
+          "calledIn": "FE/src/components/CreateArticle.tsx",
+          "sourceLine": 17
+        }
+      ],
+      "endpoints": [
+        "POST /api/articles"
+      ],
+      "dataDriven": true
+    },
+    {
+      "path": "/stats",
+      "component": "StatsLeaderboard",
+      "componentFile": "FE/src/components/StatsLeaderboard.tsx",
+      "filesWalked": [
+        "FE/src/components/StatsLeaderboard.tsx",
+        "FE/src/types/interfaces.ts",
+        "FE/src/components/Searchbar.tsx",
+        "FE/src/components/Pagination.tsx",
+        "FE/src/components/SeasonFilterBar.tsx",
+        "FE/src/components/PlayerStatsVisualization.tsx"
+      ],
+      "calls": [
+        {
+          "hook": "usePlayers",
+          "method": "GET",
+          "endpoint": "/api/players",
+          "matchedEndpoint": "GET /api/players",
+          "calledIn": "FE/src/components/StatsLeaderboard.tsx",
+          "sourceLine": 202
+        }
+      ],
+      "endpoints": [
+        "GET /api/players"
+      ],
+      "dataDriven": true
+    },
+    {
+      "path": "/schedules",
+      "component": "Schedules",
+      "componentFile": "FE/src/components/Schedules.tsx",
+      "filesWalked": [
+        "FE/src/components/Schedules.tsx",
+        "FE/src/components/Searchbar.tsx",
+        "FE/src/components/CalendarModal.tsx"
+      ],
+      "calls": [
+        {
+          "hook": "useSeasons",
+          "method": "GET",
+          "endpoint": "/api/seasons",
+          "matchedEndpoint": "GET /api/seasons",
+          "calledIn": "FE/src/components/Schedules.tsx",
+          "sourceLine": 8
+        },
+        {
+          "hook": "useMatches",
+          "method": "GET",
+          "endpoint": "/api/:param",
+          "matchedEndpoint": null,
+          "calledIn": "FE/src/components/Schedules.tsx",
+          "sourceLine": 27
+        }
+      ],
+      "endpoints": [
+        "GET /api/:param",
+        "GET /api/seasons"
+      ],
+      "dataDriven": true
+    },
+    {
+      "path": "/applications",
+      "component": "Applications",
+      "componentFile": "FE/src/components/Applications.tsx",
+      "filesWalked": [
+        "FE/src/components/Applications.tsx"
+      ],
+      "calls": [],
+      "endpoints": [],
+      "dataDriven": false
+    },
+    {
+      "path": "/faq",
+      "component": "FAQ",
+      "componentFile": "FE/src/components/FAQ.tsx",
+      "filesWalked": [
+        "FE/src/components/FAQ.tsx"
+      ],
+      "calls": [],
+      "endpoints": [],
+      "dataDriven": false
+    },
+    {
+      "path": "/records",
+      "component": "RecordsPage",
+      "componentFile": "FE/src/components/RecordsPage.tsx",
+      "filesWalked": [
+        "FE/src/components/RecordsPage.tsx",
+        "FE/src/context/authContext.tsx",
+        "FE/src/types/interfaces.ts"
+      ],
+      "calls": [
+        {
+          "hook": "useRecords",
+          "method": "GET",
+          "endpoint": "/api/records",
+          "matchedEndpoint": "GET /api/records",
+          "calledIn": "FE/src/components/RecordsPage.tsx",
+          "sourceLine": 12
+        },
+        {
+          "hook": "useCalculateRecords",
+          "method": "POST",
+          "endpoint": "/api/records/calculate",
+          "matchedEndpoint": "POST /api/records/calculate",
+          "calledIn": "FE/src/components/RecordsPage.tsx",
+          "sourceLine": 24
+        }
+      ],
+      "endpoints": [
+        "GET /api/records",
+        "POST /api/records/calculate"
+      ],
+      "dataDriven": true
+    },
+    {
+      "path": "/trivia",
+      "component": "TriviaPage",
+      "componentFile": "FE/src/components/TriviaPage.tsx",
+      "filesWalked": [
+        "FE/src/components/TriviaPage.tsx",
+        "FE/src/types/interfaces.ts"
+      ],
+      "calls": [
+        {
+          "hook": "useTriviaPlayer",
+          "method": "GET",
+          "endpoint": "/api/trivia/player",
+          "matchedEndpoint": "GET /api/trivia/player",
+          "calledIn": "FE/src/components/TriviaPage.tsx",
+          "sourceLine": 52
+        },
+        {
+          "hook": "useTriviaTeam",
+          "method": "GET",
+          "endpoint": "/api/trivia/team",
+          "matchedEndpoint": "GET /api/trivia/team",
+          "calledIn": "FE/src/components/TriviaPage.tsx",
+          "sourceLine": 53
+        },
+        {
+          "hook": "useTriviaSeason",
+          "method": "GET",
+          "endpoint": "/api/trivia/season",
+          "matchedEndpoint": "GET /api/trivia/season",
+          "calledIn": "FE/src/components/TriviaPage.tsx",
+          "sourceLine": 54
+        },
+        {
+          "hook": "useSubmitTriviaGuess",
+          "method": "POST",
+          "endpoint": "/api/trivia/guess",
+          "matchedEndpoint": "POST /api/trivia/guess",
+          "calledIn": "FE/src/components/TriviaPage.tsx",
+          "sourceLine": 55
+        }
+      ],
+      "endpoints": [
+        "GET /api/trivia/player",
+        "GET /api/trivia/season",
+        "GET /api/trivia/team",
+        "POST /api/trivia/guess"
+      ],
+      "dataDriven": true
+    },
+    {
+      "path": "/profile",
+      "component": "UserProfile",
+      "componentFile": "FE/src/components/UserProfile.tsx",
+      "filesWalked": [
+        "FE/src/components/UserProfile.tsx",
+        "FE/src/context/authContext.tsx",
+        "FE/src/types/interfaces.ts"
+      ],
+      "calls": [
+        {
+          "hook": "authFetch",
+          "method": "GET",
+          "endpoint": "/api/users/profile",
+          "matchedEndpoint": "GET /api/users/profile",
+          "calledIn": "FE/src/components/UserProfile.tsx",
+          "sourceLine": 54
+        }
+      ],
+      "endpoints": [
+        "GET /api/users/profile"
+      ],
+      "dataDriven": true
+    },
+    {
+      "path": "/login",
+      "component": "LoginPage",
+      "componentFile": "FE/src/components/Login.tsx",
+      "filesWalked": [
+        "FE/src/components/Login.tsx"
+      ],
+      "calls": [
+        {
+          "hook": "useLogin",
+          "method": "POST",
+          "endpoint": "/api/users/login",
+          "matchedEndpoint": "POST /api/users/login",
+          "calledIn": "FE/src/components/Login.tsx",
+          "sourceLine": 12
+        }
+      ],
+      "endpoints": [
+        "POST /api/users/login"
+      ],
+      "dataDriven": true
+    },
+    {
+      "path": "/signup",
+      "component": "SignUp",
+      "componentFile": "FE/src/components/SignUp.tsx",
+      "filesWalked": [
+        "FE/src/components/SignUp.tsx"
+      ],
+      "calls": [
+        {
+          "hook": "useSignup",
+          "method": "POST",
+          "endpoint": "/api/users/register",
+          "matchedEndpoint": "POST /api/users/register",
+          "calledIn": "FE/src/components/SignUp.tsx",
+          "sourceLine": 13
+        }
+      ],
+      "endpoints": [
+        "POST /api/users/register"
+      ],
+      "dataDriven": true
+    },
+    {
+      "path": "/portal",
+      "component": "PortalLayout",
+      "componentFile": "FE/src/components/portal/PortalLayout.tsx",
+      "filesWalked": [
+        "FE/src/components/portal/PortalLayout.tsx"
+      ],
+      "calls": [],
+      "endpoints": [],
+      "dataDriven": false
+    },
+    {
+      "path": "/portal",
+      "component": "Dashboard",
+      "componentFile": "FE/src/components/portal/Dashboard.tsx",
+      "filesWalked": [
+        "FE/src/components/portal/Dashboard.tsx"
+      ],
+      "calls": [
+        {
+          "hook": "fetch",
+          "method": "GET",
+          "endpoint": "/api/stats",
+          "matchedEndpoint": "GET /api/stats",
+          "calledIn": "FE/src/components/portal/Dashboard.tsx",
+          "sourceLine": 43
+        },
+        {
+          "hook": "fetch",
+          "method": "GET",
+          "endpoint": "/api/teams",
+          "matchedEndpoint": "GET /api/teams",
+          "calledIn": "FE/src/components/portal/Dashboard.tsx",
+          "sourceLine": 44
+        },
+        {
+          "hook": "fetch",
+          "method": "GET",
+          "endpoint": "/api/articles",
+          "matchedEndpoint": "GET /api/articles",
+          "calledIn": "FE/src/components/portal/Dashboard.tsx",
+          "sourceLine": 45
+        },
+        {
+          "hook": "fetch",
+          "method": "GET",
+          "endpoint": "/api/players",
+          "matchedEndpoint": "GET /api/players",
+          "calledIn": "FE/src/components/portal/Dashboard.tsx",
+          "sourceLine": 46
+        },
+        {
+          "hook": "fetch",
+          "method": "GET",
+          "endpoint": "/api/seasons",
+          "matchedEndpoint": "GET /api/seasons",
+          "calledIn": "FE/src/components/portal/Dashboard.tsx",
+          "sourceLine": 47
+        },
+        {
+          "hook": "fetch",
+          "method": "GET",
+          "endpoint": "/api/games",
+          "matchedEndpoint": "GET /api/games",
+          "calledIn": "FE/src/components/portal/Dashboard.tsx",
+          "sourceLine": 48
+        },
+        {
+          "hook": "fetch",
+          "method": "GET",
+          "endpoint": "/api/matches",
+          "matchedEndpoint": "GET /api/matches",
+          "calledIn": "FE/src/components/portal/Dashboard.tsx",
+          "sourceLine": 49
+        },
+        {
+          "hook": "fetch",
+          "method": "GET",
+          "endpoint": "/api/users",
+          "matchedEndpoint": "GET /api/users",
+          "calledIn": "FE/src/components/portal/Dashboard.tsx",
+          "sourceLine": 50
+        },
+        {
+          "hook": "fetch",
+          "method": "GET",
+          "endpoint": "/api/awards",
+          "matchedEndpoint": "GET /api/awards",
+          "calledIn": "FE/src/components/portal/Dashboard.tsx",
+          "sourceLine": 51
+        }
+      ],
+      "endpoints": [
+        "GET /api/articles",
+        "GET /api/awards",
+        "GET /api/games",
+        "GET /api/matches",
+        "GET /api/players",
+        "GET /api/seasons",
+        "GET /api/stats",
+        "GET /api/teams",
+        "GET /api/users"
+      ],
+      "dataDriven": true
+    },
+    {
+      "path": "/portal/users",
+      "component": "UsersPage",
+      "componentFile": "FE/src/components/portal/UsersPage.tsx",
+      "filesWalked": [
+        "FE/src/components/portal/UsersPage.tsx",
+        "FE/src/context/authContext.tsx",
+        "FE/src/types/interfaces.ts",
+        "FE/src/components/Searchbar.tsx",
+        "FE/src/components/Pagination.tsx"
+      ],
+      "calls": [
+        {
+          "hook": "useUsers",
+          "method": "GET",
+          "endpoint": "/api/users",
+          "matchedEndpoint": "GET /api/users",
+          "calledIn": "FE/src/components/portal/UsersPage.tsx",
+          "sourceLine": 12
+        },
+        {
+          "hook": "useUsers",
+          "method": "PATCH",
+          "endpoint": "/api/admin/users/:param/role",
+          "matchedEndpoint": "PATCH /api/admin/users/:id/role",
+          "calledIn": "FE/src/components/portal/UsersPage.tsx",
+          "sourceLine": 12
+        }
+      ],
+      "endpoints": [
+        "GET /api/users",
+        "PATCH /api/admin/users/:id/role"
+      ],
+      "dataDriven": true
+    },
+    {
+      "path": "/portal/players",
+      "component": "PlayersPage",
+      "componentFile": "FE/src/components/portal/PlayersPage.tsx",
+      "filesWalked": [
+        "FE/src/components/portal/PlayersPage.tsx",
+        "FE/src/context/authContext.tsx",
+        "FE/src/types/interfaces.ts",
+        "FE/src/components/Searchbar.tsx",
+        "FE/src/components/Pagination.tsx"
+      ],
+      "calls": [
+        {
+          "hook": "usePlayers",
+          "method": "GET",
+          "endpoint": "/api/players",
+          "matchedEndpoint": "GET /api/players",
+          "calledIn": "FE/src/components/portal/PlayersPage.tsx",
+          "sourceLine": 30
+        },
+        {
+          "hook": "usePlayerMutations",
+          "method": "PATCH",
+          "endpoint": "/api/players/:param",
+          "matchedEndpoint": "PATCH /api/players/:id",
+          "calledIn": "FE/src/components/portal/PlayersPage.tsx",
+          "sourceLine": 31
+        },
+        {
+          "hook": "useBatchPlayersByTeamName",
+          "method": "POST",
+          "endpoint": "/api/players/batch/by-team-name",
+          "matchedEndpoint": "POST /api/players/batch/by-team-name",
+          "calledIn": "FE/src/components/portal/PlayersPage.tsx",
+          "sourceLine": 32
+        },
+        {
+          "hook": "useDeletePlayers",
+          "method": "DELETE",
+          "endpoint": "/api/players/:param",
+          "matchedEndpoint": "DELETE /api/players/:id",
+          "calledIn": "FE/src/components/portal/PlayersPage.tsx",
+          "sourceLine": 33
+        }
+      ],
+      "endpoints": [
+        "DELETE /api/players/:id",
+        "GET /api/players",
+        "PATCH /api/players/:id",
+        "POST /api/players/batch/by-team-name"
+      ],
+      "dataDriven": true
+    },
+    {
+      "path": "/portal/teams",
+      "component": "TeamsPage",
+      "componentFile": "FE/src/components/portal/TeamsPage.tsx",
+      "filesWalked": [
+        "FE/src/components/portal/TeamsPage.tsx",
+        "FE/src/context/authContext.tsx",
+        "FE/src/types/interfaces.ts",
+        "FE/src/components/Searchbar.tsx",
+        "FE/src/components/Pagination.tsx"
+      ],
+      "calls": [
+        {
+          "hook": "useSkinnyTeams",
+          "method": "GET",
+          "endpoint": "/api/teams/skinny",
+          "matchedEndpoint": "GET /api/teams/skinny",
+          "calledIn": "FE/src/components/portal/TeamsPage.tsx",
+          "sourceLine": 28
+        },
+        {
+          "hook": "useSkinnySeasons",
+          "method": "GET",
+          "endpoint": "/api/seasons/skinny",
+          "matchedEndpoint": "GET /api/seasons/skinny",
+          "calledIn": "FE/src/components/portal/TeamsPage.tsx",
+          "sourceLine": 29
+        },
+        {
+          "hook": "useTeamMutations",
+          "method": "PATCH",
+          "endpoint": "/api/teams/:param",
+          "matchedEndpoint": "PATCH /api/teams/:id",
+          "calledIn": "FE/src/components/portal/TeamsPage.tsx",
+          "sourceLine": 30
+        },
+        {
+          "hook": "useCreateTeams",
+          "method": "POST",
+          "endpoint": "/api/teams",
+          "matchedEndpoint": "POST /api/teams",
+          "calledIn": "FE/src/components/portal/TeamsPage.tsx",
+          "sourceLine": 31
+        },
+        {
+          "hook": "useDeleteTeams",
+          "method": "DELETE",
+          "endpoint": "/api/teams/:param",
+          "matchedEndpoint": "DELETE /api/teams/:id",
+          "calledIn": "FE/src/components/portal/TeamsPage.tsx",
+          "sourceLine": 32
+        }
+      ],
+      "endpoints": [
+        "DELETE /api/teams/:id",
+        "GET /api/seasons/skinny",
+        "GET /api/teams/skinny",
+        "PATCH /api/teams/:id",
+        "POST /api/teams"
+      ],
+      "dataDriven": true
+    },
+    {
+      "path": "/portal/seasons",
+      "component": "SeasonsPage",
+      "componentFile": "FE/src/components/portal/SeasonsPage.tsx",
+      "filesWalked": [
+        "FE/src/components/portal/SeasonsPage.tsx",
+        "FE/src/context/authContext.tsx",
+        "FE/src/types/interfaces.ts"
+      ],
+      "calls": [
+        {
+          "hook": "useSkinnySeasons",
+          "method": "GET",
+          "endpoint": "/api/seasons/skinny",
+          "matchedEndpoint": "GET /api/seasons/skinny",
+          "calledIn": "FE/src/components/portal/SeasonsPage.tsx",
+          "sourceLine": 22
+        },
+        {
+          "hook": "useSeasonMutations",
+          "method": "PATCH",
+          "endpoint": "/api/seasons/:param",
+          "matchedEndpoint": "PATCH /api/seasons/:id",
+          "calledIn": "FE/src/components/portal/SeasonsPage.tsx",
+          "sourceLine": 25
+        },
+        {
+          "hook": "useCreateSeasons",
+          "method": "POST",
+          "endpoint": "/api/seasons",
+          "matchedEndpoint": "POST /api/seasons",
+          "calledIn": "FE/src/components/portal/SeasonsPage.tsx",
+          "sourceLine": 28
+        },
+        {
+          "hook": "useDeleteSeasons",
+          "method": "DELETE",
+          "endpoint": "/api/seasons/:param",
+          "matchedEndpoint": "DELETE /api/seasons/:id",
+          "calledIn": "FE/src/components/portal/SeasonsPage.tsx",
+          "sourceLine": 31
+        }
+      ],
+      "endpoints": [
+        "DELETE /api/seasons/:id",
+        "GET /api/seasons/skinny",
+        "PATCH /api/seasons/:id",
+        "POST /api/seasons"
+      ],
+      "dataDriven": true
+    },
+    {
+      "path": "/portal/games",
+      "component": "GamesPage",
+      "componentFile": "FE/src/components/portal/GamesPage.tsx",
+      "filesWalked": [
+        "FE/src/components/portal/GamesPage.tsx",
+        "FE/src/context/authContext.tsx",
+        "FE/src/types/interfaces.ts",
+        "FE/src/components/Searchbar.tsx",
+        "FE/src/components/Pagination.tsx"
+      ],
+      "calls": [
+        {
+          "hook": "useSkinnyGames",
+          "method": "GET",
+          "endpoint": "/api/games/skinny",
+          "matchedEndpoint": "GET /api/games/skinny",
+          "calledIn": "FE/src/components/portal/GamesPage.tsx",
+          "sourceLine": 36
+        },
+        {
+          "hook": "useGameMutations",
+          "method": "PATCH",
+          "endpoint": "/api/games/:param",
+          "matchedEndpoint": "PATCH /api/games/:id",
+          "calledIn": "FE/src/components/portal/GamesPage.tsx",
+          "sourceLine": 37
+        },
+        {
+          "hook": "useCreateGames",
+          "method": "POST",
+          "endpoint": "/api/games/createByNames",
+          "matchedEndpoint": "POST /api/games/createByNames",
+          "calledIn": "FE/src/components/portal/GamesPage.tsx",
+          "sourceLine": 38
+        },
+        {
+          "hook": "useDeleteGames",
+          "method": "DELETE",
+          "endpoint": "/api/games/:param",
+          "matchedEndpoint": "DELETE /api/games/:id",
+          "calledIn": "FE/src/components/portal/GamesPage.tsx",
+          "sourceLine": 39
+        }
+      ],
+      "endpoints": [
+        "DELETE /api/games/:id",
+        "GET /api/games/skinny",
+        "PATCH /api/games/:id",
+        "POST /api/games/createByNames"
+      ],
+      "dataDriven": true
+    },
+    {
+      "path": "/portal/stats",
+      "component": "StatsPage",
+      "componentFile": "FE/src/components/portal/StatsPage.tsx",
+      "filesWalked": [
+        "FE/src/components/portal/StatsPage.tsx",
+        "FE/src/context/authContext.tsx",
+        "FE/src/types/interfaces.ts",
+        "FE/src/utils/csvUploadUtils.ts",
+        "FE/src/utils/csvParser.ts",
+        "FE/src/components/Searchbar.tsx",
+        "FE/src/components/Pagination.tsx"
+      ],
+      "calls": [
+        {
+          "hook": "useStats",
+          "method": "GET",
+          "endpoint": "/api/stats",
+          "matchedEndpoint": "GET /api/stats",
+          "calledIn": "FE/src/components/portal/StatsPage.tsx",
+          "sourceLine": 68
+        },
+        {
+          "hook": "usePlayers",
+          "method": "GET",
+          "endpoint": "/api/players",
+          "matchedEndpoint": "GET /api/players",
+          "calledIn": "FE/src/components/portal/StatsPage.tsx",
+          "sourceLine": 71
+        },
+        {
+          "hook": "useStatsMutations",
+          "method": "PATCH",
+          "endpoint": "/api/stats/:param",
+          "matchedEndpoint": "PATCH /api/stats/:id",
+          "calledIn": "FE/src/components/portal/StatsPage.tsx",
+          "sourceLine": 74
+        },
+        {
+          "hook": "useCreateStats",
+          "method": "POST",
+          "endpoint": "/api/stats",
+          "matchedEndpoint": "POST /api/stats",
+          "calledIn": "FE/src/components/portal/StatsPage.tsx",
+          "sourceLine": 77
+        },
+        {
+          "hook": "useCreateStats",
+          "method": "POST",
+          "endpoint": "/api/stats/by-name",
+          "matchedEndpoint": "POST /api/stats/by-name",
+          "calledIn": "FE/src/components/portal/StatsPage.tsx",
+          "sourceLine": 77
+        },
+        {
+          "hook": "useDeleteStats",
+          "method": "DELETE",
+          "endpoint": "/api/stats/:param",
+          "matchedEndpoint": "DELETE /api/stats/:id",
+          "calledIn": "FE/src/components/portal/StatsPage.tsx",
+          "sourceLine": 80
+        },
+        {
+          "hook": "useCSVUpload",
+          "method": "POST",
+          "endpoint": "/api/stats/batch-csv",
+          "matchedEndpoint": "POST /api/stats/batch-csv",
+          "calledIn": "FE/src/components/portal/StatsPage.tsx",
+          "sourceLine": 83
+        },
+        {
+          "hook": "useAddStatsToExistingGame",
+          "method": "POST",
+          "endpoint": "/api/stats/add-to-game",
+          "matchedEndpoint": "POST /api/stats/add-to-game",
+          "calledIn": "FE/src/components/portal/StatsPage.tsx",
+          "sourceLine": 86
+        }
+      ],
+      "endpoints": [
+        "DELETE /api/stats/:id",
+        "GET /api/players",
+        "GET /api/stats",
+        "PATCH /api/stats/:id",
+        "POST /api/stats",
+        "POST /api/stats/add-to-game",
+        "POST /api/stats/batch-csv",
+        "POST /api/stats/by-name"
+      ],
+      "dataDriven": true
+    },
+    {
+      "path": "/portal/awards",
+      "component": "AwardsPage",
+      "componentFile": "FE/src/components/portal/AwardsPage.tsx",
+      "filesWalked": [
+        "FE/src/components/portal/AwardsPage.tsx",
+        "FE/src/context/authContext.tsx",
+        "FE/src/types/interfaces.ts",
+        "FE/src/components/Searchbar.tsx",
+        "FE/src/components/Pagination.tsx"
+      ],
+      "calls": [
+        {
+          "hook": "useSkinnyAwards",
+          "method": "GET",
+          "endpoint": "/api/awards/skinny",
+          "matchedEndpoint": "GET /api/awards/skinny",
+          "calledIn": "FE/src/components/portal/AwardsPage.tsx",
+          "sourceLine": 37
+        },
+        {
+          "hook": "useAwardsMutations",
+          "method": "PATCH",
+          "endpoint": "/api/awards/:param",
+          "matchedEndpoint": "PATCH /api/awards/:id",
+          "calledIn": "FE/src/components/portal/AwardsPage.tsx",
+          "sourceLine": 38
+        },
+        {
+          "hook": "useCreateAwards",
+          "method": "POST",
+          "endpoint": "/api/awards/with-names",
+          "matchedEndpoint": "POST /api/awards/with-names",
+          "calledIn": "FE/src/components/portal/AwardsPage.tsx",
+          "sourceLine": 39
+        },
+        {
+          "hook": "useDeleteAwards",
+          "method": "DELETE",
+          "endpoint": "/api/awards/:param",
+          "matchedEndpoint": "DELETE /api/awards/:id",
+          "calledIn": "FE/src/components/portal/AwardsPage.tsx",
+          "sourceLine": 40
+        }
+      ],
+      "endpoints": [
+        "DELETE /api/awards/:id",
+        "GET /api/awards/skinny",
+        "PATCH /api/awards/:id",
+        "POST /api/awards/with-names"
+      ],
+      "dataDriven": true
+    },
+    {
+      "path": "/portal/articles",
+      "component": "ArticlesPage",
+      "componentFile": "FE/src/components/portal/ArticlesPage.tsx",
+      "filesWalked": [
+        "FE/src/components/portal/ArticlesPage.tsx"
+      ],
+      "calls": [
+        {
+          "hook": "useArticles",
+          "method": "GET",
+          "endpoint": "/api/articles",
+          "matchedEndpoint": "GET /api/articles",
+          "calledIn": "FE/src/components/portal/ArticlesPage.tsx",
+          "sourceLine": 7
+        },
+        {
+          "hook": "useArticleMutations",
+          "method": "PATCH",
+          "endpoint": "/api/articles/:param",
+          "matchedEndpoint": "PATCH /api/articles/:id",
+          "calledIn": "FE/src/components/portal/ArticlesPage.tsx",
+          "sourceLine": 8
+        }
+      ],
+      "endpoints": [
+        "GET /api/articles",
+        "PATCH /api/articles/:id"
+      ],
+      "dataDriven": true
+    },
+    {
+      "path": "/portal/matches",
+      "component": "MatchesPage",
+      "componentFile": "FE/src/components/portal/MatchesPage.tsx",
+      "filesWalked": [
+        "FE/src/components/portal/MatchesPage.tsx",
+        "FE/src/context/authContext.tsx",
+        "FE/src/types/interfaces.ts",
+        "FE/src/components/Searchbar.tsx",
+        "FE/src/components/Pagination.tsx",
+        "FE/src/components/ChallongeImport.tsx"
+      ],
+      "calls": [
+        {
+          "hook": "useMatches",
+          "method": "GET",
+          "endpoint": "/api/:param",
+          "matchedEndpoint": null,
+          "calledIn": "FE/src/components/portal/MatchesPage.tsx",
+          "sourceLine": 39
+        },
+        {
+          "hook": "useSkinnySeasons",
+          "method": "GET",
+          "endpoint": "/api/seasons/skinny",
+          "matchedEndpoint": "GET /api/seasons/skinny",
+          "calledIn": "FE/src/components/portal/MatchesPage.tsx",
+          "sourceLine": 40
+        },
+        {
+          "hook": "useMatchMutations",
+          "method": "PATCH",
+          "endpoint": "/api/matches/:param",
+          "matchedEndpoint": "PATCH /api/matches/:id",
+          "calledIn": "FE/src/components/portal/MatchesPage.tsx",
+          "sourceLine": 42
+        },
+        {
+          "hook": "useCreateMatches",
+          "method": "POST",
+          "endpoint": "/api/matches",
+          "matchedEndpoint": "POST /api/matches",
+          "calledIn": "FE/src/components/portal/MatchesPage.tsx",
+          "sourceLine": 43
+        },
+        {
+          "hook": "useDeleteMatches",
+          "method": "DELETE",
+          "endpoint": "/api/matches/:param",
+          "matchedEndpoint": "DELETE /api/matches/:id",
+          "calledIn": "FE/src/components/portal/MatchesPage.tsx",
+          "sourceLine": 44
+        },
+        {
+          "hook": "useSeasons",
+          "method": "GET",
+          "endpoint": "/api/seasons",
+          "matchedEndpoint": "GET /api/seasons",
+          "calledIn": "FE/src/components/ChallongeImport.tsx",
+          "sourceLine": 13
+        },
+        {
+          "hook": "authFetch",
+          "method": "POST",
+          "endpoint": "/api/matches/import-challonge",
+          "matchedEndpoint": "POST /api/matches/import-challonge",
+          "calledIn": "FE/src/components/ChallongeImport.tsx",
+          "sourceLine": 50
+        }
+      ],
+      "endpoints": [
+        "DELETE /api/matches/:id",
+        "GET /api/:param",
+        "GET /api/seasons",
+        "GET /api/seasons/skinny",
+        "PATCH /api/matches/:id",
+        "POST /api/matches",
+        "POST /api/matches/import-challonge"
+      ],
+      "dataDriven": true
+    }
+  ]
+}

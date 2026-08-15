@@ -5,6 +5,7 @@ export default defineConfig({
   driver: "d1-http",
   schema: "./server/db/schema.ts",
   out: "./drizzle",
+  casing: "snake_case",
   verbose: true,
   strict: true,
 });

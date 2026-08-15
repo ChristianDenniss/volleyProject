@@ -1,0 +1,1145 @@
+{
+  "source": "BE/src/modules",
+  "count": 108,
+  "reads": 54,
+  "writes": 54,
+  "endpoints": [
+    {
+      "method": "PATCH",
+      "module": "user",
+      "controllerMethod": "setRole",
+      "middleware": [
+        "authenticateToken"
+      ],
+      "sourceFile": "BE/src/modules/user/user.routes.ts",
+      "sourceLine": 21,
+      "path": "/api/admin/users/:id/role"
+    },
+    {
+      "method": "GET",
+      "module": "articles",
+      "controllerMethod": "getAllArticles",
+      "middleware": [],
+      "sourceFile": "BE/src/modules/articles/article.routes.ts",
+      "sourceLine": 16,
+      "path": "/api/articles"
+    },
+    {
+      "method": "POST",
+      "module": "articles",
+      "controllerMethod": "createArticle",
+      "middleware": [
+        "authenticateCombined",
+        "validate(createArticleSchema)"
+      ],
+      "sourceFile": "BE/src/modules/articles/article.routes.ts",
+      "sourceLine": 13,
+      "path": "/api/articles"
+    },
+    {
+      "method": "DELETE",
+      "module": "articles",
+      "controllerMethod": "deleteArticle",
+      "middleware": [
+        "authenticateCombined"
+      ],
+      "sourceFile": "BE/src/modules/articles/article.routes.ts",
+      "sourceLine": 23,
+      "path": "/api/articles/:id"
+    },
+    {
+      "method": "GET",
+      "module": "articles",
+      "controllerMethod": "getArticleById",
+      "middleware": [],
+      "sourceFile": "BE/src/modules/articles/article.routes.ts",
+      "sourceLine": 18,
+      "path": "/api/articles/:id"
+    },
+    {
+      "method": "PATCH",
+      "module": "articles",
+      "controllerMethod": "updateArticle",
+      "middleware": [
+        "authenticateCombined",
+        "validate(updateArticleSchema)"
+      ],
+      "sourceFile": "BE/src/modules/articles/article.routes.ts",
+      "sourceLine": 22,
+      "path": "/api/articles/:id"
+    },
+    {
+      "method": "PUT",
+      "module": "articles",
+      "controllerMethod": "updateArticle",
+      "middleware": [
+        "authenticateCombined"
+      ],
+      "sourceFile": "BE/src/modules/articles/article.routes.ts",
+      "sourceLine": 21,
+      "path": "/api/articles/:id"
+    },
+    {
+      "method": "DELETE",
+      "module": "articles",
+      "controllerMethod": "unlikeArticle",
+      "middleware": [
+        "authenticateCombined"
+      ],
+      "sourceFile": "BE/src/modules/articles/article.routes.ts",
+      "sourceLine": 29,
+      "path": "/api/articles/:id/like"
+    },
+    {
+      "method": "POST",
+      "module": "articles",
+      "controllerMethod": "likeArticle",
+      "middleware": [
+        "authenticateCombined"
+      ],
+      "sourceFile": "BE/src/modules/articles/article.routes.ts",
+      "sourceLine": 26,
+      "path": "/api/articles/:id/like"
+    },
+    {
+      "method": "GET",
+      "module": "articles",
+      "controllerMethod": "checkUserLikeStatus",
+      "middleware": [
+        "authenticateCombined"
+      ],
+      "sourceFile": "BE/src/modules/articles/article.routes.ts",
+      "sourceLine": 32,
+      "path": "/api/articles/:id/like-status"
+    },
+    {
+      "method": "GET",
+      "module": "articles",
+      "controllerMethod": "getArticlesByAuthorId",
+      "middleware": [],
+      "sourceFile": "BE/src/modules/articles/article.routes.ts",
+      "sourceLine": 17,
+      "path": "/api/articles/user/:userId"
+    },
+    {
+      "method": "GET",
+      "module": "awards",
+      "controllerMethod": "getAwards",
+      "middleware": [],
+      "sourceFile": "BE/src/modules/awards/award.routes.ts",
+      "sourceLine": 20,
+      "path": "/api/awards"
+    },
+    {
+      "method": "POST",
+      "module": "awards",
+      "controllerMethod": "createAward",
+      "middleware": [
+        "authenticateCombined",
+        "validate(createAwardSchema)"
+      ],
+      "sourceFile": "BE/src/modules/awards/award.routes.ts",
+      "sourceLine": 14,
+      "path": "/api/awards"
+    },
+    {
+      "method": "DELETE",
+      "module": "awards",
+      "controllerMethod": "deleteAward",
+      "middleware": [
+        "authenticateCombined"
+      ],
+      "sourceFile": "BE/src/modules/awards/award.routes.ts",
+      "sourceLine": 29,
+      "path": "/api/awards/:id"
+    },
+    {
+      "method": "GET",
+      "module": "awards",
+      "controllerMethod": "getAwardById",
+      "middleware": [],
+      "sourceFile": "BE/src/modules/awards/award.routes.ts",
+      "sourceLine": 22,
+      "path": "/api/awards/:id"
+    },
+    {
+      "method": "PATCH",
+      "module": "awards",
+      "controllerMethod": "updateAward",
+      "middleware": [
+        "authenticateCombined",
+        "validate(updateAwardSchema)"
+      ],
+      "sourceFile": "BE/src/modules/awards/award.routes.ts",
+      "sourceLine": 28,
+      "path": "/api/awards/:id"
+    },
+    {
+      "method": "GET",
+      "module": "awards",
+      "controllerMethod": "getAwardsByPlayerId",
+      "middleware": [],
+      "sourceFile": "BE/src/modules/awards/award.routes.ts",
+      "sourceLine": 25,
+      "path": "/api/awards/player/:playerId"
+    },
+    {
+      "method": "GET",
+      "module": "awards",
+      "controllerMethod": "getAwardsBySeason",
+      "middleware": [],
+      "sourceFile": "BE/src/modules/awards/award.routes.ts",
+      "sourceLine": 24,
+      "path": "/api/awards/season/:seasonNumber"
+    },
+    {
+      "method": "GET",
+      "module": "awards",
+      "controllerMethod": "getSkinnyAwards",
+      "middleware": [],
+      "sourceFile": "BE/src/modules/awards/award.routes.ts",
+      "sourceLine": 21,
+      "path": "/api/awards/skinny"
+    },
+    {
+      "method": "GET",
+      "module": "awards",
+      "controllerMethod": "getAwardsByType",
+      "middleware": [],
+      "sourceFile": "BE/src/modules/awards/award.routes.ts",
+      "sourceLine": 23,
+      "path": "/api/awards/type/:type"
+    },
+    {
+      "method": "POST",
+      "module": "awards",
+      "controllerMethod": "createAwardWithPlayerNames",
+      "middleware": [
+        "authenticateCombined",
+        "validate(createAwardWithNamesSchema)"
+      ],
+      "sourceFile": "BE/src/modules/awards/award.routes.ts",
+      "sourceLine": 17,
+      "path": "/api/awards/with-names"
+    },
+    {
+      "method": "GET",
+      "module": "games",
+      "controllerMethod": "getGames",
+      "middleware": [],
+      "sourceFile": "BE/src/modules/games/game.routes.ts",
+      "sourceLine": 16,
+      "path": "/api/games"
+    },
+    {
+      "method": "POST",
+      "module": "games",
+      "controllerMethod": "createGame",
+      "middleware": [
+        "authenticateCombined",
+        "validate(createGameSchema)"
+      ],
+      "sourceFile": "BE/src/modules/games/game.routes.ts",
+      "sourceLine": 12,
+      "path": "/api/games"
+    },
+    {
+      "method": "DELETE",
+      "module": "games",
+      "controllerMethod": "deleteGame",
+      "middleware": [
+        "authenticateCombined"
+      ],
+      "sourceFile": "BE/src/modules/games/game.routes.ts",
+      "sourceLine": 29,
+      "path": "/api/games/:id"
+    },
+    {
+      "method": "GET",
+      "module": "games",
+      "controllerMethod": "getGameById",
+      "middleware": [],
+      "sourceFile": "BE/src/modules/games/game.routes.ts",
+      "sourceLine": 18,
+      "path": "/api/games/:id"
+    },
+    {
+      "method": "PATCH",
+      "module": "games",
+      "controllerMethod": "updateGame",
+      "middleware": [
+        "authenticateCombined",
+        "validate(updateGameSchema)"
+      ],
+      "sourceFile": "BE/src/modules/games/game.routes.ts",
+      "sourceLine": 28,
+      "path": "/api/games/:id"
+    },
+    {
+      "method": "PUT",
+      "module": "games",
+      "controllerMethod": "updateGame",
+      "middleware": [
+        "authenticateCombined"
+      ],
+      "sourceFile": "BE/src/modules/games/game.routes.ts",
+      "sourceLine": 27,
+      "path": "/api/games/:id"
+    },
+    {
+      "method": "GET",
+      "module": "games",
+      "controllerMethod": "getGameScoreById",
+      "middleware": [],
+      "sourceFile": "BE/src/modules/games/game.routes.ts",
+      "sourceLine": 21,
+      "path": "/api/games/:id/score"
+    },
+    {
+      "method": "POST",
+      "module": "games",
+      "controllerMethod": "createMultipleGames",
+      "middleware": [
+        "authenticateCombined",
+        "validate(createGameSchema)"
+      ],
+      "sourceFile": "BE/src/modules/games/game.routes.ts",
+      "sourceLine": 13,
+      "path": "/api/games/batch"
+    },
+    {
+      "method": "POST",
+      "module": "games",
+      "controllerMethod": "createGameByNames",
+      "middleware": [
+        "authenticateCombined"
+      ],
+      "sourceFile": "BE/src/modules/games/game.routes.ts",
+      "sourceLine": 24,
+      "path": "/api/games/createByNames"
+    },
+    {
+      "method": "GET",
+      "module": "games",
+      "controllerMethod": "getGamesBySeasonId",
+      "middleware": [],
+      "sourceFile": "BE/src/modules/games/game.routes.ts",
+      "sourceLine": 19,
+      "path": "/api/games/season/:seasonId"
+    },
+    {
+      "method": "GET",
+      "module": "games",
+      "controllerMethod": "getSkinnyGames",
+      "middleware": [],
+      "sourceFile": "BE/src/modules/games/game.routes.ts",
+      "sourceLine": 17,
+      "path": "/api/games/skinny"
+    },
+    {
+      "method": "GET",
+      "module": "games",
+      "controllerMethod": "getGamesByTeamId",
+      "middleware": [],
+      "sourceFile": "BE/src/modules/games/game.routes.ts",
+      "sourceLine": 20,
+      "path": "/api/games/team/:teamId"
+    },
+    {
+      "method": "GET",
+      "module": "matches",
+      "controllerMethod": "getAllMatches",
+      "middleware": [],
+      "sourceFile": "BE/src/modules/matches/match.routes.ts",
+      "sourceLine": 12,
+      "path": "/api/matches"
+    },
+    {
+      "method": "POST",
+      "module": "matches",
+      "controllerMethod": "createMatch",
+      "middleware": [
+        "authenticateCombined",
+        "validate(createMatchSchema)"
+      ],
+      "sourceFile": "BE/src/modules/matches/match.routes.ts",
+      "sourceLine": 18,
+      "path": "/api/matches"
+    },
+    {
+      "method": "DELETE",
+      "module": "matches",
+      "controllerMethod": "deleteMatch",
+      "middleware": [
+        "authenticateCombined"
+      ],
+      "sourceFile": "BE/src/modules/matches/match.routes.ts",
+      "sourceLine": 21,
+      "path": "/api/matches/:id"
+    },
+    {
+      "method": "GET",
+      "module": "matches",
+      "controllerMethod": "getMatchById",
+      "middleware": [],
+      "sourceFile": "BE/src/modules/matches/match.routes.ts",
+      "sourceLine": 15,
+      "path": "/api/matches/:id"
+    },
+    {
+      "method": "PATCH",
+      "module": "matches",
+      "controllerMethod": "updateMatch",
+      "middleware": [
+        "authenticateCombined",
+        "validate(updateMatchSchema)"
+      ],
+      "sourceFile": "BE/src/modules/matches/match.routes.ts",
+      "sourceLine": 20,
+      "path": "/api/matches/:id"
+    },
+    {
+      "method": "PUT",
+      "module": "matches",
+      "controllerMethod": "updateMatch",
+      "middleware": [
+        "authenticateCombined",
+        "validate(updateMatchSchema)"
+      ],
+      "sourceFile": "BE/src/modules/matches/match.routes.ts",
+      "sourceLine": 19,
+      "path": "/api/matches/:id"
+    },
+    {
+      "method": "POST",
+      "module": "matches",
+      "controllerMethod": "importFromChallonge",
+      "middleware": [
+        "authenticateCombined",
+        "validate(importChallongeSchema)"
+      ],
+      "sourceFile": "BE/src/modules/matches/match.routes.ts",
+      "sourceLine": 24,
+      "path": "/api/matches/import-challonge"
+    },
+    {
+      "method": "GET",
+      "module": "matches",
+      "controllerMethod": "getMatchesBySeason",
+      "middleware": [],
+      "sourceFile": "BE/src/modules/matches/match.routes.ts",
+      "sourceLine": 13,
+      "path": "/api/matches/season/:seasonId"
+    },
+    {
+      "method": "GET",
+      "module": "matches",
+      "controllerMethod": "getMatchesByRound",
+      "middleware": [],
+      "sourceFile": "BE/src/modules/matches/match.routes.ts",
+      "sourceLine": 14,
+      "path": "/api/matches/season/:seasonId/round/:round"
+    },
+    {
+      "method": "GET",
+      "module": "players",
+      "controllerMethod": "getPlayers",
+      "middleware": [
+        "cacheMiddleware({ prefix: 'players', ttl: 600 })"
+      ],
+      "sourceFile": "BE/src/modules/players/player.routes.ts",
+      "sourceLine": 25,
+      "path": "/api/players"
+    },
+    {
+      "method": "POST",
+      "module": "players",
+      "controllerMethod": "createPlayer",
+      "middleware": [
+        "authenticateCombined",
+        "validate(createPlayerSchema)"
+      ],
+      "sourceFile": "BE/src/modules/players/player.routes.ts",
+      "sourceLine": 14,
+      "path": "/api/players"
+    },
+    {
+      "method": "DELETE",
+      "module": "players",
+      "controllerMethod": "deletePlayer",
+      "middleware": [
+        "authenticateCombined",
+        "invalidateCacheMiddleware('players')"
+      ],
+      "sourceFile": "BE/src/modules/players/player.routes.ts",
+      "sourceLine": 36,
+      "path": "/api/players/:id"
+    },
+    {
+      "method": "GET",
+      "module": "players",
+      "controllerMethod": "getPlayerById",
+      "middleware": [
+        "cacheMiddleware({ prefix: 'players', ttl: 600 })"
+      ],
+      "sourceFile": "BE/src/modules/players/player.routes.ts",
+      "sourceLine": 31,
+      "path": "/api/players/:id"
+    },
+    {
+      "method": "PATCH",
+      "module": "players",
+      "controllerMethod": "updatePlayer",
+      "middleware": [
+        "authenticateCombined",
+        "validate(updatePlayerSchema)",
+        "invalidateCacheMiddleware('players')"
+      ],
+      "sourceFile": "BE/src/modules/players/player.routes.ts",
+      "sourceLine": 35,
+      "path": "/api/players/:id"
+    },
+    {
+      "method": "PUT",
+      "module": "players",
+      "controllerMethod": "updatePlayer",
+      "middleware": [
+        "authenticateCombined",
+        "invalidateCacheMiddleware('players')"
+      ],
+      "sourceFile": "BE/src/modules/players/player.routes.ts",
+      "sourceLine": 34,
+      "path": "/api/players/:id"
+    },
+    {
+      "method": "POST",
+      "module": "players",
+      "controllerMethod": "createMultiplePlayers",
+      "middleware": [
+        "authenticateCombined",
+        "validate(createPlayerSchema)"
+      ],
+      "sourceFile": "BE/src/modules/players/player.routes.ts",
+      "sourceLine": 15,
+      "path": "/api/players/batch"
+    },
+    {
+      "method": "POST",
+      "module": "players",
+      "controllerMethod": "createMultiplePlayersByName",
+      "middleware": [
+        "authenticateCombined",
+        "validate(createMultiplePlayersByNameSchema)"
+      ],
+      "sourceFile": "BE/src/modules/players/player.routes.ts",
+      "sourceLine": 19,
+      "path": "/api/players/batch/by-team-name"
+    },
+    {
+      "method": "POST",
+      "module": "players",
+      "controllerMethod": "createPlayerByName",
+      "middleware": [
+        "authenticateCombined",
+        "validate(createPlayerSchema)"
+      ],
+      "sourceFile": "BE/src/modules/players/player.routes.ts",
+      "sourceLine": 18,
+      "path": "/api/players/by-team-name"
+    },
+    {
+      "method": "GET",
+      "module": "players",
+      "controllerMethod": "getMediumPlayers",
+      "middleware": [
+        "cacheMiddleware({ prefix: 'players', ttl: 600 })"
+      ],
+      "sourceFile": "BE/src/modules/players/player.routes.ts",
+      "sourceLine": 26,
+      "path": "/api/players/medium"
+    },
+    {
+      "method": "POST",
+      "module": "players",
+      "controllerMethod": "mergePlayers",
+      "middleware": [
+        "authenticateCombined"
+      ],
+      "sourceFile": "BE/src/modules/players/player.routes.ts",
+      "sourceLine": 22,
+      "path": "/api/players/merge"
+    },
+    {
+      "method": "GET",
+      "module": "players",
+      "controllerMethod": "getPlayersByTeamId",
+      "middleware": [
+        "cacheMiddleware({ prefix: 'players', ttl: 600 })"
+      ],
+      "sourceFile": "BE/src/modules/players/player.routes.ts",
+      "sourceLine": 37,
+      "path": "/api/players/team/:teamId"
+    },
+    {
+      "method": "GET",
+      "module": "players",
+      "controllerMethod": "getTeamsByPlayerName",
+      "middleware": [
+        "cacheMiddleware({ prefix: 'players', ttl: 600 })"
+      ],
+      "sourceFile": "BE/src/modules/players/player.routes.ts",
+      "sourceLine": 28,
+      "path": "/api/players/teams/:playerName"
+    },
+    {
+      "method": "GET",
+      "module": "records",
+      "controllerMethod": "getRecords",
+      "middleware": [],
+      "sourceFile": "BE/src/modules/records/records.routes.ts",
+      "sourceLine": 18,
+      "path": "/api/records"
+    },
+    {
+      "method": "POST",
+      "module": "records",
+      "controllerMethod": "createRecord",
+      "middleware": [
+        "authenticateCombined",
+        "validate(createRecordSchema)"
+      ],
+      "sourceFile": "BE/src/modules/records/records.routes.ts",
+      "sourceLine": 12,
+      "path": "/api/records"
+    },
+    {
+      "method": "DELETE",
+      "module": "records",
+      "controllerMethod": "deleteRecord",
+      "middleware": [
+        "authenticateCombined"
+      ],
+      "sourceFile": "BE/src/modules/records/records.routes.ts",
+      "sourceLine": 28,
+      "path": "/api/records/:id"
+    },
+    {
+      "method": "GET",
+      "module": "records",
+      "controllerMethod": "getRecordById",
+      "middleware": [],
+      "sourceFile": "BE/src/modules/records/records.routes.ts",
+      "sourceLine": 23,
+      "path": "/api/records/:id"
+    },
+    {
+      "method": "PATCH",
+      "module": "records",
+      "controllerMethod": "updateRecord",
+      "middleware": [
+        "authenticateCombined",
+        "validate(updateRecordSchema)"
+      ],
+      "sourceFile": "BE/src/modules/records/records.routes.ts",
+      "sourceLine": 27,
+      "path": "/api/records/:id"
+    },
+    {
+      "method": "PUT",
+      "module": "records",
+      "controllerMethod": "updateRecord",
+      "middleware": [
+        "authenticateCombined"
+      ],
+      "sourceFile": "BE/src/modules/records/records.routes.ts",
+      "sourceLine": 26,
+      "path": "/api/records/:id"
+    },
+    {
+      "method": "POST",
+      "module": "records",
+      "controllerMethod": "calculateAllRecords",
+      "middleware": [
+        "authenticateCombined"
+      ],
+      "sourceFile": "BE/src/modules/records/records.routes.ts",
+      "sourceLine": 15,
+      "path": "/api/records/calculate"
+    },
+    {
+      "method": "GET",
+      "module": "records",
+      "controllerMethod": "getRecordsByPlayer",
+      "middleware": [],
+      "sourceFile": "BE/src/modules/records/records.routes.ts",
+      "sourceLine": 21,
+      "path": "/api/records/player/:playerId"
+    },
+    {
+      "method": "GET",
+      "module": "records",
+      "controllerMethod": "getRecordsBySeason",
+      "middleware": [],
+      "sourceFile": "BE/src/modules/records/records.routes.ts",
+      "sourceLine": 19,
+      "path": "/api/records/season/:seasonId"
+    },
+    {
+      "method": "GET",
+      "module": "records",
+      "controllerMethod": "getTop10Records",
+      "middleware": [],
+      "sourceFile": "BE/src/modules/records/records.routes.ts",
+      "sourceLine": 22,
+      "path": "/api/records/top10/:recordType/:seasonId"
+    },
+    {
+      "method": "GET",
+      "module": "records",
+      "controllerMethod": "getRecordsByType",
+      "middleware": [],
+      "sourceFile": "BE/src/modules/records/records.routes.ts",
+      "sourceLine": 20,
+      "path": "/api/records/type/:recordType"
+    },
+    {
+      "method": "GET",
+      "module": "roblox",
+      "controllerMethod": "getAvatarByUsername",
+      "middleware": [],
+      "sourceFile": "BE/src/modules/roblox/roblox.routes.ts",
+      "sourceLine": 10,
+      "path": "/api/roblox/avatar/:username"
+    },
+    {
+      "method": "GET",
+      "module": "seasons",
+      "controllerMethod": "getAllSeasons",
+      "middleware": [],
+      "sourceFile": "BE/src/modules/seasons/season.routes.ts",
+      "sourceLine": 15,
+      "path": "/api/seasons"
+    },
+    {
+      "method": "POST",
+      "module": "seasons",
+      "controllerMethod": "createSeason",
+      "middleware": [
+        "authenticateCombined",
+        "validate(createSeasonSchema)"
+      ],
+      "sourceFile": "BE/src/modules/seasons/season.routes.ts",
+      "sourceLine": 12,
+      "path": "/api/seasons"
+    },
+    {
+      "method": "DELETE",
+      "module": "seasons",
+      "controllerMethod": "deleteSeason",
+      "middleware": [
+        "authenticateCombined"
+      ],
+      "sourceFile": "BE/src/modules/seasons/season.routes.ts",
+      "sourceLine": 23,
+      "path": "/api/seasons/:id"
+    },
+    {
+      "method": "GET",
+      "module": "seasons",
+      "controllerMethod": "getSeasonById",
+      "middleware": [],
+      "sourceFile": "BE/src/modules/seasons/season.routes.ts",
+      "sourceLine": 18,
+      "path": "/api/seasons/:id"
+    },
+    {
+      "method": "PATCH",
+      "module": "seasons",
+      "controllerMethod": "updateSeason",
+      "middleware": [
+        "authenticateCombined",
+        "validate(updateSeasonSchema)"
+      ],
+      "sourceFile": "BE/src/modules/seasons/season.routes.ts",
+      "sourceLine": 22,
+      "path": "/api/seasons/:id"
+    },
+    {
+      "method": "PUT",
+      "module": "seasons",
+      "controllerMethod": "updateSeason",
+      "middleware": [
+        "authenticateCombined"
+      ],
+      "sourceFile": "BE/src/modules/seasons/season.routes.ts",
+      "sourceLine": 21,
+      "path": "/api/seasons/:id"
+    },
+    {
+      "method": "GET",
+      "module": "seasons",
+      "controllerMethod": "getMediumAllSeasons",
+      "middleware": [],
+      "sourceFile": "BE/src/modules/seasons/season.routes.ts",
+      "sourceLine": 17,
+      "path": "/api/seasons/medium"
+    },
+    {
+      "method": "GET",
+      "module": "seasons",
+      "controllerMethod": "getSkinnyAllSeasons",
+      "middleware": [],
+      "sourceFile": "BE/src/modules/seasons/season.routes.ts",
+      "sourceLine": 16,
+      "path": "/api/seasons/skinny"
+    },
+    {
+      "method": "GET",
+      "module": "stats",
+      "controllerMethod": "getStats",
+      "middleware": [
+        "cacheMiddleware({ prefix: 'stats', ttl: 600 })"
+      ],
+      "sourceFile": "BE/src/modules/stats/stat.routes.ts",
+      "sourceLine": 19,
+      "path": "/api/stats"
+    },
+    {
+      "method": "POST",
+      "module": "stats",
+      "controllerMethod": "createStat",
+      "middleware": [
+        "authenticateCombined",
+        "validate(createStatSchema)"
+      ],
+      "sourceFile": "BE/src/modules/stats/stat.routes.ts",
+      "sourceLine": 13,
+      "path": "/api/stats"
+    },
+    {
+      "method": "DELETE",
+      "module": "stats",
+      "controllerMethod": "deleteStat",
+      "middleware": [
+        "authenticateCombined",
+        "invalidateCacheMiddleware('stats')"
+      ],
+      "sourceFile": "BE/src/modules/stats/stat.routes.ts",
+      "sourceLine": 27,
+      "path": "/api/stats/:id"
+    },
+    {
+      "method": "GET",
+      "module": "stats",
+      "controllerMethod": "getStatById",
+      "middleware": [
+        "cacheMiddleware({ prefix: 'stats', ttl: 600 })"
+      ],
+      "sourceFile": "BE/src/modules/stats/stat.routes.ts",
+      "sourceLine": 22,
+      "path": "/api/stats/:id"
+    },
+    {
+      "method": "PATCH",
+      "module": "stats",
+      "controllerMethod": "updateStat",
+      "middleware": [
+        "authenticateCombined",
+        "validate(updateStatSchema)",
+        "invalidateCacheMiddleware('stats')"
+      ],
+      "sourceFile": "BE/src/modules/stats/stat.routes.ts",
+      "sourceLine": 26,
+      "path": "/api/stats/:id"
+    },
+    {
+      "method": "PUT",
+      "module": "stats",
+      "controllerMethod": "updateStat",
+      "middleware": [
+        "authenticateCombined",
+        "validate(updateStatSchema)",
+        "invalidateCacheMiddleware('stats')"
+      ],
+      "sourceFile": "BE/src/modules/stats/stat.routes.ts",
+      "sourceLine": 25,
+      "path": "/api/stats/:id"
+    },
+    {
+      "method": "POST",
+      "module": "stats",
+      "controllerMethod": "addStatsToExistingGame",
+      "middleware": [
+        "authenticateCombined"
+      ],
+      "sourceFile": "BE/src/modules/stats/stat.routes.ts",
+      "sourceLine": 16,
+      "path": "/api/stats/add-to-game"
+    },
+    {
+      "method": "POST",
+      "module": "stats",
+      "controllerMethod": "batchUploadFromCSV",
+      "middleware": [
+        "authenticateCombined"
+      ],
+      "sourceFile": "BE/src/modules/stats/stat.routes.ts",
+      "sourceLine": 15,
+      "path": "/api/stats/batch-csv"
+    },
+    {
+      "method": "POST",
+      "module": "stats",
+      "controllerMethod": "createStatByName",
+      "middleware": [
+        "authenticateCombined",
+        "validate(createStatByNameSchema)"
+      ],
+      "sourceFile": "BE/src/modules/stats/stat.routes.ts",
+      "sourceLine": 14,
+      "path": "/api/stats/by-name"
+    },
+    {
+      "method": "GET",
+      "module": "stats",
+      "controllerMethod": "getStatsByGameId",
+      "middleware": [
+        "cacheMiddleware({ prefix: 'stats', ttl: 600 })"
+      ],
+      "sourceFile": "BE/src/modules/stats/stat.routes.ts",
+      "sourceLine": 21,
+      "path": "/api/stats/game/:gameId"
+    },
+    {
+      "method": "GET",
+      "module": "stats",
+      "controllerMethod": "getStatsByPlayerId",
+      "middleware": [
+        "cacheMiddleware({ prefix: 'stats', ttl: 600 })"
+      ],
+      "sourceFile": "BE/src/modules/stats/stat.routes.ts",
+      "sourceLine": 20,
+      "path": "/api/stats/player/:playerId"
+    },
+    {
+      "method": "GET",
+      "module": "teams",
+      "controllerMethod": "getTeams",
+      "middleware": [],
+      "sourceFile": "BE/src/modules/teams/team.routes.ts",
+      "sourceLine": 17,
+      "path": "/api/teams"
+    },
+    {
+      "method": "POST",
+      "module": "teams",
+      "controllerMethod": "createTeam",
+      "middleware": [
+        "authenticateCombined",
+        "validate(createTeamSchema)"
+      ],
+      "sourceFile": "BE/src/modules/teams/team.routes.ts",
+      "sourceLine": 12,
+      "path": "/api/teams"
+    },
+    {
+      "method": "DELETE",
+      "module": "teams",
+      "controllerMethod": "deleteTeam",
+      "middleware": [
+        "authenticateCombined"
+      ],
+      "sourceFile": "BE/src/modules/teams/team.routes.ts",
+      "sourceLine": 29,
+      "path": "/api/teams/:id"
+    },
+    {
+      "method": "GET",
+      "module": "teams",
+      "controllerMethod": "getTeamById",
+      "middleware": [],
+      "sourceFile": "BE/src/modules/teams/team.routes.ts",
+      "sourceLine": 20,
+      "path": "/api/teams/:id"
+    },
+    {
+      "method": "PATCH",
+      "module": "teams",
+      "controllerMethod": "updateTeam",
+      "middleware": [
+        "authenticateCombined",
+        "validate(updateTeamSchema)"
+      ],
+      "sourceFile": "BE/src/modules/teams/team.routes.ts",
+      "sourceLine": 28,
+      "path": "/api/teams/:id"
+    },
+    {
+      "method": "PUT",
+      "module": "teams",
+      "controllerMethod": "updateTeam",
+      "middleware": [
+        "authenticateCombined",
+        "validate(updateTeamSchema)"
+      ],
+      "sourceFile": "BE/src/modules/teams/team.routes.ts",
+      "sourceLine": 27,
+      "path": "/api/teams/:id"
+    },
+    {
+      "method": "GET",
+      "module": "teams",
+      "controllerMethod": "getTeamPlayers",
+      "middleware": [],
+      "sourceFile": "BE/src/modules/teams/team.routes.ts",
+      "sourceLine": 23,
+      "path": "/api/teams/:teamId/players"
+    },
+    {
+      "method": "POST",
+      "module": "teams",
+      "controllerMethod": "createMultipleTeams",
+      "middleware": [
+        "authenticateCombined",
+        "validate(createTeamSchema)"
+      ],
+      "sourceFile": "BE/src/modules/teams/team.routes.ts",
+      "sourceLine": 14,
+      "path": "/api/teams/batch"
+    },
+    {
+      "method": "GET",
+      "module": "teams",
+      "controllerMethod": "getMediumTeams",
+      "middleware": [],
+      "sourceFile": "BE/src/modules/teams/team.routes.ts",
+      "sourceLine": 19,
+      "path": "/api/teams/medium"
+    },
+    {
+      "method": "GET",
+      "module": "teams",
+      "controllerMethod": "getTeamsByName",
+      "middleware": [],
+      "sourceFile": "BE/src/modules/teams/team.routes.ts",
+      "sourceLine": 24,
+      "path": "/api/teams/name/:name"
+    },
+    {
+      "method": "GET",
+      "module": "teams",
+      "controllerMethod": "getTeamPlayersByName",
+      "middleware": [],
+      "sourceFile": "BE/src/modules/teams/team.routes.ts",
+      "sourceLine": 22,
+      "path": "/api/teams/name/:name/players"
+    },
+    {
+      "method": "GET",
+      "module": "teams",
+      "controllerMethod": "getTeamsBySeasonId",
+      "middleware": [],
+      "sourceFile": "BE/src/modules/teams/team.routes.ts",
+      "sourceLine": 21,
+      "path": "/api/teams/season/:seasonId"
+    },
+    {
+      "method": "GET",
+      "module": "teams",
+      "controllerMethod": "getSkinnyTeams",
+      "middleware": [],
+      "sourceFile": "BE/src/modules/teams/team.routes.ts",
+      "sourceLine": 18,
+      "path": "/api/teams/skinny"
+    },
+    {
+      "method": "POST",
+      "module": "trivia",
+      "controllerMethod": "validateGuess",
+      "middleware": [],
+      "sourceFile": "BE/src/modules/trivia/trivia.routes.ts",
+      "sourceLine": 19,
+      "path": "/api/trivia/guess"
+    },
+    {
+      "method": "GET",
+      "module": "trivia",
+      "controllerMethod": "getRandomTriviaPlayer",
+      "middleware": [],
+      "sourceFile": "BE/src/modules/trivia/trivia.routes.ts",
+      "sourceLine": 14,
+      "path": "/api/trivia/player"
+    },
+    {
+      "method": "GET",
+      "module": "trivia",
+      "controllerMethod": "getRandomTriviaSeason",
+      "middleware": [],
+      "sourceFile": "BE/src/modules/trivia/trivia.routes.ts",
+      "sourceLine": 16,
+      "path": "/api/trivia/season"
+    },
+    {
+      "method": "GET",
+      "module": "trivia",
+      "controllerMethod": "getRandomTriviaTeam",
+      "middleware": [],
+      "sourceFile": "BE/src/modules/trivia/trivia.routes.ts",
+      "sourceLine": 15,
+      "path": "/api/trivia/team"
+    },
+    {
+      "method": "GET",
+      "module": "user",
+      "controllerMethod": "getPublicUsers",
+      "middleware": [
+        "authenticateToken"
+      ],
+      "sourceFile": "BE/src/modules/user/user.routes.ts",
+      "sourceLine": 16,
+      "path": "/api/users"
+    },
+    {
+      "method": "GET",
+      "module": "user",
+      "controllerMethod": "getUserById",
+      "middleware": [
+        "authenticateToken"
+      ],
+      "sourceFile": "BE/src/modules/user/user.routes.ts",
+      "sourceLine": 18,
+      "path": "/api/users/:id"
+    },
+    {
+      "method": "POST",
+      "module": "user",
+      "controllerMethod": "login",
+      "middleware": [],
+      "sourceFile": "BE/src/modules/user/user.routes.ts",
+      "sourceLine": 13,
+      "path": "/api/users/login"
+    },
+    {
+      "method": "GET",
+      "module": "user",
+      "controllerMethod": "getProfile",
+      "middleware": [
+        "authenticateToken"
+      ],
+      "sourceFile": "BE/src/modules/user/user.routes.ts",
+      "sourceLine": 17,
+      "path": "/api/users/profile"
+    },
+    {
+      "method": "POST",
+      "module": "user",
+      "controllerMethod": "register",
+      "middleware": [
+        "validate(createUserSchema)"
+      ],
+      "sourceFile": "BE/src/modules/user/user.routes.ts",
+      "sourceLine": 12,
+      "path": "/api/users/register"
+    }
+  ]
+}

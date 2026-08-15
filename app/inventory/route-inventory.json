@@ -1,0 +1,343 @@
+{
+  "source": "FE/src/App.tsx",
+  "count": 38,
+  "routes": [
+    {
+      "path": "/",
+      "component": "Home",
+      "componentFile": "FE/src/components/Home.tsx",
+      "sourceLine": 57,
+      "parentPath": null,
+      "roles": null
+    },
+    {
+      "path": "/about",
+      "component": "About",
+      "componentFile": "FE/src/components/About.tsx",
+      "sourceLine": 58,
+      "parentPath": null,
+      "roles": null
+    },
+    {
+      "path": "/players",
+      "component": "Players",
+      "componentFile": "FE/src/components/Players.tsx",
+      "sourceLine": 59,
+      "parentPath": null,
+      "roles": null
+    },
+    {
+      "path": "/teams",
+      "component": "Teams",
+      "componentFile": "FE/src/components/Teams.tsx",
+      "sourceLine": 60,
+      "parentPath": null,
+      "roles": null
+    },
+    {
+      "path": "/teams/:teamName",
+      "component": "SingleTeam",
+      "componentFile": "FE/src/components/Single/SingleTeam.tsx",
+      "sourceLine": 61,
+      "parentPath": null,
+      "roles": null
+    },
+    {
+      "path": "/games",
+      "component": "Games",
+      "componentFile": "FE/src/components/Games.tsx",
+      "sourceLine": 62,
+      "parentPath": null,
+      "roles": null
+    },
+    {
+      "path": "/games/:id",
+      "component": "SingleGame",
+      "componentFile": "FE/src/components/Single/SingleGame.tsx",
+      "sourceLine": 63,
+      "parentPath": null,
+      "roles": null
+    },
+    {
+      "path": "/seasons",
+      "component": "Seasons",
+      "componentFile": "FE/src/components/Seasons.tsx",
+      "sourceLine": 64,
+      "parentPath": null,
+      "roles": null
+    },
+    {
+      "path": "/seasons/:id",
+      "component": "SingleSeason",
+      "componentFile": "FE/src/components/Single/SingleSeason.tsx",
+      "sourceLine": 65,
+      "parentPath": null,
+      "roles": null
+    },
+    {
+      "path": "/articles",
+      "component": "Articles",
+      "componentFile": "FE/src/components/Article.tsx",
+      "sourceLine": 66,
+      "parentPath": null,
+      "roles": null
+    },
+    {
+      "path": "/articles/:id",
+      "component": "SingleArticle",
+      "componentFile": "FE/src/components/Single/SingleArticle.tsx",
+      "sourceLine": 67,
+      "parentPath": null,
+      "roles": null
+    },
+    {
+      "path": "/contact",
+      "component": "Contact",
+      "componentFile": "FE/src/components/ContactUs.tsx",
+      "sourceLine": 68,
+      "parentPath": null,
+      "roles": null
+    },
+    {
+      "path": "/privacy-policy",
+      "component": "PrivacyPolicy",
+      "componentFile": "FE/src/components/PrivacyPolicy.tsx",
+      "sourceLine": 69,
+      "parentPath": null,
+      "roles": null
+    },
+    {
+      "path": "/credits",
+      "component": "Credits",
+      "componentFile": "FE/src/components/Credits.tsx",
+      "sourceLine": 70,
+      "parentPath": null,
+      "roles": null
+    },
+    {
+      "path": "/players/:id",
+      "component": "SinglePlayer",
+      "componentFile": "FE/src/components/Single/SinglePlayer.tsx",
+      "sourceLine": 71,
+      "parentPath": null,
+      "roles": null
+    },
+    {
+      "path": "/awards/:id",
+      "component": "SingleAward",
+      "componentFile": "FE/src/components/Single/SingleAward.tsx",
+      "sourceLine": 72,
+      "parentPath": null,
+      "roles": null
+    },
+    {
+      "path": "/awards",
+      "component": "Awards",
+      "componentFile": "FE/src/components/Awards.tsx",
+      "sourceLine": 73,
+      "parentPath": null,
+      "roles": null
+    },
+    {
+      "path": "/articles/create",
+      "component": "CreateArticle",
+      "componentFile": "FE/src/components/CreateArticle.tsx",
+      "sourceLine": 74,
+      "parentPath": null,
+      "roles": null
+    },
+    {
+      "path": "/stats",
+      "component": "StatsLeaderboard",
+      "componentFile": "FE/src/components/StatsLeaderboard.tsx",
+      "sourceLine": 75,
+      "parentPath": null,
+      "roles": null
+    },
+    {
+      "path": "/schedules",
+      "component": "Schedules",
+      "componentFile": "FE/src/components/Schedules.tsx",
+      "sourceLine": 76,
+      "parentPath": null,
+      "roles": null
+    },
+    {
+      "path": "/applications",
+      "component": "Applications",
+      "componentFile": "FE/src/components/Applications.tsx",
+      "sourceLine": 77,
+      "parentPath": null,
+      "roles": null
+    },
+    {
+      "path": "/faq",
+      "component": "FAQ",
+      "componentFile": "FE/src/components/FAQ.tsx",
+      "sourceLine": 78,
+      "parentPath": null,
+      "roles": null
+    },
+    {
+      "path": "/records",
+      "component": "RecordsPage",
+      "componentFile": "FE/src/components/RecordsPage.tsx",
+      "sourceLine": 79,
+      "parentPath": null,
+      "roles": null
+    },
+    {
+      "path": "/trivia",
+      "component": "TriviaPage",
+      "componentFile": "FE/src/components/TriviaPage.tsx",
+      "sourceLine": 80,
+      "parentPath": null,
+      "roles": null
+    },
+    {
+      "path": "/profile",
+      "component": "UserProfile",
+      "componentFile": "FE/src/components/UserProfile.tsx",
+      "sourceLine": 83,
+      "parentPath": null,
+      "roles": null
+    },
+    {
+      "path": "/login",
+      "component": "LoginPage",
+      "componentFile": "FE/src/components/Login.tsx",
+      "sourceLine": 84,
+      "parentPath": null,
+      "roles": null
+    },
+    {
+      "path": "/signup",
+      "component": "SignUp",
+      "componentFile": "FE/src/components/SignUp.tsx",
+      "sourceLine": 85,
+      "parentPath": null,
+      "roles": null
+    },
+    {
+      "path": "/portal",
+      "component": "PortalLayout",
+      "componentFile": "FE/src/components/portal/PortalLayout.tsx",
+      "sourceLine": 88,
+      "parentPath": null,
+      "roles": [
+        "admin",
+        "superadmin"
+      ]
+    },
+    {
+      "path": "/portal",
+      "component": "Dashboard",
+      "componentFile": "FE/src/components/portal/Dashboard.tsx",
+      "sourceLine": 97,
+      "parentPath": "/portal",
+      "roles": [
+        "admin",
+        "superadmin"
+      ]
+    },
+    {
+      "path": "/portal/users",
+      "component": "UsersPage",
+      "componentFile": "FE/src/components/portal/UsersPage.tsx",
+      "sourceLine": 99,
+      "parentPath": "/portal",
+      "roles": [
+        "admin",
+        "superadmin"
+      ]
+    },
+    {
+      "path": "/portal/players",
+      "component": "PlayersPage",
+      "componentFile": "FE/src/components/portal/PlayersPage.tsx",
+      "sourceLine": 100,
+      "parentPath": "/portal",
+      "roles": [
+        "admin",
+        "superadmin"
+      ]
+    },
+    {
+      "path": "/portal/teams",
+      "component": "TeamsPage",
+      "componentFile": "FE/src/components/portal/TeamsPage.tsx",
+      "sourceLine": 101,
+      "parentPath": "/portal",
+      "roles": [
+        "admin",
+        "superadmin"
+      ]
+    },
+    {
+      "path": "/portal/seasons",
+      "component": "SeasonsPage",
+      "componentFile": "FE/src/components/portal/SeasonsPage.tsx",
+      "sourceLine": 102,
+      "parentPath": "/portal",
+      "roles": [
+        "admin",
+        "superadmin"
+      ]
+    },
+    {
+      "path": "/portal/games",
+      "component": "GamesPage",
+      "componentFile": "FE/src/components/portal/GamesPage.tsx",
+      "sourceLine": 103,
+      "parentPath": "/portal",
+      "roles": [
+        "admin",
+        "superadmin"
+      ]
+    },
+    {
+      "path": "/portal/stats",
+      "component": "StatsPage",
+      "componentFile": "FE/src/components/portal/StatsPage.tsx",
+      "sourceLine": 104,
+      "parentPath": "/portal",
+      "roles": [
+        "admin",
+        "superadmin"
+      ]
+    },
+    {
+      "path": "/portal/awards",
+      "component": "AwardsPage",
+      "componentFile": "FE/src/components/portal/AwardsPage.tsx",
+      "sourceLine": 105,
+      "parentPath": "/portal",
+      "roles": [
+        "admin",
+        "superadmin"
+      ]
+    },
+    {
+      "path": "/portal/articles",
+      "component": "ArticlesPage",
+      "componentFile": "FE/src/components/portal/ArticlesPage.tsx",
+      "sourceLine": 106,
+      "parentPath": "/portal",
+      "roles": [
+        "admin",
+        "superadmin"
+      ]
+    },
+    {
+      "path": "/portal/matches",
+      "component": "MatchesPage",
+      "componentFile": "FE/src/components/portal/MatchesPage.tsx",
+      "sourceLine": 107,
+      "parentPath": "/portal",
+      "roles": [
+        "admin",
+        "superadmin"
+      ]
+    }
+  ]
+}
