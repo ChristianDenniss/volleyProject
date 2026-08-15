@@ -25,7 +25,7 @@ Branch: `migrate/cloudflare-vinext`. **Commits only, never push** — the user p
 | Deploy | Fly.io app `volley-project-backend`, region `yyz`, 1GB shared VM |
 | Dead weight | `@nestjs/common` + `@nestjs/core` installed but unused; `redis` **and** `ioredis` both installed |
 
-Modules: `articles`, `awards`, `games`, `matches`, `players`, `records`, `roblox`, `seasons`, `stats`, `strategy`, `teams`, `trivia`, `user`.
+Modules: `articles`, `awards`, `games`, `matches`, `players`, `records`, `roblox`, `seasons`, `stats`, `teams`, `trivia`, `user` (plus `strategy/`, an empty directory — see §12).
 
 **`FE/`** — Vite 6 + React 19 SPA, ~18k LOC across 76 files.
 
@@ -363,7 +363,7 @@ No Redis binding, no `REDIS_URL`, and both `redis` and `ioredis` come out of `pa
 | 3 | Is `/api/*` consumed externally? | Unknown, and moot — full recreation, old origin goes away (§8). |
 | 4 | Where do `imageUrl` / `logoUrl` / `videoUrl` point? | External host. No R2 migration. |
 | 5 | Roblox account linking | **Explicit link required** from an authenticated session. Never auto-link by email (§6.4). |
-| 6 | `strategy` module — dead? | **Still open.** No entity, no routes file. Needs a look before it's carried or dropped. |
+| 6 | `strategy` module — dead? | **Dead.** `src/modules/strategy/` is an empty directory; the only matches elsewhere are TypeORM naming-strategy references inside migrations. Dropped. |
 | 7 | Who triggers `records/calculate`? | By hand, from the portal. Becomes an admin action → queue (§9). |
 | 8 | In-flight JWTs to honor? | **No.** No cutover, no dual-verify path. |
 
@@ -371,7 +371,7 @@ Remaining open items:
 
 - §6.2 — proceeding with **bcrypt as the single password scheme** unless you'd rather force resets. Say so if (b).
 - §4.2 — split `Records.record` into `(metric, min_attempts)`? Recommended, but it changes query shape.
-- §6 — the `strategy` module (row 6 above).
+- §4.3 — the join-table question, answerable only against the live schema.
 
 ---
 
