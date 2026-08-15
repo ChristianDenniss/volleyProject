@@ -50,8 +50,9 @@ Modules: `articles`, `awards`, `games`, `matches`, `players`, `records`, `roblox
 | ORM | **Drizzle** (`drizzle-orm` + `drizzle-kit`) |
 | DB | **Cloudflare D1** (SQLite) |
 | Auth | **better-auth** — email/password + native Roblox provider, `admin` plugin for roles |
+| Writes | **tRPC v11** — mutations only. Reads never leave the server (§8) |
 | Background work | **Cloudflare Queues** for record recalculation (§9) |
-| Cache | Route-segment caching + Cache API; **no Redis** (§10) |
+| Cache | Next route-segment revalidation. **No Redis, no KV, no cache layer** (§10) |
 | Tests | **vitest** + `@cloudflare/vitest-pool-workers` (real `workerd`, real D1 per test) |
 | Validation | Zod (bump to v4) — existing schemas port nearly as-is |
 
@@ -87,13 +88,16 @@ volleyProject/
       app/                # vinext App Router
         (site)/           # public pages
         portal/           # admin, session-gated
-        api/auth/[...all]/route.ts   # better-auth — the only route handler
+        api/auth/[...all]/route.ts   # better-auth handler
+        api/trpc/[trpc]/route.ts     # tRPC handler
       server/
         db/
           schema.ts       # Drizzle tables
           index.ts        # D1 client factory
-        services/         # ported service layer — pure, framework-free
-        actions/          # Server Actions ("use server")
+        services/         # service layer — pure, framework-free
+        trpc/
+          init.ts         # context, public/protected/admin procedures
+          routers/        # one router per domain
         auth.ts           # better-auth instance
         queue.ts          # records recalculation consumer
       components/         # ported from FE/src/components
@@ -124,7 +128,7 @@ Rule: **client components may never import `@db` or `@server`.** Enforced with a
 
 ### The portability rule
 
-Everything under `@server/services` is a plain function taking `(db, args)`. No framework imports — no `next/*`, no request objects, no `cookies()`. RSC pages and Server Actions both call these. If vinext hits a wall, the service layer, schema, auth config, and tests survive a swap to React Router v7 or OpenNext unchanged; only `src/app/` is lost.
+Everything under `@server/services` is a plain function taking `(db, args)`. No framework imports — no `next/*`, no request objects, no `cookies()`. RSC pages and tRPC procedures both call these. If vinext hits a wall, the service layer, schema, tRPC routers, auth config, and tests survive a swap to React Router v7 or OpenNext unchanged; only `src/app/` is lost.
 
 ---
 
@@ -282,15 +286,29 @@ So the migration unit is **the 13 service modules, not 104 routes**:
 | Old shape | New shape |
 |---|---|
 | `GET` read endpoints (~60) | service functions called directly inside RSC pages. No HTTP, no serialization round-trip, no client fetch state |
-| `POST` / `PUT` / `PATCH` / `DELETE` (~40) | Server Actions in `@server/actions`, invoked from portal client components |
+| `POST` / `PUT` / `PATCH` / `DELETE` (~40) | **tRPC mutations**, called from portal client components |
 | `POST /api/users/login`, `/register`, `GET /profile` | better-auth |
-| `PATCH /api/admin/users/:id/role` | Server Action gated by the `admin` plugin |
-| `GET /api/roblox/avatar/:username` | server function; response cached (§10) |
-| `POST /api/stats/batch-csv` | Server Action taking `FormData`, stream-parsed |
-| `POST /api/records/calculate` | admin Server Action that enqueues a Queue message (§9) |
+| `PATCH /api/admin/users/:id/role` | `adminProcedure` mutation |
+| `GET /api/roblox/avatar/:username` | server function called from RSC |
+| `POST /api/stats/batch-csv` | tRPC mutation taking parsed rows; the file is parsed client-side |
+| `POST /api/records/calculate` | `adminProcedure` mutation that enqueues a Queue message (§9) |
 | everything else | gone |
 
-**The only hand-written route handler in the new app is `app/api/auth/[...all]/route.ts` for better-auth.**
+**The new app has exactly two hand-written route handlers:** `api/auth/[...all]/route.ts` (better-auth) and `api/trpc/[trpc]/route.ts` (tRPC).
+
+### The tRPC layer
+
+Mutations only. Reads are not exposed over tRPC — a page that needs data calls its service function directly during SSR, so there is no client-side data fetching to speak of and no query layer to keep in sync.
+
+- **Adapter:** `@trpc/server` v11 fetch adapter, mounted at `api/trpc/[trpc]`.
+- **Context:** `{ db, session }` — the D1 binding plus the better-auth session resolved from request headers.
+- **Procedures:** `publicProcedure`, `protectedProcedure` (session required), `adminProcedure` (role checked via the better-auth `admin` plugin). Authorization lives in **middleware**, not in each handler.
+- **Routers:** one per domain — `articles`, `awards`, `games`, `matches`, `players`, `records`, `seasons`, `stats`, `teams`, `trivia`, `user` — composed into `appRouter`.
+- **Inputs:** the existing `BE/src/modules/**/*.schema.ts` Zod schemas drop straight into `.input()`. The `validate()` middleware disappears; the schemas themselves survive nearly untouched.
+- **Client:** `@trpc/client` + `@trpc/react-query` in portal components. End-to-end types with no codegen, replacing the untyped `useCreate` / `usePatch` / `useDelete` hooks.
+- **Revalidation:** a successful mutation calls `revalidatePath` / `revalidateTag` server-side before returning, so the SSR pages reflect the write immediately.
+
+Choosing tRPC over Server Actions is what makes authorization tractable here. With actions, every mutation is individually responsible for its own auth check and a missed one is silent; with tRPC, `adminProcedure` enforces it once and a mutation cannot opt out by accident.
 
 ### Endpoints that die on their own
 
@@ -316,7 +334,7 @@ So it's a full table scan in JavaScript plus several hundred sequential round tr
 
 **Replacement, and we agree on the queue:**
 
-- An admin-only **Server Action** validates the request and enqueues a message on a **Cloudflare Queue**. Returns immediately with a job id.
+- An **`adminProcedure` mutation** validates the request and enqueues a message on a **Cloudflare Queue**. Returns immediately with a job id.
 - The **queue consumer** does the work in SQL, not JavaScript: one `ROW_NUMBER() OVER (PARTITION BY … ORDER BY … DESC)` query per record family computes the top 10 directly in D1. Writes go through `db.batch()` — one round trip per family instead of ten.
 - If §4.2's `(metric, min_attempts)` split lands, the ~41 percentage record types collapse into a single parameterized query instead of 41 branches.
 - Job status lands in a small `job_runs` table so the portal can show progress, and the queue's native retry handles failure.
@@ -325,19 +343,17 @@ Triggered by hand from the portal, as today. No cron.
 
 ---
 
-## 10. Caching without Redis
+## 10. Redis is gone
 
-Workers cannot use `ioredis` (raw TCP + Node internals). What replaces it:
+**No Redis. No KV. No cache service. No dedicated cache layer at all.**
 
-Currently cached: `players` and `stats` read routes at TTL 600, invalidated on write via `invalidateCacheMiddleware(prefix)`.
+Deleted: `BE/src/utils/cache.ts`, `BE/src/middleware/cache.ts`, `cacheMiddleware`, `invalidateCacheMiddleware`, the `REDIS_URL` secret, and both the `redis` and `ioredis` packages.
 
-Under RSC, most of this disappears — server components query D1 in the same isolate, so the round-trip the cache was hiding is gone. What remains:
+The existing cache wrapped `players` and `stats` reads at TTL 600 to hide a network round-trip from Fly to Postgres. That round-trip does not exist anymore — server components query the D1 binding from inside the same isolate. The cache was solving a problem the architecture removes.
 
-- **Route-segment revalidation** (`next/cache`) for public pages, invalidated from the Server Action that wrote the data. This is a direct, better replacement for prefix invalidation.
-- **Cache API (`caches.default`)** for genuinely external calls — the Roblox avatar proxy and Challonge imports, which hit third-party APIs and deserve a TTL.
-- KV only if something needs to be shared across colos, which nothing currently does.
+Where freshness control is genuinely wanted, `next/cache` route-segment revalidation covers it, invalidated by the tRPC mutation that wrote the data (§8). That is a built-in, not a layer we maintain.
 
-No Redis binding, no `REDIS_URL`, and both `redis` and `ioredis` come out of `package.json`.
+If a third-party call ever needs a TTL — the Roblox avatar lookup is the only candidate — `caches.default` handles it in three lines with no binding, no service, and no infrastructure. Not building it up front.
 
 ---
 
@@ -347,7 +363,7 @@ No Redis binding, no `REDIS_URL`, and both `redis` and `ioredis` come out of `pa
 
 - **Port** the Jest suites under `BE/src/modules/**/__tests__/` (user controller + service confirmed; full inventory on the first pass). `@swc/jest` and `supertest` are dropped — vitest handles TS natively, and with no REST layer there is nothing for supertest to hit.
 - **Service layer** is the main test surface, unit-tested against a seeded D1. This is where the old controller tests' assertions move.
-- **Server Actions** get tests for authorization first, behavior second — with no middleware chain, every action is individually responsible for its own auth check, which is the main regression risk of this architecture. A test that enumerates actions and asserts each one rejects an unauthenticated and an under-privileged caller is worth writing.
+- **tRPC procedures** get authorization tests first, behavior second: a test that walks `appRouter`'s procedure list and asserts every mutation rejects an unauthenticated caller, and every admin mutation rejects a plain user. Because authorization is middleware, this test also catches a procedure declared on the wrong base — which is the one way a mutation can end up unguarded.
 - **Auth**: bcrypt login works against imported hashes, role enforcement on every admin path, Roblox link requires an authenticated session and cannot link by email.
 - **Data migration**: export→import against a fixture, asserting the §5 verification gate.
 - **`BE/src/__mocks__`** is discarded — mocking a database is pointless when a real one is available per test.
@@ -377,7 +393,7 @@ Remaining open items:
 
 ## 13. Deployment
 
-Single Worker. `wrangler.jsonc` bindings: `d1_databases`, `queues` (producer + consumer), `assets`, custom domain route. No KV unless §10 needs it.
+Single Worker. `wrangler.jsonc` bindings: `d1_databases`, `queues` (producer + consumer), `assets`, custom domain route. **No KV, no Redis, no cache binding of any kind.**
 
 **Secrets, all via `wrangler secret put`, none in the repo:**
 
@@ -408,7 +424,7 @@ Each phase is one or more commits on `migrate/cloudflare-vinext`. Nothing is pus
 | 3 | Service layer ported module by module, with tests | per-module suites green |
 | 4 | better-auth: schema, bcrypt hasher, roles, Roblox, explicit linking | §11 auth suite green |
 | 5 | Public pages SSR + Metadata API | OG tags correct with no `User-Agent` sniffing anywhere |
-| 6 | Server Actions + portal | admin CRUD works; every action has an authorization test |
+| 6 | tRPC routers + portal | admin CRUD works; the authorization sweep covers every mutation |
 | 7 | Queue consumer for record recalculation | full recalc completes inside limits, results match the old output |
 | 8 | Cache passes, CSV upload limits, load check | — |
 | 9 | Go-live: freeze, snapshot, import, verify, DNS | verification gate green |
