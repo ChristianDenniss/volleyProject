@@ -52,7 +52,7 @@ export const trpcManifest: TrpcManifestEntry[] = [
   { endpoint: "PATCH /api/records/:id", procedure: "records.update", access: "admin", status: "todo" },
   { endpoint: "DELETE /api/records/:id", procedure: "records.delete", access: "admin", status: "todo" },
   { endpoint: "PUT /api/records/:id", procedure: null, access: "admin", status: "removed", rationale: PUT_DUPLICATE },
-  { endpoint: "POST /api/records/calculate", procedure: "records.recalculate", access: "admin", status: "todo" },
+  { endpoint: "POST /api/records/calculate", procedure: "records.recalculate", access: "admin", status: "todo", rationale: "the request enqueues a Cloudflare Queue job and returns a job id instead of recomputing inline" },
 
   { endpoint: "POST /api/seasons", procedure: "seasons.create", access: "admin", status: "todo" },
   { endpoint: "PATCH /api/seasons/:id", procedure: "seasons.update", access: "admin", status: "todo" },

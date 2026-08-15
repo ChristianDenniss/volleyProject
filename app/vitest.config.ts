@@ -15,7 +15,9 @@ export default defineConfig({
   test: {
     projects: [
       {
-        resolve: { alias },
+        resolve: {
+          alias: { ...alias, "next/cache": r("./tests/helpers/next-cache-stub.ts") },
+        },
         plugins: [
           cloudflareTest(async () => ({
             main: r("./tests/helpers/test-worker.ts"),

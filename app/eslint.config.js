@@ -28,10 +28,18 @@ const clientBoundary = {
             context.report({ node, messageId: "leak", data: { name } });
           }
         };
+        const isTypeOnly = (node) =>
+          node.importKind === "type" ||
+          node.exportKind === "type" ||
+          (node.specifiers?.length > 0 &&
+            node.specifiers.every((specifier) => specifier.importKind === "type"));
+
         return {
-          ImportDeclaration: (node) => check(node, node.source.value),
-          ExportNamedDeclaration: (node) => node.source && check(node, node.source.value),
-          ExportAllDeclaration: (node) => node.source && check(node, node.source.value),
+          ImportDeclaration: (node) => !isTypeOnly(node) && check(node, node.source.value),
+          ExportNamedDeclaration: (node) =>
+            node.source && !isTypeOnly(node) && check(node, node.source.value),
+          ExportAllDeclaration: (node) =>
+            node.source && !isTypeOnly(node) && check(node, node.source.value),
           ImportExpression: (node) =>
             node.source.type === "Literal" && check(node, node.source.value),
         };
