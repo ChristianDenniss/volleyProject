@@ -24,7 +24,7 @@ export const FIXTURES = {
   teamName: "Ocean Spikers",
   otherTeamName: "Mountain Blockers",
   playerId: 1,
-  playerName: "Ava Nine",
+  playerName: "ava nine",
   gameId: 1,
   articleId: 1,
   awardId: 1,
@@ -46,13 +46,13 @@ const TEAM_NAMES = [
 
 const PLAYER_NAMES = [
   FIXTURES.playerName,
-  "Bo Reyes",
-  "Cass Uduike",
-  "Dai Fen",
-  "Eli Vance",
-  "Fay Oduya",
-  "Gus Petrov",
-  "Hana Ito",
+  "bo reyes",
+  "cass uduike",
+  "dai fen",
+  "eli vance",
+  "fay oduya",
+  "gus petrov",
+  "hana ito",
 ];
 
 const POSITIONS = ["Setter", "Outside", "Middle", "Libero"];
