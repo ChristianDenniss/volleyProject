@@ -73,6 +73,9 @@
     "db:migrate:local": "wrangler d1 migrations apply volley-project --local",
     "db:migrate:remote": "wrangler d1 migrations apply volley-project --remote",
     "db:seed:local": "wrangler d1 execute volley-project --local --file tests/fixtures/seed.sql",
-    "inventory": "tsx tooling/extract-routes.ts && tsx tooling/extract-endpoints.ts && tsx tooling/extract-data-deps.ts"
+    "inventory": "tsx tooling/extract-routes.ts && tsx tooling/extract-endpoints.ts && tsx tooling/extract-data-deps.ts",
+    "seed:sql": "tsx tooling/emit-seed-sql.ts",
+    "t3:prepare": "pnpm run seed:sql && wrangler d1 migrations apply volley-project --local && wrangler d1 execute volley-project --local --file tests/fixtures/seed.sql && tsx tooling/seed-sessions.ts",
+    "test:t3": "vitest run --project node tests/node/reachability.test.ts"
   }
 }

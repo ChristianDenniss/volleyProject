@@ -27,7 +27,7 @@ export const routeManifest: RouteManifestEntry[] = [
     auth: "public",
     services: ["articles.list", "seasons.list"],
     metadata: "static",
-    status: "todo",
+    status: "done",
   },
   {
     path: "/about",
@@ -38,7 +38,7 @@ export const routeManifest: RouteManifestEntry[] = [
     auth: "public",
     services: [],
     metadata: "static",
-    status: "todo",
+    status: "done",
   },
   {
     path: "/players",
@@ -49,7 +49,7 @@ export const routeManifest: RouteManifestEntry[] = [
     auth: "public",
     services: ["players.list"],
     metadata: "static",
-    status: "todo",
+    status: "done",
   },
   {
     path: "/players/:id",
@@ -60,7 +60,7 @@ export const routeManifest: RouteManifestEntry[] = [
     auth: "public",
     services: ["players.getById", "awards.listByPlayer", "stats.listByPlayer", "records.listByPlayer"],
     metadata: "generateMetadata",
-    status: "todo",
+    status: "done",
     fixture: "playerId",
   },
   {
@@ -72,7 +72,7 @@ export const routeManifest: RouteManifestEntry[] = [
     auth: "public",
     services: ["teams.list"],
     metadata: "static",
-    status: "todo",
+    status: "done",
   },
   {
     path: "/teams/:teamName",
@@ -83,7 +83,7 @@ export const routeManifest: RouteManifestEntry[] = [
     auth: "public",
     services: ["teams.getByName", "players.listByTeam", "games.listByTeam"],
     metadata: "generateMetadata",
-    status: "todo",
+    status: "done",
     fixture: "teamName",
   },
   {
@@ -95,7 +95,7 @@ export const routeManifest: RouteManifestEntry[] = [
     auth: "public",
     services: ["games.list"],
     metadata: "static",
-    status: "todo",
+    status: "done",
   },
   {
     path: "/games/:id",
@@ -106,7 +106,7 @@ export const routeManifest: RouteManifestEntry[] = [
     auth: "public",
     services: ["games.getById", "stats.listByGame"],
     metadata: "generateMetadata",
-    status: "todo",
+    status: "done",
     fixture: "gameId",
   },
   {
@@ -118,7 +118,7 @@ export const routeManifest: RouteManifestEntry[] = [
     auth: "public",
     services: ["seasons.list"],
     metadata: "static",
-    status: "todo",
+    status: "done",
   },
   {
     path: "/seasons/:id",
@@ -129,7 +129,7 @@ export const routeManifest: RouteManifestEntry[] = [
     auth: "public",
     services: ["seasons.getById", "teams.listBySeason", "games.listBySeason", "awards.listBySeason"],
     metadata: "generateMetadata",
-    status: "todo",
+    status: "done",
     fixture: "seasonId",
   },
   {
@@ -141,7 +141,7 @@ export const routeManifest: RouteManifestEntry[] = [
     auth: "public",
     services: ["articles.list"],
     metadata: "static",
-    status: "todo",
+    status: "done",
   },
   {
     path: "/articles/:id",
@@ -152,7 +152,7 @@ export const routeManifest: RouteManifestEntry[] = [
     auth: "public",
     services: ["articles.getById", "articles.likeStatus"],
     metadata: "generateMetadata",
-    status: "todo",
+    status: "done",
     fixture: "articleId",
   },
   {
@@ -164,7 +164,7 @@ export const routeManifest: RouteManifestEntry[] = [
     auth: "session",
     services: [],
     metadata: "static",
-    status: "todo",
+    status: "done",
     rationale:
       "old server used authenticateCombined on POST /api/articles, which accepts any authenticated user",
   },
@@ -177,7 +177,7 @@ export const routeManifest: RouteManifestEntry[] = [
     auth: "public",
     services: ["awards.list"],
     metadata: "static",
-    status: "todo",
+    status: "done",
   },
   {
     path: "/awards/:id",
@@ -188,7 +188,7 @@ export const routeManifest: RouteManifestEntry[] = [
     auth: "public",
     services: ["awards.getById"],
     metadata: "generateMetadata",
-    status: "todo",
+    status: "done",
     fixture: "awardId",
   },
   {
@@ -200,7 +200,7 @@ export const routeManifest: RouteManifestEntry[] = [
     auth: "public",
     services: [],
     metadata: "static",
-    status: "todo",
+    status: "done",
   },
   {
     path: "/privacy-policy",
@@ -211,7 +211,7 @@ export const routeManifest: RouteManifestEntry[] = [
     auth: "public",
     services: [],
     metadata: "static",
-    status: "todo",
+    status: "done",
   },
   {
     path: "/credits",
@@ -222,7 +222,7 @@ export const routeManifest: RouteManifestEntry[] = [
     auth: "public",
     services: [],
     metadata: "static",
-    status: "todo",
+    status: "done",
   },
   {
     path: "/stats",
@@ -233,7 +233,7 @@ export const routeManifest: RouteManifestEntry[] = [
     auth: "public",
     services: ["stats.leaderboard", "seasons.list"],
     metadata: "static",
-    status: "todo",
+    status: "done",
   },
   {
     path: "/schedules",
@@ -244,7 +244,7 @@ export const routeManifest: RouteManifestEntry[] = [
     auth: "public",
     services: ["matches.list", "matches.listBySeason", "seasons.list"],
     metadata: "static",
-    status: "todo",
+    status: "done",
   },
   {
     path: "/applications",
@@ -255,7 +255,7 @@ export const routeManifest: RouteManifestEntry[] = [
     auth: "public",
     services: [],
     metadata: "static",
-    status: "todo",
+    status: "done",
   },
   {
     path: "/faq",
@@ -266,7 +266,7 @@ export const routeManifest: RouteManifestEntry[] = [
     auth: "public",
     services: [],
     metadata: "static",
-    status: "todo",
+    status: "done",
   },
   {
     path: "/records",
@@ -277,7 +277,7 @@ export const routeManifest: RouteManifestEntry[] = [
     auth: "public",
     services: ["records.list", "seasons.list"],
     metadata: "static",
-    status: "todo",
+    status: "done",
   },
   {
     path: "/trivia",
@@ -288,7 +288,7 @@ export const routeManifest: RouteManifestEntry[] = [
     auth: "public",
     services: ["trivia.randomPlayer", "trivia.randomTeam", "trivia.randomSeason"],
     metadata: "static",
-    status: "todo",
+    status: "done",
   },
   {
     path: "/profile",
@@ -299,7 +299,7 @@ export const routeManifest: RouteManifestEntry[] = [
     auth: "session",
     services: ["users.profile", "articles.listByAuthor"],
     metadata: "static",
-    status: "todo",
+    status: "done",
     rationale: "unguarded in the SPA; the profile only ever renders the caller's own record",
   },
   {
@@ -311,7 +311,7 @@ export const routeManifest: RouteManifestEntry[] = [
     auth: "public",
     services: [],
     metadata: "static",
-    status: "todo",
+    status: "done",
     rationale:
       "reshaped: the username/password form is replaced by a single Roblox OAuth button",
   },
@@ -347,7 +347,7 @@ export const routeManifest: RouteManifestEntry[] = [
       "users.count",
     ],
     metadata: "static",
-    status: "todo",
+    status: "done",
   },
   {
     path: "/portal/users",
@@ -358,7 +358,7 @@ export const routeManifest: RouteManifestEntry[] = [
     auth: "admin",
     services: ["users.list"],
     metadata: "static",
-    status: "todo",
+    status: "done",
   },
   {
     path: "/portal/players",
@@ -369,7 +369,7 @@ export const routeManifest: RouteManifestEntry[] = [
     auth: "admin",
     services: ["players.list", "teams.list"],
     metadata: "static",
-    status: "todo",
+    status: "done",
   },
   {
     path: "/portal/teams",
@@ -380,7 +380,7 @@ export const routeManifest: RouteManifestEntry[] = [
     auth: "admin",
     services: ["teams.list", "seasons.list"],
     metadata: "static",
-    status: "todo",
+    status: "done",
   },
   {
     path: "/portal/seasons",
@@ -391,7 +391,7 @@ export const routeManifest: RouteManifestEntry[] = [
     auth: "admin",
     services: ["seasons.list"],
     metadata: "static",
-    status: "todo",
+    status: "done",
   },
   {
     path: "/portal/games",
@@ -402,7 +402,7 @@ export const routeManifest: RouteManifestEntry[] = [
     auth: "admin",
     services: ["games.list", "seasons.list", "teams.list"],
     metadata: "static",
-    status: "todo",
+    status: "done",
   },
   {
     path: "/portal/stats",
@@ -413,7 +413,7 @@ export const routeManifest: RouteManifestEntry[] = [
     auth: "admin",
     services: ["stats.list", "players.list", "games.list"],
     metadata: "static",
-    status: "todo",
+    status: "done",
   },
   {
     path: "/portal/awards",
@@ -424,7 +424,7 @@ export const routeManifest: RouteManifestEntry[] = [
     auth: "admin",
     services: ["awards.list", "seasons.list", "players.list"],
     metadata: "static",
-    status: "todo",
+    status: "done",
   },
   {
     path: "/portal/articles",
@@ -435,7 +435,7 @@ export const routeManifest: RouteManifestEntry[] = [
     auth: "admin",
     services: ["articles.list"],
     metadata: "static",
-    status: "todo",
+    status: "done",
   },
   {
     path: "/portal/matches",
@@ -446,7 +446,7 @@ export const routeManifest: RouteManifestEntry[] = [
     auth: "admin",
     services: ["matches.list", "seasons.list"],
     metadata: "static",
-    status: "todo",
+    status: "done",
   },
   {
     path: "/404",
@@ -457,7 +457,7 @@ export const routeManifest: RouteManifestEntry[] = [
     auth: "public",
     services: [],
     metadata: "static",
-    status: "todo",
+    status: "done",
     rationale:
       "the SPA had no catch-all, so Netlify served index.html with HTTP 200 for unknown URLs",
   },
