@@ -37,25 +37,57 @@ It is currently two separately deployed applications. It is being rebuilt as **o
 |---|---|
 | `ae3bb57` | vinext app scaffolded at `app/`, Cloudflare Workers target, pnpm |
 | `6c4d5cf` | shadcn/ui initialized on Radix primitives |
+| `e35fc46` | Phase 1 — aliases, client-import boundary, vitest on workerd, drizzle, Tailwind tokens |
+| `3c6e80c` | Phase 2 and 3 — extractors, inventories, both manifests, conformance tests, schema, fixtures |
+| `a2226ef` | Phase 4 — service layer |
+| `3d6b53c` | Phase 5 — better-auth on Roblox, session guards, admin bootstrap |
+| `55020ef` | Phase 6 and 9 — tRPC mutations, records recalculation on a queue |
+| `d578232` | Phase 7 — public pages, metadata, real 404 |
+| `5278ef6` | Phase 8 — portal, T3 and T4 |
 
-`app/` currently contains only the scaffold plus shadcn:
-
-```
-app/
-  app/layout.tsx  app/page.tsx  app/globals.css  app/api/hello/route.ts
-  components/ui/button.tsx
-  lib/utils.ts
-  components.json  next.config.ts  package.json  pnpm-workspace.yaml
-  postcss.config.mjs  tsconfig.json  vite.config.ts  wrangler.jsonc
-```
-
-`pnpm run build` passes across all five vinext environments. That is the entire extent of the new application — no schema, no auth, no routes, no services.
+Phases 1 through 9 are complete. `pnpm run build` passes, `pnpm lint` and
+`pnpm typecheck` are clean, and `pnpm test` is green at 122 — T1, T2, T3, T4,
+the tRPC authorization sweep, the service suites, the auth suite and the
+recalculation suite.
 
 ### Not started
 
-Everything else. Phases 1 through 11 in §9.
+- **Phase 10, deploy.** Blocked on §6: a Cloudflare account, a Roblox OAuth app
+  and a domain. Nothing remote has been created; `database_id` in
+  `wrangler.jsonc` is the placeholder `REPLACE_WITH_D1_DATABASE_ID`.
+- **Phase 11, deleting `BE/` and `FE/`.** Blocked on sign-off, and on the
+  screenshot baselines below.
 
----
+### Carried over
+
+**Screenshot baselines were not captured.** `tooling/capture-baselines.ts` is
+written and works, but this machine's DNS resolves `volleyball4-2.com` to an
+unrelated default nginx, so every page came back a 404 placeholder. Run it from
+a network that reaches the live site **before** phase 11 deletes `FE/`:
+
+```
+npx tsx tooling/capture-baselines.ts
+```
+
+### Answers to §6 found in the source
+
+- **Domain** is `volleyball4-2.com`; the old API was `api.volleyball4-2.com`
+  (`FE/src/components/SEO.tsx:24`, `FE/.env`).
+- **`/teams/:teamName`** keeps its name keying, matching the manifest example in
+  §8.2. Team names are unique per season in the new schema.
+
+### Pitfalls found while building
+
+- shadcn's radix-nova components import from the `radix-ui` barrel. vinext
+  beta.6's client-reference analysis walks that re-export graph and never
+  finishes — `pnpm run build` hangs at `[1/5]` and climbs past 3.5 GB. Import
+  the individual `@radix-ui/react-*` packages instead.
+- A vite alias keyed on a bare `"@"` prefix-matches every scoped npm package.
+  Use an anchored regex.
+- drizzle renders bare identifiers inside a `sql` template, so a correlated
+  subquery written as `where season_id = id` silently resolves both names
+  against the inner table. `server/db/sqlx.ts` qualifies both sides.
+- D1 caps a statement at 100 bound parameters. `server/db/insert.ts` chunks.
 
 ## 3. Target architecture
 
@@ -338,15 +370,15 @@ Each phase is one or more commits. Nothing is pushed.
 | # | Phase | Gate |
 |---|---|---|
 | 0 | ✅ Scaffold, pnpm, Workers target, shadcn on Radix | `pnpm run build` passes |
-| 1 | Aliases, ESLint client-import rule, vitest + pool-workers, drizzle config, Tailwind theme tokens extracted from the old CSS | an empty suite runs inside `workerd` |
-| 2 | `tooling/` extractors; generate all three inventories; author both manifests; capture screenshot baselines | T1 and T2 pass with everything `todo`; one baseline per route |
-| 3 | Drizzle schema, baseline migration, fixtures | seed applies to a local D1; fixture test green |
-| 4 | Service layer, domain by domain | per-domain suites green |
-| 5 | better-auth + Roblox + admin bootstrap | auth suite green; bootstrap rehearsed on preview |
-| 6 | tRPC routers | authorization sweep passes over every mutation |
-| 7 | Public pages + Metadata API + `not-found.tsx` | T3 green for public routes including 404 negatives |
-| 8 | Portal + session guards | T3 green for `/portal/*`, `/profile`, `/articles/create`; T4 passes |
-| 9 | Queue consumer for record recalculation | full recalc completes inside limits |
+| 1 | ✅ Aliases, ESLint client-import rule, vitest + pool-workers, drizzle config, Tailwind theme tokens extracted from the old CSS | an empty suite runs inside `workerd` |
+| 2 | ◐ `tooling/` extractors; generate all three inventories; author both manifests; capture screenshot baselines (baselines outstanding, see §2) | T1 and T2 pass with everything `todo`; one baseline per route |
+| 3 | ✅ Drizzle schema, baseline migration, fixtures | seed applies to a local D1; fixture test green |
+| 4 | ✅ Service layer, domain by domain | per-domain suites green |
+| 5 | ✅ better-auth + Roblox + admin bootstrap | auth suite green; bootstrap rehearsed on preview |
+| 6 | ✅ tRPC routers | authorization sweep passes over every mutation |
+| 7 | ✅ Public pages + Metadata API + `not-found.tsx` | T3 green for public routes including 404 negatives |
+| 8 | ✅ Portal + session guards | T3 green for `/portal/*`, `/profile`, `/articles/create`; T4 passes |
+| 9 | ✅ Queue consumer for record recalculation | full recalc completes inside limits |
 | 10 | Deploy, bootstrap admin, DNS | — |
 | 11 | Delete `BE/` and `FE/` | one commit, after sign-off |
 
