@@ -1,11 +1,11 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "app",
+  "name": "volley-project",
   "compatibility_date": "2026-08-15",
   "compatibility_flags": [
     "nodejs_compat"
   ],
-  "main": "vinext/server/fetch-handler",
+  "main": "server/worker.ts",
   "assets": {
     "directory": "dist/client",
     "not_found_handling": "none",
@@ -13,5 +13,32 @@
   },
   "cache": {
     "enabled": true
+  },
+  "observability": {
+    "enabled": true
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "volley-project",
+      "database_id": "f7d45881-b8c7-4bb5-809b-bd7cf318f8ac",
+      "migrations_dir": "drizzle"
+    }
+  ],
+  "queues": {
+    "producers": [
+      {
+        "binding": "RECORDS_QUEUE",
+        "queue": "volley-records"
+      }
+    ],
+    "consumers": [
+      {
+        "queue": "volley-records",
+        "max_batch_size": 1,
+        "max_concurrency": 1,
+        "max_retries": 3
+      }
+    ]
   }
 }
