@@ -21,16 +21,16 @@ export function PortalNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="lg:w-52 lg:shrink-0">
-      <ul className="flex gap-1 overflow-x-auto lg:flex-col lg:overflow-visible">
-        {LINKS.map((link) => (
-          <li key={link.href}>
+    <nav>
+      <ul className="m-0 list-none p-0 max-md:flex max-md:flex-wrap max-md:gap-4">
+        {LINKS.map((link, index) => (
+          <li key={link.href} className={cn(index > 0 && "mt-5 max-md:mt-0")}>
             <Link
               href={link.href}
               className={cn(
-                "block whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground",
+                "font-medium text-[#cbd5e1] no-underline transition-colors duration-150 hover:text-white",
                 (link.href === "/portal" ? pathname === "/portal" : pathname.startsWith(link.href)) &&
-                  "bg-muted text-foreground",
+                  "text-[#38bdf8]",
               )}
             >
               {link.label}

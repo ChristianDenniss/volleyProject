@@ -125,6 +125,19 @@ export async function listTeamNamesByPlayerName(db: Db, playerName: string) {
   return rows.map((team) => team.name);
 }
 
+export async function listAllMemberships(db: Db) {
+  return db
+    .select({
+      playerId: teamsPlayers.playerId,
+      teamName: teams.name,
+      seasonNumber: seasons.seasonNumber,
+    })
+    .from(teamsPlayers)
+    .innerJoin(teams, eq(teamsPlayers.teamId, teams.id))
+    .leftJoin(seasons, eq(teams.seasonId, seasons.id))
+    .orderBy(asc(teams.name));
+}
+
 export async function count(db: Db) {
   return db.$count(players);
 }

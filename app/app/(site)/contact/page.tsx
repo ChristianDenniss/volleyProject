@@ -1,8 +1,5 @@
 import type { Metadata } from "next";
-import { BookOpen, HelpCircle, Mail } from "lucide-react";
-import { PageHeader, Section } from "@components/site/page-header";
-import { Button } from "@components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@components/ui/card";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Contact",
@@ -11,55 +8,63 @@ export const metadata: Metadata = {
 
 const CHANNELS = [
   {
-    icon: Mail,
+    icon: "✉️",
     title: "Talk to a team member",
     description: "We will help you get the right support and answers when available.",
     action: { label: "Email us", href: "mailto:aottgpvp@gmail.com", external: true },
   },
   {
-    icon: BookOpen,
+    icon: "💬",
     title: "Join our Discord",
     description:
       "Hop into our server to reach the league and game administration team through the ticketing system.",
     action: { label: "Join Discord", href: "https://discord.gg/volleyball", external: true },
   },
-  {
-    icon: HelpCircle,
-    title: "Frequently asked questions",
-    description: "Not sure who to contact? Browse the answers we give most often.",
-    action: { label: "Read the FAQ", href: "/faq", external: false },
-  },
 ];
+
+const FAQ_CHANNEL = {
+  icon: "❓",
+  title: "Frequently asked questions",
+  description: "Not sure who to contact? Browse the answers we give most often.",
+  action: { label: "Read the FAQ", href: "/faq" },
+};
+
+const cardClass =
+  "box-border w-full min-w-[300px] max-w-[500px] flex-1 rounded-xl border border-[#ddd] bg-[#f9f9f9] p-8 shadow-[0_2px_6px_rgba(0,0,0,0.06)]";
+const buttonClass =
+  "inline-block rounded-full bg-brand-sky-pale px-8 py-3 font-semibold text-black no-underline transition-colors duration-300 hover:bg-[#b8d9f2]";
 
 export default function ContactPage() {
   return (
-    <>
-      <PageHeader title="Contact us" description="Three ways to reach the people who run the league." />
-      <Section>
-        <div className="grid gap-6 md:grid-cols-3">
-          {CHANNELS.map((channel) => (
-            <Card key={channel.title} className="flex flex-col">
-              <CardHeader>
-                <channel.icon className="size-6 text-brand-steel" aria-hidden />
-                <CardTitle className="mt-2">{channel.title}</CardTitle>
-                <CardDescription>{channel.description}</CardDescription>
-              </CardHeader>
-              <CardContent className="mt-auto">
-                <Button asChild variant="outline">
-                  <a
-                    href={channel.action.href}
-                    {...(channel.action.external
-                      ? { target: "_blank", rel: "noopener noreferrer" }
-                      : {})}
-                  >
-                    {channel.action.label}
-                  </a>
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </Section>
-    </>
+    <div className="mx-auto max-w-[1200px] px-8 py-16 text-center max-md:px-4 max-md:py-10">
+      <h1 className="mb-12 text-[3rem] font-bold max-md:text-[2rem]">Contact Us</h1>
+
+      <div className="mb-8 flex flex-wrap justify-center gap-8 max-[900px]:flex-col max-[900px]:items-center">
+        {CHANNELS.map((channel) => (
+          <div key={channel.title} className={cardClass}>
+            <div className="mb-4 text-[2rem]">{channel.icon}</div>
+            <h2 className="mb-4 text-2xl font-semibold">{channel.title}</h2>
+            <p className="mb-6 text-base text-[#444]">{channel.description}</p>
+            <a
+              href={channel.action.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={buttonClass}
+            >
+              {channel.action.label}
+            </a>
+          </div>
+        ))}
+      </div>
+
+      <div className={`${cardClass} mx-auto`}>
+        <div className="mb-4 text-[2rem]">{FAQ_CHANNEL.icon}</div>
+        <h2 className="mb-4 text-2xl font-semibold">{FAQ_CHANNEL.title}</h2>
+        <p className="mb-6 text-base text-[#444]">{FAQ_CHANNEL.description}</p>
+        <Link href={FAQ_CHANNEL.action.href} className={buttonClass}>
+          {FAQ_CHANNEL.action.label}
+        </Link>
+      </div>
+    </div>
   );
 }

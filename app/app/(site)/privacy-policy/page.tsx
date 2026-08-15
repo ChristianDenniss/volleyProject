@@ -1,6 +1,4 @@
 import type { Metadata } from "next";
-import { PageHeader, Section } from "@components/site/page-header";
-import { Card, CardContent, CardHeader, CardTitle } from "@components/ui/card";
 
 export const metadata: Metadata = {
   title: "Privacy policy",
@@ -66,29 +64,32 @@ const SECTIONS = [
 
 export default function PrivacyPolicyPage() {
   return (
-    <>
-      <PageHeader
-        title="Privacy policy"
-        description="How this platform collects, uses and protects your information. Using the service means you agree to it."
-      />
-      <Section>
-        <div className="grid gap-6 md:grid-cols-2">
-          {SECTIONS.map((section) => (
-            <Card key={section.title}>
-              <CardHeader>
-                <CardTitle>{section.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="list-disc space-y-2 pl-5 text-sm text-muted-foreground">
-                  {section.items.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </Section>
-    </>
+    <div className="mx-auto max-w-[1000px] bg-white p-12 leading-relaxed text-[#333] max-md:p-6">
+      <h1 className="mb-10 border-b-[3px] border-[#b8ddff] pb-2 text-center text-[2.75rem] font-bold text-[#222] max-md:text-[2rem]">
+        Privacy Policy
+      </h1>
+
+      <p className="mb-12 text-center text-[1.125rem] text-[#555]">
+        How this platform collects, uses and protects your information. Using the service means you
+        agree to it.
+      </p>
+
+      {SECTIONS.map((section) => (
+        <section key={section.title} className="mb-12">
+          <h2 className="mb-4 text-[1.75rem] font-bold text-black">{section.title}</h2>
+          <ul className="m-0 list-none p-0">
+            {section.items.map((item) => (
+              <li key={item} className="mb-8 text-[1.125rem] leading-[1.7] text-[#555]">
+                {item}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+
+      <p className="mt-8 text-center text-sm text-[#777]">
+        Questions about this policy? Reach us through the contact page.
+      </p>
+    </div>
   );
 }

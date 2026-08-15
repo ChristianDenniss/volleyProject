@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { getDb } from "@db";
 import { trivia } from "@server/services";
-import { PageHeader, Section } from "@components/site/page-header";
-import { EmptyState } from "@components/site/page-header";
+import { EmptyState } from "@components/site/empty-state";
 import { TriviaBoard } from "@components/site/trivia-board";
 import type { Difficulty, TriviaKind } from "@server/services/trivia";
 
@@ -98,23 +97,17 @@ export default async function TriviaPage({
   }
 
   return (
-    <>
-      <PageHeader
-        title="Trivia"
-        description="Pick a subject and a difficulty, read the clues, and name it."
-      />
-      <Section>
-        {subject === null ? (
-          <>
-            <TriviaBoard kind={kind} difficulty={difficulty} subject={null} />
-            <div className="mt-4">
-              <EmptyState>{error}</EmptyState>
-            </div>
-          </>
-        ) : (
-          <TriviaBoard kind={kind} difficulty={difficulty} subject={subject} />
-        )}
-      </Section>
-    </>
+    <div className="mx-auto box-border min-h-[80vh] w-full max-w-[1200px] px-8 pb-8 pt-22 text-[#2c3e50] max-md:px-4 max-md:pt-10">
+      {subject === null ? (
+        <>
+          <TriviaBoard kind={kind} difficulty={difficulty} subject={null} />
+          <div className="mt-4">
+            <EmptyState>{error}</EmptyState>
+          </div>
+        </>
+      ) : (
+        <TriviaBoard kind={kind} difficulty={difficulty} subject={subject} />
+      )}
+    </div>
   );
 }

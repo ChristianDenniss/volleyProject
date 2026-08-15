@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ResourceView, type ColumnSpec, type FieldSpec } from "./resource-view";
-import { Button } from "@components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -88,9 +87,9 @@ function CsvUpload({ games }: { games: { id: number; label: string }[] }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" variant="outline">
+        <button type="button" className={"cursor-pointer rounded border border-[#2d3c50] bg-white px-4 py-2 text-base text-[#2d3c50] transition-colors duration-200 hover:bg-[#2d3c50] hover:text-white"}>
           Upload CSV
-        </Button>
+        </button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
@@ -149,9 +148,9 @@ function CsvUpload({ games }: { games: { id: number; label: string }[] }) {
           </div>
 
           <DialogFooter>
-            <Button type="submit" disabled={upload.isPending}>
+            <button type="submit" className={"cursor-pointer rounded border-none bg-[#007bff] px-4 py-2 text-base text-white transition-colors duration-200 hover:enabled:bg-[#0056b3] disabled:cursor-not-allowed disabled:bg-[#ccc]"} disabled={upload.isPending}>
               {upload.isPending ? "Uploading…" : "Upload"}
-            </Button>
+            </button>
           </DialogFooter>
         </form>
       </DialogContent>

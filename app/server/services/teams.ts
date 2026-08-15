@@ -76,6 +76,21 @@ export async function listPlayers(db: Db, teamId: number) {
     .orderBy(asc(players.name));
 }
 
+export async function listPlayersBySeason(db: Db, seasonId: number) {
+  return db
+    .select({
+      teamId: teamsPlayers.teamId,
+      id: players.id,
+      name: players.name,
+      position: players.position,
+    })
+    .from(teamsPlayers)
+    .innerJoin(players, eq(teamsPlayers.playerId, players.id))
+    .innerJoin(teams, eq(teamsPlayers.teamId, teams.id))
+    .where(eq(teams.seasonId, seasonId))
+    .orderBy(asc(players.name));
+}
+
 export async function listPlayersByTeamName(db: Db, name: string) {
   const team = await db.query.teams.findFirst({ where: eq(teams.name, name) });
   if (!team) return null;

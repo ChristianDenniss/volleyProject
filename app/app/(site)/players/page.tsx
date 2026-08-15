@@ -1,17 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { getDb } from "@db";
 import { players } from "@server/services";
-import { EmptyState, PageHeader, Section } from "@components/site/page-header";
-import { HorizontalScroll } from "@components/site/scroll-area";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@components/ui/table";
+import { EmptyState } from "@components/site/empty-state";
+import { PlayersList, type PlayerListRow } from "@components/site/players-list";
 
 export const dynamic = "force-dynamic";
 
@@ -21,41 +12,36 @@ export const metadata: Metadata = {
 };
 
 export default async function PlayersPage() {
-  const rows = await players.list(getDb());
+  const db = getDb();
+  const [rows, memberships] = await Promise.all([
+    players.list(db),
+    players.listAllMemberships(db),
+  ]);
+
+  const teamsByPlayer = new Map<number, { name: string; seasonNumber: number | null }[]>();
+  for (const membership of memberships) {
+    const list = teamsByPlayer.get(membership.playerId) ?? [];
+    list.push({ name: membership.teamName, seasonNumber: membership.seasonNumber ?? null });
+    teamsByPlayer.set(membership.playerId, list);
+  }
+
+  const list: PlayerListRow[] = rows.map((player) => ({
+    id: player.id,
+    name: player.name,
+    position: player.position,
+    teams: (teamsByPlayer.get(player.id) ?? []).sort(
+      (a, b) => (a.seasonNumber ?? 0) - (b.seasonNumber ?? 0),
+    ),
+  }));
 
   return (
-    <>
-      <PageHeader title="Players" description={`${rows.length} players on record.`} />
-      <Section>
-        {rows.length === 0 ? (
-          <EmptyState>No players have been added yet.</EmptyState>
-        ) : (
-          <HorizontalScroll>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Player</TableHead>
-                  <TableHead>Position</TableHead>
-                  <TableHead className="text-right">Teams</TableHead>
-                  <TableHead className="text-right">Games</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {rows.map((player) => (
-                  <TableRow key={player.id}>
-                    <TableCell className="font-medium capitalize">
-                      <Link href={`/players/${player.id}`}>{player.name}</Link>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">{player.position}</TableCell>
-                    <TableCell className="text-right tabular-nums">{player.teamCount}</TableCell>
-                    <TableCell className="text-right tabular-nums">{player.gamesPlayed}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </HorizontalScroll>
-        )}
-      </Section>
-    </>
+    <div className="mx-auto box-border min-h-screen w-full max-w-[1200px] p-5">
+      <h1 className="m-0 mb-5 border-none p-0 text-[2rem] font-bold text-[#222]">All Players</h1>
+      {list.length === 0 ? (
+        <EmptyState>No players have been added yet.</EmptyState>
+      ) : (
+        <PlayersList players={list} />
+      )}
+    </div>
   );
 }

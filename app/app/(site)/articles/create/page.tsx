@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { PageHeader, Section } from "@components/site/page-header";
 import { ArticleForm } from "@components/site/article-form";
 
 export const metadata: Metadata = {
@@ -9,14 +8,14 @@ export const metadata: Metadata = {
 
 export default function CreateArticlePage() {
   return (
-    <>
-      <PageHeader
-        title="Write an article"
-        description="Submitted articles wait for an administrator to approve them before they appear on the site."
-      />
-      <Section>
-        <ArticleForm />
-      </Section>
-    </>
+    <div className="mx-auto max-w-[1400px] p-6">
+      <h1 className="mb-6 text-[2rem] font-bold text-[#222]">Write an article</h1>
+
+      <div className="mb-6 rounded border border-[#ffeeba] bg-[#fff3cd] px-4 py-3 text-[#856404]">
+        Submitted articles wait for an administrator to approve them before they appear on the site.
+      </div>
+
+      <ArticleForm />
+    </div>
   );
 }

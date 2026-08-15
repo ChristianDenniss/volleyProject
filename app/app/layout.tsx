@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import { Inter } from "next/font/google";
 import { Toaster } from "@components/ui/sonner";
 import { TrpcProvider } from "@/lib/trpc";
 import { cn } from "@/lib/utils";
 import "./globals.css";
 
-const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
+const inter = Inter({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://volleyball4-2.com"),
@@ -21,12 +21,17 @@ export const metadata: Metadata = {
     locale: "en_US",
   },
   twitter: { card: "summary_large_image" },
+  icons: { icon: "/rvlLogo.png" },
+};
+
+export const viewport = {
+  themeColor: "#2d3c50",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={cn("font-sans", geist.variable)}>
-      <body className="min-h-screen bg-background text-foreground antialiased">
+    <html lang="en" className={cn("font-sans", inter.variable)}>
+      <body className="min-h-screen overflow-x-hidden bg-white text-foreground antialiased">
         <TrpcProvider>{children}</TrpcProvider>
         <Toaster richColors position="top-right" />
       </body>

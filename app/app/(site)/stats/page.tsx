@@ -1,18 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { getDb } from "@db";
 import { seasons, stats } from "@server/services";
-import { EmptyState, PageHeader, Section } from "@components/site/page-header";
-import { HorizontalScroll } from "@components/site/scroll-area";
-import { Button } from "@components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@components/ui/table";
+import { EmptyState } from "@components/site/empty-state";
+import { StatsLeaderboard } from "@components/site/stats-leaderboard";
 
 export const dynamic = "force-dynamic";
 
@@ -34,68 +24,34 @@ export default async function StatsPage({
   const [rows, allSeasons] = await Promise.all([stats.leaderboard(db, seasonId), seasons.list(db)]);
 
   return (
-    <>
-      <PageHeader
-        title="Stat leaders"
-        description={seasonId ? `Season ${seasonId} only.` : "Every season combined."}
-        actions={
-          <div className="flex flex-wrap gap-2">
-            <Button asChild size="sm" variant={seasonId ? "outline" : "default"}>
-              <Link href="/stats">All time</Link>
-            </Button>
-            {allSeasons.map((entry) => (
-              <Button
-                key={entry.id}
-                asChild
-                size="sm"
-                variant={seasonId === entry.id ? "default" : "outline"}
-              >
-                <Link href={`/stats?season=${entry.id}`}>S{entry.seasonNumber}</Link>
-              </Button>
-            ))}
-          </div>
-        }
-      />
-      <Section>
-        {rows.length === 0 ? (
+    <div className="mx-auto box-border min-h-screen w-full max-w-[1200px] p-5">
+      <h1 className="m-0 border-none p-0 text-[2rem] font-bold text-[#222]">Stat Leaders</h1>
+
+      {rows.length === 0 ? (
+        <div className="mt-5">
           <EmptyState>No stat lines have been recorded yet.</EmptyState>
-        ) : (
-          <HorizontalScroll>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Player</TableHead>
-                  <TableHead className="text-right">Games</TableHead>
-                  <TableHead className="text-right">Kills</TableHead>
-                  <TableHead className="text-right">Kill %</TableHead>
-                  <TableHead className="text-right">Assists</TableHead>
-                  <TableHead className="text-right">Blocks</TableHead>
-                  <TableHead className="text-right">Digs</TableHead>
-                  <TableHead className="text-right">Aces</TableHead>
-                  <TableHead className="text-right">Errors</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {rows.map((row) => (
-                  <TableRow key={row.playerId}>
-                    <TableCell className="font-medium capitalize">
-                      <Link href={`/players/${row.playerId}`}>{row.playerName}</Link>
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">{row.gamesPlayed}</TableCell>
-                    <TableCell className="text-right tabular-nums">{row.totalKills}</TableCell>
-                    <TableCell className="text-right tabular-nums">{row.spikingPercentage}%</TableCell>
-                    <TableCell className="text-right tabular-nums">{row.assists}</TableCell>
-                    <TableCell className="text-right tabular-nums">{row.blocks}</TableCell>
-                    <TableCell className="text-right tabular-nums">{row.digs}</TableCell>
-                    <TableCell className="text-right tabular-nums">{row.aces}</TableCell>
-                    <TableCell className="text-right tabular-nums">{row.totalErrors}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </HorizontalScroll>
-        )}
-      </Section>
-    </>
+        </div>
+      ) : (
+        <StatsLeaderboard
+          rows={rows.map((row) => ({
+            playerId: row.playerId,
+            playerName: row.playerName,
+            gamesPlayed: row.gamesPlayed,
+            totalKills: row.totalKills,
+            spikingPercentage: row.spikingPercentage,
+            assists: row.assists,
+            blocks: row.blocks,
+            digs: row.digs,
+            aces: row.aces,
+            totalErrors: row.totalErrors,
+          }))}
+          seasons={allSeasons.map((entry) => ({
+            id: entry.id,
+            seasonNumber: entry.seasonNumber,
+          }))}
+          seasonId={seasonId}
+        />
+      )}
+    </div>
   );
 }

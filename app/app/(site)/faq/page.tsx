@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { PageHeader, Section } from "@components/site/page-header";
-import { Card, CardDescription, CardHeader, CardTitle } from "@components/ui/card";
 
 export const metadata: Metadata = {
   title: "FAQ",
@@ -157,54 +155,88 @@ const LINKS = [
 
 export default function FaqPage() {
   return (
-    <>
-      <PageHeader
-        title="Frequently asked questions"
-        description="Answers to common questions about RVL, plus quick links to the pages people look for."
-      />
+    <div className="mx-auto w-[90%] p-8 max-md:w-full max-md:p-4">
+      <header className="mb-12 text-center">
+        <h1 className="mb-4 text-[2.5rem] font-bold text-brand-navy max-md:text-[2rem]">
+          Frequently Asked Questions
+        </h1>
+        <p className="mx-auto max-w-[800px] text-[1.1rem] leading-relaxed text-[#6b7280] max-md:text-base">
+          Answers to common questions about RVL, plus quick links to the pages people look for.
+        </p>
+      </header>
 
-      <Section title="Quick links">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {LINKS.map((link) => (
-            <Card key={link.title}>
-              <CardHeader>
-                <CardTitle className="text-base">
-                  {link.external ? (
-                    <a href={link.href} target="_blank" rel="noopener noreferrer">
+      <div className="flex flex-col gap-12">
+        <section>
+          <h2 className="mb-6 text-[1.75rem] font-semibold text-brand-navy">Quick Links</h2>
+          <div className="grid gap-6 [grid-template-columns:repeat(auto-fit,minmax(350px,1fr))] max-md:grid-cols-1 max-md:gap-4">
+            {LINKS.map((link) => {
+              const content = (
+                <>
+                  <span className="mr-4 flex size-[50px] shrink-0 items-center justify-center rounded-[10px] bg-brand-sky text-xl text-brand-navy transition-all duration-300 group-hover:scale-105 group-hover:bg-brand-navy group-hover:text-white max-md:size-[45px] max-md:text-[1.1rem]">
+                    {link.external ? "\u2197" : "\u2192"}
+                  </span>
+                  <span className="flex-1">
+                    <span className="mb-2 block text-[1.1rem] font-semibold text-brand-navy max-md:text-base">
                       {link.title}
-                    </a>
-                  ) : (
-                    <Link href={link.href}>{link.title}</Link>
-                  )}
-                </CardTitle>
-                <CardDescription>{link.description}</CardDescription>
-              </CardHeader>
-            </Card>
-          ))}
-        </div>
-      </Section>
+                    </span>
+                    <span className="block text-[0.9rem] leading-snug text-[#6b7280] max-md:text-[0.85rem]">
+                      {link.description}
+                    </span>
+                  </span>
+                </>
+              );
 
-      <Section title="Questions">
-        <div className="space-y-8">
+              const className =
+                "group relative flex items-center rounded-lg border border-[#e5e7eb] bg-white p-6 text-inherit no-underline transition-all duration-300 hover:-translate-y-0.5 hover:border-brand-sky hover:shadow-[0_8px_25px_rgba(0,0,0,0.1)] max-md:p-5";
+
+              return link.external ? (
+                <a
+                  key={link.title}
+                  href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={className}
+                >
+                  {content}
+                </a>
+              ) : (
+                <Link key={link.title} href={link.href} className={className}>
+                  {content}
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+
+        <section>
+          <h2 className="mb-8 text-[1.75rem] font-semibold text-brand-navy">Questions</h2>
           {GROUPS.map((group) => (
-            <div key={group.category}>
-              <h3 className="mb-3 text-sm font-semibold uppercase tracking-[0.14em] text-brand-steel">
+            <div key={group.category} className="mb-10">
+              <h3 className="mb-4 border-b-2 border-brand-sky pb-2 text-xl font-semibold text-brand-navy max-md:text-[1.1rem]">
                 {group.category}
               </h3>
-              <div className="divide-y divide-border overflow-hidden rounded-lg border border-border">
+              <div className="flex flex-col gap-2">
                 {group.items.map((item) => (
-                  <details key={item.question} className="group bg-card">
-                    <summary className="cursor-pointer list-none px-5 py-4 text-sm font-medium marker:hidden hover:bg-muted/60">
-                      {item.question}
+                  <details
+                    key={item.question}
+                    className="overflow-hidden rounded-lg border border-[#e5e7eb] bg-white transition-all duration-300 hover:border-brand-sky hover:shadow-[0_2px_8px_rgba(0,0,0,0.05)]"
+                  >
+                    <summary className="flex cursor-pointer list-none items-center justify-between p-5 text-base font-medium text-brand-navy transition-colors duration-300 marker:hidden hover:bg-[#f8fafc] max-md:p-4 max-md:text-[0.95rem]">
+                      <span className="mr-4 flex-1">{item.question}</span>
+                      <span aria-hidden="true" className="text-[0.875rem] text-[#6b7280]">
+                        +
+                      </span>
                     </summary>
-                    <div className="px-5 pb-4 text-sm text-muted-foreground">{item.answer}</div>
+                    <div className="border-t border-[#e5e7eb] bg-[#f8fafc] px-5 pb-5 pt-5 text-[0.95rem] leading-relaxed text-[#4b5563] max-md:px-4 max-md:pb-4 max-md:text-[0.9rem]">
+                      {item.answer}
+                    </div>
                   </details>
                 ))}
               </div>
             </div>
           ))}
-        </div>
-      </Section>
-    </>
+        </section>
+      </div>
+    </div>
   );
 }

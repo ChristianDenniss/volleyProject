@@ -16,7 +16,6 @@ import {
 import { PortalPage } from "@components/portal/portal-page";
 import { RecalculateRecords } from "@components/portal/recalculate-records";
 import { StatRow, StatTile } from "@components/site/stat-tile";
-import { Card, CardContent, CardHeader, CardTitle } from "@components/ui/card";
 
 export const dynamic = "force-dynamic";
 
@@ -54,6 +53,7 @@ export default async function PortalDashboard() {
 
   return (
     <PortalPage title="Dashboard" description="What is in the database right now.">
+      <div className="mb-6 space-y-6">
       <StatRow>
         <StatTile label="Seasons" value={seasonCount} />
         <StatTile label="Teams" value={teamCount} />
@@ -70,36 +70,38 @@ export default async function PortalDashboard() {
         <StatTile label="Users" value={userCount} />
         <StatTile label="Records" value={recordCount} />
       </StatRow>
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Records</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            Recalculation runs on a queue. It clears the record table for the chosen scope and
-            rewrites every family from the stat table.
+      <section className="mt-8 rounded-lg bg-white p-6 shadow-[0_2px_8px_rgba(0,0,0,0.1)]">
+        <h2 className="mb-4 text-[1.3rem] font-semibold text-[#1e3d59]">Records</h2>
+        <p className="mb-4 text-base text-[#666]">
+          Recalculation runs on a queue. It clears the record table for the chosen scope and
+          rewrites every family from the stat table.
+        </p>
+        {job ? (
+          <p className="mb-4 text-base text-[#333]">
+            Last run: <span className="font-semibold">{job.status}</span>
+            {job.rowsWritten ? ` · ${job.rowsWritten} rows` : ""}
+            {job.error ? ` · ${job.error}` : ""}
           </p>
-          {job ? (
-            <p className="text-sm">
-              Last run: <span className="font-medium">{job.status}</span>
-              {job.rowsWritten ? ` · ${job.rowsWritten} rows` : ""}
-              {job.error ? ` · ${job.error}` : ""}
-            </p>
-          ) : (
-            <p className="text-sm text-muted-foreground">No recalculation has been run yet.</p>
-          )}
-          <RecalculateRecords
-            seasons={seasonList.map((season) => ({
-              id: season.id,
-              label: `Season ${season.seasonNumber}`,
-            }))}
-          />
-          <p className="text-xs text-muted-foreground">
-            The public page is at <Link href="/records">/records</Link>.
-          </p>
-        </CardContent>
-      </Card>
+        ) : (
+          <p className="mb-4 text-base text-[#666]">No recalculation has been run yet.</p>
+        )}
+        <RecalculateRecords
+          seasons={seasonList.map((season) => ({
+            id: season.id,
+            label: `Season ${season.seasonNumber}`,
+          }))}
+        />
+        <p className="mt-4 text-sm text-[#666]">
+          The public page is at{" "}
+          <Link href="/records" className="text-[#1e3d59] underline">
+            /records
+          </Link>
+          .
+        </p>
+      </section>
+
     </PortalPage>
   );
 }

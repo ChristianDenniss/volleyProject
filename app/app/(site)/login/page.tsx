@@ -1,6 +1,4 @@
 import type { Metadata } from "next";
-import { PageHeader, Section } from "@components/site/page-header";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@components/ui/card";
 import { RobloxSignIn } from "@components/site/roblox-sign-in";
 
 export const metadata: Metadata = {
@@ -17,22 +15,19 @@ export default async function LoginPage({
   const callbackURL = next && next.startsWith("/") ? next : "/";
 
   return (
-    <>
-      <PageHeader title="Sign in" description="Roblox is the only way in — there is no password." />
-      <Section>
-        <Card className="mx-auto max-w-md">
-          <CardHeader>
-            <CardTitle>Continue with Roblox</CardTitle>
-            <CardDescription>
-              We receive your Roblox username and avatar. Renaming on Roblox keeps your account,
-              your articles and your role intact.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <RobloxSignIn callbackURL={callbackURL} />
-          </CardContent>
-        </Card>
-      </Section>
-    </>
+    <div className="flex justify-center bg-[#F5F7FA] px-4 pb-16">
+      <div className="mx-auto mt-16 box-border w-auto min-w-[500px] max-w-[700px] rounded-xl bg-white px-8 py-10 text-center shadow-[0_8px_24px_rgba(0,0,0,0.1)] max-[420px]:min-w-0 max-[420px]:px-6 max-[420px]:py-8">
+        <h2 className="mb-6 mt-0 text-[1.75rem] font-semibold tracking-wide text-brand-sky">
+          Continue with Roblox
+        </h2>
+
+        <p className="mb-6 text-[0.95rem] leading-relaxed text-[#555]">
+          Roblox is the only way in — there is no password. We receive your Roblox username and
+          avatar. Renaming on Roblox keeps your account, your articles and your role intact.
+        </p>
+
+        <RobloxSignIn callbackURL={callbackURL} />
+      </div>
+    </div>
   );
 }

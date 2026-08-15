@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { getDb } from "@db";
 import { matches, seasons } from "@server/services";
-import { EmptyState, PageHeader, Section } from "@components/site/page-header";
-import { Badge } from "@components/ui/badge";
-import { Button } from "@components/ui/button";
+import { EmptyState } from "@components/site/empty-state";
+import { SchedulesBoard } from "@components/site/schedules-board";
 
 export const dynamic = "force-dynamic";
 
@@ -28,77 +26,41 @@ export default async function SchedulesPage({
     seasons.list(db),
   ]);
 
-  const rounds = new Map<string, typeof rows>();
-  for (const match of rows) {
-    rounds.set(match.round, [...(rounds.get(match.round) ?? []), match]);
-  }
-
   return (
-    <>
-      <PageHeader
-        title="Schedules"
-        description={seasonId ? `Season ${seasonId} only.` : "Every season."}
-        actions={
-          <div className="flex flex-wrap gap-2">
-            <Button asChild size="sm" variant={seasonId ? "outline" : "default"}>
-              <Link href="/schedules">All</Link>
-            </Button>
-            {allSeasons.map((entry) => (
-              <Button
-                key={entry.id}
-                asChild
-                size="sm"
-                variant={seasonId === entry.id ? "default" : "outline"}
-              >
-                <Link href={`/schedules?season=${entry.id}`}>S{entry.seasonNumber}</Link>
-              </Button>
-            ))}
-          </div>
-        }
-      />
-      <Section>
-        {rows.length === 0 ? (
-          <EmptyState>No matches have been scheduled.</EmptyState>
-        ) : (
-          <div className="space-y-8">
-            {[...rounds.entries()].map(([round, entries]) => (
-              <div key={round}>
-                <h2 className="mb-3 text-sm font-semibold uppercase tracking-[0.14em] text-brand-steel">
-                  {round}
-                </h2>
-                <ul className="divide-y divide-border overflow-hidden rounded-lg border border-border">
-                  {entries.map((match) => (
-                    <li
-                      key={match.id}
-                      className="flex flex-wrap items-center justify-between gap-3 bg-card px-4 py-3"
-                    >
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium">
-                          {match.team1Name ?? "TBD"} vs {match.team2Name ?? "TBD"}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {match.date} · {match.matchNumber}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <Badge variant="outline" className="uppercase">
-                          {match.region}
-                        </Badge>
-                        <Badge variant={match.status === "completed" ? "secondary" : "default"}>
-                          {match.status}
-                        </Badge>
-                        <span className="text-sm font-semibold tabular-nums">
-                          {match.team1Score ?? "–"} – {match.team2Score ?? "–"}
-                        </span>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-        )}
-      </Section>
-    </>
+    <div className="box-border w-full overflow-x-hidden p-24 max-lg:p-10 max-md:p-5">
+      <header className="mb-8 flex items-center justify-between border-b-2 border-[#e5e7eb] pb-5">
+        <h1 className="m-0 text-[2rem] font-bold text-[#1f2937]">Schedules</h1>
+      </header>
+
+      {rows.length === 0 ? (
+        <EmptyState>No matches have been scheduled.</EmptyState>
+      ) : (
+        <SchedulesBoard
+          matches={rows.map((match) => ({
+            id: match.id,
+            matchNumber: match.matchNumber,
+            round: match.round,
+            status: match.status,
+            region: match.region,
+            date: match.date,
+            team1Name: match.team1Name ?? null,
+            team2Name: match.team2Name ?? null,
+            team1LogoUrl: match.team1LogoUrl ?? null,
+            team2LogoUrl: match.team2LogoUrl ?? null,
+            team1Score: match.team1Score ?? null,
+            team2Score: match.team2Score ?? null,
+            setScores: [
+              match.set1Score ?? null,
+              match.set2Score ?? null,
+              match.set3Score ?? null,
+              match.set4Score ?? null,
+              match.set5Score ?? null,
+            ],
+          }))}
+          seasons={allSeasons.map((entry) => ({ id: entry.id, seasonNumber: entry.seasonNumber }))}
+          seasonId={seasonId}
+        />
+      )}
+    </div>
   );
 }

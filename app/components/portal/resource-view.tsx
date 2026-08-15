@@ -4,7 +4,7 @@ import { useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -14,17 +14,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@components/ui/dialog";
-import { Input } from "@components/ui/input";
-import { Label } from "@components/ui/label";
-import { Textarea } from "@components/ui/textarea";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@components/ui/table";
 
 export type FieldType = "text" | "number" | "date" | "url" | "textarea" | "select" | "checkbox";
 
@@ -58,6 +47,18 @@ export interface ResourceViewProps<Row extends { id: number | string }> {
   extra?: ReactNode;
 }
 
+const inputClass =
+  "w-full rounded border border-[#ccc] bg-white px-3 py-2 text-base text-[#374151] outline-none transition-colors duration-200 focus:border-[#38bdf8] focus:bg-[#f8fafc]";
+
+const createButtonClass =
+  "cursor-pointer rounded border-none bg-[#007bff] px-4 py-2 text-base text-white transition-colors duration-200 hover:enabled:bg-[#0056b3] disabled:cursor-not-allowed disabled:bg-[#ccc]";
+
+const deleteButtonClass =
+  "cursor-pointer rounded border-none bg-[#dc3545] px-2 py-1 text-white transition-colors duration-200 hover:enabled:bg-[#c82333] disabled:cursor-not-allowed disabled:bg-[#ccc]";
+
+const editButtonClass =
+  "cursor-pointer rounded border border-[#2d3c50] bg-white px-2 py-1 text-[#2d3c50] transition-colors duration-200 hover:bg-[#2d3c50] hover:text-white";
+
 function emptyValues(fields: FieldSpec[]): Values {
   return Object.fromEntries(fields.map((field) => [field.name, ""]));
 }
@@ -73,13 +74,14 @@ function FieldInput({
 }) {
   if (field.type === "textarea") {
     return (
-      <Textarea
+      <textarea
         id={field.name}
         rows={8}
         required={field.required}
         value={value}
         placeholder={field.placeholder}
         onChange={(event) => onChange(event.target.value)}
+        className={`${inputClass} min-h-[160px] resize-y`}
       />
     );
   }
@@ -91,7 +93,7 @@ function FieldInput({
         required={field.required}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+        className={inputClass}
       >
         <option value="">Choose…</option>
         {field.options?.map((option) => (
@@ -110,19 +112,20 @@ function FieldInput({
         type="checkbox"
         checked={value === "true"}
         onChange={(event) => onChange(String(event.target.checked))}
-        className="size-4 rounded border-input"
+        className="size-4 rounded border border-[#ccc]"
       />
     );
   }
 
   return (
-    <Input
+    <input
       id={field.name}
       type={field.type === "number" ? "number" : field.type === "date" ? "date" : field.type === "url" ? "url" : "text"}
       required={field.required}
       value={value}
       placeholder={field.placeholder}
       onChange={(event) => onChange(event.target.value)}
+      className={inputClass}
     />
   );
 }
@@ -183,7 +186,9 @@ function EntityDialog({
         >
           {fields.map((field) => (
             <div key={field.name} className="space-y-2">
-              <Label htmlFor={field.name}>{field.label}</Label>
+              <label htmlFor={field.name} className="block font-medium text-[#333]">
+                {field.label}
+              </label>
               <FieldInput
                 field={field}
                 value={values[field.name] ?? ""}
@@ -193,9 +198,9 @@ function EntityDialog({
           ))}
 
           <DialogFooter>
-            <Button type="submit" disabled={pending}>
+            <button type="submit" disabled={pending} className={createButtonClass}>
               {pending ? "Saving…" : submitLabel}
-            </Button>
+            </button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -220,10 +225,10 @@ export function ResourceView<Row extends { id: number | string }>({
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm italic text-[#6b7280]">
           {rows.length} {rows.length === 1 ? "row" : "rows"}
         </p>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {extra}
           {onCreate ? (
             <EntityDialog
@@ -234,45 +239,55 @@ export function ResourceView<Row extends { id: number | string }>({
               submitLabel="Create"
               onSubmit={onCreate}
               trigger={
-                <Button size="sm">
-                  <Plus className="size-4" />
+                <button type="button" className={createButtonClass}>
+                  <Plus className="mr-1 inline size-4" />
                   New
-                </Button>
+                </button>
               }
             />
           ) : null}
         </div>
       </div>
 
-      <div className="w-full overflow-x-auto rounded-lg border border-border">
-        <Table>
-          <TableHeader>
-            <TableRow>
+      <div className="w-full overflow-x-auto rounded-md shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
+        <table className="w-full min-w-[800px] border-collapse bg-white">
+          <thead>
+            <tr>
               {columns.map((column) => (
-                <TableHead
+                <th
                   key={column.key}
-                  className={column.align === "right" ? "text-right" : undefined}
+                  className={cn(
+                    "border-b border-[#e2e8f0] bg-brand-navy px-4 py-3 text-left font-semibold text-white",
+                    column.align === "right" && "text-right",
+                  )}
                 >
                   {column.label}
-                </TableHead>
+                </th>
               ))}
-              {onUpdate || onDelete ? <TableHead className="w-24 text-right">Actions</TableHead> : null}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+              {onUpdate || onDelete ? (
+                <th className="border-b border-[#e2e8f0] bg-brand-navy px-4 py-3 text-right font-semibold text-white">
+                  Actions
+                </th>
+              ) : null}
+            </tr>
+          </thead>
+          <tbody>
             {rows.map((row) => (
-              <TableRow key={String(row.id)}>
+              <tr key={String(row.id)} className="hover:bg-[#f8fafc]">
                 {columns.map((column) => (
-                  <TableCell
+                  <td
                     key={column.key}
-                    className={column.align === "right" ? "text-right tabular-nums" : undefined}
+                    className={cn(
+                      "border-b border-[#e2e8f0] px-4 py-3 text-left",
+                      column.align === "right" && "text-right tabular-nums",
+                    )}
                   >
                     {column.render(row)}
-                  </TableCell>
+                  </td>
                 ))}
                 {onUpdate || onDelete ? (
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-1">
+                  <td className="border-b border-[#e2e8f0] px-4 py-3 text-right">
+                    <div className="flex justify-end gap-2">
                       {onUpdate && toValues ? (
                         <EntityDialog
                           title={`Edit ${title}`}
@@ -282,17 +297,17 @@ export function ResourceView<Row extends { id: number | string }>({
                           submitLabel="Save"
                           onSubmit={(values) => onUpdate(row.id, values)}
                           trigger={
-                            <Button size="icon" variant="ghost" aria-label="Edit">
+                            <button type="button" aria-label="Edit" className={editButtonClass}>
                               <Pencil className="size-4" />
-                            </Button>
+                            </button>
                           }
                         />
                       ) : null}
                       {onDelete ? (
-                        <Button
-                          size="icon"
-                          variant="ghost"
+                        <button
+                          type="button"
                           aria-label="Delete"
+                          className={deleteButtonClass}
                           disabled={deleting === row.id}
                           onClick={async () => {
                             setDeleting(row.id);
@@ -310,15 +325,15 @@ export function ResourceView<Row extends { id: number | string }>({
                           }}
                         >
                           <Trash2 className="size-4" />
-                        </Button>
+                        </button>
                       ) : null}
                     </div>
-                  </TableCell>
+                  </td>
                 ) : null}
-              </TableRow>
+              </tr>
             ))}
-          </TableBody>
-        </Table>
+          </tbody>
+        </table>
       </div>
     </div>
   );

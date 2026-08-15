@@ -9,27 +9,30 @@ export default async function PortalLayout({ children }: { children: ReactNode }
   const user = await requireAdmin("/portal");
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="border-b border-border bg-brand-navy text-white">
-        <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
-          <div>
-            <Link href="/portal" className="text-base font-semibold">
+    <div className="grid min-h-screen [grid-template-columns:180px_1fr] max-md:grid-cols-1">
+      <aside className="box-border flex w-full min-w-[120px] max-w-[220px] flex-col bg-[#1f2937] px-4 py-6 text-[#f9fafb] max-md:max-w-none max-md:flex-row max-md:items-center max-md:justify-between">
+        <div>
+          <h2 className="mb-5 text-xl font-semibold">
+            <Link href="/portal" className="text-white no-underline">
               League portal
             </Link>
-            <p className="text-xs text-white/70">
-              signed in as {user.name} ({user.role})
-            </p>
-          </div>
-          <Link href="/" className="text-sm text-white/80 hover:text-white">
-            Back to the site
-          </Link>
+          </h2>
+          <p className="mb-5 text-xs text-white/70">
+            {user.name} ({user.role})
+          </p>
         </div>
-      </header>
 
-      <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 lg:flex-row">
         <PortalNav />
-        <main className="min-w-0 flex-1">{children}</main>
-      </div>
+
+        <Link
+          href="/"
+          className="mt-8 text-sm font-medium text-[#cbd5e1] no-underline transition-colors duration-150 hover:text-white max-md:mt-0"
+        >
+          Back to the site
+        </Link>
+      </aside>
+
+      <main className="min-w-0 overflow-y-auto bg-[#f8fafc] px-10 py-8 max-md:p-6">{children}</main>
     </div>
   );
 }

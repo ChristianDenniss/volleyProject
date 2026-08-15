@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { getDb } from "@db";
 import { games } from "@server/services";
-import { EmptyState, PageHeader, Section } from "@components/site/page-header";
+import { EmptyState } from "@components/site/empty-state";
+import { GamesList } from "@components/site/games-list";
 
 export const dynamic = "force-dynamic";
 
@@ -15,35 +15,23 @@ export default async function GamesPage() {
   const rows = await games.list(getDb());
 
   return (
-    <>
-      <PageHeader title="Games" description={`${rows.length} games on record.`} />
-      <Section>
-        {rows.length === 0 ? (
-          <EmptyState>No games have been recorded yet.</EmptyState>
-        ) : (
-          <ul className="divide-y divide-border overflow-hidden rounded-lg border border-border">
-            {rows.map((game) => (
-              <li
-                key={game.id}
-                className="flex flex-wrap items-center justify-between gap-3 bg-card px-4 py-3"
-              >
-                <div className="min-w-0">
-                  <Link href={`/games/${game.id}`} className="text-sm font-medium">
-                    {game.name ?? game.teams.map((team) => team.name).join(" Vs. ")}
-                  </Link>
-                  <p className="text-xs text-muted-foreground">
-                    {game.date}
-                    {game.seasonNumber ? ` · Season ${game.seasonNumber}` : ""} · {game.stage}
-                  </p>
-                </div>
-                <span className="text-sm font-semibold tabular-nums">
-                  {game.team1Score} – {game.team2Score}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Section>
-    </>
+    <div className="mx-auto box-border min-h-screen w-full max-w-[1200px] p-5">
+      <h1 className="m-0 mb-5 border-none p-0 text-[2rem] font-bold text-[#222]">All Games</h1>
+      {rows.length === 0 ? (
+        <EmptyState>No games have been recorded yet.</EmptyState>
+      ) : (
+        <GamesList
+          games={rows.map((game) => ({
+            id: game.id,
+            name: game.name ?? game.teams.map((team) => team.name).join(" Vs. "),
+            date: game.date,
+            stage: game.stage ?? null,
+            seasonNumber: game.seasonNumber ?? null,
+            team1Score: game.team1Score,
+            team2Score: game.team2Score,
+          }))}
+        />
+      )}
+    </div>
   );
 }

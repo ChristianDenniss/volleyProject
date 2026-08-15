@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Button } from "@components/ui/button";
 import { trpc } from "@/lib/trpc";
 
 export function RecalculateRecords({ seasons }: { seasons: { id: number; label: string }[] }) {
@@ -16,7 +15,7 @@ export function RecalculateRecords({ seasons }: { seasons: { id: number; label: 
       <select
         value={seasonId}
         onChange={(event) => setSeasonId(event.target.value)}
-        className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
+        className="rounded border border-[#ccc] bg-white px-3 py-2 text-base text-[#374151] focus:border-[#38bdf8] focus:outline-none"
       >
         <option value="">Every season</option>
         {seasons.map((season) => (
@@ -26,8 +25,9 @@ export function RecalculateRecords({ seasons }: { seasons: { id: number; label: 
         ))}
       </select>
 
-      <Button
-        size="sm"
+      <button
+        type="button"
+        className="cursor-pointer rounded border-none bg-[#007bff] px-4 py-2 text-base text-white transition-colors duration-200 hover:enabled:bg-[#0056b3] disabled:cursor-not-allowed disabled:bg-[#ccc]"
         disabled={recalculate.isPending}
         onClick={async () => {
           try {
@@ -43,7 +43,7 @@ export function RecalculateRecords({ seasons }: { seasons: { id: number; label: 
         }}
       >
         {recalculate.isPending ? "Queueing…" : "Recalculate records"}
-      </Button>
+      </button>
     </div>
   );
 }
