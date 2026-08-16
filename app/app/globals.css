@@ -61,14 +61,6 @@
   --foreground: #1a1a1a;
 }
 
-body {
-  margin: 0;
-}
-
-a {
-  color: inherit;
-}
-
 @theme inline {
   --font-heading: var(--font-sans);
   --font-sans:
@@ -184,7 +176,10 @@ a {
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply m-0 bg-background text-foreground;
+  }
+  a {
+    color: inherit;
   }
   html {
     @apply font-sans;
