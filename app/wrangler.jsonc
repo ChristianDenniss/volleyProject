@@ -1,44 +1,44 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "volley-project",
-  "compatibility_date": "2026-08-15",
-  "compatibility_flags": [
-    "nodejs_compat"
-  ],
-  "main": "server/worker.ts",
-  "assets": {
-    "directory": "dist/client",
-    "not_found_handling": "none",
-    "binding": "ASSETS"
-  },
-  "cache": {
-    "enabled": true
-  },
-  "observability": {
-    "enabled": true
-  },
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "volley-project",
-      "database_id": "REPLACE_WITH_D1_DATABASE_ID",
-      "migrations_dir": "drizzle"
-    }
-  ],
-  "queues": {
-    "producers": [
-      {
-        "binding": "RECORDS_QUEUE",
-        "queue": "volley-records"
-      }
-    ],
-    "consumers": [
-      {
-        "queue": "volley-records",
-        "max_batch_size": 1,
-        "max_concurrency": 1,
-        "max_retries": 3
-      }
-    ]
-  }
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "volley-project",
+	"compatibility_date": "2026-08-15",
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"main": "server/worker.ts",
+	"assets": {
+		"directory": "dist/client",
+		"not_found_handling": "none",
+		"binding": "ASSETS"
+	},
+	"cache": {
+		"enabled": true
+	},
+	"observability": {
+		"enabled": true
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "volley-project",
+			"database_id": "808daf74-fe04-4166-8aa0-8ddbb0bd98f8",
+			"migrations_dir": "drizzle"
+		}
+	],
+	"queues": {
+		"producers": [
+			{
+				"binding": "RECORDS_QUEUE",
+				"queue": "volley-records"
+			}
+		],
+		"consumers": [
+			{
+				"queue": "volley-records",
+				"max_batch_size": 1,
+				"max_concurrency": 1,
+				"max_retries": 3
+			}
+		]
+	}
 }
