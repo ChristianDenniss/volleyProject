@@ -210,7 +210,7 @@ describe("matches", () => {
       team1Name: FIXTURES.teamName,
       team2Name: "Nobody",
     });
-    expect(created.team1LogoUrl).toBe("https://images.volleyball4-2.com/teams/1.png");
+    expect(created.team1LogoUrl).toBe("/images/rvlLogo.png");
     expect(created.team2LogoUrl).toBeNull();
   });
 
