@@ -28,7 +28,7 @@ export async function SiteNav() {
   const user = await getSessionUser();
 
   return (
-    <nav className="z-[1000] box-border flex w-full items-center justify-center overflow-x-hidden bg-brand-ink px-5 max-md:h-auto max-md:py-2.5 md:h-[70px]">
+    <nav className="box-border flex w-full items-center justify-center overflow-x-hidden bg-brand-ink px-5 max-md:h-auto max-md:py-2.5 md:h-[70px]">
       <ul className="m-0 flex list-none flex-wrap items-center justify-center gap-5 p-0 md:gap-[30px]">
         {EXTERNAL_LINKS.map((link) => (
           <li key={link.href} className="flex items-center">
