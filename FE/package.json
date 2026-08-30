@@ -8,6 +8,8 @@
     "dev-mock": "vite --mode mock",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
+    "lint:conventions": "eslint --config eslint.conventions.config.mjs . && node scripts/check-css-tokens.mjs",
+    "typecheck": "tsc -b",
     "preview": "vite preview",
     "generate-meta": "node scripts/generate-meta-tags.js"
   },
