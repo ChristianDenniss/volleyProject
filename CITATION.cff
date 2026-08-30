@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you reference this software, please cite it as below."
+title: "Volleyball 4.2"
+abstract: >-
+  The platform behind the Roblox Volleyball League - team and player
+  registration, season and game management, per-set statistics with a
+  league record book, schedules, articles, and an admin portal.
+type: software
+authors:
+  - given-names: "Christian"
+    family-names: "Dennis"
+    website: "https://volleyball4-2.com"
+repository-code: "https://github.com/ChristianDenniss/volleyProject"
+url: "https://volleyball4-2.com"
+keywords:
+  - volleyball
+  - roblox
+  - esports
+  - statistics
