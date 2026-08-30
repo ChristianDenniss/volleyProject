@@ -1,295 +1,398 @@
-/**
- * RecordsPage — the league record book: leaderboards for every tracked statistic, switchable between single-game and full-season records, with an admin-only recalculation trigger.
- * Record types are ordered by an explicit `RECORD_TYPE_ORDER` rather than alphabetically (kills before errors), and the spiking-percentage records sort to the end by their attempt threshold — a rule that reads as arbitrary unless it's stated in one place.
- * Lives in `components/`; routed at /records.
- */
-import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { useRecords } from '@/hooks/allFetch'
-import { useCalculateRecords } from '@/hooks/allCreate'
-import { useRegion } from '@/context/regionContext'
-import { useAuth } from '@/context/authContext'
-import type { Records } from '@/types/interfaces'
+// src/components/RecordsPage.tsx
 
-import PageContainer from '@/components/ui/layout/PageContainer'
-import PageHeader from '@/components/ui/layout/PageHeader'
-import SectionHeader from '@/components/ui/layout/SectionHeader'
-import DataTable, { type DataTableColumn } from '@/components/ui/layout/DataTable'
-import Tabs from '@/components/ui/navigation/Tabs'
-import Button from '@/components/ui/buttons/Button'
-import Modal from '@/components/ui/modals/Modal'
-import PlacementBadge from '@/components/ui/badges/PlacementBadge'
-import ErrorNotice from '@/components/ui/feedback/ErrorNotice'
-import EmptyState from '@/components/ui/feedback/EmptyState'
-import { SkeletonTable } from '@/components/ui/feedback/Skeleton'
+import React, { useState, useEffect } from "react";
+import { useRecords } from "../hooks/allFetch";
+import { useRegion } from "../context/regionContext";
+import { useCalculateRecords } from "../hooks/allCreate";
+import { useAuth } from "../context/authContext";
+import type { Records } from "../types/interfaces";
+import Table, { type TableColumn } from "./ui/Table";
+import "../styles/RecordsPage.css";
 
-type RecordScope = 'game' | 'season'
+const RecordsPage: React.FC = () => {
+    const { regionQuery } = useRegion();
+    const { user } = useAuth();
 
-const SCOPE_TABS = [
-  { key: 'game', label: 'Single Game Records' },
-  { key: 'season', label: 'Season Records' },
-]
+    // Switch bar state: 'game' or 'season' — forwarded as a server-side type filter
+    const [recordTypeView, setRecordTypeView] = useState<'game' | 'season'>('game');
 
-/** Display order for record types — offensive volume first, errors last. */
-const RECORD_TYPE_ORDER = [
-  'most total kills',
-  'most total attempts',
-  'most spike kills',
-  'most spike attempts',
-  'most ape kills',
-  'most ape attempts',
-  'most spike errors',
-  'most blocks',
-  'most assists',
-  'most set errors',
-  'most digs',
-  'most block follows',
-  'most aces',
-  'most serve errors',
-  'most misc errors',
-  'most total errors',
-]
+    const { data: records, loading, error, refetch } = useRecords({
+        type: recordTypeView,
+        limit: 1000,
+        page: 1,
+        ...regionQuery,
+    });
 
-const RECORD_LABELS: Record<string, string> = {
-  'most spike kills': 'Most Spike Kills',
-  'most assists': 'Most Assists',
-  'most ape kills': 'Most APE Kills',
-  'most digs': 'Most Digs',
-  'most block follows': 'Most Block Follows',
-  'most blocks': 'Most Blocks',
-  'most aces': 'Most Aces',
-  'most serve errors': 'Most Serve Errors',
-  'most misc errors': 'Most Misc Errors',
-  'most set errors': 'Most Set Errors',
-  'most spike errors': 'Most Spike Errors',
-  'most spike attempts': 'Most Spike Attempts',
-  'most ape attempts': 'Most APE Attempts',
-  'most total kills': 'Most Total Kills',
-  'most total attempts': 'Most Total Attempts',
-  'most total errors': 'Most Total Errors',
-}
+    // Local copy of records for immediate UI updates
+    const [localRecords, setLocalRecords] = useState<Records[]>([]);
 
-const SPIKING_PERCENT = 'best total spiking %'
+    // Calculate records hook
+    const { calculateRecords, loading: calculating } = useCalculateRecords(showErrorModal);
 
-/** Percentage records carry their attempt threshold in the key ("best total spiking % 50"). */
-function attemptThreshold(recordType: string): number {
-  return Number.parseInt(recordType.match(/\d+/)?.[0] ?? '0', 10)
-}
+    // Modal state for errors
+    const [errorModal, setErrorModal] = useState<string | null>(null);
 
-function recordLabel(recordType: string): string {
-  if (recordType.includes(SPIKING_PERCENT)) {
-    return `Best Total Spiking % (${attemptThreshold(recordType)}+ attempts)`
-  }
-  return RECORD_LABELS[recordType] ?? recordType
-}
-
-/**
- * Percentage records sort to the very end (ascending by attempt threshold); everything else
- * follows RECORD_TYPE_ORDER, with unrecognised keys alphabetical after that.
- */
-function compareRecordTypes(a: string, b: string): number {
-  const aPercent = a.includes(SPIKING_PERCENT)
-  const bPercent = b.includes(SPIKING_PERCENT)
-
-  if (aPercent && bPercent) return attemptThreshold(a) - attemptThreshold(b)
-  if (aPercent) return 1
-  if (bPercent) return -1
-
-  const aIndex = RECORD_TYPE_ORDER.indexOf(a)
-  const bIndex = RECORD_TYPE_ORDER.indexOf(b)
-  if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex
-  if (aIndex !== -1) return -1
-  if (bIndex !== -1) return 1
-  return a.localeCompare(b)
-}
-
-function formatRecordValue(record: Records): string {
-  const value = Number(record.value)
-  if (record.value === null || record.value === undefined || Number.isNaN(value)) return 'N/A'
-  if (record.record.includes('spiking %')) return `${value.toFixed(1)}%`
-  return Math.round(value).toString()
-}
-
-function formatRecordDate(date: string): string {
-  return new Date(date).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
-}
-
-/** Normalises any thrown value to a message for the error dialog. */
-function toErrorMessage(err: unknown): string {
-  if (err && typeof err === 'object') {
-    const candidate = err as {
-      message?: string
-      error?: string
-      response?: { data?: { error?: string } }
+    // Helper to show error modal
+    function showErrorModal(err: any) {
+        let errorMsg = '';
+        if (err?.message) errorMsg = err.message;
+        else if (err?.error) errorMsg = err.error;
+        else if (err?.response?.data?.error) errorMsg = err.response.data.error;
+        else errorMsg = 'Unknown error';
+        setErrorModal(errorMsg);
     }
-    return candidate.message ?? candidate.error ?? candidate.response?.data?.error ?? 'Unknown error'
-  }
-  return 'Unknown error'
-}
 
-export default function RecordsPage() {
-  const { regionQuery } = useRegion()
-  const { user } = useAuth()
-
-  const [scope, setScope] = useState<RecordScope>('game')
-  const [errorModal, setErrorModal] = useState<string | null>(null)
-  const [localRecords, setLocalRecords] = useState<Records[]>([])
-
-  const { data: records, loading, error, refetch } = useRecords({
-    type: scope,
-    limit: 1000,
-    page: 1,
-    ...regionQuery,
-  })
-
-  const { calculateRecords, loading: calculating } = useCalculateRecords((err: unknown) =>
-    setErrorModal(toErrorMessage(err))
-  )
-
-  useEffect(() => {
-    if (records) setLocalRecords(records)
-  }, [records])
-
-  const canRecalculate = user?.role === 'admin' || user?.role === 'superadmin'
-
-  const groupedRecordTypes = useMemo(() => {
-    const groups: Record<string, Records[]> = {}
-    for (const record of localRecords) {
-      ;(groups[record.record] ??= []).push(record)
-    }
-    return Object.keys(groups)
-      .sort(compareRecordTypes)
-      .map((recordType) => ({ recordType, rows: groups[recordType] }))
-  }, [localRecords])
-
-  const columns: DataTableColumn<Records>[] = useMemo(
-    () => [
-      {
-        key: 'rank',
-        header: 'Rank',
-        width: 'w-20',
-        render: (record) => <PlacementBadge place={record.rank} size="sm" />,
-      },
-      {
-        key: 'player',
-        header: 'Player',
-        render: (record) => (
-          <Link
-            to={`/players/${record.player?.id}`}
-            className="font-medium text-accent no-underline hover:underline"
-          >
-            {record.player?.name || 'Unknown Player'}
-          </Link>
-        ),
-      },
-      {
-        key: 'value',
-        header: 'Value',
-        align: 'right',
-        render: (record) => (
-          <span className="font-semibold tabular-nums text-content">
-            {formatRecordValue(record)}
-          </span>
-        ),
-      },
-      {
-        key: 'date',
-        header: 'Date',
-        hideOnMobile: true,
-        render: (record) => formatRecordDate(record.date),
-      },
-      {
-        key: 'gameOrSeason',
-        header: scope === 'game' ? 'Game' : 'Season',
-        align: 'right',
-        render: (record) =>
-          scope === 'game' ? (
-            <Link
-              to={`/games/${record.gameId}`}
-              className="text-accent no-underline hover:underline"
-            >
-              View Game
-            </Link>
-          ) : (
-            <Link
-              to={`/seasons/${record.season?.id}`}
-              className="text-accent no-underline hover:underline"
-            >
-              S{record.season?.seasonNumber || '?'}
-            </Link>
-          ),
-      },
-    ],
-    [scope]
-  )
-
-  return (
-    <PageContainer>
-      <PageHeader
-        title="Records"
-        subtitle="League bests for every tracked statistic."
-        actions={
-          canRecalculate && (
-            <Button
-              variant="secondary"
-              loading={calculating}
-              loadingLabel="Calculating…"
-              onClick={async () => {
-                if (await calculateRecords()) refetch()
-              }}
-            >
-              Re-calculate Records
-            </Button>
-          )
+    // Initialize localRecords when data is fetched
+    useEffect(() => {
+        if (records) {
+            setLocalRecords(records);
         }
-      />
+    }, [records]);
 
-      <Tabs
-        variant="segmented"
-        items={SCOPE_TABS}
-        activeKey={scope}
-        onChange={(key) => setScope(key as RecordScope)}
-      />
+    // Group records by record type (already filtered server-side by type=game|season)
+    const groupedRecords = localRecords.reduce((groups, record) => {
+        const recordType = record.record;
+        if (!groups[recordType]) {
+            groups[recordType] = [];
+        }
+        groups[recordType].push(record);
+        return groups;
+    }, {} as { [key: string]: Records[] });
 
-      {error ? (
-        <ErrorNotice title="Error Loading Records" message={error} />
-      ) : loading ? (
-        <div className="grid gap-6 lg:grid-cols-2">
-          {Array.from({ length: 6 }).map((_, index) => (
-            <SkeletonTable key={index} rows={5} />
-          ))}
+    // Sort record types for consistent display
+    const sortedRecordTypes = Object.keys(groupedRecords).sort((a, b) => {
+        // Check if either record type is a spiking percentage record
+        const aIsSpikingPercent = a.includes('best total spiking %');
+        const bIsSpikingPercent = b.includes('best total spiking %');
+        
+        // If both are spiking percentage records, sort by attempts (lower attempts first)
+        if (aIsSpikingPercent && bIsSpikingPercent) {
+            const aAttempts = parseInt(a.match(/\d+/)?.[0] || '0');
+            const bAttempts = parseInt(b.match(/\d+/)?.[0] || '0');
+            return aAttempts - bAttempts; // Lower attempts first
+        }
+        
+        // If only one is spiking percentage, put it last
+        if (aIsSpikingPercent && !bIsSpikingPercent) {
+            return 1; // a goes after b
+        }
+        if (!aIsSpikingPercent && bIsSpikingPercent) {
+            return -1; // a goes before b
+        }
+        
+        // Custom order for non-spiking percentage records
+        const customOrder = [
+            'most total kills',
+            'most total attempts',
+            'most spike kills',
+            'most spike attempts',
+            'most ape kills',
+            'most ape attempts',
+            'most spike errors',
+            'most blocks',
+            'most assists',
+            'most set errors',
+            'most digs',
+            'most block follows',
+            'most aces',
+            'most serve errors',
+            'most misc errors',
+            'most total errors'
+        ];
+        
+        const aIndex = customOrder.indexOf(a);
+        const bIndex = customOrder.indexOf(b);
+        
+        // If both are in the custom order, sort by their position
+        if (aIndex !== -1 && bIndex !== -1) {
+            return aIndex - bIndex;
+        }
+        
+        // If only one is in the custom order, prioritize it
+        if (aIndex !== -1 && bIndex === -1) {
+            return -1; // a goes before b
+        }
+        if (aIndex === -1 && bIndex !== -1) {
+            return 1; // a goes after b
+        }
+        
+        // If neither is in the custom order, use alphabetical sorting
+        return a.localeCompare(b);
+    });
+
+    // Handle calculate records
+    const handleCalculateRecords = async () => {
+        const success = await calculateRecords();
+        if (success) {
+            // Refetch records after successful calculation
+            refetch();
+        }
+    };
+
+    // Format record value for display
+    const formatRecordValue = (record: Records) => {
+        const value = record.value;
+        const recordType = record.record;
+        
+        // Check if value is a valid number
+        if (value === null || value === undefined || isNaN(Number(value))) {
+            return 'N/A';
+        }
+        
+        const numValue = Number(value);
+        
+        // Format percentage records
+        if (recordType.includes('spiking %')) {
+            return `${numValue.toFixed(1)}%`;
+        }
+        
+        // Format integer records
+        return Math.round(numValue).toString();
+    };
+
+    // Format date for display
+    const formatDate = (dateString: string) => {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
+    };
+
+    // Get record type display name
+    const getRecordDisplayName = (recordType: string) => {
+        const typeMap: { [key: string]: string } = {
+            'most spike kills': 'Most Spike Kills',
+            'most assists': 'Most Assists',
+            'most ape kills': 'Most APE Kills',
+            'most digs': 'Most Digs',
+            'most block follows': 'Most Block Follows',
+            'most blocks': 'Most Blocks',
+            'most aces': 'Most Aces',
+            'most serve errors': 'Most Serve Errors',
+            'most misc errors': 'Most Misc Errors',
+            'most set errors': 'Most Set Errors',
+            'most spike errors': 'Most Spike Errors',
+            'most spike attempts': 'Most Spike Attempts',
+            'most ape attempts': 'Most APE Attempts',
+            'most total kills': 'Most Total Kills',
+            'most total attempts': 'Most Total Attempts',
+            'most total errors': 'Most Total Errors',
+        };
+
+        // Handle percentage records
+        if (recordType.includes('best total spiking %')) {
+            const attempts = recordType.match(/\d+/)?.[0] || '';
+            return `Best Total Spiking % (${attempts}+ attempts)`;
+        }
+
+        return typeMap[recordType] || recordType;
+    };
+
+    // Get rank badge class
+    const getRankBadgeClass = (rank: number) => {
+        if (rank === 1) return 'record-rank-badge gold';
+        if (rank === 2) return 'record-rank-badge silver';
+        if (rank === 3) return 'record-rank-badge bronze';
+        return 'record-rank-badge';
+    };
+
+    if (loading) {
+        return (
+            <div className="records-container loading">
+                {/* Skeleton header */}
+                <div className="records-skeleton-header"></div>
+                
+                {/* Skeleton calculate button for admins */}
+                {user && (user.role === 'admin' || user.role === 'superadmin') && (
+                    <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                        <div className="records-skeleton-button"></div>
+                    </div>
+                )}
+                
+                {/* Skeleton switch bar */}
+                <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                    <div className="records-skeleton-switch"></div>
+                </div>
+                
+                {/* Skeleton grid */}
+                <div className="records-grid">
+                    {[1, 2, 3, 4, 5, 6].map((i) => (
+                        <div key={i} className="record-type-section">
+                            <div className="records-skeleton-header" style={{ height: '40px', width: '200px' }}></div>
+                            <div className="records-skeleton-table"></div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
+    }
+
+    // Columns for the records table (shared across all record-type sections)
+    const recordColumns: TableColumn<Records>[] = [
+        {
+            key: "rank",
+            header: "Rank",
+            render: (record) => (
+                <div className="record-rank">
+                    <span className={getRankBadgeClass(record.rank)}>
+                        {record.rank}
+                    </span>
+                </div>
+            ),
+        },
+        {
+            key: "player",
+            header: "Player",
+            render: (record) => (
+                <a
+                    href={`/players/${record.player?.id}`}
+                    className="record-link"
+                >
+                    {record.player?.name || 'Unknown Player'}
+                </a>
+            ),
+        },
+        {
+            key: "value",
+            header: "Value",
+            render: (record) => (
+                <span className="record-value">{formatRecordValue(record)}</span>
+            ),
+        },
+        {
+            key: "date",
+            header: "Date",
+            render: (record) => (
+                <span className="record-date">{formatDate(record.date)}</span>
+            ),
+        },
+        {
+            key: "gameOrSeason",
+            header: recordTypeView === 'game' ? 'Game' : 'Season',
+            render: (record) => (
+                recordTypeView === 'game' ? (
+                    <a
+                        href={`/games/${record.gameId}`}
+                        className="record-link"
+                    >
+                        View Game
+                    </a>
+                ) : (
+                    <a
+                        href={`/seasons/${record.season?.id}`}
+                        className="record-link"
+                    >
+                        S{record.season?.seasonNumber || '?'}
+                    </a>
+                )
+            ),
+        },
+    ];
+
+    if (error) {
+        return (
+            <div className="records-container">
+                <div className="records-error">
+                    <h4>Error Loading Records</h4>
+                    <p>{error}</p>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="records-container">
+            {/* Calculate button for admins */}
+            {user && (user.role === 'admin' || user.role === 'superadmin') && (
+                <div style={{ textAlign: 'center' }}>
+                    <button
+                        className="calculate-button"
+                        onClick={handleCalculateRecords}
+                        disabled={calculating}
+                    >
+                        {calculating ? (
+                            <>
+                                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                Calculating...
+                            </>
+                        ) : (
+                            'Re-calculate Records'
+                        )}
+                    </button>
+                </div>
+            )}
+
+            {/* Switch bar for record type */}
+            <div className="records-switch-bar">
+                <button
+                    className={`records-switch-button ${recordTypeView === 'game' ? 'active' : ''}`}
+                    onClick={() => setRecordTypeView('game')}
+                >
+                    Single Game Records
+                </button>
+                <button
+                    className={`records-switch-button ${recordTypeView === 'season' ? 'active' : ''}`}
+                    onClick={() => setRecordTypeView('season')}
+                >
+                    Season Records
+                </button>
+            </div>
+
+            {/* Records grid */}
+            <div className="records-grid">
+                {sortedRecordTypes.map((recordType) => {
+                    const recordsForType = groupedRecords[recordType];
+
+                    return (
+                        <div key={recordType} className="record-type-section">
+                            <h2 className="record-type-header">{getRecordDisplayName(recordType)}</h2>
+                            
+                            <div className="records-table-container">
+                                <Table
+                                    columns={recordColumns}
+                                    rows={recordsForType}
+                                    rowKey={(record) => record.id}
+                                />
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+
+            {/* Error Modal */}
+            {errorModal && (
+                <div className="modal fade show" style={{ display: 'block' }} tabIndex={-1}>
+                    <div className="modal-dialog">
+                        <div className="modal-content">
+                            <div className="modal-header">
+                                <h5 className="modal-title">Error</h5>
+                                <button
+                                    type="button"
+                                    className="btn-close"
+                                    onClick={() => setErrorModal(null)}
+                                ></button>
+                            </div>
+                            <div className="modal-body">
+                                <p>{errorModal}</p>
+                            </div>
+                            <div className="modal-footer">
+                                <button
+                                    type="button"
+                                    className="btn btn-secondary"
+                                    onClick={() => setErrorModal(null)}
+                                >
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="modal-backdrop fade show"></div>
+                </div>
+            )}
         </div>
-      ) : groupedRecordTypes.length === 0 ? (
-        <EmptyState label="No records recorded yet for this region." />
-      ) : (
-        <div className="grid gap-6 lg:grid-cols-2">
-          {groupedRecordTypes.map(({ recordType, rows }) => (
-            <section key={recordType} className="flex flex-col gap-3">
-              <SectionHeader title={recordLabel(recordType)} level={3} />
-              <DataTable
-                columns={columns}
-                rows={rows}
-                rowKey={(record) => record.id}
-                density="compact"
-              />
-            </section>
-          ))}
-        </div>
-      )}
+    );
+};
 
-      <Modal
-        isOpen={errorModal !== null}
-        onClose={() => setErrorModal(null)}
-        title="Error"
-        size="sm"
-        footer={<Button onClick={() => setErrorModal(null)}>Close</Button>}
-      >
-        <ErrorNotice message={errorModal ?? ''} />
-      </Modal>
-    </PageContainer>
-  )
-}
+export default RecordsPage; 

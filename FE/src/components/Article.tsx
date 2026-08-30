@@ -1,161 +1,230 @@
-// src/components/Article.tsx — the public articles index.
-import { useMemo, useState, type MouseEvent } from "react";
+// src/components/Articles.tsx
+
+import React, { useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useArticles } from "@/hooks/allFetch";
-import { useAuth } from "@/context/authContext";
-import type { Article } from "@/types/interfaces";
-import SEO from "@/components/SEO";
+import { useArticles } from "../hooks/allFetch";
+import { useAuth } from "../context/authContext";
+import type { Article } from "../types/interfaces";
+import SEO from "./SEO";
+import "../styles/Article.css";
 
-import PageContainer from "@/components/ui/layout/PageContainer";
-import PageHeader from "@/components/ui/layout/PageHeader";
-import Toolbar from "@/components/ui/layout/Toolbar";
-import CardGrid from "@/components/ui/layout/CardGrid";
-import SearchBar from "@/components/ui/filters/SearchBar";
-import FilterSelect from "@/components/ui/filters/FilterSelect";
-import ErrorNotice from "@/components/ui/feedback/ErrorNotice";
-import Button from "@/components/ui/buttons/Button";
-import Pill from "@/components/ui/pills/Pill";
+const Articles: React.FC = () =>
+{
+    const navigate = useNavigate();
+    const { isAuthenticated, user } = useAuth();
+    
+    // State for search term
+    const [ searchTerm, setSearchTerm ] = useState<string>("");
 
-type SortOrder = "new" | "old" | "likes" | "least-likes";
+    // State for sort order: "new", "old", "likes", or "least-likes"
+    const [ sortOrder, setSortOrder ] = useState<"new" | "old" | "likes" | "least-likes">("new");
 
-const SORT_OPTIONS = [
-  { value: "new", label: "Newest" },
-  { value: "old", label: "Oldest" },
-  { value: "likes", label: "Most Liked" },
-  { value: "least-likes", label: "Least Liked" },
-];
+    // State for auth message
+    const [showAuthMessage, setShowAuthMessage] = useState<boolean>(false);
 
-/** Comparators keyed by sort order — adding a sort is one entry, not another branch. */
-const SORT_COMPARATORS: Record<SortOrder, (a: Article, b: Article) => number> = {
-  new: (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-  old: (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-  likes: (a, b) => (b.likes || 0) - (a.likes || 0),
-  "least-likes": (a, b) => (a.likes || 0) - (b.likes || 0),
-};
+    // Use custom hook to get articles data
+    const { data, error, loading } = useArticles();
 
-/** The badge shown beside the sort control for the two "interesting" orders. */
-const SORT_HINTS: Partial<Record<SortOrder, string>> = {
-  likes: "🔥 Most Popular",
-  "least-likes": "💡 Hidden Gems",
-};
+    const handleCreateClick = (e: React.MouseEvent) => {
+        if (!isAuthenticated) {
+            e.preventDefault();
+            setShowAuthMessage(true);
+            // Hide message after 3 seconds
+            setTimeout(() => setShowAuthMessage(false), 3000);
+            return;
+        }
 
-const AUTHORS = ["user", "admin", "superadmin"];
+        // Check if user has appropriate role
+        if (user && (user.role === 'user' || user.role === 'admin' || user.role === 'superadmin')) {
+            navigate('/articles/create');
+        } else {
+            e.preventDefault();
+            setShowAuthMessage(true);
+            setTimeout(() => setShowAuthMessage(false), 3000);
+        }
+    };
 
-export default function Articles() {
-  const navigate = useNavigate();
-  const { isAuthenticated, user } = useAuth();
+    // Compute filtered and sorted articles
+    const filteredAndSorted = useMemo(() =>
+    {
+        if (!data)
+        {
+            return [];
+        }
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [sortOrder, setSortOrder] = useState<SortOrder>("new");
-  const [authMessage, setAuthMessage] = useState<string | null>(null);
+        // Filter by title (case-insensitive) and approved status
+        const filtered = data.filter((article: Article) =>
+            article.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
+            article.approved === true
+        );
 
-  const { data, error, loading } = useArticles();
+        // Sort by createdAt or likes
+        const sorted = filtered.sort((a: Article, b: Article) =>
+        {
+            if (sortOrder === "new")
+            {
+                const dateA = new Date(a.createdAt).getTime();
+                const dateB = new Date(b.createdAt).getTime();
+                return dateB - dateA;
+            }
+            else if (sortOrder === "likes")
+            {
+                return (b.likes || 0) - (a.likes || 0);
+            }
+            else if (sortOrder === "least-likes")
+            {
+                return (a.likes || 0) - (b.likes || 0);
+            }
+            else // "old"
+            {
+                const dateA = new Date(a.createdAt).getTime();
+                const dateB = new Date(b.createdAt).getTime();
+                return dateA - dateB;
+            }
+        });
 
-  const handleCreateClick = (event: MouseEvent) => {
-    const canAuthor = isAuthenticated && user && AUTHORS.includes(user.role);
-    if (canAuthor) {
-      navigate("/articles/create");
-      return;
+        return sorted;
+    }, [ data, searchTerm, sortOrder ]);
+
+    // Total number of approved articles
+    const totalCount = data ? data.filter(article => article.approved === true).length : 0;
+
+    // Loading state with skeleton
+    if (loading) {
+        return (
+            <div className="article-list-container loading">
+                <div className="skeleton-title"></div>
+                
+                <div className="article-list-create-section">
+                    <div className="skeleton-create-btn"></div>
+                </div>
+                
+                <div className="article-list-controls">
+                    <div className="skeleton-count"></div>
+                    <div className="skeleton-search"></div>
+                    <div className="skeleton-sort"></div>
+                </div>
+                
+                <div className="article-list-grid">
+                    {[1, 2, 3, 4, 5, 6].map(i => (
+                        <div key={i} className="skeleton-article-card">
+                            <div className="skeleton-article-image"></div>
+                            <div className="skeleton-article-title"></div>
+                            <div className="skeleton-article-summary"></div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
     }
 
-    event.preventDefault();
-    setAuthMessage(
-      !isAuthenticated
-        ? "Please log in to create articles."
-        : "You need to be a registered user, admin, or superadmin to create articles."
-    );
-    setTimeout(() => setAuthMessage(null), 3000);
-  };
-
-  const approved = useMemo(
-    () => (data ?? []).filter((article) => article.approved === true),
-    [data]
-  );
-
-  const visibleArticles = useMemo(() => {
-    const query = searchTerm.toLowerCase();
-    return approved
-      .filter((article) => article.title.toLowerCase().includes(query))
-      .sort(SORT_COMPARATORS[sortOrder]);
-  }, [approved, searchTerm, sortOrder]);
-
-  return (
-    <PageContainer width="wide">
-      <SEO
-        title="Articles"
-        description="News, recaps, and community writing from the Roblox Volleyball League."
-        url="https://volleyball4-2.com/articles"
-      />
-
-      <PageHeader
-        title="Articles"
-        count={approved.length}
-        subtitle="News, recaps and community writing from around the league."
-        actions={
-          <Button onClick={handleCreateClick}>Create Article</Button>
-        }
-      />
-
-      {authMessage && <ErrorNotice message={authMessage} tone="warning" />}
-
-      <Toolbar
-        filters={
-          <>
-            <FilterSelect
-              label="Sort order"
-              value={sortOrder}
-              onChange={(value) => setSortOrder(value as SortOrder)}
-              options={SORT_OPTIONS}
-              placeholder=""
+    return (
+        <div className="article-list-container">
+            <SEO
+                title="Articles"
+                description="News, recaps, and community writing from the Roblox Volleyball League."
+                url="https://volleyball4-2.com/articles"
             />
-            {SORT_HINTS[sortOrder] && (
-              <Pill tone="warning" size="sm">{SORT_HINTS[sortOrder]}</Pill>
+            {showAuthMessage && (
+                <div className="article-list-auth-message">
+                    {!isAuthenticated 
+                        ? "Please log in to create articles!"
+                        : "You need to be a registered user, admin, or superadmin to create articles!"}
+                </div>
             )}
-          </>
-        }
-        trailing={
-          <SearchBar
-            value={searchTerm}
-            onSearch={setSearchTerm}
-            placeholder="Search by title…"
-            className="w-full sm:w-64"
-          />
-        }
-      />
 
-      <CardGrid
-        loading={loading}
-        error={error}
-        loadingCount={6}
-        loadingHeight="h-64"
-        isEmpty={visibleArticles.length === 0}
-        emptyLabel="No articles found."
-      >
-        {visibleArticles.map((article) => (
-          <Link
-            key={article.id}
-            to={`/articles/${article.id}`}
-            className="flex flex-col overflow-hidden rounded-card border border-border bg-surface no-underline transition-all hover:-translate-y-0.5 hover:border-accent hover:shadow-[var(--shadow-md)]"
-          >
-            <img
-              src={article.imageUrl}
-              alt={article.title}
-              loading="lazy"
-              className="h-40 w-full object-cover"
-            />
-            <div className="flex flex-1 flex-col gap-2 p-4">
-              <h2 className="m-0 text-base font-semibold text-content">{article.title}</h2>
-              <p className="m-0 line-clamp-3 flex-1 text-sm text-content-tertiary">
-                {article.summary}
-              </p>
-              <div className="flex items-center justify-between gap-2 text-xs text-content-muted">
-                <span>❤️ {article.likes || 0} likes</span>
-                <span>{new Date(article.createdAt).toLocaleDateString()}</span>
-              </div>
+            {/* Create Article button */}
+            <div className="article-list-create-section">
+                <Link 
+                    to="/articles/create" 
+                    className="article-create-btn"
+                    onClick={handleCreateClick}
+                >
+                    Create Article
+                </Link>
             </div>
-          </Link>
-        ))}
-      </CardGrid>
-    </PageContainer>
-  );
-}
+
+            <div className="article-list-controls">
+                {/* Total count */}
+                <div className="article-list-count">
+                    Total: { totalCount } articles
+                </div>
+
+                {/* Search bar */}
+                <input
+                    type="text"
+                    className="article-list-search"
+                    placeholder="Search by title..."
+                    value={ searchTerm }
+                    onChange={ (e) => setSearchTerm(e.target.value) }
+                />
+
+                {/* Sort select */}
+                <select
+                    className="article-list-sort"
+                    value={ sortOrder }
+                    onChange={ (e) =>
+                    {
+                        setSortOrder(e.target.value as "new" | "old" | "likes" | "least-likes");
+                    } }
+                >
+                    <option value="new">Newest</option>
+                    <option value="old">Oldest</option>
+                    <option value="likes">Most Liked</option>
+                    <option value="least-likes">Least Liked</option>
+                </select>
+
+                {/* Sort indicator */}
+                {sortOrder === "likes" && (
+                    <div className="article-list-sort-indicator">
+                        🔥 Most Popular
+                    </div>
+                )}
+                {sortOrder === "least-likes" && (
+                    <div className="article-list-sort-indicator">
+                        💡 Hidden Gems
+                    </div>
+                )}
+            </div>
+
+            {error ? (
+                <div>Error: { error }</div>
+            ) : data ? (
+                <div className="article-list-grid">
+                    { filteredAndSorted.map((article: Article) =>
+                    {
+                        return (
+                            <Link
+                                to={`/articles/${ article.id }`}
+                                key={ article.id }
+                                className="article-list-item"
+                            >
+                                <div className="article-list-card">
+                                    <img
+                                        src={ article.imageUrl }
+                                        alt={ article.title }
+                                        className="article-list-image"
+                                    />
+                                    <h2>{ article.title }</h2>
+                                    <p>{ article.summary }</p>
+                                    <div className="article-list-meta">
+                                        <span className="article-list-likes">
+                                            ❤️ {article.likes || 0} likes
+                                        </span>
+                                        <span className="article-list-date">
+                                            {new Date(article.createdAt).toLocaleDateString()}
+                                        </span>
+                                    </div>
+                                </div>
+                            </Link>
+                        );
+                    }) }
+                </div>
+            ) : (
+                <div>No articles found.</div>
+            )}
+        </div>
+    );
+};
+
+export default Articles;

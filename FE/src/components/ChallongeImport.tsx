@@ -1,267 +1,250 @@
-/**
- * ChallongeImport — the modal form that turns a Challonge bracket URL into scheduled games: pick the season, phase and round window, and every match in the bracket is created spaced by `matchSpacingMinutes`.
- * The import is all-or-nothing, so when a participant can't be matched to an existing team the modal lists the unmatched names inline instead of partially importing; a "How it works" panel states that contract up front.
- * Lives in `components/`; opened from the portal's GamesPage. The request itself lives in `useChallongeImport`.
- */
-import { useEffect, useState, type FormEvent } from 'react'
-import { useFormRegionSeason } from '@/hooks/useFormRegionSeason'
-import { useChallongeImport } from '@/hooks/useChallongeImport'
-import type { ImportChallongeInput, ChallongeImportResult } from '@/types/interfaces'
+import React, { useEffect, useState } from 'react';
+import { authFetch } from '../hooks/authFetch';
+import { useAuth } from '../context/authContext';
+import { BACKEND_URL } from '../constants/api';
+import { useFormRegionSeason } from '../hooks/useFormRegionSeason';
+import RegionSeasonFields from './ui/RegionSeasonFields';
+import type { ImportChallongeInput, ChallongeImportResult } from '../types/interfaces';
+import '../styles/ChallongeImport.css';
 
-import Modal from '@/components/ui/modals/Modal'
-import Card from '@/components/ui/layout/Card'
-import SectionHeader from '@/components/ui/layout/SectionHeader'
-import Button from '@/components/ui/buttons/Button'
-import ErrorNotice from '@/components/ui/feedback/ErrorNotice'
-import FormField from '@/components/ui/inputs/FormField'
-import TextInput from '@/components/ui/inputs/TextInput'
-import Select from '@/components/ui/inputs/Select'
-import RegionSeasonFields from '@/components/ui/inputs/RegionSeasonFields'
-import Prose from '@/components/ui/misc/Prose'
-
-const PHASE_OPTIONS = [
-  { value: 'pre_season', label: 'Pre-Season' },
-  { value: 'qualifiers', label: 'Qualifiers' },
-  { value: 'playoffs', label: 'Playoffs' },
-]
-
-const DEFAULT_SPACING_MINUTES = 30
-
-interface Props {
-  onImportSuccess: (result: ChallongeImportResult) => void
-  onCancel: () => void
+interface ChallongeImportProps {
+  onImportSuccess: (result: ChallongeImportResult) => void;
+  onCancel: () => void;
 }
 
-export default function ChallongeImport({ onImportSuccess, onCancel }: Props) {
-  const formRegionSeason = useFormRegionSeason('id')
-  const { importGames, loading, error, unmatchedTeams, setError } = useChallongeImport()
-
-  const [form, setForm] = useState<Partial<ImportChallongeInput>>({
+const ChallongeImport: React.FC<ChallongeImportProps> = ({ onImportSuccess, onCancel }) => {
+  const formRegionSeason = useFormRegionSeason('id');
+  const { token } = useAuth();
+  const [formData, setFormData] = useState<Partial<ImportChallongeInput>>({
     challongeUrl: '',
     round: '',
     roundStartDate: '',
     roundEndDate: '',
-    matchSpacingMinutes: DEFAULT_SPACING_MINUTES,
+    matchSpacingMinutes: 30,
     phase: 'qualifiers',
     tags: [],
-  })
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<Array<{ participantName: string; reason: string }>>([]);
 
   useEffect(() => {
-    formRegionSeason.initFromActiveRegion()
-    // Seed once on mount from the active region; re-running on every render of the
-    // hook's identity would clobber a selection the user has already made.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    formRegionSeason.initFromActiveRegion();
+  }, []);
 
-  const update = (field: keyof ImportChallongeInput, value: string | number | string[]) =>
-    setForm((prev) => ({ ...prev, [field]: value }))
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    setValidationErrors([]);
 
-  const handleSubmit = async (event: FormEvent) => {
-    event.preventDefault()
+    try {
+      if (
+        !formData.challongeUrl ||
+        !formRegionSeason.regionId ||
+        formRegionSeason.seasonValue === "" ||
+        !formData.roundStartDate ||
+        !formData.roundEndDate
+      ) {
+        throw new Error('Please fill in all required fields');
+      }
 
-    if (
-      !form.challongeUrl ||
-      !formRegionSeason.regionId ||
-      formRegionSeason.seasonValue === '' ||
-      !form.roundStartDate ||
-      !form.roundEndDate
-    ) {
-      setError('Please fill in all required fields')
-      return
+      const startDate = new Date(formData.roundStartDate);
+      const endDate = new Date(formData.roundEndDate);
+      if (startDate >= endDate) {
+        throw new Error('Round start date must be before round end date');
+      }
+
+      const payload: ImportChallongeInput = {
+        challongeUrl: formData.challongeUrl,
+        seasonId: formRegionSeason.seasonValue as number,
+        round: formData.round,
+        roundStartDate: formData.roundStartDate,
+        roundEndDate: formData.roundEndDate,
+        matchSpacingMinutes: formData.matchSpacingMinutes ?? 30,
+        phase: formData.phase ?? 'qualifiers',
+        region: formRegionSeason.selectedRegion?.code ?? 'na',
+        tags: formData.tags,
+      };
+
+      const backendUrl = BACKEND_URL;
+      const response = await authFetch(`${backendUrl}/api/games/import-challonge`, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      }, token);
+
+      const result: ChallongeImportResult = await response.json();
+
+      if (!response.ok || !result.success) {
+        if (result.unmatchedTeams?.length) {
+          setValidationErrors(result.unmatchedTeams.map(t => ({
+            participantName: t.participantName,
+            reason: t.reason,
+          })));
+        }
+        throw new Error(result.error || 'Failed to import games from Challonge');
+      }
+
+      onImportSuccess(result);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setLoading(false);
     }
+  };
 
-    if (new Date(form.roundStartDate) >= new Date(form.roundEndDate)) {
-      setError('Round start date must be before round end date')
-      return
-    }
+  const handleInputChange = (field: keyof ImportChallongeInput, value: string | number) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
 
-    const result = await importGames({
-      challongeUrl: form.challongeUrl,
-      seasonId: formRegionSeason.seasonValue as number,
-      round: form.round,
-      roundStartDate: form.roundStartDate,
-      roundEndDate: form.roundEndDate,
-      matchSpacingMinutes: form.matchSpacingMinutes ?? DEFAULT_SPACING_MINUTES,
-      phase: form.phase ?? 'qualifiers',
-      region: formRegionSeason.selectedRegion?.code ?? 'na',
-      tags: form.tags,
-    })
-
-    if (result) onImportSuccess(result)
-  }
+  const handleTagsChange = (tagsString: string) => {
+    const tags = tagsString.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
+    setFormData(prev => ({ ...prev, tags }));
+  };
 
   return (
-    <Modal
-      isOpen
-      onClose={onCancel}
-      title="Import Games from Challonge"
-      size="lg"
-      dismissOnBackdrop={!loading}
-      footer={
-        <>
-          <Button variant="outline" onClick={onCancel} disabled={loading}>
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            form="challonge-import-form"
-            loading={loading}
-            loadingLabel="Importing…"
-          >
-            Import Games
-          </Button>
-        </>
-      }
-    >
-      <form id="challonge-import-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <FormField label="Challonge URL" required>
-          {(id) => (
-            <TextInput
-              id={id}
+    <div className="challonge-import-overlay">
+      <div className="challonge-import-modal">
+        <div className="modal-header">
+          <h2>Import Games from Challonge</h2>
+          <button className="close-button" onClick={onCancel}>&times;</button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="import-form">
+          <div className="form-group">
+            <label htmlFor="challongeUrl">Challonge URL *</label>
+            <input
               type="url"
-              value={form.challongeUrl ?? ''}
-              onChange={(e) => update('challongeUrl', e.target.value)}
+              id="challongeUrl"
+              value={formData.challongeUrl}
+              onChange={(e) => handleInputChange('challongeUrl', e.target.value)}
               placeholder="https://challonge.com/ch2s2na"
               required
             />
-          )}
-        </FormField>
+          </div>
 
-        <RegionSeasonFields
-          regions={formRegionSeason.regions}
-          regionsLoading={formRegionSeason.regionsLoading}
-          regionId={formRegionSeason.regionId}
-          onRegionChange={formRegionSeason.setRegionId}
-          seasons={formRegionSeason.seasons}
-          seasonsLoading={formRegionSeason.seasonsLoading}
-          seasonValue={formRegionSeason.seasonValue}
-          onSeasonChange={formRegionSeason.setSeasonValue}
-          seasonValueKey="id"
-        />
+          <RegionSeasonFields
+            regions={formRegionSeason.regions}
+            regionsLoading={formRegionSeason.regionsLoading}
+            regionId={formRegionSeason.regionId}
+            onRegionChange={formRegionSeason.setRegionId}
+            seasons={formRegionSeason.seasons}
+            seasonsLoading={formRegionSeason.seasonsLoading}
+            seasonValue={formRegionSeason.seasonValue}
+            onSeasonChange={formRegionSeason.setSeasonValue}
+            seasonValueKey="id"
+          />
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <FormField label="Phase" required>
-            {(id) => (
-              <Select
-                id={id}
-                value={form.phase ?? 'qualifiers'}
-                onChange={(e) => update('phase', e.target.value)}
-                options={PHASE_OPTIONS}
+          <div className="form-row form-row-3">
+            <div className="form-group">
+              <label htmlFor="phase">Phase *</label>
+              <select
+                id="phase"
+                value={formData.phase || 'qualifiers'}
+                onChange={(e) => handleInputChange('phase', e.target.value)}
                 required
-              />
-            )}
-          </FormField>
+              >
+                <option value="pre_season">Pre-Season</option>
+                <option value="qualifiers">Qualifiers</option>
+                <option value="playoffs">Playoffs</option>
+              </select>
+            </div>
+          </div>
 
-          <FormField label="Minutes Between Games">
-            {(id) => (
-              <TextInput
-                id={id}
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="round">Challonge Round Filter (Optional)</label>
+              <input
+                type="text"
+                id="round"
+                value={formData.round || ''}
+                onChange={(e) => handleInputChange('round', e.target.value)}
+                placeholder="e.g., 1 or Round 1"
+              />
+              <small>Leave empty to import all rounds</small>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="matchSpacingMinutes">Minutes Between Games</label>
+              <input
                 type="number"
-                min={15}
-                max={120}
-                value={form.matchSpacingMinutes ?? DEFAULT_SPACING_MINUTES}
-                onChange={(e) => update('matchSpacingMinutes', Number.parseInt(e.target.value, 10))}
+                id="matchSpacingMinutes"
+                min="15"
+                max="120"
+                value={formData.matchSpacingMinutes || 30}
+                onChange={(e) => handleInputChange('matchSpacingMinutes', parseInt(e.target.value))}
               />
-            )}
-          </FormField>
+            </div>
+          </div>
 
-          <FormField label="Challonge Round Filter" hint="Leave empty to import all rounds.">
-            {(id) => (
-              <TextInput
-                id={id}
-                value={form.round ?? ''}
-                onChange={(e) => update('round', e.target.value)}
-                placeholder="e.g. 1 or Round 1"
-              />
-            )}
-          </FormField>
-
-          <FormField label="Tags" hint="Optional, comma-separated.">
-            {(id) => (
-              <TextInput
-                id={id}
-                value={form.tags?.join(', ') ?? ''}
-                onChange={(e) =>
-                  update(
-                    'tags',
-                    e.target.value
-                      .split(',')
-                      .map((tag) => tag.trim())
-                      .filter(Boolean)
-                  )
-                }
-                placeholder="e.g. RVL, Invitational"
-              />
-            )}
-          </FormField>
-
-          <FormField label="Round Start Date/Time" required>
-            {(id) => (
-              <TextInput
-                id={id}
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="roundStartDate">Round Start Date/Time *</label>
+              <input
                 type="datetime-local"
-                value={form.roundStartDate ?? ''}
-                onChange={(e) => update('roundStartDate', e.target.value)}
+                id="roundStartDate"
+                value={formData.roundStartDate}
+                onChange={(e) => handleInputChange('roundStartDate', e.target.value)}
                 required
               />
-            )}
-          </FormField>
+            </div>
 
-          <FormField label="Round End Date/Time" required>
-            {(id) => (
-              <TextInput
-                id={id}
+            <div className="form-group">
+              <label htmlFor="roundEndDate">Round End Date/Time *</label>
+              <input
                 type="datetime-local"
-                value={form.roundEndDate ?? ''}
-                onChange={(e) => update('roundEndDate', e.target.value)}
+                id="roundEndDate"
+                value={formData.roundEndDate}
+                onChange={(e) => handleInputChange('roundEndDate', e.target.value)}
                 required
               />
-            )}
-          </FormField>
-        </div>
+            </div>
+          </div>
 
-        {error && <ErrorNotice message={error} />}
+          <div className="form-group">
+            <label htmlFor="tags">Tags (optional, comma-separated)</label>
+            <input
+              type="text"
+              id="tags"
+              value={formData.tags?.join(', ') || ''}
+              onChange={(e) => handleTagsChange(e.target.value)}
+              placeholder="e.g., RVL, Invitational"
+            />
+          </div>
 
-        {unmatchedTeams.length > 0 && (
-          <ErrorNotice
-            title="Unmatched teams"
-            message={
-              <ul className="m-0 flex list-disc flex-col gap-1 pl-5">
-                {unmatchedTeams.map((item, index) => (
-                  <li key={index}>
-                    {item.participantName}: {item.reason}
-                  </li>
+          {error && <div className="error-message">{error}</div>}
+
+          {validationErrors.length > 0 && (
+            <div className="error-message">
+              <strong>Unmatched teams:</strong>
+              <ul>
+                {validationErrors.map((item, idx) => (
+                  <li key={idx}>{item.participantName}: {item.reason}</li>
                 ))}
               </ul>
-            }
-          />
-        )}
+            </div>
+          )}
 
-        <Card tone="inset" padding="md">
-          <SectionHeader title="How it works" level={4} />
-          <Prose size="sm">
-            <ul>
-              <li>
-                <strong>Teams must exist</strong> in the selected season before import — none are
-                created automatically
-              </li>
-              <li>
-                <strong>All-or-nothing:</strong> if any team cannot be matched, the entire import
-                is aborted
-              </li>
-              <li>
-                <strong>Re-import:</strong> existing games update only when teams match; identical
-                games are skipped
-              </li>
-              <li>
-                <strong>Stages:</strong> Swiss/qualifier rounds map to &quot;Round N&quot;;
-                playoffs use clean labels like &quot;Round of 16&quot; with winners/losers on the
-                bracket field
-              </li>
-            </ul>
-          </Prose>
-        </Card>
-      </form>
-    </Modal>
-  )
-}
+          <div className="form-actions">
+            <button type="button" onClick={onCancel} className="cancel-button">Cancel</button>
+            <button type="submit" disabled={loading} className="import-button">
+              {loading ? 'Importing...' : 'Import Games'}
+            </button>
+          </div>
+        </form>
+
+        <div className="import-info">
+          <h3>How it works:</h3>
+          <ul>
+            <li><strong>Teams must exist</strong> in the selected season before import — none are created automatically</li>
+            <li><strong>All-or-nothing:</strong> if any team cannot be matched, the entire import is aborted</li>
+            <li><strong>Re-import:</strong> existing games update only when teams match; identical games are skipped</li>
+            <li><strong>Stages:</strong> Swiss/qualifier rounds map to &quot;Round N&quot;; playoffs use clean labels like &quot;Round of 16&quot; with winners/losers on the bracket field</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ChallongeImport;

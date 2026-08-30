@@ -19,18 +19,6 @@ export default tseslint.config(
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
-      // A leading underscore marks a binding that exists only to be discarded — a destructured
-      // field being stripped, a callback parameter the signature requires but the body ignores.
-      // The convention is already used across the codebase; this makes it mean something.
-      '@typescript-eslint/no-unused-vars': [
-        'error',
-        {
-          argsIgnorePattern: '^_',
-          varsIgnorePattern: '^_',
-          destructuredArrayIgnorePattern: '^_',
-          caughtErrorsIgnorePattern: '^_',
-        },
-      ],
       'react-refresh/only-export-components': [
         'warn',
         { allowConstantExport: true },

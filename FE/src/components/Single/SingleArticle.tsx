@@ -1,61 +1,63 @@
-/**
- * SingleArticle — one article rendered as a newspaper page: an "RVL Examiner" masthead, the hero image, headline, byline, summary lede and body, with a like button at the foot.
- * The like count is held locally and adjusted optimistically after a successful toggle, so the number moves immediately without refetching the whole article.
- * Lives in `components/Single/`; routed at /articles/:id.
- */
-import { useMemo, useState } from 'react'
-import { useParams } from 'react-router-dom'
-import { FaHeart } from 'react-icons/fa'
-import { useSingleArticles } from '@/hooks/allFetch'
-import { useLikeArticle } from '@/hooks/useLikeArticle'
-import { useLikeStatus } from '@/hooks/useLikeStatus'
-import type { Article } from '@/types/interfaces'
-import SEO from '@/components/SEO'
+import React, { useMemo, useState } from "react";
+import { useParams } from "react-router-dom";
+import { useSingleArticles } from "../../hooks/allFetch";
+import { useLikeArticle } from "../../hooks/useLikeArticle";
+import { useLikeStatus } from "../../hooks/useLikeStatus";
+import "../../styles/SingleArticle.css";
+import { Article } from "../../types/interfaces";
+import { FaHeart } from "react-icons/fa";
+import SEO from "../SEO";
 
-import PageContainer from '@/components/ui/layout/PageContainer'
-import ErrorNotice from '@/components/ui/feedback/ErrorNotice'
-import Skeleton, { SkeletonText } from '@/components/ui/feedback/Skeleton'
-
-export default function SingleArticle() {
-  const { id } = useParams<{ id: string }>()
-
-  const { data, loading, error } = useSingleArticles(id ?? '')
-  const { hasLiked, loading: likeStatusLoading, refetch: refetchLikeStatus } = useLikeStatus(
-    Number(id ?? 0)
-  )
-  const { toggleLike, isLiking, error: likeError } = useLikeArticle()
-
-  const [localLikeCount, setLocalLikeCount] = useState<number | null>(null)
-
-  // The endpoint returns either a single article or a one-element array depending on the route.
-  const article: Article | null = useMemo(() => {
-    if (!data) return null
-    if (Array.isArray(data)) return data.length > 0 ? data[0] : null
-    return data as Article
-  }, [data])
+const SingleArticle: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const { toggleLike, isLiking, error: likeError } = useLikeArticle();
+  const [localLikeCount, setLocalLikeCount] = useState<number | null>(null);
 
   if (!id) {
-    return (
-      <PageContainer width="narrow">
-        <ErrorNotice message="Invalid article ID." />
-      </PageContainer>
-    )
+    return <p className="sa-error">Invalid article ID.</p>;
   }
 
-  const likeCount = localLikeCount ?? article?.likes ?? 0
+  const { data, loading, error } = useSingleArticles(id);
+  const { hasLiked, loading: likeStatusLoading, refetch: refetchLikeStatus } = useLikeStatus(parseInt(id));
+
+  // Normalize result: support both array and single object
+  const article: Article | null = useMemo(() => {
+    if (!data) return null;
+    if (Array.isArray(data)) {
+      return data.length > 0 ? data[0] : null;
+    }
+    return data as Article;
+  }, [data]);
+
+  // Use local like count if available, otherwise use article likes
+  const displayLikeCount = localLikeCount !== null ? localLikeCount : (article?.likes || 0);
 
   const handleToggleLike = async () => {
-    if (!article) return
-    const success = await toggleLike(article.id, hasLiked)
-    if (!success) return
+    if (article) {
+      console.log('Toggle like called:', { articleId: article.id, hasLiked, displayLikeCount });
+      const success = await toggleLike(article.id, hasLiked);
+      console.log('Toggle like result:', success);
+      
+      // Only update local like count if the API call was successful
+      if (success) {
+        if (hasLiked) {
+          setLocalLikeCount(Math.max(displayLikeCount - 1, 0));
+        } else {
+          setLocalLikeCount(displayLikeCount + 1);
+        }
+        // Refetch like status to update the heart icon
+        refetchLikeStatus();
+      }
+    }
+  };
 
-    // Optimistic: the server has accepted, so move the number without a refetch.
-    setLocalLikeCount(hasLiked ? Math.max(likeCount - 1, 0) : likeCount + 1)
-    refetchLikeStatus()
-  }
+  // Determine which heart icon to show
+  const HeartIcon = FaHeart;
+  const heartClass = hasLiked ? 'liked' : '';
 
   return (
-    <PageContainer width="narrow">
+    <div className={`single-article-page ${loading ? 'loading' : ''}`}>
+      {/* SEO Meta Tags for Social Media Embedding */}
       {article && (
         <SEO
           title={article.title}
@@ -66,106 +68,107 @@ export default function SingleArticle() {
           publishedTime={article.createdAt}
           author={article.author.username}
           section="News"
-          tags={['volleyball', 'roblox', 'RVL', 'gaming', 'sports']}
+          tags={["volleyball", "roblox", "RVL", "gaming", "sports"]}
           structuredData={{
-            '@context': 'https://schema.org',
-            '@type': 'Article',
-            headline: article.title,
-            description: article.summary,
-            image: article.imageUrl,
-            author: { '@type': 'Person', name: article.author.username },
-            publisher: {
-              '@type': 'Organization',
-              name: 'Roblox Volleyball League',
-              logo: {
-                '@type': 'ImageObject',
-                url: 'https://volleyball4-2.com/rvlLogo.png',
-              },
+            "@context": "https://schema.org",
+            "@type": "Article",
+            "headline": article.title,
+            "description": article.summary,
+            "image": article.imageUrl,
+            "author": {
+              "@type": "Person",
+              "name": article.author.username
             },
-            datePublished: article.createdAt,
-            dateModified: article.createdAt,
-            mainEntityOfPage: {
-              '@type': 'WebPage',
-              '@id': `https://volleyball4-2.com/articles/${article.id}`,
+            "publisher": {
+              "@type": "Organization",
+              "name": "Roblox Volleyball League",
+              "logo": {
+                "@type": "ImageObject",
+                "url": "https://volleyball4-2.com/rvlLogo.png"
+              }
             },
+            "datePublished": article.createdAt,
+            "dateModified": article.createdAt,
+            "mainEntityOfPage": {
+              "@type": "WebPage",
+              "@id": `https://volleyball4-2.com/articles/${article.id}`
+            }
           }}
         />
       )}
 
-      {/* Masthead — the page's newspaper conceit, kept above every state. */}
-      <header className="flex flex-wrap items-baseline justify-between gap-2 border-y-2 border-content py-3">
-        <span className="font-serif text-2xl font-bold tracking-tight text-content">
-          The RVL Examiner
-        </span>
-        <span className="text-xs uppercase tracking-widest text-content-tertiary">
-          {loading ? 'Loading…' : `Vol. 1, No. ${article?.id ?? '…'}`}
-        </span>
+      {/* Newspaper masthead */}
+      <header className="np-header">
+        <div className="np-header__brand">The RVL Examiner</div>
+        <div className="np-header__info">
+          <span className="np-header__edition">
+            {loading ? 'Loading...' : `'Vol. 1, No. ${article?.id || '...'}`}
+          </span>
+        </div>
       </header>
 
       {loading ? (
-        <article className="flex flex-col gap-4">
-          <Skeleton className="h-56 w-full !rounded-card" />
-          <Skeleton className="h-8 w-3/4" />
-          <Skeleton className="h-4 w-1/3" />
-          <SkeletonText lines={6} />
+        <article className="sa-article">
+          <div className="sa-skeleton-image"></div>
+          <div className="sa-skeleton-title"></div>
+          <div className="sa-skeleton-meta"></div>
+          <div className="sa-skeleton-summary"></div>
+          <div className="sa-skeleton-content"></div>
+          <div className="sa-skeleton-content"></div>
+          <div className="sa-skeleton-content"></div>
         </article>
       ) : error ? (
-        <ErrorNotice message={error} />
+        <p className="sa-error">Error: {error}</p>
       ) : !article ? (
-        <ErrorNotice message="No article found." />
+        <p className="sa-error">No article found.</p>
       ) : (
-        <article className="flex flex-col gap-5">
+        <article className="sa-article">
           {article.imageUrl && (
             <img
               src={article.imageUrl}
               alt={article.title}
-              className="w-full rounded-card border border-border object-cover"
+              className="sa-image"
             />
           )}
-
-          <h1 className="m-0 text-page-title font-bold leading-tight text-content">
-            {article.title}
-          </h1>
-
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-border pb-3 text-sm text-content-tertiary">
-            <span>By {article.author.username}</span>
-            <span aria-hidden className="text-content-muted">·</span>
-            <span>{new Date(article.createdAt).toLocaleDateString()}</span>
+          <h1 className="sa-title">{article.title}</h1>
+          <div className="sa-meta">
+            <span className="sa-meta-author">By {article.author.username}</span>
+            <span className="sa-meta-date">
+              {new Date(article.createdAt).toLocaleDateString()}
+            </span>
           </div>
 
-          <p className="m-0 text-lg font-medium leading-relaxed text-content-secondary">
-            {article.summary}
-          </p>
+          <div className="sa-summary">{article.summary}</div>
 
-          <div className="whitespace-pre-wrap text-base leading-relaxed text-content-secondary">
-            {article.content}
-          </div>
-
-          {likeError && <ErrorNotice message={likeError} />}
-
-          <div className="flex items-center gap-3 border-t border-border pt-4">
+          <div className="sa-content">{article.content}</div>
+          
+          {likeError && (
+            <div className="sa-error" style={{ marginTop: '1rem', padding: '0.5rem', backgroundColor: 'rgba(255, 0, 0, 0.1)', borderRadius: '4px' }}>
+              {likeError}
+            </div>
+          )}
+          
+          <div className="sa-likes">
             <button
-              type="button"
+              className={`sa-like-button ${heartClass} ${isLiking ? 'liking' : ''}`}
               onClick={handleToggleLike}
               disabled={isLiking || likeStatusLoading}
-              title={
-                isLiking ? 'Processing…' : hasLiked ? 'Unlike this article' : 'Like this article'
-              }
-              aria-pressed={hasLiked}
-              className={`inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
-                hasLiked
-                  ? 'border-status-danger/40 bg-status-danger/10 text-status-danger'
-                  : 'border-border text-content-tertiary hover:border-status-danger/40 hover:text-status-danger'
-              }`}
+              title={isLiking ? 'Processing...' : hasLiked ? 'Unlike this article' : 'Like this article'}
             >
-              <FaHeart aria-hidden />
+              {likeStatusLoading ? (
+                <div className="sa-like-loading">❤️</div>
+              ) : (
+                <HeartIcon />
+              )}
             </button>
-            <span className="text-sm tabular-nums text-content-secondary">
-              {likeCount} {likeCount === 1 ? 'like' : 'likes'}
+            <span className="sa-likes-count">
+              {displayLikeCount} {displayLikeCount === 1 ? "like" : "likes"}
             </span>
           </div>
         </article>
       )}
-    </PageContainer>
-  )
-}
+    </div>
+  );
+};
+
+export default SingleArticle;

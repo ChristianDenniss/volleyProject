@@ -1,426 +1,759 @@
-/**
- * SinglePlayer — a player's profile: their avatar and identity, career or per-season stat totals with per-game averages, the teams and games they've appeared in, their awards (including championship rings), and their Hall of Fame progress.
- * Stats can be scoped by region and by season; both filters re-derive the totals, the averages and the HOF score together, so the whole page always describes one consistent slice of the career.
- * Lives in `components/Single/`; routed at /players/:id. The HOF scoring model lives in `utils/hallOfFame`.
- */
-import { useEffect, useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import React, { useEffect, useState } from "react"
+import { useSinglePlayer, useAwardsByPlayerID } from "../../hooks/allFetch"
+import { useParams } from "react-router-dom"
+import { useRegion } from "../../context/regionContext"
+import type { RegionCode } from "../../types/interfaces"
+import { getRobloxAvatarUrl } from "../../utils/fetchAvatarRoblox"
+import Select from "react-select"
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import {
-  faTrophy,
-  faVolleyballBall,
-  faMedal,
-  faCrown,
-  faAward,
-  faShieldAlt,
-  faHandSparkles,
-  faBolt,
-  faCrosshairs,
-  faUserShield,
-  faShield,
-  faLock,
-  faStar,
-  faRing,
-  type IconDefinition,
+import { 
+    faTrophy, 
+    faVolleyballBall, 
+    faMedal, 
+    faCrown, 
+    faAward,
+    faShieldAlt,
+    faHandSparkles,
+    faBolt,
+    faCrosshairs,
+    faUserShield,
+    faShield,
+    faLock,
+    faStar,
+    faRing,
 } from '@fortawesome/free-solid-svg-icons'
-import { useSinglePlayer, useAwardsByPlayerID } from '@/hooks/allFetch'
-import { useRegion } from '@/context/regionContext'
-import { getRobloxAvatarUrl } from '@/utils/fetchAvatarRoblox'
-import { countChampionships, calculateHofScore, hofProgressPercent, HOF_INDUCTION_SCORE } from '@/utils/hallOfFame'
-import { STAT_TOTAL_FIELDS, sumStats } from '@/utils/statTotals'
-import type { RegionCode } from '@/types/interfaces'
-import SEO from '@/components/SEO'
+import "../../styles/SinglePlayer.css"
+import SEO from "../SEO"
 
-import PageContainer from '@/components/ui/layout/PageContainer'
-import SectionHeader from '@/components/ui/layout/SectionHeader'
-import Card from '@/components/ui/layout/Card'
-import DetailStats from '@/components/ui/layout/DetailStats'
-import Tabs from '@/components/ui/navigation/Tabs'
-import Button from '@/components/ui/buttons/Button'
-import Pill from '@/components/ui/pills/Pill'
-import Avatar from '@/components/ui/misc/Avatar'
-import FormField from '@/components/ui/inputs/FormField'
-import Select from '@/components/ui/inputs/Select'
-import ProgressBar from '@/components/ui/feedback/ProgressBar'
-import ErrorNotice from '@/components/ui/feedback/ErrorNotice'
-import EmptyState from '@/components/ui/feedback/EmptyState'
-import Skeleton from '@/components/ui/feedback/Skeleton'
-
-/** Award type → its trophy glyph. Unlisted types fall back to a generic trophy. */
-const AWARD_ICONS: Record<string, IconDefinition> = {
-  MVP: faTrophy,
-  'Best Spiker': faVolleyballBall,
-  'Best Setter': faHandSparkles,
-  'Best Libero': faShieldAlt,
-  'Best Server': faCrosshairs,
-  'Best Blocker': faLock,
-  'Best Aper': faBolt,
-  'Best Receiver': faUserShield,
-  DPOS: faShield,
-  FMVP: faCrown,
-  MIP: faMedal,
-  'LuvLate Award': faAward,
+const awardIcons: { [key: string]: any } = {
+    "MVP": faTrophy,
+    "Best Spiker": faVolleyballBall,
+    "Best Setter": faHandSparkles,
+    "Best Libero": faShieldAlt,
+    "Best Server": faCrosshairs,
+    "Best Blocker": faLock,
+    "Best Aper": faBolt,
+    "Best Receiver": faUserShield,
+    "DPOS": faShield,
+    "FMVP": faCrown,
+    "MIP": faMedal,
+    "LuvLate Award": faAward,
+    "Rings": faRing,
 }
 
-/** How many games are listed before the "See More Games" toggle. */
-const VISIBLE_GAMES = 5
+const calculateChampionships = (player: any): number => {
+    if (!player.teams) return 0;
+    
+    return player.teams.reduce((total: number, team: any) => {
+        if (team.placement && (
+            team.placement === '1st Place' ||
+            team.placement === '1st Place (D1)' ||
+            team.placement === '1st Place (D2)' ||
+            team.placement === '1st Place (D3)'
+        )) {
+            return total + 1;
+        }
+        return total;
+    }, 0);
+};
 
-/** The season currently treated as "now" for the Current Team line. */
-const CURRENT_SEASON_NUMBER = 14
+const calculateHOFScore = (player: any, awards: any[], careerTotals: any): number => {
+    let score = 0;
+    
+    // Award points
+    if (awards) {
+        awards.forEach(award => {
+            switch(award.type) {
+                case 'MVP':
+                    score += 50;
+                    break;
+                case 'Best Spiker':
+                case 'Best Blocker':
+                    score += 35;
+                    break;
+                case 'Best Aper':
+                case 'Best Receiver':
+                case 'Best Setter':
+                case 'FMVP':
+                case 'LuvLate Award':
+                    score += 25;
+                    break;
+                case 'Best Server':
+                case 'MIP':
+                case 'Best Libero':
+                case 'DPOS':
+                    score += 15;
+                    break;
+                default:
+                    score += 5;
+            }
+        });
+    }
 
-const CAREER_OPTION_VALUE = '0'
+    // Stats points
+    if (careerTotals) {
+        // Spike Kills tiers
+        if (careerTotals.spikeKills >= 500) score += 15;
+        else if (careerTotals.spikeKills >= 300) score += 10;
+        else if (careerTotals.spikeKills >= 100) score += 5;
 
-export default function PlayerProfiles() {
-  const { id } = useParams<{ id: string }>()
-  const { regions } = useRegion()
+        // Blocks tiers
+        if (careerTotals.blocks >= 200) score += 15;
+        else if (careerTotals.blocks >= 100) score += 10;
+        else if (careerTotals.blocks >= 50) score += 5;
 
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
-  const [profileRegion, setProfileRegion] = useState<'all' | RegionCode>('all')
-  const [selectedSeason, setSelectedSeason] = useState(0)
-  const [showAllGames, setShowAllGames] = useState(false)
+        // Assists tiers
+        if (careerTotals.assists >= 500) score += 15;
+        else if (careerTotals.assists >= 300) score += 10;
+        else if (careerTotals.assists >= 100) score += 5;
 
-  const regionFilter = profileRegion === 'all' ? undefined : profileRegion
-  const { data: player, error, loading } = useSinglePlayer(id || '', regionFilter)
-  const {
-    data: awards,
-    loading: awardsLoading,
-    error: awardsError,
-  } = useAwardsByPlayerID(id || '', regionFilter)
+        // Digs tiers
+        if (careerTotals.digs >= 500) score += 15;
+        else if (careerTotals.digs >= 300) score += 10;
+        else if (careerTotals.digs >= 100) score += 5;
 
-  useEffect(() => {
-    if (!player?.name) return
-    getRobloxAvatarUrl(player.name)
-      .then((url) => {
-        if (url) setAvatarUrl(url)
-      })
-      .catch((err) => console.error('Error fetching avatar:', err))
-  }, [player?.name])
+        // Aces tiers
+        if (careerTotals.aces >= 20) score += 15;
+        else if (careerTotals.aces >= 10) score += 10;
+        else if (careerTotals.aces >= 5) score += 5;
 
-  const allStats = useMemo(() => (Array.isArray(player?.stats) ? player.stats : []), [player])
+        // Games played tiers
+        if (careerTotals.gamesPlayed >= 100) score += 15;
+        else if (careerTotals.gamesPlayed >= 50) score += 10;
+        else if (careerTotals.gamesPlayed >= 20) score += 5;
+    }
 
-  const seasonOptions = useMemo(() => {
-    const seasons = Array.from(
-      new Set(
-        allStats
-          .map((stat) => stat.game?.season?.seasonNumber)
-          .filter((num): num is number => typeof num === 'number')
-      )
+    // Team placement points
+    if (player.teams) {
+        player.teams.forEach((team: { placement?: string }) => {
+            if (team.placement) {
+                switch(team.placement) {
+                    case 'G.O.A.T.':
+                        score = Infinity; // Instant Hall of Fame induction
+                        break;
+                    case '1st Place':
+                        score += 20;
+                        break;
+                    case '1st Place (D1)':
+                        score += 20;
+                        break;
+                    case '1st Place (D2)':
+                        score += 18;
+                        break;
+                    case '1st Place (D3)':
+                        score += 15;
+                        break;
+                    case '2nd Place (D1)':
+                        score += 15;
+                        break;
+                    case '2nd Place (D2)':
+                        score += 13;
+                        break;
+                    case '2nd Place (D3)':
+                        score += 10;
+                        break;
+                    case '2nd Place':
+                        score += 15;
+                        break;
+                    case '3rd Place (D1)':
+                        score += 10;
+                        break;
+                    case '3rd Place (D2)':
+                        score += 8;
+                        break;
+                    case '3rd Place (D3)':
+                        score += 5;
+                        break;
+                    case '3rd Place':
+                        score += 10;
+                        break;
+                    case '4th Place (D1)':
+                        score += 5;
+                        break;
+                    case '4th Place (D2)':
+                        score += 4;
+                        break;
+                    case '4th Place (D3)':
+                        score += 3;
+                        break;
+                    case '4th Place':
+                        score += 5;
+                        break;
+                    case 'Top 6 (D1)':
+                        score += 3;
+                        break;
+                    case 'Top 6 (D2)':
+                        score += 2;
+                        break;
+                    case 'Top 6 (D3)':
+                        score += 1;
+                        break;
+                    case 'Top 6':
+                        score += 3;
+                        break;
+                    case 'Top 8 (D1)':
+                        score += 1;
+                        break;
+                    case 'Top 8 (D2)':
+                        score += 0.5;
+                        break;
+                    case 'Top 8 (D3)':
+                        score += 0.25;
+                        break;
+                    case 'Top 8':
+                        score += 1;
+                        break;
+                }
+            }
+        });
+    }
+
+
+
+    // Teams played for points
+    const teamsPlayed = player.teams?.length || 0;
+    if (teamsPlayed >= 3 && teamsPlayed <= 6) {
+        score += 5;
+    } else if (teamsPlayed > 6 && teamsPlayed <= 10) {
+        score += 10;
+    } else if (teamsPlayed > 10 && teamsPlayed <= 12) {
+        score += 15;
+    } else if (teamsPlayed > 12 && teamsPlayed <= 14) {
+        score += 20;
+    }
+
+    return score; // Removed the Math.min cap
+};
+
+const PlayerProfiles: React.FC = () =>
+{
+    const { id } = useParams<{ id: string }>()
+    const { regions } = useRegion()
+    const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+    const [profileRegion, setProfileRegion] = useState<'all' | RegionCode>('all')
+    const regionFilter = profileRegion === 'all' ? undefined : profileRegion
+    const { data, error, loading } = useSinglePlayer(id || "", regionFilter)
+    const [selectedSeason, setSelectedSeason] = useState<number>(0)
+    const [showAllGames, setShowAllGames] = useState<boolean>(false)
+    const { data: awards, loading: awardsLoading, error: awardsError } = useAwardsByPlayerID(id || "", regionFilter)
+
+    useEffect(() =>
+    {
+        if (data?.name)
+        {
+            getRobloxAvatarUrl(data.name)
+                .then(url => { if (url) setAvatarUrl(url) })
+                .catch(err => console.error("Error fetching avatar:", err))
+        }
+    }, [data?.name])
+
+    if (!id) return <div className="player-profile-container">URL ID is undefined</div>
+    
+    // Loading state with skeleton
+    if (loading) {
+        return (
+            <div className="player-profile-container loading">
+                <div className="player-main-header">
+                    <div className="avatar-header-info">
+                        <div className="avatar-left">
+                            <div className="skeleton-avatar"></div>
+                        </div>
+                        <div className="avatar-right">
+                            <div className="skeleton-player-name"></div>
+                            <div className="skeleton-player-meta">
+                                {[1, 2, 3, 4, 5, 6, 7].map(i => (
+                                    <div key={i} className="skeleton-meta-item"></div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div className="skeleton-season-select"></div>
+                
+                <div className="player-profiles-grid">
+                    <div className="player-card">
+                        <div className="player-stats">
+                            <div className="stat-category">
+                                <div className="skeleton-category-title"></div>
+                                <div className="skeleton-stat-grid">
+                                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].map(i => (
+                                        <div key={i} className="skeleton-stat-item"></div>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="stat-category">
+                                <div className="skeleton-category-title"></div>
+                                <div className="skeleton-stat-grid">
+                                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].map(i => (
+                                        <div key={i} className="skeleton-stat-item"></div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div className="player-teams-section">
+                    <div className="skeleton-section-title"></div>
+                    <div className="skeleton-teams-list">
+                        {[1, 2, 3, 4, 5].map(i => (
+                            <div key={i} className="skeleton-team-item"></div>
+                        ))}
+                    </div>
+                </div>
+                
+                <div className="player-games-section">
+                    <div className="skeleton-section-title"></div>
+                    <div className="skeleton-games-list">
+                        {[1, 2, 3, 4, 5].map(i => (
+                            <div key={i} className="skeleton-game-item"></div>
+                        ))}
+                    </div>
+                </div>
+                
+                <div className="player-awards-section">
+                    <div className="skeleton-section-title"></div>
+                    <div className="skeleton-awards-list">
+                        {[1, 2, 3].map(i => (
+                            <div key={i} className="skeleton-award-item"></div>
+                        ))}
+                    </div>
+                </div>
+                
+                <div className="player-hof-section">
+                    <div className="skeleton-section-title"></div>
+                    <div className="skeleton-hof-progress"></div>
+                </div>
+            </div>
+        );
+    }
+    
+    if (error) return <div className="player-profile-container">Error: {error}</div>
+    if (!data) return <div className="player-profile-container">No player found.</div>
+
+    const player = data
+    const allStats = Array.isArray(player.stats) ? player.stats : []
+
+    const uniqueSeasons = Array.from(
+        new Set(
+            allStats
+                .map(stat => stat.game?.season?.seasonNumber)
+                .filter((num): num is number => typeof num === "number")
+        )
     ).sort((a, b) => a - b)
 
-    return [
-      { value: CAREER_OPTION_VALUE, label: 'Career' },
-      ...seasons.map((season) => ({ value: String(season), label: `Season ${season}` })),
-    ]
-  }, [allStats])
-
-  const filteredStats = useMemo(
-    () =>
-      selectedSeason === 0
+    const filteredStats = selectedSeason === 0
         ? allStats
-        : allStats.filter((stat) => stat.game?.season?.seasonNumber === selectedSeason),
-    [allStats, selectedSeason]
-  )
+        : allStats.filter(stat => stat.game?.season?.seasonNumber === selectedSeason)
 
-  /** Totals for the selected slice, plus the games-played count the HOF model needs. */
-  const totals = useMemo(
-    () => ({ ...sumStats(filteredStats), gamesPlayed: filteredStats.length }),
-    [filteredStats]
-  )
+    const careerTotals = filteredStats.reduce((acc, stat) => ({
+        spikeKills: acc.spikeKills + stat.spikeKills,
+        spikeAttempts: acc.spikeAttempts + stat.spikeAttempts,
+        apeKills: acc.apeKills + stat.apeKills,
+        apeAttempts: acc.apeAttempts + stat.apeAttempts,
+        spikingErrors: acc.spikingErrors + stat.spikingErrors,
+        digs: acc.digs + stat.digs,
+        blocks: acc.blocks + stat.blocks,
+        assists: acc.assists + stat.assists,
+        aces: acc.aces + stat.aces,
+        settingErrors: acc.settingErrors + stat.settingErrors,
+        blockFollows: acc.blockFollows + stat.blockFollows,
+        servingErrors: acc.servingErrors + stat.servingErrors,
+        miscErrors: acc.miscErrors + stat.miscErrors,
+        gamesPlayed: acc.gamesPlayed + 1
+    }), {
+        spikeKills: 0,
+        spikeAttempts: 0,
+        apeKills: 0,
+        apeAttempts: 0,
+        spikingErrors: 0,
+        digs: 0,
+        blocks: 0,
+        assists: 0,
+        aces: 0,
+        settingErrors: 0,
+        blockFollows: 0,
+        servingErrors: 0,
+        miscErrors: 0,
+        gamesPlayed: 0
+    })
 
-  const dedupedGames = useMemo(() => {
-    const seen = new Set<number>()
-    return (player?.teams ?? [])
-      .flatMap((team) => team.games || [])
-      .filter((game) => {
-        if (seen.has(game.id)) return false
-        seen.add(game.id)
+    const averages = {
+        spikeKills: careerTotals.gamesPlayed ? (careerTotals.spikeKills / careerTotals.gamesPlayed).toFixed(1) : "0",
+        spikeAttempts: careerTotals.gamesPlayed ? (careerTotals.spikeAttempts / careerTotals.gamesPlayed).toFixed(1) : "0",
+        apeKills: careerTotals.gamesPlayed ? (careerTotals.apeKills / careerTotals.gamesPlayed).toFixed(1) : "0",
+        apeAttempts: careerTotals.gamesPlayed ? (careerTotals.apeAttempts / careerTotals.gamesPlayed).toFixed(1) : "0",
+        spikingErrors: careerTotals.gamesPlayed ? (careerTotals.spikingErrors / careerTotals.gamesPlayed).toFixed(1) : "0",
+        digs: careerTotals.gamesPlayed ? (careerTotals.digs / careerTotals.gamesPlayed).toFixed(1) : "0",
+        blocks: careerTotals.gamesPlayed ? (careerTotals.blocks / careerTotals.gamesPlayed).toFixed(1) : "0",
+        assists: careerTotals.gamesPlayed ? (careerTotals.assists / careerTotals.gamesPlayed).toFixed(1) : "0",
+        aces: careerTotals.gamesPlayed ? (careerTotals.aces / careerTotals.gamesPlayed).toFixed(1) : "0",
+        settingErrors: careerTotals.gamesPlayed ? (careerTotals.settingErrors / careerTotals.gamesPlayed).toFixed(1) : "0",
+        blockFollows: careerTotals.gamesPlayed ? (careerTotals.blockFollows / careerTotals.gamesPlayed).toFixed(1) : "0",
+        servingErrors: careerTotals.gamesPlayed ? (careerTotals.servingErrors / careerTotals.gamesPlayed).toFixed(1) : "0",
+        miscErrorsPerGame: careerTotals.gamesPlayed ? (careerTotals.miscErrors / careerTotals.gamesPlayed).toFixed(1) : "0"
+    }
+
+    const currentSeasonTeam = player.teams?.find(team => team.season?.seasonNumber === 14)?.name || "Not Active"
+    const mostRecentTeam = player.teams?.reduce((mostRecent, team) =>
+    {
+        if (!team.season) return mostRecent
+        if (!mostRecent || team.season.id > mostRecent.season.id) return team
+        return mostRecent
+    }, null as typeof player.teams[0] | null)?.name || "N/A"
+
+    const seenGames = new Set<number>()
+    const dedupedGames = player.teams?.flatMap(team => team.games || []).filter(game =>
+    {
+        if (seenGames.has(game.id)) return false
+        seenGames.add(game.id)
         return true
-      })
-  }, [player])
+    }) || []
 
-  if (!id) {
+    const visibleGamesList = showAllGames ? dedupedGames : dedupedGames.slice(0, 5)
+    const hasMoreGames = dedupedGames.length > 5
+
+    const handleToggleGames = () => {
+        setShowAllGames(prev => !prev)
+    }
+
+    const formatStatName = (key: string): string => {
+        const nameMap: { [key: string]: string } = {
+            spikeKills: "Spike Kills",
+            spikeAttempts: "Spike Attempts",
+            apeKills: "Ape Kills",
+            apeAttempts: "Ape Attempts",
+            spikingErrors: "Spiking Errors",
+            digs: "Digs",
+            blocks: "Blocks",
+            assists: "Assists",
+            aces: "Aces",
+            settingErrors: "Setting Errors",
+            blockFollows: "Block Follows",
+            servingErrors: "Serving Errors",
+            miscErrors: "Misc Errors",
+            gamesPlayed: "Games Played",
+            miscErrorsPerGame: "Misc Errors Per Game"
+        }
+        return nameMap[key] || key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())
+    }
+
+    const hofScore = calculateHOFScore(player, awards || [], careerTotals)
+    const isGOAT = hofScore === Infinity
+    const hofPercentage = isGOAT ? 100 : Math.min((hofScore / 100) * 100, 100); // Cap percentage at 100 for display
+
     return (
-      <PageContainer width="narrow">
-        <ErrorNotice message="URL ID is undefined" />
-      </PageContainer>
-    )
-  }
-
-  if (loading) {
-    return (
-      <PageContainer width="wide">
-        <Skeleton className="h-28 w-full !rounded-panel" />
-        <Skeleton className="h-10 w-64" />
-        <Skeleton className="h-72 w-full !rounded-card" />
-      </PageContainer>
-    )
-  }
-
-  if (error || !player) {
-    return (
-      <PageContainer width="narrow">
-        <ErrorNotice message={error || 'No player found.'} />
-      </PageContainer>
-    )
-  }
-
-  const perGame = (value: number) =>
-    totals.gamesPlayed ? (value / totals.gamesPlayed).toFixed(1) : '0'
-
-  const currentTeam =
-    player.teams?.find((team) => team.season?.seasonNumber === CURRENT_SEASON_NUMBER)?.name ??
-    'Not Active'
-
-  const mostRecentTeam =
-    player.teams?.reduce<(typeof player.teams)[number] | null>((recent, team) => {
-      if (!team.season) return recent
-      if (!recent || team.season.id > recent.season!.id) return team
-      return recent
-    }, null)?.name ?? 'N/A'
-
-  const visibleGames = showAllGames ? dedupedGames : dedupedGames.slice(0, VISIBLE_GAMES)
-  const championships = countChampionships(player)
-  const hofScore = calculateHofScore(player, awards ?? [], totals)
-  const isGoat = hofScore === Infinity
-  const hofPercent = hofProgressPercent(hofScore)
-
-  const teamSlug = (name: string) => encodeURIComponent(name.toLowerCase().replace(/\s+/g, '-'))
-
-  return (
-    <PageContainer width="wide">
-      <SEO
-        title={`${player.name} - Player Profile`}
-        description={`${player.name} is a ${player.position} in the Roblox Volleyball League. View stats, teams, awards, and career highlights.`}
-        image={avatarUrl || 'https://volleyball4-2.com/rvlLogo.png'}
-        url={`https://volleyball4-2.com/players/${player.id}`}
-        type="profile"
-        structuredData={{
-          '@context': 'https://schema.org',
-          '@type': 'Person',
-          name: player.name,
-          jobTitle: player.position,
-          description: `${player.name} is a ${player.position} in the Roblox Volleyball League`,
-          image: avatarUrl || 'https://volleyball4-2.com/rvlLogo.png',
-          url: `https://volleyball4-2.com/players/${player.id}`,
-          worksFor: {
-            '@type': 'Organization',
-            name: 'Roblox Volleyball League',
-            url: 'https://volleyball4-2.com',
-          },
-          knowsAbout: ['Volleyball', 'Gaming', 'Sports'],
-          alumniOf:
-            player.teams?.map((team) => ({
-              '@type': 'SportsTeam',
-              name: team.name,
-              url: `https://volleyball4-2.com/teams/${teamSlug(team.name)}`,
-            })) || [],
-        }}
-      />
-
-      {/* Hero — deliberately dark in a light app, hence the inverse surface tokens. */}
-      <header className="flex flex-wrap items-center gap-6 rounded-panel bg-surface-inverse p-6 text-content-inverse">
-        <Avatar src={avatarUrl} name={player.name} size="xl" shape="circle" />
-        <div className="flex min-w-0 flex-col gap-2">
-          <h1 className="m-0 text-page-title font-semibold leading-tight">{player.name}</h1>
-          <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-content-inverse/80">
-            <span>Position: {player.position}</span>
-            <span>Current Team: {currentTeam}</span>
-            <span>Most Recent Team: {mostRecentTeam}</span>
-            <span>Total Teams: {player.teams?.length || 0}</span>
-            <span>Possible Games Played: {dedupedGames.length}</span>
-            <span>Total Stat Entries: {filteredStats.length}</span>
-          </div>
-        </div>
-      </header>
-
-      <Tabs
-        variant="segmented"
-        activeKey={profileRegion}
-        onChange={(key) => setProfileRegion(key as 'all' | RegionCode)}
-        items={[
-          { key: 'all', label: 'All Regions' },
-          ...regions.map((region) => ({ key: region.code, label: region.name })),
-        ]}
-      />
-
-      <FormField label="View stats for" className="max-w-xs">
-        {(fieldId) => (
-          <Select
-            id={fieldId}
-            value={String(selectedSeason)}
-            onChange={(e) => setSelectedSeason(Number(e.target.value))}
-            options={seasonOptions}
-          />
-        )}
-      </FormField>
-
-      {filteredStats.length === 0 ? (
-        <EmptyState label="No stats available for this season." />
-      ) : (
-        <div className="grid gap-4 lg:grid-cols-2">
-          <Card padding="lg">
-            <SectionHeader
-              title={selectedSeason === 0 ? 'Career Totals' : `Season ${selectedSeason} Totals`}
-              level={3}
-              className="mb-4"
-            />
-            <DetailStats
-              columns={3}
-              items={[
-                ...STAT_TOTAL_FIELDS.map((field) => ({
-                  label: field.label,
-                  value: totals[field.key],
-                })),
-                { label: 'Games Played', value: totals.gamesPlayed },
-              ]}
-            />
-          </Card>
-
-          <Card padding="lg">
-            <SectionHeader title="Per Game Averages" level={3} className="mb-4" />
-            <DetailStats
-              columns={3}
-              items={STAT_TOTAL_FIELDS.map((field) => ({
-                label: field.label,
-                value: perGame(totals[field.key]),
-              }))}
-            />
-          </Card>
-        </div>
-      )}
-
-      <section className="flex flex-col gap-3">
-        <SectionHeader title="Teams" count={player.teams?.length ?? 0} />
-        {!player.teams?.length ? (
-          <EmptyState label="No teams found." />
-        ) : (
-          <div className="flex flex-wrap gap-2">
-            {player.teams.map((team) => (
-              <Link
-                key={team.id}
-                to={`/teams/${teamSlug(team.name)}`}
-                className="rounded-full border border-status-info/30 bg-status-info/15 px-3 py-1 text-sm text-status-info no-underline transition-colors hover:bg-status-info/25"
-              >
-                {team.name}
-              </Link>
-            ))}
-          </div>
-        )}
-      </section>
-
-      <section className="flex flex-col gap-3">
-        <SectionHeader
-          title="Games Played"
-          count={dedupedGames.length}
-          actions={
-            dedupedGames.length > VISIBLE_GAMES && (
-              <Button variant="secondary" size="sm" onClick={() => setShowAllGames((v) => !v)}>
-                {showAllGames ? 'Show Less' : 'See More Games'}
-              </Button>
-            )
-          }
-        />
-        {dedupedGames.length === 0 ? (
-          <EmptyState label="No games found." />
-        ) : (
-          <ul className="m-0 grid list-none gap-2 p-0 sm:grid-cols-2 lg:grid-cols-3">
-            {visibleGames.map((game) => (
-              <li key={game.id}>
-                <Link
-                  to={`/games/${game.id}`}
-                  className="block truncate rounded-card border border-border bg-surface px-3 py-2 text-sm text-content no-underline transition-colors hover:border-accent hover:text-accent"
-                >
-                  {game.name}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <section className="flex flex-col gap-3">
-        <SectionHeader title="Awards" count={(awards?.length ?? 0) + (championships > 0 ? 1 : 0)} />
-        {awardsLoading ? (
-          <Skeleton className="h-24 w-full !rounded-card" />
-        ) : awardsError ? (
-          <ErrorNotice message="Error loading awards" />
-        ) : !awards?.length && championships === 0 ? (
-          <EmptyState label="No awards yet." />
-        ) : (
-          <div className="grid gap-3 grid-cols-[repeat(auto-fill,minmax(180px,1fr))]">
-            {championships > 0 && (
-              <div className="flex flex-col items-center gap-2 rounded-card border border-status-gold/40 bg-status-gold/10 p-4 text-center">
-                <div className="flex gap-1 text-2xl text-status-gold">
-                  {Array.from({ length: Math.min(championships, 3) }).map((_, index) => (
-                    <FontAwesomeIcon key={index} icon={faRing} />
-                  ))}
-                </div>
-                <span className="text-sm font-semibold text-content">Rings</span>
-                <span className="text-xs text-content-tertiary">
-                  {championships} Championship{championships > 1 ? 's' : ''}
-                </span>
-              </div>
+        <div className="player-profile-container">
+            {/* SEO Meta Tags for Social Media Embedding */}
+            {player && (
+                <SEO
+                    title={`${player.name} - Player Profile`}
+                    description={`${player.name} is a ${player.position} in the Roblox Volleyball League. View stats, teams, awards, and career highlights.`}
+                    image={avatarUrl || "https://volleyball4-2.com/rvlLogo.png"}
+                    url={`https://volleyball4-2.com/players/${player.id}`}
+                    type="profile"
+                    structuredData={{
+                        "@context": "https://schema.org",
+                        "@type": "Person",
+                        "name": player.name,
+                        "jobTitle": player.position,
+                        "description": `${player.name} is a ${player.position} in the Roblox Volleyball League`,
+                        "image": avatarUrl || "https://volleyball4-2.com/rvlLogo.png",
+                        "url": `https://volleyball4-2.com/players/${player.id}`,
+                        "worksFor": {
+                            "@type": "Organization",
+                            "name": "Roblox Volleyball League",
+                            "url": "https://volleyball4-2.com"
+                        },
+                        "knowsAbout": ["Volleyball", "Gaming", "Sports"],
+                        "alumniOf": player.teams?.map(team => ({
+                            "@type": "SportsTeam",
+                            "name": team.name,
+                            "url": `https://volleyball4-2.com/teams/${encodeURIComponent(team.name.toLowerCase().replace(/\s+/g, "-"))}`
+                        })) || []
+                    }}
+                />
             )}
 
-            {awards?.map((award) => (
-              <Link
-                key={award.id}
-                to={`/awards/${award.id}`}
-                className="flex flex-col items-center gap-2 rounded-card border border-border bg-surface p-4 text-center no-underline transition-all hover:-translate-y-0.5 hover:border-status-gold hover:shadow-[var(--shadow-md)]"
-              >
-                <FontAwesomeIcon
-                  icon={AWARD_ICONS[award.type] ?? faTrophy}
-                  className="text-2xl text-status-gold"
-                />
-                <span className="text-sm font-semibold text-content">{award.type}</span>
-                <Pill tone="neutral" size="sm">
-                  Season {award.season.seasonNumber}
-                </Pill>
-              </Link>
-            ))}
-          </div>
-        )}
-      </section>
-
-      <section className="flex flex-col gap-3">
-        <SectionHeader title="Hall of Fame Progress" />
-        <Card padding="lg" tone={isGoat ? 'accent' : 'surface'}>
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center justify-center gap-2 text-3xl font-bold">
-              <FontAwesomeIcon icon={faStar} className="text-status-gold" />
-              <span className={isGoat ? 'text-status-gold' : 'text-content'}>
-                {isGoat ? '∞' : hofScore}
-              </span>
-              {!isGoat && (
-                <span className="text-lg font-normal text-content-muted">
-                  /{HOF_INDUCTION_SCORE}
-                </span>
-              )}
-              {isGoat && <FontAwesomeIcon icon={faStar} className="text-status-gold" />}
+            <div className="player-main-header">
+                <div className="avatar-header-info">
+                    {avatarUrl && (
+                        <div className="avatar-left">
+                            <img src={avatarUrl} alt={`${player.name}'s avatar`} className="player-avatar" />
+                        </div>
+                    )}
+                    <div className="avatar-right">
+                        <h1 className="player-name-large">{player.name}</h1>
+                        <div className="player-meta">
+                            <span>Username: {player.name}</span>
+                            <span>Position: {player.position}</span>
+                            <span>Current Team: {currentSeasonTeam}</span>
+                            <span>Most Recent Team: {mostRecentTeam}</span>
+                            <span>Total Teams: {player.teams?.length || 0}</span>
+                            <span>Possible Games Played: {dedupedGames.length}</span>
+                            <span>Total Stat Entries: {filteredStats.length}</span>
+                            
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <ProgressBar
-              label="Hall of Fame progress"
-              value={hofPercent}
-              tone={isGoat || hofScore >= HOF_INDUCTION_SCORE ? 'gold' : 'accent'}
-            />
+            <div className="player-region-tabs" style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem", flexWrap: "wrap" }}>
+                <button
+                    type="button"
+                    className={profileRegion === 'all' ? 'active' : ''}
+                    onClick={() => setProfileRegion('all')}
+                >
+                    All Regions
+                </button>
+                {regions.map((region) => (
+                    <button
+                        key={region.id}
+                        type="button"
+                        className={profileRegion === region.code ? 'active' : ''}
+                        onClick={() => setProfileRegion(region.code)}
+                    >
+                        {region.name}
+                    </button>
+                ))}
+            </div>
 
-            <p className="m-0 text-center text-sm font-medium">
-              {isGoat ? (
-                <span className="text-status-gold">G.O.A.T. — Hall of Fame Inducted!</span>
-              ) : hofScore >= HOF_INDUCTION_SCORE ? (
-                <span className="text-status-gold">
-                  Hall of Fame Inducted! (+{hofScore - HOF_INDUCTION_SCORE} points)
-                </span>
-              ) : (
-                <span className="text-content-tertiary">
-                  {Math.round(hofPercent)}% to Hall of Fame
-                </span>
-              )}
-            </p>
-          </div>
-        </Card>
-      </section>
-    </PageContainer>
-  )
+            <div style={{ marginBottom: "1.5rem", maxWidth: "300px" }}>
+                <label htmlFor="season-select" style={{ color: "#ccc", marginBottom: "0.5rem", display: "block" }}>
+                    View stats for:
+                </label>
+                <Select
+                    id="season-select"
+                    value={{ value: selectedSeason, label: selectedSeason === 0 ? "Career" : `Season ${selectedSeason}` }}
+                    onChange={(option) => setSelectedSeason(option?.value || 0)}
+                    options={[
+                        { value: 0, label: "Career" },
+                        ...uniqueSeasons.map(season => ({ value: season, label: `Season ${season}` }))
+                    ]}
+                    styles={{
+                        control: (base) => ({
+                            ...base,
+                            backgroundColor: "#1a1a1a",
+                            borderColor: "#333",
+                            color: "#fff",
+                            boxShadow: "none"
+                        }),
+                        singleValue: (base) => ({
+                            ...base,
+                            color: "#fff"
+                        }),
+                        menu: (base) => ({
+                            ...base,
+                            backgroundColor: "#1a1a1a",
+                            color: "#fff"
+                        }),
+                        option: (base, state) => ({
+                            ...base,
+                            backgroundColor: state.isFocused ? "var(--color-brand-primary-hover)" : "#1a1a1a",
+                            color: "#fff",
+                            cursor: "pointer"
+                        }),
+                    }}
+                />
+            </div>
+
+            {filteredStats.length === 0 ? (
+                <p>No stats available for this season.</p>
+            ) : (
+                <div className="player-profiles-grid">
+                    <div className="player-card">
+                        <div className="player-stats">
+                            <div className="stat-category">
+                                <h3>{selectedSeason === 0 ? "Career Totals" : `Season ${selectedSeason} Totals`}</h3>
+                                <div className="stat-grid">
+                                    {Object.entries(careerTotals).map(([label, value]) => (
+                                        <div key={label} className="stat-item">
+                                            <span className="stat-label">{formatStatName(label)}</span>
+                                            <span className="stat-value">{value}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="stat-category">
+                                <h3>Per Game Averages</h3>
+                                <div className="stat-grid">
+                                    {Object.entries(averages).map(([label, value]) => (
+                                        <div key={label} className="stat-item">
+                                            <span className="stat-label">{formatStatName(label)}</span>
+                                            <span className="stat-value">{value}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <div className="player-teams-section">
+                <h3>Teams</h3>
+                {!player.teams || player.teams.length === 0 ? (
+                    <p>No teams found.</p>
+                ) : (
+                    <ul className="team-list">
+                        {player.teams.map(team => (
+                            <li key={team.id}>
+                                <a href={`/teams/${encodeURIComponent(team.name.toLowerCase().replace(/\s+/g, "-"))}`}>
+                                    {team.name}
+                                </a>
+                            </li>
+                        ))}
+                    </ul>
+                )}
+            </div>
+
+            <div className="player-games-section">
+                <h3>Games Played</h3>
+                {dedupedGames.length === 0 ? (
+                    <p>No games found.</p>
+                ) : (
+                    <>
+                        <ul className={`game-list ${showAllGames ? 'expanded' : ''}`}>
+                            {visibleGamesList.map(game => (
+                                <li key={game.id}>
+                                    <a href={`/games/${game.id}`}>{game.name}</a>
+                                </li>
+                            ))}
+                        </ul>
+                        {hasMoreGames && (
+                            <button 
+                                className="show-more-games"
+                                onClick={handleToggleGames}
+                            >
+                                {showAllGames ? 'Show Less' : 'See More Games'}
+                            </button>
+                        )}
+                    </>
+                )}
+            </div>
+
+            <div className="player-awards-section">
+                <h3>Awards</h3>
+                {awardsLoading ? (
+                    <p>Loading awards...</p>
+                ) : awardsError ? (
+                    <p>Error loading awards</p>
+                ) : (
+                    <>
+                        {/* Display all awards in one list */}
+                        {(awards && awards.length > 0) || calculateChampionships(player) > 0 ? (
+                            <ul className="player-profile-awards-list">
+                                {/* Rings award first if player has championships */}
+                                {(() => {
+                                    const championships = calculateChampionships(player);
+                                    if (championships > 0) {
+                                        return (
+                                            <li className="player-profile-award-item">
+                                                <div className="player-profile-award-content">
+                                                    <div className="rings-display">
+                                                        {championships === 1 && (
+                                                            <FontAwesomeIcon 
+                                                                icon={faRing} 
+                                                                className="championship-ring single-ring"
+                                                            />
+                                                        )}
+                                                        {championships === 2 && (
+                                                            <>
+                                                                <FontAwesomeIcon 
+                                                                    icon={faRing} 
+                                                                    className="championship-ring ring-left"
+                                                                />
+                                                                <FontAwesomeIcon 
+                                                                    icon={faRing} 
+                                                                    className="championship-ring ring-right"
+                                                                />
+                                                            </>
+                                                        )}
+                                                        {championships >= 3 && (
+                                                            <>
+                                                                <FontAwesomeIcon 
+                                                                    icon={faRing} 
+                                                                    className="championship-ring ring-left"
+                                                                />
+                                                                <FontAwesomeIcon 
+                                                                    icon={faRing} 
+                                                                    className="championship-ring ring-center"
+                                                                />
+                                                                <FontAwesomeIcon 
+                                                                    icon={faRing} 
+                                                                    className="championship-ring ring-right"
+                                                                />
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                    <span className="player-profile-award-type">Rings</span>
+                                                    <span className="player-profile-award-season">{championships} Championship{championships > 1 ? 's' : ''}</span>
+                                                </div>
+                                            </li>
+                                        );
+                                    }
+                                    return null;
+                                })()}
+                                
+                                {/* Existing awards */}
+                                {awards && awards.map((award) => (
+                                    <li key={award.id} className="player-profile-award-item">
+                                        <a href={`/awards/${award.id}`} className="player-profile-award-link">
+                                            <div className="player-profile-award-content">
+                                                <FontAwesomeIcon 
+                                                    icon={awardIcons[award.type] || faTrophy} 
+                                                    className="player-profile-award-icon"
+                                                />
+                                                <span className="player-profile-award-type">{award.type}</span>
+                                                <span className="player-profile-award-season">Season {award.season.seasonNumber}</span>
+                                            </div>
+                                        </a>
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : null}
+                        
+                        {/* Show "No awards yet" only if no awards and no rings */}
+                        {(!awards || awards.length === 0) && calculateChampionships(player) === 0 && (
+                            <p>No awards yet.</p>
+                        )}
+                    </>
+                )}
+            </div>
+
+            <div className={`player-hof-section ${isGOAT ? 'goat-section' : ''}`}>
+                <h3>Hall of Fame Progress</h3>
+                <div className="hof-progress-container">
+                    <div className="hof-score">
+                        {!isGOAT && <FontAwesomeIcon icon={faStar} className="hof-icon" />}
+                        <span className={`hof-score-value ${isGOAT ? 'goat-infinity' : ''}`}>
+                            {isGOAT ? '∞' : hofScore}
+                        </span>
+                        {isGOAT && <FontAwesomeIcon icon={faStar} className="hof-icon" />}
+                        <span className="hof-score-max">
+                            {isGOAT ? '' : '/100'}
+                        </span>
+                    </div>
+                    <div className="hof-progress-bar">
+                        <div 
+                            className={`hof-progress-fill ${isGOAT ? 'goat-fill' : ''}`}
+                            style={{ width: `${hofPercentage}%` }}
+                        />
+                    </div>
+                    <div className="hof-status">
+                        {isGOAT ? (
+                            <span className="hof-inducted">G.O.A.T. - Hall of Fame Inducted!</span>
+                        ) : hofScore >= 100 ? (
+                            <span className="hof-inducted">Hall of Fame Inducted! (+{hofScore - 100} points)</span>
+                        ) : (
+                            <span className="hof-progress">{Math.round(hofPercentage)}% to Hall of Fame</span>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
+    )
 }
+
+export default PlayerProfiles

@@ -4,17 +4,16 @@ import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./context/authContext";
 import { RegionProvider } from "./context/regionContext";
 import ViewportLayoutSync from "./components/ViewportLayoutSync";
-import SiteHeader     from "./components/layout/SiteHeader";
-import SiteNav        from "./components/layout/SiteNav";
-import SiteFooter     from "./components/layout/SiteFooter";
+import Header         from "./components/Header";
+import Navbar         from "./components/NavBar";
+import Footer         from "./components/Footer";
 import PrivateRoute   from "./components/portal/PrivateRoute";
+// Eager, not lazy: keeps the admin shell (sidebar) mounted across lazy portal pages.
 import PortalLayout   from "./components/portal/PortalLayout";
-import ErrorBoundary  from "./components/layout/ErrorBoundary";
-import { PageLoader } from "./components/ui/feedback/LoadingSpinner";
+import ErrorBoundary  from "./components/ErrorBoundary";
 
 // Route-level code splitting: each page (and its exclusive dependencies, e.g. three.js
 // for VectorGraphPage) only downloads when a visitor actually navigates to it.
-// PortalLayout is eager so the admin shell (sidebar) stays mounted across lazy portal pages.
 const Applications      = lazy(() => import("./components/Applications"));
 const UserProfile       = lazy(() => import("./components/UserProfile"));
 const SignUp            = lazy(() => import("./components/SignUp"));
@@ -63,12 +62,12 @@ const App: React.FC = () => (
     <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
     <RegionProvider>
     <ViewportLayoutSync />
-      <SiteHeader />
-      <SiteNav />
+      <Header />
+      <Navbar />
 
-      <main className="flex min-h-0 flex-1 shrink-0 grow basis-auto flex-col">
+      <div className="main-content">
         <ErrorBoundary>
-        <Suspense fallback={<PageLoader />}>
+        <Suspense fallback={<div className="page-loading" role="status">Loading…</div>}>
         <Routes>
           {/* public site */}
           <Route path="/" element={<Home />} />
@@ -131,9 +130,9 @@ const App: React.FC = () => (
         </Routes>
         </Suspense>
         </ErrorBoundary>
-      </main>
+      </div>
 
-      <SiteFooter />
+      <Footer />
     </RegionProvider>
     </Router>
   </AuthProvider>
