@@ -39,7 +39,28 @@ export function usePlayerMutations() {
  */
 export function useTeamMutations() {
   const { patch: patchTeam } = usePatch<Team>("teams");
-  return { patchTeam };
+
+  /**
+   * Toggles a team's boolean feature flags (currently only `captainEditEnabled`).
+   *
+   * These live behind `PATCH /teams/:id/flags` rather than the normal team PATCH, so they
+   * need their own request — but it belongs here with the other team mutations, not inline
+   * in the portal page that renders the checkbox (CLAUDE.md Rule 3).
+   */
+  const patchTeamFlags = useCallback(
+    async (id: number, flags: { captainEditEnabled?: boolean }): Promise<Partial<Team>> => {
+      const response = await authFetch(`${backendUrl}/api/teams/${id}/flags`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(flags),
+      });
+      if (!response.ok) throw new Error("Failed to update team flags");
+      return (await response.json()) as Partial<Team>;
+    },
+    [],
+  );
+
+  return { patchTeam, patchTeamFlags };
 }
 
 /**

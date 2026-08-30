@@ -1,0 +1,524 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   GLOBALS — the single source of truth for every color, radius, shadow and
+   fluid-layout value in the app. Imported once from main.tsx.
+
+   No component, page or CSS file may contain a raw hex value, a raw Tailwind
+   palette class (bg-blue-600, text-gray-500, …) or a raw rgba() shadow. If a
+   value isn't in this file, it doesn't exist — add a token here first.
+   Enforced by eslint-rules/no-raw-color-classes.js (`npm run lint:conventions`).
+
+   This is the app's ONLY stylesheet. There are no per-page CSS files: every component
+   styles itself with the Tailwind token utilities registered in the @theme inline block
+   below. See docs/architecture/design-system.md.
+
+   Inter is loaded via a <link> in index.html (not an @import here — an @import
+   would block first paint on a third-party request).
+───────────────────────────────────────────────────────────────────────────── */
+
+/* Tailwind v4 — processed by @tailwindcss/vite */
+@import "tailwindcss";
+
+/* Class-based dark mode — makes every dark: utility respond to a `.dark` class on
+   <html> rather than the OS prefers-color-scheme media query. The dark palette is
+   fully defined below, but nothing sets `.dark` yet: the app ships light-only and
+   the tokens are in place for when a theme toggle is added. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   VIEWPORT LAYOUT TIERS — the JS-driven tier system, as Tailwind variants.
+
+   `utils/visualViewport.ts` measures the *visual* viewport (which, unlike a media
+   query, accounts for a pinch-zoomed or keyboard-shrunk window on mobile) and
+   writes the resulting tier to `data-viewport` on <html>. These variants let a
+   component respond to that tier the same way it responds to a breakpoint:
+
+     vp-mobile:   <= 768px
+     vp-compact:  769px - 1024px
+     vp-normal:   1025px - 1799px
+     vp-wide:     >= 1800px
+
+   `vp-wide:` also matches when the attribute is absent and a plain media query
+   says the window is wide — so the wide layout still applies on the first paint,
+   before the effect that sets the attribute has run.
+
+   The thresholds themselves live in the @theme block below as --viewport-*, and
+   visualViewport.ts reads those same custom properties at runtime, so the CSS and
+   the JS can never drift apart.
+───────────────────────────────────────────────────────────────────────────── */
+@custom-variant vp-mobile  (html[data-viewport="mobile"] &);
+@custom-variant vp-compact (html[data-viewport="compact"] &);
+@custom-variant vp-normal  (html[data-viewport="normal"] &);
+@custom-variant vp-wide {
+  html[data-viewport="wide"] & { @slot; }
+  @media (min-width: 1800px) { html:not([data-viewport]) & { @slot; } }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   VIEWPORT TIERS — single source of truth for responsive breakpoints.
+
+   These override Tailwind's defaults with the values the app's existing media
+   queries were written against, so `md:` here means the same 768px it always did.
+   Change a number here and every responsive utility in the app recalibrates.
+
+     xs   480px   phones
+     sm   600px   large phones
+     md   768px   tablets
+     lg   900px   small laptops
+     xl  1200px   desktop
+    2xl  1600px   wide desktop
+───────────────────────────────────────────────────────────────────────────── */
+@theme {
+  --breakpoint-xs:  480px;
+  --breakpoint-sm:  600px;
+  --breakpoint-md:  768px;
+  --breakpoint-lg:  900px;
+  --breakpoint-xl:  1200px;
+  --breakpoint-2xl: 1600px;
+
+  /* Viewport-tier thresholds. Read back at runtime by utils/visualViewport.ts —
+     change one here and both the vp-* variants and the JS tier recalibrate. */
+  --viewport-mobile-max:     768;
+  --viewport-compact-max:    1024;
+  --viewport-wide-min:       1800;
+  --viewport-home-large-min: 1600;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   BRAND SCALE
+
+   The whole eleven-stop brand ramp is generated from two numbers:
+   `--brand-hue` and `--brand-l-mid`. `--brand-l-mid` is the lightness anchor —
+   it *is* `--brand-400` verbatim; every other stop is a calc() offset from it,
+   with its own fixed saturation, clamped into a valid range.
+
+   Because each stop is a formula over the same two variables rather than a
+   hardcoded hex, writing `--brand-hue` at runtime recolors all eleven stops at
+   once — no palette regeneration, no re-render.
+
+   Calibrated so the ramp passes through the league's two historical brand
+   colors: `--brand-800` is the navy (#2D3C50) used for nav, headers and primary
+   actions; `--brand-200` is the pale sky blue (#a1d2ff) used for soft
+   highlights, badges and table stripes.
+───────────────────────────────────────────────────────────────────────────── */
+:root {
+  --brand-hue:   212;
+  --brand-l-mid: 62%;
+
+  --brand-50:  hsl(var(--brand-hue), 100%, clamp(0%, calc(var(--brand-l-mid) + 34%), 100%));
+  --brand-100: hsl(var(--brand-hue), 100%, clamp(0%, calc(var(--brand-l-mid) + 30%), 100%));
+  --brand-200: hsl(var(--brand-hue), 100%, clamp(0%, calc(var(--brand-l-mid) + 20%), 100%));
+  --brand-300: hsl(var(--brand-hue),  95%, clamp(0%, calc(var(--brand-l-mid) + 13%), 100%));
+  --brand-400: hsl(var(--brand-hue),  80%, var(--brand-l-mid));
+  --brand-500: hsl(var(--brand-hue),  70%, clamp(0%, calc(var(--brand-l-mid) - 14%), 100%));
+  --brand-600: hsl(var(--brand-hue),  62%, clamp(0%, calc(var(--brand-l-mid) - 24%), 100%));
+  --brand-700: hsl(var(--brand-hue),  45%, clamp(0%, calc(var(--brand-l-mid) - 32%), 100%));
+  --brand-800: hsl(var(--brand-hue),  27%, clamp(0%, calc(var(--brand-l-mid) - 37%), 100%));
+  --brand-900: hsl(var(--brand-hue),  30%, clamp(0%, calc(var(--brand-l-mid) - 44%), 100%));
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   LIGHT THEME — the raw values. Nothing downstream of the @theme inline block
+   below ever references these directly; they exist only so the .dark block can
+   swap them wholesale.
+───────────────────────────────────────────────────────────────────────────── */
+:root, .light {
+  /* Surfaces — ordered by elevation, outermost page shell down to recessed insets */
+  --surface-page:     #f5f7fa; /* outermost app shell background */
+  --surface-base:     #ffffff; /* default card / panel / table background */
+  --surface-raised:   #ffffff; /* dropdowns, popovers, raised cards */
+  --surface-elevated: #ffffff; /* tooltips, modals, floating UI */
+  --surface-inset:    #f0f4f8; /* inputs, code blocks, zebra rows, skeleton base */
+
+  /* Inverted surfaces — panels that are deliberately dark in a light app
+     (player profile hero, season cards, the vector graph canvas). These are a
+     design choice, not a theme state, so they do NOT invert in dark mode. */
+  --surface-inverse:        #1f2937;
+  --surface-inverse-raised: #2b3644;
+  --surface-inverse-inset:  #161d27;
+
+  /* Text — ordered by prominence, headings down to placeholders */
+  --text-primary:   #333333;
+  --text-secondary: #5d6673;
+  --text-tertiary:  #6b7280;
+  --text-muted:     #94a3b8;
+  --text-inverse:   #ffffff; /* text on --surface-inverse-* */
+
+  /* Borders */
+  --border-base:   #e2e8f0;
+  --border-strong: #cbd5e1;
+
+  /* Accent — the brand-colored interactive stop (links, active nav, focus rings).
+     A different stop per theme so contrast against --surface-page holds both ways. */
+  --accent: var(--brand-600);
+
+  /* Text/icon color for use on top of a bg-brand or bg-accent fill */
+  --on-brand:  #ffffff;
+  --on-accent: #ffffff;
+
+  /* Overlay scrims — modal / drawer backdrops only */
+  --overlay-scrim:    rgba(0, 0, 0, 0.5);
+  --overlay-scrim-sm: rgba(0, 0, 0, 0.25);
+
+  /* Scrollbar thumbs — one pair for light surfaces, one for --surface-inverse-* */
+  --scroll-thumb:               rgba(0, 0, 0, 0.28);
+  --scroll-thumb-hover:         rgba(0, 0, 0, 0.42);
+  --scroll-thumb-inverse:       rgba(255, 255, 255, 0.32);
+  --scroll-thumb-inverse-hover: rgba(255, 255, 255, 0.48);
+
+  /* Status — semantic states and entity-type badges. Intentionally allowed to
+     shift value between themes so text/badge contrast holds on either ground. */
+  --status-success: #27ae60; /* won, approved, active, published */
+  --status-warning: #f39c12; /* pending, caution, needs review */
+  --status-danger:  #dc2626; /* lost, rejected, errors, destructive actions */
+  --status-info:    #3b82f6; /* in progress, informational, neutral highlight */
+  --status-pending: #f39c12; /* alias of warning */
+  --status-running: #3b82f6; /* alias of info */
+  --status-gold:    #ffbf00; /* 1st place, MVP, championship, award highlights */
+  --status-silver:  #9ca3af; /* 2nd place */
+  --status-bronze:  #b45309; /* 3rd place */
+  --status-purple:  #8b5cf6; /* playoff stage, special events */
+  --status-orange:  #f97316; /* scheduled / upcoming */
+  --status-pink:    #ec4899; /* user / staff entity type */
+
+  /* Chart — data-vis series fills. Fixed and identical in BOTH themes: a series
+     that changes color when someone toggles the theme reads as the underlying
+     data having changed. Never use status-* for a chart fill. */
+  --chart-1: #3b82f6;
+  --chart-2: #27ae60;
+  --chart-3: #f59e0b;
+  --chart-4: #ef4444;
+  --chart-5: #8b5cf6;
+  --chart-6: #f97316;
+  --chart-7: #ec4899;
+  --chart-8: #14b8a6;
+  --chart-grid: rgba(0, 0, 0, 0.08);
+
+  /* Archetype palette — the player-archetype identity colors used by the vector graph and
+     the stats visualisation. Like chart-*, these are fixed in both themes: an archetype's
+     color IS its identity, so it must not shift when the theme does. Named after the trait
+     rather than numbered, because a call site refers to "striker", not "series 1". */
+  --archetype-striker:      #ff6b6b;
+  --archetype-piercer:      #ff8787;
+  --archetype-guardian:     #4ecdc4;
+  --archetype-playmaker:    #c7ceea;
+  --archetype-finisher:     #a8e6cf;
+  --archetype-intimidator:  #fcbad3;
+  --archetype-bomber:       #ffd3a5;
+  --archetype-versatile:    #ffffd2;
+  --archetype-jack:         #d4a5ff;
+  --archetype-balanced:     #95e1d3;
+  --archetype-unicorn:      #9b59b6;
+  --archetype-sniper:       #ffb74d;
+  --archetype-gunslinger:   #ff8c94;
+  --archetype-anchor:       #c8e6c9;
+  --archetype-technician:   #64b5f6;
+  --archetype-unclassified: #95a5a6;
+
+  /* Team-card accent rotation — the eight header colors cycled through a season's team
+     grid so adjacent cards are visually distinct. Positional, not semantic: index N means
+     "the Nth card", nothing about the team. Fixed in both themes, like chart-*. */
+  --team-accent-1: #a8d5ba;
+  --team-accent-2: #aed4f1;
+  --team-accent-3: #e57373;
+  --team-accent-4: #f4a261;
+  --team-accent-5: #e9c46a;
+  --team-accent-6: #ffd54f;
+  --team-accent-7: #8e3a3a;
+  --team-accent-8: #66bb6a;
+
+  /* Shadows — fixed black, identical in both themes (like chart colors) */
+  --shadow-xs:    0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-sm:    0 2px 4px rgba(0, 0, 0, 0.10);
+  --shadow-md:    0 4px 6px rgba(0, 0, 0, 0.10);
+  --shadow-lg:    0 10px 24px rgba(0, 0, 0, 0.12);
+  --shadow-modal: 0 20px 60px rgba(0, 0, 0, 0.30);
+  --shadow-chart: 0 2px 6px rgba(0, 0, 0, 0.35);
+
+  /* Focus ring — derived from the brand so it follows a hue change */
+  --focus-ring: color-mix(in srgb, var(--brand-800) 25%, transparent);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   DARK THEME — swaps only the raw layer above. Every token class, component and
+   page is unchanged. Not activated yet (nothing sets `.dark`).
+───────────────────────────────────────────────────────────────────────────── */
+.dark {
+  --surface-page:     #0b1017;
+  --surface-base:     #141b26;
+  --surface-raised:   #1a2230;
+  --surface-elevated: #212b3b;
+  --surface-inset:    #1c2431;
+
+  --text-primary:   #e8edf8;
+  --text-secondary: #bac4dc;
+  --text-tertiary:  #8c98b6;
+  --text-muted:     #64708e;
+
+  --border-base:   #232c3d;
+  --border-strong: #35415a;
+
+  --accent: var(--brand-300);
+
+  --scroll-thumb:       rgba(255, 255, 255, 0.28);
+  --scroll-thumb-hover: rgba(255, 255, 255, 0.42);
+
+  --status-success: #34d399;
+  --status-warning: #fbbf24;
+  --status-danger:  #f87171;
+  --status-info:    #60a5fa;
+  --status-pending: #fbbf24;
+  --status-running: #60a5fa;
+  --status-gold:    #fcd34d;
+  --status-silver:  #cbd5e1;
+  --status-bronze:  #d97706;
+  --status-purple:  #a78bfa;
+  --status-orange:  #fb923c;
+  --status-pink:    #f472b6;
+
+  --chart-grid: rgba(255, 255, 255, 0.10);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   TAILWIND UTILITIES
+   Registers every semantic token as a Tailwind utility class. These class names
+   — and only these — are what component code is allowed to write.
+
+   Surfaces:  bg-page · bg-surface · bg-surface-raised · bg-surface-elevated · bg-surface-inset
+              bg-surface-inverse · bg-surface-inverse-raised · bg-surface-inverse-inset
+   Text:      text-content · text-content-secondary · text-content-tertiary · text-content-muted
+              text-content-inverse
+   Borders:   border-border · border-border-strong
+   Brand:     bg-brand · text-brand · text-accent · bg-accent · border-accent
+              text-on-brand · text-on-accent
+   Status:    {text,bg,border}-status-{success|warning|danger|info|pending|running
+                                      |gold|silver|bronze|purple|orange|pink}
+   Chart:     {text,bg,border,fill,stroke}-chart-{1..8}
+
+   Opacity modifiers work on all of them: bg-brand/10, border-status-danger/30.
+───────────────────────────────────────────────────────────────────────────── */
+@theme inline {
+  /* Surfaces */
+  --color-page:                   var(--surface-page);
+  --color-surface:                var(--surface-base);
+  --color-surface-raised:         var(--surface-raised);
+  --color-surface-elevated:       var(--surface-elevated);
+  --color-surface-inset:          var(--surface-inset);
+  --color-surface-inverse:        var(--surface-inverse);
+  --color-surface-inverse-raised: var(--surface-inverse-raised);
+  --color-surface-inverse-inset:  var(--surface-inverse-inset);
+
+  /* Text */
+  --color-content:           var(--text-primary);
+  --color-content-secondary: var(--text-secondary);
+  --color-content-tertiary:  var(--text-tertiary);
+  --color-content-muted:     var(--text-muted);
+  --color-content-inverse:   var(--text-inverse);
+
+  /* Borders */
+  --color-border:        var(--border-base);
+  --color-border-strong: var(--border-strong);
+
+  /* Brand / accent */
+  --color-brand:        var(--brand-800);
+  --color-brand-hover:  var(--brand-700);
+  --color-brand-muted:  var(--brand-200);
+  --color-brand-subtle: var(--brand-100);
+  --color-brand-faint:  var(--brand-50);
+  --color-accent:       var(--accent);
+  --color-on-brand:     var(--on-brand);
+  --color-on-accent:    var(--on-accent);
+  --color-overlay:      var(--overlay-scrim);
+  --color-overlay-sm:   var(--overlay-scrim-sm);
+
+  /* Status — semantic states */
+  --color-status-success: var(--status-success);
+  --color-status-warning: var(--status-warning);
+  --color-status-danger:  var(--status-danger);
+  --color-status-info:    var(--status-info);
+  --color-status-pending: var(--status-pending);
+  --color-status-running: var(--status-running);
+
+  /* Status — placement / categorical */
+  --color-status-gold:   var(--status-gold);
+  --color-status-silver: var(--status-silver);
+  --color-status-bronze: var(--status-bronze);
+  --color-status-purple: var(--status-purple);
+  --color-status-orange: var(--status-orange);
+  --color-status-pink:   var(--status-pink);
+
+  /* Chart — fixed data-vis series colors, identical in both themes */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-chart-6: var(--chart-6);
+  --color-chart-7: var(--chart-7);
+  --color-chart-8: var(--chart-8);
+
+  /* Radius — `rounded-card`, `rounded-control`, `rounded-panel` name the intent
+     so a change to the app's roundness is one edit, not a find-and-replace. */
+  --radius-control: 4px;
+  --radius-card:    8px;
+  --radius-panel:   12px;
+
+  /* Fluid layout scale — these clamp() values are what keeps the shell
+     proportional from phone to ultrawide. Used as p-page, gap-section,
+     h-header, text-page-title, max-w-shell. */
+  --spacing-page:    clamp(1rem, 0.6rem + 2vw, 2rem);
+  --spacing-section: clamp(0.75rem, 0.5rem + 1.2vw, 1.5rem);
+
+  --text-page-title: clamp(1.75rem, 1.4rem + 1.75vw, 2.5rem);
+
+  --container-shell: 2400px;
+
+  /* Named spacing values live in the --spacing-* namespace so Tailwind generates the
+     full set of utilities for them (p-page, gap-section, h-header, top-nav, …). */
+  --spacing-header: clamp(3.125rem, 2.25rem + 0.85vw, 4.5rem);
+  --spacing-nav:    clamp(4.375rem, 3rem + 1.1vw, 6rem);
+
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   BASE
+───────────────────────────────────────────────────────────────────────────── */
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100%;
+  box-sizing: border-box;
+}
+
+body {
+  min-height: 100vh;
+  background-color: var(--surface-page);
+  color: var(--text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   SCROLLBARS — thumb only: no track box, no arrow buttons.
+
+   Kept as global CSS rather than utilities because ::-webkit-scrollbar-* has no
+   Tailwind equivalent and must apply to every scroll container in the app.
+   `.scroll-inverse` opts a dark panel into the light-on-dark thumb.
+───────────────────────────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  scrollbar-width: auto;
+  scrollbar-color: var(--scroll-thumb) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track,
+*::-webkit-scrollbar-track-piece,
+*::-webkit-scrollbar-corner {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--scroll-thumb);
+  border-radius: 5px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  min-height: 40px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--scroll-thumb-hover);
+  background-clip: padding-box;
+}
+
+/* Hide every scrollbar arrow button (WebKit / legacy Edge) */
+*::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  appearance: none;
+}
+
+.scroll-inverse,
+.scroll-inverse * {
+  scrollbar-color: var(--scroll-thumb-inverse) transparent;
+}
+
+.scroll-inverse::-webkit-scrollbar-thumb,
+.scroll-inverse *::-webkit-scrollbar-thumb {
+  background: var(--scroll-thumb-inverse);
+}
+
+.scroll-inverse::-webkit-scrollbar-thumb:hover,
+.scroll-inverse *::-webkit-scrollbar-thumb:hover {
+  background: var(--scroll-thumb-inverse-hover);
+}
+
+.scrollbar-thin::-webkit-scrollbar { width: 4px; height: 4px; }
+.scrollbar-thin::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 9999px; }
+.scrollbar-thin { scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   FOCUS — suppress mouse-click focus rings globally, preserve keyboard rings.
+───────────────────────────────────────────────────────────────────────────── */
+*:focus:not(:focus-visible) {
+  outline: none !important;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   NATIVE DATE/TIME INPUTS — the calendar-picker glyph ignores `color` and only
+   follows `color-scheme`, so set it explicitly and dial its opacity down so it
+   reads as muted rather than stark black.
+───────────────────────────────────────────────────────────────────────────── */
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"] {
+  color-scheme: light;
+}
+
+.dark input[type="date"],
+.dark input[type="time"],
+.dark input[type="datetime-local"] {
+  color-scheme: dark;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  opacity: 0.55;
+  cursor: pointer;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   ANIMATIONS — shared keyframes referenced by utility classes on components.
+───────────────────────────────────────────────────────────────────────────── */
+@keyframes skeleton-shimmer {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}

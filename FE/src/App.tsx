@@ -4,11 +4,12 @@ import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./context/authContext";
 import { RegionProvider } from "./context/regionContext";
 import ViewportLayoutSync from "./components/ViewportLayoutSync";
-import Header         from "./components/Header";
-import Navbar         from "./components/NavBar";
-import Footer         from "./components/Footer";
-import PrivateRoute   from "./components/portal/PrivateRoute";      // ← NEW import
-import ErrorBoundary  from "./components/ErrorBoundary";
+import SiteHeader     from "./components/layout/SiteHeader";
+import SiteNav        from "./components/layout/SiteNav";
+import SiteFooter     from "./components/layout/SiteFooter";
+import PrivateRoute   from "./components/portal/PrivateRoute";
+import ErrorBoundary  from "./components/layout/ErrorBoundary";
+import { PageLoader } from "./components/ui/feedback/LoadingSpinner";
 
 // Route-level code splitting: each page (and its exclusive dependencies, e.g. three.js
 // for VectorGraphPage) only downloads when a visitor actually navigates to it.
@@ -61,12 +62,12 @@ const App: React.FC = () => (
     <Router>
     <RegionProvider>
     <ViewportLayoutSync />
-      <Header />
-      <Navbar />
+      <SiteHeader />
+      <SiteNav />
 
-      <div className="main-content">
+      <main className="flex min-h-0 flex-1 shrink-0 grow basis-auto flex-col">
         <ErrorBoundary>
-        <Suspense fallback={<div className="page-loading" role="status">Loading…</div>}>
+        <Suspense fallback={<PageLoader />}>
         <Routes>
           {/* public site */}
           <Route path="/" element={<Home />} />
@@ -129,9 +130,9 @@ const App: React.FC = () => (
         </Routes>
         </Suspense>
         </ErrorBoundary>
-      </div>
+      </main>
 
-      <Footer />
+      <SiteFooter />
     </RegionProvider>
     </Router>
   </AuthProvider>

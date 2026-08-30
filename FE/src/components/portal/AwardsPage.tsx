@@ -1,43 +1,69 @@
-import React, { useState, useEffect } from "react";
-import { useSkinnyAwards, useSkinnySeasons } from "../../hooks/allFetch";
-import { useAwardsMutations } from "../../hooks/allPatch";
-import { useCreateAwards } from "../../hooks/allCreate";
-import { useDeleteAwards } from "../../hooks/allDelete";
-import { useAuth } from "../../context/authContext";
-import { useRegion } from "../../context/regionContext";
-import type { Award } from "../../types/interfaces";
-import SearchBar from "../Searchbar";
-import Pagination from "../Pagination";
-import Modal from "../ui/Modal";
-import FilterBar from "../ui/FilterBar";
-import Table from "../ui/Table";
-import "../../styles/UsersPage.css";
-import "../../styles/AwardsPage.css";
-import "../../styles/PortalPlayersPage.css";
-import { AWARD_TYPES } from "../../constants/awardTypes";
-import RegionSeasonFields from "../ui/RegionSeasonFields";
-import { useFormRegionSeason } from "../../hooks/useFormRegionSeason";
-import { useDebouncedValue } from "../../hooks/useDebouncedValue";
+/**
+ * AwardsPage — the admin portal's award management view: a paginated, searchable table filtered by season and award type, with every column inline-editable (type as a select, awarded date as a date picker, artwork as a thumbnail) and a create-award modal.
+ * Each inline edit is staged into `pendingEdit` and confirmed before the PATCH, so a stray click on a select can't silently rewrite an award; deletion is superadmin-only.
+ * Lives in `components/portal/`; mounted at /portal/awards.
+ */
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useSkinnyAwards, useSkinnySeasons } from '@/hooks/allFetch'
+import { useAwardsMutations } from '@/hooks/allPatch'
+import { useCreateAwards } from '@/hooks/allCreate'
+import { useDeleteAwards } from '@/hooks/allDelete'
+import { useAuth } from '@/context/authContext'
+import { useRegion } from '@/context/regionContext'
+import { useFormRegionSeason } from '@/hooks/useFormRegionSeason'
+import { useDebouncedValue } from '@/hooks/useDebouncedValue'
+import { AWARD_TYPES } from '@/constants/awardTypes'
+import type { Award } from '@/types/interfaces'
 
-type EditField = "type" | "description" | "seasonId" | "playerName" | "imageUrl" | "createdAt";
+import PageContainer from '@/components/ui/layout/PageContainer'
+import PageHeader from '@/components/ui/layout/PageHeader'
+import Toolbar from '@/components/ui/layout/Toolbar'
+import ResultsCounter from '@/components/ui/layout/ResultsCounter'
+import DataTable, { type DataTableColumn } from '@/components/ui/layout/DataTable'
+import FilterBar from '@/components/ui/filters/FilterBar'
+import FilterSelect from '@/components/ui/filters/FilterSelect'
+import SearchBar from '@/components/ui/filters/SearchBar'
+import Pagination from '@/components/ui/navigation/Pagination'
+import Button from '@/components/ui/buttons/Button'
+import Modal from '@/components/ui/modals/Modal'
+import ConfirmModal from '@/components/ui/modals/ConfirmModal'
+import ErrorNotice from '@/components/ui/feedback/ErrorNotice'
+import FormField from '@/components/ui/inputs/FormField'
+import TextInput, { TextArea } from '@/components/ui/inputs/TextInput'
+import Select, { toOptions } from '@/components/ui/inputs/Select'
+import InlineEditCell from '@/components/ui/inputs/InlineEditCell'
+import RegionSeasonFields from '@/components/ui/inputs/RegionSeasonFields'
 
-interface EditingState {
-  id: number;
-  field: EditField;
-  value: string;
+const AWARDS_PER_PAGE = 10
+
+type EditField = 'type' | 'description' | 'seasonId' | 'playerName' | 'imageUrl' | 'createdAt'
+
+const FIELD_LABELS: Record<EditField, string> = {
+  type: 'Type',
+  description: 'Description',
+  seasonId: 'Season ID',
+  playerName: 'Player Name',
+  imageUrl: 'Image URL',
+  createdAt: 'Award Date',
 }
 
-const AWARDS_PER_PAGE = 10;
+interface PendingEdit {
+  award: Award
+  field: EditField
+  value: string
+  previous: string
+}
 
-const AwardsPage: React.FC = () => {
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const debouncedSearch = useDebouncedValue(searchQuery, 300);
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [seasonFilter, setSeasonFilter] = useState<string>("");
-  const [awardTypeFilter, setAwardTypeFilter] = useState<string>("");
+export default function AwardsPage() {
+  const [searchQuery, setSearchQuery] = useState('')
+  const [seasonFilter, setSeasonFilter] = useState('')
+  const [awardTypeFilter, setAwardTypeFilter] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const debouncedSearch = useDebouncedValue(searchQuery, 300)
 
-  const { regionQuery } = useRegion();
-  const formRegionSeason = useFormRegionSeason("id");
+  const { regionQuery } = useRegion()
+  const { user } = useAuth()
+  const formRegionSeason = useFormRegionSeason('id')
 
   const { data: awards, total, totalPages, loading, error, refetch } = useSkinnyAwards({
     page: currentPage,
@@ -46,515 +72,339 @@ const AwardsPage: React.FC = () => {
     seasonNumber: seasonFilter || undefined,
     type: awardTypeFilter || undefined,
     ...regionQuery,
-  });
-  const { data: seasons, loading: seasonsLoading } = useSkinnySeasons({ page: 1, limit: 100, ...regionQuery });
-  const { patchAward } = useAwardsMutations();
-  const { createAwards, loading: creating } = useCreateAwards();
-  const { deleteItem: deleteAward, loading: deleting } = useDeleteAwards();
-  const { user } = useAuth();
+  })
+  const { data: seasons, loading: seasonsLoading } = useSkinnySeasons({
+    page: 1,
+    limit: 100,
+    ...regionQuery,
+  })
 
-  const [localAwards, setLocalAwards] = useState<Award[]>([]);
-  const [editing, setEditing] = useState<EditingState | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { patchAward } = useAwardsMutations()
+  const { createAwards, loading: creating } = useCreateAwards()
+  const { deleteItem: deleteAward, loading: deleting } = useDeleteAwards()
 
-  // Modal state for creating a new award
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [newType, setNewType] = useState<string>("");
-  const [newDescription, setNewDescription] = useState<string>("");
-  const [newPlayerName, setNewPlayerName] = useState<string>("");
-  const [newImageUrl, setNewImageUrl] = useState<string>("");
-  const [formError, setFormError] = useState<string>("");
+  const [localAwards, setLocalAwards] = useState<Award[]>([])
+  const [pendingEdit, setPendingEdit] = useState<PendingEdit | null>(null)
+  const [pendingDelete, setPendingDelete] = useState<Award | null>(null)
+  const [saveError, setSaveError] = useState<string | null>(null)
+
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [newType, setNewType] = useState('')
+  const [newDescription, setNewDescription] = useState('')
+  const [newPlayerName, setNewPlayerName] = useState('')
+  const [newImageUrl, setNewImageUrl] = useState('')
+  const [formError, setFormError] = useState('')
+
+  const canDelete = user?.role === 'superadmin'
 
   useEffect(() => {
-    setLocalAwards(awards ?? []);
-  }, [awards]);
+    setLocalAwards(awards ?? [])
+  }, [awards])
 
-  const uniqueSeasons = (seasons ?? [])
-    .map((season) => season.seasonNumber)
-    .sort((a, b) => a - b);
+  const seasonOptions = useMemo(
+    () =>
+      [...(seasons ?? [])]
+        .map((season) => season.seasonNumber)
+        .sort((a, b) => a - b)
+        .map((seasonNumber) => ({
+          value: seasonNumber.toString(),
+          label: `Season ${seasonNumber}`,
+        })),
+    [seasons]
+  )
 
-  // Handle search
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    setCurrentPage(1); // Reset to first page when searching
-  };
+  const applyEdit = async () => {
+    if (!pendingEdit) return
+    const { award, field, value } = pendingEdit
+    setPendingEdit(null)
+    setSaveError(null)
 
-  // Handle filter changes
-  const handleSeasonFilterChange = (value: string) => {
-    setSeasonFilter(value);
-    setCurrentPage(1); // Reset to first page when filtering
-  };
-
-  const handleAwardTypeFilterChange = (value: string) => {
-    setAwardTypeFilter(value);
-    setCurrentPage(1); // Reset to first page when filtering
-  };
-
-  // Clear all filters
-  const clearFilters = () => {
-    setSearchQuery("");
-    setSeasonFilter("");
-    setAwardTypeFilter("");
-    setCurrentPage(1);
-  };
-
-  // Commit inline edits
-  const commitEdit = async () => {
-    if (!editing || isSubmitting) return;
-    
-    setIsSubmitting(true);
-    const { id, field, value } = editing;
-    const orig = localAwards.find((a) => a.id === id);
-    if (!orig) {
-      setEditing(null);
-      setIsSubmitting(false);
-      return;
-    }
-
-    let origValue: string;
-    switch (field) {
-      case "type": origValue = orig.type; break;
-      case "description": origValue = orig.description; break;
-      case "seasonId": origValue = orig.season.id.toString(); break;
-      case "playerName": origValue = orig.players[0]?.name || ""; break;
-      case "imageUrl": origValue = orig.imageUrl || ""; break;
-      case "createdAt": origValue = new Date(orig.createdAt).toISOString(); break;
-      default: origValue = "";
-    }
-
-    if (value === origValue) {
-      setEditing(null);
-      setIsSubmitting(false);
-      return;
-    }
-
-    const labelMap: Record<EditField, string> = {
-      type: "Type",
-      description: "Description",
-      seasonId: "Season ID",
-      playerName: "Player Name",
-      imageUrl: "Image URL",
-      createdAt: "Award Date",
-    };
-
-    if (!window.confirm(`Change ${labelMap[field]} from "${origValue}" to "${value}"?`)) {
-      setEditing(null);
-      setIsSubmitting(false);
-      return;
-    }
-
-    // Build payload
-    const payload: Record<string, any> = {};
-    switch (field) {
-      case "type": payload.type = value; break;
-      case "description": payload.description = value; break;
-      case "seasonId": payload.seasonId = Number(value); break;
-      case "playerName": payload.playerName = value.toLowerCase(); break;
-      case "imageUrl": payload.imageUrl = value; break;
-      case "createdAt": payload.createdAt = value.toString(); break;
-    }
-    
-    console.log('AwardsPage: Sending payload for createdAt update:', payload);
+    const payload: Record<string, unknown> = {}
+    if (field === 'seasonId') payload.seasonId = Number(value)
+    else if (field === 'playerName') payload.playerName = value.toLowerCase()
+    else payload[field] = value
 
     try {
-      const updated = await patchAward(id, payload);
-      setLocalAwards((prev) =>
-        prev.map((a) => (a.id === id ? { ...a, ...updated } : a))
-      );
-      refetch();
-    } catch (err: any) {
-      console.error(err);
-      alert("Failed to save changes:\n" + err.message);
-    } finally {
-      setEditing(null);
-      setIsSubmitting(false);
+      const updated = await patchAward(award.id, payload)
+      setLocalAwards((prev) => prev.map((a) => (a.id === award.id ? { ...a, ...updated } : a)))
+      refetch()
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Failed to save changes.')
     }
-  };
+  }
 
-  // Delete handler (superadmin only)
-  const handleDelete = async (id: number) => {
-    if (user?.role !== "superadmin") return;
-    if (!window.confirm("Are you sure you want to delete this award?")) return;
-
-    const wasDeleted = await deleteAward(id.toString());
+  const confirmDelete = async () => {
+    if (!pendingDelete) return
+    const wasDeleted = await deleteAward(pendingDelete.id.toString())
     if (wasDeleted) {
-      setLocalAwards((prev) => prev.filter((a) => a.id !== id));
-      refetch();
+      setLocalAwards((prev) => prev.filter((a) => a.id !== pendingDelete.id))
+      refetch()
     }
-  };
+    setPendingDelete(null)
+  }
 
-  // Open "Create Award" modal
+  const stageEdit = (award: Award, field: EditField, value: string, previous: string) =>
+    setPendingEdit({ award, field, value, previous })
+
   const openModal = () => {
-    setIsModalOpen(true);
-    setFormError("");
-    setNewType("");
-    setNewDescription("");
-    formRegionSeason.initFromActiveRegion();
-    setNewPlayerName("");
-    setNewImageUrl("");
-  };
+    setIsModalOpen(true)
+    setFormError('')
+    setNewType('')
+    setNewDescription('')
+    setNewPlayerName('')
+    setNewImageUrl('')
+    formRegionSeason.initFromActiveRegion()
+  }
 
-  // Close modal
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setFormError("");
-  };
+  const handleCreate = async (event: FormEvent) => {
+    event.preventDefault()
 
-  // Create new award handler
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newType.trim() === "" || formRegionSeason.seasonValue === "" || newPlayerName.trim() === "" || newDescription.trim() === "") {
-      setFormError("Type, region, season, description, and player name are required.");
-      return;
+    if (
+      !newType.trim() ||
+      formRegionSeason.seasonValue === '' ||
+      !newPlayerName.trim() ||
+      !newDescription.trim()
+    ) {
+      setFormError('Type, region, season, description, and player name are required.')
+      return
     }
-
-    const payload = {
-      type: newType,
-      description: newDescription,
-      seasonId: formRegionSeason.seasonValue as number,
-      playerName: newPlayerName.toLowerCase(),
-      imageUrl: newImageUrl,
-    };
-
-    console.log('Creating award with payload:', payload);
 
     try {
-      const created = await createAwards(payload);
+      const created = await createAwards({
+        type: newType,
+        description: newDescription,
+        seasonId: formRegionSeason.seasonValue as number,
+        playerName: newPlayerName.toLowerCase(),
+        imageUrl: newImageUrl,
+      })
       if (created) {
-        setLocalAwards((prev) => [created, ...prev]);
-        refetch();
-        closeModal();
+        setLocalAwards((prev) => [created, ...prev])
+        refetch()
+        setIsModalOpen(false)
       }
-    } catch (err: any) {
-      console.error('Error creating award:', err);
-      setFormError(err.message || "Failed to create award");
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : 'Failed to create award')
     }
-  };
+  }
 
-  if (loading) return <p>Loading awards...</p>;
-  if (error) return <p>Error: {error}</p>;
-
-  const columns = [
+  const columns: DataTableColumn<Award>[] = [
+    { key: 'id', header: 'ID', width: 'w-16', render: (award) => award.id },
     {
-      key: "id",
-      header: "ID",
-      render: (award: Award) => award.id,
+      key: 'type',
+      header: 'Type',
+      render: (award) => (
+        <InlineEditCell
+          label="Award type"
+          value={award.type}
+          options={toOptions(AWARD_TYPES)}
+          onCommit={(value) => stageEdit(award, 'type', value, award.type)}
+        />
+      ),
     },
     {
-      key: "type",
-      header: "Type",
-      render: (award: Award) =>
-        editing?.id === award.id && editing.field === "type" ? (
-          <select
-            value={editing.value}
-            onChange={(e) =>
-              setEditing({ ...editing, value: e.target.value })
-            }
-            onBlur={commitEdit}
-            disabled={isSubmitting}
-            autoFocus
-          >
-            {AWARD_TYPES.map((type) => (
-              <option key={type} value={type}>
-                {type}
-              </option>
-            ))}
-          </select>
-        ) : (
-          <span
-            onClick={() =>
-              !isSubmitting && setEditing({ id: award.id, field: "type", value: award.type })
-            }
-          >
-            {award.type}
-          </span>
-        ),
+      key: 'description',
+      header: 'Description',
+      render: (award) => (
+        <InlineEditCell
+          label="Award description"
+          value={award.description}
+          onCommit={(value) => stageEdit(award, 'description', value, award.description)}
+        />
+      ),
     },
     {
-      key: "description",
-      header: "Description",
-      render: (award: Award) =>
-        editing?.id === award.id && editing.field === "description" ? (
-          <input
-            type="text"
-            value={editing.value}
-            onChange={(e) =>
-              setEditing({ ...editing, value: e.target.value })
-            }
-            onBlur={commitEdit}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !isSubmitting) {
-                e.preventDefault();
-                commitEdit();
-              }
-            }}
-            disabled={isSubmitting}
-            autoFocus
-          />
-        ) : (
-          <span
-            onClick={() =>
-              !isSubmitting && setEditing({
-                id: award.id,
-                field: "description",
-                value: award.description,
-              })
-            }
-          >
-            {award.description}
-          </span>
-        ),
+      key: 'season',
+      header: 'Season',
+      width: 'w-24',
+      render: (award) => (
+        <InlineEditCell
+          label="Season id"
+          type="number"
+          value={award.season.id.toString()}
+          display={award.season.seasonNumber}
+          onCommit={(value) =>
+            stageEdit(award, 'seasonId', value, award.season.id.toString())
+          }
+        />
+      ),
     },
     {
-      key: "season",
-      header: "Season",
-      render: (award: Award) =>
-        editing?.id === award.id && editing.field === "seasonId" ? (
-          <input
-            type="number"
-            value={editing.value}
-            onChange={(e) =>
-              setEditing({ ...editing, value: e.target.value })
-            }
-            onBlur={commitEdit}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !isSubmitting) {
-                e.preventDefault();
-                commitEdit();
-              }
-            }}
-            disabled={isSubmitting}
-            autoFocus
-          />
-        ) : (
-          <span
-            onClick={() =>
-              !isSubmitting && setEditing({
-                id: award.id,
-                field: "seasonId",
-                value: award.season.id.toString(),
-              })
-            }
-          >
-            {award.season.seasonNumber}
-          </span>
-        ),
+      key: 'player',
+      header: 'Player',
+      render: (award) => (
+        <InlineEditCell
+          label="Player name"
+          value={award.players[0]?.name?.toLowerCase() || ''}
+          display={award.players[0]?.name || 'N/A'}
+          onCommit={(value) =>
+            stageEdit(award, 'playerName', value, award.players[0]?.name?.toLowerCase() || '')
+          }
+        />
+      ),
     },
     {
-      key: "player",
-      header: "Player",
-      render: (award: Award) =>
-        editing?.id === award.id && editing.field === "playerName" ? (
-          <input
-            type="text"
-            value={editing.value}
-            onChange={(e) =>
-              setEditing({ ...editing, value: e.target.value.toLowerCase() })
-            }
-            onBlur={commitEdit}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !isSubmitting) {
-                e.preventDefault();
-                commitEdit();
-              }
-            }}
-            disabled={isSubmitting}
-            autoFocus
-          />
-        ) : (
-          <span
-            onClick={() =>
-              !isSubmitting && setEditing({
-                id: award.id,
-                field: "playerName",
-                value: award.players[0]?.name?.toLowerCase() || "",
-              })
-            }
-          >
-            {award.players[0]?.name || "N/A"}
-          </span>
-        ),
-    },
-    {
-      key: "createdAt",
-      header: "Awarded Date",
-      render: (award: Award) =>
-        editing?.id === award.id && editing.field === "createdAt" ? (
-          <input
+      key: 'createdAt',
+      header: 'Awarded Date',
+      hideOnMobile: true,
+      render: (award) => {
+        // The control edits a YYYY-MM-DD value; the API stores a full ISO timestamp.
+        const iso = new Date(award.createdAt).toISOString()
+        return (
+          <InlineEditCell
+            label="Awarded date"
             type="date"
-            value={editing.value.slice(0, 10)} // Format for date input (YYYY-MM-DD)
-            onChange={(e) =>
-              setEditing({ ...editing, value: new Date(e.target.value + 'T00:00:00').toISOString() })
+            value={iso.slice(0, 10)}
+            display={new Date(award.createdAt).toLocaleDateString()}
+            onCommit={(value) =>
+              stageEdit(
+                award,
+                'createdAt',
+                new Date(`${value}T00:00:00`).toISOString(),
+                iso.slice(0, 10)
+              )
             }
-            onBlur={commitEdit}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !isSubmitting) {
-                e.preventDefault();
-                commitEdit();
-              }
-            }}
-            disabled={isSubmitting}
-            autoFocus
           />
-        ) : (
-          <span
-            onClick={() =>
-              !isSubmitting && setEditing({
-                id: award.id,
-                field: "createdAt",
-                value: new Date(award.createdAt).toISOString(),
-              })
-            }
-          >
-            {new Date(award.createdAt).toLocaleDateString()}
-          </span>
-        ),
+        )
+      },
     },
     {
-      key: "imageUrl",
-      header: "Image",
-      render: (award: Award) =>
-        editing?.id === award.id && editing.field === "imageUrl" ? (
-          <input
-            type="url"
-            value={editing.value}
-            onChange={(e) =>
-              setEditing({ ...editing, value: e.target.value })
-            }
-            onBlur={commitEdit}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !isSubmitting) {
-                e.preventDefault();
-                commitEdit();
-              }
-            }}
-            autoFocus
-          />
-        ) : (
-          <div
-            onClick={() =>
-              !isSubmitting && setEditing({
-                id: award.id,
-                field: "imageUrl",
-                value: award.imageUrl || "",
-              })
-            }
-            style={{ cursor: "pointer" }}
-          >
-            {award.imageUrl ? (
+      key: 'imageUrl',
+      header: 'Image',
+      hideOnMobile: true,
+      width: 'w-28',
+      render: (award) => (
+        <InlineEditCell
+          label="Image URL"
+          type="url"
+          value={award.imageUrl || ''}
+          display={
+            award.imageUrl ? (
               <img
                 src={award.imageUrl}
                 alt={`${award.type} award`}
-                style={{
-                  maxWidth: "80px",
-                  maxHeight: "45px",
-                  width: "auto",
-                  height: "auto",
-                  objectFit: "contain",
-                  borderRadius: "4px"
-                }}
+                loading="lazy"
+                className="max-h-11 w-auto max-w-20 rounded-control object-contain"
               />
             ) : (
-              "No image"
-            )}
-          </div>
-        ),
+              <span className="text-content-muted">No image</span>
+            )
+          }
+          onCommit={(value) => stageEdit(award, 'imageUrl', value, award.imageUrl || '')}
+        />
+      ),
     },
     {
-      key: "actions",
-      header: "Actions",
-      render: (award: Award) =>
-        user?.role === "superadmin" ? (
-          <button
-            onClick={() => handleDelete(award.id)}
+      key: 'actions',
+      header: 'Actions',
+      align: 'right',
+      width: 'w-28',
+      render: (award) =>
+        canDelete ? (
+          <Button
+            variant="danger"
+            size="xs"
             disabled={deleting}
-            className="delete-button"
+            onClick={() => setPendingDelete(award)}
           >
             Delete
-          </button>
+          </Button>
         ) : (
-          <span style={{ color: "#666", fontStyle: "italic" }}>No permissions</span>
+          <span className="text-xs italic text-content-muted">No permissions</span>
         ),
     },
-  ];
+  ]
+
+  const clearFilters = () => {
+    setSearchQuery('')
+    setSeasonFilter('')
+    setAwardTypeFilter('')
+    setCurrentPage(1)
+  }
 
   return (
-    <div className="portal-main">
-      {/* Search and Controls */}
-      <div className="players-controls">
-        <button
-          onClick={openModal}
-          className="create-button"
-        >
-          Create Award
-        </button>
-        <div className="players-controls-right">
-          <SearchBar onSearch={handleSearch} placeholder="Search player names..." />
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-          />
-        </div>
-      </div>
+    <PageContainer>
+      <PageHeader title="Awards" actions={<Button onClick={openModal}>Create Award</Button>} />
 
-      {/* Filters */}
-      <FilterBar onReset={clearFilters}>
-        <div className="filter-group">
-          <select
-            className="filter-select ui-filter-select"
-            aria-label="Season"
-            value={seasonFilter}
-            onChange={(e) => handleSeasonFilterChange(e.target.value)}
+      <Toolbar
+        filters={
+          <FilterBar
+            onReset={clearFilters}
+            activeCount={[searchQuery, seasonFilter, awardTypeFilter].filter(Boolean).length}
           >
-            <option value="">{seasonsLoading ? "Loading seasons..." : "All Seasons"}</option>
-            {uniqueSeasons.map(season => (
-              <option key={season} value={season.toString()}>
-                Season {season}
-              </option>
-            ))}
-          </select>
-        </div>
+            <FilterSelect
+              label="Season"
+              value={seasonFilter}
+              onChange={(value) => {
+                setSeasonFilter(value)
+                setCurrentPage(1)
+              }}
+              options={seasonOptions}
+              placeholder={seasonsLoading ? 'Loading seasons…' : 'All Seasons'}
+            />
+            <FilterSelect
+              label="Award type"
+              value={awardTypeFilter}
+              onChange={(value) => {
+                setAwardTypeFilter(value)
+                setCurrentPage(1)
+              }}
+              options={toOptions(AWARD_TYPES)}
+              placeholder="All Award Types"
+            />
+          </FilterBar>
+        }
+        trailing={
+          <>
+            <SearchBar
+              value={searchQuery}
+              onSearch={(query) => {
+                setSearchQuery(query)
+                setCurrentPage(1)
+              }}
+              placeholder="Search player names…"
+              className="w-full sm:w-64"
+            />
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          </>
+        }
+      />
 
-        <div className="filter-group">
-          <select
-            className="filter-select ui-filter-select"
-            aria-label="Award type"
-            value={awardTypeFilter}
-            onChange={(e) => handleAwardTypeFilterChange(e.target.value)}
-          >
-            <option value="">All Award Types</option>
-            {AWARD_TYPES.map(type => (
-              <option key={type} value={type}>
-                {type}
-              </option>
-            ))}
-          </select>
-        </div>
-      </FilterBar>
+      <ResultsCounter page={currentPage} pageSize={AWARDS_PER_PAGE} total={total} noun="awards" />
 
-      <div className="results-counter">
-        Showing {total === 0 ? 0 : ((currentPage - 1) * AWARDS_PER_PAGE) + 1}-{Math.min(currentPage * AWARDS_PER_PAGE, total)} of {total} awards
-      </div>
+      {saveError && <ErrorNotice message={saveError} />}
 
-      {/* Awards Table */}
-      <div className="table-container">
-        <Table
-          columns={columns}
-          rows={localAwards as unknown as (Award & Record<string, unknown>)[]}
-          rowKey={(award) => award.id}
-        />
-      </div>
+      <DataTable
+        columns={columns}
+        rows={localAwards}
+        rowKey={(award) => award.id}
+        loading={loading}
+        error={error}
+        emptyLabel="No awards match your filters."
+      />
 
       <Modal
         isOpen={isModalOpen}
-        onClose={closeModal}
+        onClose={() => setIsModalOpen(false)}
         title="Create New Award"
-        className="award-create-modal"
+        size="md"
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" form="create-award-form" loading={creating} loadingLabel="Creating…">
+              Create
+            </Button>
+          </>
+        }
       >
-        {formError && <p className="award-modal-error">{formError}</p>}
+        <form id="create-award-form" onSubmit={handleCreate} className="flex flex-col gap-4">
+          {formError && <ErrorNotice message={formError} />}
 
-        <form onSubmit={handleCreate} className="award-create-form">
           <RegionSeasonFields
             regions={formRegionSeason.regions}
             regionsLoading={formRegionSeason.regionsLoading}
@@ -567,73 +417,90 @@ const AwardsPage: React.FC = () => {
             seasonValueKey="id"
           />
 
-          <div className="award-form-row award-form-row-2">
-            <div className="form-group">
-              <label htmlFor="awardType">Type*</label>
-              <select
-                id="awardType"
+          <FormField label="Type" required>
+            {(id) => (
+              <Select
+                id={id}
                 value={newType}
                 onChange={(e) => setNewType(e.target.value)}
-                required
-              >
-                <option value="">Select an award type</option>
-                {AWARD_TYPES.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="award-form-row award-form-row-2">
-            <div className="form-group">
-              <label htmlFor="awardPlayerName">Player Name*</label>
-              <input
-                id="awardPlayerName"
-                type="text"
-                value={newPlayerName}
-                onChange={(e) => setNewPlayerName(e.target.value.toLowerCase())}
-                placeholder="player name"
+                options={toOptions(AWARD_TYPES)}
+                placeholder="Select an award type"
                 required
               />
-            </div>
+            )}
+          </FormField>
 
-            <div className="form-group">
-              <label htmlFor="awardImageUrl">Image URL</label>
-              <input
-                id="awardImageUrl"
-                type="url"
-                value={newImageUrl}
-                onChange={(e) => setNewImageUrl(e.target.value)}
-                placeholder="https://example.com/image.jpg"
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FormField label="Player Name" required>
+              {(id) => (
+                <TextInput
+                  id={id}
+                  value={newPlayerName}
+                  onChange={(e) => setNewPlayerName(e.target.value.toLowerCase())}
+                  placeholder="player name"
+                  required
+                />
+              )}
+            </FormField>
+
+            <FormField label="Image URL">
+              {(id) => (
+                <TextInput
+                  id={id}
+                  type="url"
+                  value={newImageUrl}
+                  onChange={(e) => setNewImageUrl(e.target.value)}
+                  placeholder="https://example.com/image.jpg"
+                />
+              )}
+            </FormField>
+          </div>
+
+          <FormField label="Description" required>
+            {(id) => (
+              <TextArea
+                id={id}
+                value={newDescription}
+                onChange={(e) => setNewDescription(e.target.value)}
+                placeholder="Award description"
+                required
               />
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="awardDescription">Description*</label>
-            <textarea
-              id="awardDescription"
-              value={newDescription}
-              onChange={(e) => setNewDescription(e.target.value)}
-              placeholder="Award description"
-              required
-            />
-          </div>
-
-          <div className="award-form-actions">
-            <button type="button" onClick={closeModal} className="award-btn-cancel">
-              Cancel
-            </button>
-            <button type="submit" disabled={creating} className="award-btn-submit">
-              {creating ? "Creating..." : "Create"}
-            </button>
-          </div>
+            )}
+          </FormField>
         </form>
       </Modal>
-    </div>
-  );
-};
 
-export default AwardsPage; 
+      <ConfirmModal
+        isOpen={pendingEdit !== null}
+        onClose={() => setPendingEdit(null)}
+        onConfirm={applyEdit}
+        tone="primary"
+        title={`Change ${pendingEdit ? FIELD_LABELS[pendingEdit.field] : ''}`}
+        confirmLabel="Save change"
+        message={
+          <>
+            Change {pendingEdit ? FIELD_LABELS[pendingEdit.field] : ''} from{' '}
+            <strong>{pendingEdit?.previous || '(empty)'}</strong> to{' '}
+            <strong>{pendingEdit?.value || '(empty)'}</strong>?
+          </>
+        }
+      />
+
+      <ConfirmModal
+        isOpen={pendingDelete !== null}
+        onClose={() => setPendingDelete(null)}
+        onConfirm={confirmDelete}
+        loading={deleting}
+        title="Delete award"
+        confirmLabel="Delete"
+        message={
+          <>
+            Delete the <strong>{pendingDelete?.type}</strong> award for{' '}
+            <strong>{pendingDelete?.players[0]?.name ?? 'this player'}</strong>? This cannot be
+            undone.
+          </>
+        }
+      />
+    </PageContainer>
+  )
+}

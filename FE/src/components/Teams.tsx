@@ -1,230 +1,169 @@
-import React, { useState, useEffect } from "react";
-/* Bring in the navigate helper from React Router */
-import { useNavigate }                          from "react-router-dom";
-import { Link } from "react-router-dom";
-import { useMediumTeams, useSkinnySeasons }                             from "../hooks/allFetch";
-import "../styles/Teams.css";
-import "../styles/ListingPage.css";
-import "../styles/TeamRegistrations.css";
-import SearchBar                                from "./Searchbar";
-import Pagination                               from "./Pagination";
-import FilterBar                                from "./ui/FilterBar";
-import { useRegion } from "../context/regionContext";
-import { useDebouncedValue } from "../hooks/useDebouncedValue";
-import { TEAM_PLACEMENTS } from "../constants/teamPlacements";
+import { useMemo, useState, type KeyboardEvent } from "react";
+import { useNavigate } from "react-router-dom";
+import { useMediumTeams, useSkinnySeasons } from "@/hooks/allFetch";
+import { useRegion } from "@/context/regionContext";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { TEAM_PLACEMENTS } from "@/constants/teamPlacements";
+import { TEAMS_NAV_ITEMS } from "@/constants/teamsNav";
 
-const Teams: React.FC = () =>
-{
-    const { regionQuery } = useRegion();
+import PageContainer from "@/components/ui/layout/PageContainer";
+import Toolbar from "@/components/ui/layout/Toolbar";
+import CardGrid from "@/components/ui/layout/CardGrid";
+import DetailStats from "@/components/ui/layout/DetailStats";
+import SubNav from "@/components/ui/navigation/SubNav";
+import FilterBar from "@/components/ui/filters/FilterBar";
+import FilterSelect from "@/components/ui/filters/FilterSelect";
+import SearchBar from "@/components/ui/filters/SearchBar";
+import Pagination from "@/components/ui/navigation/Pagination";
+import { toOptions } from "@/components/ui/inputs/Select";
 
-    /* Track the currently "opened" team card */
-    const [ activeTeam,         setActiveTeam ]         = useState<string | null>(null);
-    const [ previousActiveTeam, setPreviousActiveTeam ] = useState<string | null>(null);
+const TEAMS_PER_PAGE = 12;
 
-    /* Track the search-box value */
-    const [ searchQuery, setSearchQuery ] = useState<string>("");
+/** "Team Name" → "team-name" — the URL segment SingleTeam resolves by. */
+function slugify(name: string): string {
+  return name.toLowerCase().replace(/\s+/g, "-");
+}
 
-    /* Filter states */
-    const [ seasonFilter, setSeasonFilter ] = useState<string>("");
-    const [ placementFilter, setPlacementFilter ] = useState<string>("");
+export default function Teams() {
+  const { regionQuery } = useRegion();
+  const navigate = useNavigate();
 
-    /* Pagination state */
-    const [ currentPage, setCurrentPage ] = useState<number>(1);
-    const teamsPerPage = 12;
+  const [searchQuery, setSearchQuery] = useState("");
+  const [seasonFilter, setSeasonFilter] = useState("");
+  const [placementFilter, setPlacementFilter] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
 
-    const debouncedSearch = useDebouncedValue(searchQuery);
+  const debouncedSearch = useDebouncedValue(searchQuery);
 
-    const { data: paginatedTeams, totalPages, loading, error } = useMediumTeams({
-        page: currentPage,
-        limit: teamsPerPage,
-        search: debouncedSearch || undefined,
-        seasonId: seasonFilter || undefined,
-        placement: placementFilter || undefined,
-        ...regionQuery,
-    });
+  const { data: paginatedTeams, totalPages, loading, error } = useMediumTeams({
+    page: currentPage,
+    limit: TEAMS_PER_PAGE,
+    search: debouncedSearch || undefined,
+    seasonId: seasonFilter || undefined,
+    placement: placementFilter || undefined,
+    ...regionQuery,
+  });
 
-    const { data: seasons } = useSkinnySeasons({ page: 1, limit: 100, ...regionQuery });
-    const seasonOptions = [...(seasons ?? [])].sort((a, b) => a.seasonNumber - b.seasonNumber);
+  const { data: seasons } = useSkinnySeasons({ page: 1, limit: 100, ...regionQuery });
 
-    /* Hook for programmatic navigation */
-    const navigate = useNavigate();
+  const seasonOptions = useMemo(
+    () =>
+      [...(seasons ?? [])]
+        .sort((a, b) => a.seasonNumber - b.seasonNumber)
+        .map((season) => ({ value: season.id.toString(), label: `Season ${season.seasonNumber}` })),
+    [seasons]
+  );
 
-    /* Log whichever card was active before the latest click */
-    useEffect(() =>
-    {
-        if (previousActiveTeam !== null)
-        {
-            console.log("Previous active team:", previousActiveTeam);
-        }
-    }, [ previousActiveTeam ]);
+  const teams = paginatedTeams ?? [];
+  const activeFilterCount = [searchQuery, seasonFilter, placementFilter].filter(Boolean).length;
 
-    /* Helper – turn "Team Name" → "team-name" */
-    const slugify = (name: string): string =>
-    {
-        return name.toLowerCase().replace(/\s+/g, "-");
-    };
+  const openTeam = (teamName: string) => navigate(slugify(teamName));
 
-    /* Handle a card click */
-    const handleCardClick = (teamName: string): void =>
-    {
-        /* Save current active for comparison */
-        setPreviousActiveTeam(activeTeam);
-
-        /* Toggle highlight state (purely visual) */
-        setActiveTeam(prev => (prev === teamName ? null : teamName));
-
-        /* Navigate to /teams/<team-name> (relative path) */
-        navigate(slugify(teamName));
-    };
-
-    const handleCardKeyDown = (event: React.KeyboardEvent, teamName: string): void =>
-    {
-        if (event.key === "Enter" || event.key === " ")
-        {
-            event.preventDefault();
-            handleCardClick(teamName);
-        }
-    };
-
-    /* Update search box state */
-    const handleSearch = (query: string): void =>
-    {
-        setSearchQuery(query);
-        setCurrentPage(1); // Reset to first page when searching
-    };
-
-    /* Clear all filters */
-    const clearFilters = () => {
-        setSearchQuery("")
-        setSeasonFilter("")
-        setPlacementFilter("")
-        setCurrentPage(1) // Reset to first page when clearing filters
+  const handleCardKeyDown = (event: KeyboardEvent, teamName: string) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      openTeam(teamName);
     }
+  };
 
-    return (
-        <div className={`teams-page ${loading ? 'loading' : ''}`}>
-            <div className="team-regs-nav" style={{ padding: "0.75rem 1rem" }}>
-                <span className="team-regs-nav-active">League teams</span>
-                <span>·</span>
-                <Link to="/teams/registrations">Team registrations</Link>
-                <span>·</span>
-                <Link to="/teams/register">Register a team</Link>
-            </div>
-            <div className="listing-controls-toolbar">
-                    <FilterBar onReset={(searchQuery || seasonFilter || placementFilter) ? clearFilters : undefined}>
-                        <div className="teams-season-filter">
-                            <select
-                                id="season-filter"
-                                aria-label="Season"
-                                value={seasonFilter}
-                                onChange={(e) => {
-                                    setSeasonFilter(e.target.value)
-                                    setCurrentPage(1)
-                                }}
-                            >
-                                <option value="">All Seasons</option>
-                                {seasonOptions.map(season => (
-                                    <option key={season.id} value={season.id.toString()}>
-                                        Season {season.seasonNumber}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
+  const clearFilters = () => {
+    setSearchQuery("");
+    setSeasonFilter("");
+    setPlacementFilter("");
+    setCurrentPage(1);
+  };
 
-                        <div className="teams-placement-filter">
-                            <select
-                                id="placement-filter"
-                                aria-label="Placement"
-                                value={placementFilter}
-                                onChange={(e) => {
-                                    setPlacementFilter(e.target.value)
-                                    setCurrentPage(1)
-                                }}
-                            >
-                                <option value="">All Placements</option>
-                                {TEAM_PLACEMENTS.map(placement => (
-                                    <option key={placement} value={placement}>
-                                        {placement}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                    </FilterBar>
+  return (
+    <PageContainer>
+      <SubNav items={TEAMS_NAV_ITEMS} activeLabel="League teams" />
 
-                    <div className="listing-search-row">
-                        <SearchBar 
-                            onSearch={handleSearch} 
-                            placeholder="Search teams..." 
-                        />
-                        <Pagination
-                            currentPage={currentPage}
-                            totalPages={totalPages}
-                            onPageChange={setCurrentPage}
-                        />
-                    </div>
-            </div>
+      <Toolbar
+        filters={
+          <FilterBar onReset={clearFilters} activeCount={activeFilterCount}>
+            <FilterSelect
+              label="Season"
+              value={seasonFilter}
+              onChange={(value) => {
+                setSeasonFilter(value);
+                setCurrentPage(1);
+              }}
+              options={seasonOptions}
+              placeholder="All Seasons"
+            />
+            <FilterSelect
+              label="Placement"
+              value={placementFilter}
+              onChange={(value) => {
+                setPlacementFilter(value);
+                setCurrentPage(1);
+              }}
+              options={toOptions(TEAM_PLACEMENTS)}
+              placeholder="All Placements"
+            />
+          </FilterBar>
+        }
+        trailing={
+          <>
+            <SearchBar
+              value={searchQuery}
+              onSearch={(query) => {
+                setSearchQuery(query);
+                setCurrentPage(1);
+              }}
+              placeholder="Search teams…"
+              className="w-full sm:w-64"
+            />
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          </>
+        }
+      />
 
-            {error ? (
-                <div>Error: {error}</div>
-            ) : loading ? (
-                <div className="teams-wrapper">
-                    <div className="teams-container">
-                        {/* Skeleton loaders */}
-                        {Array.from({ length: 12 }).map((_, index) => (
-                            <div key={index} className="teams-skeleton"></div>
-                        ))}
-                    </div>
-                </div>
-            ) : (paginatedTeams ?? []).length === 0 ? (
-                <div className="listing-table-empty">No teams match your filters.</div>
-            ) : (
-                <div className="teams-wrapper">
-                    <div className="teams-container">
-                        {(paginatedTeams ?? []).map(team => (
-                            <div
-                                key={team.id}
-                                className={`team-card ${activeTeam === team.name ? "active" : ""}`}
-                                role="link"
-                                tabIndex={0}
-                                onClick={() => handleCardClick(team.name)}
-                                onKeyDown={(event) => handleCardKeyDown(event, team.name)}
-                                aria-label={`View team ${team.name}`}
-                            >
-                                {team.logoUrl && (
-                                    <div 
-                                        className="team-card-logo-bg"
-                                        style={{
-                                            backgroundImage: `url(${team.logoUrl})`
-                                        }}
-                                    />
-                                )}
-                                
-                                <div className="team-name">
-                                    <strong>{team.name}</strong>
-                                </div>
-
-                                <div className="team-id">
-                                    <strong>ID:</strong> {team.id}
-                                </div>
-
-                                <div className="team-season">
-                                    <strong>Season:</strong> {team.season.seasonNumber}
-                                </div>
-
-                                <div className="team-card-stage">
-                                    <strong>Placement:</strong> {team.placement}
-                                </div>
-
-                                <div className="team-players">
-                                    <strong>Players:</strong> {team.players?.length || 0}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+      <CardGrid
+        loading={loading}
+        error={error}
+        loadingCount={TEAMS_PER_PAGE}
+        isEmpty={teams.length === 0}
+        emptyLabel="No teams match your filters."
+      >
+        {teams.map((team) => (
+          <div
+            key={team.id}
+            role="link"
+            tabIndex={0}
+            aria-label={`View team ${team.name}`}
+            onClick={() => openTeam(team.name)}
+            onKeyDown={(event) => handleCardKeyDown(event, team.name)}
+            className="group relative flex cursor-pointer flex-col gap-3 overflow-hidden rounded-card border border-border bg-surface p-4 transition-all hover:-translate-y-0.5 hover:border-accent hover:shadow-[var(--shadow-md)] focus-visible:border-accent"
+          >
+            {/* Logo watermark — decorative, so it stays behind the text and is aria-hidden. */}
+            {team.logoUrl && (
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-0 bg-contain bg-center bg-no-repeat opacity-10 transition-opacity group-hover:opacity-20"
+                style={{ backgroundImage: `url(${team.logoUrl})` }}
+              />
             )}
-        </div>
-    );
-};
 
-export default Teams;
+            <div className="relative z-10 flex flex-col gap-3">
+              <h3 className="m-0 truncate text-base font-semibold text-content">{team.name}</h3>
+
+              <DetailStats
+                columns={2}
+                items={[
+                  { label: "ID", value: team.id },
+                  { label: "Season", value: team.season.seasonNumber },
+                  { label: "Placement", value: team.placement ?? "—" },
+                  { label: "Players", value: team.players?.length ?? 0 },
+                ]}
+              />
+            </div>
+          </div>
+        ))}
+      </CardGrid>
+    </PageContainer>
+  );
+}

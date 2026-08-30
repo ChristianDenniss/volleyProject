@@ -1,276 +1,282 @@
-import React, { useState, useRef, useEffect, useMemo } from "react";
-import ReactDOM from "react-dom";
-import { useLeaderboard } from "../hooks/allFetch";
-import { useRegion } from "../context/regionContext";
-import { useDebouncedValue } from "../hooks/useDebouncedValue";
-import "../styles/StatsLeaderboard.css";
-import SearchBar from "./Searchbar";
-import Pagination from "./Pagination";
-import SeasonFilter from "./SeasonFilterBar";
-import { Link } from "react-router-dom";
-import PlayerStatsVisualization from "./PlayerStatsVisualization";
-import Table, { type TableColumn } from "./ui/Table";
+/**
+ * StatsLeaderboard — the sortable stat leaderboard for players or teams: every tracked statistic as a toggleable column, scoped by season, playoff round and totals/per-game/per-set, with an advanced filter that adds numeric conditions on any stat.
+ * A player row expands into `PlayerStatsVisualization`; team rows do not, because the visualisation is a per-player archetype view.
+ * Lives in `components/`; routed at /stats. `STAT_COLUMNS` is the single list driving the columns, the column-picker and the advanced filter's stat choices.
+ */
+import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { useLeaderboard } from '@/hooks/allFetch'
+import { useRegion } from '@/context/regionContext'
+import { useDebouncedValue } from '@/hooks/useDebouncedValue'
+import PlayerStatsVisualization from '@/components/PlayerStatsVisualization'
 
-type StatCategory =
-  | "spikeKills"
-  | "spikeAttempts"
-  | "apeKills"
-  | "apeAttempts"
-  | "spikingErrors"
-  | "digs"
-  | "blocks"
-  | "assists"
-  | "aces"
-  | "settingErrors"
-  | "blockFollows"
-  | "servingErrors"
-  | "miscErrors"
-  | "totalAttempts"
-  | "totalKills"
-  | "totalSpike%"
-  | "Spike%"
-  | "Ape%"
-  | "totalReceives"
-  | "PRF"
-  | "totalErrors"
-  | "plusMinus";
+import PageContainer from '@/components/ui/layout/PageContainer'
+import PageHeader from '@/components/ui/layout/PageHeader'
+import Toolbar from '@/components/ui/layout/Toolbar'
+import Card from '@/components/ui/layout/Card'
+import SectionHeader from '@/components/ui/layout/SectionHeader'
+import DataTable, { type DataTableColumn } from '@/components/ui/layout/DataTable'
+import FilterSelect from '@/components/ui/filters/FilterSelect'
+import SearchBar from '@/components/ui/filters/SearchBar'
+import ColumnToggleMenu from '@/components/ui/filters/ColumnToggleMenu'
+import Pagination from '@/components/ui/navigation/Pagination'
+import Button from '@/components/ui/buttons/Button'
+import IconButton from '@/components/ui/buttons/IconButton'
+import LinkButton from '@/components/ui/buttons/LinkButton'
+import Select from '@/components/ui/inputs/Select'
+import TextInput from '@/components/ui/inputs/TextInput'
+import EmptyState from '@/components/ui/feedback/EmptyState'
 
-type StatType = "total" | "perGame" | "perSet";
-type ViewType = "player" | "team";
-type ComparisonOperator = "==" | "!=" | ">" | ">=" | "<" | "<=";
-type StageRound = "R1" | "R2" | "R3" | "R4" | "R5" | "R6" | "all";
+const ROWS_PER_PAGE = 25
+/** Seasons offered in the season filter. */
+const SEASON_COUNT = 14
+
+type StatType = 'total' | 'perGame' | 'perSet'
+type ViewType = 'player' | 'team'
+type ComparisonOperator = '==' | '!=' | '>' | '>=' | '<' | '<='
+type StageRound = 'R1' | 'R2' | 'R3' | 'R4' | 'R5' | 'R6' | 'all'
+
+/**
+ * Every leaderboard statistic: its API key, its column label, and whether it is shown by
+ * default. Percentage stats are stored 0–1 and rendered as a percentage.
+ */
+const STAT_COLUMNS = [
+  { key: 'spikeKills', label: 'Spike Kills', default: false },
+  { key: 'spikeAttempts', label: 'Spike Attempts', default: false },
+  { key: 'Spike%', label: 'Spike %', default: false, percent: true },
+  { key: 'apeKills', label: 'Ape Kills', default: false },
+  { key: 'apeAttempts', label: 'Ape Attempts', default: false },
+  { key: 'Ape%', label: 'Ape %', default: false, percent: true },
+  { key: 'totalKills', label: 'Total Kills', default: true },
+  { key: 'totalAttempts', label: 'Total Attempts', default: true },
+  { key: 'totalSpike%', label: 'Total Spike %', default: true, percent: true },
+  { key: 'spikingErrors', label: 'Spiking Errors', default: false },
+  { key: 'blocks', label: 'Blocks', default: true },
+  { key: 'assists', label: 'Assists', default: true },
+  { key: 'settingErrors', label: 'Setting Errors', default: false },
+  { key: 'digs', label: 'Digs', default: false },
+  { key: 'blockFollows', label: 'Block Follows', default: false },
+  { key: 'totalReceives', label: 'Total Receives', default: true },
+  { key: 'aces', label: 'Aces', default: true },
+  { key: 'servingErrors', label: 'Serving Errors', default: false },
+  { key: 'PRF', label: 'PRF', default: false },
+  { key: 'plusMinus', label: 'Plus Minus', default: false },
+  { key: 'totalErrors', label: 'Total Errors', default: true },
+  { key: 'miscErrors', label: 'Misc Errors', default: false },
+] as const
+
+type StatKey = (typeof STAT_COLUMNS)[number]['key']
+
+const DEFAULT_VISIBLE: Record<string, boolean> = Object.fromEntries(
+  STAT_COLUMNS.map((column) => [column.key, column.default]),
+)
+
+const PERCENT_STATS = new Set<string>(
+  STAT_COLUMNS.filter((column) => 'percent' in column && column.percent).map((c) => c.key),
+)
+
+const STAT_TYPE_OPTIONS = [
+  { value: 'total', label: 'Totals' },
+  { value: 'perGame', label: 'Per Game' },
+  { value: 'perSet', label: 'Per Set' },
+]
+
+const VIEW_OPTIONS = [
+  { value: 'player', label: 'Players' },
+  { value: 'team', label: 'Teams' },
+]
+
+const STAGE_ROUND_OPTIONS = [
+  { value: 'all', label: 'All Rounds' },
+  { value: 'R1', label: 'R1 — Winners Round of 16' },
+  { value: 'R2', label: 'R2 — Winners QF + Losers R1' },
+  { value: 'R3', label: 'R3 — Winners SF + Losers R2' },
+  { value: 'R4', label: 'R4 — Winners Finals + Losers R3/QF' },
+  { value: 'R5', label: 'R5 — Losers SF + Losers Finals' },
+  { value: 'R6', label: 'R6 — Grand Finals' },
+]
+
+const OPERATOR_OPTIONS = [
+  { value: '==', label: '=' },
+  { value: '!=', label: '≠' },
+  { value: '>', label: '>' },
+  { value: '>=', label: '≥' },
+  { value: '<', label: '<' },
+  { value: '<=', label: '≤' },
+]
+
+const SEASON_OPTIONS = Array.from({ length: SEASON_COUNT }, (_, index) => ({
+  value: String(index + 1),
+  label: `Season ${index + 1}`,
+}))
+
+const STAT_TYPE_SUFFIX: Record<StatType, string> = {
+  total: '',
+  perGame: ' (Per Game)',
+  perSet: ' (Per Set)',
+}
 
 interface FilterCondition {
-  id: string;
-  stat: StatCategory;
-  operator: ComparisonOperator;
-  value: number;
+  id: string
+  stat: StatKey
+  operator: ComparisonOperator
+  value: number
 }
 
-/** One row from GET /api/stats/leaderboard */
+/** One row from GET /api/stats/leaderboard. */
 interface LeaderboardRow {
-  id: number;
-  name: string;
-  logoUrl?: string | null;
-  seasonNumber?: number | null;
-  gamesPlayed?: number;
-  totalSets?: number;
-  [stat: string]: string | number | null | undefined;
+  id: number
+  name: string
+  logoUrl?: string | null
+  seasonNumber?: number | null
+  gamesPlayed?: number
+  totalSets?: number
+  [stat: string]: string | number | null | undefined
 }
 
-const STAT_CATEGORIES: StatCategory[] = [
-  "spikeKills",
-  "spikeAttempts",
-  "Spike%",
-  "apeKills",
-  "apeAttempts",
-  "Ape%",
-  "totalKills",
-  "totalAttempts",
-  "totalSpike%",
-  "spikingErrors",
-  "blocks",
-  "assists",
-  "settingErrors",
-  "digs",
-  "blockFollows",
-  "totalReceives",
-  "aces",
-  "servingErrors",
-  "PRF",
-  "plusMinus",
-  "totalErrors",
-  "miscErrors",
-];
-
-function formatStatName(stat: string): string {
-  return stat
-    .replace(/([A-Z])/g, " $1")
-    .split(" ")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(" ");
+/** Percentages arrive as 0–1 and display as a percentage; other values keep two decimals. */
+function formatStatValue(stat: string, value: number): string {
+  if (PERCENT_STATS.has(stat)) return `${(value * 100).toFixed(2)}%`
+  if (Number.isInteger(value)) return value.toString()
+  return value.toFixed(2)
 }
 
-function formatStatValue(stat: StatCategory, value: number): string {
-  if (stat === "totalSpike%" || stat === "Spike%" || stat === "Ape%") {
-    return `${(value * 100).toFixed(2)}%`;
-  }
-  if (Number.isInteger(value)) return value.toString();
-  return value.toFixed(2);
+interface AdvancedFilterProps {
+  conditions: FilterCondition[]
+  onChange: (conditions: FilterCondition[]) => void
 }
 
-function getSkeletonBarClass(columnKey: string, variantSeed: number): string {
-  if (columnKey === "rank") return "stats-skeleton-bar short";
-  if (columnKey === "name") return "stats-skeleton-bar long";
-  return variantSeed % 2 === 0 ? "stats-skeleton-bar medium" : "stats-skeleton-bar short";
-}
-
-const AdvancedFilter: React.FC<{
-  conditions: FilterCondition[];
-  onConditionsChange: (conditions: FilterCondition[]) => void;
-  statCategories: StatCategory[];
-}> = ({ conditions, onConditionsChange, statCategories }) => {
-  const addCondition = () => {
-    onConditionsChange([
-      ...conditions,
-      { id: Date.now().toString(), stat: "totalKills", operator: ">", value: 0 },
-    ]);
-  };
-
-  const removeCondition = (id: string) => {
-    onConditionsChange(conditions.filter((c) => c.id !== id));
-  };
-
-  const updateCondition = (id: string, updates: Partial<FilterCondition>) => {
-    onConditionsChange(conditions.map((c) => (c.id === id ? { ...c, ...updates } : c)));
-  };
+/** The numeric-condition builder — "total kills ≥ 100" and so on, ANDed together server-side. */
+function AdvancedFilter({ conditions, onChange }: AdvancedFilterProps) {
+  const update = (id: string, updates: Partial<FilterCondition>) =>
+    onChange(conditions.map((c) => (c.id === id ? { ...c, ...updates } : c)))
 
   return (
-    <div className="advanced-filter">
-      <div className="advanced-filter-header">
-        <h3>Advanced Filters</h3>
-        <button className="add-filter-button" onClick={addCondition} type="button">
-          + Add Filter
-        </button>
-      </div>
-
-      {conditions.length === 0 && (
-        <div className="no-filters-message">
-          No filters applied. Click &quot;Add Filter&quot; to create conditions.
-        </div>
-      )}
-
-      {conditions.map((condition) => (
-        <div key={condition.id} className="filter-condition">
-          <div className="filter-condition-row">
-            <select
-              value={condition.stat}
-              onChange={(e) =>
-                updateCondition(condition.id, { stat: e.target.value as StatCategory })
+    <Card padding="lg">
+      <div className="flex flex-col gap-4">
+        <SectionHeader
+          title="Advanced Filters"
+          level={3}
+          actions={
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() =>
+                onChange([
+                  ...conditions,
+                  {
+                    id: Date.now().toString(),
+                    stat: 'totalKills',
+                    operator: '>',
+                    value: 0,
+                  },
+                ])
               }
-              className="filter-stat-select"
             >
-              {statCategories.map((stat) => (
-                <option key={stat} value={stat}>
-                  {formatStatName(stat)}
-                </option>
-              ))}
-            </select>
+              + Add Filter
+            </Button>
+          }
+        />
 
-            <select
-              value={condition.operator}
-              onChange={(e) =>
-                updateCondition(condition.id, {
-                  operator: e.target.value as ComparisonOperator,
-                })
-              }
-              className="filter-operator-select"
-            >
-              <option value="==">=</option>
-              <option value="!=">≠</option>
-              <option value=">">&gt;</option>
-              <option value=">=">≥</option>
-              <option value="<">&lt;</option>
-              <option value="<=">≤</option>
-            </select>
-
-            <div className="filter-value-container">
-              <input
-                type="number"
-                value={
-                  condition.stat.includes("%")
-                    ? Math.round(condition.value * 100 * 100) / 100
-                    : condition.value
-                }
-                onChange={(e) => {
-                  const inputValue = parseFloat(e.target.value) || 0;
-                  const actualValue = condition.stat.includes("%")
-                    ? inputValue / 100
-                    : inputValue;
-                  updateCondition(condition.id, { value: actualValue });
-                }}
-                className="filter-value-input"
-                step="1"
-                min="0"
-                max={condition.stat.includes("%") ? "100" : undefined}
-              />
-              {condition.stat.includes("%") && (
-                <span className="filter-percentage-symbol">%</span>
-              )}
-            </div>
-
-            <button
-              onClick={() => removeCondition(condition.id)}
-              className="remove-filter-button"
-              type="button"
-            >
-              ×
-            </button>
+        {conditions.length === 0 ? (
+          <p className="m-0 text-sm text-content-muted">
+            No filters applied. Use &ldquo;Add Filter&rdquo; to create conditions.
+          </p>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {conditions.map((condition) => {
+              const isPercent = PERCENT_STATS.has(condition.stat)
+              return (
+                <div
+                  key={condition.id}
+                  className="grid gap-2 sm:grid-cols-[2fr_auto_1fr_auto] sm:items-center"
+                >
+                  <Select
+                    size="sm"
+                    aria-label="Statistic"
+                    value={condition.stat}
+                    onChange={(e) => update(condition.id, { stat: e.target.value as StatKey })}
+                    options={STAT_COLUMNS.map((column) => ({
+                      value: column.key,
+                      label: column.label,
+                    }))}
+                  />
+                  <Select
+                    size="sm"
+                    aria-label="Comparison"
+                    value={condition.operator}
+                    onChange={(e) =>
+                      update(condition.id, {
+                        operator: e.target.value as ComparisonOperator,
+                      })
+                    }
+                    options={OPERATOR_OPTIONS}
+                    className="w-auto min-w-20"
+                  />
+                  <div className="flex items-center gap-1">
+                    <TextInput
+                      size="sm"
+                      type="number"
+                      aria-label="Value"
+                      min={0}
+                      max={isPercent ? 100 : undefined}
+                      value={
+                        isPercent
+                          ? Math.round(condition.value * 100 * 100) / 100
+                          : condition.value
+                      }
+                      onChange={(e) => {
+                        const input = Number.parseFloat(e.target.value) || 0
+                        update(condition.id, { value: isPercent ? input / 100 : input })
+                      }}
+                    />
+                    {isPercent && <span className="text-sm text-content-muted">%</span>}
+                  </div>
+                  <IconButton
+                    icon={<span aria-hidden className="text-lg leading-none">&times;</span>}
+                    label="Remove filter"
+                    variant="danger"
+                    size="sm"
+                    onClick={() => onChange(conditions.filter((c) => c.id !== condition.id))}
+                  />
+                </div>
+              )
+            })}
           </div>
-        </div>
-      ))}
-    </div>
-  );
-};
+        )}
+      </div>
+    </Card>
+  )
+}
 
-const StatsLeaderboard: React.FC = () => {
-  const { regionQuery } = useRegion();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedSeason, setSelectedSeason] = useState<number | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
-  const [sortColumn, setSortColumn] = useState<StatCategory | "name">("totalKills");
-  const [showFilterMenu, setShowFilterMenu] = useState(false);
-  const [showAdvancedFilter, setShowAdvancedFilter] = useState(false);
-  const [statType, setStatType] = useState<StatType>("total");
-  const [viewType, setViewType] = useState<ViewType>("player");
-  const [filterConditions, setFilterConditions] = useState<FilterCondition[]>([]);
-  const [selectedStageRound, setSelectedStageRound] = useState<StageRound>("all");
-  const [visibleStats, setVisibleStats] = useState<Record<StatCategory, boolean>>({
-    spikeKills: false,
-    spikeAttempts: false,
-    apeKills: false,
-    apeAttempts: false,
-    spikingErrors: false,
-    digs: false,
-    blocks: true,
-    assists: true,
-    aces: true,
-    settingErrors: false,
-    blockFollows: false,
-    servingErrors: false,
-    miscErrors: false,
-    totalAttempts: true,
-    totalKills: true,
-    "totalSpike%": true,
-    "Spike%": false,
-    "Ape%": false,
-    totalReceives: true,
-    PRF: false,
-    totalErrors: true,
-    plusMinus: false,
-  });
-  const playersPerPage = 25;
-  const filterButtonRef = useRef<HTMLButtonElement>(null);
-  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
-  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
+export default function StatsLeaderboard() {
+  const { regionQuery } = useRegion()
 
-  const debouncedSearch = useDebouncedValue(searchQuery);
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedSeason, setSelectedSeason] = useState<number | null>(null)
+  const [selectedStageRound, setSelectedStageRound] = useState<StageRound>('all')
+  const [statType, setStatType] = useState<StatType>('total')
+  const [viewType, setViewType] = useState<ViewType>('player')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [sortColumn, setSortColumn] = useState<string>('totalKills')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
+  const [visibleStats, setVisibleStats] = useState<Record<string, boolean>>(DEFAULT_VISIBLE)
+  const [filterConditions, setFilterConditions] = useState<FilterCondition[]>([])
+  const [showAdvancedFilter, setShowAdvancedFilter] = useState(false)
+  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({})
+
+  const debouncedSearch = useDebouncedValue(searchQuery)
 
   const filtersParam =
     filterConditions.length > 0
       ? JSON.stringify(
-          filterConditions.map(({ stat, operator, value }) => ({
-            stat,
-            operator,
-            value,
-          }))
+          filterConditions.map(({ stat, operator, value }) => ({ stat, operator, value })),
         )
-      : undefined;
+      : undefined
 
   const { data: rows, totalPages, loading, error } = useLeaderboard({
     page: currentPage,
-    limit: playersPerPage,
+    limit: ROWS_PER_PAGE,
     view: viewType,
     statType,
     season: selectedSeason ?? undefined,
@@ -280,368 +286,227 @@ const StatsLeaderboard: React.FC = () => {
     sortDir: sortDirection,
     filters: filtersParam,
     ...regionQuery,
-  });
+  })
 
-  const leaderboardRows = (rows ?? []) as LeaderboardRow[];
+  const leaderboardRows = (rows ?? []) as LeaderboardRow[]
 
-  useEffect(() => {
-    if (showFilterMenu && filterButtonRef.current) {
-      const rect = filterButtonRef.current.getBoundingClientRect();
-      setDropdownStyle({
-        position: "absolute",
-        top: rect.bottom + window.scrollY + 4,
-        left: rect.left + window.scrollX,
-        minWidth: 400,
-        zIndex: 1000,
-      });
-    }
-  }, [showFilterMenu]);
+  /** Every filter change resets to page 1 — a narrower set may not have the current page. */
+  const resetPage = <T,>(setter: (value: T) => void) => (value: T) => {
+    setter(value)
+    setCurrentPage(1)
+  }
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    setCurrentPage(1);
-  };
-
-  const handleSeasonChange = (season: number | null) => {
-    setSelectedSeason(season);
-    setCurrentPage(1);
-  };
-
-  const handleFilterConditionsChange = (conditions: FilterCondition[]) => {
-    setFilterConditions(conditions);
-    setCurrentPage(1);
-  };
-
-  const handleStageRoundChange = (stageRound: StageRound) => {
-    setSelectedStageRound(stageRound);
-    setCurrentPage(1);
-  };
-
-  const handleSort = (stat: StatCategory | "name") => {
-    if (sortColumn === stat) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+  const handleSort = (key: string) => {
+    if (sortColumn === key) {
+      setSortDirection((direction) => (direction === 'asc' ? 'desc' : 'asc'))
     } else {
-      setSortColumn(stat);
-      setSortDirection("desc");
+      setSortColumn(key)
+      setSortDirection('desc')
     }
-    setCurrentPage(1);
-  };
+    setCurrentPage(1)
+  }
 
-  const toggleStatVisibility = (stat: StatCategory) => {
-    setVisibleStats((prev) => ({ ...prev, [stat]: !prev[stat] }));
-  };
-
-  const toggleAllStats = () => {
-    const allVisible = Object.values(visibleStats).every((v) => v);
-    setVisibleStats(
-      Object.keys(visibleStats).reduce(
-        (acc, key) => ({ ...acc, [key]: !allVisible }),
-        {} as Record<StatCategory, boolean>
-      )
-    );
-  };
-
-  const handleRowClick = (rowId: string) => {
-    setExpandedRows((prev) => ({ ...prev, [rowId]: !prev[rowId] }));
-  };
-
-  const visibleStatCategories = STAT_CATEGORIES.filter((stat) => visibleStats[stat]);
-
-  const leaderboardColumns: TableColumn<LeaderboardRow>[] = useMemo(() => {
-    const cols: TableColumn<LeaderboardRow>[] = [
+  const columns: DataTableColumn<LeaderboardRow>[] = useMemo(() => {
+    const base: DataTableColumn<LeaderboardRow>[] = [
       {
-        key: "rank",
-        header: "#",
-        render: (_item, index) => (currentPage - 1) * playersPerPage + (index ?? 0) + 1,
+        key: 'rank',
+        header: '#',
+        width: 'w-12',
+        render: (_row, index) => (currentPage - 1) * ROWS_PER_PAGE + index + 1,
       },
       {
-        key: "name",
-        header: (
-          <>
-            {viewType === "team" ? "Team" : "Player"}
-            {sortColumn === "name" && (
-              <span className={`sort-arrow ${sortDirection}`}>
-                {sortDirection === "desc" ? "↓" : "↑"}
+        key: 'name',
+        header: viewType === 'team' ? 'Team' : 'Player',
+        onSort: () => handleSort('name'),
+        sortDirection: sortColumn === 'name' ? sortDirection : null,
+        render: (row) =>
+          viewType === 'team' ? (
+            <span className="flex min-w-0 items-center gap-2">
+              {row.logoUrl && (
+                <img
+                  src={String(row.logoUrl)}
+                  alt=""
+                  loading="lazy"
+                  className="h-6 w-6 shrink-0 rounded-full border border-border object-contain"
+                />
+              )}
+              <span className="truncate font-medium text-content">
+                {row.name}
+                {row.seasonNumber != null ? ` (S${row.seasonNumber})` : ''}
               </span>
-            )}
-          </>
-        ),
-        headerClassName: "sortable",
-        onHeaderClick: () => handleSort("name"),
-        render: (item) =>
-          viewType === "team" ? (
-            <span className="team-name-cell">
-              {item.logoUrl ? (
-                <img src={String(item.logoUrl)} alt="" className="team-logo-thumb" />
-              ) : null}
-              {item.name}
-              {item.seasonNumber != null ? ` (S${item.seasonNumber})` : ""}
             </span>
           ) : (
             <Link
-              to={`/players/${item.id}`}
-              className="stats-pill-link"
-              onClick={(e) => e.stopPropagation()}
+              to={`/players/${row.id}`}
+              onClick={(event) => event.stopPropagation()}
+              className="font-medium text-accent no-underline hover:underline"
             >
-              {item.name}
+              {row.name}
             </Link>
           ),
       },
-    ];
+    ]
 
-    visibleStatCategories.forEach((stat) => {
-      cols.push({
-        key: stat,
-        header: (
-          <>
-            {formatStatName(stat)}{" "}
-            {statType === "perGame"
-              ? "(Per Game)"
-              : statType === "perSet"
-                ? "(Per Set)"
-                : ""}
-            {sortColumn === stat && (
-              <span className={`sort-arrow ${sortDirection}`}>
-                {sortDirection === "desc" ? "↓" : "↑"}
-              </span>
-            )}
-          </>
-        ),
-        headerClassName: "sortable",
-        onHeaderClick: () => handleSort(stat),
-        render: (item) => {
-          const raw = Number(item[stat] ?? 0);
-          return formatStatValue(stat, Number.isFinite(raw) ? raw : 0);
+    for (const column of STAT_COLUMNS) {
+      if (!visibleStats[column.key]) continue
+      base.push({
+        key: column.key,
+        header: `${column.label}${STAT_TYPE_SUFFIX[statType]}`,
+        align: 'right',
+        onSort: () => handleSort(column.key),
+        sortDirection: sortColumn === column.key ? sortDirection : null,
+        render: (row) => {
+          const raw = Number(row[column.key] ?? 0)
+          return (
+            <span className="tabular-nums">
+              {formatStatValue(column.key, Number.isFinite(raw) ? raw : 0)}
+            </span>
+          )
         },
-      });
-    });
+      })
+    }
 
-    return cols;
-  }, [
-    currentPage,
-    playersPerPage,
-    viewType,
-    sortColumn,
-    sortDirection,
-    visibleStatCategories,
-    statType,
-  ]);
+    return base
+    // handleSort is stable in effect (it only reads state setters), so it is deliberately
+    // not a dependency — including it would rebuild the columns on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, viewType, sortColumn, sortDirection, visibleStats, statType])
 
   return (
-    <div className={`stats-leaderboard-page ${loading ? "loading" : ""}`}>
-      <div className="stats-records-nav">
-        <button
-          className="stats-records-button"
-          onClick={() => {
-            window.location.href = "/records";
-          }}
-        >
-          View Stat Records
-        </button>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Stats Leaderboard"
+        actions={
+          <LinkButton to="/records" variant="secondary">
+            View Stat Records
+          </LinkButton>
+        }
+      />
 
-      <div className="stats-controls-wrapper">
-        <div className="stats-controls-container">
-          <div className="stats-filters-row">
-            <div className="stats-season-filter">
-              <SeasonFilter
-                selectedSeason={selectedSeason}
-                onSeasonChange={handleSeasonChange}
-              />
-            </div>
-            <div className="stats-stage-filter">
-              <select
-                id="stage-round"
-                aria-label="Round"
-                value={selectedStageRound}
-                onChange={(e) =>
-                  handleStageRoundChange(e.target.value as StageRound)
-                }
-              >
-                <option value="all">All Rounds</option>
-                <option value="R1">R1 - Winners Round of 16</option>
-                <option value="R2">R2 - Winners QF + Losers R1</option>
-                <option value="R3">R3 - Winners SF + Losers R2</option>
-                <option value="R4">R4 - Winners Finals + Losers R3/QF</option>
-                <option value="R5">R5 - Losers SF + Losers Finals</option>
-                <option value="R6">R6 - Grand Finals</option>
-              </select>
-            </div>
-            <div className="stats-type-filter">
-              <select
-                id="stat-type"
-                aria-label="Stat type"
-                value={statType}
-                onChange={(e) => {
-                  setStatType(e.target.value as StatType);
-                  setCurrentPage(1);
-                }}
-              >
-                <option value="total">Totals</option>
-                <option value="perGame">Per Game</option>
-                <option value="perSet">Per Set</option>
-              </select>
-            </div>
-            <div className="stats-view-filter">
-              <select
-                id="view-type"
-                aria-label="View"
-                value={viewType}
-                onChange={(e) => {
-                  setViewType(e.target.value as ViewType);
-                  setCurrentPage(1);
-                  setExpandedRows({});
-                }}
-              >
-                <option value="player">Players</option>
-                <option value="team">Teams</option>
-              </select>
-            </div>
-            <div className="stats-filter-menu">
-              <button
-                className="filter-menu-button"
-                ref={filterButtonRef}
-                onClick={() => setShowFilterMenu(!showFilterMenu)}
-              >
-                Filter Stats
-              </button>
-            </div>
-            <div className="stats-advanced-filter">
-              <button
-                className={`advanced-filter-button ${showAdvancedFilter ? "active" : ""}`}
-                onClick={() => setShowAdvancedFilter(!showAdvancedFilter)}
-              >
-                Advanced Filters{" "}
-                {filterConditions.length > 0 && `(${filterConditions.length})`}
-              </button>
-            </div>
-            <div className="stats-search-controls">
-              <SearchBar
-                onSearch={handleSearch}
-                placeholder={
-                  viewType === "team" ? "Search Teams..." : "Search Players..."
-                }
-              />
-              <div className="stats-pagination-wrapper">
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  onPageChange={setCurrentPage}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {showFilterMenu &&
-        ReactDOM.createPortal(
-          <div className="filter-menu-dropdown" style={dropdownStyle}>
-            <div className="filter-menu-header">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={Object.values(visibleStats).every((v) => v)}
-                  onChange={toggleAllStats}
-                />
-                All Stats
-              </label>
-            </div>
-            <div className="filter-menu-items">
-              {STAT_CATEGORIES.map((stat) => (
-                <label key={stat} className="filter-menu-item">
-                  <input
-                    type="checkbox"
-                    checked={visibleStats[stat]}
-                    onChange={() => toggleStatVisibility(stat)}
-                  />
-                  {stat.replace(/([A-Z])/g, " $1").trim()}
-                </label>
-              ))}
-            </div>
-          </div>,
-          document.body
-        )}
+      <Toolbar
+        filters={
+          <>
+            <FilterSelect
+              label="Season"
+              value={selectedSeason ? String(selectedSeason) : ''}
+              onChange={resetPage((value: string) =>
+                setSelectedSeason(value ? Number(value) : null),
+              )}
+              options={SEASON_OPTIONS}
+              placeholder="All Seasons"
+            />
+            <FilterSelect
+              label="Round"
+              value={selectedStageRound === 'all' ? '' : selectedStageRound}
+              onChange={resetPage((value: string) =>
+                setSelectedStageRound((value || 'all') as StageRound),
+              )}
+              options={STAGE_ROUND_OPTIONS.filter((option) => option.value !== 'all')}
+              placeholder="All Rounds"
+            />
+            <FilterSelect
+              label="Stat type"
+              value={statType}
+              onChange={resetPage((value: string) => setStatType(value as StatType))}
+              options={STAT_TYPE_OPTIONS}
+              placeholder=""
+            />
+            <FilterSelect
+              label="View"
+              value={viewType}
+              onChange={resetPage((value: string) => {
+                setViewType(value as ViewType)
+                setExpandedRows({})
+              })}
+              options={VIEW_OPTIONS}
+              placeholder=""
+            />
+            <ColumnToggleMenu
+              columns={STAT_COLUMNS.map((column) => ({
+                key: column.key,
+                label: column.label,
+              }))}
+              visible={visibleStats}
+              onToggle={(key) =>
+                setVisibleStats((prev) => ({ ...prev, [key]: !prev[key] }))
+              }
+              onToggleAll={(next) =>
+                setVisibleStats(
+                  Object.fromEntries(STAT_COLUMNS.map((column) => [column.key, next])),
+                )
+              }
+            />
+            <Button
+              variant={showAdvancedFilter ? 'accent' : 'secondary'}
+              size="sm"
+              onClick={() => setShowAdvancedFilter((value) => !value)}
+            >
+              Advanced Filters
+              {filterConditions.length > 0 && ` (${filterConditions.length})`}
+            </Button>
+          </>
+        }
+        trailing={
+          <>
+            <SearchBar
+              value={searchQuery}
+              onSearch={resetPage(setSearchQuery)}
+              placeholder={viewType === 'team' ? 'Search teams…' : 'Search players…'}
+              className="w-full sm:w-64"
+            />
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          </>
+        }
+      />
 
       {showAdvancedFilter && (
-        <div className="advanced-filter-panel">
-          <AdvancedFilter
-            conditions={filterConditions}
-            onConditionsChange={handleFilterConditionsChange}
-            statCategories={STAT_CATEGORIES}
-          />
-        </div>
-      )}
-
-      {error ? (
-        <div>Error: {error}</div>
-      ) : loading ? (
-        <div className="stats-table-wrapper loading">
-          <table className="stats-table stats-skeleton-table">
-            <thead>
-              <tr>
-                {leaderboardColumns.map((col) => (
-                  <th key={col.key} className={col.headerClassName}>
-                    {col.header}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {Array.from({ length: playersPerPage }).map((_, rowIndex) => (
-                <tr
-                  key={rowIndex}
-                  className="stats-skeleton-row"
-                  style={
-                    { "--row-delay": `${(rowIndex % 5) * 0.06}s` } as React.CSSProperties
-                  }
-                >
-                  {leaderboardColumns.map((col, colIndex) => (
-                    <td key={col.key}>
-                      <span
-                        className={getSkeletonBarClass(col.key, rowIndex + colIndex)}
-                      />
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <Table
-          columns={leaderboardColumns}
-          rows={leaderboardRows}
-          rowKey={(item) =>
-            viewType === "team"
-              ? `${item.id}-${item.seasonNumber ?? "all"}`
-              : item.id
-          }
-          tableClassName="stats-table"
-          wrapperClassName="stats-table-wrapper"
-          rowClassName={() => (viewType === "player" ? "player-row" : undefined)}
-          onRowClick={(item) => {
-            if (viewType === "player") handleRowClick(String(item.id));
-          }}
-          renderAfterRow={(item) => {
-            if (viewType !== "player") return null;
-            const rowId = String(item.id);
-            if (!expandedRows[rowId]) return null;
-            return (
-              <tr className="player-visualization-row" key={`viz-${rowId}`}>
-                <td colSpan={leaderboardColumns.length}>
-                  <PlayerStatsVisualization
-                    playerId={item.id}
-                    selectedSeason={selectedSeason}
-                  />
-                </td>
-              </tr>
-            );
+        <AdvancedFilter
+          conditions={filterConditions}
+          onChange={(conditions) => {
+            setFilterConditions(conditions)
+            setCurrentPage(1)
           }}
         />
       )}
-    </div>
-  );
-};
 
-export default StatsLeaderboard;
+      {columns.length <= 2 && !loading ? (
+        <EmptyState
+          label="No stat columns selected."
+          description="Use “Filter Stats” to choose which statistics to show."
+        />
+      ) : (
+        <DataTable
+          columns={columns}
+          rows={leaderboardRows}
+          rowKey={(row) =>
+            viewType === 'team' ? `${row.id}-${row.seasonNumber ?? 'all'}` : row.id
+          }
+          loading={loading}
+          error={error}
+          density="compact"
+          stickyHeader
+          emptyLabel="No results match your filters."
+          onRowClick={
+            viewType === 'player'
+              ? (row) =>
+                  setExpandedRows((prev) => ({
+                    ...prev,
+                    [String(row.id)]: !prev[String(row.id)],
+                  }))
+              : undefined
+          }
+          expandedRow={(row) => {
+            if (viewType !== 'player' || !expandedRows[String(row.id)]) return null
+            return (
+              <PlayerStatsVisualization playerId={row.id} selectedSeason={selectedSeason} />
+            )
+          }}
+        />
+      )}
+    </PageContainer>
+  )
+}

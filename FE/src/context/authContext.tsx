@@ -14,9 +14,7 @@ import type {
 } from "../types/interfaces"
 import { MOCK_AUTH_TOKEN, mockAuthUser } from "../mocks/data"
 import { isMockMode, clearClientAuthState } from "../utils/authStorage"
-import { BACKEND_URL } from "../constants/api"
-
-const API_BASE = BACKEND_URL
+import { fetchSessionUser, endSession } from "../hooks/useSessionApi"
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
@@ -42,11 +40,9 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
         {
             try
             {
-                const res = await fetch(`${API_BASE}/api/users/profile`, {
-                    credentials: "include",
-                })
+                const sessionUser = await fetchSessionUser()
 
-                if (!res.ok)
+                if (!sessionUser)
                 {
                     clearClientAuthState()
                     setToken(null)
@@ -54,10 +50,8 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
                     return
                 }
 
-                const profile = await res.json() as User
-                const { password: _password, ...userWithoutPassword } = profile as User & { password?: string }
-                localStorage.setItem("currentUser", JSON.stringify(userWithoutPassword))
-                setUser(userWithoutPassword)
+                localStorage.setItem("currentUser", JSON.stringify(sessionUser))
+                setUser(sessionUser)
                 setToken(null)
             }
             catch
@@ -89,10 +83,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
 
     const logout = () =>
     {
-        void fetch(`${API_BASE}/api/users/logout`, {
-            method: "POST",
-            credentials: "include",
-        }).finally(() =>
+        void endSession().finally(() =>
         {
             clearClientAuthState()
             setToken(null)

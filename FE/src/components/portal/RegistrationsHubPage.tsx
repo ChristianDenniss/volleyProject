@@ -1,292 +1,286 @@
-import React, { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import { useTeamRegistrations, useRegistrationSummary } from "../../hooks/useTeamRegistrations";
-import { authFetch } from "../../hooks/authFetch";
-import { BACKEND_URL } from "../../constants/api";
-import type { RegionCode, TeamRegistration } from "../../types/interfaces";
-import { RegStatusBadge } from "../RegStatusBadge";
-import Modal from "../ui/Modal";
-import "../../styles/TeamRegistrations.css";
+/**
+ * RegistrationsHubPage — the portal's moderation view for team applications, tabbed by region, where a row expands to show colors, vice captain and roster before accepting, denying or revoking it.
+ * Accepting can return a conflict (duplicate team name, or a player already rostered elsewhere); that opens the resolution modal, where the name can be changed and each contested player transferred or excluded.
+ * Lives in `components/portal/`; mounted at /portal/registrations. All requests go through `useRegistrationModeration`.
+ */
+import { useCallback, useState } from 'react'
+import { Link } from 'react-router-dom'
+import {
+  useTeamRegistrations,
+  useRegistrationSummary,
+  useRegistrationModeration,
+  type PlayerConflictAction,
+} from '@/hooks/useTeamRegistrations'
+import type { RegionCode, TeamRegistration } from '@/types/interfaces'
 
-type Conflict = {
-  type: string;
-  teamName?: string;
-  roblox?: string;
-  existingTeamName?: string;
-  existingTeamId?: number;
-};
+import PageContainer from '@/components/ui/layout/PageContainer'
+import PageHeader from '@/components/ui/layout/PageHeader'
+import DataTable, { type DataTableColumn } from '@/components/ui/layout/DataTable'
+import DetailStats from '@/components/ui/layout/DetailStats'
+import Tabs from '@/components/ui/navigation/Tabs'
+import Button from '@/components/ui/buttons/Button'
+import Modal from '@/components/ui/modals/Modal'
+import ErrorNotice from '@/components/ui/feedback/ErrorNotice'
+import FormField from '@/components/ui/inputs/FormField'
+import TextInput from '@/components/ui/inputs/TextInput'
+import Select from '@/components/ui/inputs/Select'
+import { RegStatusBadge } from '@/components/ui/badges/RegStatusBadge'
 
-const RegistrationsHubPage: React.FC = () => {
-  const [region, setRegion] = useState<RegionCode>("na");
-  const { data, loading, error, reload } = useTeamRegistrations({ region, full: true });
-  const summary = useRegistrationSummary(region);
-  const [expanded, setExpanded] = useState<number | null>(null);
-  const [conflicts, setConflicts] = useState<Conflict[] | null>(null);
-  const [conflictId, setConflictId] = useState<number | null>(null);
-  const [rename, setRename] = useState("");
-  const [playerActions, setPlayerActions] = useState<Record<string, "transfer" | "exclude">>({});
-  const [msg, setMsg] = useState<string | null>(null);
+const REGIONS: RegionCode[] = ['na', 'eu', 'as']
 
-  const header = useMemo(() => {
-    if (!summary) return "Accepted —";
-    if (summary.capacity != null) return `Accepted ${summary.accepted}/${summary.capacity}`;
-    return `Accepted ${summary.accepted}`;
-  }, [summary]);
+const PLAYER_ACTION_OPTIONS = [
+  { value: 'transfer', label: 'Transfer' },
+  { value: 'exclude', label: 'Exclude' },
+]
 
-  const act = async (id: number, path: string, body?: unknown) => {
-    setMsg(null);
-    const res = await authFetch(`${BACKEND_URL}/api/team-registrations/${id}/${path}`, {
-      method: "POST",
-      headers: body ? { "Content-Type": "application/json" } : undefined,
-      body: body ? JSON.stringify(body) : undefined,
-    });
-    const data = await res.json().catch(() => ({}));
-    if (res.status === 409 && data.conflicts) {
-      setConflictId(id);
-      setConflicts(data.conflicts);
-      setRename(data.registration?.teamName || "");
-      return;
-    }
-    if (!res.ok) {
-      setMsg(data.error || "Action failed");
-      return;
-    }
-    setConflicts(null);
-    setConflictId(null);
-    setMsg("Updated");
-    await reload();
-  };
+/** Statuses that still accept an accept/deny decision. */
+const ACTIONABLE = ['pending', 'conflict']
 
-  const resolve = async (decision?: "pending" | "denied") => {
-    if (!conflictId) return;
-    if (decision) {
-      await act(conflictId, "resolve", { decision });
-      return;
-    }
-    const players = Object.entries(playerActions).map(([roblox, action]) => ({ roblox, action }));
-    await act(conflictId, "resolve", { teamName: rename || undefined, players });
-  };
+export default function RegistrationsHubPage() {
+  const [region, setRegion] = useState<RegionCode>('na')
+  const [expanded, setExpanded] = useState<number | null>(null)
+  const [playerActions, setPlayerActions] = useState<Record<string, PlayerConflictAction>>({})
 
-  const closeConflicts = () => {
-    setConflicts(null);
-    setConflictId(null);
-  };
+  const { data, loading, error, reload } = useTeamRegistrations({ region, full: true })
+  const summary = useRegistrationSummary(region)
+
+  const onChanged = useCallback(() => reload(), [reload])
+  const moderation = useRegistrationModeration(onChanged)
+
+  const capacityLine = !summary
+    ? 'Accepted —'
+    : summary.capacity != null
+      ? `Accepted ${summary.accepted}/${summary.capacity}`
+      : `Accepted ${summary.accepted}`
+
+  const columns: DataTableColumn<TeamRegistration>[] = [
+    {
+      key: 'teamName',
+      header: 'Team',
+      render: (row) => <span className="font-medium text-content">{row.teamName}</span>,
+    },
+    {
+      key: 'submitter',
+      header: 'Submitter',
+      hideOnMobile: true,
+      render: (row) => row.submittedBy?.username || row.submittedByUserId,
+    },
+    {
+      key: 'captain',
+      header: 'Captain',
+      render: (row) => `${row.captainDiscord} / ${row.captainRoblox}`,
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      align: 'right',
+      render: (row) => <RegStatusBadge status={row.status} />,
+    },
+  ]
 
   return (
-    <div className="team-regs-page">
-      <header className="team-regs-header">
-        <div className="team-regs-header-body">
-          <h1>Registrations</h1>
-          <p>
-            Manage team applications. Other registration types can be added here later.{" "}
-            <Link to="/portal/teams">League teams CRUD</Link>
-          </p>
-          <p className="team-regs-spots">
-            Teams · {region.toUpperCase()} · {header}
-          </p>
-        </div>
-      </header>
+    <PageContainer>
+      <PageHeader
+        title="Registrations"
+        subtitle={
+          <>
+            Manage team applications. Other registration types can be added here later.{' '}
+            <Link to="/portal/teams" className="text-accent no-underline hover:underline">
+              League teams CRUD
+            </Link>
+          </>
+        }
+      />
 
-      <div className="team-regs-region-tabs">
-        {(["na", "eu", "as"] as RegionCode[]).map((r) => (
-          <button
-            key={r}
-            type="button"
-            className={region === r ? "active" : undefined}
-            onClick={() => {
-              setRegion(r);
-              setExpanded(null);
-            }}
-          >
-            {r.toUpperCase()}
-          </button>
-        ))}
-      </div>
+      <p className="m-0 text-sm font-medium text-content-secondary">
+        Teams · {region.toUpperCase()} · {capacityLine}
+      </p>
 
-      {msg && <p className={msg === "Updated" ? "form-success" : "form-error"}>{msg}</p>}
-      {loading && <p className="team-regs-muted">Loading…</p>}
-      {error && <p className="form-error">{error}</p>}
+      <Tabs
+        variant="segmented"
+        items={REGIONS.map((code) => ({ key: code, label: code.toUpperCase() }))}
+        activeKey={region}
+        onChange={(key) => {
+          setRegion(key as RegionCode)
+          setExpanded(null)
+        }}
+      />
 
-      <div className="team-regs-table-wrap">
-        <table className="team-regs-table">
-          <thead>
-            <tr>
-              <th>Team</th>
-              <th>Submitter</th>
-              <th>Captain</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.map((row: TeamRegistration) => {
-              const isOpen = expanded === row.id;
-              return (
-                <React.Fragment key={row.id}>
-                  <tr
-                    className={`listing-row-clickable ${isOpen ? "selected listing-row-expanded" : ""}`}
-                    onClick={() => setExpanded(isOpen ? null : row.id)}
+      {moderation.message && <ErrorNotice message={moderation.message} tone="info" />}
+      {moderation.errorMessage && <ErrorNotice message={moderation.errorMessage} />}
+
+      <DataTable
+        columns={columns}
+        rows={data}
+        rowKey={(row) => row.id}
+        loading={loading}
+        error={error}
+        emptyLabel="No registrations for this region."
+        onRowClick={(row) => setExpanded(expanded === row.id ? null : row.id)}
+        rowTone={(row) => (expanded === row.id ? 'accent' : 'default')}
+        expandedRow={(row) =>
+          expanded === row.id ? (
+            <div className="flex flex-col gap-4">
+              <DetailStats
+                columns={2}
+                items={[
+                  {
+                    label: 'Colors',
+                    value: (
+                      <span className="inline-flex items-center gap-2">
+                        {row.hexColor && (
+                          /* The registered team color — a runtime value with no token. */
+                          <span
+                            aria-hidden
+                            className="inline-block h-4 w-4 shrink-0 rounded-full border border-border"
+                            style={{ background: row.hexColor }}
+                          />
+                        )}
+                        {row.hexColor} · {row.brickColor}
+                      </span>
+                    ),
+                  },
+                  { label: 'Vice', value: `${row.viceDiscord} / ${row.viceRoblox}` },
+                ]}
+              />
+
+              {(row.roster ?? []).length > 0 && (
+                <ul className="m-0 grid list-none gap-2 p-0 sm:grid-cols-2 lg:grid-cols-3">
+                  {(row.roster ?? []).map((player, index) => (
+                    <li
+                      key={index}
+                      className="flex flex-wrap items-center gap-2 rounded-card border border-border bg-surface px-3 py-2 text-sm"
+                    >
+                      <span className="shrink-0 rounded-full bg-brand-subtle px-2 py-0.5 text-xs font-semibold text-accent">
+                        P{index + 1}
+                      </span>
+                      <span className="text-content">{player.discord}</span>
+                      <span aria-hidden className="text-content-muted">·</span>
+                      <span className="text-content-tertiary">{player.roblox}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              <div className="flex flex-wrap gap-2">
+                {ACTIONABLE.includes(row.status) && (
+                  <>
+                    <Button
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        void moderation.accept(row.id)
+                      }}
+                    >
+                      Accept
+                    </Button>
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        void moderation.deny(row.id)
+                      }}
+                    >
+                      Deny
+                    </Button>
+                  </>
+                )}
+                {row.status === 'accepted' && (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      void moderation.revoke(row.id)
+                    }}
                   >
-                    <td className="team-name-cell">{row.teamName}</td>
-                    <td>{row.submittedBy?.username || row.submittedByUserId}</td>
-                    <td>
-                      {row.captainDiscord} / {row.captainRoblox}
-                    </td>
-                    <td>
-                      <RegStatusBadge status={row.status} />
-                    </td>
-                  </tr>
-                  {isOpen && (
-                    <tr className="listing-table-detail-row">
-                      <td colSpan={4}>
-                        <div className="team-regs-detail">
-                          <dl className="team-regs-detail-stats">
-                            <div className="team-regs-detail-stat">
-                              <dt>Colors</dt>
-                              <dd>
-                                {row.hexColor && (
-                                  <span
-                                    className="team-regs-color-swatch"
-                                    style={{ background: row.hexColor }}
-                                    aria-hidden
-                                  />
-                                )}
-                                {row.hexColor} · {row.brickColor}
-                              </dd>
-                            </div>
-                            <div className="team-regs-detail-stat">
-                              <dt>Vice</dt>
-                              <dd>
-                                {row.viceDiscord} / {row.viceRoblox}
-                              </dd>
-                            </div>
-                          </dl>
-                          <ul className="team-regs-roster">
-                            {(row.roster || []).map((p, i) => (
-                              <li key={i}>
-                                <span className="team-regs-roster-label">P{i + 1}</span>
-                                <span>{p.discord}</span>
-                                <span className="team-regs-muted">·</span>
-                                <span>{p.roblox}</span>
-                              </li>
-                            ))}
-                          </ul>
-                          <div className="form-actions" style={{ justifyContent: "flex-start" }}>
-                            {(row.status === "pending" || row.status === "conflict") && (
-                              <>
-                                <button
-                                  type="button"
-                                  className="team-regs-cta"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    void act(row.id, "accept");
-                                  }}
-                                >
-                                  Accept
-                                </button>
-                                <button
-                                  type="button"
-                                  className="team-regs-cta team-regs-cta--danger"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    void act(row.id, "deny");
-                                  }}
-                                >
-                                  Deny
-                                </button>
-                              </>
-                            )}
-                            {row.status === "accepted" && (
-                              <button
-                                type="button"
-                                className="team-regs-cta team-regs-cta--secondary"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  void act(row.id, "revoke");
-                                }}
-                              >
-                                Revoke (while apps open)
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </React.Fragment>
-              );
-            })}
-            {data.length === 0 && !loading && (
-              <tr>
-                <td colSpan={4} className="listing-table-empty">
-                  No registrations for this region.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+                    Revoke (while apps open)
+                  </Button>
+                )}
+              </div>
+            </div>
+          ) : null
+        }
+      />
 
       <Modal
-        isOpen={Boolean(conflicts && conflictId)}
-        onClose={closeConflicts}
+        isOpen={Boolean(moderation.conflicts && moderation.conflictId)}
+        onClose={moderation.closeConflicts}
         title="Resolve conflicts"
+        size="md"
+        footer={
+          <>
+            <Button variant="outline" size="sm" onClick={moderation.closeConflicts}>
+              Close
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => void moderation.resolveConflicts('pending')}
+            >
+              Revert pending
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={() => void moderation.resolveConflicts('denied')}
+            >
+              Deny
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => void moderation.resolveConflicts(undefined, playerActions)}
+            >
+              Apply &amp; accept
+            </Button>
+          </>
+        }
       >
-        <div className="team-regs-conflict-modal">
-          <label>
-            Team name
-            <input value={rename} onChange={(e) => setRename(e.target.value)} />
-          </label>
-          <ul className="team-regs-conflict-list">
-            {(conflicts || []).map((c, i) => (
-              <li key={i}>
-                {c.type === "name" && <>Name clash: {c.teamName}</>}
-                {c.type === "player" && (
+        <div className="flex flex-col gap-4">
+          <FormField label="Team name" hint="Change it here to clear a name clash.">
+            {(id) => (
+              <TextInput
+                id={id}
+                value={moderation.conflictTeamName}
+                onChange={(e) => moderation.setConflictTeamName(e.target.value)}
+              />
+            )}
+          </FormField>
+
+          <ul className="m-0 flex list-none flex-col gap-2 p-0">
+            {(moderation.conflicts ?? []).map((conflict, index) => (
+              <li
+                key={index}
+                className="flex flex-wrap items-center gap-2 rounded-card border border-status-warning/30 bg-status-warning/10 px-3 py-2 text-sm text-content-secondary"
+              >
+                {conflict.type === 'name' && <>Name clash: {conflict.teamName}</>}
+                {conflict.type === 'player' && (
                   <>
-                    Player {c.roblox} on {c.existingTeamName}{" "}
-                    <select
-                      value={playerActions[c.roblox!] || ""}
+                    <span>
+                      Player {conflict.roblox} on {conflict.existingTeamName}
+                    </span>
+                    <Select
+                      size="sm"
+                      aria-label={`Resolution for ${conflict.roblox}`}
+                      value={playerActions[conflict.roblox!] || ''}
+                      placeholder="Choose…"
+                      options={PLAYER_ACTION_OPTIONS}
                       onChange={(e) =>
                         setPlayerActions((prev) => ({
                           ...prev,
-                          [c.roblox!]: e.target.value as "transfer" | "exclude",
+                          [conflict.roblox!]: e.target.value as PlayerConflictAction,
                         }))
                       }
-                    >
-                      <option value="">Choose…</option>
-                      <option value="transfer">Transfer</option>
-                      <option value="exclude">Exclude</option>
-                    </select>
+                      className="w-auto min-w-[9rem]"
+                    />
                   </>
                 )}
               </li>
             ))}
           </ul>
-          <div className="form-actions">
-            <button type="button" className="team-regs-cta" onClick={() => void resolve()}>
-              Apply &amp; accept
-            </button>
-            <button
-              type="button"
-              className="team-regs-cta team-regs-cta--secondary"
-              onClick={() => void resolve("pending")}
-            >
-              Revert pending
-            </button>
-            <button
-              type="button"
-              className="team-regs-cta team-regs-cta--danger"
-              onClick={() => void resolve("denied")}
-            >
-              Deny
-            </button>
-            <button type="button" className="team-regs-cta team-regs-cta--secondary" onClick={closeConflicts}>
-              Close
-            </button>
-          </div>
         </div>
       </Modal>
-    </div>
-  );
-};
-
-export default RegistrationsHubPage;
+    </PageContainer>
+  )
+}

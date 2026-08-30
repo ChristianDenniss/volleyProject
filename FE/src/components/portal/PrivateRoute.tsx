@@ -1,8 +1,9 @@
 // src/components/PrivateRoute.tsx
 import React from "react";
 import { Navigate } from "react-router-dom";
-import { useAuth } from "../../context/authContext";
-import type { User } from "../../types/interfaces";
+import { useAuth } from "@/context/authContext";
+import type { User } from "@/types/interfaces";
+import { PageLoader } from "@/components/ui/feedback/LoadingSpinner";
 
 type AllowedRole = Extract<User["role"], "admin" | "superadmin">;
 
@@ -14,7 +15,7 @@ interface PrivateRouteProps {
 export default function PrivateRoute({ roles, children }: PrivateRouteProps) {
   const { user, isAuthenticated, loading } = useAuth();
 
-  if (loading) return <div className="page-loading" role="status">Loading…</div>;
+  if (loading) return <PageLoader />;
   if (!isAuthenticated || !user) return <Navigate to="/login" replace />;
   if (!roles.includes(user.role as AllowedRole)) return <Navigate to="/" replace />;
 

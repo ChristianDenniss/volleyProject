@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { BACKEND_URL } from "../constants/api";
+import { fetchRegions } from "../hooks/useSessionApi";
 
 export type RegionCode = "na" | "eu" | "as";
 
@@ -36,10 +36,8 @@ export const RegionProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [regions, selectedCode]);
 
   useEffect(() => {
-    const backendUrl = BACKEND_URL;
-    fetch(`${backendUrl}/api/regions`)
-      .then((res) => res.json())
-      .then((data: Region[]) => setRegions(data))
+    void fetchRegions()
+      .then(setRegions)
       .catch((err) => console.error("Failed to load regions:", err))
       .finally(() => setLoading(false));
   }, []);
