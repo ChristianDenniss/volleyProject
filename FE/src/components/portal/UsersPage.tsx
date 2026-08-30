@@ -1,186 +1,227 @@
-// src/pages/UsersPage.tsx
-import React, { useState, useEffect } from "react";
-import { useAuth } from "../../context/authContext";
-import type { User } from "../../types/interfaces";
-import { useUsers } from "../../hooks/useUsers";
-import { useDebouncedValue } from "../../hooks/useDebouncedValue";
-import SearchBar from "../Searchbar";
-import Pagination from "../Pagination";
-import FilterBar from "../ui/FilterBar";
-import Table from "../ui/Table";
-import "../../styles/UsersPage.css";
-import "../../styles/PortalPlayersPage.css";
+/**
+ * UsersPage — the admin portal's user management view: a paginated, searchable, role-filtered table where a superadmin can promote or demote any non-superadmin account.
+ * The Actions cell states *why* an action is unavailable ("This is you", "Cannot moderate a user of the same role", "No actions available") rather than rendering an empty cell, and a role change confirms through `ConfirmModal` before it is applied.
+ * Lives in `components/portal/`; mounted at /portal/users.
+ */
+import { useEffect, useMemo, useState } from 'react'
+import { useAuth } from '@/context/authContext'
+import type { User } from '@/types/interfaces'
+import { useUsers } from '@/hooks/useUsers'
+import { useDebouncedValue } from '@/hooks/useDebouncedValue'
 
-const USERS_PER_PAGE = 10;
-const ALL_ROLES: User["role"][] = ["user", "captain", "vice_captain", "court_captain", "admin", "superadmin"];
+import PageContainer from '@/components/ui/layout/PageContainer'
+import PageHeader from '@/components/ui/layout/PageHeader'
+import Toolbar from '@/components/ui/layout/Toolbar'
+import ResultsCounter from '@/components/ui/layout/ResultsCounter'
+import DataTable, { type DataTableColumn } from '@/components/ui/layout/DataTable'
+import FilterBar from '@/components/ui/filters/FilterBar'
+import FilterSelect from '@/components/ui/filters/FilterSelect'
+import SearchBar from '@/components/ui/filters/SearchBar'
+import Pagination from '@/components/ui/navigation/Pagination'
+import Select from '@/components/ui/inputs/Select'
+import ConfirmModal from '@/components/ui/modals/ConfirmModal'
+import Pill, { type PillTone } from '@/components/ui/pills/Pill'
 
-const UsersPage: React.FC = () => {
-  const { user: me } = useAuth();
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const debouncedSearch = useDebouncedValue(searchQuery, 300);
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [roleFilter, setRoleFilter] = useState<string>("");
+const USERS_PER_PAGE = 10
+
+const ALL_ROLES: User['role'][] = [
+  'user',
+  'captain',
+  'vice_captain',
+  'court_captain',
+  'admin',
+  'superadmin',
+]
+
+/** Role → chip tone, so seniority reads at a glance instead of as plain text. */
+const ROLE_TONES: Partial<Record<User['role'], PillTone>> = {
+  superadmin: 'danger',
+  admin: 'purple',
+  captain: 'accent',
+  vice_captain: 'info',
+  court_captain: 'info',
+}
+
+/** "vice_captain" → "Vice Captain". */
+function humanizeRole(role: string): string {
+  return role
+    .split('_')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
+}
+
+interface PendingRoleChange {
+  user: User
+  role: User['role']
+}
+
+export default function UsersPage() {
+  const { user: me } = useAuth()
+
+  const [searchQuery, setSearchQuery] = useState('')
+  const [roleFilter, setRoleFilter] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pendingChange, setPendingChange] = useState<PendingRoleChange | null>(null)
+
+  const debouncedSearch = useDebouncedValue(searchQuery, 300)
 
   const { users, total, totalPages, loading, error, changeRole } = useUsers({
     page: currentPage,
     limit: USERS_PER_PAGE,
     search: debouncedSearch || undefined,
     role: roleFilter || undefined,
-  });
+  })
 
-  const [localUsers, setLocalUsers] = useState<User[]>([]);
+  const [localUsers, setLocalUsers] = useState<User[]>([])
 
   useEffect(() => {
-    setLocalUsers(users);
-  }, [users]);
+    setLocalUsers(users)
+  }, [users])
 
-  // Handle search
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    setCurrentPage(1); // Reset to first page when searching
-  };
+  /** Only a superadmin may change roles, and a superadmin account is never a target. */
+  const promotableRoles = (target: User): User['role'][] => {
+    if (me?.role !== 'superadmin') return []
+    if (target.role === 'superadmin') return []
+    return ALL_ROLES.filter((role) => role !== target.role)
+  }
 
-  // Handle role filter change
-  const handleRoleFilterChange = (value: string) => {
-    setRoleFilter(value);
-    setCurrentPage(1); // Reset to first page when filtering
-  };
+  const roleOptions = useMemo(
+    () => ALL_ROLES.map((role) => ({ value: role, label: humanizeRole(role) })),
+    []
+  )
 
-  // Clear all filters
-  const clearFilters = () => {
-    setSearchQuery("");
-    setRoleFilter("");
-    setCurrentPage(1);
-  };
-
-  const canPromote = (target: User, to: User["role"]) => {
-    if (me?.role !== "superadmin") {
-      return false;
-    }
-    if (target.role === "superadmin") return false;
-    return target.role !== to;
-  };
-
-  // Table requires rows to satisfy Record<string, unknown>; User has no index
-  // signature, so widen locally for the shared Table component's generic.
-  type UserRow = User & Record<string, unknown>;
-
-  const columns = [
+  const columns: DataTableColumn<User>[] = [
+    { key: 'id', header: 'ID', width: 'w-16', render: (user) => user.id },
     {
-      key: "id",
-      header: "ID",
-      render: (u: UserRow) => u.id,
+      key: 'username',
+      header: 'Name',
+      render: (user) => <span className="font-medium text-content">{user.username}</span>,
     },
     {
-      key: "username",
-      header: "Name",
-      render: (u: UserRow) => u.username,
+      key: 'role',
+      header: 'Role',
+      render: (user) => (
+        <Pill tone={ROLE_TONES[user.role] ?? 'neutral'} size="sm">
+          {humanizeRole(user.role)}
+        </Pill>
+      ),
     },
     {
-      key: "role",
-      header: "Role",
-      render: (u: UserRow) => u.role,
-    },
-    {
-      key: "actions",
-      header: "Actions",
-      render: (u: UserRow) => {
-        // 1) If this is the current user:
-        if (u.id === me?.id) {
-          return <span className="text-muted">This is you</span>;
+      key: 'actions',
+      header: 'Actions',
+      align: 'right',
+      render: (user) => {
+        if (user.id === me?.id) {
+          return <span className="text-xs text-content-muted">This is you</span>
         }
-
-        // 2) If same role as current user:
-        if (u.role === me?.role) {
+        if (user.role === me?.role) {
           return (
-            <span className="text-muted">
-              Cannot moderate player of same role
+            <span className="text-xs text-content-muted">
+              Cannot moderate a user of the same role
             </span>
-          );
+          )
         }
 
-        // 3) Otherwise, render dropdown of promotable roles:
-        const options = ALL_ROLES.filter(
-          (r) => u.role !== r && canPromote(u, r)
-        );
-
+        const options = promotableRoles(user)
         if (options.length === 0) {
-          return <span className="text-muted">No actions available</span>;
+          return <span className="text-xs text-content-muted">No actions available</span>
         }
 
         return (
-          <select
-            defaultValue=""
+          <Select
+            size="sm"
+            aria-label={`Change role for ${user.username}`}
+            value=""
+            placeholder="Change role…"
+            options={options.map((role) => ({ value: role, label: humanizeRole(role) }))}
             onChange={(e) => {
-              const newRole = e.target.value as User["role"];
-              if (
-                newRole &&
-                window.confirm(
-                  `Are you sure you want to change ${u.username}'s role to "${newRole}"?`
-                )
-              ) {
-                changeRole(u.id, newRole);
-              }
-              e.currentTarget.value = "";
+              const nextRole = e.target.value as User['role']
+              if (nextRole) setPendingChange({ user, role: nextRole })
+              e.currentTarget.value = ''
             }}
-          >
-            <option value="" disabled hidden>
-              Change role…
-            </option>
-            {options.map((r) => (
-              <option key={r} value={r}>
-                {r}
-              </option>
-            ))}
-          </select>
-        );
+            className="w-auto min-w-[10rem]"
+          />
+        )
       },
     },
-  ];
+  ]
 
-  if (loading) return <p>Loading users…</p>;
-  if (error)   return <p>Error: {error}</p>;
+  const clearFilters = () => {
+    setSearchQuery('')
+    setRoleFilter('')
+    setCurrentPage(1)
+  }
 
   return (
-    <div className="portal-main">
-      {/* Search and Controls */}
-      <div className="players-controls">
-        <div className="players-controls-right">
-          <SearchBar onSearch={handleSearch} placeholder="Search users..." />
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-          />
-        </div>
-      </div>
+    <PageContainer>
+      <PageHeader title="Users" />
 
-      {/* Filters */}
-      <FilterBar onReset={clearFilters}>
-        <div className="filter-group">
-          <select
-            className="filter-select ui-filter-select"
-            aria-label="Role"
-            value={roleFilter}
-            onChange={(e) => handleRoleFilterChange(e.target.value)}
+      <Toolbar
+        filters={
+          <FilterBar
+            onReset={clearFilters}
+            activeCount={[searchQuery, roleFilter].filter(Boolean).length}
           >
-            <option value="">All Roles</option>
-            {ALL_ROLES.map(role => (
-              <option key={role} value={role}>
-                {role.charAt(0).toUpperCase() + role.slice(1)}
-              </option>
-            ))}
-          </select>
-        </div>
-      </FilterBar>
+            <FilterSelect
+              label="Role"
+              value={roleFilter}
+              onChange={(value) => {
+                setRoleFilter(value)
+                setCurrentPage(1)
+              }}
+              options={roleOptions}
+              placeholder="All Roles"
+            />
+          </FilterBar>
+        }
+        trailing={
+          <>
+            <SearchBar
+              value={searchQuery}
+              onSearch={(query) => {
+                setSearchQuery(query)
+                setCurrentPage(1)
+              }}
+              placeholder="Search users…"
+              className="w-full sm:w-64"
+            />
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          </>
+        }
+      />
 
-      <div className="results-counter">
-        Showing {total === 0 ? 0 : ((currentPage - 1) * USERS_PER_PAGE) + 1}-{Math.min(currentPage * USERS_PER_PAGE, total)} of {total} users
-      </div>
+      <ResultsCounter page={currentPage} pageSize={USERS_PER_PAGE} total={total} noun="users" />
 
-      <Table columns={columns} rows={localUsers as UserRow[]} rowKey={(row) => row.id} />
-    </div>
-  );
-};
+      <DataTable
+        columns={columns}
+        rows={localUsers}
+        rowKey={(user) => user.id}
+        loading={loading}
+        error={error}
+        emptyLabel="No users match your filters."
+      />
 
-export default UsersPage;
+      <ConfirmModal
+        isOpen={pendingChange !== null}
+        onClose={() => setPendingChange(null)}
+        onConfirm={() => {
+          if (pendingChange) changeRole(pendingChange.user.id, pendingChange.role)
+          setPendingChange(null)
+        }}
+        tone="primary"
+        title="Change role"
+        confirmLabel="Change role"
+        message={
+          <>
+            Change <strong>{pendingChange?.user.username}</strong>&rsquo;s role to{' '}
+            <strong>{pendingChange ? humanizeRole(pendingChange.role) : ''}</strong>?
+          </>
+        }
+      />
+    </PageContainer>
+  )
+}

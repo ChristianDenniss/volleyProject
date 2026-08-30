@@ -1,53 +1,100 @@
-// src/pages/GamesPage.tsx
+/**
+ * GamesPage — the admin portal's game management view: a paginated table filtered by season, stage, status, phase and bracket, with every editable column inline-editable, plus create-game, Challonge bracket import, and per-game stat upload.
+ * The create form's Stage options are derived from the selected Phase (`getStageOptionsForPhase`), and Bracket only appears for playoffs — so an impossible phase/stage pairing can't be submitted.
+ * Lives in `components/portal/`; mounted at /portal/games.
+ */
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useGames, useSkinnySeasons, useGameStages } from '@/hooks/allFetch'
+import { useGameMutations } from '@/hooks/allPatch'
+import { useCreateGames } from '@/hooks/allCreate'
+import { useDeleteGames } from '@/hooks/allDelete'
+import { useAuth } from '@/context/authContext'
+import { useRegion } from '@/context/regionContext'
+import { useFormRegionSeason } from '@/hooks/useFormRegionSeason'
+import { useDebouncedValue } from '@/hooks/useDebouncedValue'
+import { formatGameStage } from '@/utils/gameLabels'
+import { getStageOptionsForPhase } from '@/constants/gameStages'
+import type { Game, CreateGameInput, ChallongeImportResult } from '@/types/interfaces'
+import ChallongeImport from '@/components/ChallongeImport'
+import GameStatUploadModal from './GameStatUploadModal'
 
-import React, { useState, useEffect, useMemo } from "react";
-import { useGames, useSkinnySeasons, useGameStages } from "../../hooks/allFetch";
-import { useGameMutations } from "../../hooks/allPatch";
-import { useCreateGames } from "../../hooks/allCreate";
-import { useDeleteGames } from "../../hooks/allDelete";
-import { useAuth } from "../../context/authContext";
-import { useRegion } from "../../context/regionContext";
-import type { Game, CreateGameInput, ChallongeImportResult } from "../../types/interfaces";
-import ChallongeImport from "../ChallongeImport";
-import GameStatUploadModal from "./GameStatUploadModal";
-import "../../styles/GamesPage.css";       // table & button styling
-import "../../styles/PlayersPage.css";     // custom modal styling
-import "../../styles/PortalPlayersPage.css"; // portal-specific styles
-import SearchBar from "../Searchbar";
-import Pagination from "../Pagination";
-import Modal from "../ui/Modal";
-import FilterBar from "../ui/FilterBar";
-import Table, { type TableColumn } from "../ui/Table";
-import { formatGameStage } from "../../utils/gameLabels";
-import { getStageOptionsForPhase } from "../../constants/gameStages";
-import RegionSeasonFields from "../ui/RegionSeasonFields";
-import { useFormRegionSeason } from "../../hooks/useFormRegionSeason";
-import { useDebouncedValue } from "../../hooks/useDebouncedValue";
+import PageContainer from '@/components/ui/layout/PageContainer'
+import PageHeader from '@/components/ui/layout/PageHeader'
+import Toolbar from '@/components/ui/layout/Toolbar'
+import ResultsCounter from '@/components/ui/layout/ResultsCounter'
+import DataTable, { type DataTableColumn } from '@/components/ui/layout/DataTable'
+import DetailStats from '@/components/ui/layout/DetailStats'
+import FilterBar from '@/components/ui/filters/FilterBar'
+import FilterSelect from '@/components/ui/filters/FilterSelect'
+import SearchBar from '@/components/ui/filters/SearchBar'
+import Pagination from '@/components/ui/navigation/Pagination'
+import Button from '@/components/ui/buttons/Button'
+import Modal from '@/components/ui/modals/Modal'
+import ConfirmModal from '@/components/ui/modals/ConfirmModal'
+import ErrorNotice from '@/components/ui/feedback/ErrorNotice'
+import StatusBadge from '@/components/ui/badges/StatusBadge'
+import FormField from '@/components/ui/inputs/FormField'
+import TextInput from '@/components/ui/inputs/TextInput'
+import Select, { toOptions } from '@/components/ui/inputs/Select'
+import InlineEditCell from '@/components/ui/inputs/InlineEditCell'
+import RegionSeasonFields from '@/components/ui/inputs/RegionSeasonFields'
 
-type EditField = "name" | "seasonId" | "stage" | "phase" | "bracket" | "team1Score" | "team2Score" | "date" | "videoUrl" | "status";
+const GAMES_PER_PAGE = 10
 
-interface EditingState {
-  id: number;
-  field: EditField;
-  value: string;
+const PHASE_OPTIONS = [
+  { value: 'pre_season', label: 'Pre-Season' },
+  { value: 'qualifiers', label: 'Qualifiers' },
+  { value: 'playoffs', label: 'Playoffs' },
+]
+
+const BRACKET_OPTIONS = [
+  { value: 'winners', label: 'Winners' },
+  { value: 'losers', label: 'Losers' },
+]
+
+const STATUS_OPTIONS = [
+  { value: 'scheduled', label: 'Scheduled' },
+  { value: 'completed', label: 'Completed' },
+]
+
+type EditField =
+  | 'name'
+  | 'seasonId'
+  | 'stage'
+  | 'phase'
+  | 'bracket'
+  | 'team1Score'
+  | 'team2Score'
+  | 'date'
+  | 'videoUrl'
+  | 'status'
+
+/** Reads a game's date as YYYY-MM-DD, falling back to today for a missing or invalid value. */
+function toDateInputValue(date: Game['date'] | undefined): string {
+  const parsed = date ? new Date(date) : new Date()
+  const safe = Number.isNaN(parsed.getTime()) ? new Date() : parsed
+  return safe.toISOString().split('T')[0]
 }
 
-interface GameColumn extends TableColumn<Game> {}
+function formatGameDate(date: Game['date'] | undefined): string {
+  if (!date) return 'No Date'
+  const parsed = new Date(date)
+  return Number.isNaN(parsed.getTime()) ? 'Invalid Date' : parsed.toLocaleDateString()
+}
 
-const GAMES_PER_PAGE = 10;
+export default function GamesPage() {
+  const [searchQuery, setSearchQuery] = useState('')
+  const [seasonFilter, setSeasonFilter] = useState('')
+  const [stageFilter, setStageFilter] = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
+  const [phaseFilter, setPhaseFilter] = useState('')
+  const [bracketFilter, setBracketFilter] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const debouncedSearch = useDebouncedValue(searchQuery, 300)
 
-const GamesPage: React.FC = () => {
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const debouncedSearch = useDebouncedValue(searchQuery, 300);
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [seasonFilter, setSeasonFilter] = useState<string>("");
-  const [stageFilter, setStageFilter] = useState<string>("");
-  const [statusFilter, setStatusFilter] = useState<string>("");
-  const [phaseFilter, setPhaseFilter] = useState<string>("");
-  const [bracketFilter, setBracketFilter] = useState<string>("");
-
-  const { regionQuery } = useRegion();
-  const formRegionSeason = useFormRegionSeason("id");
+  const { regionQuery } = useRegion()
+  const { user } = useAuth()
+  const formRegionSeason = useFormRegionSeason('id')
 
   const { data: games, total, totalPages, loading, error, refetch } = useGames({
     page: currentPage,
@@ -57,124 +104,122 @@ const GamesPage: React.FC = () => {
     stage: stageFilter || undefined,
     status: statusFilter || undefined,
     phase: phaseFilter || undefined,
-    ...regionQuery,
     bracket: bracketFilter || undefined,
-  });
-  const { data: seasons, loading: seasonsLoading } = useSkinnySeasons({ page: 1, limit: 100, ...regionQuery });
-  const { data: uniqueStages, loading: stagesLoading } = useGameStages({ seasonId: seasonFilter || undefined, ...regionQuery });
-  const { patchGame } = useGameMutations();
-  const { createGame, loading: creating, error: createError } = useCreateGames();
-  const { deleteItem: deleteGame, loading: deleting } = useDeleteGames();
-  const { user } = useAuth();
+    ...regionQuery,
+  })
+  const { data: seasons, loading: seasonsLoading } = useSkinnySeasons({
+    page: 1,
+    limit: 100,
+    ...regionQuery,
+  })
+  const { data: uniqueStages, loading: stagesLoading } = useGameStages({
+    seasonId: seasonFilter || undefined,
+    ...regionQuery,
+  })
 
-  const [localGames, setLocalGames] = useState<Game[]>([]);
-  const [editing, setEditing] = useState<EditingState | null>(null);
+  const { patchGame } = useGameMutations()
+  const { createGame, loading: creating, error: createError } = useCreateGames()
+  const { deleteItem: deleteGame, loading: deleting } = useDeleteGames()
 
-  // Modal state for creating a new game
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [isImportModalOpen, setIsImportModalOpen] = useState<boolean>(false);
-  const [importResult, setImportResult] = useState<ChallongeImportResult | null>(null);
-  const [statUploadGame, setStatUploadGame] = useState<Game | null>(null);
-  const [newName, setNewName] = useState<string>("");
-  const [newStage, setNewStage] = useState<string>("Round 1");
-  const [newPhase, setNewPhase] = useState<Game["phase"]>("qualifiers");
-  const [newBracket, setNewBracket] = useState<Game["bracket"]>(null);
-  const [newStatus, setNewStatus] = useState<string>("scheduled");
-  const [newTeam1Score, setNewTeam1Score] = useState<string>("");
-  const [newTeam2Score, setNewTeam2Score] = useState<string>("");
-  const [newDate, setNewDate] = useState<string>("");
-  const [newVideoUrl, setNewVideoUrl] = useState<string>("");
-  const [newTeam1Name, setNewTeam1Name] = useState<string>("");
-  const [newTeam2Name, setNewTeam2Name] = useState<string>("");
-  const [formError, setFormError] = useState<string>("");
+  const [localGames, setLocalGames] = useState<Game[]>([])
+  const [pendingDelete, setPendingDelete] = useState<Game | null>(null)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
-  const createStageOptions = useMemo(
-    () => getStageOptionsForPhase(newPhase),
-    [newPhase]
-  );
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false)
+  const [importResult, setImportResult] = useState<ChallongeImportResult | null>(null)
+  const [statUploadGame, setStatUploadGame] = useState<Game | null>(null)
+
+  const [newName, setNewName] = useState('')
+  const [newStage, setNewStage] = useState('Round 1')
+  const [newPhase, setNewPhase] = useState<Game['phase']>('qualifiers')
+  const [newBracket, setNewBracket] = useState<Game['bracket']>(null)
+  const [newStatus, setNewStatus] = useState('scheduled')
+  const [newTeam1Score, setNewTeam1Score] = useState('')
+  const [newTeam2Score, setNewTeam2Score] = useState('')
+  const [newDate, setNewDate] = useState('')
+  const [newVideoUrl, setNewVideoUrl] = useState('')
+  const [newTeam1Name, setNewTeam1Name] = useState('')
+  const [newTeam2Name, setNewTeam2Name] = useState('')
+  const [formError, setFormError] = useState('')
+
+  const canDelete = user?.role === 'superadmin'
 
   useEffect(() => {
-    setLocalGames(games ?? []);
-  }, [games]);
+    setLocalGames(games ?? [])
+  }, [games])
 
-  const uniqueSeasons = (seasons ?? [])
-    .slice()
-    .sort((a, b) => a.seasonNumber - b.seasonNumber);
+  const seasonOptions = useMemo(
+    () =>
+      [...(seasons ?? [])]
+        .sort((a, b) => a.seasonNumber - b.seasonNumber)
+        .map((season) => ({ value: season.id.toString(), label: `Season ${season.seasonNumber}` })),
+    [seasons]
+  )
 
-  // Commit inline edits
-  const commitEdit = async () => {
-    if (!editing) return;
+  /** Stage choices follow the selected phase — a playoff stage can't be picked for qualifiers. */
+  const createStageOptions = useMemo(() => getStageOptionsForPhase(newPhase), [newPhase])
 
-    const payload: any = {};
-    const value = editing.value;
+  const commitEdit = async (game: Game, field: EditField, value: string) => {
+    setSaveError(null)
 
-    switch (editing.field) {
-      case "name": payload.name = value; break;
-      case "seasonId": payload.seasonId = Number(value); break;
-      case "stage": payload.stage = value; break;
-      case "team1Score": payload.team1Score = Number(value); break;
-      case "team2Score": payload.team2Score = Number(value); break;
-      case "date": payload.date = new Date(value); break;
-      case "videoUrl": payload.videoUrl = value === "" ? null : value; break;
-      case "status": payload.status = value; break;
-      case "phase": payload.phase = value; break;
-      case "bracket": payload.bracket = value === "" ? null : value; break;
-    }
+    const payload: Record<string, unknown> = {}
+    if (field === 'seasonId') payload.seasonId = Number(value)
+    else if (field === 'team1Score' || field === 'team2Score') payload[field] = Number(value)
+    else if (field === 'date') payload.date = new Date(value)
+    else if (field === 'videoUrl' || field === 'bracket') payload[field] = value === '' ? null : value
+    else payload[field] = value
 
     try {
-      const updatedGame = await patchGame(editing.id, payload);
-      setLocalGames((prev) =>
-        prev.map((g) => (g.id === editing.id ? updatedGame : g))
-      );
-      refetch();
-    } catch (error) {
-      console.error("Error updating game:", error);
-      alert("Failed to update game");
-    } finally {
-      setEditing(null);
+      const updated = await patchGame(game.id, payload)
+      setLocalGames((prev) => prev.map((g) => (g.id === game.id ? updated : g)))
+      refetch()
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Failed to update game.')
     }
-  };
+  }
 
-  // Delete handler (superadmin only)
-  const handleDelete = async (id: number) => {
-    if (user?.role !== "superadmin") return;
-    if (!window.confirm("Are you sure you want to delete this game?")) return;
-
-    const wasDeleted = await deleteGame(id.toString());
+  const confirmDelete = async () => {
+    if (!pendingDelete) return
+    const wasDeleted = await deleteGame(pendingDelete.id.toString())
     if (wasDeleted) {
-      setLocalGames((prev) => prev.filter((g) => g.id !== id));
-      refetch();
+      setLocalGames((prev) => prev.filter((g) => g.id !== pendingDelete.id))
+      refetch()
     }
-  };
+    setPendingDelete(null)
+  }
 
-  // Open "Create Game" modal
   const openModal = () => {
-    setIsModalOpen(true);
-    setFormError("");
-    setNewName("");
-    formRegionSeason.initFromActiveRegion();
-    setNewPhase("qualifiers");
-    setNewBracket(null);
-    setNewStage("Round 1");
-    setNewTeam1Score("");
-    setNewTeam2Score("");
-    setNewDate("");
-    setNewVideoUrl("");
-    setNewTeam1Name("");
-    setNewTeam2Name("");
-  };
+    setIsModalOpen(true)
+    setFormError('')
+    setNewName('')
+    setNewPhase('qualifiers')
+    setNewBracket(null)
+    setNewStage('Round 1')
+    setNewStatus('scheduled')
+    setNewTeam1Score('')
+    setNewTeam2Score('')
+    setNewDate('')
+    setNewVideoUrl('')
+    setNewTeam1Name('')
+    setNewTeam2Name('')
+    formRegionSeason.initFromActiveRegion()
+  }
 
-  // Close modal
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setFormError("");
-  };
+  const handleCreate = async (event: FormEvent) => {
+    event.preventDefault()
+    setFormError('')
 
-  // Create new game handler
-  const handleCreate = async () => {
-    if (!newName || formRegionSeason.seasonValue === "" || !newTeam1Name || !newTeam2Name || !newDate || !newStage) {
-      alert("Please fill in all required fields");
-      return;
+    if (
+      !newName ||
+      formRegionSeason.seasonValue === '' ||
+      !newTeam1Name ||
+      !newTeam2Name ||
+      !newDate ||
+      !newStage
+    ) {
+      setFormError('Name, region, season, both team names, date and stage are required.')
+      return
     }
 
     try {
@@ -182,447 +227,334 @@ const GamesPage: React.FC = () => {
         name: newName,
         seasonId: formRegionSeason.seasonValue as number,
         teamNames: [newTeam1Name, newTeam2Name],
-        team1Score: newTeam1Score === "" ? null : Number(newTeam1Score),
-        team2Score: newTeam2Score === "" ? null : Number(newTeam2Score),
-        videoUrl: newVideoUrl === "" ? null : newVideoUrl,
+        team1Score: newTeam1Score === '' ? null : Number(newTeam1Score),
+        team2Score: newTeam2Score === '' ? null : Number(newTeam2Score),
+        videoUrl: newVideoUrl === '' ? null : newVideoUrl,
         date: new Date(newDate),
         stage: newStage,
         phase: newPhase,
-        bracket: newPhase === "playoffs" ? newBracket : null,
+        bracket: newPhase === 'playoffs' ? newBracket : null,
         status: newStatus as 'scheduled' | 'completed',
-      } satisfies CreateGameInput);
-      setIsModalOpen(false);
-      setNewName("");
-      formRegionSeason.setSeasonValue("");
-      setNewTeam1Name("");
-      setNewTeam2Name("");
-      setNewTeam1Score("");
-      setNewTeam2Score("");
-      setNewVideoUrl("");
-      setNewDate("");
-      setNewStage("");
-      refetch();
-    } catch (error) {
-      console.error("Error creating game:", error);
-      alert("Failed to create game");
+      } satisfies CreateGameInput)
+
+      setIsModalOpen(false)
+      formRegionSeason.setSeasonValue('')
+      refetch()
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : 'Failed to create game.')
     }
-  };
+  }
 
-  // Start edit function
-  const startEdit = (id: number, field: EditField) => {
-    if (!games) return;
-    const orig = games.find(g => g.id === id);
-    if (!orig) return;
-
-    let origValue: string;
-    switch (field) {
-      case "name": origValue = orig.name; break;
-      case "seasonId": origValue = String(orig.season.id); break;
-      case "stage": origValue = orig.stage; break;
-      case "team1Score": origValue = String(orig.team1Score); break;
-      case "team2Score": origValue = String(orig.team2Score); break;
-      case "date": 
-        // Handle date as string, null, or undefined
-        let dateObj: Date;
-        if (!orig.date) {
-          // If date is null/undefined, use current date
-          dateObj = new Date();
-        } else {
-          dateObj = new Date(orig.date);
-        }
-        
-        // Check if the date is valid
-        if (isNaN(dateObj.getTime())) {
-          dateObj = new Date(); // Use current date if invalid
-        }
-        
-        origValue = dateObj.toISOString().split('T')[0]; 
-        break;
-      case "videoUrl": origValue = orig.videoUrl || ''; break;
-      case "status": origValue = orig.status; break;
-      case "phase": origValue = orig.phase ?? 'qualifiers'; break;
-      case "bracket": origValue = orig.bracket ?? ''; break;
-    }
-    setEditing({ id, field, value: origValue });
-  };
-
-  // Handle search
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    setCurrentPage(1); // Reset to first page when searching
-  };
-
-  // Handle filter changes
-  const handleSeasonFilterChange = (value: string) => {
-    setSeasonFilter(value);
-    setCurrentPage(1); // Reset to first page when filtering
-  };
-
-  const handleStageFilterChange = (value: string) => {
-    setStageFilter(value);
-    setCurrentPage(1);
-  };
-
-  const handleStatusFilterChange = (value: string) => {
-    setStatusFilter(value);
-    setCurrentPage(1);
-  };
-
-  const handlePhaseFilterChange = (value: string) => {
-    setPhaseFilter(value);
-    setCurrentPage(1);
-  };
-
-  const handleBracketFilterChange = (value: string) => {
-    setBracketFilter(value);
-    setCurrentPage(1);
-  };
-
-  // Clear all filters
-  const clearFilters = () => {
-    setSearchQuery("");
-    setSeasonFilter("");
-    setStageFilter("");
-    setStatusFilter("");
-    setPhaseFilter("");
-    setBracketFilter("");
-    setCurrentPage(1);
-  };
-
-  const handleImportSuccess = (result: ChallongeImportResult) => {
-    setIsImportModalOpen(false);
-    setImportResult(result);
-    refetch();
-  };
-
-  const columns: GameColumn[] = [
+  const columns: DataTableColumn<Game>[] = [
     {
-      key: "name",
-      header: "Game",
-      render: (g) =>
-        editing?.id === g.id && editing?.field === "name" ? (
-          <input
-            type="text"
-            value={editing.value}
-            onChange={e => setEditing({ ...editing, value: e.target.value })}
-            onBlur={commitEdit}
-            onKeyDown={e => e.key === 'Enter' && commitEdit()}
-            autoFocus
-          />
+      key: 'name',
+      header: 'Game',
+      render: (game) => (
+        <InlineEditCell
+          label="Game name"
+          value={game.name ?? ''}
+          display={game.name || `#${game.id}`}
+          onCommit={(value) => commitEdit(game, 'name', value)}
+        />
+      ),
+    },
+    {
+      key: 'phase',
+      header: 'Phase',
+      hideOnMobile: true,
+      render: (game) => (
+        <InlineEditCell
+          label="Phase"
+          value={game.phase ?? 'qualifiers'}
+          options={PHASE_OPTIONS}
+          onCommit={(value) => commitEdit(game, 'phase', value)}
+        />
+      ),
+    },
+    {
+      key: 'bracket',
+      header: 'Bracket',
+      hideOnMobile: true,
+      render: (game) => (
+        <InlineEditCell
+          label="Bracket"
+          value={game.bracket ?? ''}
+          display={game.bracket ?? '—'}
+          options={[{ value: '', label: '—' }, ...BRACKET_OPTIONS]}
+          onCommit={(value) => commitEdit(game, 'bracket', value)}
+        />
+      ),
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (game) => (
+        <InlineEditCell
+          label="Status"
+          value={game.status}
+          display={<StatusBadge status={game.status} />}
+          options={STATUS_OPTIONS}
+          onCommit={(value) => commitEdit(game, 'status', value)}
+        />
+      ),
+    },
+    {
+      key: 'season',
+      header: 'Season',
+      width: 'w-24',
+      hideOnMobile: true,
+      render: (game) => (
+        <InlineEditCell
+          label="Season id"
+          type="number"
+          value={String(game.season.id)}
+          display={game.season.seasonNumber}
+          onCommit={(value) => commitEdit(game, 'seasonId', value)}
+        />
+      ),
+    },
+    {
+      key: 'stage',
+      header: 'Stage',
+      render: (game) => (
+        <InlineEditCell
+          label="Stage"
+          value={game.stage}
+          display={formatGameStage(game)}
+          onCommit={(value) => commitEdit(game, 'stage', value)}
+        />
+      ),
+    },
+    {
+      key: 'stats',
+      header: 'Stats',
+      align: 'center',
+      width: 'w-16',
+      render: (game) =>
+        game.stats?.length ? (
+          <span className="text-status-success">✓</span>
         ) : (
-          <span onClick={() => startEdit(g.id, "name")}>{g.name || `#${g.id}`}</span>
+          <span className="text-content-muted">—</span>
         ),
     },
+    { key: 'team1', header: 'Team 1', hideOnMobile: true, render: (game) => game.teams?.[0]?.name || 'N/A' },
+    { key: 'team2', header: 'Team 2', hideOnMobile: true, render: (game) => game.teams?.[1]?.name || 'N/A' },
     {
-      key: "phase",
-      header: "Phase",
-      render: (g) =>
-        editing?.id === g.id && editing?.field === "phase" ? (
-          <select
-            value={editing.value}
-            onChange={e => setEditing({ ...editing, value: e.target.value })}
-            onBlur={commitEdit}
-            autoFocus
-          >
-            <option value="pre_season">Pre-Season</option>
-            <option value="qualifiers">Qualifiers</option>
-            <option value="playoffs">Playoffs</option>
-          </select>
-        ) : (
-          <span onClick={() => startEdit(g.id, "phase")}>{g.phase ?? 'qualifiers'}</span>
-        ),
+      key: 'team1Score',
+      header: 'T1',
+      align: 'center',
+      width: 'w-16',
+      render: (game) => (
+        <InlineEditCell
+          label="Team 1 score"
+          type="number"
+          value={String(game.team1Score ?? '')}
+          onCommit={(value) => commitEdit(game, 'team1Score', value)}
+        />
+      ),
     },
     {
-      key: "bracket",
-      header: "Bracket",
-      render: (g) =>
-        editing?.id === g.id && editing?.field === "bracket" ? (
-          <select
-            value={editing.value}
-            onChange={e => setEditing({ ...editing, value: e.target.value })}
-            onBlur={commitEdit}
-            autoFocus
-          >
-            <option value="">—</option>
-            <option value="winners">Winners</option>
-            <option value="losers">Losers</option>
-          </select>
-        ) : (
-          <span onClick={() => startEdit(g.id, "bracket")}>{g.bracket ?? '—'}</span>
-        ),
+      key: 'team2Score',
+      header: 'T2',
+      align: 'center',
+      width: 'w-16',
+      render: (game) => (
+        <InlineEditCell
+          label="Team 2 score"
+          type="number"
+          value={String(game.team2Score ?? '')}
+          onCommit={(value) => commitEdit(game, 'team2Score', value)}
+        />
+      ),
     },
     {
-      key: "status",
-      header: "Status",
-      render: (g) =>
-        editing?.id === g.id && editing?.field === "status" ? (
-          <select
-            value={editing.value}
-            onChange={e => setEditing({ ...editing, value: e.target.value })}
-            onBlur={commitEdit}
-            autoFocus
-          >
-            <option value="scheduled">scheduled</option>
-            <option value="completed">completed</option>
-          </select>
-        ) : (
-          <span onClick={() => startEdit(g.id, "status")}>{g.status}</span>
-        ),
+      key: 'date',
+      header: 'Date',
+      hideOnMobile: true,
+      render: (game) => (
+        <InlineEditCell
+          label="Game date"
+          type="date"
+          value={toDateInputValue(game.date)}
+          display={formatGameDate(game.date)}
+          onCommit={(value) => commitEdit(game, 'date', value)}
+        />
+      ),
     },
     {
-      key: "season",
-      header: "Season",
-      render: (g) =>
-        editing?.id === g.id && editing?.field === "seasonId" ? (
-          <input
-            type="number"
-            value={editing.value}
-            onChange={e => setEditing({ ...editing, value: e.target.value })}
-            onBlur={commitEdit}
-            onKeyDown={e => e.key === 'Enter' && commitEdit()}
-            autoFocus
-          />
-        ) : (
-          <span onClick={() => startEdit(g.id, "seasonId")}>{g.season.seasonNumber}</span>
-        ),
+      key: 'videoUrl',
+      header: 'Video',
+      hideOnMobile: true,
+      render: (game) => (
+        <InlineEditCell
+          label="Video URL"
+          type="url"
+          value={game.videoUrl || ''}
+          display={game.videoUrl || 'N/A'}
+          onCommit={(value) => commitEdit(game, 'videoUrl', value)}
+        />
+      ),
     },
     {
-      key: "stage",
-      header: "Stage",
-      render: (g) =>
-        editing?.id === g.id && editing?.field === "stage" ? (
-          <input
-            type="text"
-            value={editing.value}
-            onChange={e => setEditing({ ...editing, value: e.target.value })}
-            onBlur={commitEdit}
-            onKeyDown={e => e.key === 'Enter' && commitEdit()}
-            autoFocus
-          />
-        ) : (
-          <span onClick={() => startEdit(g.id, "stage")}>{formatGameStage(g)}</span>
-        ),
-    },
-    {
-      key: "stats",
-      header: "Stats",
-      render: (g) => (g.stats?.length ? '✓' : '—'),
-    },
-    {
-      key: "team1",
-      header: "Team 1",
-      render: (g) => g.teams?.[0]?.name || 'N/A',
-    },
-    {
-      key: "team2",
-      header: "Team 2",
-      render: (g) => g.teams?.[1]?.name || 'N/A',
-    },
-    {
-      key: "team1Score",
-      header: "T1 Score",
-      render: (g) =>
-        editing?.id === g.id && editing?.field === "team1Score" ? (
-          <input
-            type="number"
-            value={editing.value}
-            onChange={e => setEditing({ ...editing, value: e.target.value })}
-            onBlur={commitEdit}
-            onKeyDown={e => e.key === 'Enter' && commitEdit()}
-            autoFocus
-          />
-        ) : (
-          <span onClick={() => startEdit(g.id, "team1Score")}>{g.team1Score}</span>
-        ),
-    },
-    {
-      key: "team2Score",
-      header: "T2 Score",
-      render: (g) =>
-        editing?.id === g.id && editing?.field === "team2Score" ? (
-          <input
-            type="number"
-            value={editing.value}
-            onChange={e => setEditing({ ...editing, value: e.target.value })}
-            onBlur={commitEdit}
-            onKeyDown={e => e.key === 'Enter' && commitEdit()}
-            autoFocus
-          />
-        ) : (
-          <span onClick={() => startEdit(g.id, "team2Score")}>{g.team2Score}</span>
-        ),
-    },
-    {
-      key: "date",
-      header: "Date",
-      render: (g) =>
-        editing?.id === g.id && editing?.field === "date" ? (
-          <input
-            type="date"
-            value={editing.value}
-            onChange={e => setEditing({ ...editing, value: e.target.value })}
-            onBlur={commitEdit}
-            onKeyDown={e => e.key === 'Enter' && commitEdit()}
-            autoFocus
-          />
-        ) : (
-          <span
-            onClick={() => startEdit(g.id, "date")}
-            style={{ cursor: "pointer" }}
-          >
-            {(() => {
-              if (!g.date) return 'No Date';
-              const dateObj = new Date(g.date);
-              return isNaN(dateObj.getTime()) ? 'Invalid Date' : dateObj.toLocaleDateString();
-            })()}
-          </span>
-        ),
-    },
-    {
-      key: "videoUrl",
-      header: "Video",
-      render: (g) =>
-        editing?.id === g.id && editing?.field === "videoUrl" ? (
-          <input
-            type="text"
-            value={editing.value}
-            onChange={e => setEditing({ ...editing, value: e.target.value })}
-            onBlur={commitEdit}
-            onKeyDown={e => e.key === 'Enter' && commitEdit()}
-            autoFocus
-          />
-        ) : (
-          <span onClick={() => startEdit(g.id, "videoUrl")}>{g.videoUrl || 'N/A'}</span>
-        ),
-    },
-    {
-      key: "actions",
-      header: "Actions",
-      render: (g) => (
-        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-          <button onClick={() => setStatUploadGame(g)} className="create-button" style={{ padding: '0.25rem 0.5rem' }}>
+      key: 'actions',
+      header: 'Actions',
+      align: 'right',
+      width: 'w-48',
+      render: (game) => (
+        <div className="flex flex-wrap justify-end gap-2">
+          <Button variant="secondary" size="xs" onClick={() => setStatUploadGame(game)}>
             Upload Stats
-          </button>
-          {user?.role === "superadmin" && (
-            <button
-              onClick={() => handleDelete(g.id)}
+          </Button>
+          {canDelete && (
+            <Button
+              variant="danger"
+              size="xs"
               disabled={deleting}
-              className="game-btn-remove"
+              onClick={() => setPendingDelete(game)}
             >
               Delete
-            </button>
+            </Button>
           )}
         </div>
       ),
     },
-  ];
+  ]
 
-  if (loading) return <p>Loading games…</p>;
-  if (error) return <p>Error: {error}</p>;
+  const activeFilterCount = [
+    searchQuery,
+    seasonFilter,
+    stageFilter,
+    statusFilter,
+    phaseFilter,
+    bracketFilter,
+  ].filter(Boolean).length
+
+  const clearFilters = () => {
+    setSearchQuery('')
+    setSeasonFilter('')
+    setStageFilter('')
+    setStatusFilter('')
+    setPhaseFilter('')
+    setBracketFilter('')
+    setCurrentPage(1)
+  }
+
+  /** Every filter resets to page 1 — otherwise a narrower result set lands on an empty page. */
+  const setFilter = (setter: (value: string) => void) => (value: string) => {
+    setter(value)
+    setCurrentPage(1)
+  }
 
   return (
-    <div className="portal-main">
-      {/* Search and Controls */}
-      <div className="players-controls">
-        <div className="players-controls-left">
-          <button className="create-button" onClick={openModal}>Create Game</button>
-          <button className="create-button" onClick={() => setIsImportModalOpen(true)}>Import from Challonge</button>
-        </div>
-        <div className="players-controls-right">
-          <SearchBar onSearch={handleSearch} placeholder="Search games..." />
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-          />
-        </div>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Games"
+        actions={
+          <>
+            <Button onClick={openModal}>Create Game</Button>
+            <Button variant="secondary" onClick={() => setIsImportModalOpen(true)}>
+              Import from Challonge
+            </Button>
+          </>
+        }
+      />
 
-      {/* Filters */}
-      <FilterBar onReset={(searchQuery || seasonFilter || stageFilter || statusFilter || phaseFilter || bracketFilter) ? clearFilters : undefined}>
-        <div className="filter-group">
-          <select
-            className="filter-select ui-filter-select"
-            aria-label="Season"
-            value={seasonFilter}
-            onChange={(e) => handleSeasonFilterChange(e.target.value)}
-          >
-            <option value="">{seasonsLoading ? "Loading seasons..." : "All Seasons"}</option>
-            {uniqueSeasons.map((season) => (
-              <option key={season.id} value={season.id.toString()}>
-                Season {season.seasonNumber}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="filter-group">
-          <select
-            className="filter-select ui-filter-select"
-            aria-label="Stage"
-            value={stageFilter}
-            onChange={(e) => handleStageFilterChange(e.target.value)}
-          >
-            <option value="">{stagesLoading ? "Loading stages..." : "All Stages"}</option>
-            {uniqueStages.map(stage => (
-              <option key={stage} value={stage}>
-                {stage}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="filter-group">
-          <select className="filter-select ui-filter-select" aria-label="Status" value={statusFilter} onChange={(e) => handleStatusFilterChange(e.target.value)}>
-            <option value="">All Statuses</option>
-            <option value="scheduled">Scheduled</option>
-            <option value="completed">Completed</option>
-          </select>
-        </div>
-
-        <div className="filter-group">
-          <select className="filter-select ui-filter-select" aria-label="Phase" value={phaseFilter} onChange={(e) => handlePhaseFilterChange(e.target.value)}>
-            <option value="">All Phases</option>
-            <option value="pre_season">Pre-Season</option>
-            <option value="qualifiers">Qualifiers</option>
-            <option value="playoffs">Playoffs</option>
-          </select>
-        </div>
-
-        <div className="filter-group">
-          <select className="filter-select ui-filter-select" aria-label="Bracket" value={bracketFilter} onChange={(e) => handleBracketFilterChange(e.target.value)}>
-            <option value="">All Brackets</option>
-            <option value="winners">Winners</option>
-            <option value="losers">Losers</option>
-          </select>
-        </div>
-      </FilterBar>
-
-      <div className="results-counter">
-        Showing {total === 0 ? 0 : ((currentPage - 1) * GAMES_PER_PAGE) + 1}-{Math.min(currentPage * GAMES_PER_PAGE, total)} of {total} games
-      </div>
-
-      {/* Modal for Creating a New Game */}
-      <Modal isOpen={isModalOpen} onClose={closeModal} title="New Game">
-        {formError && (
-          <p className="error" style={{ color: "red", marginBottom: "0.5rem" }}>
-            {formError}
-          </p>
-        )}
-
-        {/* Create Game Form */}
-        <form onSubmit={handleCreate}>
-          {/* Name */}
-          <label>
-            Name*
-            <input
-              type="text"
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              required
-              style={{ width: "100%", marginBottom: "0.75rem" }}
+      <Toolbar
+        filters={
+          <FilterBar onReset={clearFilters} activeCount={activeFilterCount}>
+            <FilterSelect
+              label="Season"
+              value={seasonFilter}
+              onChange={setFilter(setSeasonFilter)}
+              options={seasonOptions}
+              placeholder={seasonsLoading ? 'Loading seasons…' : 'All Seasons'}
             />
-          </label>
+            <FilterSelect
+              label="Stage"
+              value={stageFilter}
+              onChange={setFilter(setStageFilter)}
+              options={toOptions(uniqueStages ?? [])}
+              placeholder={stagesLoading ? 'Loading stages…' : 'All Stages'}
+            />
+            <FilterSelect
+              label="Status"
+              value={statusFilter}
+              onChange={setFilter(setStatusFilter)}
+              options={STATUS_OPTIONS}
+              placeholder="All Statuses"
+            />
+            <FilterSelect
+              label="Phase"
+              value={phaseFilter}
+              onChange={setFilter(setPhaseFilter)}
+              options={PHASE_OPTIONS}
+              placeholder="All Phases"
+            />
+            <FilterSelect
+              label="Bracket"
+              value={bracketFilter}
+              onChange={setFilter(setBracketFilter)}
+              options={BRACKET_OPTIONS}
+              placeholder="All Brackets"
+            />
+          </FilterBar>
+        }
+        trailing={
+          <>
+            <SearchBar
+              value={searchQuery}
+              onSearch={setFilter(setSearchQuery)}
+              placeholder="Search games…"
+              className="w-full sm:w-64"
+            />
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          </>
+        }
+      />
+
+      <ResultsCounter page={currentPage} pageSize={GAMES_PER_PAGE} total={total} noun="games" />
+
+      {saveError && <ErrorNotice message={saveError} />}
+
+      <DataTable
+        columns={columns}
+        rows={localGames}
+        rowKey={(game) => game.id}
+        loading={loading}
+        error={error}
+        density="compact"
+        emptyLabel="No games match your filters."
+      />
+
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title="New Game"
+        size="md"
+        footer={
+          <Button type="submit" form="create-game-form" loading={creating} loadingLabel="Creating…">
+            Submit
+          </Button>
+        }
+      >
+        <form id="create-game-form" onSubmit={handleCreate} className="flex flex-col gap-4">
+          {formError && <ErrorNotice message={formError} />}
+          {createError && <ErrorNotice message={createError} />}
+
+          <FormField label="Name" required>
+            {(id) => (
+              <TextInput
+                id={id}
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                required
+              />
+            )}
+          </FormField>
 
           <RegionSeasonFields
             regions={formRegionSeason.regions}
@@ -636,185 +568,189 @@ const GamesPage: React.FC = () => {
             seasonValueKey="id"
           />
 
-          <label>
-            Status
-            <select value={newStatus} onChange={(e) => setNewStatus(e.target.value)}>
-              <option value="scheduled">Scheduled</option>
-              <option value="completed">Completed</option>
-            </select>
-          </label>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FormField label="Status">
+              {(id) => (
+                <Select
+                  id={id}
+                  value={newStatus}
+                  onChange={(e) => setNewStatus(e.target.value)}
+                  options={STATUS_OPTIONS}
+                />
+              )}
+            </FormField>
 
-          <label>
-            Phase
-            <select
-              value={newPhase ?? 'qualifiers'}
-              onChange={(e) => {
-                const phase = e.target.value as Game["phase"];
-                setNewPhase(phase);
-                if (phase !== "playoffs") setNewBracket(null);
-                const options = getStageOptionsForPhase(phase);
-                setNewStage((current) =>
-                  options.includes(current) ? current : options[0] ?? ""
-                );
-              }}
-            >
-              <option value="pre_season">Pre-Season</option>
-              <option value="qualifiers">Qualifiers</option>
-              <option value="playoffs">Playoffs</option>
-            </select>
-          </label>
+            <FormField label="Phase">
+              {(id) => (
+                <Select
+                  id={id}
+                  value={newPhase ?? 'qualifiers'}
+                  options={PHASE_OPTIONS}
+                  onChange={(e) => {
+                    const phase = e.target.value as Game['phase']
+                    setNewPhase(phase)
+                    if (phase !== 'playoffs') setNewBracket(null)
+                    // Keep the stage valid for the new phase.
+                    const options = getStageOptionsForPhase(phase)
+                    setNewStage((current) =>
+                      options.includes(current) ? current : (options[0] ?? '')
+                    )
+                  }}
+                />
+              )}
+            </FormField>
 
-          {newPhase === "playoffs" && (
-            <label>
-              Bracket
-              <select
-                value={newBracket ?? ""}
-                onChange={(e) => setNewBracket(e.target.value === "" ? null : e.target.value as Game["bracket"])}
-              >
-                <option value="">Auto (from stage)</option>
-                <option value="winners">Winners</option>
-                <option value="losers">Losers</option>
-              </select>
-            </label>
-          )}
+            {newPhase === 'playoffs' && (
+              <FormField label="Bracket" hint="Leave on Auto to derive it from the stage.">
+                {(id) => (
+                  <Select
+                    id={id}
+                    value={newBracket ?? ''}
+                    placeholder="Auto (from stage)"
+                    options={BRACKET_OPTIONS}
+                    onChange={(e) =>
+                      setNewBracket(
+                        e.target.value === '' ? null : (e.target.value as Game['bracket'])
+                      )
+                    }
+                  />
+                )}
+              </FormField>
+            )}
 
-          <label>
-            Stage*
-            <select
-              value={newStage}
-              onChange={(e) => setNewStage(e.target.value)}
-              required
-            >
-              <option value="" disabled>
-                Select a stage
-              </option>
-              {createStageOptions.map((stage) => (
-                <option key={stage} value={stage}>
-                  {stage}
-                </option>
-              ))}
-            </select>
-          </label>
+            <FormField label="Stage" required>
+              {(id) => (
+                <Select
+                  id={id}
+                  value={newStage}
+                  onChange={(e) => setNewStage(e.target.value)}
+                  options={toOptions(createStageOptions)}
+                  placeholder="Select a stage"
+                  required
+                />
+              )}
+            </FormField>
 
-          {/* Team 1 Name */}
-          <label>
-            Team 1 Name*
-            <input
-              type="text"
-              value={newTeam1Name}
-              onChange={(e) => setNewTeam1Name(e.target.value)}
-              required
-              style={{ width: "100%", marginBottom: "0.75rem" }}
-            />
-          </label>
+            <FormField label="Team 1 Name" required>
+              {(id) => (
+                <TextInput
+                  id={id}
+                  value={newTeam1Name}
+                  onChange={(e) => setNewTeam1Name(e.target.value)}
+                  required
+                />
+              )}
+            </FormField>
 
-          {/* Team 1 Score */}
-          <label>
-            Team 1 Score
-            <input
-              type="number"
-              value={newTeam1Score}
-              onChange={(e) => setNewTeam1Score(e.target.value)}
-              style={{ width: "100%", marginBottom: "0.75rem" }}
-            />
-          </label>
+            <FormField label="Team 1 Score">
+              {(id) => (
+                <TextInput
+                  id={id}
+                  type="number"
+                  value={newTeam1Score}
+                  onChange={(e) => setNewTeam1Score(e.target.value)}
+                />
+              )}
+            </FormField>
 
-          {/* Team 2 Name */}
-          <label>
-            Team 2 Name*
-            <input
-              type="text"
-              value={newTeam2Name}
-              onChange={(e) => setNewTeam2Name(e.target.value)}
-              required
-              style={{ width: "100%", marginBottom: "0.75rem" }}
-            />
-          </label>
+            <FormField label="Team 2 Name" required>
+              {(id) => (
+                <TextInput
+                  id={id}
+                  value={newTeam2Name}
+                  onChange={(e) => setNewTeam2Name(e.target.value)}
+                  required
+                />
+              )}
+            </FormField>
 
-          {/* Team 2 Score */}
-          <label>
-            Team 2 Score
-            <input
-              type="number"
-              value={newTeam2Score}
-              onChange={(e) => setNewTeam2Score(e.target.value)}
-              style={{ width: "100%", marginBottom: "0.75rem" }}
-            />
-          </label>
+            <FormField label="Team 2 Score">
+              {(id) => (
+                <TextInput
+                  id={id}
+                  type="number"
+                  value={newTeam2Score}
+                  onChange={(e) => setNewTeam2Score(e.target.value)}
+                />
+              )}
+            </FormField>
 
-          {/* Date */}
-          <label>
-            Date*
-            <input
-              type="date"
-              value={newDate}
-              onChange={(e) => setNewDate(e.target.value)}
-              required
-              style={{ width: "100%", marginBottom: "0.75rem" }}
-            />
-          </label>
+            <FormField label="Date" required>
+              {(id) => (
+                <TextInput
+                  id={id}
+                  type="date"
+                  value={newDate}
+                  onChange={(e) => setNewDate(e.target.value)}
+                  required
+                />
+              )}
+            </FormField>
 
-          {/* Video URL */}
-          <label>
-            Video URL
-            <input
-              type="text"
-              value={newVideoUrl}
-              onChange={(e) => setNewVideoUrl(e.target.value)}
-              style={{ width: "100%", marginBottom: "1rem" }}
-            />
-          </label>
-
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={creating}
-            className="modal-submit-button"
-          >
-            {creating ? "Creating…" : "Submit"}
-          </button>
-          {createError && (
-            <p className="error" style={{ color: "red", marginTop: "0.5rem" }}>
-              {createError}
-            </p>
-          )}
+            <FormField label="Video URL">
+              {(id) => (
+                <TextInput
+                  id={id}
+                  type="url"
+                  value={newVideoUrl}
+                  onChange={(e) => setNewVideoUrl(e.target.value)}
+                />
+              )}
+            </FormField>
+          </div>
         </form>
       </Modal>
 
       {isImportModalOpen && (
         <ChallongeImport
-          onImportSuccess={handleImportSuccess}
+          onImportSuccess={(result) => {
+            setIsImportModalOpen(false)
+            setImportResult(result)
+            refetch()
+          }}
           onCancel={() => setIsImportModalOpen(false)}
         />
       )}
 
-      <Modal isOpen={!!importResult} onClose={() => setImportResult(null)} title="Challonge Import Results">
+      <Modal
+        isOpen={Boolean(importResult)}
+        onClose={() => setImportResult(null)}
+        title="Challonge Import Results"
+        size="sm"
+      >
         {importResult && (
-          <div>
-            <p>Created: {importResult.summary.created}</p>
-            <p>Updated: {importResult.summary.updated}</p>
-            <p>Skipped: {importResult.summary.skipped}</p>
-          </div>
+          <DetailStats
+            columns={3}
+            items={[
+              { label: 'Created', value: importResult.summary.created },
+              { label: 'Updated', value: importResult.summary.updated },
+              { label: 'Skipped', value: importResult.summary.skipped },
+            ]}
+          />
         )}
       </Modal>
 
       <GameStatUploadModal
         game={statUploadGame}
-        isOpen={!!statUploadGame}
+        isOpen={Boolean(statUploadGame)}
         onClose={() => setStatUploadGame(null)}
         onSuccess={refetch}
       />
 
-      {/* Games Table */}
-      <div className="users-table" style={{ marginTop: "1.5rem" }}>
-        <Table
-          columns={columns}
-          rows={localGames}
-          rowKey={(row) => row.id}
-        />
-      </div>
-    </div>
-  );
-};
-
-export default GamesPage;
+      <ConfirmModal
+        isOpen={pendingDelete !== null}
+        onClose={() => setPendingDelete(null)}
+        onConfirm={confirmDelete}
+        loading={deleting}
+        title="Delete game"
+        confirmLabel="Delete"
+        message={
+          <>
+            Delete <strong>{pendingDelete?.name || `game #${pendingDelete?.id}`}</strong>? This also
+            removes its recorded stats and cannot be undone.
+          </>
+        }
+      />
+    </PageContainer>
+  )
+}
