@@ -15,6 +15,7 @@ import {
   getTriviaSeason,
   getTriviaTeam,
 } from "./relations";
+import { buildMockLeaderboard } from "./leaderboard";
 const api = (path: string) => `*/api/${path}`;
 
 function json(data: JsonBodyType, status = 200) {
@@ -252,6 +253,10 @@ export const handlers = [
   }),
 
   // Stats
+  http.get(api("stats/leaderboard"), ({ request }) => {
+    const result = buildMockLeaderboard(new URL(request.url).searchParams);
+    return json(result);
+  }),
   http.get(api("stats"), ({ request }) => json(paginated(db.stats, request))),
   http.post(api("stats/batch-csv"), async ({ request }) => {
     const body = (await request.json()) as { statsData?: Array<Record<string, unknown>> };
