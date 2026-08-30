@@ -1,12 +1,14 @@
 /**
  * PortalLayout — the admin portal shell: a collapsible left sidebar listing every management section, and the routed page rendered beside it.
  * Sections come from the module-scope `PORTAL_SECTIONS` array, so adding a management page is one entry; the collapse toggle shrinks the sidebar to a rail rather than removing it, keeping the toggle reachable.
+ * Nested Suspense around `<Outlet />` keeps the sidebar mounted while a lazy page chunk loads; nav links prefetch those chunks on hover/focus.
  * Lives in `components/portal/`; App mounts it behind `PrivateRoute` for admin and superadmin only.
  */
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa'
 import IconButton from '@/components/ui/buttons/IconButton'
+import { PageLoader } from '@/components/ui/feedback/LoadingSpinner'
 
 interface PortalSection {
   label: string
@@ -29,6 +31,21 @@ const PORTAL_SECTIONS: PortalSection[] = [
   { label: 'Applications', to: 'applications' },
   { label: 'Awards', to: 'awards' },
 ]
+
+/** Prefetch portal page chunks on hover/focus so nav feels instant. */
+const PORTAL_PREFETCH: Record<string, () => Promise<unknown>> = {
+  '': () => import('./Dashboard'),
+  users: () => import('./UsersPage'),
+  seasons: () => import('./SeasonsPage'),
+  teams: () => import('./TeamsPage'),
+  players: () => import('./PlayersPage'),
+  games: () => import('./GamesPage'),
+  stats: () => import('./StatsPage'),
+  articles: () => import('./ArticlesPage'),
+  registrations: () => import('./RegistrationsHubPage'),
+  applications: () => import('./ApplicationsPage'),
+  awards: () => import('./AwardsPage'),
+}
 
 const LINK_BASE =
   'block rounded-control px-3 py-2 text-sm no-underline transition-colors'
@@ -57,6 +74,8 @@ export default function PortalLayout() {
                     className={({ isActive }) =>
                       `${LINK_BASE} ${isActive ? LINK_ACTIVE : LINK_INACTIVE}`
                     }
+                    onMouseEnter={() => { void PORTAL_PREFETCH[section.to]?.() }}
+                    onFocus={() => { void PORTAL_PREFETCH[section.to]?.() }}
                   >
                     {section.label}
                   </NavLink>
@@ -77,7 +96,9 @@ export default function PortalLayout() {
       </aside>
 
       <main className="min-w-0 flex-1">
-        <Outlet />
+        <Suspense fallback={<PageLoader />}>
+          <Outlet />
+        </Suspense>
       </main>
     </div>
   )
