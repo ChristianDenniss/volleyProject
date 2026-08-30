@@ -8,11 +8,13 @@ import SiteHeader     from "./components/layout/SiteHeader";
 import SiteNav        from "./components/layout/SiteNav";
 import SiteFooter     from "./components/layout/SiteFooter";
 import PrivateRoute   from "./components/portal/PrivateRoute";
+import PortalLayout   from "./components/portal/PortalLayout";
 import ErrorBoundary  from "./components/layout/ErrorBoundary";
 import { PageLoader } from "./components/ui/feedback/LoadingSpinner";
 
 // Route-level code splitting: each page (and its exclusive dependencies, e.g. three.js
 // for VectorGraphPage) only downloads when a visitor actually navigates to it.
+// PortalLayout is eager so the admin shell (sidebar) stays mounted across lazy portal pages.
 const Applications      = lazy(() => import("./components/Applications"));
 const UserProfile       = lazy(() => import("./components/UserProfile"));
 const SignUp            = lazy(() => import("./components/SignUp"));
@@ -32,7 +34,6 @@ const Contact           = lazy(() => import("./components/ContactUs"));
 const PrivacyPolicy     = lazy(() => import("./components/PrivacyPolicy"));
 const Credits           = lazy(() => import("./components/Credits"));
 const SinglePlayer      = lazy(() => import("./components/Single/SinglePlayer"));
-const PortalLayout      = lazy(() => import("./components/portal/PortalLayout"));
 const Dashboard         = lazy(() => import("./components/portal/Dashboard"));
 const UsersPage         = lazy(() => import("./components/portal/UsersPage"));
 const PlayersPage       = lazy(() => import("./components/portal/PlayersPage"));
@@ -59,7 +60,7 @@ const VectorGraphPage   = lazy(() => import("./components/VectorGraphPage"));
 
 const App: React.FC = () => (
   <AuthProvider>
-    <Router>
+    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
     <RegionProvider>
     <ViewportLayoutSync />
       <SiteHeader />
