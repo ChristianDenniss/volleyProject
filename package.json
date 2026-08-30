@@ -1,0 +1,7 @@
+{
+  "name": "volleyball-4-2",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Volleyball 4.2 - semantic-release automation root. Versioning is derived from Conventional Commits; do not edit this version by hand.",
+  "//": "This root package.json exists only as semantic-release's anchor - it is not an app and has no dependencies. The two apps are BE/ and FE/, each with its own package.json and lockfile. See docs/architecture/versioning.md."
+}

@@ -1,0 +1,63 @@
+name: Release
+
+# Semantic-release: on every push to main (and to maintenance branches like
+# 1.2.x), analyze Conventional Commits, compute the next version, tag it, cut a
+# GitHub Release, and attach CHANGELOG.md to it.
+# See docs/architecture/versioning.md.
+on:
+  push:
+    branches:
+      - main
+      - '[0-9]+.[0-9]+.x'
+      - '[0-9]+.x'
+  workflow_dispatch:
+
+# Avoid two releases racing if commits land back-to-back.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  # Build and test both apps before tagging anything, so a release is never cut
+  # from a broken tree. This reuses ci.yml rather than restating its steps -
+  # "does it build" is defined in exactly one place.
+  verify:
+    name: Verify
+    uses: ./.github/workflows/ci.yml
+
+  release:
+    name: Tag & Release
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # push tags, create releases
+      issues: write # comment on issues included in the release
+      pull-requests: write # comment on PRs included in the release
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # semantic-release needs full history + tags to compute the next version.
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # Installed ephemerally rather than vendored, so the release tooling's
+      # transitive deps never enter either app's lockfile or its audit surface.
+      - name: Install semantic-release tooling
+        run: |
+          npm install --no-save --no-package-lock \
+            semantic-release@24.2.3 \
+            @semantic-release/changelog@6.0.3 \
+            @semantic-release/commit-analyzer@13.0.1 \
+            @semantic-release/github@11.0.1 \
+            @semantic-release/release-notes-generator@14.0.3 \
+            conventional-changelog-conventionalcommits@8.0.0
+
+      - name: Semantic Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # No version suffix on npx - run the pinned semantic-release@24.2.3
+        # installed above, not whatever is newest on npm.
+        run: npx semantic-release
