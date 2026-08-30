@@ -9,7 +9,7 @@
 >
 > Folders are purpose-based. A component that fits a category goes there; a one-off that fits nothing goes in `misc/` until 3+ of a kind justify their own folder.
 
-**47 components across 11 categories.** Every file opens with a 2–3 sentence header comment — read it before deciding a component doesn't fit.
+**48 components across 11 categories.** Every file opens with a 2–3 sentence header comment — read it before deciding a component doesn't fit.
 
 ---
 
@@ -52,6 +52,7 @@
 | `StatCard` | A single labelled figure with optional icon, footnote and `tone`. |
 | `ResultsCounter` | "Showing 11–20 of 243 players" — derives the range from `page`/`pageSize`/`total`, so the off-by-one is solved once. |
 | `AuthCard` | The centered panel the sign-in and sign-up screens share: title, error/success notices, form, SSO divider, footer link. |
+| `MasterDetail` | The two-pane selector/detail layout - a dense selectable list beside a detail pane, in one bordered surface. Exports `MasterDetailList`, `MasterDetailItem`, `MasterDetailPane`, `MasterDetailHeader` and `MasterDetailBody`. The list stacks and caps its height below `md`. Use it when picking an item should show its contents *beside* the list; use `DataTable`'s `expandedRow` when the detail belongs inline. **Not yet used by any page** - added to the library ahead of the first consumer. |
 
 ## `ui/feedback/` — loading, empty, error
 
