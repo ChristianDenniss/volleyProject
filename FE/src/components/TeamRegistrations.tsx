@@ -1,178 +1,155 @@
-import React, { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import { useRegion } from "../context/regionContext";
-import { useAuth } from "../context/authContext";
-import { useTeamRegistrations, useRegistrationSummary } from "../hooks/useTeamRegistrations";
-import type { RegionCode, TeamRegistration } from "../types/interfaces";
-import { RegStatusBadge, REGISTRATION_STATUSES } from "./RegStatusBadge";
-import "../styles/TeamRegistrations.css";
-import "../styles/ListingPage.css";
+/**
+ * TeamRegistrations — the public list of team applications for the current registration window, tabbed by region, with a row that expands into a quick preview before opening full details.
+ * The header reports capacity as "accepted / capacity" plus a spots-left line when the season declares one, so a visitor can see at a glance whether registration is still worth starting.
+ * Lives in `components/`; routed at /teams/registrations.
+ */
+import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { useRegion } from '@/context/regionContext'
+import { useAuth } from '@/context/authContext'
+import { useTeamRegistrations, useRegistrationSummary } from '@/hooks/useTeamRegistrations'
+import type { RegionCode, TeamRegistration } from '@/types/interfaces'
+import { TEAMS_NAV_ITEMS } from '@/constants/teamsNav'
 
-const REGIONS: { code: RegionCode; label: string }[] = [
-  { code: "na", label: "NA" },
-  { code: "eu", label: "EU" },
-  { code: "as", label: "AS" },
-];
+import PageContainer from '@/components/ui/layout/PageContainer'
+import PageHeader from '@/components/ui/layout/PageHeader'
+import DataTable, { type DataTableColumn } from '@/components/ui/layout/DataTable'
+import DetailStats from '@/components/ui/layout/DetailStats'
+import SubNav from '@/components/ui/navigation/SubNav'
+import Tabs from '@/components/ui/navigation/Tabs'
+import LinkButton from '@/components/ui/buttons/LinkButton'
+import { RegStatusBadge, REGISTRATION_STATUSES } from '@/components/ui/badges/RegStatusBadge'
 
-const TeamRegistrations: React.FC = () => {
-  const { regions, setActiveRegion, activeRegion } = useRegion();
-  const { isAuthenticated } = useAuth();
-  const activeCode = (activeRegion?.code || "na") as RegionCode;
-  const { data, loading, error } = useTeamRegistrations({ region: activeCode });
-  const summary = useRegistrationSummary(activeCode);
-  const [selected, setSelected] = useState<TeamRegistration | null>(null);
+const REGION_TABS: { key: RegionCode; label: string }[] = [
+  { key: 'na', label: 'NA' },
+  { key: 'eu', label: 'EU' },
+  { key: 'as', label: 'AS' },
+]
 
-  const header = useMemo(() => {
-    if (!summary) return "Accepted teams";
-    if (summary.capacity != null) {
-      return `Accepted teams ${summary.accepted}/${summary.capacity}`;
-    }
-    return `Accepted teams ${summary.accepted}`;
-  }, [summary]);
+export default function TeamRegistrations() {
+  const { regions, setActiveRegion, activeRegion } = useRegion()
+  const { isAuthenticated } = useAuth()
+
+  const activeCode = (activeRegion?.code || 'na') as RegionCode
+  const { data, loading, error } = useTeamRegistrations({ region: activeCode })
+  const summary = useRegistrationSummary(activeCode)
+
+  const [selected, setSelected] = useState<TeamRegistration | null>(null)
+
+  const capacityLine = useMemo(() => {
+    if (!summary) return 'Accepted teams'
+    if (summary.capacity != null) return `Accepted teams ${summary.accepted}/${summary.capacity}`
+    return `Accepted teams ${summary.accepted}`
+  }, [summary])
 
   const spotsLine =
     summary?.spotsLeft != null
-      ? `${summary.spotsLeft} team spot${summary.spotsLeft === 1 ? "" : "s"} left`
-      : null;
+      ? `${summary.spotsLeft} team spot${summary.spotsLeft === 1 ? '' : 's'} left`
+      : null
+
+  const registerLabel = isAuthenticated ? 'Register a team' : 'Log in to register'
+
+  const columns: DataTableColumn<TeamRegistration>[] = [
+    {
+      key: 'teamName',
+      header: 'Team',
+      render: (row) => <span className="font-medium text-content">{row.teamName}</span>,
+    },
+    { key: 'captainDiscord', header: 'Captain Discord' },
+    { key: 'captainRoblox', header: 'Captain Roblox', hideOnMobile: true },
+    {
+      key: 'status',
+      header: 'Status',
+      align: 'right',
+      render: (row) => <RegStatusBadge status={row.status} />,
+    },
+  ]
 
   return (
-    <div className="team-regs-page">
-      <div className="team-regs-nav">
-        <Link to="/teams">League teams</Link>
-        <span aria-hidden="true">·</span>
-        <span className="team-regs-nav-active">Team registrations</span>
-        <span aria-hidden="true">·</span>
-        <Link to="/teams/register">{isAuthenticated ? "Register a team" : "Log in to register"}</Link>
-      </div>
+    <PageContainer width="wide">
+      <SubNav items={TEAMS_NAV_ITEMS} activeLabel="Team registrations" />
 
-      <header className="team-regs-header">
-        <div className="team-regs-header-body">
-          <h1>Team registrations</h1>
-          <p>
-            Public applications for the current registration window. Select a row for a quick
-            preview, or open full details.
-          </p>
-          <p className="team-regs-spots">{header}</p>
-          {spotsLine && <p className="team-regs-muted">{spotsLine}</p>}
-        </div>
-        <div className="team-regs-header-actions">
-          <Link className="team-regs-cta" to="/teams/register">
-            {isAuthenticated ? "Register a team" : "Log in to register"}
-          </Link>
-          <div className="team-regs-legend" aria-label="Status legend">
-            {REGISTRATION_STATUSES.map((status) => (
-              <div className="team-regs-legend-item" key={status}>
-                <RegStatusBadge status={status} />
-              </div>
-            ))}
+      <PageHeader
+        title="Team registrations"
+        subtitle="Public applications for the current registration window. Select a row for a quick preview, or open full details."
+        actions={
+          <div className="flex flex-col items-end gap-3">
+            <LinkButton to="/teams/register">{registerLabel}</LinkButton>
+            <div className="flex flex-wrap gap-1.5" aria-label="Status legend">
+              {REGISTRATION_STATUSES.map((status) => (
+                <RegStatusBadge key={status} status={status} />
+              ))}
+            </div>
           </div>
-        </div>
-      </header>
+        }
+      />
 
-      <div className="team-regs-region-tabs" role="tablist" aria-label="Region">
-        {REGIONS.map((r) => (
-          <button
-            key={r.code}
-            type="button"
-            role="tab"
-            aria-selected={activeCode === r.code}
-            className={activeCode === r.code ? "active" : undefined}
-            onClick={() => {
-              setSelected(null);
-              const match = regions.find((x) => x.code === r.code);
-              if (match) setActiveRegion(match);
-            }}
-          >
-            {r.label}
-          </button>
-        ))}
+      <div className="flex flex-col gap-0.5">
+        <p className="m-0 text-sm font-medium text-content-secondary">{capacityLine}</p>
+        {spotsLine && <p className="m-0 text-xs text-content-muted">{spotsLine}</p>}
       </div>
 
-      {loading && <p className="team-regs-muted">Loading registrations…</p>}
-      {error && <p className="team-regs-error">{error}</p>}
+      <Tabs
+        variant="segmented"
+        items={REGION_TABS.map((tab) => ({ key: tab.key, label: tab.label }))}
+        activeKey={activeCode}
+        onChange={(key) => {
+          setSelected(null)
+          const match = regions.find((region) => region.code === key)
+          if (match) setActiveRegion(match)
+        }}
+      />
 
-      {!loading && !error && (
-        <div className="team-regs-table-wrap">
-          <table className="team-regs-table">
-            <thead>
-              <tr>
-                <th>Team</th>
-                <th>Captain Discord</th>
-                <th>Captain Roblox</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.map((row) => {
-                const isSelected = selected?.id === row.id;
-                return (
-                  <React.Fragment key={row.id}>
-                    <tr
-                      className={`listing-row-clickable ${isSelected ? "selected listing-row-expanded" : ""}`}
-                      onClick={() => setSelected(isSelected ? null : row)}
-                    >
-                      <td className="team-name-cell">{row.teamName}</td>
-                      <td>{row.captainDiscord}</td>
-                      <td>{row.captainRoblox}</td>
-                      <td>
-                        <RegStatusBadge status={row.status} />
-                      </td>
-                    </tr>
-                    {isSelected && (
-                      <tr className="listing-table-detail-row">
-                        <td colSpan={4}>
-                          <div className="team-regs-detail">
-                            <dl className="team-regs-detail-stats">
-                              <div className="team-regs-detail-stat">
-                                <dt>Status</dt>
-                                <dd>
-                                  <RegStatusBadge status={row.status} />
-                                </dd>
-                              </div>
-                              <div className="team-regs-detail-stat">
-                                <dt>Captain</dt>
-                                <dd>
-                                  {row.captainDiscord} / {row.captainRoblox}
-                                </dd>
-                              </div>
-                              {row.hexColor && (
-                                <div className="team-regs-detail-stat">
-                                  <dt>Colors</dt>
-                                  <dd>
-                                    <span
-                                      className="team-regs-color-swatch"
-                                      style={{ background: row.hexColor }}
-                                      aria-hidden
-                                    />
-                                    {row.hexColor}
-                                    {row.brickColor ? ` · ${row.brickColor}` : ""}
-                                  </dd>
-                                </div>
-                              )}
-                            </dl>
-                            <Link className="team-regs-cta team-regs-cta--secondary" to={`/teams/registrations/${row.id}`}>
-                              View full details
-                            </Link>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </React.Fragment>
-                );
-              })}
-              {data.length === 0 && (
-                <tr>
-                  <td colSpan={4} className="listing-table-empty">
-                    No registrations yet for this region.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
-  );
-};
-
-export default TeamRegistrations;
+      <DataTable
+        columns={columns}
+        rows={data}
+        rowKey={(row) => row.id}
+        loading={loading}
+        error={error}
+        emptyLabel="No registrations yet for this region."
+        onRowClick={(row) => setSelected(selected?.id === row.id ? null : row)}
+        rowTone={(row) => (selected?.id === row.id ? 'accent' : 'default')}
+        expandedRow={(row) =>
+          selected?.id === row.id ? (
+            <div className="flex flex-col gap-4">
+              <DetailStats
+                columns={3}
+                items={[
+                  { label: 'Status', value: <RegStatusBadge status={row.status} /> },
+                  { label: 'Captain', value: `${row.captainDiscord} / ${row.captainRoblox}` },
+                  ...(row.hexColor
+                    ? [
+                        {
+                          label: 'Colors',
+                          value: (
+                            <span className="inline-flex items-center gap-2">
+                              {/* The swatch IS the registered team color — a runtime value
+                                  with no token equivalent, so it stays an inline style. */}
+                              <span
+                                aria-hidden
+                                className="inline-block h-4 w-4 shrink-0 rounded-full border border-border"
+                                style={{ background: row.hexColor }}
+                              />
+                              {row.hexColor}
+                              {row.brickColor ? ` · ${row.brickColor}` : ''}
+                            </span>
+                          ),
+                        },
+                      ]
+                    : []),
+                ]}
+              />
+              <Link
+                to={`/teams/registrations/${row.id}`}
+                onClick={(event) => event.stopPropagation()}
+                className="self-start text-sm font-medium text-accent no-underline hover:underline"
+              >
+                View full details →
+              </Link>
+            </div>
+          ) : null
+        }
+      />
+    </PageContainer>
+  )
+}
