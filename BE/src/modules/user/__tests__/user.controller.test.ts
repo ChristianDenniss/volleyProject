@@ -29,6 +29,21 @@ const mockUsers = [
   },
 ];
 
+// What `UserService.getProfile` actually resolves with: it sanitizes through
+// `toPublicUser`, so the controller receives a password-free object already.
+const mockPublicProfile = {
+  id: mockUser.id,
+  username: mockUser.username,
+  email: mockUser.email,
+  role: mockUser.role,
+  robloxUserId: null,
+  robloxUsername: null,
+  hasPassword: true,
+  createdAt: mockUser.createdAt,
+  updatedAt: mockUser.updatedAt,
+  articles: undefined,
+};
+
 const mockToken = 'mock.jwt.token';
 
 const mockCreateUser = jest.fn();
@@ -225,12 +240,13 @@ describe('UserController', () => {
   describe('getProfile', () => {
     it('should return the current user profile without password', async () => {
       mockRequest.user = { id: 1, username: 'testuser', role: 'user' };
-      mockGetProfile.mockResolvedValueOnce(mockUser);
+      mockGetProfile.mockResolvedValueOnce(mockPublicProfile);
 
       await userController.getProfile(mockRequest as Request, mockResponse as Response, next);
 
       expect(mockGetProfile).toHaveBeenCalledWith(1);
-      expect(jsonMock).toHaveBeenCalledWith(expect.not.objectContaining({ password: expect.any(String) }));
+      expect(jsonMock).toHaveBeenCalledWith(mockPublicProfile);
+      expect(jsonMock).toHaveBeenCalledWith(expect.not.objectContaining({ password: expect.anything() }));
       expect(next).not.toHaveBeenCalled();
     });
 
