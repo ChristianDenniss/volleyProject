@@ -169,97 +169,6 @@
     flex-shrink: 0;                    /* ✅ Prevent image from shrinking */
 }
 
-/* Full-Width Breakout for Video Section */
-.video-section
-{
-    position: relative;
-    width: 100vw;
-    margin-left: calc(-50vw + 50%);
-    padding-top: 56.25%; /* 16:9 aspect ratio */
-    margin-bottom: -1px; /* Negative margin to remove gap */
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 3px 12px rgb(0 0 0 / 0.1);
-}
-
-/* Embedded YouTube Player */
-.yt-player
-{
-    position: absolute !important;
-    top: 0;
-    left: 0;
-    width: 100% !important;
-    height: 100% !important;
-}
-
-/* Full-Width Call to Action */
-.call-to-action
-{
-    position: relative; /* Needed for absolute positioning children */
-    width: 100vw;
-    margin-left: calc(-50vw + 50%);
-    margin-top: 0; /* Remove any top margin */
-    margin-bottom: -1rem;
-    height: 500px; /* Base height */
-    min-height: 500px; /* Ensure minimum height */
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 3px 12px rgb(0 0 0 / 0.1);
-}
-
-/* Make the image a background layer */
-.promo-banner
-{
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    z-index: 1;
-}
-
-/* Add the overlay button */
-.join-button-overlay
-{
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    z-index: 2;
-    background-color: #edbb00;
-    color: black;
-    border: none;
-    padding: 0.6rem 1.5rem;
-    font-size: 1.1rem;
-    font-weight: 700;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-.join-button-overlay:hover
-{
-    background-color: #c49a00;
-}
-
-.join-button
-{
-    background-color: #edbb00;
-    color: black;
-    border: none;
-    padding: 0.6rem 1.5rem;
-    font-size: 1.1rem;
-    font-weight: 700;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-.join-button:hover
-{
-    background-color: #c49a00;
-}
-
 /* Remove default link styling in featured & side articles */
 .headline-section .featured-article a,
 .side-articles article a {
@@ -404,15 +313,6 @@ html[data-viewport="mobile"] .side-articles article h4 {
     font-size: 1rem;
 }
 
-html[data-viewport="mobile"] .call-to-action {
-    height: 300px;
-}
-
-html[data-viewport="mobile"] .join-button {
-    font-size: 1rem;
-    padding: 0.5rem 1.2rem;
-}
-
 /* Mobile Responsive Styles */
 @media screen and (max-width: 1024px) {
     .headline-section {
@@ -485,15 +385,6 @@ html[data-viewport="mobile"] .join-button {
     .side-articles article h4 {
         font-size: 1rem;
     }
-
-    .call-to-action {
-        height: 300px;
-    }
-
-    .join-button {
-        font-size: 1rem;
-        padding: 0.5rem 1.2rem;
-    }
 }
 
 /* Large screen adjustments */
@@ -519,24 +410,12 @@ html[data-viewport="mobile"] .join-button {
 }
 
 @media screen and (min-width: 1600px) {
-    .call-to-action {
-        height: 600px;
-        min-height: 600px;
-    }
-    
     .headline-section {
         gap: 3rem;
     }
     
     .side-articles {
         padding-left: 2.5rem;
-    }
-}
-
-@media screen and (min-width: 2000px) {
-    .call-to-action {
-        height: 700px;
-        min-height: 700px;
     }
 }
 
@@ -566,40 +445,16 @@ html[data-viewport="mobile"] .join-button {
         margin: 0;
         font-size: 0.9rem;
     }
-
-    .call-to-action {
-        height: 250px;
-    }
-
-    .join-button {
-        font-size: 0.9rem;
-        padding: 0.4rem 1rem;
-    }
-}
-
-/* Fix for video section on mobile */
-@media screen and (max-width: 768px) {
-    .video-section {
-        margin-left: -0.5rem;
-        margin-right: -0.5rem;
-        width: calc(100% + 1rem);
-        border-radius: 0;
-    }
 }
 
 /* Improve touch targets on mobile */
 @media (hover: none) and (pointer: coarse) {
-    .side-articles article,
-    .join-button {
+    .side-articles article {
         cursor: default;
     }
 
     .side-articles article:active {
         background-color: #f0f0f0;
-    }
-
-    .join-button:active {
-        background-color: #c49a00;
     }
 }
 
