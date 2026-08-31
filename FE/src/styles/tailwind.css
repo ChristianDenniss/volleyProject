@@ -137,8 +137,12 @@
 
   /* The skeleton sweep used while a list or tile grid loads. Declared once and
      shared: the Games grid and the Home article cards had byte-identical
-     keyframes under two different names. */
+     keyframes under two different names. Listing tables and the stats
+     leaderboard reuse the same keyframes at the timings their stylesheets
+     used (1.4s ease-in-out and 1.6s ease-in-out). */
   --animate-skeleton-sweep: skeleton-sweep 1.5s infinite;
+  --animate-listing-shimmer: skeleton-sweep 1.4s ease-in-out infinite;
+  --animate-stats-shimmer: skeleton-sweep 1.6s ease-in-out infinite;
   @keyframes skeleton-sweep {
     0% {
       background-position: 200% 0;
@@ -168,6 +172,33 @@
     to {
       opacity: 1;
       transform: translateY(0);
+    }
+  }
+
+  /* Public article list. Auth banner uses a shorter fade; the sort pill
+     scales, so it cannot be a scale-* utility. */
+  --animate-article-fade-in: article-fade-in 0.3s ease-in-out;
+  @keyframes article-fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  --animate-article-pulse: article-pulse 2s infinite;
+  @keyframes article-pulse {
+    0%,
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(1.05);
+      opacity: 0.9;
     }
   }
 
@@ -212,6 +243,108 @@
       transform: scale(1.05);
     }
   }
+
+  /* SinglePlayer Hall of Fame G.O.A.T. treatments. The glow animates
+     `transform` (and text-shadow), so it stays a keyframe rather than a
+     scale-* utility. Values are carried over verbatim. */
+  --animate-goat-glow: goat-glow 2s ease-in-out infinite alternate;
+  @keyframes goat-glow {
+    0% {
+      text-shadow:
+        0 0 5px #ffd700,
+        0 0 10px #ffd700,
+        0 0 15px #ff6b35,
+        0 0 20px #ff6b35;
+      transform: scale(1);
+    }
+    100% {
+      text-shadow:
+        0 0 8px #ffd700,
+        0 0 15px #ffd700,
+        0 0 20px #ff6b35,
+        0 0 25px #ff6b35;
+      transform: scale(1.05);
+    }
+  }
+
+  --animate-goat-progress: goat-progress 3s ease-in-out infinite;
+  @keyframes goat-progress {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  /* Trivia page. `pulse` is not Tailwind's animate-pulse (2s, different
+     curve). Error and loading share one slide-in keyframe; error used `ease`
+     and loading used `ease-out`. */
+  --animate-trivia-pulse: trivia-pulse 1s infinite;
+  @keyframes trivia-pulse {
+    0% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+
+  --animate-trivia-shake: trivia-shake 0.5s ease-in-out;
+  @keyframes trivia-shake {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    25% {
+      transform: translateX(-5px);
+    }
+    75% {
+      transform: translateX(5px);
+    }
+  }
+
+  --animate-trivia-slide-in: trivia-slide-in 0.3s ease;
+  --animate-trivia-slide-in-out: trivia-slide-in 0.3s ease-out;
+  @keyframes trivia-slide-in {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Repeating question-mark watermark. Nested url()/rotate() parentheses
+     cannot sit in an arbitrary class without the parser splitting on them. */
+  --background-image-trivia-marks: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='420'%3E%3Cg fill='%232d3c50' fill-opacity='0.05' font-family='Inter, sans-serif' font-weight='700'%3E%3Ctext x='30' y='80' font-size='64' transform='rotate(-15 30 80)'%3E%3F%3C/text%3E%3Ctext x='210' y='140' font-size='36' transform='rotate(10 210 140)'%3E%3F%3C/text%3E%3Ctext x='330' y='70' font-size='48' transform='rotate(20 330 70)'%3E%3F%3C/text%3E%3Ctext x='90' y='260' font-size='40' transform='rotate(8 90 260)'%3E%3F%3C/text%3E%3Ctext x='260' y='300' font-size='72' transform='rotate(-12 260 300)'%3E%3F%3C/text%3E%3Ctext x='355' y='385' font-size='30' transform='rotate(-25 355 385)'%3E%3F%3C/text%3E%3Ctext x='40' y='390' font-size='52' transform='rotate(14 40 390)'%3E%3F%3C/text%3E%3C/g%3E%3C/svg%3E");
+
+  /* Schedules "Stay Updated" hatched overlay. Two stacked linear-gradients
+     cannot sit in an arbitrary class without the parser splitting on commas. */
+  --background-image-stay-updated-hatch:
+    linear-gradient(45deg, transparent 30%, rgba(45, 60, 80, 0.03) 30%, rgba(45, 60, 80, 0.03) 70%, transparent 70%),
+    linear-gradient(-45deg, transparent 30%, rgba(45, 60, 80, 0.03) 30%, rgba(45, 60, 80, 0.03) 70%, transparent 70%);
+
+  /* Stats advanced-filter panel. Animates transform, so it stays a keyframe. */
+  --animate-filter-slide-down: filter-slide-down 0.3s ease-out;
+  @keyframes filter-slide-down {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -235,10 +368,15 @@
    silently changes which rule wins on small screens.
 ───────────────────────────────────────────────────────────────────────────── */
 @custom-variant upto-xl   (@media (max-width: 1200px));
+@custom-variant upto-1100 (@media (max-width: 1100px));
 @custom-variant upto-1024 (@media (max-width: 1024px));
 @custom-variant upto-lg   (@media (max-width: 900px));
+@custom-variant upto-800  (@media (max-width: 800px));
 @custom-variant upto-md   (@media (max-width: 768px));
+@custom-variant upto-700  (@media (max-width: 700px));
+@custom-variant upto-640  (@media (max-width: 640px));
 @custom-variant upto-sm   (@media (max-width: 600px));
+@custom-variant upto-576  (@media (max-width: 576px));
 @custom-variant upto-xs   (@media (max-width: 480px));
 @custom-variant upto-420  (@media (max-width: 420px));
 /* FAQ and the public Applications page both pin a 360px query last. */
