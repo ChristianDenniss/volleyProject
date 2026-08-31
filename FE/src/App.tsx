@@ -56,6 +56,19 @@ const RecordsPage       = lazy(() => import("./components/RecordsPage"));
 const TriviaPage        = lazy(() => import("./components/TriviaPage"));
 const Schedules         = lazy(() => import("./components/Schedules"));
 const VectorGraphPage   = lazy(() => import("./components/VectorGraphPage"));
+const NotFoundPage      = lazy(() => import("./components/misc/NotFoundPage"));
+
+/* Dev-only error-screen previews. Written as a ternary rather than a guarded <Route> alone so
+   that Vite's static replacement of import.meta.env.DEV folds the whole thing to null in a
+   production build and the dynamic import is dropped instead of shipping an orphan chunk. */
+const ErrorPagesPreview = import.meta.env.DEV
+  ? lazy(() => import("./components/misc/ErrorPagesPreview"))
+  : null;
+const ErrorBoundaryPreview = import.meta.env.DEV
+  ? lazy(() =>
+      import("./components/misc/ErrorPagesPreview").then(m => ({ default: m.ErrorBoundaryPreview }))
+    )
+  : null;
 
 const App: React.FC = () => (
   <AuthProvider>
@@ -127,6 +140,18 @@ const App: React.FC = () => (
             <Route path="applications" element={<ApplicationsPage />} />
             <Route path="registrations" element={<RegistrationsHubPage />} />
           </Route>
+
+          {/* ---------- Dev-only error screen previews ---------- */}
+          {ErrorPagesPreview && ErrorBoundaryPreview && (
+            <>
+              <Route path="/errors" element={<ErrorPagesPreview />} />
+              <Route path="/errors/:kind" element={<ErrorPagesPreview />} />
+              <Route path="/error" element={<ErrorBoundaryPreview />} />
+            </>
+          )}
+
+          {/* Catch-all: any unmatched path is a 404, not a blank page. Keep last. */}
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
         </Suspense>
         </ErrorBoundary>
