@@ -1,0 +1,157 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   TAILWIND — utility layer, opted in without changing anything that exists.
+
+   This file does two things and nothing else:
+
+   1. Loads Tailwind's theme and utilities, but NOT its preflight reset.
+   2. Registers the tokens already declared in tokens.css as Tailwind theme
+      values, so `bg-brand-primary` resolves to the same #2D3C50 that
+      `var(--color-brand-primary)` already does.
+
+   ── Why preflight is excluded ────────────────────────────────────────────────
+   Preflight is a global element reset: it strips heading margins, list markers,
+   button styling and border defaults from every element on the page. In a
+   greenfield app that is the right starting point. Here it is not - 50 existing
+   stylesheets are written against the browser defaults preflight removes, so
+   importing it would restyle every un-migrated page the moment this file is
+   added.
+
+   Excluding it means adopting Tailwind is additive: a component that uses
+   utility classes gets them, and a component that has not been converted yet
+   renders exactly as it did before. Once every page is converted, preflight can
+   be switched on in one commit and reviewed on its own.
+
+   ── The token mapping ────────────────────────────────────────────────────────
+   Every value below is a reference to a variable in tokens.css, never a literal.
+   tokens.css stays the single source of truth; this file only makes those values
+   reachable from a class name. Change a colour there and both the CSS and the
+   utilities follow.
+───────────────────────────────────────────────────────────────────────────── */
+
+@layer theme, base, components, utilities;
+
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+@theme inline {
+  /* ── Brand ── */
+  --color-brand-primary: var(--color-brand-primary);
+  --color-brand-primary-hover: var(--color-brand-primary-hover);
+
+  /* ── Accent (the pale blue family) ── */
+  --color-accent: var(--color-accent);
+  --color-accent-dark: var(--color-accent-dark);
+  --color-accent-pale: var(--color-accent-pale);
+  --color-accent-border: var(--color-accent-border);
+  --color-accent-hover-bg: var(--color-accent-hover-bg);
+
+  /* ── Surfaces ── */
+  --color-bg: var(--color-bg);
+  --color-bg-light: var(--color-bg-light);
+  --color-bg-muted: var(--color-bg-muted);
+
+  /* ── Site chrome. These two are currently hardcoded in Navbar.css / Footer.css
+     rather than tokenised; they are registered here so the nav and footer can be
+     converted without inventing a new colour for either. ── */
+  --color-chrome: #262626;
+  --color-chrome-footer: #000000;
+
+  /* ── Text ── */
+  --color-text: var(--color-text);
+  --color-text-muted: var(--color-text-muted);
+  --color-text-muted-alt: var(--color-text-muted-alt);
+  --color-text-subtle: var(--color-text-subtle);
+  --color-text-on-brand: var(--color-text-on-brand);
+
+  /* ── Borders and lines ── */
+  --color-border: var(--color-border);
+  --color-table-border: var(--color-table-border);
+
+  /* ── Table & list row states ── */
+  --color-row-stripe: var(--color-row-stripe);
+  --color-row-hover: var(--color-row-hover);
+  --color-row-opponent-stripe: var(--color-row-opponent-stripe);
+  --color-row-opponent-hover: var(--color-row-opponent-hover);
+
+  /* ── Semantic ── */
+  --color-gold: var(--color-gold);
+  --color-success: var(--color-success);
+  --color-warning: var(--color-warning);
+  --color-error: var(--color-error);
+  --color-error-bg: var(--color-error-bg);
+  --color-error-border: var(--color-error-border);
+
+  /* ── Shadow. Registered for the same reason as radius: without these,
+     `shadow-sm` and `shadow-md` resolve to Tailwind's own two-layer defaults
+     rather than the single-layer shadows the app already uses. ── */
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-modal: var(--shadow-modal);
+
+  /* ── Radius ── */
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+
+  /* ── Named spacing. The two fluid values keep pages proportional from phone
+     to ultrawide; the numbered steps mirror the existing --space-N scale. ── */
+  --spacing-page: var(--space-page);
+  --spacing-section: var(--space-section);
+  --spacing-header: var(--header-height);
+  --spacing-nav: var(--nav-height);
+
+  /* ── Type ── */
+  --text-page-title: var(--font-size-page-title);
+  --text-header: var(--header-font-size);
+  --text-nav: var(--nav-font-size);
+
+  /* ── Layout ── */
+  --container-shell: var(--layout-max-width);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   BREAKPOINTS — the values the existing @media queries are already written
+   against, so `md:` here means the same 768px it means in the stylesheets.
+───────────────────────────────────────────────────────────────────────────── */
+@theme {
+  --breakpoint-xs: 480px;
+  --breakpoint-sm: 600px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 900px;
+  --breakpoint-xl: 1200px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   ANIMATIONS — keyframes cannot be expressed as a utility, so they are declared
+   here and exposed as `animate-*` classes. Values are carried over verbatim from
+   the page stylesheets they came from.
+───────────────────────────────────────────────────────────────────────────── */
+@theme {
+  /* Credits page: the gradient sweep across the heading text. */
+  --animate-shimmer: shimmer 2.5s linear infinite;
+  @keyframes shimmer {
+    to {
+      background-position: -200% center;
+    }
+  }
+
+  /* Games page: the skeleton tile sweep while results load. */
+  --animate-game-card-shimmer: game-card-shimmer 1.5s infinite;
+  @keyframes game-card-shimmer {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+
+  /* Credits page: cards slide up and fade in on mount. */
+  --animate-card-in: card-in 0.6s ease-out forwards;
+  @keyframes card-in {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
