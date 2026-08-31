@@ -126,7 +126,7 @@ const ProfilePage: React.FC = () =>
                     <strong>Roblox:</strong>{" "}
                     {profile.robloxUsername ? `@${profile.robloxUsername}` : "Not connected"}
                 </p>
-                <div className="profile-roblox-actions">
+                <div className="mt-[0.5rem] mx-0 mb-[1rem]">
                     {!profile.robloxUsername ? (
                         <button type="button" onClick={() => void startRobloxOAuth("connect")}>
                             Connect Roblox

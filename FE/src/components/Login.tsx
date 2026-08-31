@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useLogin } from "../hooks/useLogin";
 import { startRobloxOAuth } from "../hooks/useTeamRegistrations";
-import "../styles/Login.css";
+import { authContainer, authError, authForm, authLink, authSsoButton } from "./authClasses";
 
 const LoginPage: React.FC = () =>
 {
@@ -41,10 +41,10 @@ const LoginPage: React.FC = () =>
     };
 
     return (
-        <div className="auth-container">
+        <div className={authContainer}>
             <h2>Login</h2>
-            {(error || oauthError) && <div className="auth-error">{error || oauthError}</div>}
-            <form onSubmit={handleSubmit} className="auth-form">
+            {(error || oauthError) && <div className={authError}>{error || oauthError}</div>}
+            <form onSubmit={handleSubmit} className={authForm}>
                 <label>
                     Username
                     <input
@@ -69,14 +69,14 @@ const LoginPage: React.FC = () =>
             </form>
             <button
                 type="button"
-                className="auth-sso-btn"
+                className={authSsoButton}
                 onClick={() => void startRobloxOAuth("login").catch((e) => setOauthError(String(e.message || e)))}
             >
                 Log in with Roblox
             </button>
             <p>
                 Don’t have an account?{" "}
-                <Link className="auth-link" to="/signup">
+                <Link className={authLink} to="/signup">
                     Sign up
                 </Link>
             </p>

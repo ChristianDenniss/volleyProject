@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate }        from "react-router-dom";
 import { useSignup }          from "../hooks/useSignUp";
 import { startRobloxOAuth } from "../hooks/useTeamRegistrations";
-import "../styles/Login.css";
+import { authContainer, authError, authSuccess, authForm, authLink, authSsoButton } from "./authClasses";
 
 const SignupPage: React.FC = () =>
 {
@@ -56,14 +56,14 @@ const SignupPage: React.FC = () =>
     };
 
     return (
-        <div className="auth-container">
+        <div className={authContainer}>
             <h2>Sign Up</h2>
 
             {/* display error or success */}
-            {error   && <div className="auth-error">{error}</div>}
-            {success && <div className="auth-success">{success}</div>}
+            {error   && <div className={authError}>{error}</div>}
+            {success && <div className={authSuccess}>{success}</div>}
 
-            <form onSubmit={handleSubmit} className="auth-form">
+            <form onSubmit={handleSubmit} className={authForm}>
                 <label>
                     Username
                     <input
@@ -108,7 +108,7 @@ const SignupPage: React.FC = () =>
 
             <button
                 type="button"
-                className="auth-sso-btn"
+                className={authSsoButton}
                 onClick={() => void startRobloxOAuth("signup").catch((e) => alert(String(e.message || e)))}
             >
                 Sign up with Roblox
@@ -116,7 +116,7 @@ const SignupPage: React.FC = () =>
 
             <p>
                 Already have an account?{' '}
-                <Link className="auth-link" to="/login">
+                <Link className={authLink} to="/login">
                     Log in
                 </Link>
             </p>
