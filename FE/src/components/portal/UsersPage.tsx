@@ -1,5 +1,5 @@
 // src/pages/UsersPage.tsx
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useAuth } from "../../context/authContext";
 import type { User } from "../../types/interfaces";
 import { useUsers } from "../../hooks/useUsers";
@@ -21,18 +21,14 @@ const UsersPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [roleFilter, setRoleFilter] = useState<string>("");
 
+  // Role changes apply via overrides in useUsers — no local mirror needed.
+  // (Mirroring `users` in an effect infinite-loops: the hook remaps every render.)
   const { users, total, totalPages, loading, error, changeRole } = useUsers({
     page: currentPage,
     limit: USERS_PER_PAGE,
     search: debouncedSearch || undefined,
     role: roleFilter || undefined,
   });
-
-  const [localUsers, setLocalUsers] = useState<User[]>([]);
-
-  useEffect(() => {
-    setLocalUsers(users);
-  }, [users]);
 
   // Handle search
   const handleSearch = (query: string) => {
@@ -178,7 +174,7 @@ const UsersPage: React.FC = () => {
         Showing {total === 0 ? 0 : ((currentPage - 1) * USERS_PER_PAGE) + 1}-{Math.min(currentPage * USERS_PER_PAGE, total)} of {total} users
       </div>
 
-      <Table columns={columns} rows={localUsers as UserRow[]} rowKey={(row) => row.id} />
+      <Table columns={columns} rows={users as UserRow[]} rowKey={(row) => row.id} />
     </div>
   );
 };

@@ -1,5 +1,5 @@
 // src/hooks/useUsers.ts
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { authFetch }             from "./authFetch";
 import { BACKEND_URL } from "../constants/api";
 import type { User } from "../types/interfaces";
@@ -24,7 +24,12 @@ export const useUsers = (params: UserListParams = DEFAULT_PAGINATION) =>
     const [overrides, setOverrides] = useState<Record<number, User>>({});
     useEffect(() => { setOverrides({}); }, [data]);
 
-    const users = (data ?? []).map((u) => overrides[u.id] ?? u);
+    // Stable reference unless data/overrides actually change — callers must not
+    // sync this into useEffect-driven local state with [users] as a dependency.
+    const users = useMemo(
+        () => (data ?? []).map((u) => overrides[u.id] ?? u),
+        [data, overrides]
+    );
 
     // Function to patch a user's role and update local state
     const changeRole = useCallback
