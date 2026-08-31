@@ -180,6 +180,7 @@
 ───────────────────────────────────────────────────────────────────────────── */
 @custom-variant upto-xl   (@media (max-width: 1200px));
 @custom-variant upto-1024 (@media (max-width: 1024px));
+@custom-variant upto-lg   (@media (max-width: 900px));
 @custom-variant upto-md   (@media (max-width: 768px));
 @custom-variant upto-xs   (@media (max-width: 480px));
 
