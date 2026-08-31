@@ -11,9 +11,16 @@ import Pagination from "../Pagination";
 import Modal from "../ui/Modal";
 import FilterBar from "../ui/FilterBar";
 import Table from "../ui/Table";
-import "../../styles/UsersPage.css";
 import "../../styles/AwardsPage.css";
 import "../../styles/PortalPlayersPage.css";
+import {
+  createButton,
+  filterGroup,
+  playersControls,
+  playersControlsRight,
+  portalMain,
+  resultsCounter,
+} from "./portalPageStyles";
 import { AWARD_TYPES } from "../../constants/awardTypes";
 import RegionSeasonFields from "../ui/RegionSeasonFields";
 import { useFormRegionSeason } from "../../hooks/useFormRegionSeason";
@@ -28,6 +35,33 @@ interface EditingState {
 }
 
 const AWARDS_PER_PAGE = 10;
+
+const deleteButton =
+  "bg-[#ef4444] text-white py-[0.375rem] px-[0.75rem] border-none rounded-[0.25rem] text-[0.875rem] " +
+  "cursor-pointer transition-[background-color] duration-200 ease-[ease] " +
+  "hover:bg-[#dc2626] disabled:bg-[#fca5a5] disabled:cursor-not-allowed";
+
+const awardCreateForm = "award-create-form flex flex-col gap-[1rem]";
+
+const awardFormRow = "grid gap-[1rem] min-w-0";
+
+const awardFormRow2 = `${awardFormRow} grid-cols-2 upto-md:grid-cols-[1fr]`;
+
+const awardModalError = "text-[#ef4444] mb-[0.5rem] text-[0.875rem]";
+
+const awardFormActions =
+  "flex gap-[0.75rem] justify-end pt-[0.75rem] border-t border-[#e5e7eb]";
+
+const awardBtnSubmit =
+  "py-[0.5rem] px-[1rem] border-none rounded-[0.25rem] text-[0.875rem] cursor-pointer " +
+  "transition-[background-color] duration-200 ease-[ease] h-auto w-auto " +
+  "bg-brand-primary text-white hover:enabled:bg-brand-primary-hover " +
+  "disabled:bg-[#63686f] disabled:cursor-not-allowed";
+
+const awardBtnCancel =
+  "py-[0.5rem] px-[1rem] border-none rounded-[0.25rem] text-[0.875rem] cursor-pointer " +
+  "transition-[background-color] duration-200 ease-[ease] h-auto w-auto " +
+  "bg-[#e2e8f0] text-[#374151] hover:bg-[#cbd5e1]";
 
 const AwardsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -468,7 +502,7 @@ const AwardsPage: React.FC = () => {
           <button
             onClick={() => handleDelete(award.id)}
             disabled={deleting}
-            className="delete-button"
+            className={deleteButton}
           >
             Delete
           </button>
@@ -479,16 +513,16 @@ const AwardsPage: React.FC = () => {
   ];
 
   return (
-    <div className="portal-main">
+    <div className={portalMain}>
       {/* Search and Controls */}
-      <div className="players-controls">
+      <div className={playersControls}>
         <button
           onClick={openModal}
-          className="create-button"
+          className={createButton}
         >
           Create Award
         </button>
-        <div className="players-controls-right">
+        <div className={playersControlsRight}>
           <SearchBar onSearch={handleSearch} placeholder="Search player names..." />
           <Pagination
             currentPage={currentPage}
@@ -500,7 +534,7 @@ const AwardsPage: React.FC = () => {
 
       {/* Filters */}
       <FilterBar onReset={clearFilters}>
-        <div className="filter-group">
+        <div className={filterGroup}>
           <select
             className="filter-select ui-filter-select"
             aria-label="Season"
@@ -516,7 +550,7 @@ const AwardsPage: React.FC = () => {
           </select>
         </div>
 
-        <div className="filter-group">
+        <div className={filterGroup}>
           <select
             className="filter-select ui-filter-select"
             aria-label="Award type"
@@ -533,7 +567,7 @@ const AwardsPage: React.FC = () => {
         </div>
       </FilterBar>
 
-      <div className="results-counter">
+      <div className={resultsCounter}>
         Showing {total === 0 ? 0 : ((currentPage - 1) * AWARDS_PER_PAGE) + 1}-{Math.min(currentPage * AWARDS_PER_PAGE, total)} of {total} awards
       </div>
 
@@ -552,9 +586,9 @@ const AwardsPage: React.FC = () => {
         title="Create New Award"
         className="award-create-modal"
       >
-        {formError && <p className="award-modal-error">{formError}</p>}
+        {formError && <p className={awardModalError}>{formError}</p>}
 
-        <form onSubmit={handleCreate} className="award-create-form">
+        <form onSubmit={handleCreate} className={awardCreateForm}>
           <RegionSeasonFields
             regions={formRegionSeason.regions}
             regionsLoading={formRegionSeason.regionsLoading}
@@ -567,7 +601,7 @@ const AwardsPage: React.FC = () => {
             seasonValueKey="id"
           />
 
-          <div className="award-form-row award-form-row-2">
+          <div className={awardFormRow2}>
             <div className="form-group">
               <label htmlFor="awardType">Type*</label>
               <select
@@ -586,7 +620,7 @@ const AwardsPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="award-form-row award-form-row-2">
+          <div className={awardFormRow2}>
             <div className="form-group">
               <label htmlFor="awardPlayerName">Player Name*</label>
               <input
@@ -622,11 +656,11 @@ const AwardsPage: React.FC = () => {
             />
           </div>
 
-          <div className="award-form-actions">
-            <button type="button" onClick={closeModal} className="award-btn-cancel">
+          <div className={awardFormActions}>
+            <button type="button" onClick={closeModal} className={awardBtnCancel}>
               Cancel
             </button>
-            <button type="submit" disabled={creating} className="award-btn-submit">
+            <button type="submit" disabled={creating} className={awardBtnSubmit}>
               {creating ? "Creating..." : "Create"}
             </button>
           </div>

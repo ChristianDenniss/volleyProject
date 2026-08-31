@@ -1,38 +1,22 @@
-/* Portal Players Page Styles */
+/* What is left of PortalPlayersPage.css after the portal list pages moved to
+   utilities.
 
-/* Controls section */
-.players-controls {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin-bottom: 0.75rem;
-  padding: 0;
-}
+   `.ui-filter-bar` in ui.css is unlayered and sets margin-bottom to the fluid
+   `--space-section` token. A utility on the bar (or an `[&_.ui-filter-bar]:`
+   descendant from `portal-main`) would live in the utilities layer and lose,
+   snapping the gap back to the token. This descendant rule stays unlayered so
+   the tighter 0.75rem spacing still wins.
+
+   `.search-bar input` is the same story against Searchbar utilities: those
+   live in the utilities layer, so this unlayered rule still wins padding,
+   radius, and the focus ring once a portal page has been visited. Vite does
+   not unload a chunk's CSS, so visiting any of these portal pages already
+   restyled every search bar for the rest of the session. The selector is
+   still global, matching the pre-existing leak. `search-bar` stays on
+   Searchbar.tsx so this remnant still matches. */
 
 .portal-main .ui-filter-bar {
   margin-bottom: 0.75rem;
-}
-
-/* Left side controls (action buttons grouped together) */
-.players-controls-left {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-/* Right side controls (search + pagination) */
-.players-controls-right {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  flex-shrink: 0;
-  margin-left: auto;
-}
-
-/* Search bar styling */
-.search-bar {
-  width: 200px; /* Reduced width */
 }
 
 .search-bar input {

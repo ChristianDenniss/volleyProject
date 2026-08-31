@@ -13,7 +13,7 @@ import Table                           from "../ui/Table";
 import Pagination                      from "../Pagination";
 import RegionSeasonFields              from "../ui/RegionSeasonFields";
 import { useFormRegionSeason }         from "../../hooks/useFormRegionSeason";
-import "../../styles/SeasonsPage.css";
+import { createButton, portalMain, textMuted } from "./portalPageStyles";
 
 type EditField = "theme" | "image" | "startDate" | "endDate";
 interface EditingState {
@@ -412,7 +412,7 @@ const SeasonsPage: React.FC = () =>
                     ) : row.image ? (
                         row.image
                     ) : (
-                        <span className="text-muted">None</span>
+                        <span className={textMuted}>None</span>
                     )}
                 </div>
             ),
@@ -526,7 +526,7 @@ const SeasonsPage: React.FC = () =>
                             Delete
                         </button>
                     ) : (
-                        <span className="text-muted">No permission</span>
+                        <span className={textMuted}>No permission</span>
                     )}
                     {deleteError && (
                         <p className="error" style={{ color: "red" }}>
@@ -542,12 +542,12 @@ const SeasonsPage: React.FC = () =>
     if (error)   return <p>Error: {error}</p>;
 
     return (
-        <div className="portal-main">
+        <div className={portalMain}>
             {/* Create Season Button */}
             <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1rem", flexWrap: "wrap" }}>
                 <button
                     onClick={openModal}
-                    className="create-button"
+                    className={createButton}
                 >
                     Create Season
                 </button>
@@ -571,7 +571,7 @@ const SeasonsPage: React.FC = () =>
                 )}
 
                 {/* Create Form */}
-                <form onSubmit={handleCreate} className="season-create-form">
+                <form onSubmit={handleCreate} className="season-create-form grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-[1rem]">
                     <RegionSeasonFields
                         regions={formRegionSeason.regions}
                         regionsLoading={formRegionSeason.regionsLoading}
@@ -644,7 +644,7 @@ const SeasonsPage: React.FC = () =>
                     <button
                         type="submit"
                         disabled={creating}
-                        className="modal-submit-button"
+                        className="modal-submit-button col-span-full"
                     >
                         {creating ? "Creating…" : "Submit"}
                     </button>

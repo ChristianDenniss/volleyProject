@@ -18,9 +18,16 @@ import SearchBar from "../Searchbar";
 import Pagination from "../Pagination";
 import Table, { type TableColumn } from "../ui/Table";
 import "../ui/ui.css";
-import "../../styles/GamesPage.css"; // reuse table & text-muted styles
-import "../../styles/PortalPlayersPage.css"; // portal-specific styles
-import "../../styles/StatsPage.css"; // import new styles
+import "../../styles/PortalPlayersPage.css";
+import "../../styles/StatsPage.css";
+import {
+  playersControls,
+  playersControlsLeft,
+  playersControlsRight,
+  portalMain,
+  resultsCounter,
+  textMuted,
+} from "./portalPageStyles";
 
 // Define the fields eligible for inline editing
 type EditField =
@@ -64,6 +71,56 @@ const STAGE_OPTIONS = [
 ];
 
 const STATS_PER_PAGE = 10;
+
+const createButton =
+  "bg-brand-primary text-white py-[0.5rem] px-[1rem] border-none rounded-[4px] " +
+  "cursor-pointer text-[1rem] hover:bg-brand-primary-hover " +
+  "disabled:bg-[#ccc] disabled:cursor-not-allowed";
+
+const deleteButton =
+  "py-[0.25rem] px-[0.5rem] bg-[#dc3545] text-white border-none rounded-[4px] cursor-pointer " +
+  "hover:bg-[#c82333] disabled:bg-[#ccc] disabled:cursor-not-allowed";
+
+const modalOverlay =
+  "fixed top-0 left-0 w-full h-full bg-[rgba(0,0,0,0.5)] flex items-center justify-center z-[1000]";
+
+const modalBox =
+  "modal bg-white p-[1.5rem] rounded-[0.5rem] w-[90%] max-h-[90vh] overflow-y-auto " +
+  "shadow-[0_2px_10px_rgba(0,0,0,0.3)]";
+
+const modalBoxDefault = `${modalBox} max-w-[600px]`;
+
+const statCreateModal = `${modalBox} stat-create-modal max-w-[800px]`;
+
+const modalClose =
+  "bg-transparent border-none text-[1.25rem] float-right cursor-pointer";
+
+const modalTitle = "mt-0";
+
+const modalError = "text-[red] my-[0.5rem]";
+
+const statCreateForm =
+  "grid grid-cols-[1fr_1fr] gap-x-[1rem] gap-y-[0.75rem] upto-md:grid-cols-[1fr]";
+
+const statSubmit = `${createButton} col-span-full justify-self-start mt-[0.5rem]`;
+
+const csvOverlay =
+  "csv-modal-overlay fixed inset-0 bg-[rgba(0,0,0,0.5)] flex justify-center items-center z-[1000]";
+
+const csvModal =
+  "csv-modal bg-white p-[2.5rem] rounded-[8px] overflow-y-auto relative box-border upto-md:p-[2rem]";
+
+const csvClose =
+  "absolute top-[1.5rem] right-[1.5rem] bg-transparent border-none text-[1.5rem] cursor-pointer " +
+  "upto-md:top-[1rem] upto-md:right-[1rem]";
+
+const csvTitle = "mb-[1.5rem]";
+
+const csvError = "text-[red] mb-[1rem]";
+
+const csvLabel = "flex flex-col gap-[0.5rem] mb-[0.5rem]";
+
+const csvInput = "p-[0.5rem] rounded-[4px] border border-[#ccc]";
 
 const StatsPage: React.FC = () =>
 {
@@ -630,15 +687,15 @@ const StatsPage: React.FC = () =>
                         <button
                             onClick={() => handleDelete(row.id)}
                             disabled={deleting}
-                            className="delete-button"
+                            className={deleteButton}
                         >
                             Delete
                         </button>
                     ) : (
-                        <span className="text-muted">No permission</span>
+                        <span className={textMuted}>No permission</span>
                     )}
                     {deleteError && (
-                        <p className="modal-error">
+                        <p className={modalError}>
                             {deleteError}
                         </p>
                     )}
@@ -659,18 +716,18 @@ const StatsPage: React.FC = () =>
     }
 
     return (
-        <div className="portal-main">
+        <div className={portalMain}>
             {/* Search and Controls */}
-            <div className="players-controls">
-                <div className="players-controls-left">
-                    <button className="create-button" onClick={openModal}>
+            <div className={playersControls}>
+                <div className={playersControlsLeft}>
+                    <button className={createButton} onClick={openModal}>
                         Create Stat
                     </button>
-                    <button className="create-button" onClick={openCSVModal}>
+                    <button className={createButton} onClick={openCSVModal}>
                         Upload CSV
                     </button>
                 </div>
-                <div className="players-controls-right">
+                <div className={playersControlsRight}>
                     <SearchBar onSearch={handleSearch} placeholder="Search stats..." />
                     {searchQuery && (
                         <button
@@ -691,26 +748,26 @@ const StatsPage: React.FC = () =>
 
             {/* Create Modal */}
             {isModalOpen && (
-                <div className="modal-overlay">
-                    <div className="modal stat-create-modal">
+                <div className={modalOverlay}>
+                    <div className={statCreateModal}>
                         {/* Close button */}
                         <button
                             onClick={closeModal}
-                            className="modal-close"
+                            className={modalClose}
                         >
                             ×
                         </button>
 
-                        <h2 className="modal-title">New Stat</h2>
+                        <h2 className={modalTitle}>New Stat</h2>
 
                         {/* Display form validation error */}
                         {formError && (
-                            <p className="modal-error">
+                            <p className={modalError}>
                                 {formError}
                             </p>
                         )}
 
-                        <form onSubmit={handleCreate}>
+                        <form onSubmit={handleCreate} className={statCreateForm}>
                             {/* Spiking Errors */}
                             <label>
                                 Spiking Errors
@@ -919,12 +976,12 @@ const StatsPage: React.FC = () =>
                             <button
                                 type="submit"
                                 disabled={creating}
-                                className="create-button"
+                                className={statSubmit}
                             >
                                 {creating ? "Creating…" : "Submit"}
                             </button>
                             {createError && (
-                                <p className="modal-error">
+                                <p className={modalError}>
                                     {createError}
                                 </p>
                             )}
@@ -935,33 +992,33 @@ const StatsPage: React.FC = () =>
 
             {/* CSV Upload Modal */}
             {isCSVModalOpen && (
-                <div className="csv-modal-overlay">
-                    <div className="csv-modal" style={{ maxWidth: '800px', maxHeight: '80vh', overflow: 'auto' }}>
+                <div className={csvOverlay}>
+                    <div className={csvModal} style={{ maxWidth: '800px', maxHeight: '80vh', overflow: 'auto' }}>
                         {/* Close button */}
                         <button
                             onClick={closeCSVModal}
-                            className="csv-modal-close"
+                            className={csvClose}
                         >
                             ×
                         </button>
 
-                        <h2 className="csv-modal-title">Upload CSV</h2>
+                        <h2 className={csvTitle}>Upload CSV</h2>
 
                         {/* Display CSV upload errors */}
                         {csvParseError && (
-                            <p className="csv-modal-error">
+                            <p className={csvError}>
                                 {csvParseError}
                             </p>
                         )}
 
                         {csvUploadError && (
-                            <p className="csv-modal-error">
+                            <p className={csvError}>
                                 CSV Upload Error: {csvUploadError}
                             </p>
                         )}
 
                         {addStatsError && (
-                            <p className="csv-modal-error">
+                            <p className={csvError}>
                                 Add Stats Error: {addStatsError}
                             </p>
                         )}
@@ -1000,7 +1057,7 @@ const StatsPage: React.FC = () =>
                             </div>
                             {csvUploadMode === 'add' && (
                                 <div style={{ marginTop: '10px' }}>
-                                    <label>
+                                    <label className={csvLabel}>
                                         Existing Game ID*
                                         <input
                                             type="text"
@@ -1016,12 +1073,13 @@ const StatsPage: React.FC = () =>
 
                         {/* File upload section */}
                         <div style={{ marginBottom: '20px' }}>
-                            <label>
+                            <label className={csvLabel}>
                                 Select CSV File
                                 <input
                                     type="file"
                                     accept=".csv"
                                     onChange={(e) => handleFileUploadWrapper(e, setCsvPreview, setCsvParseError)}
+                                    className={csvInput}
                                     style={{ marginTop: '5px' }}
                                 />
                             </label>
@@ -1066,7 +1124,7 @@ const StatsPage: React.FC = () =>
                         <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
                             <button
                                 onClick={closeCSVModal}
-                                className="create-button"
+                                className={createButton}
                                 style={{ background: '#dc3545', color: 'white' }}
                                 disabled={csvUploadLoading || addStatsLoading}
                             >
@@ -1088,7 +1146,7 @@ const StatsPage: React.FC = () =>
                                             }
                                         }
                                     }}
-                                    className="create-button"
+                                    className={createButton}
                                     disabled={csvUploadLoading || addStatsLoading || (csvUploadMode === 'add' && !existingGameId)}
                                 >
                                     {csvUploadLoading || addStatsLoading ? 'Processing...' : 
@@ -1102,9 +1160,9 @@ const StatsPage: React.FC = () =>
 
             {/* Stage Modal */}
             {isStageModalOpen && csvUploadMode === 'create' && (
-                <div className="modal-overlay">
-                    <div className="modal" style={{ maxWidth: '400px' }}>
-                        <h2 className="modal-title">Region, Season &amp; Stage</h2>
+                <div className={modalOverlay}>
+                    <div className={modalBoxDefault} style={{ maxWidth: '400px' }}>
+                        <h2 className={modalTitle}>Region, Season &amp; Stage</h2>
                         <RegionSeasonFields
                             regions={formRegionSeason.regions}
                             regionsLoading={formRegionSeason.regionsLoading}
@@ -1140,7 +1198,7 @@ const StatsPage: React.FC = () =>
                                     setFailureModal(null);
                                     setGameCreationError("");
                                 }} 
-                                className="create-button"
+                                className={createButton}
                                 style={{ background: '#dc3545', color: 'white' }}
                                 disabled={csvUploadLoading}
                             >
@@ -1148,7 +1206,7 @@ const StatsPage: React.FC = () =>
                             </button>
                             <button 
                                 onClick={handleStageSubmit} 
-                                className="create-button" 
+                                className={createButton} 
                                 disabled={!stageInput.trim() || csvUploadLoading}
                             >
                                 {csvUploadLoading ? 'Creating...' : 'Submit'}
@@ -1158,39 +1216,39 @@ const StatsPage: React.FC = () =>
                 </div>
             )}
             {gameCreationError && (
-                <div className="modal-overlay">
-                    <div className="modal" style={{ maxWidth: '400px' }}>
-                        <h2 className="modal-title">Error</h2>
-                        <p className="modal-error">{gameCreationError}</p>
-                        <button onClick={() => setGameCreationError("")} className="create-button">Close</button>
+                <div className={modalOverlay}>
+                    <div className={modalBoxDefault} style={{ maxWidth: '400px' }}>
+                        <h2 className={modalTitle}>Error</h2>
+                        <p className={modalError}>{gameCreationError}</p>
+                        <button onClick={() => setGameCreationError("")} className={createButton}>Close</button>
                     </div>
                 </div>
             )}
 
             {/* Missing Players Error Modal */}
             {missingPlayersError && (
-                <div className="modal-overlay">
-                    <div className="modal" style={{ maxWidth: '400px' }}>
-                        <h2 className="modal-title">Missing Players</h2>
-                        <p className="modal-error">{missingPlayersError}</p>
-                        <button onClick={() => setMissingPlayersError(null)} className="create-button">Close</button>
+                <div className={modalOverlay}>
+                    <div className={modalBoxDefault} style={{ maxWidth: '400px' }}>
+                        <h2 className={modalTitle}>Missing Players</h2>
+                        <p className={modalError}>{missingPlayersError}</p>
+                        <button onClick={() => setMissingPlayersError(null)} className={createButton}>Close</button>
                     </div>
                 </div>
             )}
 
             {/* Generic Failure Modal */}
             {failureModal && (
-                <div className="modal-overlay">
-                    <div className="modal" style={{ maxWidth: '400px' }}>
-                        <h2 className="modal-title">Upload Failed</h2>
-                        <p className="modal-error">{failureModal}</p>
-                        <button onClick={() => setFailureModal(null)} className="create-button">Close</button>
+                <div className={modalOverlay}>
+                    <div className={modalBoxDefault} style={{ maxWidth: '400px' }}>
+                        <h2 className={modalTitle}>Upload Failed</h2>
+                        <p className={modalError}>{failureModal}</p>
+                        <button onClick={() => setFailureModal(null)} className={createButton}>Close</button>
                     </div>
                 </div>
             )}
 
             {/* Results Counter */}
-            <div className="results-counter" style={{ marginBottom: '1rem' }}>
+            <div className={`${resultsCounter} mb-[1rem]`}>
                 {total > 0 ? (
                     `Showing ${((currentPage - 1) * STATS_PER_PAGE) + 1}-${Math.min(currentPage * STATS_PER_PAGE, total)} of ${total} stats`
                 ) : (

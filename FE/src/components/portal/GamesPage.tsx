@@ -10,9 +10,8 @@ import { useRegion } from "../../context/regionContext";
 import type { Game, CreateGameInput, ChallongeImportResult } from "../../types/interfaces";
 import ChallongeImport from "../ChallongeImport";
 import GameStatUploadModal from "./GameStatUploadModal";
-import "../../styles/GamesPage.css";       // table & button styling
-import "../../styles/PlayersPage.css";     // custom modal styling
-import "../../styles/PortalPlayersPage.css"; // portal-specific styles
+import "../../styles/GamesPage.css";
+import "../../styles/PortalPlayersPage.css";
 import SearchBar from "../Searchbar";
 import Pagination from "../Pagination";
 import Modal from "../ui/Modal";
@@ -23,6 +22,15 @@ import { getStageOptionsForPhase } from "../../constants/gameStages";
 import RegionSeasonFields from "../ui/RegionSeasonFields";
 import { useFormRegionSeason } from "../../hooks/useFormRegionSeason";
 import { useDebouncedValue } from "../../hooks/useDebouncedValue";
+import {
+  createButton,
+  filterGroup,
+  playersControls,
+  playersControlsLeft,
+  playersControlsRight,
+  portalMain,
+  resultsCounter,
+} from "./portalPageStyles";
 
 type EditField = "name" | "seasonId" | "stage" | "phase" | "bracket" | "team1Score" | "team2Score" | "date" | "videoUrl" | "status";
 
@@ -35,6 +43,37 @@ interface EditingState {
 interface GameColumn extends TableColumn<Game> {}
 
 const GAMES_PER_PAGE = 10;
+
+const createButtonGames = `${createButton} inline-block mb-[1.5rem]`;
+
+const gameBtnRemove =
+  "bg-[#dc2626] text-white border-none rounded-[0.25rem] p-[0.4rem] text-[0.875rem] cursor-pointer whitespace-nowrap";
+
+const tableInput =
+  "w-full py-[0.25rem] px-[0.5rem] border border-[#e2e8f0] rounded-[0.375rem] text-[1rem] " +
+  "focus:outline-none focus:border-accent focus:bg-[#f8fafc]";
+
+/* Column widths are the effective cascade of GamesPage.css then PlayersPage.css
+   (GamesPage imported both). text-align and last-row border stay in the remnant
+   because `.ui-table th, td` in ui.css would beat utilities for those. */
+const gamesTableWrap =
+  "users-table mt-[1.5rem] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.05)] rounded-[0.375rem] overflow-hidden " +
+  "[&_tr:hover_td]:bg-[#f8fafc] " +
+  "[&_th:nth-child(1)]:w-[60px] [&_td:nth-child(1)]:w-[60px] " +
+  "[&_th:nth-child(2)]:w-[100px] [&_th:nth-child(2)]:max-w-[100px] [&_th:nth-child(2)]:truncate " +
+  "[&_td:nth-child(2)]:w-[100px] [&_td:nth-child(2)]:max-w-[100px] [&_td:nth-child(2)]:truncate " +
+  "[&_th:nth-child(3)]:min-w-[100px] [&_th:nth-child(3)]:w-[80px] [&_th:nth-child(3)]:max-w-[80px] [&_th:nth-child(3)]:truncate " +
+  "[&_td:nth-child(3)]:min-w-[100px] [&_td:nth-child(3)]:w-[80px] [&_td:nth-child(3)]:max-w-[80px] [&_td:nth-child(3)]:truncate " +
+  "[&_th:nth-child(4)]:min-w-[100px] [&_th:nth-child(4)]:w-[400px] [&_th:nth-child(4)]:max-w-[400px] [&_th:nth-child(4)]:whitespace-normal [&_th:nth-child(4)]:[overflow-wrap:anywhere] " +
+  "[&_td:nth-child(4)]:min-w-[100px] [&_td:nth-child(4)]:w-[400px] [&_td:nth-child(4)]:max-w-[400px] [&_td:nth-child(4)]:whitespace-normal [&_td:nth-child(4)]:[overflow-wrap:anywhere] " +
+  "[&_th:nth-child(5)]:w-[70px] [&_td:nth-child(5)]:w-[70px] " +
+  "[&_th:nth-child(6)]:w-[70px] [&_td:nth-child(6)]:w-[70px] " +
+  "[&_th:nth-child(7)]:w-[120px] [&_td:nth-child(7)]:w-[120px] " +
+  "[&_th:nth-child(8)]:min-w-[160px] [&_th:nth-child(8)]:max-w-[240px] " +
+  "[&_td:nth-child(8)]:min-w-[160px] [&_td:nth-child(8)]:max-w-[240px] " +
+  "[&_th:nth-child(9)]:w-[100px] [&_td:nth-child(9)]:w-[100px] " +
+  "[&_th:last-child]:min-w-[8rem] [&_th:last-child]:align-middle " +
+  "[&_td:last-child]:min-w-[8rem] [&_td:last-child]:align-middle";
 
 const GamesPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -305,6 +344,7 @@ const GamesPage: React.FC = () => {
             type="text"
             value={editing.value}
             onChange={e => setEditing({ ...editing, value: e.target.value })}
+            className={tableInput}
             onBlur={commitEdit}
             onKeyDown={e => e.key === 'Enter' && commitEdit()}
             autoFocus
@@ -378,6 +418,7 @@ const GamesPage: React.FC = () => {
             type="number"
             value={editing.value}
             onChange={e => setEditing({ ...editing, value: e.target.value })}
+            className={tableInput}
             onBlur={commitEdit}
             onKeyDown={e => e.key === 'Enter' && commitEdit()}
             autoFocus
@@ -395,6 +436,7 @@ const GamesPage: React.FC = () => {
             type="text"
             value={editing.value}
             onChange={e => setEditing({ ...editing, value: e.target.value })}
+            className={tableInput}
             onBlur={commitEdit}
             onKeyDown={e => e.key === 'Enter' && commitEdit()}
             autoFocus
@@ -427,6 +469,7 @@ const GamesPage: React.FC = () => {
             type="number"
             value={editing.value}
             onChange={e => setEditing({ ...editing, value: e.target.value })}
+            className={tableInput}
             onBlur={commitEdit}
             onKeyDown={e => e.key === 'Enter' && commitEdit()}
             autoFocus
@@ -444,6 +487,7 @@ const GamesPage: React.FC = () => {
             type="number"
             value={editing.value}
             onChange={e => setEditing({ ...editing, value: e.target.value })}
+            className={tableInput}
             onBlur={commitEdit}
             onKeyDown={e => e.key === 'Enter' && commitEdit()}
             autoFocus
@@ -461,6 +505,7 @@ const GamesPage: React.FC = () => {
             type="date"
             value={editing.value}
             onChange={e => setEditing({ ...editing, value: e.target.value })}
+            className={tableInput}
             onBlur={commitEdit}
             onKeyDown={e => e.key === 'Enter' && commitEdit()}
             autoFocus
@@ -487,6 +532,7 @@ const GamesPage: React.FC = () => {
             type="text"
             value={editing.value}
             onChange={e => setEditing({ ...editing, value: e.target.value })}
+            className={tableInput}
             onBlur={commitEdit}
             onKeyDown={e => e.key === 'Enter' && commitEdit()}
             autoFocus
@@ -500,14 +546,14 @@ const GamesPage: React.FC = () => {
       header: "Actions",
       render: (g) => (
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-          <button onClick={() => setStatUploadGame(g)} className="create-button" style={{ padding: '0.25rem 0.5rem' }}>
+          <button onClick={() => setStatUploadGame(g)} className={createButtonGames} style={{ padding: '0.25rem 0.5rem' }}>
             Upload Stats
           </button>
           {user?.role === "superadmin" && (
             <button
               onClick={() => handleDelete(g.id)}
               disabled={deleting}
-              className="game-btn-remove"
+              className={gameBtnRemove}
             >
               Delete
             </button>
@@ -521,14 +567,14 @@ const GamesPage: React.FC = () => {
   if (error) return <p>Error: {error}</p>;
 
   return (
-    <div className="portal-main">
+    <div className={portalMain}>
       {/* Search and Controls */}
-      <div className="players-controls">
-        <div className="players-controls-left">
-          <button className="create-button" onClick={openModal}>Create Game</button>
-          <button className="create-button" onClick={() => setIsImportModalOpen(true)}>Import from Challonge</button>
+      <div className={playersControls}>
+        <div className={playersControlsLeft}>
+          <button className={createButtonGames} onClick={openModal}>Create Game</button>
+          <button className={createButtonGames} onClick={() => setIsImportModalOpen(true)}>Import from Challonge</button>
         </div>
-        <div className="players-controls-right">
+        <div className={playersControlsRight}>
           <SearchBar onSearch={handleSearch} placeholder="Search games..." />
           <Pagination
             currentPage={currentPage}
@@ -540,7 +586,7 @@ const GamesPage: React.FC = () => {
 
       {/* Filters */}
       <FilterBar onReset={(searchQuery || seasonFilter || stageFilter || statusFilter || phaseFilter || bracketFilter) ? clearFilters : undefined}>
-        <div className="filter-group">
+        <div className={filterGroup}>
           <select
             className="filter-select ui-filter-select"
             aria-label="Season"
@@ -556,7 +602,7 @@ const GamesPage: React.FC = () => {
           </select>
         </div>
 
-        <div className="filter-group">
+        <div className={filterGroup}>
           <select
             className="filter-select ui-filter-select"
             aria-label="Stage"
@@ -572,7 +618,7 @@ const GamesPage: React.FC = () => {
           </select>
         </div>
 
-        <div className="filter-group">
+        <div className={filterGroup}>
           <select className="filter-select ui-filter-select" aria-label="Status" value={statusFilter} onChange={(e) => handleStatusFilterChange(e.target.value)}>
             <option value="">All Statuses</option>
             <option value="scheduled">Scheduled</option>
@@ -580,7 +626,7 @@ const GamesPage: React.FC = () => {
           </select>
         </div>
 
-        <div className="filter-group">
+        <div className={filterGroup}>
           <select className="filter-select ui-filter-select" aria-label="Phase" value={phaseFilter} onChange={(e) => handlePhaseFilterChange(e.target.value)}>
             <option value="">All Phases</option>
             <option value="pre_season">Pre-Season</option>
@@ -589,7 +635,7 @@ const GamesPage: React.FC = () => {
           </select>
         </div>
 
-        <div className="filter-group">
+        <div className={filterGroup}>
           <select className="filter-select ui-filter-select" aria-label="Bracket" value={bracketFilter} onChange={(e) => handleBracketFilterChange(e.target.value)}>
             <option value="">All Brackets</option>
             <option value="winners">Winners</option>
@@ -598,7 +644,7 @@ const GamesPage: React.FC = () => {
         </div>
       </FilterBar>
 
-      <div className="results-counter">
+      <div className={resultsCounter}>
         Showing {total === 0 ? 0 : ((currentPage - 1) * GAMES_PER_PAGE) + 1}-{Math.min(currentPage * GAMES_PER_PAGE, total)} of {total} games
       </div>
 
@@ -806,7 +852,7 @@ const GamesPage: React.FC = () => {
       />
 
       {/* Games Table */}
-      <div className="users-table" style={{ marginTop: "1.5rem" }}>
+      <div className={gamesTableWrap}>
         <Table
           columns={columns}
           rows={localGames}

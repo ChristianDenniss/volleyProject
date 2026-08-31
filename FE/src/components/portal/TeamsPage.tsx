@@ -10,6 +10,15 @@ import { useRegion } from "../../context/regionContext";
 import type { Team } from "../../types/interfaces";
 import "../../styles/PlayersPage.css";
 import "../../styles/PortalPlayersPage.css";
+import {
+  createButton,
+  filterGroup,
+  playersControls,
+  playersControlsRight,
+  portalMain,
+  resultsCounter,
+  textMuted,
+} from "./portalPageStyles";
 import SearchBar from "../Searchbar";
 import Pagination from "../Pagination";
 import Modal from "../ui/Modal";
@@ -378,7 +387,7 @@ const TeamsPage: React.FC = () => {
               Delete
             </button>
           ) : (
-            <span className="text-muted">No permission</span>
+            <span className={textMuted}>No permission</span>
           )}
           {deleteError && (
             <p className="error" style={{ color: "red", marginTop: "0.25rem" }}>
@@ -394,13 +403,13 @@ const TeamsPage: React.FC = () => {
   if (error) return <p>Error: {error}</p>;
 
   return (
-    <div className="portal-main">
+    <div className={portalMain}>
       {/* Search and Controls */}
-      <div className="players-controls">
-        <button className="create-button" onClick={openModal}>
+      <div className={playersControls}>
+        <button className={createButton} onClick={openModal}>
           Create Team
         </button>
-        <div className="players-controls-right">
+        <div className={playersControlsRight}>
           <SearchBar onSearch={handleSearch} placeholder="Search teams..." />
           <Pagination
             currentPage={currentPage}
@@ -412,7 +421,7 @@ const TeamsPage: React.FC = () => {
 
       {/* Filters */}
       <FilterBar onReset={clearFilters}>
-        <div className="filter-group">
+        <div className={filterGroup}>
           <select
             className="filter-select ui-filter-select"
             aria-label="Season"
@@ -428,7 +437,7 @@ const TeamsPage: React.FC = () => {
           </select>
         </div>
 
-        <div className="results-counter">
+        <div className={resultsCounter}>
           Showing {total === 0 ? 0 : ((currentPage - 1) * TEAMS_PER_PAGE) + 1}-{Math.min(currentPage * TEAMS_PER_PAGE, total)} of {total} teams
         </div>
       </FilterBar>
@@ -441,7 +450,7 @@ const TeamsPage: React.FC = () => {
           </p>
         )}
 
-        <form onSubmit={handleCreate} className="team-create-form">
+        <form onSubmit={handleCreate} className="team-create-form flex flex-col gap-[1rem]">
           <label>
             Name*
             <input
@@ -491,7 +500,7 @@ const TeamsPage: React.FC = () => {
           <button
             type="submit"
             disabled={creating}
-            className="player-btn-submit"
+            className="py-[0.5rem] px-[1rem] rounded-[0.25rem] bg-brand-primary text-white border-none text-[0.875rem] cursor-pointer w-auto inline-block h-auto mt-[0.25rem] disabled:bg-[#63686f] disabled:cursor-not-allowed"
           >
             {creating ? "Creating…" : "Submit"}
           </button>

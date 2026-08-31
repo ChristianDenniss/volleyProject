@@ -136,8 +136,8 @@ const PortalLayout: React.FC = () => {
       {/* Nested Suspense keeps the sidebar mounted while a lazy page chunk loads,
           so navigating inside the portal doesn't unmount and remount the shell.
 
-          `portal-main` stays as a class: PortalPlayersPage.css reaches into this
-          element with `.portal-main .ui-filter-bar`. */}
+          `portal-main` stays as a class: ui.css and the PortalPlayersPage.css
+          remnant reach into this element (navy pill selects, filter-bar gap). */}
       <main className="portal-main py-[2rem] px-[2.5rem] bg-[#f8fafc] overflow-y-auto min-w-0 upto-md:p-[1.5rem]">
         <Suspense fallback={<div className="page-loading" role="status">Loading…</div>}>
           <Outlet />

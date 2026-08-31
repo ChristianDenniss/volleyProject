@@ -8,8 +8,15 @@ import SearchBar from "../Searchbar";
 import Pagination from "../Pagination";
 import FilterBar from "../ui/FilterBar";
 import Table from "../ui/Table";
-import "../../styles/UsersPage.css";
 import "../../styles/PortalPlayersPage.css";
+import {
+  filterGroup,
+  playersControls,
+  playersControlsRight,
+  portalMain,
+  resultsCounter,
+  textMuted,
+} from "./portalPageStyles";
 
 const USERS_PER_PAGE = 10;
 const ALL_ROLES: User["role"][] = ["user", "captain", "vice_captain", "court_captain", "admin", "superadmin"];
@@ -83,13 +90,13 @@ const UsersPage: React.FC = () => {
       render: (u: UserRow) => {
         // 1) If this is the current user:
         if (u.id === me?.id) {
-          return <span className="text-muted">This is you</span>;
+          return <span className={textMuted}>This is you</span>;
         }
 
         // 2) If same role as current user:
         if (u.role === me?.role) {
           return (
-            <span className="text-muted">
+            <span className={textMuted}>
               Cannot moderate player of same role
             </span>
           );
@@ -101,7 +108,7 @@ const UsersPage: React.FC = () => {
         );
 
         if (options.length === 0) {
-          return <span className="text-muted">No actions available</span>;
+          return <span className={textMuted}>No actions available</span>;
         }
 
         return (
@@ -138,10 +145,10 @@ const UsersPage: React.FC = () => {
   if (error)   return <p>Error: {error}</p>;
 
   return (
-    <div className="portal-main">
+    <div className={portalMain}>
       {/* Search and Controls */}
-      <div className="players-controls">
-        <div className="players-controls-right">
+      <div className={playersControls}>
+        <div className={playersControlsRight}>
           <SearchBar onSearch={handleSearch} placeholder="Search users..." />
           <Pagination
             currentPage={currentPage}
@@ -153,7 +160,7 @@ const UsersPage: React.FC = () => {
 
       {/* Filters */}
       <FilterBar onReset={clearFilters}>
-        <div className="filter-group">
+        <div className={filterGroup}>
           <select
             className="filter-select ui-filter-select"
             aria-label="Role"
@@ -170,7 +177,7 @@ const UsersPage: React.FC = () => {
         </div>
       </FilterBar>
 
-      <div className="results-counter">
+      <div className={resultsCounter}>
         Showing {total === 0 ? 0 : ((currentPage - 1) * USERS_PER_PAGE) + 1}-{Math.min(currentPage * USERS_PER_PAGE, total)} of {total} users
       </div>
 

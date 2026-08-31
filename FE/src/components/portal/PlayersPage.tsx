@@ -8,9 +8,16 @@ import { useDeletePlayers }               from "../../hooks/allDelete";
 import { useAuth }                        from "../../context/authContext";
 import { useRegion }                      from "../../context/regionContext";
 import type { Player }                    from "../../types/interfaces";
-import "../../styles/UsersPage.css";       // table & button styling
-import "../../styles/PlayersPage.css";     // custom "submit players" modal styling
-import "../../styles/PortalPlayersPage.css"; // portal-specific styles
+import "../../styles/PlayersPage.css";
+import "../../styles/PortalPlayersPage.css";
+import {
+  createButton,
+  playersControls,
+  playersControlsRight,
+  portalMain,
+  resultsCounter,
+  textMuted,
+} from "./portalPageStyles";
 import SearchBar                          from "../Searchbar";
 import Pagination                         from "../Pagination";
 import Modal                              from "../ui/Modal";
@@ -34,6 +41,44 @@ interface BatchFormRow {
 }
 
 const PLAYERS_PER_PAGE = 10;
+
+const playerModalError = "text-[#dc2626] mb-[0.5rem] text-[0.875rem]";
+
+const playerForm = "player-form flex flex-col gap-[1rem]";
+
+const playerFormHeader =
+  "grid grid-cols-[minmax(140px,1fr)_minmax(120px,1fr)_minmax(220px,2fr)_auto] gap-[0.75rem] items-center " +
+  "text-[0.8125rem] font-semibold text-text-muted pb-[0.25rem] border-b border-border " +
+  "upto-md:hidden";
+
+const playerFormRows = "flex flex-col gap-[0.75rem]";
+
+const playerFormRow =
+  "grid grid-cols-[minmax(140px,1fr)_minmax(120px,1fr)_minmax(220px,2fr)_auto] gap-[0.75rem] items-center " +
+  "upto-md:grid-cols-[1fr] upto-md:p-[0.75rem] upto-md:border upto-md:border-border upto-md:rounded-[0.5rem]";
+
+const playerFormRowSpacer = "w-[4.75rem] upto-md:hidden";
+
+const playerInput =
+  "py-[0.5rem] px-[0.75rem] border border-[#e2e8f0] rounded-[0.375rem] text-[0.875rem] w-full min-w-0 box-border " +
+  "focus:outline-none focus:border-brand-primary focus:shadow-[0_0_0_2px_rgba(45,60,80,0.1)]";
+
+const playerInputTeams = `${playerInput} min-w-0`;
+
+const playerBtnRemove =
+  "bg-[#dc2626] text-white border-none rounded-[0.25rem] py-[0.5rem] px-[0.75rem] text-[0.875rem] " +
+  "cursor-pointer whitespace-nowrap self-center h-fit upto-md:justify-self-start";
+
+const playerFormActions =
+  "flex flex-wrap gap-[0.75rem] items-center pt-[0.75rem] border-t border-border";
+
+const playerBtnAdd =
+  "bg-brand-primary text-white border-none rounded-[0.25rem] py-[0.5rem] px-[1rem] text-[0.875rem] " +
+  "cursor-pointer w-auto inline-block h-auto";
+
+const playerBtnSubmit =
+  "py-[0.5rem] px-[1rem] rounded-[0.25rem] bg-brand-primary text-white border-none text-[0.875rem] " +
+  "cursor-pointer w-auto inline-block h-auto disabled:bg-[#63686f] disabled:cursor-not-allowed";
 
 const PlayersPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -257,7 +302,7 @@ const PlayersPage: React.FC = () => {
         <OverflowListCell
           items={p.teams?.map((team) => team.name) ?? []}
           maxVisible={2}
-          emptyLabel={<span className="text-muted">No teams</span>}
+          emptyLabel={<span className={textMuted}>No teams</span>}
           popoverTitle="Teams"
         />
       ),
@@ -284,7 +329,7 @@ const PlayersPage: React.FC = () => {
               Delete
             </button>
           ) : (
-            <span className="text-muted">No permission</span>
+            <span className={textMuted}>No permission</span>
           )}
           {deleteError && (
             <p className="error" style={{ color: "red", marginTop: "0.25rem" }}>
@@ -300,16 +345,16 @@ const PlayersPage: React.FC = () => {
   if (error)   return <p>Error: {error}</p>;
 
   return (
-    <div className="portal-main">
+    <div className={portalMain}>
       {/* Search and Controls */}
-      <div className="players-controls">
-        <button className="create-button" onClick={() => {
+      <div className={playersControls}>
+        <button className={createButton} onClick={() => {
           formRegionSeason.initFromActiveRegion();
           setIsModalOpen(true);
         }}>
           Create Players
         </button>
-        <div className="players-controls-right">
+        <div className={playersControlsRight}>
           <SearchBar onSearch={handleSearch} placeholder="Search players..." />
           <Pagination
             currentPage={currentPage}
@@ -319,7 +364,7 @@ const PlayersPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="results-counter">
+      <div className={resultsCounter}>
         Showing {total === 0 ? 0 : ((currentPage - 1) * PLAYERS_PER_PAGE) + 1}-{Math.min(currentPage * PLAYERS_PER_PAGE, total)} of {total} players
       </div>
 
@@ -335,13 +380,13 @@ const PlayersPage: React.FC = () => {
         title="Batch Create Players"
       >
         {formError && (
-          <p className="player-modal-error">{formError}</p>
+          <p className={playerModalError}>{formError}</p>
         )}
         {batchError && (
-          <p className="player-modal-error">{batchError}</p>
+          <p className={playerModalError}>{batchError}</p>
         )}
 
-        <form onSubmit={handleBatchCreate} className="player-form">
+        <form onSubmit={handleBatchCreate} className={playerForm}>
           <RegionSeasonFields
             regions={formRegionSeason.regions}
             regionsLoading={formRegionSeason.regionsLoading}
@@ -354,20 +399,20 @@ const PlayersPage: React.FC = () => {
             seasonValueKey="id"
           />
 
-          <div className="player-form-header" aria-hidden="true">
+          <div className={playerFormHeader} aria-hidden="true">
             <span>Name*</span>
             <span>Position*</span>
             <span>Teams</span>
             <span />
           </div>
 
-          <div className="player-form-rows">
+          <div className={playerFormRows}>
             {batchRows.map((row, idx) => (
-              <div key={idx} className="player-form-row">
+              <div key={idx} className={playerFormRow}>
                 <input
                   type="text"
                   placeholder="Player name"
-                  className="player-input"
+                  className={playerInput}
                   value={row.name}
                   onChange={(e) => {
                     const updated = [...batchRows];
@@ -380,7 +425,7 @@ const PlayersPage: React.FC = () => {
                 <input
                   type="text"
                   placeholder="e.g. OH, S, MB"
-                  className="player-input"
+                  className={playerInput}
                   value={row.position}
                   onChange={(e) => {
                     const updated = [...batchRows];
@@ -393,7 +438,7 @@ const PlayersPage: React.FC = () => {
                 <input
                   type="text"
                   placeholder="Team names (comma-separated)"
-                  className="player-input player-input-teams"
+                  className={playerInputTeams}
                   value={row.teamNamesCSV}
                   onChange={(e) => {
                     const updated = [...batchRows];
@@ -405,22 +450,22 @@ const PlayersPage: React.FC = () => {
                 {batchRows.length > 1 ? (
                   <button
                     type="button"
-                    className="player-btn-remove"
+                    className={playerBtnRemove}
                     onClick={() => removeRow(idx)}
                   >
                     Remove
                   </button>
                 ) : (
-                  <span className="player-form-row-spacer" />
+                  <span className={playerFormRowSpacer} />
                 )}
               </div>
             ))}
           </div>
 
-          <div className="player-form-actions">
+          <div className={playerFormActions}>
             <button
               type="button"
-              className="player-btn-add"
+              className={playerBtnAdd}
               onClick={addRow}
             >
               + Add Another
@@ -428,7 +473,7 @@ const PlayersPage: React.FC = () => {
 
             <button
               type="submit"
-              className="player-btn-submit"
+              className={playerBtnSubmit}
               disabled={batchLoading}
             >
               {batchLoading ? "Creating…" : "Submit All"}
