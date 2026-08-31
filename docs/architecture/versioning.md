@@ -1,3 +1,15 @@
+---
+title: Versioning
+type: architecture
+status: current
+area: [ci-cd, docs]
+created: 2026-08-31
+verified: 2026-08-31
+summary: Semantic-release from Conventional Commits on main — types, merge strategy, and what the Release workflow publishes.
+related:
+  - CONTRIBUTING.md
+---
+
 # Versioning
 
 Volleyball 4.2 versions itself **automatically**. You never edit a version
@@ -137,16 +149,19 @@ Until the first release lands, `git tag -l 'v*'` is empty and Releases shows
 
 ## 4. Standard workflow — shipping a change
 
-1. Branch off `main`:
+1. Branch off `main` with a type prefix (same types as the PR title):
    ```bash
    git checkout main && git pull
-   git checkout -b feat/short-description
+   git checkout -b feat/131-short-description
    ```
-2. Commit using the convention:
+   Hyphens work too: `fix-136-header-alt`.
+2. Open a PR whose **title** is a Conventional Commit. That title is squash-merged
+   onto `main` and is what semantic-release reads:
    ```
    feat: add a per-season win/loss column to the team page
    ```
-3. Open a PR, get it approved, merge.
+   CI job **PR conventions** rejects titles and branches that do not match.
+3. Get a code-owner review, merge.
 4. The release workflow publishes the next version (a `feat:` produces a
    **minor** bump — e.g. `1.2.0` → `1.3.0`).
 

@@ -1,3 +1,8 @@
+<!-- Title must be a Conventional Commit. CI ("PR conventions") will fail otherwise.
+     feat: / fix: / perf: / revert: / chore: / docs: / style: / refactor: / test: / ci: / build:
+     Example: feat: add a skip-to-content link
+     Branch: feat/131-login-css  or  fix-136-header-alt -->
+
 ## What
 
 <!-- 1–3 bullets. Link the issue with Fixes #N when this PR fully resolves it. -->
@@ -11,6 +16,3 @@
 ## Notes
 
 <!-- Breaking change? Screenshot? Anything the reviewer should not miss. -->
-
-<!-- PR title must be a Conventional Commit (feat: / fix: / docs: / …) if this
-     will be squash-merged — that title is what the release job reads. -->

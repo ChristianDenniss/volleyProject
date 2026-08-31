@@ -1,0 +1,51 @@
+name: PR conventions
+
+# Title and branch naming are what squash-merge + semantic-release read.
+# Types match .releaserc.json. This workflow is pull_request-only so it
+# does not run on pushes to main.
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened, ready_for_review]
+
+jobs:
+  conventions:
+    name: PR conventions
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    steps:
+      - name: Validate PR title
+        uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            perf
+            revert
+            chore
+            docs
+            style
+            refactor
+            test
+            build
+            ci
+          requireScope: false
+          subjectPattern: .+
+          subjectPatternError: |
+            The PR title must be a Conventional Commit, e.g.
+            "feat: add skip-to-content link" or "fix: restore Login.css import".
+            Allowed types: feat, fix, perf, revert, chore, docs, style, refactor, test, build, ci.
+
+      - name: Validate branch name
+        if: github.actor != 'dependabot[bot]'
+        env:
+          BRANCH: ${{ github.head_ref }}
+        run: |
+          if [[ ! "$BRANCH" =~ ^(feat|fix|perf|revert|chore|docs|style|refactor|test|build|ci)[/-] ]]; then
+            echo "Branch must start with a Conventional Commit type."
+            echo "Examples: feat/131-login-css   fix-136-header-alt   docs/fe-readme"
+            echo "Got: $BRANCH"
+            exit 1
+          fi
