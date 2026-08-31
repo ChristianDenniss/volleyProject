@@ -1,34 +1,3 @@
-/**
- * VectorGraphPage — the 3D player-similarity explorer: every player in a season is placed in
- * 13-dimensional statistical space, projected to three principal components, and rendered as an
- * orbitable point cloud coloured by play-style archetype.
- * The panels floating over the canvas (search, archetype legend, player info) are absolutely
- * positioned overlays rather than page chrome, which is why this page's layout is hand-built
- * instead of using PageContainer's stacked sections.
- * Lives in `components/`; routed at /vector-graph. Archetype colours come from the
- * `--archetype-*` tokens via `analytics/playerArchetypes`.
- */
-
-import PageContainer from '@/components/ui/layout/PageContainer';
-import PageHeader from '@/components/ui/layout/PageHeader';
-import Card from '@/components/ui/layout/Card';
-import StatCard from '@/components/ui/layout/StatCard';
-import FormField from '@/components/ui/inputs/FormField';
-import Select from '@/components/ui/inputs/Select';
-import TextInput from '@/components/ui/inputs/TextInput';
-import ErrorNotice from '@/components/ui/feedback/ErrorNotice';
-import EmptyState from '@/components/ui/feedback/EmptyState';
-import { PageLoader } from '@/components/ui/feedback/LoadingSpinner';
-
-/**
- * A PCA feature's emphasis, banded by how strongly it loads onto the component.
- * Three bands rather than a continuous weight, so the type stays on the app's font scale.
- */
-function featureWeightClass(weight: number): string {
-  if (weight > 0.7) return 'font-bold';
-  if (weight > 0.4) return 'font-semibold';
-  return 'font-medium';
-}
 // src/components/VectorGraphPage.tsx
 
 import React, { useState, useMemo, useRef, useEffect } from "react";
@@ -39,6 +8,7 @@ import { useFetchPlayersWithStats, useFetchSeasons } from "../hooks/useVectorGra
 import { buildSeasonVectors, computePCA3D, VECTOR_FEATURE_ORDER } from "../analytics/statsVectorization";
 import type { PlayerSeasonVectorRow } from "../analytics/statsVectorization";
 import { classifyPlayerArchetype, type PlayerArchetype } from "../analytics/playerArchetypes";
+import "../styles/VectorGraphPage.css";
 
 const DEFAULT_MIN_SETS = 5;
 
@@ -102,11 +72,11 @@ function PlayerPoint({
 
   const scale = isSelected ? 1.5 : hovered ? 1.2 : 1;
   // Color priority: selected > hovered > archetype color > default gray
-  const color = isSelected
-    ? "#ff6b6b"
-    : hovered
-    ? "#4ecdc4"
-    : archetype
+  const color = isSelected 
+    ? "#ff6b6b" 
+    : hovered 
+    ? "#4ecdc4" 
+    : archetype 
     ? archetype.color
     : "#95a5a6";
   // Show label if selected (persistent) OR if hovered and closest
@@ -125,11 +95,9 @@ function PlayerPoint({
       <meshStandardMaterial color={color} />
       {showLabel && (
         <Html distanceFactor={10} position={[0, 0.3, 0]}>
-          <div className="pointer-events-none whitespace-nowrap rounded-control border border-border bg-surface-elevated px-2 py-1 text-center shadow-[var(--shadow-sm)]">
-            <div className="text-xs font-semibold text-content">{vectorRow.playerName}</div>
-            <div className="text-[0.625rem] text-content-tertiary">
-              Sets: {vectorRow.setsPlayed}
-            </div>
+          <div className="player-label">
+            <div className="player-name">{vectorRow.playerName}</div>
+            <div className="player-sets">Sets: {vectorRow.setsPlayed}</div>
           </div>
         </Html>
       )}
@@ -246,10 +214,8 @@ function VectorGraph3D({
   const [popupPosition, setPopupPosition] = useState<{ left: number; top: number } | null>(null);
   const [legendHidden, setLegendHidden] = useState<boolean>(false);
   const legendRef = useRef<HTMLDivElement>(null);
-  // Legend rows are <button>s now (they are clickable), so the map is typed to the
-  // common element interface rather than HTMLDivElement.
-  const itemRefs = useRef<Map<string, HTMLElement>>(new Map());
-
+  const itemRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  
   // Update popup position when clicked archetype changes
   useEffect(() => {
     if (clickedArchetype && legendRef.current) {
@@ -266,7 +232,7 @@ function VectorGraph3D({
       setPopupPosition(null);
     }
   }, [clickedArchetype]);
-
+  
   // Update popup position when clicked archetype changes
   useEffect(() => {
     if (clickedArchetype && legendRef.current) {
@@ -283,7 +249,7 @@ function VectorGraph3D({
       setPopupPosition(null);
     }
   }, [clickedArchetype]);
-
+  
   const points = useMemo(() => {
     if (vectorRows.length === 0) return [];
     return vectorRows.map((row, idx) => {
@@ -355,7 +321,7 @@ function VectorGraph3D({
     if (clickedPlayer) {
       return;
     }
-
+    
     if (closestHoveredPlayerId) {
       const player = vectorRows.find(row => row.playerId === closestHoveredPlayerId);
       setHoveredPlayer(player || null);
@@ -460,7 +426,7 @@ function VectorGraph3D({
     }
 
     const query = searchQuery.toLowerCase().trim();
-    const matches = vectorRows.filter(row =>
+    const matches = vectorRows.filter(row => 
       row.playerName.toLowerCase().includes(query)
     );
     setSearchResults(matches);
@@ -478,39 +444,39 @@ function VectorGraph3D({
     // Move camera to focus on the player
     const [px, py, pz] = playerPoint.position;
     const target = new THREE.Vector3(px, py, pz);
-
+    
     // Calculate a good camera position (offset from the player)
     const offsetDistance = maxRange * 0.8;
     const offset = new THREE.Vector3(offsetDistance, offsetDistance, offsetDistance);
     const newCameraPos = target.clone().add(offset);
-
+    
     // Animate camera to the new position
     if (controlsRef.current && cameraRef.current) {
       // Set the target (what the camera looks at)
       controlsRef.current.target.copy(target);
-
+      
       // Animate camera position
       const startPos = cameraRef.current.position.clone();
       const duration = 1000; // 1 second
       const startTime = Date.now();
-
+      
       const animate = () => {
         const elapsed = Date.now() - startTime;
         const progress = Math.min(elapsed / duration, 1);
         // Easing function (ease-out)
         const eased = 1 - Math.pow(1 - progress, 3);
-
+        
         cameraRef.current!.position.lerpVectors(startPos, newCameraPos, eased);
         controlsRef.current!.update();
-
+        
         if (progress < 1) {
           requestAnimationFrame(animate);
         }
       };
-
+      
       animate();
     }
-
+    
     // Clear search after selection
     setSearchQuery("");
   };
@@ -546,42 +512,37 @@ function VectorGraph3D({
   // Early return AFTER all hooks
   if (vectorRows.length === 0) {
     return (
-      <div className="flex min-h-96 flex-col items-center justify-center gap-2 rounded-panel border border-dashed border-border bg-surface p-8 text-center">
-        <p className="m-0 text-sm font-medium text-content">
-          No players match the selected criteria.
-        </p>
-        <p className="m-0 text-xs text-content-muted">
-          Try adjusting the minimum sets threshold or selecting a different season.
-        </p>
+      <div className="vector-graph-empty">
+        <p>No players match the selected criteria.</p>
+        <p>Try adjusting the minimum sets threshold or selecting a different season.</p>
       </div>
     );
   }
 
   return (
-    <div className="relative h-[70vh] min-h-[500px] w-full overflow-hidden rounded-panel border border-border bg-surface-inverse">
-      {/* Search — floats over the canvas, top-left. */}
-      <div className="absolute left-4 top-4 z-20 w-64">
-        <TextInput
-          size="sm"
+    <div className="vector-graph-3d-container">
+      {/* Search Bar */}
+      <div className="player-search-container">
+        <input
+          type="text"
+          className="player-search-input"
           placeholder="Search players..."
-          aria-label="Search players"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
         {searchResults.length > 0 && (
-          <div className="mt-1 overflow-hidden rounded-card border border-border bg-surface-elevated shadow-[var(--shadow-lg)]">
+          <div className="player-search-results">
             {searchResults.slice(0, 5).map((player) => (
-              <button
+              <div
                 key={player.playerId}
-                type="button"
-                className="block w-full cursor-pointer px-3 py-2 text-left text-sm text-content-secondary transition-colors hover:bg-surface-inset hover:text-content"
+                className="player-search-result-item"
                 onClick={() => handleSearchSelect(player)}
               >
                 {player.playerName}
-              </button>
+              </div>
             ))}
             {searchResults.length > 5 && (
-              <div className="px-3 py-2 text-xs text-content-muted">
+              <div className="player-search-result-more">
                 +{searchResults.length - 5} more
               </div>
             )}
@@ -592,42 +553,34 @@ function VectorGraph3D({
       {/* Archetype Legend */}
       {archetypeCounts.length > 0 && (
         <>
-          <div
-            ref={legendRef}
-            className={`scroll-inverse absolute right-4 top-4 z-20 max-h-[60%] overflow-y-auto rounded-card border border-surface-inverse-raised bg-surface-inverse-raised p-2 transition-all ${legendHidden ? 'pointer-events-none w-0 p-0 opacity-0' : 'w-52'}`}
-          >
-            {!legendHidden &&
-              archetypeCounts.map(({ archetype, count }) => (
-                <button
-                  key={archetype.id}
-                  type="button"
-                  ref={(el) => {
-                    if (el) itemRefs.current.set(archetype.id, el);
-                    else itemRefs.current.delete(archetype.id);
-                  }}
-                  className="flex w-full cursor-pointer items-center gap-2 rounded-control px-2 py-1 text-left text-xs text-content-inverse transition-colors hover:bg-surface-inverse-inset"
-                  onClick={() =>
-                    setClickedArchetype(clickedArchetype === archetype.id ? null : archetype.id)
-                  }
-                >
-                  {/* The swatch IS the archetype's identity colour, resolved from its token at
-                      runtime — there is no class that could express it. */}
-                  <span
-                    aria-hidden
-                    className="h-3 w-3 shrink-0 rounded-full"
-                    style={{ backgroundColor: archetype.color }}
-                  />
-                  <span className="min-w-0 flex-1 truncate">{archetype.name}</span>
-                  <span className="shrink-0 text-content-inverse/60">({count})</span>
-                </button>
-              ))}
+          <div className={`archetype-legend dark-scrollbar ${legendHidden ? 'legend-hidden' : ''}`} ref={legendRef}>
+            {!legendHidden && (
+              <>
+                {archetypeCounts.map(({ archetype, count }) => (
+                  <div
+                    key={archetype.id}
+                    ref={(el) => {
+                      if (el) itemRefs.current.set(archetype.id, el);
+                      else itemRefs.current.delete(archetype.id);
+                    }}
+                    className="archetype-legend-item"
+                    onClick={() => setClickedArchetype(clickedArchetype === archetype.id ? null : archetype.id)}
+                  >
+                    <span
+                      className="archetype-legend-color"
+                      style={{ backgroundColor: archetype.color }}
+                    />
+                    <span className="archetype-legend-name">{archetype.name}</span>
+                    <span className="archetype-legend-count">({count})</span>
+                  </div>
+                ))}
+              </>
+            )}
           </div>
           <button
-            type="button"
-            className={`absolute top-4 z-20 flex h-8 w-6 cursor-pointer items-center justify-center rounded-control border border-surface-inverse-raised bg-surface-inverse-raised text-content-inverse transition-all ${legendHidden ? 'right-4' : 'right-[14.5rem]'}`}
+            className={`archetype-legend-toggle ${legendHidden ? 'legend-hidden-toggle' : ''}`}
             onClick={() => setLegendHidden(!legendHidden)}
-            title={legendHidden ? 'Show legend' : 'Hide legend'}
-            aria-label={legendHidden ? 'Show legend' : 'Hide legend'}
+            title={legendHidden ? "Show legend" : "Hide legend"}
           >
             {legendHidden ? '>' : '<'}
           </button>
@@ -638,20 +591,18 @@ function VectorGraph3D({
         const archetype = archetypeCounts.find(a => a.archetype.id === clickedArchetype)?.archetype;
         if (!archetype) return null;
         return (
-          <div
-            role="tooltip"
-            className="fixed z-50 w-72 rounded-card border border-border bg-surface-elevated p-3 shadow-[var(--shadow-lg)]"
-            style={{ left: `${popupPosition.left}px`, top: `${popupPosition.top}px` }}
+          <div 
+            className="archetype-legend-popup"
+            style={{
+              left: `${popupPosition.left}px`,
+              top: `${popupPosition.top}px`
+            }}
           >
-            <div className="mb-1 text-sm font-semibold text-content">{archetype.name}</div>
-            <div className="mb-2 text-xs leading-relaxed text-content-secondary">
-              {archetype.description}
-            </div>
-            <div className="text-xs text-content-tertiary">
-              <strong className="text-content-secondary">Statistical Thresholds:</strong>
-              <div className="mt-1 font-mono text-[0.6875rem]">
-                {getArchetypeThresholds(archetype.id)}
-              </div>
+            <div className="archetype-popup-header">{archetype.name}</div>
+            <div className="archetype-popup-description">{archetype.description}</div>
+            <div className="archetype-popup-thresholds">
+              <strong>Statistical Thresholds:</strong>
+              <div className="archetype-popup-thresholds-text">{getArchetypeThresholds(archetype.id)}</div>
             </div>
           </div>
         );
@@ -697,51 +648,39 @@ function VectorGraph3D({
         />
       </Canvas>
       {!infoBoxHidden && (
-        <div className="scroll-inverse absolute bottom-4 left-4 z-20 flex max-h-[70%] w-72 flex-col gap-3 overflow-y-auto rounded-card border border-surface-inverse-raised bg-surface-inverse-raised p-3 text-content-inverse">
-          <button
-            type="button"
-            className="absolute right-2 top-2 cursor-pointer text-lg leading-none text-content-inverse/70 transition-colors hover:text-content-inverse"
+        <div className="vector-graph-info">
+          <button 
+            className="info-box-toggle"
             onClick={() => setInfoBoxHidden(true)}
             title="Hide info panel"
             aria-label="Hide info panel"
           >
-            &times;
+            ×
           </button>
-
-          <div className="flex flex-col gap-2">
-            <button
-              type="button"
-              className="flex cursor-pointer items-center justify-between gap-2 pr-6 text-left"
+          
+          <div className={`info-section ${playerInfoCollapsed ? 'collapsed' : ''}`}>
+            <div 
+              className="info-section-header"
               onClick={() => setPlayerInfoCollapsed(!playerInfoCollapsed)}
-              aria-expanded={!playerInfoCollapsed}
             >
-              <h4 className="m-0 text-sm font-semibold">Player Info</h4>
-              <span aria-hidden className="text-xs text-content-inverse/60">
-                {playerInfoCollapsed ? '\u25B6' : '\u25BC'}
-              </span>
-            </button>
+              <h4>Player Info</h4>
+              <span className="collapse-icon">{playerInfoCollapsed ? '▶' : '▼'}</span>
+            </div>
             {!playerInfoCollapsed && (() => {
               // Prioritize clicked player over hovered player
               const displayPlayer = clickedPlayer || hoveredPlayer;
-              if (!displayPlayer)
-                return (
-                  <p className="m-0 text-xs italic text-content-inverse/60">
-                    Hover or click a player to see info
-                  </p>
-                );
-
+              if (!displayPlayer) return <p className="note">Hover or click a player to see info</p>;
+              
               return (
-                <div className="flex flex-col gap-1.5 text-xs">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h4 className="m-0 text-sm font-semibold">{displayPlayer.playerName}</h4>
+                <div className="hovered-player-info">
+                  <div className="player-info-header">
+                    <h4>{displayPlayer.playerName}</h4>
                     {clickedPlayer && clickedPlayer.playerId === displayPlayer.playerId && (
-                      <span className="rounded-full bg-brand-muted px-2 py-0.5 text-[0.625rem] font-semibold text-content">
-                        Selected
-                      </span>
+                      <span className="selected-badge">Selected</span>
                     )}
                   </div>
-                  <p className="m-0">Season: {displayPlayer.seasonNumber}</p>
-                  <p className="m-0">Sets Played: {displayPlayer.setsPlayed}</p>
+                  <p>Season: {displayPlayer.seasonNumber}</p>
+                  <p>Sets Played: {displayPlayer.setsPlayed}</p>
                   {clickedPlayer && clickedPlayer.playerId === displayPlayer.playerId && (
                     <>
                       {(() => {
@@ -751,36 +690,30 @@ function VectorGraph3D({
                             row => archetypeAssignments.get(row.playerId)?.id === archetype.id
                           );
                           return (
-                            <div className="mt-1 flex flex-col gap-1 border-t border-surface-inverse-inset pt-2">
-                              <p className="m-0 flex flex-wrap items-center gap-1.5">
+                            <div className="cluster-info">
+                              <p>
                                 <strong>Archetype:</strong> {archetype.name}
-                                {/* Identity colour resolved from the archetype's token. */}
-                                <span
-                                  aria-hidden
-                                  className="inline-block h-2.5 w-2.5 rounded-full"
+                                <span 
+                                  className="cluster-color-indicator"
                                   style={{ backgroundColor: archetype.color }}
                                 />
-                                <span className="text-content-inverse/60">
-                                  ({archetypePlayers.length} players)
-                                </span>
+                                ({archetypePlayers.length} players)
                               </p>
-                              <p className="m-0 leading-relaxed text-content-inverse/70">
-                                {archetype.description}
-                              </p>
+                              <p className="archetype-description">{archetype.description}</p>
                             </div>
                           );
                         }
                         return null;
                       })()}
                       {similarPlayers.closest && (
-                        <p className="m-0">
-                          <strong>Most Similar:</strong> {similarPlayers.closest.playerName}
-                        </p>
+                        <div className="similarity-info">
+                          <p><strong>Most Similar:</strong> {similarPlayers.closest.playerName}</p>
+                        </div>
                       )}
                       {similarPlayers.farthest && (
-                        <p className="m-0">
-                          <strong>Least Similar:</strong> {similarPlayers.farthest.playerName}
-                        </p>
+                        <div className="similarity-info">
+                          <p><strong>Least Similar:</strong> {similarPlayers.farthest.playerName}</p>
+                        </div>
                       )}
                     </>
                   )}
@@ -788,21 +721,17 @@ function VectorGraph3D({
               );
             })()}
           </div>
-
-          <div className="flex flex-col gap-2 border-t border-surface-inverse-inset pt-3">
-            <button
-              type="button"
-              className="flex cursor-pointer items-center justify-between gap-2 text-left"
+          
+          <div className={`info-section ${controlsCollapsed ? 'collapsed' : ''}`}>
+            <div 
+              className="info-section-header"
               onClick={() => setControlsCollapsed(!controlsCollapsed)}
-              aria-expanded={!controlsCollapsed}
             >
-              <h4 className="m-0 text-sm font-semibold">Controls</h4>
-              <span aria-hidden className="text-xs text-content-inverse/60">
-                {controlsCollapsed ? '\u25B6' : '\u25BC'}
-              </span>
-            </button>
+              <h4>Controls</h4>
+              <span className="collapse-icon">{controlsCollapsed ? '▶' : '▼'}</span>
+            </div>
             {!controlsCollapsed && (
-              <ul className="m-0 flex list-disc flex-col gap-1 pl-4 text-xs text-content-inverse/80">
+              <ul>
                 <li>Rotate: Left Click + Drag</li>
                 <li>Pan: Right Click + Drag</li>
                 <li>Zoom: Scroll</li>
@@ -811,48 +740,41 @@ function VectorGraph3D({
               </ul>
             )}
           </div>
-
-          <div className="flex flex-col gap-2 border-t border-surface-inverse-inset pt-3">
-            <button
-              type="button"
-              className="flex cursor-pointer items-center justify-between gap-2 text-left"
+          
+          <div className={`info-section ${axesCollapsed ? 'collapsed' : ''}`}>
+            <div 
+              className="info-section-header"
               onClick={() => setAxesCollapsed(!axesCollapsed)}
-              aria-expanded={!axesCollapsed}
             >
-              <h4 className="m-0 text-sm font-semibold">Axes (PCA)</h4>
-              <span aria-hidden className="text-xs text-content-inverse/60">
-                {axesCollapsed ? '\u25B6' : '\u25BC'}
-              </span>
-            </button>
+              <h4>Axes (PCA)</h4>
+              <span className="collapse-icon">{axesCollapsed ? '▶' : '▼'}</span>
+            </div>
             {!axesCollapsed && (
-              <div className="flex flex-col gap-1 text-xs text-content-inverse/80">
-                <p className="m-0">X: First Principal Component (PC1)</p>
-                <p className="m-0">Y: Second Principal Component (PC2)</p>
-                <p className="m-0">Z: Third Principal Component (PC3)</p>
+              <>
+                <p>X: First Principal Component (PC1)</p>
+                <p>Y: Second Principal Component (PC2)</p>
+                <p>Z: Third Principal Component (PC3)</p>
                 {model && model.explainedVariance && model.explainedVariance.length > 0 && (
-                  <p className="m-0 italic text-content-inverse/60">
-                    Variance explained: PC1: {((model.explainedVariance[0] / model.explainedVariance.reduce((a: number, b: number) => a + b, 0)) * 100).toFixed(1)}%,
-                    PC2: {((model.explainedVariance[1] / model.explainedVariance.reduce((a: number, b: number) => a + b, 0)) * 100).toFixed(1)}%,
+                  <p className="note">
+                    Variance explained: PC1: {((model.explainedVariance[0] / model.explainedVariance.reduce((a: number, b: number) => a + b, 0)) * 100).toFixed(1)}%, 
+                    PC2: {((model.explainedVariance[1] / model.explainedVariance.reduce((a: number, b: number) => a + b, 0)) * 100).toFixed(1)}%, 
                     PC3: {((model.explainedVariance[2] / model.explainedVariance.reduce((a: number, b: number) => a + b, 0)) * 100).toFixed(1)}%
                   </p>
                 )}
-                <p className="m-0 italic text-content-inverse/60">
-                  Uses all 12 statistical dimensions via PCA.
-                </p>
-              </div>
+                <p className="note">Uses all 12 statistical dimensions via PCA.</p>
+              </>
             )}
           </div>
         </div>
       )}
       {infoBoxHidden && (
-        <button
-          type="button"
-          className="absolute bottom-4 left-4 z-20 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-surface-inverse-raised bg-surface-inverse-raised text-content-inverse transition-colors hover:bg-surface-inverse-inset"
+        <button 
+          className="info-box-show-button"
           onClick={() => setInfoBoxHidden(false)}
           title="Show info panel"
           aria-label="Show info panel"
         >
-          i
+          ℹ
         </button>
       )}
     </div>
@@ -883,90 +805,97 @@ const VectorGraphPage: React.FC = () => {
 
   if (playersLoading || seasonsLoading || selectedSeasonNumber === null) {
     return (
-      <PageContainer width="shell">
-        <PageLoader message="Loading vector graph - fetching player and season data..." />
-      </PageContainer>
+      <div className="vector-graph-page">
+        <div className="loading-container">
+          <h2>Loading Vector Graph...</h2>
+          <p>Fetching player and season data...</p>
+        </div>
+      </div>
     );
   }
 
   if (playersError || seasonsError) {
     return (
-      <PageContainer width="shell">
-        <ErrorNotice
-          title="Error Loading Data"
-          message={
-            <>
-              {playersError && <span className="block">Error loading players: {playersError}</span>}
-              {seasonsError && <span className="block">Error loading seasons: {seasonsError}</span>}
-            </>
-          }
-        />
-      </PageContainer>
+      <div className="vector-graph-page">
+        <div className="error-container">
+          <h2>Error Loading Data</h2>
+          {playersError && <p>Error loading players: {playersError}</p>}
+          {seasonsError && <p>Error loading seasons: {seasonsError}</p>}
+        </div>
+      </div>
     );
   }
 
   if (!players || !seasons || seasons.length === 0) {
     return (
-      <PageContainer width="shell">
-        <EmptyState
-          title="No Data Available"
-          description="No seasons found. Please ensure data is available in the database."
-        />
-      </PageContainer>
+      <div className="vector-graph-page">
+        <div className="error-container">
+          <h2>No Data Available</h2>
+          <p>No seasons found. Please ensure data is available in the database.</p>
+        </div>
+      </div>
     );
   }
 
   const sortedSeasons = [...seasons].sort((a, b) => b.seasonNumber - a.seasonNumber);
 
   return (
-    <PageContainer width="shell">
-      <PageHeader
-        title="Player Stats Vectorization"
-        subtitle="Explore player statistical profiles in 3D space. Each point represents a player's normalized performance across multiple statistical dimensions."
-      />
+    <div className="vector-graph-page">
+      <div className="vector-graph-header">
+        <h1>Player Stats Vectorization</h1>
+        <p className="subtitle">
+          Explore player statistical profiles in 3D space. Each point represents a player's normalized
+          performance across multiple statistical dimensions.
+        </p>
+      </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <FormField label="Season" htmlFor="season-select">
-          <Select
+      <div className="vector-graph-controls">
+        <div className="control-group">
+          <label htmlFor="season-select">Season:</label>
+          <select
             id="season-select"
-            value={selectedSeasonNumber ? String(selectedSeasonNumber) : ''}
+            value={selectedSeasonNumber || ""}
             onChange={(e) => setSelectedSeasonNumber(Number(e.target.value))}
-            options={sortedSeasons.map((season) => ({
-              value: String(season.seasonNumber),
-              label: `Season ${season.seasonNumber}${season.theme ? ` - ${season.theme}` : ''}`,
-            }))}
+            className="control-select"
+          >
+            {sortedSeasons.map((season) => (
+              <option key={season.id} value={season.seasonNumber}>
+                Season {season.seasonNumber} {season.theme ? `- ${season.theme}` : ""}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="control-group">
+          <label htmlFor="min-sets-slider">
+            Minimum Sets Played: <strong>{minSetsPlayed}</strong>
+          </label>
+          <input
+            id="min-sets-slider"
+            type="range"
+            min="1"
+            max="50"
+            value={minSetsPlayed}
+            onChange={(e) => setMinSetsPlayed(Number(e.target.value))}
+            className="control-slider"
           />
-        </FormField>
-
-        <FormField
-          label={
-            <>
-              Minimum Sets Played: <strong className="text-content">{minSetsPlayed}</strong>
-            </>
-          }
-          htmlFor="min-sets-slider"
-        >
-          <div className="flex flex-col gap-1">
-            <input
-              id="min-sets-slider"
-              type="range"
-              min="1"
-              max="50"
-              value={minSetsPlayed}
-              onChange={(e) => setMinSetsPlayed(Number(e.target.value))}
-              className="w-full cursor-pointer accent-[var(--color-brand)]"
-            />
-            <div className="flex justify-between text-[0.625rem] tabular-nums text-content-muted">
-              <span>1</span>
-              <span>25</span>
-              <span>50</span>
-            </div>
+          <div className="slider-labels">
+            <span>1</span>
+            <span>25</span>
+            <span>50</span>
           </div>
-        </FormField>
+        </div>
 
-        <StatCard label="Players in Graph" value={vectorRows.length} />
+        <div className="control-group">
+          <label>Players in Graph:</label>
+          <div className="stat-value-large">{vectorRows.length}</div>
+        </div>
+
         {selectedSeasonNumber && (
-          <StatCard label="Selected Season" value={selectedSeasonNumber} />
+          <div className="control-group">
+            <label>Selected Season:</label>
+            <div className="stat-value-large">{selectedSeasonNumber}</div>
+          </div>
         )}
       </div>
 
@@ -975,7 +904,7 @@ const VectorGraphPage: React.FC = () => {
         // Compute PCA to get the model
         const zVectors = vectorRows.map(row => row.zVector);
         const { model } = vectorRows.length > 0 ? computePCA3D(zVectors) : { model: null };
-
+        
         if (!model || !model.components || model.components.length === 0) {
           return null;
         }
@@ -1007,21 +936,21 @@ const VectorGraphPage: React.FC = () => {
             weight: component[idx] || 0,
             absWeight: Math.abs(component[idx] || 0)
           }));
-
+          
           // Find max weight across ALL features in this component for proper normalization
           const maxWeight = Math.max(...allFeatures.map(f => f.absWeight));
-
+          
           // Get top features sorted by absolute weight
           const topFeatures = [...allFeatures]
             .sort((a, b) => b.absWeight - a.absWeight)
             .slice(0, count);
-
+          
           // Find min and max weights in the top features for better color distribution
           const topWeights = topFeatures.map(f => f.absWeight);
           const minTopWeight = Math.min(...topWeights);
           const maxTopWeight = Math.max(...topWeights);
           const weightRange = maxTopWeight - minTopWeight;
-
+          
           return topFeatures.map(f => {
             const sign = f.weight >= 0 ? '+' : '-';
             // Normalize to 0-1 range within the top features, with better distribution
@@ -1049,100 +978,91 @@ const VectorGraphPage: React.FC = () => {
         const pc3Features = getTopFeatures(model.components[2]);
 
         return (
-          <div className="grid gap-4 lg:grid-cols-3">
-            <Card padding="md">
-              <div className="flex flex-col gap-1">
-                <span className="text-xs font-medium uppercase tracking-wide text-content-tertiary">
-                  PC1
-                </span>
-                <p className="m-0 text-sm text-content-secondary">
-                  {pc1Features.map((feature, idx) => (
-                    <span
-                      key={idx}
-                      className={featureWeightClass(feature.weight)}
-                      // Opacity is a continuous function of the loading, so it has no class
-                      // equivalent; the weight bands above do.
-                      style={{ opacity: 0.4 + feature.weight * 0.6 }}
-                    >
-                      {feature.text}
-                      {idx < pc1Features.length - 1 && ', '}
-                    </span>
-                  ))}
-                </p>
+          <div className="vector-graph-controls pca-components-row">
+            <div className="control-group pca-component">
+              <label>PC1:</label>
+              <div className="pca-description">
+                {pc1Features.map((feature, idx) => (
+                  <span
+                    key={idx}
+                    className="pca-feature"
+                    style={{
+                      opacity: 0.4 + (feature.weight * 0.6), // Range from 0.4 to 1.0
+                      fontWeight: feature.weight > 0.7 ? 700 : feature.weight > 0.4 ? 600 : 500
+                    }}
+                  >
+                    {feature.text}
+                    {idx < pc1Features.length - 1 && ', '}
+                  </span>
+                ))}
               </div>
-            </Card>
-            <Card padding="md">
-              <div className="flex flex-col gap-1">
-                <span className="text-xs font-medium uppercase tracking-wide text-content-tertiary">
-                  PC2
-                </span>
-                <p className="m-0 text-sm text-content-secondary">
-                  {pc2Features.map((feature, idx) => (
-                    <span
-                      key={idx}
-                      className={featureWeightClass(feature.weight)}
-                      // Opacity is a continuous function of the loading, so it has no class
-                      // equivalent; the weight bands above do.
-                      style={{ opacity: 0.4 + feature.weight * 0.6 }}
-                    >
-                      {feature.text}
-                      {idx < pc2Features.length - 1 && ', '}
-                    </span>
-                  ))}
-                </p>
+            </div>
+            <div className="control-group pca-component">
+              <label>PC2:</label>
+              <div className="pca-description">
+                {pc2Features.map((feature, idx) => (
+                  <span
+                    key={idx}
+                    className="pca-feature"
+                    style={{
+                      opacity: 0.4 + (feature.weight * 0.6), // Range from 0.4 to 1.0
+                      fontWeight: feature.weight > 0.7 ? 700 : feature.weight > 0.4 ? 600 : 500
+                    }}
+                  >
+                    {feature.text}
+                    {idx < pc2Features.length - 1 && ', '}
+                  </span>
+                ))}
               </div>
-            </Card>
-            <Card padding="md">
-              <div className="flex flex-col gap-1">
-                <span className="text-xs font-medium uppercase tracking-wide text-content-tertiary">
-                  PC3
-                </span>
-                <p className="m-0 text-sm text-content-secondary">
-                  {pc3Features.map((feature, idx) => (
-                    <span
-                      key={idx}
-                      className={featureWeightClass(feature.weight)}
-                      // Opacity is a continuous function of the loading, so it has no class
-                      // equivalent; the weight bands above do.
-                      style={{ opacity: 0.4 + feature.weight * 0.6 }}
-                    >
-                      {feature.text}
-                      {idx < pc3Features.length - 1 && ', '}
-                    </span>
-                  ))}
-                </p>
+            </div>
+            <div className="control-group pca-component">
+              <label>PC3:</label>
+              <div className="pca-description">
+                {pc3Features.map((feature, idx) => (
+                  <span
+                    key={idx}
+                    className="pca-feature"
+                    style={{
+                      opacity: 0.4 + (feature.weight * 0.6), // Range from 0.4 to 1.0
+                      fontWeight: feature.weight > 0.7 ? 700 : feature.weight > 0.4 ? 600 : 500
+                    }}
+                  >
+                    {feature.text}
+                    {idx < pc3Features.length - 1 && ', '}
+                  </span>
+                ))}
               </div>
-            </Card>
+            </div>
           </div>
         );
       })()}
 
-      <VectorGraph3D
-        vectorRows={vectorRows}
-        onPlayerHover={() => {}} // Hover state is managed internally by VectorGraph3D
-        onPlayerClick={() => {}} // Click state is managed internally by VectorGraph3D
-      />
+      <div className="vector-graph-content">
+        <VectorGraph3D
+          vectorRows={vectorRows}
+          onPlayerHover={() => {}} // Hover state managed internally by VectorGraph3D
+          onPlayerClick={() => {}} // Click state managed internally by VectorGraph3D
+        />
+      </div>
 
-      <Card tone="inset" padding="lg">
-        <div className="flex flex-col gap-2">
-          <h3 className="m-0 text-base font-semibold text-content">About This Visualization</h3>
-          <p className="m-0 text-sm leading-relaxed text-content-secondary">
-            This graph represents players as vectors in a 13-dimensional statistical space,
-            projected into 3D for visualization. Each player's position is determined by their
-            normalized (z-scored) performance across multiple statistical categories.
+      <div className="vector-graph-footer">
+        <div className="info-box">
+          <h3>About This Visualization</h3>
+          <p>
+            This graph represents players as vectors in a 13-dimensional statistical space, projected
+            into 3D for visualization. Each player's position is determined by their normalized (z-scored)
+            performance across multiple statistical categories.
           </p>
-          <p className="m-0 text-sm leading-relaxed text-content-secondary">
-            <strong className="text-content">Statistical Dimensions Used (13 total):</strong> Spike
-            kills per set, Spike attempts per set, APE kills per set, APE attempts per set, Blocks
-            per set, Assists per set, Aces per set, Digs per set, Block follows per set, Spiking
-            errors per set, Setting errors per set, Serving errors per set, and Misc errors per set.
+          <p>
+            <strong>Statistical Dimensions Used (13 total):</strong> Spike kills per set, Spike attempts per set, 
+            APE kills per set, APE attempts per set, Blocks per set, Assists per set, Aces per set, 
+            Digs per set, Block follows per set, Spiking errors per set, Setting errors per set, 
+            Serving errors per set, and Misc errors per set.
           </p>
-          <p className="m-0 text-xs text-content-muted">
-            Vector Version: v2 | Projection: PCA (Principal Component Analysis)
-          </p>
+          <p className="version-info">Vector Version: v2 | Projection: PCA (Principal Component Analysis)</p>
         </div>
-      </Card>
-    </PageContainer>
+      </div>
+    </div>
   );
 };
 

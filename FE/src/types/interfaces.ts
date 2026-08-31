@@ -344,9 +344,6 @@ export type CreateAwardsInput = {
   playerName: string;
   description: string;
   seasonId:   number;
-  /** Award artwork. Optional — the portal's create form has always sent it; the type
-   *  previously omitted it only because the payload was built as an untyped object literal. */
-  imageUrl?:  string;
 };
 
 // CSV Upload types

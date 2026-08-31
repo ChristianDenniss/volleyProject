@@ -1,7 +1,8 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { HelmetProvider } from '@dr.pogodin/react-helmet'
-import './styles/globals.css'
+import './styles/tokens.css'
+import './styles/App.css'
 import App from './App.tsx'
 import { enableMocking } from './mocks'
 

@@ -1,68 +1,53 @@
-/**
- * TeamsPage — the admin portal's team management view: a paginated, searchable, season-filtered table with inline editing of name, season number, placement and logo URL, a staff-edit flag toggle, and a create-team modal.
- * Every inline edit routes through `InlineEditCell` and confirms via `ConfirmModal` before the PATCH, so a mis-click can't silently rewrite a team; deletion is superadmin-only.
- * Lives in `components/portal/`; mounted at /portal/teams.
- */
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { useSkinnyTeams, useSkinnySeasons } from '@/hooks/allFetch'
-import { useTeamMutations } from '@/hooks/allPatch'
-import { useCreateTeams } from '@/hooks/allCreate'
-import { useDeleteTeams } from '@/hooks/allDelete'
-import { useAuth } from '@/context/authContext'
-import { useRegion } from '@/context/regionContext'
-import { useFormRegionSeason } from '@/hooks/useFormRegionSeason'
-import { useDebouncedValue } from '@/hooks/useDebouncedValue'
-import { TEAM_PLACEMENT_OPTIONS } from '@/constants/teamPlacements'
-import type { Team } from '@/types/interfaces'
+// src/components/portal/TeamsPage.tsx
 
-import PageContainer from '@/components/ui/layout/PageContainer'
-import PageHeader from '@/components/ui/layout/PageHeader'
-import Toolbar from '@/components/ui/layout/Toolbar'
-import ResultsCounter from '@/components/ui/layout/ResultsCounter'
-import DataTable, { type DataTableColumn } from '@/components/ui/layout/DataTable'
-import FilterBar from '@/components/ui/filters/FilterBar'
-import FilterSelect from '@/components/ui/filters/FilterSelect'
-import SearchBar from '@/components/ui/filters/SearchBar'
-import Pagination from '@/components/ui/navigation/Pagination'
-import Button from '@/components/ui/buttons/Button'
-import Modal from '@/components/ui/modals/Modal'
-import ConfirmModal from '@/components/ui/modals/ConfirmModal'
-import ErrorNotice from '@/components/ui/feedback/ErrorNotice'
-import FormField from '@/components/ui/inputs/FormField'
-import TextInput from '@/components/ui/inputs/TextInput'
-import Select, { toOptions } from '@/components/ui/inputs/Select'
-import Checkbox from '@/components/ui/inputs/Checkbox'
-import InlineEditCell from '@/components/ui/inputs/InlineEditCell'
-import RegionSeasonFields from '@/components/ui/inputs/RegionSeasonFields'
+import React, { useState, useEffect } from "react";
+import { useSkinnyTeams, useSkinnySeasons } from "../../hooks/allFetch";
+import { useTeamMutations } from "../../hooks/allPatch";
+import { useCreateTeams } from "../../hooks/allCreate";
+import { useDeleteTeams } from "../../hooks/allDelete";
+import { useAuth } from "../../context/authContext";
+import { useRegion } from "../../context/regionContext";
+import type { Team } from "../../types/interfaces";
+import "../../styles/PlayersPage.css";
+import "../../styles/PortalPlayersPage.css";
+import SearchBar from "../Searchbar";
+import Pagination from "../Pagination";
+import Modal from "../ui/Modal";
+import FilterBar from "../ui/FilterBar";
+import Table, { type TableColumn } from "../ui/Table";
+import RegionSeasonFields from "../ui/RegionSeasonFields";
+import { useFormRegionSeason } from "../../hooks/useFormRegionSeason";
+import { TEAM_PLACEMENT_OPTIONS } from "../../constants/teamPlacements";
+import { useDebouncedValue } from "../../hooks/useDebouncedValue";
+import { authFetch } from "../../hooks/authFetch";
+import { BACKEND_URL } from "../../constants/api";
 
-const TEAMS_PER_PAGE = 10
-const DEFAULT_PLACEMENT = 'Didnt make playoffs'
+type EditField =
+  | "name"
+  | "seasonNumber"
+  | "placement"
+  | "logoUrl";
 
-type EditField = 'name' | 'seasonNumber' | 'placement' | 'logoUrl'
-
-const FIELD_LABELS: Record<EditField, string> = {
-  name: 'Name',
-  seasonNumber: 'Season Number',
-  placement: 'Placement',
-  logoUrl: 'Logo URL',
+interface EditingState {
+  id: number;
+  field: EditField;
+  value: string;
 }
 
-interface PendingEdit {
-  team: Team
-  field: EditField
-  value: string
-  previous: string
-}
+interface TeamTableColumn extends TableColumn<Team> {}
 
-export default function TeamsPage() {
-  const [searchQuery, setSearchQuery] = useState('')
-  const [seasonFilter, setSeasonFilter] = useState('')
-  const [currentPage, setCurrentPage] = useState(1)
-  const debouncedSearch = useDebouncedValue(searchQuery, 300)
+const TEAMS_PER_PAGE = 10;
 
-  const { regionQuery } = useRegion()
-  const { user } = useAuth()
-  const formRegionSeason = useFormRegionSeason('seasonNumber')
+const TeamsPage: React.FC = () => {
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const debouncedSearch = useDebouncedValue(searchQuery, 300);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+
+  // Filter state
+  const [seasonFilter, setSeasonFilter] = useState<string>("");
+
+  const { regionQuery } = useRegion();
+  const formRegionSeason = useFormRegionSeason("seasonNumber");
 
   const { data: teams, total, totalPages, loading, error, refetch } = useSkinnyTeams({
     page: currentPage,
@@ -70,258 +55,402 @@ export default function TeamsPage() {
     search: debouncedSearch || undefined,
     seasonId: seasonFilter || undefined,
     ...regionQuery,
-  })
-  const { data: seasons, loading: seasonsLoading } = useSkinnySeasons({
-    page: 1,
-    limit: 100,
-    ...regionQuery,
-  })
+  });
+  const { data: seasons, loading: seasonsLoading } = useSkinnySeasons({ page: 1, limit: 100, ...regionQuery });
+  const { patchTeam } = useTeamMutations();
+  const { createTeam, loading: creating, error: createError } = useCreateTeams();
+  const { deleteItem: deleteTeam, loading: deleting, error: deleteError } = useDeleteTeams();
+  const { user } = useAuth();
 
-  const { patchTeam, patchTeamFlags } = useTeamMutations()
-  const { createTeam, loading: creating, error: createError } = useCreateTeams()
-  const { deleteItem: deleteTeam, loading: deleting, error: deleteError } = useDeleteTeams()
+  const [localTeams, setLocalTeams] = useState<Team[]>([]);
+  const [editing, setEditing] = useState<EditingState | null>(null);
 
-  const [localTeams, setLocalTeams] = useState<Team[]>([])
-  const [pendingEdit, setPendingEdit] = useState<PendingEdit | null>(null)
-  const [pendingDelete, setPendingDelete] = useState<Team | null>(null)
-  const [saveError, setSaveError] = useState<string | null>(null)
-
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [newName, setNewName] = useState('')
-  const [newPlacement, setNewPlacement] = useState(DEFAULT_PLACEMENT)
-  const [newLogoUrl, setNewLogoUrl] = useState('')
-  const [formError, setFormError] = useState('')
-
-  const canDelete = user?.role === 'superadmin'
+  // Modal state for creating a new team
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [newName, setNewName] = useState<string>("");
+  const [newPlacement, setNewPlacement] = useState<string>("Didnt make playoffs");
+  const [newLogoUrl, setNewLogoUrl] = useState<string>("");
+  const [formError, setFormError] = useState<string>("");
 
   useEffect(() => {
-    setLocalTeams(teams ?? [])
-  }, [teams])
+    setLocalTeams(teams ?? []);
+  }, [teams]);
 
-  // Season options come from the full seasons list, not just the teams on this page.
-  const seasonOptions = useMemo(
-    () =>
-      [...(seasons ?? [])]
-        .sort((a, b) => a.seasonNumber - b.seasonNumber)
-        .map((season) => ({ value: season.id.toString(), label: `Season ${season.seasonNumber}` })),
-    [seasons]
-  )
+  // Season filter options come from the full seasons list, not just this page's teams
+  const uniqueSeasons = (seasons ?? [])
+    .slice()
+    .sort((a, b) => a.seasonNumber - b.seasonNumber);
 
-  const applyEdit = async () => {
-    if (!pendingEdit) return
-    const { team, field, value } = pendingEdit
-    setPendingEdit(null)
-    setSaveError(null)
+  // Handle search
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    setCurrentPage(1); // Reset to first page when searching
+  };
 
-    const payload: Partial<Team> & Record<string, unknown> = {}
-    if (field === 'seasonNumber') payload.seasonNumber = Number(value)
-    else if (field === 'logoUrl') payload.logoUrl = value.trim() || undefined
-    else payload[field] = value
+  // Handle season filter change
+  const handleSeasonFilterChange = (value: string) => {
+    setSeasonFilter(value);
+    setCurrentPage(1); // Reset to first page when filtering
+  };
+
+  // Clear all filters
+  const clearFilters = () => {
+    setSearchQuery("");
+    setSeasonFilter("");
+    setCurrentPage(1);
+  };
+
+  // Commit inline edits
+  const commitEdit = async () => {
+    if (!editing) return;
+    const { id, field, value } = editing;
+    const orig = localTeams.find((t) => t.id === id);
+    if (!orig) {
+      setEditing(null);
+      return;
+    }
+
+    let origValue: string;
+    switch (field) {
+      case "name": origValue = orig.name; break;
+      case "seasonNumber": origValue = orig.season.seasonNumber.toString(); break;
+      case "placement": origValue = orig.placement; break;
+      case "logoUrl": origValue = orig.logoUrl || ""; break;
+      default: origValue = "";
+    }
+    if (value === origValue) {
+      setEditing(null);
+      return;
+    }
+
+    const labelMap: Record<EditField, string> = {
+      name: "Name",
+      seasonNumber: "Season Number",
+      placement: "Placement",
+      logoUrl: "Logo URL",
+    };
+    if (
+      !window.confirm(
+        `Change ${labelMap[field]} from "${origValue}" to "${value}"?`
+      )
+    ) {
+      setEditing(null);
+      return;
+    }
+
+    // Build payload
+    const payload: Partial<Team> & Record<string, any> = {};
+    switch (field) {
+      case "name": payload.name = value; break;
+      case "seasonNumber": payload.seasonNumber = Number(value); break;
+      case "placement": payload.placement = value; break;
+      case "logoUrl": payload.logoUrl = value.trim() === "" ? undefined : value.trim(); break;
+    }
 
     try {
-      const updated = await patchTeam(team.id, payload)
-      setLocalTeams((prev) => prev.map((t) => (t.id === team.id ? { ...t, ...updated } : t)))
-      refetch()
-    } catch (err) {
-      setSaveError(err instanceof Error ? err.message : 'Failed to save changes.')
+      const updated = await patchTeam(id, payload);
+      setLocalTeams((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, ...updated } : t))
+      );
+      refetch();
+    } catch (err: any) {
+      console.error(err);
+      alert("Failed to save changes:\n" + err.message);
+    } finally {
+      setEditing(null);
     }
-  }
+  };
 
-  const toggleStaffEdit = async (team: Team, enabled: boolean) => {
-    setSaveError(null)
-    try {
-      const updated = await patchTeamFlags(team.id, { captainEditEnabled: enabled })
-      setLocalTeams((prev) => prev.map((t) => (t.id === team.id ? { ...t, ...updated } : t)))
-    } catch (err) {
-      setSaveError(err instanceof Error ? err.message : 'Failed to update the staff-edit flag.')
-    }
-  }
+  // Delete handler (superadmin only)
+  const handleDelete = async (id: number) => {
+    if (user?.role !== "superadmin") return;
+    if (!window.confirm("Are you sure you want to delete this team?")) return;
 
-  const confirmDelete = async () => {
-    if (!pendingDelete) return
-    const wasDeleted = await deleteTeam(pendingDelete.id.toString())
+    const wasDeleted = await deleteTeam(id.toString());
     if (wasDeleted) {
-      setLocalTeams((prev) => prev.filter((t) => t.id !== pendingDelete.id))
-      refetch()
+      setLocalTeams((prev) => prev.filter((t) => t.id !== id));
+      refetch();
     }
-    setPendingDelete(null)
-  }
+  };
 
+  // Open "Create Team" modal
   const openModal = () => {
-    setIsModalOpen(true)
-    setFormError('')
-    setNewName('')
-    setNewPlacement(DEFAULT_PLACEMENT)
-    setNewLogoUrl('')
-    formRegionSeason.initFromActiveRegion()
-  }
+    setIsModalOpen(true);
+    setFormError("");
+    setNewName("");
+    formRegionSeason.initFromActiveRegion();
+    setNewPlacement("Didnt make playoffs");
+    setNewLogoUrl("");
+  };
 
-  const handleCreate = async (event: FormEvent) => {
-    event.preventDefault()
+  // Close modal
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setFormError("");
+  };
 
-    if (!newName.trim() || !formRegionSeason.regionId || formRegionSeason.seasonValue === '') {
-      setFormError('Name, region, and season are required.')
-      return
+  // Create new team handler
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newName.trim() === "" || !formRegionSeason.regionId || formRegionSeason.seasonValue === "") {
+      setFormError("Name, region, and season are required.");
+      return;
     }
 
-    const created = await createTeam({
+    const payload = {
       name: newName,
       seasonNumber: formRegionSeason.seasonValue as number,
       placement: newPlacement,
       logoUrl: newLogoUrl.trim() || undefined,
       ...formRegionSeason.regionPayload,
-    })
+    };
 
-    if (created) {
-      setLocalTeams((prev) => [created, ...prev])
-      refetch()
-      setIsModalOpen(false)
+    try {
+      const created = await createTeam(payload);
+      if (created) {
+        setLocalTeams((prev) => [created, ...prev]);
+        refetch();
+        closeModal();
+      }
+    } catch {
+      // Hook will expose createError if any
     }
-  }
+  };
 
-  /** Builds an inline-editable cell that stages the change for confirmation. */
-  const editableCell = (team: Team, field: EditField, current: string, placeholder?: string) => (
-    <InlineEditCell
-      label={`Team ${FIELD_LABELS[field]}`}
-      value={current}
-      placeholder={placeholder}
-      onCommit={(value) => setPendingEdit({ team, field, value, previous: current })}
-    />
-  )
-
-  const columns: DataTableColumn<Team>[] = [
-    { key: 'id', header: 'ID', width: 'w-16', render: (team) => team.id },
-    { key: 'name', header: 'Name', render: (team) => editableCell(team, 'name', team.name) },
+  const columns: TeamTableColumn[] = [
     {
-      key: 'seasonNumber',
-      header: 'Season',
-      width: 'w-24',
-      render: (team) => editableCell(team, 'seasonNumber', team.season.seasonNumber.toString()),
+      key: "id",
+      header: "ID",
+      render: (t) => t.id,
     },
     {
-      key: 'placement',
-      header: 'Placement',
-      render: (team) => editableCell(team, 'placement', team.placement),
+      key: "name",
+      header: "Name",
+      render: (t) => (
+        <div
+          style={{ cursor: "pointer" }}
+          onClick={() => setEditing({ id: t.id, field: "name", value: t.name })}
+        >
+          {editing?.id === t.id && editing.field === "name" ? (
+            <input
+              type="text"
+              value={editing.value}
+              onChange={(e) => setEditing({ ...editing, value: e.target.value })}
+              onBlur={commitEdit}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") e.currentTarget.blur();
+                if (e.key === "Escape") setEditing(null);
+              }}
+              autoFocus
+            />
+          ) : (
+            t.name
+          )}
+        </div>
+      ),
     },
     {
-      key: 'logoUrl',
-      header: 'Logo URL',
-      hideOnMobile: true,
-      render: (team) => editableCell(team, 'logoUrl', team.logoUrl || '', 'N/A'),
+      key: "seasonNumber",
+      header: "Season",
+      render: (t) => (
+        <div
+          className="small-column"
+          style={{ cursor: "pointer" }}
+          onClick={() =>
+            setEditing({ id: t.id, field: "seasonNumber", value: t.season.seasonNumber.toString() })
+          }
+        >
+          {editing?.id === t.id && editing.field === "seasonNumber" ? (
+            <input
+              type="number"
+              min="1"
+              value={editing.value}
+              onChange={(e) => setEditing({ ...editing, value: e.target.value })}
+              onBlur={commitEdit}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") e.currentTarget.blur();
+                if (e.key === "Escape") setEditing(null);
+              }}
+              autoFocus
+            />
+          ) : (
+            t.season.seasonNumber
+          )}
+        </div>
+      ),
     },
     {
-      key: 'captainEditEnabled',
-      header: 'Staff Edit',
-      align: 'center',
-      width: 'w-24',
-      render: (team) => (
-        <Checkbox
-          label=""
-          aria-label={`Allow staff edits for ${team.name}`}
-          checked={team.captainEditEnabled !== false}
-          onChange={(e) => toggleStaffEdit(team, e.target.checked)}
-          className="justify-center"
+      key: "placement",
+      header: "Placement",
+      render: (t) => (
+        <div
+          style={{ cursor: "pointer" }}
+          onClick={() => setEditing({ id: t.id, field: "placement", value: t.placement })}
+        >
+          {editing?.id === t.id && editing.field === "placement" ? (
+            <input
+              type="text"
+              value={editing.value}
+              onChange={(e) => setEditing({ ...editing, value: e.target.value })}
+              onBlur={commitEdit}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") e.currentTarget.blur();
+                if (e.key === "Escape") setEditing(null);
+              }}
+              autoFocus
+            />
+          ) : (
+            t.placement
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "logoUrl",
+      header: "Logo URL",
+      render: (t) => (
+        <div
+          style={{ cursor: "pointer" }}
+          onClick={() => setEditing({ id: t.id, field: "logoUrl", value: t.logoUrl || "" })}
+        >
+          {editing?.id === t.id && editing.field === "logoUrl" ? (
+            <input
+              type="url"
+              value={editing.value}
+              onChange={(e) => setEditing({ ...editing, value: e.target.value })}
+              onBlur={commitEdit}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") e.currentTarget.blur();
+                if (e.key === "Escape") setEditing(null);
+              }}
+              autoFocus
+            />
+          ) : (
+            t.logoUrl || "N/A"
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "captainEditEnabled",
+      header: "Staff Edit",
+      render: (t) => (
+        <input
+          type="checkbox"
+          checked={t.captainEditEnabled !== false}
+          onChange={async (e) => {
+            try {
+              const res = await authFetch(`${BACKEND_URL}/api/teams/${t.id}/flags`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ captainEditEnabled: e.target.checked }),
+              });
+              if (!res.ok) throw new Error("Failed");
+              const updated = await res.json();
+              setLocalTeams((prev) =>
+                prev.map((x) => (x.id === t.id ? { ...x, ...updated } : x))
+              );
+            } catch (err) {
+              console.error(err);
+            }
+          }}
         />
       ),
     },
     {
-      key: 'actions',
-      header: 'Actions',
-      align: 'right',
-      width: 'w-28',
-      render: (team) =>
-        canDelete ? (
-          <Button
-            variant="danger"
-            size="xs"
-            disabled={deleting}
-            onClick={() => setPendingDelete(team)}
-          >
-            Delete
-          </Button>
-        ) : (
-          <span className="text-xs text-content-muted">No permission</span>
-        ),
+      key: "actions",
+      header: "Actions",
+      render: (t) => (
+        <>
+          {user?.role === "superadmin" ? (
+            <button
+              onClick={() => handleDelete(t.id)}
+              disabled={deleting}
+              style={{
+                padding: "0.25rem 0.5rem",
+                borderRadius: "0.25rem",
+                background: "#dc3545",
+                color: "#fff",
+                border: "none",
+                cursor: "pointer",
+              }}
+            >
+              Delete
+            </button>
+          ) : (
+            <span className="text-muted">No permission</span>
+          )}
+          {deleteError && (
+            <p className="error" style={{ color: "red", marginTop: "0.25rem" }}>
+              {deleteError}
+            </p>
+          )}
+        </>
+      ),
     },
-  ]
+  ];
 
-  const clearFilters = () => {
-    setSearchQuery('')
-    setSeasonFilter('')
-    setCurrentPage(1)
-  }
+  if (loading) return <p>Loading teams…</p>;
+  if (error) return <p>Error: {error}</p>;
 
   return (
-    <PageContainer>
-      <PageHeader title="Teams" actions={<Button onClick={openModal}>Create Team</Button>} />
+    <div className="portal-main">
+      {/* Search and Controls */}
+      <div className="players-controls">
+        <button className="create-button" onClick={openModal}>
+          Create Team
+        </button>
+        <div className="players-controls-right">
+          <SearchBar onSearch={handleSearch} placeholder="Search teams..." />
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        </div>
+      </div>
 
-      <Toolbar
-        filters={
-          <FilterBar
-            onReset={clearFilters}
-            activeCount={[searchQuery, seasonFilter].filter(Boolean).length}
+      {/* Filters */}
+      <FilterBar onReset={clearFilters}>
+        <div className="filter-group">
+          <select
+            className="filter-select ui-filter-select"
+            aria-label="Season"
+            value={seasonFilter}
+            onChange={(e) => handleSeasonFilterChange(e.target.value)}
           >
-            <FilterSelect
-              label="Season"
-              value={seasonFilter}
-              onChange={(value) => {
-                setSeasonFilter(value)
-                setCurrentPage(1)
-              }}
-              options={seasonOptions}
-              placeholder={seasonsLoading ? 'Loading seasons…' : 'All Seasons'}
+            <option value="">{seasonsLoading ? "Loading seasons..." : "All Seasons"}</option>
+            {uniqueSeasons.map((season) => (
+              <option key={season.id} value={season.id.toString()}>
+                Season {season.seasonNumber}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="results-counter">
+          Showing {total === 0 ? 0 : ((currentPage - 1) * TEAMS_PER_PAGE) + 1}-{Math.min(currentPage * TEAMS_PER_PAGE, total)} of {total} teams
+        </div>
+      </FilterBar>
+
+      {/* Modal for Creating a New Team */}
+      <Modal isOpen={isModalOpen} onClose={closeModal} title="New Team" className="team-create-modal">
+        {formError && (
+          <p className="error" style={{ color: "red", marginBottom: "0.5rem" }}>
+            {formError}
+          </p>
+        )}
+
+        <form onSubmit={handleCreate} className="team-create-form">
+          <label>
+            Name*
+            <input
+              type="text"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              required
             />
-          </FilterBar>
-        }
-        trailing={
-          <>
-            <SearchBar
-              value={searchQuery}
-              onSearch={(query) => {
-                setSearchQuery(query)
-                setCurrentPage(1)
-              }}
-              placeholder="Search teams…"
-              className="w-full sm:w-64"
-            />
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-            />
-          </>
-        }
-      />
-
-      <ResultsCounter page={currentPage} pageSize={TEAMS_PER_PAGE} total={total} noun="teams" />
-
-      {saveError && <ErrorNotice message={saveError} />}
-      {deleteError && <ErrorNotice message={deleteError} />}
-
-      <DataTable
-        columns={columns}
-        rows={localTeams}
-        rowKey={(team) => team.id}
-        loading={loading}
-        error={error}
-        emptyLabel="No teams match your filters."
-      />
-
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="New Team" size="md">
-        <form onSubmit={handleCreate} className="flex flex-col gap-4">
-          {formError && <ErrorNotice message={formError} />}
-          {createError && <ErrorNotice message={createError} />}
-
-          <FormField label="Name" required>
-            {(id) => (
-              <TextInput
-                id={id}
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                required
-              />
-            )}
-          </FormField>
+          </label>
 
           <RegionSeasonFields
             regions={formRegionSeason.regions}
@@ -335,64 +464,55 @@ export default function TeamsPage() {
             seasonValueKey="seasonNumber"
           />
 
-          <FormField label="Placement">
-            {(id) => (
-              <Select
-                id={id}
-                value={newPlacement}
-                onChange={(e) => setNewPlacement(e.target.value)}
-                options={toOptions(TEAM_PLACEMENT_OPTIONS)}
-              />
-            )}
-          </FormField>
+          <label>
+            Placement
+            <select
+              value={newPlacement}
+              onChange={(e) => setNewPlacement(e.target.value)}
+            >
+              {TEAM_PLACEMENT_OPTIONS.map((placement) => (
+                <option key={placement} value={placement}>
+                  {placement}
+                </option>
+              ))}
+            </select>
+          </label>
 
-          <FormField label="Logo URL" hint="Optional — shown as the team's crest and card watermark.">
-            {(id) => (
-              <TextInput
-                id={id}
-                type="url"
-                value={newLogoUrl}
-                onChange={(e) => setNewLogoUrl(e.target.value)}
-                placeholder="https://example.com/logo.png"
-              />
-            )}
-          </FormField>
+          <label>
+            Logo URL (Optional)
+            <input
+              type="url"
+              value={newLogoUrl}
+              onChange={(e) => setNewLogoUrl(e.target.value)}
+              placeholder="https://example.com/logo.png"
+            />
+          </label>
 
-          <Button type="submit" loading={creating} loadingLabel="Creating…" className="self-start">
-            Submit
-          </Button>
+          <button
+            type="submit"
+            disabled={creating}
+            className="player-btn-submit"
+          >
+            {creating ? "Creating…" : "Submit"}
+          </button>
+          {createError && (
+            <p className="error" style={{ color: "red", marginTop: "0.5rem" }}>
+              {createError}
+            </p>
+          )}
         </form>
       </Modal>
 
-      <ConfirmModal
-        isOpen={pendingEdit !== null}
-        onClose={() => setPendingEdit(null)}
-        onConfirm={applyEdit}
-        tone="primary"
-        title={`Change ${pendingEdit ? FIELD_LABELS[pendingEdit.field] : ''}`}
-        confirmLabel="Save change"
-        message={
-          <>
-            Change {pendingEdit ? FIELD_LABELS[pendingEdit.field] : ''} from{' '}
-            <strong>{pendingEdit?.previous || '(empty)'}</strong> to{' '}
-            <strong>{pendingEdit?.value || '(empty)'}</strong>?
-          </>
-        }
-      />
+      {/* Teams Table */}
+      <div style={{ marginTop: "1.5rem" }}>
+        <Table
+          columns={columns}
+          rows={localTeams}
+          rowKey={(row) => row.id}
+        />
+      </div>
+    </div>
+  );
+};
 
-      <ConfirmModal
-        isOpen={pendingDelete !== null}
-        onClose={() => setPendingDelete(null)}
-        onConfirm={confirmDelete}
-        loading={deleting}
-        title="Delete team"
-        confirmLabel="Delete"
-        message={
-          <>
-            Delete <strong>{pendingDelete?.name}</strong>? This cannot be undone.
-          </>
-        }
-      />
-    </PageContainer>
-  )
-}
+export default TeamsPage;

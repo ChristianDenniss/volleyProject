@@ -1,26 +1,19 @@
-import { useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
+import { useMediumPlayers, useSkinnySeasons } from "../hooks/allFetch";
 import { useNavigate } from "react-router-dom";
-import { useMediumPlayers, useSkinnySeasons } from "@/hooks/allFetch";
-import type { Player, Stats, Team } from "@/types/interfaces";
-import { useRegion } from "@/context/regionContext";
-import { useDebouncedValue } from "@/hooks/useDebouncedValue";
-import { PLAYER_POSITIONS } from "@/constants/playerPositions";
-
-import PageContainer from "@/components/ui/layout/PageContainer";
-import Toolbar from "@/components/ui/layout/Toolbar";
-import DataTable, { type DataTableColumn } from "@/components/ui/layout/DataTable";
-import DetailStats from "@/components/ui/layout/DetailStats";
-import FilterBar from "@/components/ui/filters/FilterBar";
-import FilterSelect from "@/components/ui/filters/FilterSelect";
-import SearchBar from "@/components/ui/filters/SearchBar";
-import Pagination from "@/components/ui/navigation/Pagination";
-import Button from "@/components/ui/buttons/Button";
-import Pill from "@/components/ui/pills/Pill";
-import OverflowListCell from "@/components/ui/misc/OverflowListCell";
-import { toOptions } from "@/components/ui/inputs/Select";
+import type { Player, Stats, Team } from "../types/interfaces";
+import Table, { type TableColumn } from "./ui/Table";
+import "../styles/Players.css";
+import "../styles/ListingPage.css";
+import SearchBar from "./Searchbar";
+import Pagination from "./Pagination";
+import FilterBar from "./ui/FilterBar";
+import { useRegion } from "../context/regionContext";
+import { useDebouncedValue } from "../hooks/useDebouncedValue";
+import OverflowListCell from "./ui/OverflowListCell";
+import { PLAYER_POSITIONS } from "../constants/playerPositions";
 
 const LISTING_OVERFLOW_VISIBLE = 2;
-const PLAYERS_PER_PAGE = 25;
 
 interface PlayerSeasonEntry {
   seasonId: number;
@@ -102,21 +95,22 @@ function formatAwardsSummary(player: Player): string {
   return awards.map((award) => award.type).join(", ");
 }
 
-export default function Players() {
+const Players: React.FC = () => {
   const { regionQuery } = useRegion();
   const navigate = useNavigate();
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [seasonFilter, setSeasonFilter] = useState("");
-  const [positionFilter, setPositionFilter] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [seasonFilter, setSeasonFilter] = useState<string>("");
+  const [positionFilter, setPositionFilter] = useState<string>("");
+  const [currentPage, setCurrentPage] = useState<number>(1);
   const [expandedRows, setExpandedRows] = useState<Record<number, boolean>>({});
+  const playersPerPage = 25;
 
   const debouncedSearch = useDebouncedValue(searchQuery);
 
   const { data: paginatedPlayers, totalPages, loading, error } = useMediumPlayers({
     page: currentPage,
-    limit: PLAYERS_PER_PAGE,
+    limit: playersPerPage,
     search: debouncedSearch || undefined,
     seasonId: seasonFilter || undefined,
     position: positionFilter || undefined,
@@ -124,41 +118,35 @@ export default function Players() {
   });
 
   const { data: seasons } = useSkinnySeasons({ page: 1, limit: 100, ...regionQuery });
+  const seasonOptions = [...(seasons ?? [])].sort((a, b) => a.seasonNumber - b.seasonNumber);
 
-  const seasonOptions = useMemo(
-    () =>
-      [...(seasons ?? [])]
-        .sort((a, b) => a.seasonNumber - b.seasonNumber)
-        .map((season) => ({ value: season.id.toString(), label: `Season ${season.seasonNumber}` })),
-    [seasons]
-  );
-
-  const toggleRow = (id: number) =>
+  const toggleRow = (id: number) => {
     setExpandedRows((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
 
-  const columns: DataTableColumn<Player>[] = useMemo(
+  const playerColumns: TableColumn<Player>[] = useMemo(
     () => [
       {
         key: "name",
         header: "Player",
-        render: (player) => <span className="font-medium text-content">{player.name}</span>,
+        render: (player) => player.name,
       },
       {
         key: "position",
         header: "Position",
         render: (player) =>
           player.position && player.position !== "N/A" ? (
-            <Pill tone="accent" size="sm">{player.position}</Pill>
+            <span className="listing-table-position-pill">{player.position}</span>
           ) : (
-            <span className="text-content-muted">Unknown</span>
+            "Unknown"
           ),
       },
       {
         key: "teams",
         header: "Teams",
-        hideOnMobile: true,
         render: (player) => (
           <OverflowListCell
+            className="listing-table-overflow-list"
             items={getPlayerTeamLabels(player)}
             maxVisible={LISTING_OVERFLOW_VISIBLE}
             popoverTitle="Teams"
@@ -168,9 +156,9 @@ export default function Players() {
       {
         key: "seasons",
         header: "Seasons",
-        hideOnMobile: true,
         render: (player) => (
           <OverflowListCell
+            className="listing-table-overflow-list"
             items={getPlayerSeasonLabels(player)}
             maxVisible={LISTING_OVERFLOW_VISIBLE}
             popoverTitle="Seasons"
@@ -180,12 +168,10 @@ export default function Players() {
       {
         key: "expand",
         header: "",
-        align: "right",
-        width: "w-10",
         render: (player) => (
           <span
-            aria-hidden
-            className={`inline-block text-xs text-content-muted transition-transform ${expandedRows[player.id] ? "rotate-90" : ""}`}
+            className={`listing-table-expand-toggle${expandedRows[player.id] ? " expanded" : ""}`}
+            aria-hidden="true"
           >
             ▶
           </span>
@@ -195,7 +181,10 @@ export default function Players() {
     [expandedRows]
   );
 
-  const activeFilterCount = [searchQuery, seasonFilter, positionFilter].filter(Boolean).length;
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    setCurrentPage(1);
+  };
 
   const clearFilters = () => {
     setSearchQuery("");
@@ -205,93 +194,148 @@ export default function Players() {
   };
 
   return (
-    <PageContainer>
-      <Toolbar
-        filters={
-          <FilterBar onReset={clearFilters} activeCount={activeFilterCount}>
-            <FilterSelect
-              label="Season"
-              value={seasonFilter}
-              onChange={(value) => {
-                setSeasonFilter(value);
-                setCurrentPage(1);
-              }}
-              options={seasonOptions}
-              placeholder="All Seasons"
-            />
-            <FilterSelect
-              label="Position"
-              value={positionFilter}
-              onChange={(value) => {
-                setPositionFilter(value);
-                setCurrentPage(1);
-              }}
-              options={toOptions(PLAYER_POSITIONS)}
-              placeholder="All Positions"
-            />
+    <div className={`players-page ${loading ? "loading" : ""}`}>
+      <div className="listing-controls-toolbar">
+          <FilterBar onReset={clearFilters}>
+            <div className="players-season-filter">
+              <select
+                id="season-filter"
+                aria-label="Season"
+                value={seasonFilter}
+                onChange={(e) => {
+                  setSeasonFilter(e.target.value);
+                  setCurrentPage(1);
+                }}
+              >
+                <option value="">All Seasons</option>
+                {seasonOptions.map((season) => (
+                  <option key={season.id} value={season.id.toString()}>
+                    Season {season.seasonNumber}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="players-position-filter">
+              <select
+                id="position-filter"
+                aria-label="Position"
+                value={positionFilter}
+                onChange={(e) => {
+                  setPositionFilter(e.target.value);
+                  setCurrentPage(1);
+                }}
+              >
+                <option value="">All Positions</option>
+                {PLAYER_POSITIONS.map((position) => (
+                  <option key={position} value={position}>
+                    {position}
+                  </option>
+                ))}
+              </select>
+            </div>
           </FilterBar>
-        }
-        trailing={
-          <>
+
+          <div className="listing-search-row">
             <SearchBar
-              value={searchQuery}
-              onSearch={(query) => {
-                setSearchQuery(query);
-                setCurrentPage(1);
-              }}
-              placeholder="Search players…"
-              className="w-full sm:w-64"
+              onSearch={handleSearch}
+              placeholder="Search players..."
             />
             <Pagination
               currentPage={currentPage}
               totalPages={totalPages}
               onPageChange={setCurrentPage}
             />
-          </>
-        }
-      />
+          </div>
+      </div>
 
-      <DataTable
-        columns={columns}
-        rows={paginatedPlayers}
-        rowKey={(player) => player.id}
-        loading={loading}
-        error={error}
-        emptyLabel="No players match your filters."
-        onRowClick={(player) => toggleRow(player.id)}
-        expandedRow={(player) => {
-          if (!expandedRows[player.id]) return null;
-
-          const totals = getPlayerCareerTotals(player);
-
-          return (
-            <div className="flex flex-col gap-4">
-              <DetailStats
-                columns={6}
-                items={[
-                  { label: "Awards", value: formatAwardsSummary(player) },
-                  { label: "Kills", value: totals.kills },
-                  { label: "Assists", value: totals.assists },
-                  { label: "Blocks", value: totals.blocks },
-                  { label: "Receives", value: totals.receives },
-                  { label: "Aces", value: totals.aces },
-                  { label: "Seasons played", value: formatPlayerSeasons(player), wide: true },
-                ]}
-              />
-              <Button
-                size="sm"
-                className="self-start"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigate(`/players/${player.id}`);
-                }}
-              >
-                View profile
-              </Button>
+      {error ? (
+        <div>Error: {error}</div>
+      ) : (
+        <div className="listing-content-wrapper">
+          {loading ? (
+            <div className="listing-table-wrapper">
+              <div className="listing-skeleton-table">
+                {Array.from({ length: 10 }).map((_, index) => (
+                  <div key={index} className="listing-skeleton-row" />
+                ))}
+              </div>
             </div>
-          );
-        }}
-      />
-    </PageContainer>
+          ) : !paginatedPlayers || paginatedPlayers.length === 0 ? (
+            <div className="listing-table-empty">No players match your filters.</div>
+          ) : (
+            <Table
+              columns={playerColumns}
+              rows={paginatedPlayers}
+              rowKey={(player) => player.id}
+              tableClassName="listing-table"
+              wrapperClassName="listing-table-wrapper"
+              rowClassName={(player) =>
+                `listing-row-clickable${expandedRows[player.id] ? " listing-row-expanded" : ""}`
+              }
+              onRowClick={(player) => toggleRow(player.id)}
+              renderAfterRow={(player) => {
+                if (!expandedRows[player.id]) return null;
+
+                const totals = getPlayerCareerTotals(player);
+                const seasonsPlayed = formatPlayerSeasons(player);
+
+                return (
+                  <tr className="listing-table-detail-row">
+                    <td colSpan={playerColumns.length}>
+                      <div className="listing-table-detail">
+                        <dl className="listing-table-detail-stats">
+                          <div className="listing-table-detail-stat">
+                            <dt>Awards</dt>
+                            <dd>{formatAwardsSummary(player)}</dd>
+                          </div>
+                          <div className="listing-table-detail-stat">
+                            <dt>Kills</dt>
+                            <dd>{totals.kills}</dd>
+                          </div>
+                          <div className="listing-table-detail-stat">
+                            <dt>Assists</dt>
+                            <dd>{totals.assists}</dd>
+                          </div>
+                          <div className="listing-table-detail-stat">
+                            <dt>Blocks</dt>
+                            <dd>{totals.blocks}</dd>
+                          </div>
+                          <div className="listing-table-detail-stat">
+                            <dt>Receives</dt>
+                            <dd>{totals.receives}</dd>
+                          </div>
+                          <div className="listing-table-detail-stat">
+                            <dt>Aces</dt>
+                            <dd>{totals.aces}</dd>
+                          </div>
+                          <div className="listing-table-detail-stat listing-table-detail-stat--wide">
+                            <dt>Seasons played</dt>
+                            <dd>{seasonsPlayed}</dd>
+                          </div>
+                        </dl>
+
+                        <button
+                          type="button"
+                          className="ui-btn ui-btn-primary listing-table-detail-profile-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/players/${player.id}`);
+                          }}
+                        >
+                          View profile
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              }}
+            />
+          )}
+        </div>
+      )}
+    </div>
   );
-}
+};
+
+export default Players;

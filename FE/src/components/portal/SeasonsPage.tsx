@@ -1,448 +1,664 @@
-/**
- * SeasonsPage — the admin portal's season management view: a table with inline editing of theme, image URL and date range, direct toggles for the registrations-open and staff-edit flags, an editable team cap, and a create-season modal.
- * Text and date edits stage a confirmation before the PATCH; the boolean flags and the team cap apply immediately, because they are single-click toggles where a confirm dialog would be more disruptive than the change.
- * Lives in `components/portal/`; mounted at /portal/seasons.
- */
-import { useEffect, useState, type FormEvent } from 'react'
-import { useSkinnySeasons } from '@/hooks/allFetch'
-import { useSeasonMutations } from '@/hooks/allPatch'
-import { useCreateSeasons } from '@/hooks/allCreate'
-import { useDeleteSeasons } from '@/hooks/allDelete'
-import { useAuth } from '@/context/authContext'
-import { useRegion } from '@/context/regionContext'
-import { useFormRegionSeason } from '@/hooks/useFormRegionSeason'
-import type { Season } from '@/types/interfaces'
+// src/pages/SeasonsPage.tsx
 
-import PageContainer from '@/components/ui/layout/PageContainer'
-import PageHeader from '@/components/ui/layout/PageHeader'
-import Toolbar from '@/components/ui/layout/Toolbar'
-import DataTable, { type DataTableColumn } from '@/components/ui/layout/DataTable'
-import Pagination from '@/components/ui/navigation/Pagination'
-import Button from '@/components/ui/buttons/Button'
-import Modal from '@/components/ui/modals/Modal'
-import ConfirmModal from '@/components/ui/modals/ConfirmModal'
-import ErrorNotice from '@/components/ui/feedback/ErrorNotice'
-import FormField from '@/components/ui/inputs/FormField'
-import TextInput from '@/components/ui/inputs/TextInput'
-import Checkbox from '@/components/ui/inputs/Checkbox'
-import InlineEditCell from '@/components/ui/inputs/InlineEditCell'
-import RegionSeasonFields from '@/components/ui/inputs/RegionSeasonFields'
+import React, { useState, useEffect } from "react";
+import { useSkinnySeasons }                  from "../../hooks/allFetch";
+import { useSeasonMutations }          from "../../hooks/allPatch";
+import { useCreateSeasons }            from "../../hooks/allCreate";
+import { useDeleteSeasons }            from "../../hooks/allDelete";
+import { useAuth } from "../../context/authContext";
+import { useRegion } from "../../context/regionContext";
+import type { Season }                 from "../../types/interfaces";
+import Modal                           from "../ui/Modal";
+import Table                           from "../ui/Table";
+import Pagination                      from "../Pagination";
+import RegionSeasonFields              from "../ui/RegionSeasonFields";
+import { useFormRegionSeason }         from "../../hooks/useFormRegionSeason";
+import "../../styles/SeasonsPage.css";
 
-const SEASONS_PER_PAGE = 20
-
-type EditField = 'theme' | 'image' | 'startDate' | 'endDate'
-
-const FIELD_LABELS: Record<EditField, string> = {
-  theme: 'theme',
-  image: 'image URL',
-  startDate: 'start date',
-  endDate: 'end date',
+type EditField = "theme" | "image" | "startDate" | "endDate";
+interface EditingState {
+    id:    number;
+    field: EditField;
+    value: string; // "YYYY-MM-DD" for dates, text otherwise
 }
 
-interface PendingEdit {
-  season: Season
-  field: EditField
-  value: string
-  previous: string
-}
+// Table<T> constrains T to Record<string, unknown>, which plain domain
+// interfaces like Season don't structurally satisfy (no index signature).
+// Narrow the shared component to a Season-specific alias once here so the
+// column/row definitions below stay fully typed against Season.
+const SeasonTable = Table as unknown as React.ComponentType<{
+    columns: {
+        key:     string;
+        header:  string;
+        render?: (row: Season) => React.ReactNode;
+    }[];
+    rows:   Season[];
+    rowKey: (row: Season) => string | number;
+}>;
 
-/** A date column edits YYYY-MM-DD; an absent end date means the season is ongoing. */
-function toDateInput(date: Date | string | undefined | null): string {
-  if (!date) return ''
-  return new Date(date).toISOString().slice(0, 10)
-}
+const SEASONS_PER_PAGE = 20;
 
-export default function SeasonsPage() {
-  const { regionQuery, activeRegion } = useRegion()
-  const { user } = useAuth()
-  const formRegionSeason = useFormRegionSeason()
+const SeasonsPage: React.FC = () =>
+{
+    const { regionQuery, activeRegion } = useRegion();
+    const formRegionSeason = useFormRegionSeason();
+    const [currentPage, setCurrentPage] = useState(1);
+    const { data: seasons, totalPages, loading, error } = useSkinnySeasons({
+        page: currentPage,
+        limit: SEASONS_PER_PAGE,
+        ...regionQuery,
+    });
 
-  const [currentPage, setCurrentPage] = useState(1)
+    // Patch (edit) existing seasons
+    const { patchSeason }                   = useSeasonMutations();
 
-  const { data: seasons, totalPages, loading, error } = useSkinnySeasons({
-    page: currentPage,
-    limit: SEASONS_PER_PAGE,
-    ...regionQuery,
-  })
+    // Create new season
+    const { createSeason, loading: creating } = useCreateSeasons();
 
-  const { patchSeason } = useSeasonMutations()
-  const { createSeason, loading: creating } = useCreateSeasons()
-  const { deleteItem: deleteSeason, loading: deleting, error: deleteError } = useDeleteSeasons()
+    // Delete a season
+    const { deleteItem: deleteSeason, loading: deleting, error: deleteError } = useDeleteSeasons();
 
-  const [localSeasons, setLocalSeasons] = useState<Season[]>([])
-  const [pendingEdit, setPendingEdit] = useState<PendingEdit | null>(null)
-  const [pendingDelete, setPendingDelete] = useState<Season | null>(null)
-  const [saveError, setSaveError] = useState<string | null>(null)
+    // Read current user for permission check
+    const { user } = useAuth();
 
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [newSeasonNumber, setNewSeasonNumber] = useState(0)
-  const [newTheme, setNewTheme] = useState('')
-  const [newImage, setNewImage] = useState('')
-  const [newStartDate, setNewStartDate] = useState('')
-  const [newEndDate, setNewEndDate] = useState('')
-  const [formError, setFormError] = useState('')
+    // Local copy of seasons for inline edits and appending new ones
+    const [ localSeasons, setLocalSeasons ] = useState<Season[]>([]);
 
-  const canDelete = user?.role === 'superadmin'
+    // Track which field is being edited
+    const [ editing, setEditing ]           = useState<EditingState | null>(null);
 
-  useEffect(() => {
-    if (seasons) setLocalSeasons(seasons)
-  }, [seasons])
+    // Control modal visibility
+    const [ isModalOpen, setIsModalOpen ]   = useState<boolean>(false);
 
-  // A region switch narrows the result set — page 1 is the only page guaranteed to exist.
-  useEffect(() => {
-    setCurrentPage(1)
-  }, [activeRegion])
+    // Form state for creating a new season
+    const [ newSeasonNumber, setNewSeasonNumber ] = useState<number>(0);
+    const [ newTheme, setNewTheme ]               = useState<string>("");
+    const [ newImage, setNewImage ]               = useState<string>("");
+    const [ newStartDate, setNewStartDate ]       = useState<string>("");
+    const [ newEndDate, setNewEndDate ]           = useState<string>("");
 
-  /** Applies a patch and merges the response into the local row. */
-  const applyPatch = async (season: Season, payload: Partial<Season>) => {
-    setSaveError(null)
-    try {
-      const updated = await patchSeason(season.id, payload)
-      setLocalSeasons((prev) => prev.map((s) => (s.id === season.id ? { ...s, ...updated } : s)))
-    } catch (err) {
-      setSaveError(err instanceof Error ? err.message : 'Failed to save changes.')
-    }
-  }
+    // Form-level error message
+    const [ formError, setFormError ]             = useState<string>("");
 
-  const applyStagedEdit = async () => {
-    if (!pendingEdit) return
-    const { season, field, value } = pendingEdit
-    setPendingEdit(null)
-
-    const payload: Partial<Season> = {}
-    if (field === 'theme') payload.theme = value
-    else if (field === 'image') payload.image = value || undefined
-    else if (field === 'startDate') payload.startDate = new Date(value)
-    else payload.endDate = value ? new Date(value) : undefined
-
-    await applyPatch(season, payload)
-  }
-
-  const confirmDelete = async () => {
-    if (!pendingDelete) return
-    const wasDeleted = await deleteSeason(pendingDelete.id.toString())
-    if (wasDeleted) {
-      setLocalSeasons((prev) => prev.filter((s) => s.id !== pendingDelete.id))
-    }
-    setPendingDelete(null)
-  }
-
-  const openModal = () => {
-    setIsModalOpen(true)
-    setFormError('')
-    setNewSeasonNumber(0)
-    setNewTheme('')
-    setNewImage('')
-    setNewStartDate('')
-    setNewEndDate('')
-    formRegionSeason.initFromActiveRegion()
-  }
-
-  const handleCreate = async (event: FormEvent) => {
-    event.preventDefault()
-
-    if (
-      newSeasonNumber <= 0 ||
-      !newTheme.trim() ||
-      !newStartDate.trim() ||
-      !formRegionSeason.regionId
-    ) {
-      setFormError('Region, season number, theme, and start date are required.')
-      return
-    }
-
-    const created = await createSeason({
-      seasonNumber: newSeasonNumber,
-      theme: newTheme,
-      image: newImage || undefined,
-      startDate: new Date(newStartDate).toISOString(),
-      endDate: newEndDate ? new Date(newEndDate).toISOString() : undefined,
-      ...formRegionSeason.regionPayload,
-    })
-
-    if (created) {
-      setLocalSeasons((prev) => [created, ...prev])
-      setIsModalOpen(false)
-    }
-  }
-
-  const stageEdit = (season: Season, field: EditField, value: string, previous: string) =>
-    setPendingEdit({ season, field, value, previous })
-
-  const columns: DataTableColumn<Season>[] = [
+    useEffect(() =>
     {
-      key: 'seasonNumber',
-      header: 'Season #',
-      width: 'w-24',
-      render: (row) => <span className="font-medium text-content">{row.seasonNumber}</span>,
-    },
-    {
-      key: 'theme',
-      header: 'Theme',
-      render: (row) => (
-        <InlineEditCell
-          label="Theme"
-          value={row.theme}
-          onCommit={(value) => stageEdit(row, 'theme', value, row.theme)}
-        />
-      ),
-    },
-    {
-      key: 'registrationsOpen',
-      header: 'Apps Open',
-      align: 'center',
-      width: 'w-24',
-      render: (row) => (
-        <Checkbox
-          label=""
-          aria-label={`Registrations open for season ${row.seasonNumber}`}
-          checked={Boolean(row.registrationsOpen)}
-          onChange={(e) => applyPatch(row, { registrationsOpen: e.target.checked })}
-          className="justify-center"
-        />
-      ),
-    },
-    {
-      key: 'captainEditEnabled',
-      header: 'Staff Edit',
-      align: 'center',
-      width: 'w-24',
-      render: (row) => (
-        <Checkbox
-          label=""
-          aria-label={`Allow staff edits in season ${row.seasonNumber}`}
-          checked={row.captainEditEnabled !== false}
-          onChange={(e) => applyPatch(row, { captainEditEnabled: e.target.checked })}
-          className="justify-center"
-        />
-      ),
-    },
-    {
-      key: 'maxTeams',
-      header: 'Max Teams',
-      align: 'center',
-      width: 'w-28',
-      render: (row) => (
-        <TextInput
-          type="number"
-          min={1}
-          size="sm"
-          aria-label={`Maximum teams in season ${row.seasonNumber}`}
-          defaultValue={row.maxTeams ?? undefined}
-          placeholder="—"
-          className="w-20 text-center"
-          onBlur={(e) => {
-            const raw = e.target.value.trim()
-            void applyPatch(row, { maxTeams: raw === '' ? null : Number(raw) })
-          }}
-        />
-      ),
-    },
-    {
-      key: 'image',
-      header: 'Image URL',
-      hideOnMobile: true,
-      render: (row) => (
-        <InlineEditCell
-          label="Image URL"
-          type="url"
-          value={row.image ?? ''}
-          placeholder="None"
-          onCommit={(value) => stageEdit(row, 'image', value, row.image ?? '')}
-        />
-      ),
-    },
-    {
-      key: 'startDate',
-      header: 'Start Date',
-      render: (row) => (
-        <InlineEditCell
-          label="Start date"
-          type="date"
-          value={toDateInput(row.startDate)}
-          display={new Date(row.startDate).toLocaleDateString()}
-          onCommit={(value) => stageEdit(row, 'startDate', value, toDateInput(row.startDate))}
-        />
-      ),
-    },
-    {
-      key: 'endDate',
-      header: 'End Date',
-      render: (row) => (
-        <InlineEditCell
-          label="End date"
-          type="date"
-          value={toDateInput(row.endDate)}
-          display={row.endDate ? new Date(row.endDate).toLocaleDateString() : 'Ongoing'}
-          onCommit={(value) => stageEdit(row, 'endDate', value, toDateInput(row.endDate))}
-        />
-      ),
-    },
-    {
-      key: 'actions',
-      header: 'Actions',
-      align: 'right',
-      width: 'w-28',
-      render: (row) =>
-        canDelete ? (
-          <Button
-            variant="danger"
-            size="xs"
-            disabled={deleting}
-            onClick={() => setPendingDelete(row)}
-          >
-            Delete
-          </Button>
-        ) : (
-          <span className="text-xs text-content-muted">No permission</span>
-        ),
-    },
-  ]
-
-  return (
-    <PageContainer>
-      <PageHeader title="Seasons" actions={<Button onClick={openModal}>Create Season</Button>} />
-
-      <Toolbar
-        trailing={
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-          />
+        if (seasons)
+        {
+            setLocalSeasons(seasons);
         }
-      />
+    }, [seasons]);
 
-      {saveError && <ErrorNotice message={saveError} />}
-      {deleteError && <ErrorNotice message={deleteError} />}
+    // Reset to first page when the active region changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [activeRegion]);
 
-      <DataTable
-        columns={columns}
-        rows={localSeasons}
-        rowKey={(row) => row.id}
-        loading={loading}
-        error={error}
-        emptyLabel="No seasons in this region yet."
-      />
+    // Commit inline edits for existing seasons
+    const commitEdit = async () =>
+    {
+        if (!editing) return;
 
-      <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title="New Season"
-        size="md"
-        footer={
-          <Button
-            type="submit"
-            form="create-season-form"
-            loading={creating}
-            loadingLabel="Creating…"
-          >
-            Submit
-          </Button>
+        const { id, field, value } = editing;
+
+        // Find original in localSeasons
+        const orig = localSeasons.find((s) => s.id === id);
+        if (!orig)
+        {
+            setEditing(null);
+            return;
         }
-      >
-        <form id="create-season-form" onSubmit={handleCreate} className="flex flex-col gap-4">
-          {formError && <ErrorNotice message={formError} />}
 
-          <RegionSeasonFields
-            regions={formRegionSeason.regions}
-            regionsLoading={formRegionSeason.regionsLoading}
-            regionId={formRegionSeason.regionId}
-            onRegionChange={formRegionSeason.setRegionId}
-            includeSeason={false}
-          />
+        // Derive original string for comparison
+        let origValue: string;
+        if (field === "theme")         origValue = orig.theme;
+        else if (field === "image")     origValue = orig.image ?? "";
+        else if (field === "startDate") origValue = new Date(orig.startDate).toISOString().slice(0, 10);
+        else                            origValue = orig.endDate
+                                             ? new Date(orig.endDate).toISOString().slice(0, 10)
+                                             : "";
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <FormField label="Season Number" required>
-              {(id) => (
-                <TextInput
-                  id={id}
-                  type="number"
-                  min={1}
-                  value={newSeasonNumber}
-                  onChange={(e) => setNewSeasonNumber(Number(e.target.value))}
-                  required
-                />
-              )}
-            </FormField>
-
-            <FormField label="Theme" required>
-              {(id) => (
-                <TextInput
-                  id={id}
-                  value={newTheme}
-                  onChange={(e) => setNewTheme(e.target.value)}
-                  required
-                />
-              )}
-            </FormField>
-
-            <FormField label="Start Date" required>
-              {(id) => (
-                <TextInput
-                  id={id}
-                  type="date"
-                  value={newStartDate}
-                  onChange={(e) => setNewStartDate(e.target.value)}
-                  required
-                />
-              )}
-            </FormField>
-
-            <FormField label="End Date" hint="Leave empty for an ongoing season.">
-              {(id) => (
-                <TextInput
-                  id={id}
-                  type="date"
-                  value={newEndDate}
-                  onChange={(e) => setNewEndDate(e.target.value)}
-                />
-              )}
-            </FormField>
-          </div>
-
-          <FormField label="Image URL">
-            {(id) => (
-              <TextInput
-                id={id}
-                type="url"
-                value={newImage}
-                onChange={(e) => setNewImage(e.target.value)}
-              />
-            )}
-          </FormField>
-        </form>
-      </Modal>
-
-      <ConfirmModal
-        isOpen={pendingEdit !== null}
-        onClose={() => setPendingEdit(null)}
-        onConfirm={applyStagedEdit}
-        tone="primary"
-        title={`Change ${pendingEdit ? FIELD_LABELS[pendingEdit.field] : ''}`}
-        confirmLabel="Save change"
-        message={
-          <>
-            Change {pendingEdit ? FIELD_LABELS[pendingEdit.field] : ''} from{' '}
-            <strong>{pendingEdit?.previous || '(empty)'}</strong> to{' '}
-            <strong>{pendingEdit?.value || '(empty)'}</strong>?
-          </>
+        // If reverted to original, cancel
+        if (value === origValue)
+        {
+            setEditing(null);
+            return;
         }
-      />
 
-      <ConfirmModal
-        isOpen={pendingDelete !== null}
-        onClose={() => setPendingDelete(null)}
-        onConfirm={confirmDelete}
-        loading={deleting}
-        title="Delete season"
-        confirmLabel="Delete"
-        message={
-          <>
-            Delete <strong>Season {pendingDelete?.seasonNumber}</strong>? This cannot be undone.
-          </>
+        const label =
+            field === "theme"     ? "theme" :
+            field === "image"     ? "image URL" :
+            field === "startDate" ? "start date" :
+                                     "end date";
+
+        if (!window.confirm(`Change ${label} from "${origValue}" to "${value}"?`))
+        {
+            setEditing(null);
+            return;
         }
-      />
-    </PageContainer>
-  )
-}
+
+        // Build payload for patch
+        const payload: Partial<Season> = {};
+        if (field === "theme")         payload.theme     = value;
+        else if (field === "image")     payload.image     = value !== "" ? value : undefined;
+        else if (field === "startDate") payload.startDate = new Date(value);
+        else                            payload.endDate   = value !== "" ? new Date(value) : undefined;
+
+        try
+        {
+            // Send patch request
+            const updated = await patchSeason(id, payload);
+
+            // Update local state
+            setLocalSeasons((prev) =>
+                prev.map((s) =>
+                    s.id === id
+                        ? {
+                              ...s,
+                              theme:     updated.theme,
+                              image:     updated.image,
+                              startDate: updated.startDate,
+                              endDate:   updated.endDate,
+                          }
+                        : s
+                )
+            );
+        }
+        catch (err: any)
+        {
+            console.error(err);
+            alert("Failed to save changes:\n" + err.message);
+        }
+        finally
+        {
+            setEditing(null);
+        }
+    };
+
+    // Handler to open the modal
+    const openModal = () =>
+    {
+        setIsModalOpen(true);
+        setFormError("");
+        formRegionSeason.initFromActiveRegion();
+        setNewSeasonNumber(0);
+        setNewTheme("");
+        setNewImage("");
+        setNewStartDate("");
+        setNewEndDate("");
+    };
+
+    // Handler to close the modal
+    const closeModal = () =>
+    {
+        setIsModalOpen(false);
+        setFormError("");
+    };
+
+    // Handler to create a new season
+    const handleCreate = async (e: React.FormEvent) =>
+    {
+        e.preventDefault();
+
+        // Validate required fields
+        if (
+            newSeasonNumber <= 0 ||
+            newTheme.trim() === "" ||
+            newStartDate.trim() === "" ||
+            !formRegionSeason.regionId
+        )
+        {
+            setFormError("Region, season number, theme, and start date are required.");
+            return;
+        }
+
+        // Build payload with full ISO timestamps
+        const payload = {
+            seasonNumber: newSeasonNumber,
+            theme:        newTheme,
+            image:        newImage !== "" ? newImage : undefined,
+            startDate:    new Date(newStartDate).toISOString(),
+            endDate:      newEndDate !== "" ? new Date(newEndDate).toISOString() : undefined,
+            ...formRegionSeason.regionPayload,
+        };
+
+        try
+        {
+            // Call createSeason, which returns the newly created Season
+            const created = await createSeason(payload);
+
+            if (created)
+            {
+                // Prepend to local state so it appears at the top
+                setLocalSeasons((prev) => [created, ...prev]);
+
+                // Close modal on success
+                closeModal();
+            }
+        }
+        catch (err)
+        {
+            // Error is already handled inside createSeason hook
+        }
+    };
+
+    // Handler to delete a season (only if user is superadmin)
+    const handleDelete = async (id: number) =>
+    {
+        if (user?.role !== "superadmin") return;
+
+        if (!window.confirm("Are you sure you want to delete this season?")) return;
+
+        try
+        {
+            const wasDeleted = await deleteSeason(id.toString());
+            if (wasDeleted)
+            {
+                setLocalSeasons((prev) => prev.filter((s) => s.id !== id));
+            }
+        }
+        catch (err)
+        {
+            console.error(err);
+            // deleteError will be displayed below
+        }
+    };
+
+    // Column definitions for the shared Table component, reproducing the
+    // exact per-cell rendering (inline edit, permission checks, etc.) that
+    // previously lived in the hand-rolled <table> markup below.
+    const columns = [
+        {
+            key:    "seasonNumber",
+            header: "Season #",
+            render: (row: Season) => row.seasonNumber,
+        },
+        {
+            key:    "theme",
+            header: "Theme",
+            render: (row: Season) => (
+                <div
+                    style={{ cursor: "pointer" }}
+                    onClick={() =>
+                        setEditing({ id: row.id, field: "theme", value: row.theme })
+                    }
+                >
+                    {editing?.id === row.id && editing.field === "theme" ? (
+                        <input
+                            type="text"
+                            value={editing.value}
+                            onChange={(e) =>
+                                setEditing({ ...editing, value: e.target.value })
+                            }
+                            onBlur={commitEdit}
+                            onKeyDown={(e) =>
+                            {
+                                if (e.key === "Enter")
+                                {
+                                    e.currentTarget.blur();
+                                }
+                                if (e.key === "Escape")
+                                {
+                                    setEditing(null);
+                                }
+                            }}
+                            autoFocus
+                        />
+                    ) : (
+                        row.theme
+                    )}
+                </div>
+            ),
+        },
+        {
+            key: "registrationsOpen",
+            header: "Apps Open",
+            render: (row: Season) => (
+                <input
+                    type="checkbox"
+                    checked={Boolean(row.registrationsOpen)}
+                    onChange={async (e) => {
+                        try {
+                            const updated = await patchSeason(row.id, {
+                                registrationsOpen: e.target.checked,
+                            });
+                            setLocalSeasons((prev) =>
+                                prev.map((s) => (s.id === row.id ? { ...s, ...updated } : s))
+                            );
+                        } catch (err) {
+                            console.error(err);
+                        }
+                    }}
+                />
+            ),
+        },
+        {
+            key: "captainEditEnabled",
+            header: "Staff Edit",
+            render: (row: Season) => (
+                <input
+                    type="checkbox"
+                    checked={row.captainEditEnabled !== false}
+                    onChange={async (e) => {
+                        try {
+                            const updated = await patchSeason(row.id, {
+                                captainEditEnabled: e.target.checked,
+                            });
+                            setLocalSeasons((prev) =>
+                                prev.map((s) => (s.id === row.id ? { ...s, ...updated } : s))
+                            );
+                        } catch (err) {
+                            console.error(err);
+                        }
+                    }}
+                />
+            ),
+        },
+        {
+            key: "maxTeams",
+            header: "Max Teams",
+            render: (row: Season) => (
+                <input
+                    type="number"
+                    min={1}
+                    style={{ width: "4.5rem" }}
+                    defaultValue={row.maxTeams ?? undefined}
+                    placeholder="—"
+                    onBlur={async (e) => {
+                        const raw = e.target.value.trim();
+                        const maxTeams = raw === "" ? null : Number(raw);
+                        try {
+                            const updated = await patchSeason(row.id, { maxTeams });
+                            setLocalSeasons((prev) =>
+                                prev.map((s) => (s.id === row.id ? { ...s, ...updated } : s))
+                            );
+                        } catch (err) {
+                            console.error(err);
+                        }
+                    }}
+                />
+            ),
+        },
+        {
+            key:    "image",
+            header: "Image URL",
+            render: (row: Season) => (
+                <div
+                    style={{ cursor: "pointer" }}
+                    onClick={() =>
+                        setEditing({ id: row.id, field: "image", value: row.image ?? "" })
+                    }
+                >
+                    {editing?.id === row.id && editing.field === "image" ? (
+                        <input
+                            type="text"
+                            value={editing.value}
+                            onChange={(e) =>
+                                setEditing({ ...editing, value: e.target.value })
+                            }
+                            onBlur={commitEdit}
+                            onKeyDown={(e) =>
+                            {
+                                if (e.key === "Enter")
+                                {
+                                    e.currentTarget.blur();
+                                }
+                                if (e.key === "Escape")
+                                {
+                                    setEditing(null);
+                                }
+                            }}
+                            autoFocus
+                        />
+                    ) : row.image ? (
+                        row.image
+                    ) : (
+                        <span className="text-muted">None</span>
+                    )}
+                </div>
+            ),
+        },
+        {
+            key:    "startDate",
+            header: "Start Date",
+            render: (row: Season) =>
+            {
+                const startStr = new Date(row.startDate).toISOString().slice(0, 10);
+
+                return (
+                    <div
+                        style={{ cursor: "pointer" }}
+                        onClick={() =>
+                            setEditing({ id: row.id, field: "startDate", value: startStr })
+                        }
+                    >
+                        {editing?.id === row.id && editing.field === "startDate" ? (
+                            <input
+                                type="date"
+                                value={editing.value}
+                                onChange={(e) =>
+                                    setEditing({ ...editing, value: e.target.value })
+                                }
+                                onBlur={commitEdit}
+                                onKeyDown={(e) =>
+                                {
+                                    if (e.key === "Enter")
+                                    {
+                                        e.currentTarget.blur();
+                                    }
+                                    if (e.key === "Escape")
+                                    {
+                                        setEditing(null);
+                                    }
+                                }}
+                                autoFocus
+                            />
+                        ) : (
+                            new Date(row.startDate).toLocaleDateString()
+                        )}
+                    </div>
+                );
+            },
+        },
+        {
+            key:    "endDate",
+            header: "End Date",
+            render: (row: Season) =>
+            {
+                const endStr = row.endDate
+                    ? new Date(row.endDate).toISOString().slice(0, 10)
+                    : "";
+
+                return (
+                    <div
+                        style={{ cursor: "pointer" }}
+                        onClick={() =>
+                            setEditing({ id: row.id, field: "endDate", value: endStr })
+                        }
+                    >
+                        {editing?.id === row.id && editing.field === "endDate" ? (
+                            <input
+                                type="date"
+                                value={editing.value}
+                                onChange={(e) =>
+                                    setEditing({ ...editing, value: e.target.value })
+                                }
+                                onBlur={commitEdit}
+                                onKeyDown={(e) =>
+                                {
+                                    if (e.key === "Enter")
+                                    {
+                                        e.currentTarget.blur();
+                                    }
+                                    if (e.key === "Escape")
+                                    {
+                                        setEditing(null);
+                                    }
+                                }}
+                                autoFocus
+                            />
+                        ) : row.endDate ? (
+                            new Date(row.endDate).toLocaleDateString()
+                        ) : (
+                            "Ongoing"
+                        )}
+                    </div>
+                );
+            },
+        },
+        {
+            key:    "actions",
+            header: "Actions",
+            render: (row: Season) => (
+                <>
+                    {user?.role === "superadmin" ? (
+                        <button
+                            onClick={() => handleDelete(row.id)}
+                            disabled={deleting}
+                            style={{
+                                padding:      "0.25rem 0.5rem",
+                                borderRadius: "0.25rem",
+                                background:   "#dc3545",
+                                color:        "#fff",
+                                border:       "none",
+                                cursor:       "pointer",
+                            }}
+                        >
+                            Delete
+                        </button>
+                    ) : (
+                        <span className="text-muted">No permission</span>
+                    )}
+                    {deleteError && (
+                        <p className="error" style={{ color: "red" }}>
+                            {deleteError}
+                        </p>
+                    )}
+                </>
+            ),
+        },
+    ];
+
+    if (loading) return <p>Loading seasons…</p>;
+    if (error)   return <p>Error: {error}</p>;
+
+    return (
+        <div className="portal-main">
+            {/* Create Season Button */}
+            <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1rem", flexWrap: "wrap" }}>
+                <button
+                    onClick={openModal}
+                    className="create-button"
+                >
+                    Create Season
+                </button>
+                <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                />
+            </div>
+
+            {/* Create Season Modal */}
+            <Modal isOpen={isModalOpen} onClose={closeModal} title="New Season">
+                {/* Form-level Error */}
+                {formError && (
+                    <p
+                        className="error"
+                        style={{ color: "red", marginBottom: "0.5rem" }}
+                    >
+                        {formError}
+                    </p>
+                )}
+
+                {/* Create Form */}
+                <form onSubmit={handleCreate} className="season-create-form">
+                    <RegionSeasonFields
+                        regions={formRegionSeason.regions}
+                        regionsLoading={formRegionSeason.regionsLoading}
+                        regionId={formRegionSeason.regionId}
+                        onRegionChange={formRegionSeason.setRegionId}
+                        includeSeason={false}
+                    />
+
+                    {/* Season Number */}
+                    <label>
+                        Season Number*
+                        <input
+                            type="number"
+                            value={newSeasonNumber}
+                            onChange={(e) =>
+                                setNewSeasonNumber(Number(e.target.value))
+                            }
+                            required
+                            style={{ width: "100%", marginBottom: "0.75rem" }}
+                        />
+                    </label>
+
+                    {/* Theme */}
+                    <label>
+                        Theme*
+                        <input
+                            type="text"
+                            value={newTheme}
+                            onChange={(e) => setNewTheme(e.target.value)}
+                            required
+                            style={{ width: "100%", marginBottom: "0.75rem" }}
+                        />
+                    </label>
+
+                    {/* Image URL */}
+                    <label>
+                        Image URL
+                        <input
+                            type="text"
+                            value={newImage}
+                            onChange={(e) => setNewImage(e.target.value)}
+                            style={{ width: "100%", marginBottom: "0.75rem" }}
+                        />
+                    </label>
+
+                    {/* Start Date */}
+                    <label>
+                        Start Date*
+                        <input
+                            type="date"
+                            value={newStartDate}
+                            onChange={(e) => setNewStartDate(e.target.value)}
+                            required
+                            style={{ width: "100%", marginBottom: "0.75rem" }}
+                        />
+                    </label>
+
+                    {/* End Date */}
+                    <label>
+                        End Date
+                        <input
+                            type="date"
+                            value={newEndDate}
+                            onChange={(e) => setNewEndDate(e.target.value)}
+                            style={{ width: "100%", marginBottom: "1rem" }}
+                        />
+                    </label>
+
+                    {/* Submit Button */}
+                    <button
+                        type="submit"
+                        disabled={creating}
+                        className="modal-submit-button"
+                    >
+                        {creating ? "Creating…" : "Submit"}
+                    </button>
+                </form>
+            </Modal>
+
+            {/* Seasons Table */}
+            <SeasonTable
+                columns={columns}
+                rows={localSeasons}
+                rowKey={(row) => row.id}
+            />
+        </div>
+    );
+};
+
+export default SeasonsPage;

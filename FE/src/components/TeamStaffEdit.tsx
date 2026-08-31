@@ -1,176 +1,138 @@
-/**
- * TeamStaffEdit — the in-place editor a team's captain, vice captain or court captain sees on their own team page: colors, logo and roster, plus the team name for the captain only.
- * It renders nothing at all for a non-staff visitor, and a short explanation instead of a form when staff editing has been locked for the season or the team — so the reason is visible rather than the control silently vanishing.
- * Lives in `components/`; embedded by `SingleTeam`. Permission and saving live in `useTeamStaffEdit`.
- */
-import { useState } from 'react'
-import { useTeamStaffEdit, type RosterEntry } from '@/hooks/useTeamStaffEdit'
-import type { Team, Player } from '@/types/interfaces'
+import React, { useEffect, useState } from "react";
+import { useAuth } from "../context/authContext";
+import { authFetch } from "../hooks/authFetch";
+import { BACKEND_URL } from "../constants/api";
+import type { Team, Player } from "../types/interfaces";
 
-import SectionHeader from '@/components/ui/layout/SectionHeader'
-import Card from '@/components/ui/layout/Card'
-import Button from '@/components/ui/buttons/Button'
-import ErrorNotice from '@/components/ui/feedback/ErrorNotice'
-import FormField from '@/components/ui/inputs/FormField'
-import TextInput from '@/components/ui/inputs/TextInput'
-import Pill from '@/components/ui/pills/Pill'
-
-const DEFAULT_HEX = '#2D3C50'
-
-interface Props {
-  team: Team
-  onUpdated?: (team: Team) => void
-}
-
-export default function TeamStaffEdit({ team, onUpdated }: Props) {
-  const { staffRole, canEdit, isLocked, saving, save } = useTeamStaffEdit(team.id)
-
-  const [name, setName] = useState(team.name)
-  const [hexColor, setHexColor] = useState(team.hexColor || DEFAULT_HEX)
-  const [brickColor, setBrickColor] = useState(team.brickColor || '')
-  const [logoUrl, setLogoUrl] = useState(team.logoUrl || '')
-  const [roster, setRoster] = useState<RosterEntry[]>(
-    (team.players || []).map((player: Player) => ({
-      discord: player.discordUsername || '',
-      roblox: player.robloxUsername || player.name,
+const TeamStaffEdit: React.FC<{ team: Team; onUpdated?: (t: Team) => void }> = ({ team, onUpdated }) => {
+  const { user, isAuthenticated } = useAuth();
+  const [meta, setMeta] = useState<{ captainCanEdit?: boolean; staffRole?: string | null } | null>(null);
+  const [name, setName] = useState(team.name);
+  const [hexColor, setHexColor] = useState(team.hexColor || "#2D3C50");
+  const [brickColor, setBrickColor] = useState(team.brickColor || "");
+  const [logoUrl, setLogoUrl] = useState(team.logoUrl || "");
+  const [roster, setRoster] = useState(
+    (team.players || []).map((p: Player) => ({
+      discord: p.discordUsername || "",
+      roblox: p.robloxUsername || p.name,
     }))
-  )
-  const [message, setMessage] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  );
+  const [message, setMessage] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
-  if (isLocked) {
-    return (
-      <p className="m-0 text-sm text-content-muted">
-        Team editing is locked for this season or team.
-      </p>
-    )
+  useEffect(() => {
+    if (!isAuthenticated || !user) return;
+    void (async () => {
+      const res = await authFetch(`${BACKEND_URL}/api/teams/${team.id}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      // compute can-edit client-side from ownership if API doesn't enrich
+      const isStaff =
+        data.captainUserId === user.id ||
+        data.viceCaptainUserId === user.id ||
+        data.courtCaptainUserId === user.id;
+      const seasonOk = data.season?.captainEditEnabled !== false;
+      const teamOk = data.captainEditEnabled !== false;
+      setMeta({
+        captainCanEdit: Boolean(isStaff && seasonOk && teamOk),
+        staffRole:
+          data.captainUserId === user.id
+            ? "captain"
+            : data.viceCaptainUserId === user.id
+              ? "vice_captain"
+              : data.courtCaptainUserId === user.id
+                ? "court_captain"
+                : null,
+      });
+    })();
+  }, [team.id, isAuthenticated, user]);
+
+  if (!meta?.captainCanEdit) {
+    if (user && (team.captainUserId === user.id || team.viceCaptainUserId === user.id || team.courtCaptainUserId === user.id)) {
+      return <p className="text-muted">Team editing is locked for this season or team.</p>;
+    }
+    return null;
   }
 
-  if (!canEdit) return null
-
-  const updateRosterRow = (index: number, patch: Partial<RosterEntry>) =>
-    setRoster((rows) => rows.map((row, i) => (i === index ? { ...row, ...patch } : row)))
-
-  const handleSave = async () => {
-    setMessage(null)
-    setError(null)
-
+  const save = async () => {
+    setSaving(true);
+    setMessage(null);
     try {
-      const updated = await save({
-        // Only the captain may rename — the API rejects it from the other roles anyway.
-        ...(staffRole === 'captain' ? { name } : {}),
-        hexColor: hexColor.startsWith('#') ? hexColor : `#${hexColor}`,
+      const body: Record<string, unknown> = {
+        hexColor: hexColor.startsWith("#") ? hexColor : `#${hexColor}`,
         brickColor,
         logoUrl: logoUrl || null,
         roster,
-      })
-      setMessage('Saved')
-      onUpdated?.(updated)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Save failed')
+      };
+      if (meta.staffRole === "captain") body.name = name;
+
+      const res = await authFetch(`${BACKEND_URL}/api/teams/${team.id}/staff`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Save failed");
+      setMessage("Saved");
+      onUpdated?.(data);
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : "Save failed");
+    } finally {
+      setSaving(false);
     }
-  }
+  };
 
   return (
-    <Card padding="lg" className="mt-6">
-      <div className="flex flex-col gap-5">
-        <SectionHeader
-          title="Edit team"
-          level={3}
-          actions={staffRole && <Pill tone="accent" size="sm">{staffRole.replace('_', ' ')}</Pill>}
-        />
-
-        {error && <ErrorNotice message={error} />}
-        {message && <ErrorNotice message={message} tone="info" />}
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          {staffRole === 'captain' && (
-            <FormField label="Name">
-              {(id) => (
-                <TextInput id={id} value={name} onChange={(e) => setName(e.target.value)} />
-              )}
-            </FormField>
-          )}
-
-          <FormField label="Hex color">
-            {(id) => (
-              <TextInput
-                id={id}
-                value={hexColor}
-                onChange={(e) => setHexColor(e.target.value)}
-                placeholder={DEFAULT_HEX}
-              />
-            )}
-          </FormField>
-
-          <FormField label="Brick color">
-            {(id) => (
-              <TextInput
-                id={id}
-                value={brickColor}
-                onChange={(e) => setBrickColor(e.target.value)}
-                placeholder="Roblox brick color name"
-              />
-            )}
-          </FormField>
-
-          <FormField label="Logo URL">
-            {(id) => (
-              <TextInput
-                id={id}
-                type="url"
-                value={logoUrl}
-                onChange={(e) => setLogoUrl(e.target.value)}
-              />
-            )}
-          </FormField>
+    <section className="team-staff-edit" style={{ marginTop: "1.5rem", paddingTop: "1rem", borderTop: "1px solid #ddd" }}>
+      <h3>Edit team ({meta.staffRole})</h3>
+      {meta.staffRole === "captain" && (
+        <label>
+          Name
+          <input value={name} onChange={(e) => setName(e.target.value)} />
+        </label>
+      )}
+      <label>
+        Hex
+        <input value={hexColor} onChange={(e) => setHexColor(e.target.value)} />
+      </label>
+      <label>
+        Brick
+        <input value={brickColor} onChange={(e) => setBrickColor(e.target.value)} />
+      </label>
+      <label>
+        Logo URL
+        <input value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} />
+      </label>
+      <h4>Roster</h4>
+      {roster.map((row, i) => (
+        <div key={i} className="roster-row">
+          <input
+            value={row.discord}
+            placeholder="Discord"
+            onChange={(e) =>
+              setRoster((r) => r.map((x, idx) => (idx === i ? { ...x, discord: e.target.value } : x)))
+            }
+          />
+          <input
+            value={row.roblox}
+            placeholder="Roblox"
+            onChange={(e) =>
+              setRoster((r) => r.map((x, idx) => (idx === i ? { ...x, roblox: e.target.value } : x)))
+            }
+          />
         </div>
-
-        <div className="flex flex-col gap-3">
-          <SectionHeader title="Roster" level={4} count={roster.length} />
-
-          <div className="flex flex-col gap-2">
-            {roster.map((row, index) => (
-              <div key={index} className="grid gap-2 sm:grid-cols-2">
-                <TextInput
-                  size="sm"
-                  placeholder="Discord"
-                  aria-label={`Player ${index + 1} Discord`}
-                  value={row.discord}
-                  onChange={(e) => updateRosterRow(index, { discord: e.target.value })}
-                />
-                <TextInput
-                  size="sm"
-                  placeholder="Roblox"
-                  aria-label={`Player ${index + 1} Roblox`}
-                  value={row.roblox}
-                  onChange={(e) => updateRosterRow(index, { roblox: e.target.value })}
-                />
-              </div>
-            ))}
-          </div>
-
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            className="self-start"
-            onClick={() => setRoster((rows) => [...rows, { discord: '', roblox: '' }])}
-          >
-            Add player
-          </Button>
-        </div>
-
-        <Button
-          type="button"
-          className="self-start"
-          loading={saving}
-          loadingLabel="Saving…"
-          onClick={() => void handleSave()}
-        >
-          Save changes
-        </Button>
+      ))}
+      <button type="button" onClick={() => setRoster((r) => [...r, { discord: "", roblox: "" }])}>
+        Add player
+      </button>
+      <div className="form-actions">
+        <button type="button" disabled={saving} onClick={() => void save()}>
+          {saving ? "Saving…" : "Save changes"}
+        </button>
       </div>
-    </Card>
-  )
-}
+      {message && <p>{message}</p>}
+    </section>
+  );
+};
+
+export default TeamStaffEdit;

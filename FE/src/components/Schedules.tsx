@@ -1,118 +1,33 @@
-/**
- * Schedules — the upcoming-games calendar: games grouped by day inside a two-week window the reader pages through, each day collapsible, with filters for season, stage, phase and division.
- * A match card shows both teams (crest, name, overall score and per-set scores when the game has finished), its start time in either league or local time, and links out to the broadcast and the stat sheet.
- * Lives in `components/`; routed at /schedules. The date-picker overlay is `CalendarModal`.
- */
-import { useMemo, useState, type KeyboardEvent, type MouseEvent as ReactMouseEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { useGames, useSeasons } from '@/hooks/allFetch'
-import { useRegion } from '@/context/regionContext'
-import { useDebouncedValue } from '@/hooks/useDebouncedValue'
-import { formatGameStage } from '@/utils/gameLabels'
-import { isSafeExternalUrl } from '@/utils/url'
-import type { Game } from '@/types/interfaces'
-import SEO from '@/components/SEO'
-import CalendarModal from '@/components/CalendarModal'
+import React, { useState, useMemo } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useGames, useSeasons } from '../hooks/allFetch';
+import type { Game } from '../types/interfaces';
+import SearchBar from './Searchbar';
+import CalendarModal from './CalendarModal';
+import FilterBar from './ui/FilterBar';
+import { formatGameStage } from '../utils/gameLabels';
+import { isSafeExternalUrl } from '../utils/url';
+import { useRegion } from '../context/regionContext';
+import SEO from './SEO';
+import { useDebouncedValue } from '../hooks/useDebouncedValue';
+import '../styles/Schedules.css';
 
-import PageContainer from '@/components/ui/layout/PageContainer'
-import Toolbar from '@/components/ui/layout/Toolbar'
-import Card from '@/components/ui/layout/Card'
-import FilterBar from '@/components/ui/filters/FilterBar'
-import FilterSelect from '@/components/ui/filters/FilterSelect'
-import SearchBar from '@/components/ui/filters/SearchBar'
-import IconButton from '@/components/ui/buttons/IconButton'
-import Button from '@/components/ui/buttons/Button'
-import LinkButton from '@/components/ui/buttons/LinkButton'
-import Pill, { type PillTone } from '@/components/ui/pills/Pill'
-import StatusBadge from '@/components/ui/badges/StatusBadge'
-import Checkbox from '@/components/ui/inputs/Checkbox'
-import EmptyState from '@/components/ui/feedback/EmptyState'
-import ErrorNotice from '@/components/ui/feedback/ErrorNotice'
-import { SkeletonCardGrid } from '@/components/ui/feedback/Skeleton'
-import { TeamCrest } from '@/components/ui/cards/GameScoreCard'
-import { toOptions } from '@/components/ui/inputs/Select'
+const Schedules: React.FC = () => {
+  const navigate = useNavigate();
+  const { regionQuery } = useRegion();
+  const { data: seasons, loading: seasonsLoading } = useSeasons(regionQuery);
+  const [selectedSeason, setSelectedSeason] = useState<number | undefined>();
+  const [selectedStage, setSelectedStage] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const debouncedSearch = useDebouncedValue(searchQuery, 300);
+  const [currentDateRange, setCurrentDateRange] = useState<Date>(new Date());
+  const [showLocalTime, setShowLocalTime] = useState<boolean>(false);
+  const [collapsedDates, setCollapsedDates] = useState<Set<string>>(new Set());
+  const [isCalendarOpen, setIsCalendarOpen] = useState<boolean>(false);
 
-/** The window the date navigation pages through, in days. */
-const WINDOW_DAYS = 14
-
-const PHASE_OPTIONS = [
-  { value: 'pre_season', label: 'Pre-Season' },
-  { value: 'qualifiers', label: 'Qualifiers' },
-  { value: 'playoffs', label: 'Playoffs' },
-]
-
-const DIVISION_OPTIONS = toOptions(['Invitational', 'RVL', 'D-League'])
-
-/** Division/stage tags carry a conventional colour. Matched loosely because the tag text is
- *  free-form on the game record ("RVL Playoffs", "D-League Qualifier", …). */
-const TAG_TONE_RULES: { match: string[]; tone: PillTone }[] = [
-  { match: ['rvl'], tone: 'info' },
-  { match: ['playoff', 'winner'], tone: 'purple' },
-  { match: ['d-league', 'dleague', 'qualifier'], tone: 'success' },
-  { match: ['loser'], tone: 'danger' },
-  { match: ['exhibition', 'pre-season'], tone: 'warning' },
-]
-
-function tagTone(tag: string): PillTone {
-  const lower = tag.toLowerCase()
-  return TAG_TONE_RULES.find((rule) => rule.match.some((m) => lower.includes(m)))?.tone ?? 'neutral'
-}
-
-/** Which side won, or null while the game is unplayed. Handles a forfeit, where one side has
- *  a score and the other is null. */
-function winningSide(game: Game): 0 | 1 | null {
-  if (game.status !== 'completed') return null
-
-  const t1 = game.team1Score
-  const t2 = game.team2Score
-  if (t1 != null && t2 == null) return 0
-  if (t2 != null && t1 == null) return 1
-  if (t1 != null && t2 != null) return t1 > t2 ? 0 : 1
-  return null
-}
-
-function setScoresFor(game: Game, side: 0 | 1): number[] {
-  return [game.set1Score, game.set2Score, game.set3Score, game.set4Score, game.set5Score]
-    .filter((score): score is string => Boolean(score))
-    .map((score) => {
-      const [a, b] = score.split('-').map(Number)
-      return side === 0 ? a : b
-    })
-}
-
-function formatDayHeading(dateKey: string): string {
-  return new Date(dateKey).toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
-}
-
-function formatStartTime(value: string): string {
-  const date = new Date(value)
-  const time = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
-  const day = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-  return `${time} • ${day}`
-}
-
-export default function Schedules() {
-  const navigate = useNavigate()
-  const { regionQuery } = useRegion()
-
-  const { data: seasons, loading: seasonsLoading } = useSeasons(regionQuery)
-
-  const [selectedSeason, setSelectedSeason] = useState<number | undefined>()
-  const [selectedStage, setSelectedStage] = useState('')
-  const [selectedPhase, setSelectedPhase] = useState('')
-  const [selectedTag, setSelectedTag] = useState('')
-  const [searchQuery, setSearchQuery] = useState('')
-  const [windowStart, setWindowStart] = useState<Date>(new Date())
-  const [showLocalTime, setShowLocalTime] = useState(false)
-  const [collapsedDates, setCollapsedDates] = useState<Set<string>>(new Set())
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false)
-
-  const debouncedSearch = useDebouncedValue(searchQuery, 300)
+  // Don't auto-select any season - let user choose or show all
+  const [selectedPhase, setSelectedPhase] = useState<string>('');
+  const [selectedTag, setSelectedTag] = useState<string>('');
 
   const { data: games, error, loading } = useGames({
     page: 1,
@@ -123,394 +38,493 @@ export default function Schedules() {
     status: 'scheduled',
     phase: selectedPhase || undefined,
     ...regionQuery,
-  })
+  });
 
-  /** Stage options come from the loaded games, numerically sorted so "Round 10" follows "Round 9". */
-  const stageOptions = useMemo(() => {
-    const stages = Array.from(
-      new Set((games ?? []).map((game) => game.stage).filter(Boolean) as string[])
-    ).sort((a, b) => {
-      const aNum = Number.parseInt(a.replace(/\D/g, ''), 10)
-      const bNum = Number.parseInt(b.replace(/\D/g, ''), 10)
-      if (!Number.isNaN(aNum) && !Number.isNaN(bNum)) return aNum - bNum
-      return a.localeCompare(b)
-    })
-    return toOptions(stages)
-  }, [games])
-
-  const seasonOptions = useMemo(
-    () =>
-      (seasons ?? []).map((season) => ({
-        value: String(season.id),
-        label: `Season ${season.seasonNumber}`,
-      })),
-    [seasons]
-  )
+  // Get unique rounds from matches
+  const uniqueStages = useMemo(() => {
+    if (!games) return [];
+    return Array.from(new Set(games.map(game => game.stage).filter(Boolean) as string[]))
+      .sort((a, b) => {
+        const aNum = parseInt(a.replace(/\D/g, ''));
+        const bNum = parseInt(b.replace(/\D/g, ''));
+        if (!isNaN(aNum) && !isNaN(bNum)) {
+          return aNum - bNum;
+        }
+        return a.localeCompare(b);
+      });
+  }, [games]);
 
   const filteredGames = useMemo(() => {
-    const query = searchQuery.toLowerCase()
-    return (games ?? []).filter((game) => {
-      const team1 = game.teams?.[0]?.name ?? ''
-      const team2 = game.teams?.[1]?.name ?? ''
-      const label = game.name ?? `${team1} vs ${team2}`
-
-      const matchesStage = !selectedStage || game.stage === selectedStage
-      const matchesSearch =
-        label.toLowerCase().includes(query) ||
-        team1.toLowerCase().includes(query) ||
-        team2.toLowerCase().includes(query)
-      const matchesTag =
-        !selectedTag ||
-        (game.tags ?? []).some((tag) => tag.toLowerCase().includes(selectedTag.toLowerCase()))
-
-      return matchesStage && matchesSearch && matchesTag
-    })
-  }, [games, selectedStage, searchQuery, selectedTag])
+    if (!games) return [];
+    
+    return games.filter(game => {
+      const matchesStage = !selectedStage || game.stage === selectedStage;
+      const team1Name = game.teams?.[0]?.name ?? '';
+      const team2Name = game.teams?.[1]?.name ?? '';
+      const label = game.name ?? `${team1Name} vs ${team2Name}`;
+      const matchesSearch = label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          team1Name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          team2Name.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesTag = !selectedTag || (game.tags ?? []).some(t => t.toLowerCase().includes(selectedTag.toLowerCase()));
+       
+      return matchesStage && matchesSearch && matchesTag;
+    });
+  }, [games, selectedStage, searchQuery, selectedTag]);
 
   const gamesByDate = useMemo(() => {
-    const grouped: Record<string, Game[]> = {}
-    for (const game of filteredGames) {
-      const key = new Date(game.date).toDateString()
-      ;(grouped[key] ??= []).push(game)
+    const grouped: { [key: string]: Game[] } = {};
+    
+    filteredGames.forEach(game => {
+      const dateKey = new Date(game.date).toDateString();
+      if (!grouped[dateKey]) {
+        grouped[dateKey] = [];
+      }
+      grouped[dateKey].push(game);
+    });
+    
+    return grouped;
+  }, [filteredGames]);
+
+  // Date-based navigation (2-week spans)
+  const getDateRange = () => {
+    const startDate = new Date(currentDateRange);
+    startDate.setDate(startDate.getDate() - startDate.getDay()); // Start of week (Sunday)
+    const endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + 13); // 2 weeks (14 days)
+    return { startDate, endDate };
+  };
+
+  const { startDate, endDate } = getDateRange();
+  
+  // Filter dates within the 2-week range
+  const paginatedDates = Object.keys(gamesByDate).filter(dateKey => {
+    const date = new Date(dateKey);
+    return date >= startDate && date < endDate;
+  }).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+  };
+
+  const handleGameClick = (gameId: number) => {
+    navigate(`/games/${gameId}`);
+  };
+
+  const handleGameKeyDown = (event: React.KeyboardEvent, gameId: number) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      handleGameClick(gameId);
     }
-    return grouped
-  }, [filteredGames])
+  };
 
-  /** The visible window runs from the Sunday of `windowStart`'s week for WINDOW_DAYS days. */
-  const { rangeStart, rangeEnd } = useMemo(() => {
-    const start = new Date(windowStart)
-    start.setDate(start.getDate() - start.getDay())
-    const end = new Date(start)
-    end.setDate(end.getDate() + WINDOW_DAYS - 1)
-    return { rangeStart: start, rangeEnd: end }
-  }, [windowStart])
+  const stopCardNavigation = (event: React.MouseEvent | React.KeyboardEvent) => {
+    event.stopPropagation();
+  };
 
-  const visibleDates = useMemo(
-    () =>
-      Object.keys(gamesByDate)
-        .filter((key) => {
-          const date = new Date(key)
-          return date >= rangeStart && date < rangeEnd
-        })
-        .sort((a, b) => new Date(a).getTime() - new Date(b).getTime()),
-    [gamesByDate, rangeStart, rangeEnd]
-  )
+  const toggleDateSection = (dateKey: string) => {
+    setCollapsedDates(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(dateKey)) {
+        newSet.delete(dateKey);
+      } else {
+        newSet.add(dateKey);
+      }
+      return newSet;
+    });
+  };
 
-  const shiftWindow = (days: number) => {
-    const next = new Date(windowStart)
-    next.setDate(next.getDate() + days)
-    setWindowStart(next)
-  }
 
-  const toggleDate = (dateKey: string) =>
-    setCollapsedDates((prev) => {
-      const next = new Set(prev)
-      if (next.has(dateKey)) next.delete(dateKey)
-      else next.add(dateKey)
-      return next
-    })
 
-  const stopCardNavigation = (event: ReactMouseEvent | KeyboardEvent) => event.stopPropagation()
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
 
-  const openGame = (gameId: number) => navigate(`/games/${gameId}`)
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const time = date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    const dateStr = date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+    return `${time} • ${dateStr}`;
+  };
 
-  const activeFilterCount = [
-    selectedSeason ? '1' : '',
-    selectedStage,
-    selectedPhase,
-    selectedTag,
-    searchQuery,
-  ].filter(Boolean).length
+  const getWinningTeam = (game: Game) => {
+    if (game.status !== 'completed') return null;
+    
+    // Handle cases where one team has a valid score and the other is null (e.g., 2-0)
+    if (game.team1Score !== null && game.team1Score !== undefined && (game.team2Score === null || game.team2Score === undefined)) {
+      return 0;
+    }
+    if (game.team2Score !== null && game.team2Score !== undefined && (game.team1Score === null || game.team1Score === undefined)) {
+      return 1;
+    }
+    
+    if (game.team1Score !== null && game.team1Score !== undefined && game.team2Score !== null && game.team2Score !== undefined) {
+      return game.team1Score > game.team2Score ? 0 : 1;
+    }
+    
+    return null;
+  };
 
-  const clearFilters = () => {
-    setSelectedSeason(undefined)
-    setSelectedStage('')
-    setSelectedPhase('')
-    setSelectedTag('')
-    setSearchQuery('')
-  }
-
-  const formatRangeLabel = (date: Date) =>
-    date.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })
+  const getTagColor = (tag: string) => {
+    const tagLower = tag.toLowerCase();
+    if (tagLower.includes('rvl')) return 'blue';
+    if (tagLower.includes('playoff') || tagLower.includes('winner')) return 'purple';
+    if (tagLower.includes('d-league') || tagLower.includes('dleague')) return 'green';
+    if (tagLower.includes('qualifier')) return 'green';
+    if (tagLower.includes('loser')) return 'red';
+    if (tagLower.includes('exhibition') || tagLower.includes('pre-season')) return 'orange';
+    return 'default'; // Default dark gray
+  };
 
   if (error) {
-    return (
-      <PageContainer width="wide">
-        <ErrorNotice message={error} />
-      </PageContainer>
-    )
+    return <div className="schedules-error">Error: {error}</div>;
   }
 
   return (
-    <PageContainer width="wide">
+    <>
       <SEO
         title="Schedules"
         description="Upcoming Roblox Volleyball League match schedules, dates, and stages."
         url="https://volleyball4-2.com/schedules"
       />
-
-      {/* Date window navigation */}
-      <div className="flex flex-wrap items-center justify-center gap-3 rounded-card border border-border bg-surface px-4 py-3">
-        <IconButton
-          icon={<span aria-hidden className="text-lg leading-none">&lsaquo;</span>}
-          label="Previous two weeks"
-          onClick={() => shiftWindow(-WINDOW_DAYS)}
-        />
-        <span className="text-sm font-medium tabular-nums text-content">
-          {formatRangeLabel(rangeStart)} – {formatRangeLabel(rangeEnd)}
+      <div className="schedules-page">
+        {/* VNL-Style Header */}
+        <div className="vnl-header">
+        <div className="color-bars">
+          <div className="bar green"></div>
+          <div className="bar yellow"></div>
+          <div className="bar purple"></div>
+          <div className="bar blue"></div>
+        </div>
+        
+        <div className="date-navigation">
+          <button className="nav-arrow" onClick={() => {
+            const newDate = new Date(currentDateRange);
+            newDate.setDate(newDate.getDate() - 14); // Move back 2 weeks
+            setCurrentDateRange(newDate);
+          }}>
+            ‹
+          </button>
+                  <span className="date-range">
+          {`${startDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })} - ${endDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}`}
         </span>
-        <IconButton
-          icon={<span aria-hidden className="text-lg leading-none">&rsaquo;</span>}
-          label="Next two weeks"
-          onClick={() => shiftWindow(WINDOW_DAYS)}
-        />
-        <Button variant="secondary" size="sm" onClick={() => setIsCalendarOpen(true)}>
-          Pick a date
-        </Button>
+          <button className="nav-arrow" onClick={() => {
+            const newDate = new Date(currentDateRange);
+            newDate.setDate(newDate.getDate() + 14); // Move forward 2 weeks
+            setCurrentDateRange(newDate);
+          }}>
+            ›
+          </button>
+                     <button className="calendar-btn" onClick={() => setIsCalendarOpen(true)}>
+             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+               <path d="M8 2V6M16 2V6M3 10H21M5 4H19C20.1046 4 21 4.89543 21 6V20C21 21.1046 20.1046 22 19 22H5C3.89543 22 3 21.1046 3 20V6C3 4.89543 3.89543 4 5 4Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+             </svg>
+           </button>
+        </div>
+
+        <FilterBar>
+          <select
+            className="filter-dropdown"
+            value={selectedSeason || ''}
+            onChange={(e) => {
+              setSelectedSeason(e.target.value ? parseInt(e.target.value) : undefined);
+            }}
+          >
+            <option value="">{seasonsLoading ? "Loading seasons..." : "All Seasons"}</option>
+            {seasons?.map(season => (
+              <option key={season.id} value={season.id}>
+                Season {season.seasonNumber}
+              </option>
+            ))}
+          </select>
+          <select
+            className="filter-dropdown"
+            value={selectedStage}
+            onChange={(e) => {
+              setSelectedStage(e.target.value);
+            }}
+          >
+            <option value="">All Stages</option>
+            {uniqueStages.map(stage => (
+              <option key={stage} value={stage}>
+                {stage}
+              </option>
+            ))}
+          </select>
+          <select className="filter-dropdown" value={selectedPhase} onChange={(e) => setSelectedPhase(e.target.value)}>
+            <option value="">All Phases</option>
+            <option value="pre_season">Pre-Season</option>
+            <option value="qualifiers">Qualifiers</option>
+            <option value="playoffs">Playoffs</option>
+          </select>
+          <select className="filter-dropdown" value={selectedTag} onChange={(e) => setSelectedTag(e.target.value)}>
+            <option value="">All Divisions</option>
+            <option value="Invitational">Invitational</option>
+            <option value="RVL">RVL</option>
+            <option value="D-League">D-League</option>
+          </select>
+          <button className="sync-calendar">
+            SYNC TO CALENDAR
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 2V6M16 2V6M3 10H21M5 4H19C20.1046 4 21 4.89543 21 6V20C21 21.1046 20.1046 22 19 22H5C3.89543 22 3 21.1046 3 20V6C3 4.89543 3.89543 4 5 4Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+        </FilterBar>
       </div>
 
-      <Toolbar
-        filters={
-          <FilterBar onReset={clearFilters} activeCount={activeFilterCount}>
-            <FilterSelect
-              label="Season"
-              value={selectedSeason ? String(selectedSeason) : ''}
-              onChange={(value) => setSelectedSeason(value ? Number(value) : undefined)}
-              options={seasonOptions}
-              placeholder={seasonsLoading ? 'Loading seasons…' : 'All Seasons'}
-            />
-            <FilterSelect
-              label="Stage"
-              value={selectedStage}
-              onChange={setSelectedStage}
-              options={stageOptions}
-              placeholder="All Stages"
-            />
-            <FilterSelect
-              label="Phase"
-              value={selectedPhase}
-              onChange={setSelectedPhase}
-              options={PHASE_OPTIONS}
-              placeholder="All Phases"
-            />
-            <FilterSelect
-              label="Division"
-              value={selectedTag}
-              onChange={setSelectedTag}
-              options={DIVISION_OPTIONS}
-              placeholder="All Divisions"
-            />
-          </FilterBar>
-        }
-        trailing={
-          <>
-            <SearchBar
-              value={searchQuery}
-              onSearch={setSearchQuery}
-              placeholder="Search upcoming games…"
-              className="w-full sm:w-64"
-            />
-            <Checkbox
-              label="Show local match time"
+
+
+      {/* Filters */}
+      <div className="schedules-filters">
+        <div className="search-row">
+          <SearchBar 
+            onSearch={handleSearch} 
+            placeholder="Search upcoming games..." 
+            className="schedules-search-bar"
+          />
+          <label className="local-time-toggle">
+            <span>Show local match time</span>
+            <input
+              type="checkbox"
               checked={showLocalTime}
               onChange={(e) => setShowLocalTime(e.target.checked)}
             />
-          </>
-        }
-      />
+            <span className="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
 
+      {/* Matches List */}
       {loading ? (
-        <SkeletonCardGrid count={4} height="h-52" />
-      ) : visibleDates.length === 0 ? (
-        <EmptyState label="No upcoming games found for the selected criteria." />
+        <div className="schedules-loading">
+          <div className="loading-spinner"></div>
+          <p>Loading upcoming games...</p>
+        </div>
       ) : (
-        <div className="flex flex-col gap-6">
-          {visibleDates.map((dateKey) => {
-            const collapsed = collapsedDates.has(dateKey)
-            return (
-              <section key={dateKey} className="flex flex-col gap-3">
-                <button
-                  type="button"
-                  onClick={() => toggleDate(dateKey)}
-                  aria-expanded={!collapsed}
-                  className="flex w-full cursor-pointer items-center justify-between gap-3 rounded-card border border-border bg-surface-inset px-4 py-3 text-left transition-colors hover:bg-surface"
-                >
-                  <h2 className="m-0 text-base font-semibold text-content">
-                    {formatDayHeading(dateKey)}
-                  </h2>
-                  <span
-                    aria-hidden
-                    className={`text-xs text-content-tertiary transition-transform ${collapsed ? '-rotate-90' : ''}`}
-                  >
-                    ▼
-                  </span>
-                </button>
-
-                {!collapsed && (
-                  <div className="flex flex-col gap-3">
-                    {gamesByDate[dateKey].map((game) => {
-                      const winner = winningSide(game)
-                      const team1 = game.teams?.[0]
-                      const team2 = game.teams?.[1]
-                      const label =
-                        game.name ?? `${team1?.name ?? 'TBD'} vs ${team2?.name ?? 'TBD'}`
-
+        <div className="schedules-content">
+          {paginatedDates.length === 0 ? (
+            <div className="no-matches">
+              <p>No upcoming games found for the selected criteria.</p>
+            </div>
+          ) : (
+            paginatedDates.map(dateKey => {
+              const dayGames = gamesByDate[dateKey];
+               
+              return (
+                 <div key={dateKey} className="date-section">
+                   <div className="date-header" onClick={() => toggleDateSection(dateKey)}>
+                     <h2>{formatDate(dateKey)}</h2>
+                     <span className={`collapse-arrow ${collapsedDates.has(dateKey) ? 'collapsed' : ''}`}>
+                       ▼
+                     </span>
+                   </div>
+                    
+                   <div className={`matches-container ${collapsedDates.has(dateKey) ? 'collapsed' : ''}`}>
+                    {dayGames.map(game => {
+                      const winningTeam = getWinningTeam(game);
+                      const team1 = game.teams?.[0];
+                      const team2 = game.teams?.[1];
+                       
                       return (
-                        <Card
+                        <div
                           key={game.id}
-                          padding="none"
-                          interactive
-                          onClick={() => openGame(game.id)}
-                          className="focus-visible:border-accent"
+                          className="match-card match-card-clickable"
+                          role="link"
+                          tabIndex={0}
+                          onClick={() => handleGameClick(game.id)}
+                          onKeyDown={(event) => handleGameKeyDown(event, game.id)}
+                          aria-label={`View game: ${game.name ?? `${team1?.name ?? 'TBD'} vs ${team2?.name ?? 'TBD'}`}`}
                         >
-                          <div
-                            role="link"
-                            tabIndex={0}
-                            aria-label={`View game: ${label}`}
-                            onKeyDown={(event) => {
-                              if (event.key === 'Enter' || event.key === ' ') {
-                                event.preventDefault()
-                                openGame(game.id)
-                              }
-                            }}
-                          >
-                            <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-3">
-                              <div className="flex min-w-0 flex-col gap-1">
-                                {game.tags && game.tags.length > 0 && (
-                                  <div className="flex flex-wrap gap-1.5" aria-label="Game tags">
-                                    {game.tags.map((tag) => (
-                                      <Pill key={tag} tone={tagTone(tag)} size="sm">
-                                        {tag}
-                                      </Pill>
-                                    ))}
+                          <div className="match-header">
+                            {game.tags && game.tags.length > 0 && (
+                              <div className="match-tags" aria-label="Game tags">
+                                {game.tags.map((tag) => (
+                                  <span key={tag} className={`gender-tag tag-${getTagColor(tag)}`}>
+                                    {tag}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                            <div className="match-info">
+                              <span className="match-type">
+                                Upcoming {formatGameStage(game)} · {game.name ?? `${team1?.name ?? 'TBD'} vs ${team2?.name ?? 'TBD'}`}
+                              </span>
+                              <span className="venue">TBD Venue</span>
+                            </div>
+                            <div className="match-status">
+                              <span className={`status-badge ${game.status}`}>
+                                {game.status}
+                              </span>
+                            </div>
+                          </div>
+                           
+                          <div className="match-teams">
+                            <div className={`team-row ${winningTeam === 0 ? 'winning-team' : ''}`}>
+                              <div className="team-info">
+                                {team1?.logoUrl && (
+                                  <div className="team-logo-container">
+                                    <img 
+                                      src={team1.logoUrl} 
+                                      alt={`${team1.name} logo`}
+                                      className="team-logo"
+                                    />
                                   </div>
                                 )}
-                                <span className="text-sm font-medium text-content">
-                                  Upcoming {formatGameStage(game)} · {label}
-                                </span>
-                                <span className="text-xs text-content-muted">TBD Venue</span>
-                              </div>
-                              <StatusBadge status={game.status} />
-                            </header>
-
-                            <div className="flex flex-col divide-y divide-border">
-                              {([0, 1] as const).map((side) => {
-                                const team = side === 0 ? team1 : team2
-                                const score = side === 0 ? game.team1Score : game.team2Score
-                                const isWinner = winner === side
-                                const sets = setScoresFor(game, side)
-
-                                return (
-                                  <div
-                                    key={side}
-                                    className={`flex items-center justify-between gap-3 px-4 py-3 ${isWinner ? 'bg-status-success/8' : ''}`}
+                                {team1?.name ? (
+                                  <Link
+                                    to={`/teams/${encodeURIComponent(team1.name)}`}
+                                    className="team-name team-name-link"
+                                    onClick={stopCardNavigation}
                                   >
-                                    <div className="flex min-w-0 items-center gap-3">
-                                      <TeamCrest
-                                        team={team ?? null}
-                                        name={team?.name ?? 'TBD'}
-                                        muted={winner !== null && !isWinner}
-                                      />
-                                      {team?.name ? (
-                                        <Link
-                                          to={`/teams/${encodeURIComponent(team.name)}`}
-                                          onClick={stopCardNavigation}
-                                          className={`min-w-0 truncate text-sm no-underline hover:underline ${isWinner ? 'font-semibold text-content' : 'text-content-secondary'}`}
-                                        >
-                                          {team.name}
-                                        </Link>
-                                      ) : (
-                                        <span className="text-sm text-content-muted">TBD</span>
-                                      )}
-                                    </div>
-
-                                    {game.status === 'completed' && score != null && (
-                                      <div className="flex items-center gap-3">
-                                        <span
-                                          className={`text-lg font-bold tabular-nums ${isWinner ? 'text-content' : 'text-content-tertiary'}`}
-                                        >
-                                          {score}
-                                        </span>
-                                        {sets.length > 0 && (
-                                          <div className="flex gap-1">
-                                            {sets.map((setScore, index) => (
-                                              <span
-                                                key={index}
-                                                className="min-w-6 rounded-control bg-surface-inset px-1.5 text-center text-xs tabular-nums text-content-tertiary"
-                                              >
-                                                {setScore}
+                                    {team1.name}
+                                  </Link>
+                                ) : (
+                                  <span className="team-name">TBD</span>
+                                )}
+                              </div>
+                              <div className="team-score">
+                                {game.status === 'completed' && game.team1Score != null && (
+                                  <div className="score-container">
+                                    <span className={`overall-score ${winningTeam === 0 ? 'winning-score' : ''}`}>
+                                      {game.team1Score}
+                                    </span>
+                                    {(game.set1Score || game.set2Score || game.set3Score || game.set4Score || game.set5Score) && (
+                                      <div className="set-scores">
+                                        {[game.set1Score, game.set2Score, game.set3Score, game.set4Score, game.set5Score]
+                                          .filter(score => score !== null && score !== undefined)
+                                          .map((setScore, setIndex) => {
+                                            if (!setScore) return null;
+                                            const [s1, s2] = setScore.split('-').map(Number);
+                                            const isWinningSet = s1 > s2;
+                                            return (
+                                              <span key={setIndex} className={`set-score ${isWinningSet ? 'winning-set' : 'losing-set'}`}>
+                                                {s1}
                                               </span>
-                                            ))}
-                                          </div>
-                                        )}
+                                            );
+                                          })}
                                       </div>
                                     )}
                                   </div>
-                                )
-                              })}
+                                )}
+                              </div>
                             </div>
-
-                            <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-border bg-surface-inset px-4 py-3">
-                              <div className="flex flex-col">
-                                <span className="text-xs uppercase tracking-wide text-content-muted">
-                                  Start Time
-                                </span>
-                                <span className="text-sm tabular-nums text-content-secondary">
-                                  {game.date ? formatStartTime(game.date.toString()) : 'TBD'}
-                                </span>
-                              </div>
-
-                              <div className="flex flex-wrap gap-2" onClick={stopCardNavigation}>
-                                {isSafeExternalUrl(game.videoUrl) ? (
-                                  <LinkButton to={game.videoUrl!} external variant="secondary" size="sm">
-                                    Watch
-                                  </LinkButton>
+                            
+                            <div className={`team-row ${winningTeam === 1 ? 'winning-team' : ''}`}>
+                              <div className="team-info">
+                                {team2?.logoUrl && (
+                                  <div className="team-logo-container">
+                                    <img 
+                                      src={team2.logoUrl} 
+                                      alt={`${team2.name} logo`}
+                                      className="team-logo"
+                                    />
+                                  </div>
+                                )}
+                                {team2?.name ? (
+                                  <Link
+                                    to={`/teams/${encodeURIComponent(team2.name)}`}
+                                    className="team-name team-name-link"
+                                    onClick={stopCardNavigation}
+                                  >
+                                    {team2.name}
+                                  </Link>
                                 ) : (
-                                  <Button variant="secondary" size="sm" disabled>
-                                    Watch
-                                  </Button>
-                                )}
-                                {game.status === 'completed' && (
-                                  <LinkButton to={`/games/${game.id}`} size="sm">
-                                    Stats
-                                  </LinkButton>
+                                  <span className="team-name">TBD</span>
                                 )}
                               </div>
-                            </footer>
+                              <div className="team-score">
+                                {game.status === 'completed' && game.team2Score != null && (
+                                  <div className="score-container">
+                                    <span className={`overall-score ${winningTeam === 1 ? 'winning-score' : ''}`}>
+                                      {game.team2Score}
+                                    </span>
+                                    {(game.set1Score || game.set2Score || game.set3Score || game.set4Score || game.set5Score) && (
+                                      <div className="set-scores">
+                                        {[game.set1Score, game.set2Score, game.set3Score, game.set4Score, game.set5Score]
+                                          .filter(score => score !== null && score !== undefined)
+                                          .map((setScore, setIndex) => {
+                                            if (!setScore) return null;
+                                            const [s1, s2] = setScore.split('-').map(Number);
+                                            const isWinningSet = s2 > s1;
+                                            return (
+                                              <span key={setIndex} className={`set-score ${isWinningSet ? 'winning-set' : 'losing-set'}`}>
+                                                {s2}
+                                              </span>
+                                            );
+                                          })}
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
                           </div>
-                        </Card>
-                      )
+                           
+                          <div className="match-details">
+                            <div className="match-time">
+                              <span className="time-label">Start Time</span>
+                              <span className="time-value">
+                                {game.date ? formatTime(game.date.toString()) : 'TBD'}
+                              </span>
+                            </div>
+                            <div className="match-actions" onClick={stopCardNavigation}>
+                              {isSafeExternalUrl(game.videoUrl) ? (
+                                <a href={game.videoUrl} className="action-button watch" target="_blank" rel="noreferrer">WATCH</a>
+                              ) : (
+                                <button type="button" className="action-button watch" disabled>WATCH</button>
+                              )}
+                              {game.status === 'completed' && (
+                                <Link to={`/games/${game.id}`} className="action-button shop">STATS</Link>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
                     })}
                   </div>
-                )}
-              </section>
-            )
-          })}
+                </div>
+              );
+            })
+          )}
         </div>
       )}
+      </div>
 
-      <Card tone="inset" padding="lg">
-        <div className="flex flex-col gap-2">
-          <h2 className="m-0 text-lg font-semibold text-content">
-            Stay Updated with 4.2 Schedules
-          </h2>
-          <p className="m-0 text-sm leading-relaxed text-content-secondary">
-            The Roblox Volleyball League (RVL) 4.2 season brings together the most competitive teams
-            from around the world in many different exciting tournament formats. Staying updated
-            with the upcoming volleyball game schedules is essential to ensure you never miss a
-            moment of the elite action. Our platform here provides the most accurate and up-to-date
-            information on match schedules, results, and comprehensive statistics for the RVL/4.2
-            volleyball seasons.
-          </p>
+      {/* Stay Updated Section */}
+      <div className="stay-updated-section">
+        <div className="stay-updated-content">
+          <h2>Stay Updated with 4.2 Schedules</h2>
+                     <p>
+             The Roblox Volleyball League (RVL) 4.2 season brings together the most competitive teams 
+             from around the world in many different exciting tournament formats. Staying updated with the upcoming 
+             volleyball game schedules is essential to ensure you never miss a moment of the elite action. 
+             Our platform here provides the most accurate and up-to-date information on match schedules, 
+             results, and comprehensive statistics for the RVL/4.2 volleyball seasons.
+           </p>
         </div>
-      </Card>
+      </div>
 
+      {/* Calendar Modal */}
       <CalendarModal
         isOpen={isCalendarOpen}
         onClose={() => setIsCalendarOpen(false)}
-        currentDateRange={windowStart}
-        onDateRangeChange={setWindowStart}
+        currentDateRange={currentDateRange}
+        onDateRangeChange={setCurrentDateRange}
       />
-    </PageContainer>
-  )
-}
+    </>
+  );
+};
+
+export default Schedules; 

@@ -1,30 +1,14 @@
-/**
- * TriviaPage — the guess-the-player/team game: pick a subject and a difficulty, then work through
- * progressively revealing hints against a 60-second clock.
- * Scoring is the difficulty's base score, minus a penalty per hint beyond the free first letter, plus a bonus for each second left on the clock — the result screen shows that breakdown line by line rather than only the total, so the score is explainable.
- * Lives in `components/`; routed at /trivia.
- */
-import { useState, useRef, useEffect, type KeyboardEvent } from 'react';
-import type {
-    TriviaPlayer,
-    TriviaTeam,
-    TriviaSeason,
-    Hint,
-    GuessResult,
-    TriviaData,
-} from '@/types/interfaces';
-import { useTriviaPlayer, useTriviaTeam, useTriviaSeason, useSubmitTriviaGuess } from '@/hooks/allFetch';
-
-import PageContainer from '@/components/ui/layout/PageContainer';
-import PageHeader from '@/components/ui/layout/PageHeader';
-import SectionHeader from '@/components/ui/layout/SectionHeader';
-import Card from '@/components/ui/layout/Card';
-import DetailStats, { type DetailStatItem } from '@/components/ui/layout/DetailStats';
-import Button from '@/components/ui/buttons/Button';
-import Pill, { type PillTone } from '@/components/ui/pills/Pill';
-import TextInput from '@/components/ui/inputs/TextInput';
-import ErrorNotice from '@/components/ui/feedback/ErrorNotice';
-import { PageLoader } from '@/components/ui/feedback/LoadingSpinner';
+import React, { useState, useRef, useEffect } from 'react';
+import '../styles/TriviaPage.css';
+import { 
+    TriviaPlayer, 
+    TriviaTeam, 
+    TriviaSeason, 
+    Hint, 
+    GuessResult, 
+    TriviaData 
+} from '../types/interfaces';
+import { useTriviaPlayer, useTriviaTeam, useTriviaSeason, useSubmitTriviaGuess } from '../hooks/allFetch';
 
 type GameState = 'selection' | 'playing' | 'result';
 
@@ -646,300 +630,270 @@ const TriviaPage: React.FC = () => {
         console.log('🏳️ [TriviaPage] Game ended via giveUp()');
     };
 
-    const handleKeyPress = (e: KeyboardEvent) => {
+    const handleKeyPress = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter') {
             submitGuess();
         }
     };
 
-    /** Difficulty to chip colour, so "impossible" reads as harder at a glance. */
-    const DIFFICULTY_TONES: Record<Difficulty, PillTone> = {
-        easy: 'success',
-        medium: 'info',
-        hard: 'warning',
-        impossible: 'danger',
-    };
-
-    const TYPE_CHOICES: { value: TriviaType; label: string; disabled?: boolean; note?: string }[] = [
-        { value: 'player', label: 'Player' },
-        { value: 'team', label: 'Team' },
-        // Season trivia is temporarily withdrawn; the button stays visible with its reason
-        // rather than disappearing, so the option is known to exist.
-        {
-            value: 'season',
-            label: 'Season',
-            disabled: true,
-            note: 'Coming soon - Season trivia is currently being fixed',
-        },
-    ];
-
-    const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard', 'impossible'];
-
-    /** The score breakdown, shared by both result outcomes. */
-    const scoreBreakdown = (): DetailStatItem[] => [
-        { label: `Base Score (${selectedDifficulty})`, value: BASE_SCORES[selectedDifficulty!] },
-        { label: 'Free Hint (first letter)', value: 0 },
-        {
-            label: `Hint Penalty (${Math.max(hintLevel - 1, 0)} hints)`,
-            value: `-${Math.max(hintLevel - 1, 0) * HINT_PENALTY}`,
-        },
-        { label: `Time Bonus (${timeRemaining}s remaining)`, value: `+${timeBonus}` },
-        { label: 'Final Score', value: finalScore },
-    ];
-
     const renderSelectionScreen = () => (
-        <div className="flex flex-col gap-6">
-            <p className="m-0 text-content-secondary">
-                Test your knowledge of RVL players, teams, and seasons.
-            </p>
-
-            <section className="flex flex-col gap-3">
-                <SectionHeader title="What would you like to guess?" level={3} />
-                <div className="flex flex-wrap gap-3">
-                    {TYPE_CHOICES.map((choice) => (
-                        <button
-                            key={choice.value}
-                            type="button"
-                            title={choice.note}
-                            disabled={choice.disabled || debounce}
-                            onClick={() => setSelectedType(choice.value)}
-                            className={`flex h-24 w-24 cursor-pointer flex-col items-center justify-center gap-2 rounded-card border-2 transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
-                                selectedType === choice.value
-                                    ? 'border-accent bg-brand-subtle text-accent'
-                                    : 'border-border bg-surface text-content-secondary hover:border-border-strong'
-                            }`}
-                        >
-                            <span className="text-2xl font-bold">{choice.label.charAt(0)}</span>
-                            <span className="text-sm font-medium">{choice.label}</span>
-                        </button>
-                    ))}
+        <div className="trivia-selection">
+            <p>Test your knowledge of RVL players, teams, and seasons...</p>
+            <div className="selection-section">
+                <h2>What would you like to guess?</h2>
+                <div className="type-buttons">
+                    <button
+                        className={`type-btn ${selectedType === 'player' ? 'selected' : ''}`}
+                        onClick={() => setSelectedType('player')}
+                        disabled={debounce}
+                    >
+                        <span className="type-icon">P</span>
+                        <span className="type-label">Player</span>
+                    </button>
+                    <button
+                        className={`type-btn ${selectedType === 'team' ? 'selected' : ''}`}
+                        onClick={() => setSelectedType('team')}
+                        disabled={debounce}
+                    >
+                        <span className="type-icon">T</span>
+                        <span className="type-label">Team</span>
+                    </button>
+                    <button
+                        className={`type-btn ${selectedType === 'season' ? 'selected' : ''}`}
+                        onClick={() => setSelectedType('season')}
+                        disabled={true}
+                        title="Coming soon - Season trivia is currently being fixed"
+                    >
+                        <span className="type-icon">S</span>
+                        <span className="type-label">Season</span>
+                    </button>
                 </div>
-            </section>
-
+            </div>
             {selectedType && (
-                <section className="flex flex-col gap-3">
-                    <SectionHeader title="Choose difficulty" level={3} />
-                    <div className="flex flex-wrap gap-2">
-                        {DIFFICULTIES.map((difficulty) => (
-                            <Button
-                                key={difficulty}
-                                variant={selectedDifficulty === difficulty ? 'primary' : 'secondary'}
-                                disabled={debounce}
-                                onClick={() => setSelectedDifficulty(difficulty)}
-                                className="capitalize"
-                            >
-                                {difficulty}
-                            </Button>
-                        ))}
+                <div className="selection-section">
+                    <h2>Choose difficulty:</h2>
+                    <div className="difficulty-buttons">
+                        <button
+                            className={`difficulty-btn easy ${selectedDifficulty === 'easy' ? 'selected' : ''}`}
+                            onClick={() => setSelectedDifficulty('easy')}
+                            disabled={debounce}
+                        >
+                            Easy
+                        </button>
+                        <button
+                            className={`difficulty-btn medium ${selectedDifficulty === 'medium' ? 'selected' : ''}`}
+                            onClick={() => setSelectedDifficulty('medium')}
+                            disabled={debounce}
+                        >
+                            Medium
+                        </button>
+                        <button
+                            className={`difficulty-btn hard ${selectedDifficulty === 'hard' ? 'selected' : ''}`}
+                            onClick={() => setSelectedDifficulty('hard')}
+                            disabled={debounce}
+                        >
+                            Hard
+                        </button>
+                        <button
+                            className={`difficulty-btn impossible ${selectedDifficulty === 'impossible' ? 'selected' : ''}`}
+                            onClick={() => setSelectedDifficulty('impossible')}
+                            disabled={debounce}
+                        >
+                            Impossible
+                        </button>
                     </div>
-                </section>
+                </div>
             )}
-
             {selectedType && selectedDifficulty && (
-                <Button
-                    size="lg"
-                    className="self-start"
-                    loading={debounce}
-                    loadingLabel="Please wait..."
+                <button 
+                    className="start-game-btn"
                     onClick={startGame}
+                    disabled={debounce}
                 >
-                    Start Game!
-                </Button>
+                    {debounce ? 'Please wait...' : 'Start Game!'}
+                </button>
             )}
         </div>
     );
 
     const renderGameScreen = () => (
-        <div className="flex flex-col gap-5">
-            <SectionHeader
-                title={`Guess the ${selectedType}`}
-                actions={
-                    <div className="flex flex-wrap items-center gap-2">
-                        <Pill tone={DIFFICULTY_TONES[selectedDifficulty!]} className="capitalize">
-                            {selectedDifficulty}
-                        </Pill>
-                        <Pill tone="neutral">
-                            Hint {hintLevel}/{currentTrivia?.hintCount}
-                        </Pill>
-                        <span
-                            className={`text-lg font-bold tabular-nums ${timeRemaining <= 10 ? 'text-status-danger' : 'text-content'}`}
-                        >
-                            {Math.floor(timeRemaining / 60)}:
-                            {(timeRemaining % 60).toString().padStart(2, '0')}
+        <div className="trivia-game">
+            <div className="game-header">
+                <h2>Guess the {selectedType}</h2>
+                <div className="game-info">
+                    <span className={`difficulty-badge ${selectedDifficulty}`}>{selectedDifficulty}</span>
+                    <span className="hint-counter">Hint {hintLevel}/{currentTrivia?.hintCount}</span>
+                    <div className="timer">
+                        <span className={`timer-text ${timeRemaining <= 10 ? 'warning' : ''}`}>
+                            {Math.floor(timeRemaining / 60)}:{(timeRemaining % 60).toString().padStart(2, '0')}
                         </span>
                     </div>
-                }
-            />
-
-            <section className="flex flex-col gap-2">
-                <SectionHeader title="Hints" level={4} />
-                <ol className="m-0 flex list-none flex-col gap-2 p-0">
-                    {currentHints.slice(0, hintLevel).map((hint, index) => (
-                        <li
-                            key={index}
-                            className="rounded-card border border-brand-muted bg-brand-subtle px-4 py-3 text-sm text-content"
-                        >
-                            {hint.text}
-                        </li>
-                    ))}
-                </ol>
-            </section>
-
-            <div className="flex flex-col gap-3">
-                <TextInput
-                    value={userGuess}
-                    onChange={(e) => setUserGuess(e.target.value)}
-                    onKeyDown={handleKeyPress}
-                    placeholder="Enter your guess..."
-                    aria-label="Your guess"
-                    disabled={debounce}
-                />
-                <div className="flex flex-wrap gap-2">
-                    <Button
-                        disabled={!userGuess.trim()}
-                        loading={debounce}
-                        loadingLabel="Please wait..."
-                        onClick={submitGuess}
-                    >
-                        Submit Guess
-                    </Button>
-                    <Button variant="outline" onClick={giveUp}>
-                        Give Up
-                    </Button>
                 </div>
             </div>
-
+            <div className="hints-section">
+                <h3>Hints:</h3>
+                <div className="hints-list">
+                    {currentHints.slice(0, hintLevel).map((hint, index) => (
+                        <div key={index} className={`hint hint-level-${hint.level}`}>
+                            {hint.text}
+                        </div>
+                    ))}
+                </div>
+            </div>
+            <div className="guess-section">
+                <input
+                    type="text"
+                    value={userGuess}
+                    onChange={(e) => setUserGuess(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder={`Enter your guess...`}
+                    className="guess-input"
+                    disabled={debounce}
+                />
+                <div className="guess-buttons">
+                    <button 
+                        className="submit-btn"
+                        onClick={submitGuess}
+                        disabled={!userGuess.trim() || debounce}
+                    >
+                        {debounce ? 'Please wait...' : 'Submit Guess'}
+                    </button>
+                    <button 
+                        className="give-up-btn"
+                        onClick={giveUp}
+                    >
+                        Give Up
+                    </button>
+                </div>
+            </div>
             {guessResult && !guessResult.correct && (
-                <ErrorNotice tone="warning" message={guessResult.message} />
+                <div className="incorrect-message">
+                    {guessResult.message}
+                </div>
             )}
         </div>
     );
 
-    const renderResultScreen = () => {
-        const correct = Boolean(guessResult?.correct);
-
-        const gameStats: DetailStatItem[] = [
-            { label: 'Difficulty', value: selectedDifficulty },
-            { label: 'Type', value: selectedType },
-            { label: 'Hints used', value: `${hintLevel} / ${currentTrivia?.hintCount || 0}` },
-            { label: 'Total hints available', value: currentTrivia?.hintCount || 0 },
-            { label: 'Time solved', value: `${timeSolved}s` },
-            { label: 'Time remaining', value: `${timeRemaining}s` },
-            { label: 'Time bonus', value: `+${timeBonus} points` },
-        ];
-
-        if (currentTrivia && selectedType === 'player') {
-            gameStats.push({ label: 'Player name', value: (currentTrivia as TriviaPlayer).name });
-            if ((currentTrivia as TriviaPlayer).position) {
-                gameStats.push({
-                    label: 'Position',
-                    value: (currentTrivia as TriviaPlayer).position,
-                });
-            }
-        }
-        if (currentTrivia && selectedType === 'team') {
-            gameStats.push({ label: 'Team name', value: (currentTrivia as TriviaTeam).name });
-            gameStats.push({ label: 'Placement', value: (currentTrivia as TriviaTeam).placement });
-        }
-        if (currentTrivia && selectedType === 'season') {
-            gameStats.push({
-                label: 'Season number',
-                value: (currentTrivia as TriviaSeason).seasonNumber,
-            });
-        }
-
-        return (
-            <div className="flex flex-col gap-5">
-                <SectionHeader title="Game Over!" />
-
-                <Card padding="lg" tone={correct ? 'accent' : 'surface'}>
-                    <div className="flex flex-col gap-4">
-                        <div className="flex items-center gap-3">
-                            <span
-                                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xl font-bold ${
-                                    correct
-                                        ? 'bg-status-success/15 text-status-success'
-                                        : 'bg-status-danger/15 text-status-danger'
-                                }`}
-                            >
-                                {correct ? 'OK' : '!'}
-                            </span>
-                            <div className="flex min-w-0 flex-col">
-                                <h3 className="m-0 text-lg font-semibold text-content">
-                                    {correct ? 'Congratulations!' : 'The answer was:'}
-                                </h3>
-                                <p className="m-0 text-sm text-content-secondary">
-                                    {correct ? 'You guessed correctly!' : guessResult?.answer}
-                                </p>
+    const renderResultScreen = () => (
+        <div className="trivia-result">
+            <h2>Game Over!</h2>
+            <div className="result-content">
+                {guessResult?.correct ? (
+                    <div className="correct-result">
+                        <span className="result-icon">✓</span>
+                        <h3>Congratulations!</h3>
+                        <p>You guessed correctly!</p>
+                        <div className="score-display">
+                            <h4>Your Score: <span className="score-value">{finalScore}</span></h4>
+                            <div className="score-breakdown">
+                                <p>Base Score ({selectedDifficulty}): <span className="score-detail">{BASE_SCORES[selectedDifficulty!]}</span></p>
+                                <p>Free Hint (First letter): <span className="score-detail">0</span></p>
+                                <p>Hint Penalty ({Math.max(hintLevel - 1, 0)} hints): <span className="score-detail">-{Math.max(hintLevel - 1, 0) * HINT_PENALTY}</span></p>
+                                <p>Time Bonus ({timeRemaining}s remaining): <span className="score-detail">+{timeBonus}</span></p>
+                                <p>Final Score: <span className="score-detail">{finalScore}</span></p>
                             </div>
                         </div>
-
-                        <div className="flex flex-col gap-3">
-                            <p className="m-0 text-2xl font-bold tabular-nums text-content">
-                                Your Score: {finalScore}
-                            </p>
-                            {correct || finalScore > 0 ? (
-                                <DetailStats columns={3} items={scoreBreakdown()} />
+                    </div>
+                ) : (
+                    <div className="incorrect-result">
+                        <span className="result-icon">!</span>
+                        <h3>The answer was:</h3>
+                        <p className="correct-answer">{guessResult?.answer}</p>
+                        <div className="score-display">
+                            <h4>Your Score: <span className="score-value">{finalScore}</span></h4>
+                            {finalScore > 0 ? (
+                                <div className="score-breakdown">
+                                    <p>Base Score ({selectedDifficulty}): <span className="score-detail">{BASE_SCORES[selectedDifficulty!]}</span></p>
+                                    <p>Free Hint (First letter): <span className="score-detail">0</span></p>
+                                    <p>Hint Penalty ({Math.max(hintLevel - 1, 0)} hints): <span className="score-detail">-{Math.max(hintLevel - 1, 0) * HINT_PENALTY}</span></p>
+                                    <p>Time Bonus ({timeRemaining}s remaining): <span className="score-detail">+{timeBonus}</span></p>
+                                    <p>Final Score: <span className="score-detail">{finalScore}</span></p>
+                                </div>
                             ) : (
-                                <p className="m-0 text-sm text-content-muted">
-                                    No points earned - try again!
-                                </p>
+                                <p className="no-score">No points earned - try again!</p>
                             )}
                         </div>
                     </div>
-                </Card>
-
-                <Card padding="lg">
-                    <SectionHeader title="Game stats" level={4} className="mb-4" />
-                    <DetailStats columns={3} items={gameStats} />
-                </Card>
-
-                <Button className="self-start" onClick={resetGame}>
-                    Play Again
-                </Button>
+                )}
+                <div className="game-stats">
+                    <p>Difficulty: <span className="stat-value">{selectedDifficulty}</span></p>
+                    <p>Type: <span className="stat-value">{selectedType}</span></p>
+                    <p>Hints used: <span className="stat-value">{hintLevel} / {currentTrivia?.hintCount || 0}</span></p>
+                    <p>Total hints available: <span className="stat-value">{currentTrivia?.hintCount || 0}</span></p>
+                    <p>Time solved: <span className="stat-value">{timeSolved}s</span></p>
+                    <p>Time remaining: <span className="stat-value">{timeRemaining}s</span></p>
+                    <p>Time bonus: <span className="stat-value">+{timeBonus} points</span></p>
+                    {currentTrivia && (
+                        <>
+                            {selectedType === 'player' && (
+                                <>
+                                    <p>Player name: <span className="stat-value">{(currentTrivia as TriviaPlayer).name}</span></p>
+                                    {(currentTrivia as TriviaPlayer).position && (
+                                        <p>Position: <span className="stat-value">{(currentTrivia as TriviaPlayer).position}</span></p>
+                                    )}
+                                </>
+                            )}
+                            {selectedType === 'team' && (
+                                <>
+                                    <p>Team name: <span className="stat-value">{(currentTrivia as TriviaTeam).name}</span></p>
+                                    <p>Placement: <span className="stat-value">{(currentTrivia as TriviaTeam).placement}</span></p>
+                                </>
+                            )}
+                            {selectedType === 'season' && (
+                                <p>Season number: <span className="stat-value">{(currentTrivia as TriviaSeason).seasonNumber}</span></p>
+                            )}
+                        </>
+                    )}
+                </div>
             </div>
-        );
-    };
+            <div className="result-buttons">
+                <button className="play-again-btn" onClick={resetGame}>
+                    Play Again
+                </button>
+            </div>
+        </div>
+    );
 
+    // Check for loading states
     const isLoading = triviaPlayer.loading || triviaTeam.loading || triviaSeason.loading;
+    
+    // Check for errors
     const hasError = triviaPlayer.error || triviaTeam.error || triviaSeason.error || error;
-
-    /** Clearing an error means retrying the fetch that produced it. */
+    
+    // Function to dismiss all errors
     const dismissError = () => {
         setError(null);
+        // Clear hook errors by calling their fetch functions
         if (selectedDifficulty) {
             triviaPlayer.fetchTriviaPlayer();
             triviaTeam.fetchTriviaTeam();
             triviaSeason.fetchTriviaSeason();
         }
     };
-
+    
     return (
-        <PageContainer width="narrow">
-            <PageHeader title="RVL Trivia" />
-
-            {hasError && (
-                <ErrorNotice
-                    title="Error"
-                    message={hasError}
-                    action={
-                        <Button variant="secondary" size="sm" onClick={dismissError}>
-                            Dismiss
-                        </Button>
-                    }
-                />
-            )}
-
-            {isLoading && gameState === 'playing' ? (
-                <PageLoader message="Loading trivia..." />
-            ) : (
-                <>
-                    {gameState === 'selection' && renderSelectionScreen()}
-                    {gameState === 'playing' && renderGameScreen()}
-                    {gameState === 'result' && renderResultScreen()}
-                </>
-            )}
-        </PageContainer>
+        <div className="trivia-page-shell">
+            <div className={`trivia-page ${isLoading ? 'loading' : ''}`}>
+                {hasError && (
+                    <div className="error-message">
+                        <h3>Error</h3>
+                        <p>{hasError}</p>
+                        <button onClick={dismissError}>Dismiss</button>
+                    </div>
+                )}
+                
+                {isLoading && gameState === 'playing' && (
+                    <div className="loading-message">
+                        <h3>Loading trivia...</h3>
+                        <p>Please wait while we fetch your trivia question.</p>
+                    </div>
+                )}
+                
+                {gameState === 'selection' && renderSelectionScreen()}
+                {gameState === 'playing' && !isLoading && renderGameScreen()}
+                {gameState === 'result' && renderResultScreen()}
+            </div>
+        </div>
     );
 };
 

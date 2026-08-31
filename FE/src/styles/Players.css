@@ -1,0 +1,130 @@
+/* Players page specific styles */
+.players-page {
+    padding: 20px clamp(1rem, 2.5vw, 2.5rem);
+    width: min(100%, 1600px);
+    max-width: 1600px;
+    margin: 0 auto;
+    min-height: 100vh; /* Prevent layout shift by setting minimum height */
+    box-sizing: border-box;
+    contain: layout style paint; /* Improve performance */
+}
+
+/* Page title styling */
+.players-page h1 {
+    margin: 0 0 20px 0;
+    padding: 0;
+    border: none;
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+/* Controls layout - filter selects only; toolbar in ListingPage.css */
+.players-season-filter, 
+.players-position-filter { 
+    margin: 0; 
+    white-space: nowrap; 
+}
+
+.players-season-filter select,
+.players-position-filter select {
+    font-size: 15px;
+    padding: 8px 16px;
+    padding-right: 32px;
+    border: 1px solid var(--color-brand-primary);
+    border-radius: 4px;
+    background: var(--color-brand-primary) url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e") no-repeat right 8px center / 20px;
+    color: #ffffff;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    box-shadow: none;
+}
+
+.players-season-filter select:hover,
+.players-position-filter select:hover,
+.players-season-filter select:focus,
+.players-position-filter select:focus {
+    background-color: var(--color-brand-primary-hover);
+    border-color: var(--color-brand-primary-hover);
+    background: var(--color-brand-primary-hover) url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e") no-repeat right 8px center / 20px;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(45, 60, 80, 0.2);
+}
+
+/* Pagination button styling */
+.players-page .listing-search-row button {
+    height: 30px;
+    padding: 0 8px;
+    border: 1px solid var(--color-brand-primary);
+    border-radius: 6px;
+    background: var(--color-brand-primary);
+    color: #ffffff;
+    font-size: 14px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.18s, border 0.18s;
+}
+
+.players-page .listing-search-row button:hover:not(:disabled),
+.players-page .listing-search-row button.active {
+    background: var(--color-brand-primary-hover);
+    border-color: var(--color-brand-primary-hover);
+    color: #ffffff;
+}
+
+.players-page .listing-search-row button:disabled {
+    background: #e5e7eb;
+    border-color: #e5e7eb;
+    color: #9ca3af;
+    cursor: not-allowed;
+}
+
+/* Loading state to prevent layout shift */
+.players-page.loading {
+    opacity: 0.8;
+    pointer-events: none;
+}
+
+/* Replace light-blue accent surfaces with brand navy / neutral tokens */
+.players-page .listing-table tbody tr.listing-row-clickable:hover {
+    background: var(--color-bg-muted);
+}
+
+.players-page .listing-table tbody tr.listing-row-expanded,
+.players-page .listing-table tbody tr.listing-row-expanded:hover {
+    background: var(--color-bg-light);
+}
+
+.players-page .listing-table-detail-row td,
+.players-page .listing-table-detail-row:hover td {
+    background: var(--color-bg-light);
+}
+
+.players-page .listing-table-position-pill {
+    color: var(--color-brand-primary);
+    background: rgba(var(--color-brand-primary-rgb), 0.1);
+    border: 1px solid var(--color-brand-primary);
+}
+
+.players-page .ui-overflow-list-trigger {
+    border-color: rgba(var(--color-brand-primary-rgb), 0.25);
+    background: var(--color-bg);
+}
+
+.players-page .ui-overflow-list-trigger:hover,
+.players-page .ui-overflow-list-trigger:focus-visible {
+    background: rgba(var(--color-brand-primary-rgb), 0.08);
+    border-color: var(--color-brand-primary);
+}
+
+.players-page .listing-skeleton-row {
+    background: linear-gradient(
+        90deg,
+        var(--color-bg-muted) 25%,
+        var(--color-bg-light) 50%,
+        var(--color-bg-muted) 75%
+    );
+    background-size: 200% 100%;
+}

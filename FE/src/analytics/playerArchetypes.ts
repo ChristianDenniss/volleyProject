@@ -1,13 +1,3 @@
-/**
- * playerArchetypes — classifies a player's per-set feature vector into a named archetype.
- *
- * Each trait carries an identity color. Those colors are NOT literals here: every one
- * resolves from an `--archetype-*` token in styles/globals.css via `archetypeColor`, so the
- * palette stays in the token file with the rest of the design system (CLAUDE.md Rule 2)
- * even though three.js and chart.js need literal strings at the point of use.
- */
-import { archetypeColor } from "@/constants/chartPalette";
-
 // Player archetype classification system with prefix/suffix combinations
 
 export type PlayerArchetype = {
@@ -136,7 +126,7 @@ const SECONDARY_TRAITS: SecondaryTrait[] = [
   {
     id: "striker",
     name: "Striker",
-    color: archetypeColor("striker"),
+    color: "#FF6B6B",
     condition: (f) => 
       (f.spikeKillsPerSet > 2.5 || f.apeKillsPerSet > 1.0) && 
       (f.spikeAttemptsPerSet > 4.0 || f.apeAttemptsPerSet > 1.5)
@@ -144,7 +134,7 @@ const SECONDARY_TRAITS: SecondaryTrait[] = [
   {
     id: "piercer",
     name: "Piercer",
-    color: archetypeColor("piercer"),
+    color: "#FF8787",
     condition: (f) => {
       const totalAttempts = f.spikeAttemptsPerSet + f.apeAttemptsPerSet;
       const totalKills = f.spikeKillsPerSet + f.apeKillsPerSet;
@@ -159,40 +149,40 @@ const SECONDARY_TRAITS: SecondaryTrait[] = [
   {
     id: "guardian",
     name: "Guardian",
-    color: archetypeColor("guardian"),
+    color: "#4ECDC4",
     condition: (f) => 
       (f.digsPerSet > 3.0 || f.blocksPerSet > 1.0)
   },
   {
     id: "playmaker",
     name: "Playmaker",
-    color: archetypeColor("playmaker"),
+    color: "#C7CEEA",
     condition: (f) => f.assistsPerSet > 6.0
   },
   {
     id: "finisher",
     name: "Finisher",
-    color: archetypeColor("finisher"),
+    color: "#A8E6CF",
     condition: (f) => 
       (f.spikeKillsPerSet > 2.5 || f.apeKillsPerSet > 1.0)
   },
   {
     id: "intimidator",
     name: "Intimidator",
-    color: archetypeColor("intimidator"),
+    color: "#FCBAD3",
     condition: (f) => 
       (f.blocksPerSet > 1.0 || f.blockFollowsPerSet > 1.5)
   },
   {
     id: "bomber",
     name: "Bomber",
-    color: archetypeColor("bomber"),
+    color: "#FFD3A5",
     condition: (f) => f.acesPerSet > 0.8
   },
   {
     id: "versatile",
     name: "Versatile",
-    color: archetypeColor("versatile"),
+    color: "#FFFFD2",
     condition: (f) => {
       const hasOffense = (f.spikeKillsPerSet > 1.5 || f.apeKillsPerSet > 0.8);
       const hasDefense = (f.digsPerSet > 2.0 || f.blocksPerSet > 0.8);
@@ -203,7 +193,7 @@ const SECONDARY_TRAITS: SecondaryTrait[] = [
   {
     id: "jack-of-all-trades",
     name: "Jack of All Trades",
-    color: archetypeColor("jack"),
+    color: "#D4A5FF",
     condition: (f) => {
       const allStats = [
         f.spikeKillsPerSet, f.apeKillsPerSet, f.assistsPerSet, f.digsPerSet, 
@@ -219,7 +209,7 @@ const STANDALONE_ARCHETYPES: StandaloneArchetype[] = [
   {
     id: "perfectly-balanced",
     name: "Perfectly Balanced",
-    color: archetypeColor("balanced"),
+    color: "#95E1D3",
     description: "Exceptionally balanced player with consistent contributions across offense, defense, and setting, with minimal errors",
     condition: (f) => {
       const offensive = f.spikeKillsPerSet + f.apeKillsPerSet;
@@ -240,7 +230,7 @@ const STANDALONE_ARCHETYPES: StandaloneArchetype[] = [
   {
     id: "unicorn",
     name: "Unicorn",
-    color: archetypeColor("unicorn"),
+    color: "#9B59B6",
     description: "Rare player who achieves elite-level performance in at least three different statistical categories simultaneously",
     condition: (f) => {
       // Must be elite in at least 3 different categories
@@ -257,7 +247,7 @@ const STANDALONE_ARCHETYPES: StandaloneArchetype[] = [
   {
     id: "sniper",
     name: "Sniper",
-    color: archetypeColor("sniper"),
+    color: "#FFB74D",
     description: "Highly efficient attacker with exceptional kill rate (55%+) and minimal errors, prioritizing precision over volume",
     condition: (f) => {
       const totalAttempts = f.spikeAttemptsPerSet + f.apeAttemptsPerSet;
@@ -272,7 +262,7 @@ const STANDALONE_ARCHETYPES: StandaloneArchetype[] = [
   {
     id: "gunslinger",
     name: "Gunslinger",
-    color: archetypeColor("gunslinger"),
+    color: "#FF8C94",
     description: "Extreme high-volume attacker with exceptional kill totals and significant errors - the ultimate risk-taker",
     condition: (f) => {
       const totalAttempts = f.spikeAttemptsPerSet + f.apeAttemptsPerSet;
@@ -288,7 +278,7 @@ const STANDALONE_ARCHETYPES: StandaloneArchetype[] = [
   {
     id: "anchor",
     name: "Anchor",
-    color: archetypeColor("anchor"),
+    color: "#C8E6C9",
     description: "Steady, reliable player with low attempts and minimal errors, providing stability and consistency to the team",
     condition: (f) => 
       (f.spikeAttemptsPerSet < 2.0 && f.apeAttemptsPerSet < 0.5) && 
@@ -297,7 +287,7 @@ const STANDALONE_ARCHETYPES: StandaloneArchetype[] = [
   {
     id: "technician",
     name: "Technician",
-    color: archetypeColor("technician"),
+    color: "#64B5F6",
     description: "Technical precision specialist who excels through flawless execution, maintaining exceptional efficiency with minimal errors across all aspects of play",
     condition: (f) => {
       const totalErrors = f.spikingErrorsPerSet + f.settingErrorsPerSet + f.servingErrorsPerSet + f.miscErrorsPerSet;
@@ -394,7 +384,7 @@ export function classifyPlayerArchetype(features: Record<string, number>): Playe
       return {
         id: primaryTrait ? `${primaryTrait.id}-playmaking-piercer` : "playmaking-piercer",
         name: `${primaryPrefix}Playmaking Piercer`,
-        color: archetypeColor("piercer"),
+        color: "#FF8787",
         description: primaryTrait 
           ? `${primaryTrait.name.toLowerCase()} elite setter (6+ assists/set) who also excels as an efficient offensive threat with high kills and superior kill rate (55%+), orchestrating both setting and scoring`
           : "Elite setter (6+ assists/set) who also excels as an efficient offensive threat with high kills and superior kill rate (55%+), orchestrating both setting and scoring"
@@ -403,7 +393,7 @@ export function classifyPlayerArchetype(features: Record<string, number>): Playe
       return {
         id: primaryTrait ? `${primaryTrait.id}-playmaking-striker` : "playmaking-striker",
         name: `${primaryPrefix}Playmaking Striker`,
-        color: archetypeColor("striker"),
+        color: "#FF6B6B",
         description: primaryTrait
           ? `${primaryTrait.name.toLowerCase()} elite setter (6+ assists/set) who also serves as a primary offensive threat with high kill and attempt rates, orchestrating both setting and attacking`
           : "Elite setter (6+ assists/set) who also serves as a primary offensive threat with high kill and attempt rates, orchestrating both setting and attacking"
@@ -419,7 +409,7 @@ export function classifyPlayerArchetype(features: Record<string, number>): Playe
       return {
         id: "playmaking-intimidator",
         name: "Playmaking Intimidator",
-        color: archetypeColor("playmaker"),
+        color: "#C7CEEA",
         description: "Elite setter (6+ assists/set) who also commands the net with strong blocking presence, orchestrating both offense and defense"
       };
     } else {
@@ -427,7 +417,7 @@ export function classifyPlayerArchetype(features: Record<string, number>): Playe
       return {
         id: "intimidating-playmaker",
         name: "Intimidating Playmaker",
-        color: archetypeColor("intimidator"),
+        color: "#FCBAD3",
         description: "Dominant blocker (1+ blocks/set) who also orchestrates the offense with high assist totals, controlling both sides of the game"
       };
     }
@@ -522,7 +512,7 @@ export function classifyPlayerArchetype(features: Record<string, number>): Playe
     return {
       id: primaryTrait.id,
       name: primaryTrait.name,
-      color: archetypeColor("unclassified"),
+      color: "#95a5a6",
       description: primaryDesc[primaryTrait.id] || `${primaryTrait.name.toLowerCase()} player`
     };
   }

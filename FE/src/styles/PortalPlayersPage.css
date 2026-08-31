@@ -1,0 +1,52 @@
+/* Portal Players Page Styles */
+
+/* Controls section */
+.players-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  padding: 0;
+}
+
+.portal-main .ui-filter-bar {
+  margin-bottom: 0.75rem;
+}
+
+/* Left side controls (action buttons grouped together) */
+.players-controls-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Right side controls (search + pagination) */
+.players-controls-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+/* Search bar styling */
+.search-bar {
+  width: 200px; /* Reduced width */
+}
+
+.search-bar input {
+  width: 100%;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  background-color: #fff;
+  transition: border-color 0.2s ease;
+}
+
+.search-bar input:focus {
+  outline: none;
+  border-color: var(--color-brand-primary);
+  box-shadow: 0 0 0 2px rgba(45, 60, 80, 0.1);
+}

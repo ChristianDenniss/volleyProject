@@ -1,106 +1,274 @@
-/**
- * Dashboard — the admin portal's landing page: a grid of collection counts and a row of shortcuts into each management section.
- * Tiles and shortcuts are both declared as module-scope arrays keyed off `usePortalDashboard`'s counts, so adding a metric or a section is one entry rather than another copy of the markup.
- * Lives in `components/portal/`; it is the portal's index route.
- */
-import type { ReactNode } from 'react'
-import {
-  FaVolleyballBall,
-  FaUserAlt,
-  FaChartBar,
-  FaNewspaper,
-  FaUsers,
-  FaCalendarAlt,
-  FaTrophy,
-  FaClock,
-} from 'react-icons/fa'
-import LuvLateAvatar from '@/images/LuvLate.png'
-import { usePortalDashboard, type PortalDashboardCounts } from '@/hooks/usePortalDashboard'
+import React, { useState, useEffect } from 'react';
+import { FaVolleyballBall, FaUserAlt, FaChartBar, FaNewspaper, FaUsers, FaCalendarAlt, FaTrophy, FaClock } from 'react-icons/fa';
+import LuvLateAvatar from '../../images/LuvLate.png';
+import '../../styles/Dashboard.css';
+import { BACKEND_URL } from '../../constants/api';
 
-import PageContainer from '@/components/ui/layout/PageContainer'
-import PageHeader from '@/components/ui/layout/PageHeader'
-import SectionHeader from '@/components/ui/layout/SectionHeader'
-import StatCard from '@/components/ui/layout/StatCard'
-import LinkButton from '@/components/ui/buttons/LinkButton'
-import ErrorNotice from '@/components/ui/feedback/ErrorNotice'
-import { SkeletonCardGrid } from '@/components/ui/feedback/Skeleton'
+const backendUrl = BACKEND_URL;
 
-interface StatTile {
-  key: keyof PortalDashboardCounts
-  label: string
-  icon: ReactNode
-}
+const parseJson = async (response: Response) => {
+  const contentType = response.headers.get('content-type') ?? '';
+  if (!response.ok || !contentType.includes('application/json')) {
+    return null;
+  }
+  return response.json();
+};
 
-const STAT_TILES: StatTile[] = [
-  { key: 'teams', label: 'Total Teams', icon: <FaVolleyballBall /> },
-  { key: 'users', label: 'Total Users', icon: <FaUserAlt /> },
-  { key: 'stats', label: 'Total Stat Entries', icon: <FaChartBar /> },
-  { key: 'articles', label: 'Total Articles', icon: <FaNewspaper /> },
-  { key: 'players', label: 'Total Players', icon: <FaUsers /> },
-  { key: 'seasons', label: 'Total Seasons', icon: <FaCalendarAlt /> },
-  { key: 'awards', label: 'Total Awards', icon: <FaTrophy /> },
-  { key: 'games', label: 'Total Games', icon: <FaVolleyballBall /> },
-  { key: 'scheduledGames', label: 'Scheduled Games', icon: <FaClock /> },
-  { key: 'completedGames', label: 'Completed Games', icon: <FaTrophy /> },
-]
+const Dashboard: React.FC = () => {
+  const [stats, setStats] = useState<any>(null);
+  const [teams, setTeams] = useState<any[]>([]);
+  const [articles, setArticles] = useState<any[]>([]);
+  const [players, setPlayers] = useState<any[]>([]);
+  const [seasons, setSeasons] = useState<any[]>([]);
+  const [games, setGames] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
+  const [awards, setAwards] = useState<any[]>([]);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [teamsLoading, setTeamsLoading] = useState(true);
+  const [articlesLoading, setArticlesLoading] = useState(true);
+  const [playersLoading, setPlayersLoading] = useState(true);
+  const [seasonsLoading, setSeasonsLoading] = useState(true);
+  const [gamesLoading, setGamesLoading] = useState(true);
+  const [usersLoading, setUsersLoading] = useState(true);
+  const [awardsLoading, setAwardsLoading] = useState(true);
 
-const QUICK_ACTIONS = [
-  { label: 'Manage Teams', to: '/portal/teams' },
-  { label: 'Manage Articles', to: '/portal/articles' },
-  { label: 'Manage Seasons', to: '/portal/seasons' },
-  { label: 'Manage Games', to: '/portal/games' },
-  { label: 'Manage Stats', to: '/portal/stats' },
-  { label: 'Manage Players', to: '/portal/players' },
-  { label: 'Manage Users', to: '/portal/users' },
-  { label: 'Manage Awards', to: '/portal/awards' },
-  { label: 'Manage Applications', to: '/portal/applications' },
-]
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
 
-export default function Dashboard() {
-  const { counts, loading, error } = usePortalDashboard()
+  const fetchDashboardData = async () => {
+    try {
+      // Fetch all data in parallel
+      const [
+        statsResponse,
+        teamsResponse,
+        articlesResponse,
+        playersResponse,
+        seasonsResponse,
+        gamesResponse,
+        usersResponse,
+        awardsResponse
+      ] = await Promise.all([
+        fetch(`${backendUrl}/api/stats`),
+        fetch(`${backendUrl}/api/teams`),
+        fetch(`${backendUrl}/api/articles`),
+        fetch(`${backendUrl}/api/players`),
+        fetch(`${backendUrl}/api/seasons`),
+        fetch(`${backendUrl}/api/games`),
+        fetch(`${backendUrl}/api/users`),
+        fetch(`${backendUrl}/api/awards`)
+      ]);
+
+      const [
+        statsJson,
+        teamsJson,
+        articlesJson,
+        playersJson,
+        seasonsJson,
+        gamesJson,
+        usersJson,
+        awardsJson
+      ] = await Promise.all([
+        parseJson(statsResponse),
+        parseJson(teamsResponse),
+        parseJson(articlesResponse),
+        parseJson(playersResponse),
+        parseJson(seasonsResponse),
+        parseJson(gamesResponse),
+        parseJson(usersResponse),
+        parseJson(awardsResponse)
+      ]);
+
+      if (statsJson) setStats(statsJson.data ?? statsJson);
+      if (teamsJson) setTeams(teamsJson.data ?? teamsJson);
+      if (articlesJson) setArticles(articlesJson.data ?? articlesJson);
+      if (playersJson) setPlayers(playersJson.data ?? playersJson);
+      if (seasonsJson) setSeasons(seasonsJson.data ?? seasonsJson);
+      if (gamesJson) setGames(gamesJson.data ?? gamesJson);
+      if (usersJson) setUsers(usersJson.data ?? usersJson);
+      if (awardsJson) setAwards(awardsJson.data ?? awardsJson);
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+    } finally {
+      setStatsLoading(false);
+      setTeamsLoading(false);
+      setArticlesLoading(false);
+      setPlayersLoading(false);
+      setSeasonsLoading(false);
+      setGamesLoading(false);
+      setUsersLoading(false);
+      setAwardsLoading(false);
+    }
+  };
+
+  const totalTeams = teams?.length ?? 0;
+  const totalSeasons = seasons?.length ?? 0;
+  const totalGames = games?.length ?? 0;
+  const scheduledGames = games?.filter((g: any) => g.status === 'scheduled').length ?? 0;
+  const completedGames = games?.filter((g: any) => g.status === 'completed').length ?? 0;
+  const totalUsers = users?.length ?? 0;
+  const totalAwards = awards?.length ?? 0;
+  const totalStats = stats?.length ?? 0;
+  const totalArticles = articles?.length ?? 0;
+  const totalPlayers = players?.length ?? 0;
+  const isLoading = statsLoading || teamsLoading || articlesLoading || playersLoading || seasonsLoading || gamesLoading || usersLoading || awardsLoading;
+
+  if (isLoading) {
+    return <div className="dashboard-container"><p>Loading dashboard data...</p></div>;
+  }
 
   return (
-    <PageContainer>
-      <PageHeader title="Dashboard" subtitle="League totals at a glance." />
-
-      {error && <ErrorNotice message={error} />}
-
-      {loading ? (
-        <SkeletonCardGrid count={STAT_TILES.length} height="h-24" />
-      ) : (
-        <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(200px,1fr))]">
-          {STAT_TILES.map((tile) => (
-            <StatCard
-              key={tile.label}
-              label={tile.label}
-              value={counts[tile.key]}
-              icon={tile.icon}
-            />
-          ))}
+    <div className="dashboard-container">
+      {/* Quick Stats Cards */}
+      <div className="dashboard-stats-grid">
+        <div className="dashboard-stat-card">
+          <div className="stat-icon-wrap">
+            <FaVolleyballBall className="stat-icon" />
+          </div>
+          <div className="stat-content">
+            <h3>Total Teams</h3>
+            <p className="stat-value">{totalTeams}</p>
+          </div>
         </div>
-      )}
 
-      <section className="flex flex-col gap-3">
-        <SectionHeader title="Quick Actions" />
-        <div className="flex flex-wrap gap-2">
-          {QUICK_ACTIONS.map((action) => (
-            <LinkButton key={action.to} to={action.to} variant="secondary" size="sm">
-              {action.label}
-            </LinkButton>
-          ))}
+        <div className="dashboard-stat-card">
+          <div className="stat-icon-wrap">
+            <FaUserAlt className="stat-icon" />
+          </div>
+          <div className="stat-content">
+            <h3>Total Users</h3>
+            <p className="stat-value">{totalUsers}</p>
+          </div>
         </div>
-      </section>
 
-      <figure className="m-0 flex flex-wrap items-center gap-4 rounded-card border border-border bg-surface-inset p-4">
+        <div className="dashboard-stat-card">
+          <div className="stat-icon-wrap">
+            <FaChartBar className="stat-icon" />
+          </div>
+          <div className="stat-content">
+            <h3>Total Stat Entries</h3>
+            <p className="stat-value">{totalStats}</p>
+          </div>
+        </div>
+
+        <div className="dashboard-stat-card">
+          <div className="stat-icon-wrap">
+            <FaNewspaper className="stat-icon" />
+          </div>
+          <div className="stat-content">
+            <h3>Total Articles</h3>
+            <p className="stat-value">{totalArticles}</p>
+          </div>
+        </div>
+
+        <div className="dashboard-stat-card">
+          <div className="stat-icon-wrap">
+            <FaUsers className="stat-icon" />
+          </div>
+          <div className="stat-content">
+            <h3>Total Players</h3>
+            <p className="stat-value">{totalPlayers}</p>
+          </div>
+        </div>
+
+        <div className="dashboard-stat-card">
+          <div className="stat-icon-wrap">
+            <FaCalendarAlt className="stat-icon" />
+          </div>
+          <div className="stat-content">
+            <h3>Total Seasons</h3>
+            <p className="stat-value">{totalSeasons}</p>
+          </div>
+        </div>
+
+        <div className="dashboard-stat-card">
+          <div className="stat-icon-wrap">
+            <FaTrophy className="stat-icon" />
+          </div>
+          <div className="stat-content">
+            <h3>Total Awards</h3>
+            <p className="stat-value">{totalAwards}</p>
+          </div>
+        </div>
+
+        <div className="dashboard-stat-card">
+          <div className="stat-icon-wrap">
+            <FaVolleyballBall className="stat-icon" />
+          </div>
+          <div className="stat-content">
+            <h3>Total Games</h3>
+            <p className="stat-value">{totalGames}</p>
+          </div>
+        </div>
+
+        <div className="dashboard-stat-card">
+          <div className="stat-icon-wrap">
+            <FaClock className="stat-icon" />
+          </div>
+          <div className="stat-content">
+            <h3>Scheduled Games</h3>
+            <p className="stat-value">{scheduledGames}</p>
+          </div>
+        </div>
+
+        <div className="dashboard-stat-card">
+          <div className="stat-icon-wrap">
+            <FaTrophy className="stat-icon" />
+          </div>
+          <div className="stat-content">
+            <h3>Completed Games</h3>
+            <p className="stat-value">{completedGames}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="quick-actions">
+        <h2>Quick Actions</h2>
+        <div className="dashboard-action-buttons">
+          <button className="dashboard-action-button" onClick={() => window.location.href = '/portal/teams'}>
+            Manage Teams
+          </button>
+          <button className="dashboard-action-button" onClick={() => window.location.href = '/portal/articles'}>
+            Manage Articles
+          </button>
+          <button className="dashboard-action-button" onClick={() => window.location.href = '/portal/seasons'}>
+            Manage Seasons
+          </button>
+          <button className="dashboard-action-button" onClick={() => window.location.href = '/portal/games'}>
+            Manage Games
+          </button>
+          <button className="dashboard-action-button" onClick={() => window.location.href = '/portal/stats'}>
+            Manage Stats
+          </button>
+          <button className="dashboard-action-button" onClick={() => window.location.href = '/portal/players'}>
+            Manage Players
+          </button>
+          <button className="dashboard-action-button" onClick={() => window.location.href = '/portal/users'}>
+            Manage Users
+          </button>
+          <button className="dashboard-action-button" onClick={() => window.location.href = '/portal/awards'}>
+            Manage Awards
+          </button>
+          <button className="dashboard-action-button" onClick={() => window.location.href = '/portal/applications'}>
+            Manage Applications
+          </button>
+        </div>
+      </div>
+
+      <div className="dashboard-quote">
         <img
           src={LuvLateAvatar}
-          alt=""
-          className="h-14 w-14 shrink-0 rounded-full border border-border object-cover"
+          alt="LuvLate"
+          className="dashboard-quote-avatar"
         />
-        <blockquote className="m-0 min-w-0 flex-1 text-sm italic text-content-secondary">
+        <blockquote className="dashboard-quote-text">
           &ldquo;Every great season starts with the people behind the scenes.&rdquo;
         </blockquote>
-      </figure>
-    </PageContainer>
-  )
-}
+      </div>
+    </div>
+  );
+};
+
+export default Dashboard;
+      

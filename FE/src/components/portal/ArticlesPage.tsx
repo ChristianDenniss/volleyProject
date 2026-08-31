@@ -1,192 +1,191 @@
-/**
- * ArticlesPage — the admin portal's article moderation queue: a table of submissions filtered to pending or all, where a row expands to show the article's image, summary and body before approving or rejecting it.
- * Approving from the pending view drops the row; approving from the all view updates it in place, so the moderator's list always reflects what is still outstanding.
- * Lives in `components/portal/`; mounted at /portal/articles.
- */
-import { useEffect, useState } from 'react'
-import { useArticles } from '@/hooks/allFetch'
-import { useArticleMutations } from '@/hooks/allPatch'
-import type { Article } from '@/types/interfaces'
+import React, { useState, useEffect } from 'react';
+import { useArticles } from '../../hooks/allFetch';
+import { useArticleMutations } from '../../hooks/allPatch';
+import Table, { type TableColumn } from '../ui/Table';
+import Pagination from '../Pagination';
+import type { Article } from '../../types/interfaces';
+import '../../styles/ArticlesPage.css';
 
-import PageContainer from '@/components/ui/layout/PageContainer'
-import PageHeader from '@/components/ui/layout/PageHeader'
-import Toolbar from '@/components/ui/layout/Toolbar'
-import DataTable, { type DataTableColumn } from '@/components/ui/layout/DataTable'
-import Tabs from '@/components/ui/navigation/Tabs'
-import Pagination from '@/components/ui/navigation/Pagination'
-import Button from '@/components/ui/buttons/Button'
-import StatusBadge from '@/components/ui/badges/StatusBadge'
-import ErrorNotice from '@/components/ui/feedback/ErrorNotice'
+const ARTICLES_PER_PAGE = 10;
 
-const ARTICLES_PER_PAGE = 10
+const ArticlesPage: React.FC = () => {
+    const [filter, setFilter] = useState<'all' | 'pending'>('pending');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [expandedArticleId, setExpandedArticleId] = useState<number | null>(null);
 
-type ArticleFilter = 'pending' | 'all'
+    const { data: fetchedArticles, totalPages, loading, error } = useArticles({
+        page: currentPage,
+        limit: ARTICLES_PER_PAGE,
+        status: filter === 'pending' ? 'pending' : undefined,
+    });
+    const { patchArticle } = useArticleMutations();
+    const [articles, setArticles] = useState<Article[]>([]);
 
-const FILTER_TABS = [
-  { key: 'pending', label: 'Pending Approval' },
-  { key: 'all', label: 'All Articles' },
-]
-
-/** `approved` is tri-state: null means it hasn't been reviewed yet. */
-function articleStatus(article: Article): string {
-  if (article.approved === null) return 'pending'
-  return article.approved ? 'approved' : 'rejected'
-}
-
-export default function ArticlesPage() {
-  const [filter, setFilter] = useState<ArticleFilter>('pending')
-  const [currentPage, setCurrentPage] = useState(1)
-  const [expandedId, setExpandedId] = useState<number | null>(null)
-  const [actionError, setActionError] = useState<string | null>(null)
-
-  const { data: fetchedArticles, totalPages, loading, error } = useArticles({
-    page: currentPage,
-    limit: ARTICLES_PER_PAGE,
-    status: filter === 'pending' ? 'pending' : undefined,
-  })
-  const { patchArticle } = useArticleMutations()
-
-  const [articles, setArticles] = useState<Article[]>([])
-
-  useEffect(() => {
-    if (fetchedArticles) setArticles(fetchedArticles)
-  }, [fetchedArticles])
-
-  const setApproval = async (articleId: number, approved: boolean) => {
-    setActionError(null)
-    try {
-      const updated = await patchArticle(articleId, { approved })
-      if (!updated) return
-
-      setArticles((prev) =>
-        filter === 'pending'
-          ? prev.filter((article) => article.id !== articleId)
-          : prev.map((article) => (article.id === articleId ? { ...article, approved } : article))
-      )
-    } catch (err) {
-      setActionError(err instanceof Error ? err.message : 'Failed to update the article.')
-    }
-  }
-
-  const columns: DataTableColumn<Article>[] = [
-    {
-      key: 'title',
-      header: 'Title',
-      render: (article) => <span className="font-medium text-content">{article.title}</span>,
-    },
-    { key: 'author', header: 'Author', render: (article) => article.author.username },
-    {
-      key: 'createdAt',
-      header: 'Created',
-      hideOnMobile: true,
-      render: (article) => new Date(article.createdAt).toLocaleDateString(),
-    },
-    {
-      key: 'status',
-      header: 'Status',
-      render: (article) => <StatusBadge status={articleStatus(article)} />,
-    },
-    {
-      key: 'actions',
-      header: 'Actions',
-      align: 'right',
-      width: 'w-44',
-      render: (article) => (
-        <div className="flex justify-end gap-2">
-          {article.approved !== true && (
-            <Button
-              variant="success"
-              size="xs"
-              onClick={(e) => {
-                e.stopPropagation()
-                void setApproval(article.id, true)
-              }}
-            >
-              Approve
-            </Button>
-          )}
-          {article.approved !== false && (
-            <Button
-              variant="danger"
-              size="xs"
-              onClick={(e) => {
-                e.stopPropagation()
-                void setApproval(article.id, false)
-              }}
-            >
-              Reject
-            </Button>
-          )}
-        </div>
-      ),
-    },
-  ]
-
-  return (
-    <PageContainer>
-      <PageHeader title="Articles" subtitle="Review and moderate community submissions." />
-
-      {actionError && <ErrorNotice message={actionError} />}
-
-      <Toolbar
-        filters={
-          <Tabs
-            items={FILTER_TABS}
-            activeKey={filter}
-            onChange={(key) => {
-              setFilter(key as ArticleFilter)
-              setCurrentPage(1)
-            }}
-          />
+    useEffect(() => {
+        if (fetchedArticles) {
+            setArticles(fetchedArticles);
         }
-        trailing={
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-          />
-        }
-      />
+    }, [fetchedArticles]);
 
-      <DataTable
-        columns={columns}
-        rows={articles}
-        rowKey={(article) => article.id}
-        loading={loading}
-        error={error}
-        emptyLabel={filter === 'pending' ? 'Nothing awaiting approval.' : 'No articles yet.'}
-        onRowClick={(article) =>
-          setExpandedId((current) => (current === article.id ? null : article.id))
+    const handleApprove = async (articleId: number) => {
+        try {
+            const updatedArticle = await patchArticle(articleId, { approved: true });
+            if (updatedArticle) {
+                // Pending view: drop the row once approved; all view: update in place
+                setArticles(prevArticles =>
+                    filter === 'pending'
+                        ? prevArticles.filter(article => article.id !== articleId)
+                        : prevArticles.map(article =>
+                            article.id === articleId ? { ...article, approved: true } : article
+                        )
+                );
+            }
+        } catch (error) {
+            console.error('Error approving article:', error);
         }
-        expandedRow={(article) =>
-          expandedId === article.id ? (
-            <div className="flex flex-col gap-4 md:flex-row">
-              <img
-                src={article.imageUrl}
-                alt={article.title}
-                loading="lazy"
-                className="h-40 w-full shrink-0 rounded-card border border-border object-cover md:w-64"
-              />
-              <div className="flex min-w-0 flex-col gap-3">
-                <div>
-                  <h3 className="m-0 text-sm font-semibold uppercase tracking-wide text-content-tertiary">
-                    Summary
-                  </h3>
-                  <p className="m-0 text-sm text-content-secondary">{article.summary}</p>
+    };
+
+    const handleReject = async (articleId: number) => {
+        try {
+            const updatedArticle = await patchArticle(articleId, { approved: false });
+            if (updatedArticle) {
+                setArticles(prevArticles =>
+                    filter === 'pending'
+                        ? prevArticles.filter(article => article.id !== articleId)
+                        : prevArticles.map(article =>
+                            article.id === articleId ? { ...article, approved: false } : article
+                        )
+                );
+            }
+        } catch (error) {
+            console.error('Error rejecting article:', error);
+        }
+    };
+
+    const toggleExpand = (articleId: number) => {
+        setExpandedArticleId(expandedArticleId === articleId ? null : articleId);
+    };
+
+    const columns: TableColumn<Article>[] = [
+        {
+            key: 'title',
+            header: 'Title',
+            render: (article) => article.title,
+        },
+        {
+            key: 'author',
+            header: 'Author',
+            render: (article) => article.author.username,
+        },
+        {
+            key: 'createdAt',
+            header: 'Created',
+            render: (article) => new Date(article.createdAt).toLocaleDateString(),
+        },
+        {
+            key: 'status',
+            header: 'Status',
+            render: (article) =>
+                article.approved === null ? 'Pending' :
+                article.approved ? 'Approved' : 'Rejected',
+        },
+        {
+            key: 'actions',
+            header: 'Actions',
+            render: (article) => (
+                <div className="action-buttons">
+                    {article.approved !== true && (
+                        <button
+                            className="approve-btn"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleApprove(article.id);
+                            }}
+                        >
+                            Approve
+                        </button>
+                    )}
+                    {article.approved !== false && (
+                        <button
+                            className="reject-btn"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleReject(article.id);
+                            }}
+                        >
+                            Reject
+                        </button>
+                    )}
                 </div>
-                <div>
-                  <h3 className="m-0 text-sm font-semibold uppercase tracking-wide text-content-tertiary">
-                    Content
-                  </h3>
-                  <p className="m-0 whitespace-pre-wrap text-sm text-content-secondary">
-                    {article.content}
-                  </p>
+            ),
+        },
+    ];
+
+    if (loading) return <div>Loading...</div>;
+    if (error) return <div>Error: {error}</div>;
+
+    return (
+        <div className="articles-page">
+            <div className="page-header">
+                <div className="filter-controls">
+                    <button
+                        className={`filter-btn ${filter === 'all' ? 'active' : ''}`}
+                        onClick={() => {
+                            setFilter('all');
+                            setCurrentPage(1);
+                        }}
+                    >
+                        All Articles
+                    </button>
+                    <button
+                        className={`filter-btn ${filter === 'pending' ? 'active' : ''}`}
+                        onClick={() => {
+                            setFilter('pending');
+                            setCurrentPage(1);
+                        }}
+                    >
+                        Pending Approval
+                    </button>
                 </div>
-              </div>
+                <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                />
             </div>
-          ) : null
-        }
-      />
-    </PageContainer>
-  )
-}
+
+            <div className="articles-table">
+                <Table
+                    columns={columns}
+                    rows={articles}
+                    rowKey={(article) => article.id}
+                    rowClassName={(article) =>
+                        `article-row${expandedArticleId === article.id ? ' expanded' : ''}`
+                    }
+                    onRowClick={(article) => toggleExpand(article.id)}
+                    renderAfterRow={(article) =>
+                        expandedArticleId === article.id ? (
+                            <tr className="article-details" key={`details-${article.id}`}>
+                                <td colSpan={columns.length}>
+                                    <div className="article-content">
+                                        <div className="article-image">
+                                            <img src={article.imageUrl} alt={article.title} />
+                                        </div>
+                                        <div className="article-text">
+                                            <h3>Summary</h3>
+                                            <p>{article.summary}</p>
+                                            <h3>Content</h3>
+                                            <p>{article.content}</p>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        ) : null
+                    }
+                />
+            </div>
+        </div>
+    );
+};
+
+export default ArticlesPage;

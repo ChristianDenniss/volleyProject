@@ -1,374 +1,341 @@
-/**
- * TeamRegister — the public team application form: eligibility acknowledgements, team identity (name and colors), captain/vice contacts, and a roster of at least ten players.
- * Rows 1 and 2 of the roster are overwritten with the captain and vice on submit, so the two are never missing from the roster even if the applicant leaves those rows blank; the whole form is gated behind sign-in.
- * Lives in `components/`; routed at /teams/register. The POST lives in `useSubmitTeamRegistration`.
- */
-import { useMemo, useState, type FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useAuth } from '@/context/authContext'
-import { useRegion } from '@/context/regionContext'
-import { useRegistrationSummary, useSubmitTeamRegistration } from '@/hooks/useTeamRegistrations'
-import type { RegionCode, TeamRegistrationRosterEntry } from '@/types/interfaces'
-import { TEAMS_NAV_ITEMS } from '@/constants/teamsNav'
-
-import PageContainer from '@/components/ui/layout/PageContainer'
-import PageHeader from '@/components/ui/layout/PageHeader'
-import SectionHeader from '@/components/ui/layout/SectionHeader'
-import Card from '@/components/ui/layout/Card'
-import SubNav from '@/components/ui/navigation/SubNav'
-import Button from '@/components/ui/buttons/Button'
-import LinkButton from '@/components/ui/buttons/LinkButton'
-import ErrorNotice from '@/components/ui/feedback/ErrorNotice'
-import EmptyState from '@/components/ui/feedback/EmptyState'
-import { PageLoader } from '@/components/ui/feedback/LoadingSpinner'
-import FormField from '@/components/ui/inputs/FormField'
-import TextInput, { TextArea } from '@/components/ui/inputs/TextInput'
-import Select from '@/components/ui/inputs/Select'
-import Checkbox from '@/components/ui/inputs/Checkbox'
-
-const MIN_ROSTER_SIZE = 10
-const DEFAULT_HEX = '#2D3C50'
-const HEX_PATTERN = /^#[0-9A-Fa-f]{6}$/
-
-const REGION_OPTIONS = [
-  { value: 'na', label: 'North American (NA)' },
-  { value: 'eu', label: 'European (EU)' },
-  { value: 'as', label: 'Asian (AS)' },
-]
+import React, { useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/authContext";
+import { useRegion } from "../context/regionContext";
+import { authFetch } from "../hooks/authFetch";
+import { BACKEND_URL } from "../constants/api";
+import { useRegistrationSummary } from "../hooks/useTeamRegistrations";
+import type { RegionCode, TeamRegistrationRosterEntry } from "../types/interfaces";
+import "../styles/TeamRegistrations.css";
 
 const emptyRoster = (): TeamRegistrationRosterEntry[] =>
-  Array.from({ length: MIN_ROSTER_SIZE }, () => ({ discord: '', roblox: '' }))
+  Array.from({ length: 10 }, () => ({ discord: "", roblox: "" }));
 
-export default function TeamRegister() {
-  const { isAuthenticated, loading: authLoading } = useAuth()
-  const { activeRegion } = useRegion()
-  const navigate = useNavigate()
+const TeamRegister: React.FC = () => {
+  const { isAuthenticated, loading: authLoading } = useAuth();
+  const { activeRegion } = useRegion();
+  const navigate = useNavigate();
+  const region = (activeRegion?.code || "na") as RegionCode;
+  const summary = useRegistrationSummary(region);
 
-  const region = (activeRegion?.code || 'na') as RegionCode
-  const summary = useRegistrationSummary(region)
-  const { submit, submitting } = useSubmitTeamRegistration()
-
-  const [teamName, setTeamName] = useState('')
-  const [hexColor, setHexColor] = useState(DEFAULT_HEX)
-  const [brickColor, setBrickColor] = useState('')
-  const [captainDiscord, setCaptainDiscord] = useState('')
-  const [captainRoblox, setCaptainRoblox] = useState('')
-  const [viceDiscord, setViceDiscord] = useState('')
-  const [viceRoblox, setViceRoblox] = useState('')
-  const [roster, setRoster] = useState(emptyRoster)
-  const [agreeCivil, setAgreeCivil] = useState(false)
-  const [confident, setConfident] = useState(false)
-  const [logoAck, setLogoAck] = useState(false)
-  const [experience, setExperience] = useState('')
-  const [regionCode, setRegionCode] = useState<RegionCode>(region)
-  const [error, setError] = useState<string | null>(null)
+  const [teamName, setTeamName] = useState("");
+  const [hexColor, setHexColor] = useState("#2D3C50");
+  const [brickColor, setBrickColor] = useState("");
+  const [captainDiscord, setCaptainDiscord] = useState("");
+  const [captainRoblox, setCaptainRoblox] = useState("");
+  const [viceDiscord, setViceDiscord] = useState("");
+  const [viceRoblox, setViceRoblox] = useState("");
+  const [roster, setRoster] = useState(emptyRoster);
+  const [agreeCivil, setAgreeCivil] = useState(false);
+  const [confident, setConfident] = useState(false);
+  const [experience, setExperience] = useState("");
+  const [logoAck, setLogoAck] = useState(false);
+  const [regionCode, setRegionCode] = useState<RegionCode>(region);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const startLabel = useMemo(() => {
-    if (!summary?.startDate) return 'TBD'
-    try {
-      return new Date(summary.startDate).toLocaleDateString()
-    } catch {
-      return 'TBD'
+    if (summary?.startDate) {
+      try {
+        return new Date(summary.startDate).toLocaleDateString();
+      } catch {
+        return "TBD";
+      }
     }
-  }, [summary?.startDate])
+    return "TBD";
+  }, [summary?.startDate]);
 
-  if (authLoading) return <PageLoader />
+  if (authLoading) {
+    return (
+      <div className="team-reg-form">
+        <div className="team-reg-card team-reg-gate">
+          <p className="team-regs-muted">Loading…</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return (
-      <PageContainer width="narrow">
-        <SubNav items={TEAMS_NAV_ITEMS} activeLabel="Register a team" />
-        <EmptyState
-          title="Register a team"
-          description="You must be logged in to submit a team application."
-          action={
-            <div className="flex flex-wrap justify-center gap-2">
-              <LinkButton to="/login">Log in</LinkButton>
-              <LinkButton to="/signup" variant="secondary">
-                Sign up
-              </LinkButton>
-            </div>
-          }
-        />
-      </PageContainer>
-    )
+      <div className="team-reg-form">
+        <div className="team-regs-nav">
+          <Link to="/teams">League teams</Link>
+          <span aria-hidden="true">·</span>
+          <Link to="/teams/registrations">Team registrations</Link>
+          <span aria-hidden="true">·</span>
+          <span className="team-regs-nav-active">Register a team</span>
+        </div>
+        <div className="team-reg-card team-reg-gate">
+          <h1>Register a team</h1>
+          <p>You must be logged in to submit a team application.</p>
+          <div className="team-reg-gate-links">
+            <Link className="team-regs-cta" to="/login">
+              Log in
+            </Link>
+            <Link className="team-regs-cta team-regs-cta--secondary" to="/signup">
+              Sign up
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
   }
 
-  const normalizedHex = hexColor.startsWith('#') ? hexColor : `#${hexColor}`
+  const updateRoster = (index: number, field: "discord" | "roblox", value: string) => {
+    setRoster((prev) => prev.map((row, i) => (i === index ? { ...row, [field]: value } : row)));
+  };
 
-  const updateRoster = (index: number, field: 'discord' | 'roblox', value: string) => {
-    setRoster((prev) => prev.map((row, i) => (i === index ? { ...row, [field]: value } : row)))
-  }
-
-  /** The captain and vice always occupy rows 1 and 2, whatever the applicant typed there. */
-  const rosterWithStaff = (): TeamRegistrationRosterEntry[] => {
-    const copy = [...roster]
-    if (captainDiscord && captainRoblox) copy[0] = { discord: captainDiscord, roblox: captainRoblox }
-    if (viceDiscord && viceRoblox) copy[1] = { discord: viceDiscord, roblox: viceRoblox }
-    return copy
-  }
-
-  const handleSubmit = async (event: FormEvent) => {
-    event.preventDefault()
-    setError(null)
-
-    if (!agreeCivil || !confident || !logoAck) {
-      setError('Please answer all required yes/no and acknowledgment questions.')
-      return
+  const syncCaptainViceIntoRoster = (next: TeamRegistrationRosterEntry[]) => {
+    const copy = [...next];
+    if (captainDiscord && captainRoblox) {
+      copy[0] = { discord: captainDiscord, roblox: captainRoblox };
     }
+    if (viceDiscord && viceRoblox) {
+      copy[1] = { discord: viceDiscord, roblox: viceRoblox };
+    }
+    return copy;
+  };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setSuccess(null);
+    setSubmitting(true);
     try {
-      const id = await submit({
+      const body = {
         region: regionCode,
         teamName,
-        hexColor: normalizedHex,
+        hexColor: hexColor.startsWith("#") ? hexColor : `#${hexColor}`,
         brickColor,
         captainDiscord,
         captainRoblox,
         viceDiscord,
         viceRoblox,
-        roster: rosterWithStaff(),
-        agreeCivilScheduling: true,
-        confidentWillParticipate: true,
+        roster: syncCaptainViceIntoRoster(roster),
+        agreeCivilScheduling: true as const,
+        confidentWillParticipate: true as const,
         priorLeagueExperience: experience || null,
-        logoJerseyAck: true,
-      })
-      navigate(`/teams/registrations/${id}`)
+        logoJerseyAck: true as const,
+      };
+
+      if (!agreeCivil || !confident || !logoAck) {
+        throw new Error("Please answer all required yes/no and acknowledgment questions");
+      }
+
+      const res = await authFetch(`${BACKEND_URL}/api/team-registrations`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || data.message || "Submission failed");
+      setSuccess("Application submitted!");
+      navigate(`/teams/registrations/${data.id}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Submission failed')
+      setError(err instanceof Error ? err.message : "Submission failed");
+    } finally {
+      setSubmitting(false);
     }
-  }
+  };
+
+  const normalizedHex = hexColor.startsWith("#") ? hexColor : `#${hexColor}`;
 
   return (
-    <PageContainer width="wide">
-      <SubNav items={TEAMS_NAV_ITEMS} activeLabel="Register a team" />
+    <div className="team-reg-form">
+      <div className="team-regs-nav">
+        <Link to="/teams">League teams</Link>
+        <span aria-hidden="true">·</span>
+        <Link to="/teams/registrations">Team registrations</Link>
+        <span aria-hidden="true">·</span>
+        <span className="team-regs-nav-active">Register a team</span>
+      </div>
 
-      <PageHeader
-        title="Register your team"
-        subtitle={
-          <>
-            Anyone with a site account can submit. Season start: <strong>{startLabel}</strong>.
-          </>
-        }
-      />
+      <div className="team-reg-card">
+        <h1>Register your team</h1>
+        <p className="team-regs-muted">
+          Anyone with a site account can submit. Season start: <strong>{startLabel}</strong>.
+        </p>
 
-      {error && <ErrorNotice message={error} />}
+        {error && <p className="form-error">{error}</p>}
+        {success && <p className="form-success">{success}</p>}
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-        <Card padding="lg">
-          <div className="flex flex-col gap-4">
-            <SectionHeader title="Eligibility" level={3} />
+        <form onSubmit={handleSubmit}>
+          <section className="team-reg-section">
+            <h2>Eligibility</h2>
+            <label className="form-check">
+              <input type="checkbox" checked={agreeCivil} onChange={(e) => setAgreeCivil(e.target.checked)} />
+              <span>I understand and agree to be civil and accommodating when scheduling matches.</span>
+            </label>
+            <label className="form-check">
+              <input type="checkbox" checked={confident} onChange={(e) => setConfident(e.target.checked)} />
+              <span>
+                This season is set to start on {startLabel}. I am confident the team will still participate by then.
+              </span>
+            </label>
+            <div className="form-group">
+              <label htmlFor="team-reg-region">Region</label>
+              <select
+                id="team-reg-region"
+                value={regionCode}
+                onChange={(e) => setRegionCode(e.target.value as RegionCode)}
+              >
+                <option value="na">North American (NA)</option>
+                <option value="eu">European (EU)</option>
+                <option value="as">Asian (AS)</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label htmlFor="team-reg-experience">Prior competitive Roblox Volleyball leagues (optional)</label>
+              <textarea
+                id="team-reg-experience"
+                value={experience}
+                onChange={(e) => setExperience(e.target.value)}
+                rows={3}
+                placeholder="e.g. previous RVL seasons, other leagues…"
+              />
+            </div>
+          </section>
 
-            <Checkbox
-              checked={agreeCivil}
-              onChange={(e) => setAgreeCivil(e.target.checked)}
-              label="I understand and agree to be civil and accommodating when scheduling matches."
-            />
-            <Checkbox
-              checked={confident}
-              onChange={(e) => setConfident(e.target.checked)}
-              label={`This season is set to start on ${startLabel}. I am confident the team will still participate by then.`}
-            />
-
-            <FormField label="Region">
-              {(id) => (
-                <Select
-                  id={id}
-                  value={regionCode}
-                  onChange={(e) => setRegionCode(e.target.value as RegionCode)}
-                  options={REGION_OPTIONS}
+          <section className="team-reg-section">
+            <h2>Team</h2>
+            <div className="form-group">
+              <label htmlFor="team-reg-name">Team name</label>
+              <input
+                id="team-reg-name"
+                value={teamName}
+                onChange={(e) => setTeamName(e.target.value)}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="team-reg-hex">Hex color</label>
+              <div className="team-reg-color-row">
+                <input
+                  type="color"
+                  aria-label="Pick hex color"
+                  value={/^#[0-9A-Fa-f]{6}$/.test(normalizedHex) ? normalizedHex : "#2D3C50"}
+                  onChange={(e) => setHexColor(e.target.value)}
                 />
-              )}
-            </FormField>
-
-            <FormField
-              label="Prior competitive Roblox Volleyball leagues"
-              hint="Optional — previous RVL seasons, other leagues, and so on."
-            >
-              {(id) => (
-                <TextArea
-                  id={id}
-                  rows={3}
-                  value={experience}
-                  onChange={(e) => setExperience(e.target.value)}
-                  placeholder="e.g. previous RVL seasons, other leagues…"
+                <input
+                  id="team-reg-hex"
+                  value={hexColor}
+                  onChange={(e) => setHexColor(e.target.value)}
+                  required
+                  pattern="#?[0-9A-Fa-f]{6}"
+                  placeholder="#2D3C50"
                 />
-              )}
-            </FormField>
-          </div>
-        </Card>
+              </div>
+            </div>
+            <div className="form-group">
+              <label htmlFor="team-reg-brick">Brick color</label>
+              <input
+                id="team-reg-brick"
+                value={brickColor}
+                onChange={(e) => setBrickColor(e.target.value)}
+                required
+                placeholder="Roblox brick color name"
+              />
+            </div>
+            <label className="form-check">
+              <input type="checkbox" checked={logoAck} onChange={(e) => setLogoAck(e.target.checked)} />
+              <span>I will prepare a logo &amp; jerseys if accepted to RVL</span>
+            </label>
+          </section>
 
-        <Card padding="lg">
-          <div className="flex flex-col gap-4">
-            <SectionHeader title="Team" level={3} />
+          <section className="team-reg-section">
+            <h2>Captain &amp; Vice</h2>
+            <div className="form-group">
+              <label htmlFor="team-reg-cap-discord">Captain Discord</label>
+              <input
+                id="team-reg-cap-discord"
+                value={captainDiscord}
+                onChange={(e) => setCaptainDiscord(e.target.value)}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="team-reg-cap-roblox">Captain Roblox</label>
+              <input
+                id="team-reg-cap-roblox"
+                value={captainRoblox}
+                onChange={(e) => setCaptainRoblox(e.target.value)}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="team-reg-vice-discord">Vice Discord</label>
+              <input
+                id="team-reg-vice-discord"
+                value={viceDiscord}
+                onChange={(e) => setViceDiscord(e.target.value)}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="team-reg-vice-roblox">Vice Roblox</label>
+              <input
+                id="team-reg-vice-roblox"
+                value={viceRoblox}
+                onChange={(e) => setViceRoblox(e.target.value)}
+                required
+              />
+            </div>
+          </section>
 
-            <FormField label="Team name" required>
-              {(id) => (
-                <TextInput
-                  id={id}
-                  value={teamName}
-                  onChange={(e) => setTeamName(e.target.value)}
+          <section className="team-reg-section">
+            <h2>Roster</h2>
+            <p className="team-regs-muted" style={{ marginBottom: "1rem" }}>
+              Minimum 10 players, including captain &amp; vice (rows 1–2).
+            </p>
+            {roster.map((row, i) => (
+              <div className="roster-row" key={i}>
+                <input
+                  placeholder={`Player ${i + 1} Discord`}
+                  aria-label={`Player ${i + 1} Discord`}
+                  value={row.discord}
+                  onChange={(e) => updateRoster(i, "discord", e.target.value)}
                   required
                 />
-              )}
-            </FormField>
-
-            <FormField label="Hex color" required>
-              {(id) => (
-                <div className="flex items-center gap-2">
-                  <input
-                    type="color"
-                    aria-label="Pick hex color"
-                    value={HEX_PATTERN.test(normalizedHex) ? normalizedHex : DEFAULT_HEX}
-                    onChange={(e) => setHexColor(e.target.value)}
-                    className="h-10 w-12 shrink-0 cursor-pointer rounded-control border border-border bg-surface p-1"
-                  />
-                  <TextInput
-                    id={id}
-                    value={hexColor}
-                    onChange={(e) => setHexColor(e.target.value)}
-                    required
-                    pattern="#?[0-9A-Fa-f]{6}"
-                    placeholder={DEFAULT_HEX}
-                  />
-                </div>
-              )}
-            </FormField>
-
-            <FormField label="Brick color" required>
-              {(id) => (
-                <TextInput
-                  id={id}
-                  value={brickColor}
-                  onChange={(e) => setBrickColor(e.target.value)}
+                <input
+                  placeholder={`Player ${i + 1} Roblox`}
+                  aria-label={`Player ${i + 1} Roblox`}
+                  value={row.roblox}
+                  onChange={(e) => updateRoster(i, "roblox", e.target.value)}
                   required
-                  placeholder="Roblox brick color name"
                 />
-              )}
-            </FormField>
-
-            <Checkbox
-              checked={logoAck}
-              onChange={(e) => setLogoAck(e.target.checked)}
-              label="I will prepare a logo & jerseys if accepted to RVL"
-            />
-          </div>
-        </Card>
-
-        <Card padding="lg">
-          <div className="flex flex-col gap-4">
-            <SectionHeader title="Captain & Vice" level={3} />
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <FormField label="Captain Discord" required>
-                {(id) => (
-                  <TextInput
-                    id={id}
-                    value={captainDiscord}
-                    onChange={(e) => setCaptainDiscord(e.target.value)}
-                    required
-                  />
+                {i >= 10 && (
+                  <button
+                    type="button"
+                    className="roster-row-remove"
+                    onClick={() => setRoster((r) => r.filter((_, idx) => idx !== i))}
+                  >
+                    Remove
+                  </button>
                 )}
-              </FormField>
-              <FormField label="Captain Roblox" required>
-                {(id) => (
-                  <TextInput
-                    id={id}
-                    value={captainRoblox}
-                    onChange={(e) => setCaptainRoblox(e.target.value)}
-                    required
-                  />
-                )}
-              </FormField>
-              <FormField label="Vice Discord" required>
-                {(id) => (
-                  <TextInput
-                    id={id}
-                    value={viceDiscord}
-                    onChange={(e) => setViceDiscord(e.target.value)}
-                    required
-                  />
-                )}
-              </FormField>
-              <FormField label="Vice Roblox" required>
-                {(id) => (
-                  <TextInput
-                    id={id}
-                    value={viceRoblox}
-                    onChange={(e) => setViceRoblox(e.target.value)}
-                    required
-                  />
-                )}
-              </FormField>
-            </div>
-          </div>
-        </Card>
-
-        <Card padding="lg">
-          <div className="flex flex-col gap-4">
-            <SectionHeader
-              title="Roster"
-              level={3}
-              description={`Minimum ${MIN_ROSTER_SIZE} players, including captain & vice (rows 1–2).`}
-            />
-
-            <div className="flex flex-col gap-2">
-              {roster.map((row, index) => (
-                <div key={index} className="grid gap-2 sm:grid-cols-[1fr_1fr_auto] sm:items-center">
-                  <TextInput
-                    size="sm"
-                    placeholder={`Player ${index + 1} Discord`}
-                    aria-label={`Player ${index + 1} Discord`}
-                    value={row.discord}
-                    onChange={(e) => updateRoster(index, 'discord', e.target.value)}
-                    required
-                  />
-                  <TextInput
-                    size="sm"
-                    placeholder={`Player ${index + 1} Roblox`}
-                    aria-label={`Player ${index + 1} Roblox`}
-                    value={row.roblox}
-                    onChange={(e) => updateRoster(index, 'roblox', e.target.value)}
-                    required
-                  />
-                  {index >= MIN_ROSTER_SIZE ? (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="w-24"
-                      onClick={() => setRoster((rows) => rows.filter((_, i) => i !== index))}
-                    >
-                      Remove
-                    </Button>
-                  ) : (
-                    <span className="hidden w-24 sm:block" />
-                  )}
-                </div>
-              ))}
-            </div>
-
-            <Button
+              </div>
+            ))}
+            <button
               type="button"
-              variant="secondary"
-              size="sm"
-              className="self-start"
-              onClick={() => setRoster((rows) => [...rows, { discord: '', roblox: '' }])}
+              className="team-regs-cta team-regs-cta--secondary"
+              onClick={() => setRoster((r) => [...r, { discord: "", roblox: "" }])}
             >
               Add player
-            </Button>
-          </div>
-        </Card>
+            </button>
+          </section>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <LinkButton to="/teams/registrations" variant="outline">
-            Cancel
-          </LinkButton>
-          <Button type="submit" loading={submitting} loadingLabel="Submitting…">
-            Submit application
-          </Button>
-        </div>
-      </form>
-    </PageContainer>
-  )
-}
+          <div className="form-actions">
+            <Link className="team-regs-cta team-regs-cta--secondary" to="/teams/registrations">
+              Cancel
+            </Link>
+            <button className="team-regs-cta" type="submit" disabled={submitting}>
+              {submitting ? "Submitting…" : "Submit application"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default TeamRegister;
