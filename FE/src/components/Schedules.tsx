@@ -10,7 +10,237 @@ import { isSafeExternalUrl } from '../utils/url';
 import { useRegion } from '../context/regionContext';
 import SEO from './SEO';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
-import '../styles/Schedules.css';
+
+const schedulesPage =
+  "w-full mx-auto p-[6rem] [font-family:-apple-system,BlinkMacSystemFont,'Segoe_UI',Roboto,sans-serif] " +
+  "overflow-x-hidden box-border [&_*]:box-border [&_*]:max-w-full " +
+  "upto-md:pt-[15px] upto-md:px-[10px] upto-md:pb-0";
+
+const vnlHeader =
+  "bg-bg border border-border rounded-lg overflow-hidden mb-[20px] shadow-sm " +
+  "[&_.ui-filter-bar]:p-[1rem_1.25rem_1.25rem] [&_.ui-filter-bar]:mb-0! [&_.ui-filter-bar]:gap-[0.75rem]!";
+
+const colorBars = "flex h-[4px]";
+
+const colorBar = "flex-1 h-full";
+
+const dateNavigation =
+  "flex items-center justify-center py-[16px] px-[20px] gap-[16px] border-b border-border";
+
+const navArrow =
+  "bg-transparent border-none text-[18px] text-text-muted-alt cursor-pointer p-[8px] rounded-sm " +
+  "transition-all duration-200 hover:bg-bg-muted hover:text-text";
+
+const dateRange = "font-semibold text-brand-primary text-[1.1rem]";
+
+const calendarBtn =
+  "bg-transparent border-none text-[16px] cursor-pointer p-[8px] rounded-sm " +
+  "transition-all duration-200 text-brand-primary hover:bg-bg-muted";
+
+const filterDropdown =
+  "filter-dropdown text-[0.875rem] py-[8px] px-[16px] pr-[32px] border border-brand-primary " +
+  "rounded-sm bg-brand-primary bg-[image:var(--chevron-down-white)] bg-no-repeat " +
+  "bg-[right_8px_center] bg-[length:20px] text-text-on-brand cursor-pointer min-w-[100px] " +
+  "appearance-none shadow-none " +
+  "transition-[background-color,border-color] duration-200 ease-[ease] " +
+  "hover:bg-brand-primary-hover hover:border-brand-primary-hover " +
+  "focus:bg-brand-primary-hover focus:border-brand-primary-hover focus:outline-none " +
+  "focus:shadow-[0_0_0_2px_var(--color-focus-ring)]";
+
+const syncCalendar =
+  "bg-brand-primary text-text-on-brand border border-brand-primary py-[8px] px-[16px] " +
+  "rounded-sm text-[0.875rem] font-medium cursor-pointer ml-auto inline-flex items-center gap-[0.5rem] " +
+  "transition-[background-color,border-color] duration-200 " +
+  "hover:bg-brand-primary-hover hover:border-brand-primary-hover";
+
+const schedulesFilters = "pt-0 px-0 pb-[0.75rem] mb-[0.75rem]";
+
+const searchRow =
+  "flex justify-between items-center gap-[0.75rem] upto-md:flex-col upto-md:items-stretch";
+
+const schedulesSearchBar = "flex-1 max-w-[400px] upto-md:max-w-none";
+
+const localTimeToggle =
+  "flex items-center gap-[8px] cursor-pointer text-[0.875rem] text-[#374151]";
+
+const toggleSlider =
+  "relative w-[40px] h-[20px] bg-[#d1d5db] rounded-[10px] " +
+  "transition-[background-color] duration-200 " +
+  "before:content-[''] before:absolute before:top-[2px] before:left-[2px] " +
+  "before:w-[16px] before:h-[16px] before:bg-white before:rounded-full " +
+  "before:transition-transform before:duration-200 " +
+  "peer-checked:bg-brand-primary peer-checked:before:[transform:translateX(20px)]";
+
+const schedulesLoading = "text-center py-[60px] px-[20px]";
+
+const loadingSpinner =
+  "w-[40px] h-[40px] border-4 border-[#f3f3f3] border-t-brand-primary rounded-full " +
+  "animate-spin mx-auto mb-[20px]";
+
+const schedulesLoadingP = "text-[#666] text-[1.1rem]";
+
+const schedulesError = "text-center py-[40px] px-[20px] text-[#dc3545] text-[1.1rem]";
+
+const schedulesContent = "flex flex-col gap-[30px] pb-[60px]";
+
+const noMatches = "text-center py-[60px] px-[20px] text-[#666] text-[1.1rem]";
+
+const dateSection = "bg-white rounded-[12px] overflow-hidden shadow-[0_4px_12px_rgba(0,0,0,0.1)]";
+
+const dateHeader =
+  "bg-brand-primary text-white py-[15px] px-[20px] text-center cursor-pointer " +
+  "flex justify-between items-center transition-[background-color] duration-200 " +
+  "hover:bg-brand-primary-hover " +
+  "[&_h2]:m-0 [&_h2]:text-[1.3rem] [&_h2]:font-semibold";
+
+const collapseArrow =
+  "text-[1rem] transition-transform duration-300 ease-[ease]";
+
+const collapseArrowCollapsed = `${collapseArrow} [transform:rotate(-90deg)]`;
+
+const matchesContainer =
+  "p-[10px] flex flex-col gap-[8px] transition-[max-height,opacity] duration-300 ease-[ease] overflow-hidden";
+
+const matchesContainerCollapsed =
+  "py-0 px-[20px] flex flex-col gap-[8px] transition-[max-height,opacity] duration-300 ease-[ease] " +
+  "overflow-hidden max-h-0 opacity-0";
+
+/* Second .match-card / .match-header / .match-details / .action-button win.
+   Mobile flex-direction on header/details is not overridden by the later
+   desktop rules (those do not set flex-direction). */
+const matchCard =
+  "bg-white border border-[#e5e7eb] rounded-[8px] mb-[16px] overflow-hidden " +
+  "shadow-[0_1px_3px_rgba(0,0,0,0.1)]";
+
+const matchCardClickable =
+  "cursor-pointer transition-[box-shadow,transform] duration-200 ease-[ease] " +
+  "hover:shadow-[0_4px_12px_rgba(0,0,0,0.12)] hover:[transform:translateY(-1px)] " +
+  "focus-visible:outline-2 focus-visible:outline-brand-primary focus-visible:outline-offset-2";
+
+const matchHeader =
+  "flex items-start py-[16px] px-[16px] bg-[#f9fafb] border-b border-[#e5e7eb] gap-[12px] " +
+  "upto-md:flex-col";
+
+const matchTags =
+  "grid grid-rows-[auto_auto] grid-flow-col gap-[6px] max-w-[45%] content-start";
+
+const genderTag =
+  "text-white py-[4px] px-[8px] rounded-[4px] text-[0.75rem] font-semibold uppercase " +
+  "max-w-[120px] overflow-hidden text-ellipsis whitespace-nowrap";
+
+const TAG_BG: Record<string, string> = {
+  default: "bg-[#1f2937]",
+  blue: "bg-brand-primary",
+  purple: "bg-[#8b5cf6]",
+  green: "bg-[#059669]",
+  red: "bg-[#dc2626]",
+  orange: "bg-[#d97706]",
+};
+
+const matchInfo = "flex-1 flex flex-col gap-[4px] self-center";
+
+const matchType = "font-semibold text-[#1f2937] text-[0.875rem]";
+
+const venue = "text-[0.75rem] text-[#6b7280]";
+
+const statusBadge =
+  "py-[4px] px-[12px] rounded-[20px] text-[0.8rem] font-semibold uppercase";
+
+const statusScheduled = `${statusBadge} bg-[#fff3cd] text-[#856404]`;
+
+const statusCompleted = `${statusBadge} bg-[#d4edda] text-[#155724]`;
+
+const matchTeams = "flex flex-col gap-[4px] mb-[6px]";
+
+const teamRow =
+  "flex justify-between items-center py-[2px] px-[1.5rem] border-b border-[#e5e7eb] " +
+  "transition-all duration-200 ease-[ease] last:border-b-0";
+
+const teamRowWinning =
+  `${teamRow} bg-[linear-gradient(135deg,#f0fdf4_0%,#dcfce7_100%)] ` +
+  "border-l-4 border-l-[#a1d5b4] shadow-[0_2px_8px_rgba(34,197,94,0.15)]";
+
+const teamInfo = "flex items-center gap-[6px] flex-1";
+
+const teamLogo =
+  "w-[32px] h-[32px] rounded-full object-cover border-2 border-[#e5e7eb]";
+
+const teamLogoWinning =
+  "w-[32px] h-[32px] rounded-full object-cover border-2 border-[#f59e0b] " +
+  "shadow-[0_0_8px_rgba(245,158,11,0.3)]";
+
+const teamLogoContainer = "flex items-center gap-[8px]";
+
+const teamNameLink =
+  "font-semibold text-[1rem] no-underline hover:text-brand-primary hover:underline";
+
+const teamNameLinkWinning =
+  "font-bold text-[1rem] text-[#166534] no-underline hover:text-[#15803d] hover:underline";
+
+const schedulesTeamName = "font-semibold text-[#1f2937] text-[1rem]";
+
+const schedulesTeamNameWinning = "font-bold text-[#166534] text-[1rem]";
+
+const teamScore = "flex flex-col items-end gap-[2px] min-h-[auto]";
+
+const scoreContainer = "flex flex-col items-end gap-[4px]";
+
+/* First .winning-score colour is !important (#166534); second adds text-shadow. */
+const overallScore = "text-[1.3rem] font-bold text-[#374151] pr-[1.5rem]";
+
+const winningScore =
+  `${overallScore} text-[#166534]! font-bold [text-shadow:0_1px_2px_rgba(146,64,14,0.2)]`;
+
+const winningSet =
+  "text-[0.9rem] mr-[3px] py-[1px] px-[3px] rounded-[2px] text-[#166534] font-semibold bg-[#dcfce7]";
+
+const losingSet =
+  "text-[0.9rem] mr-[3px] py-[1px] px-[3px] rounded-[2px] text-[#dc2626] font-semibold bg-[#fef2f2]";
+
+const matchDetails =
+  "flex justify-between items-center p-[16px] border-t border-[#e5e7eb] " +
+  "upto-md:flex-col upto-md:gap-[10px] upto-md:items-start";
+
+const matchTime = "flex flex-col gap-[4px]";
+
+const timeLabel = "text-[0.75rem] text-[#6b7280] uppercase font-medium";
+
+const timeValue = "font-semibold text-[#1f2937] text-[1rem]";
+
+const matchActions =
+  "flex flex-col gap-[4px] upto-md:w-full upto-md:justify-between";
+
+const actionWatch =
+  "border-none py-[6px] px-[12px] rounded-[4px] text-[0.75rem] font-semibold " +
+  "cursor-pointer transition-[background-color] duration-200 uppercase " +
+  "bg-[#dc2626] text-white hover:bg-[#b91c1c]";
+
+const actionShop =
+  "border-none py-[6px] px-[12px] rounded-[4px] text-[0.75rem] font-semibold " +
+  "cursor-pointer transition-[background-color] duration-200 uppercase " +
+  "bg-[#6c757d] text-white hover:bg-[#545b62]";
+
+const stayUpdatedSection =
+  "m-0 pt-[2.5rem] pr-[3.75rem] pb-0 pl-0 " +
+  "bg-[linear-gradient(135deg,#f7f7f7_0%,#ffffff_75%,var(--color-bg-muted)_100%)] " +
+  "relative overflow-hidden [clip-path:polygon(0_0,100%_0,85%_100%,0_100%)] " +
+  "w-fit max-w-[1200px] " +
+  "before:content-[''] before:absolute before:inset-0 " +
+  "before:bg-[image:var(--background-image-stay-updated-hatch)] before:bg-[length:60px_60px] " +
+  "before:pointer-events-none " +
+  "upto-md:p-[24px_40px_24px_60px] upto-md:[clip-path:polygon(0_0,100%_0,90%_100%,0_100%)]";
+
+const stayUpdatedContent =
+  "relative z-[1] max-w-[800px] ml-[60px] mr-[40px] mb-[20px] upto-md:ml-[10px] " +
+  "[&_h2]:text-[1.75rem] [&_h2]:font-bold [&_h2]:text-brand-primary [&_h2]:m-0 [&_h2]:mb-[16px] [&_h2]:leading-[1.3] " +
+  "upto-md:[&_h2]:text-[1.5rem] " +
+  "[&_p]:text-[1rem] [&_p]:leading-[1.6] [&_p]:text-text [&_p]:m-0 [&_p]:mb-[24px] [&_p]:max-w-[600px] " +
+  "upto-md:[&_p]:text-[0.95rem]";
+
+const STATUS_BADGE: Record<string, string> = {
+  scheduled: statusScheduled,
+  completed: statusCompleted,
+};
 
 const Schedules: React.FC = () => {
   const navigate = useNavigate();
@@ -189,7 +419,7 @@ const Schedules: React.FC = () => {
   };
 
   if (error) {
-    return <div className="schedules-error">Error: {error}</div>;
+    return <div className={schedulesError}>Error: {error}</div>;
   }
 
   return (
@@ -199,35 +429,35 @@ const Schedules: React.FC = () => {
         description="Upcoming Roblox Volleyball League match schedules, dates, and stages."
         url="https://volleyball4-2.com/schedules"
       />
-      <div className="schedules-page">
+      <div className={schedulesPage}>
         {/* VNL-Style Header */}
-        <div className="vnl-header">
-        <div className="color-bars">
-          <div className="bar green"></div>
-          <div className="bar yellow"></div>
-          <div className="bar purple"></div>
-          <div className="bar blue"></div>
+        <div className={vnlHeader}>
+        <div className={colorBars}>
+          <div className={`${colorBar} bg-success`}></div>
+          <div className={`${colorBar} bg-warning`}></div>
+          <div className={`${colorBar} bg-[#8b5cf6]`}></div>
+          <div className={`${colorBar} bg-brand-primary`}></div>
         </div>
         
-        <div className="date-navigation">
-          <button className="nav-arrow" onClick={() => {
+        <div className={dateNavigation}>
+          <button className={navArrow} onClick={() => {
             const newDate = new Date(currentDateRange);
             newDate.setDate(newDate.getDate() - 14); // Move back 2 weeks
             setCurrentDateRange(newDate);
           }}>
             ‹
           </button>
-                  <span className="date-range">
+                  <span className={dateRange}>
           {`${startDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })} - ${endDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}`}
         </span>
-          <button className="nav-arrow" onClick={() => {
+          <button className={navArrow} onClick={() => {
             const newDate = new Date(currentDateRange);
             newDate.setDate(newDate.getDate() + 14); // Move forward 2 weeks
             setCurrentDateRange(newDate);
           }}>
             ›
           </button>
-                     <button className="calendar-btn" onClick={() => setIsCalendarOpen(true)}>
+                     <button className={calendarBtn} onClick={() => setIsCalendarOpen(true)}>
              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                <path d="M8 2V6M16 2V6M3 10H21M5 4H19C20.1046 4 21 4.89543 21 6V20C21 21.1046 20.1046 22 19 22H5C3.89543 22 3 21.1046 3 20V6C3 4.89543 3.89543 4 5 4Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
              </svg>
@@ -236,7 +466,7 @@ const Schedules: React.FC = () => {
 
         <FilterBar>
           <select
-            className="filter-dropdown"
+            className={filterDropdown}
             value={selectedSeason || ''}
             onChange={(e) => {
               setSelectedSeason(e.target.value ? parseInt(e.target.value) : undefined);
@@ -250,7 +480,7 @@ const Schedules: React.FC = () => {
             ))}
           </select>
           <select
-            className="filter-dropdown"
+            className={filterDropdown}
             value={selectedStage}
             onChange={(e) => {
               setSelectedStage(e.target.value);
@@ -263,19 +493,19 @@ const Schedules: React.FC = () => {
               </option>
             ))}
           </select>
-          <select className="filter-dropdown" value={selectedPhase} onChange={(e) => setSelectedPhase(e.target.value)}>
+          <select className={filterDropdown} value={selectedPhase} onChange={(e) => setSelectedPhase(e.target.value)}>
             <option value="">All Phases</option>
             <option value="pre_season">Pre-Season</option>
             <option value="qualifiers">Qualifiers</option>
             <option value="playoffs">Playoffs</option>
           </select>
-          <select className="filter-dropdown" value={selectedTag} onChange={(e) => setSelectedTag(e.target.value)}>
+          <select className={filterDropdown} value={selectedTag} onChange={(e) => setSelectedTag(e.target.value)}>
             <option value="">All Divisions</option>
             <option value="Invitational">Invitational</option>
             <option value="RVL">RVL</option>
             <option value="D-League">D-League</option>
           </select>
-          <button className="sync-calendar">
+          <button className={syncCalendar}>
             SYNC TO CALENDAR
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M8 2V6M16 2V6M3 10H21M5 4H19C20.1046 4 21 4.89543 21 6V20C21 21.1046 20.1046 22 19 22H5C3.89543 22 3 21.1046 3 20V6C3 4.89543 3.89543 4 5 4Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -287,35 +517,36 @@ const Schedules: React.FC = () => {
 
 
       {/* Filters */}
-      <div className="schedules-filters">
-        <div className="search-row">
+      <div className={schedulesFilters}>
+        <div className={searchRow}>
           <SearchBar 
             onSearch={handleSearch} 
             placeholder="Search upcoming games..." 
-            className="schedules-search-bar"
+            className={schedulesSearchBar}
           />
-          <label className="local-time-toggle">
+          <label className={localTimeToggle}>
             <span>Show local match time</span>
             <input
+              className="peer hidden"
               type="checkbox"
               checked={showLocalTime}
               onChange={(e) => setShowLocalTime(e.target.checked)}
             />
-            <span className="toggle-slider"></span>
+            <span className={toggleSlider}></span>
           </label>
         </div>
       </div>
 
       {/* Matches List */}
       {loading ? (
-        <div className="schedules-loading">
-          <div className="loading-spinner"></div>
-          <p>Loading upcoming games...</p>
+        <div className={schedulesLoading}>
+          <div className={loadingSpinner}></div>
+          <p className={schedulesLoadingP}>Loading upcoming games...</p>
         </div>
       ) : (
-        <div className="schedules-content">
+        <div className={schedulesContent}>
           {paginatedDates.length === 0 ? (
-            <div className="no-matches">
+            <div className={noMatches}>
               <p>No upcoming games found for the selected criteria.</p>
             </div>
           ) : (
@@ -323,15 +554,15 @@ const Schedules: React.FC = () => {
               const dayGames = gamesByDate[dateKey];
                
               return (
-                 <div key={dateKey} className="date-section">
-                   <div className="date-header" onClick={() => toggleDateSection(dateKey)}>
+                 <div key={dateKey} className={dateSection}>
+                   <div className={dateHeader} onClick={() => toggleDateSection(dateKey)}>
                      <h2>{formatDate(dateKey)}</h2>
-                     <span className={`collapse-arrow ${collapsedDates.has(dateKey) ? 'collapsed' : ''}`}>
+                     <span className={collapsedDates.has(dateKey) ? collapseArrowCollapsed : collapseArrow}>
                        ▼
                      </span>
                    </div>
                     
-                   <div className={`matches-container ${collapsedDates.has(dateKey) ? 'collapsed' : ''}`}>
+                   <div className={collapsedDates.has(dateKey) ? matchesContainerCollapsed : matchesContainer}>
                     {dayGames.map(game => {
                       const winningTeam = getWinningTeam(game);
                       const team1 = game.teams?.[0];
@@ -340,68 +571,68 @@ const Schedules: React.FC = () => {
                       return (
                         <div
                           key={game.id}
-                          className="match-card match-card-clickable"
+                          className={`${matchCard} ${matchCardClickable}`}
                           role="link"
                           tabIndex={0}
                           onClick={() => handleGameClick(game.id)}
                           onKeyDown={(event) => handleGameKeyDown(event, game.id)}
                           aria-label={`View game: ${game.name ?? `${team1?.name ?? 'TBD'} vs ${team2?.name ?? 'TBD'}`}`}
                         >
-                          <div className="match-header">
+                          <div className={matchHeader}>
                             {game.tags && game.tags.length > 0 && (
-                              <div className="match-tags" aria-label="Game tags">
+                              <div className={matchTags} aria-label="Game tags">
                                 {game.tags.map((tag) => (
-                                  <span key={tag} className={`gender-tag tag-${getTagColor(tag)}`}>
+                                  <span key={tag} className={`${genderTag} ${TAG_BG[getTagColor(tag)] ?? TAG_BG.default}`}>
                                     {tag}
                                   </span>
                                 ))}
                               </div>
                             )}
-                            <div className="match-info">
-                              <span className="match-type">
+                            <div className={matchInfo}>
+                              <span className={matchType}>
                                 Upcoming {formatGameStage(game)} · {game.name ?? `${team1?.name ?? 'TBD'} vs ${team2?.name ?? 'TBD'}`}
                               </span>
-                              <span className="venue">TBD Venue</span>
+                              <span className={venue}>TBD Venue</span>
                             </div>
-                            <div className="match-status">
-                              <span className={`status-badge ${game.status}`}>
+                            <div>
+                              <span className={STATUS_BADGE[game.status] ?? statusBadge}>
                                 {game.status}
                               </span>
                             </div>
                           </div>
                            
-                          <div className="match-teams">
-                            <div className={`team-row ${winningTeam === 0 ? 'winning-team' : ''}`}>
-                              <div className="team-info">
+                          <div className={matchTeams}>
+                            <div className={winningTeam === 0 ? teamRowWinning : teamRow}>
+                              <div className={teamInfo}>
                                 {team1?.logoUrl && (
-                                  <div className="team-logo-container">
+                                  <div className={teamLogoContainer}>
                                     <img 
                                       src={team1.logoUrl} 
                                       alt={`${team1.name} logo`}
-                                      className="team-logo"
+                                      className={winningTeam === 0 ? teamLogoWinning : teamLogo}
                                     />
                                   </div>
                                 )}
                                 {team1?.name ? (
                                   <Link
                                     to={`/teams/${encodeURIComponent(team1.name)}`}
-                                    className="team-name team-name-link"
+                                    className={winningTeam === 0 ? teamNameLinkWinning : teamNameLink}
                                     onClick={stopCardNavigation}
                                   >
                                     {team1.name}
                                   </Link>
                                 ) : (
-                                  <span className="team-name">TBD</span>
+                                  <span className={winningTeam === 0 ? schedulesTeamNameWinning : schedulesTeamName}>TBD</span>
                                 )}
                               </div>
-                              <div className="team-score">
+                              <div className={teamScore}>
                                 {game.status === 'completed' && game.team1Score != null && (
-                                  <div className="score-container">
-                                    <span className={`overall-score ${winningTeam === 0 ? 'winning-score' : ''}`}>
+                                  <div className={scoreContainer}>
+                                    <span className={winningTeam === 0 ? winningScore : overallScore}>
                                       {game.team1Score}
                                     </span>
                                     {(game.set1Score || game.set2Score || game.set3Score || game.set4Score || game.set5Score) && (
-                                      <div className="set-scores">
+                                      <div>
                                         {[game.set1Score, game.set2Score, game.set3Score, game.set4Score, game.set5Score]
                                           .filter(score => score !== null && score !== undefined)
                                           .map((setScore, setIndex) => {
@@ -409,7 +640,7 @@ const Schedules: React.FC = () => {
                                             const [s1, s2] = setScore.split('-').map(Number);
                                             const isWinningSet = s1 > s2;
                                             return (
-                                              <span key={setIndex} className={`set-score ${isWinningSet ? 'winning-set' : 'losing-set'}`}>
+                                              <span key={setIndex} className={isWinningSet ? winningSet : losingSet}>
                                                 {s1}
                                               </span>
                                             );
@@ -421,37 +652,37 @@ const Schedules: React.FC = () => {
                               </div>
                             </div>
                             
-                            <div className={`team-row ${winningTeam === 1 ? 'winning-team' : ''}`}>
-                              <div className="team-info">
+                            <div className={winningTeam === 1 ? teamRowWinning : teamRow}>
+                              <div className={teamInfo}>
                                 {team2?.logoUrl && (
-                                  <div className="team-logo-container">
+                                  <div className={teamLogoContainer}>
                                     <img 
                                       src={team2.logoUrl} 
                                       alt={`${team2.name} logo`}
-                                      className="team-logo"
+                                      className={winningTeam === 1 ? teamLogoWinning : teamLogo}
                                     />
                                   </div>
                                 )}
                                 {team2?.name ? (
                                   <Link
                                     to={`/teams/${encodeURIComponent(team2.name)}`}
-                                    className="team-name team-name-link"
+                                    className={winningTeam === 1 ? teamNameLinkWinning : teamNameLink}
                                     onClick={stopCardNavigation}
                                   >
                                     {team2.name}
                                   </Link>
                                 ) : (
-                                  <span className="team-name">TBD</span>
+                                  <span className={winningTeam === 1 ? schedulesTeamNameWinning : schedulesTeamName}>TBD</span>
                                 )}
                               </div>
-                              <div className="team-score">
+                              <div className={teamScore}>
                                 {game.status === 'completed' && game.team2Score != null && (
-                                  <div className="score-container">
-                                    <span className={`overall-score ${winningTeam === 1 ? 'winning-score' : ''}`}>
+                                  <div className={scoreContainer}>
+                                    <span className={winningTeam === 1 ? winningScore : overallScore}>
                                       {game.team2Score}
                                     </span>
                                     {(game.set1Score || game.set2Score || game.set3Score || game.set4Score || game.set5Score) && (
-                                      <div className="set-scores">
+                                      <div>
                                         {[game.set1Score, game.set2Score, game.set3Score, game.set4Score, game.set5Score]
                                           .filter(score => score !== null && score !== undefined)
                                           .map((setScore, setIndex) => {
@@ -459,7 +690,7 @@ const Schedules: React.FC = () => {
                                             const [s1, s2] = setScore.split('-').map(Number);
                                             const isWinningSet = s2 > s1;
                                             return (
-                                              <span key={setIndex} className={`set-score ${isWinningSet ? 'winning-set' : 'losing-set'}`}>
+                                              <span key={setIndex} className={isWinningSet ? winningSet : losingSet}>
                                                 {s2}
                                               </span>
                                             );
@@ -472,21 +703,21 @@ const Schedules: React.FC = () => {
                             </div>
                           </div>
                            
-                          <div className="match-details">
-                            <div className="match-time">
-                              <span className="time-label">Start Time</span>
-                              <span className="time-value">
+                          <div className={matchDetails}>
+                            <div className={matchTime}>
+                              <span className={timeLabel}>Start Time</span>
+                              <span className={timeValue}>
                                 {game.date ? formatTime(game.date.toString()) : 'TBD'}
                               </span>
                             </div>
-                            <div className="match-actions" onClick={stopCardNavigation}>
+                            <div className={matchActions} onClick={stopCardNavigation}>
                               {isSafeExternalUrl(game.videoUrl) ? (
-                                <a href={game.videoUrl} className="action-button watch" target="_blank" rel="noreferrer">WATCH</a>
+                                <a href={game.videoUrl} className={actionWatch} target="_blank" rel="noreferrer">WATCH</a>
                               ) : (
-                                <button type="button" className="action-button watch" disabled>WATCH</button>
+                                <button type="button" className={actionWatch} disabled>WATCH</button>
                               )}
                               {game.status === 'completed' && (
-                                <Link to={`/games/${game.id}`} className="action-button shop">STATS</Link>
+                                <Link to={`/games/${game.id}`} className={actionShop}>STATS</Link>
                               )}
                             </div>
                           </div>
@@ -503,8 +734,8 @@ const Schedules: React.FC = () => {
       </div>
 
       {/* Stay Updated Section */}
-      <div className="stay-updated-section">
-        <div className="stay-updated-content">
+      <div className={stayUpdatedSection}>
+        <div className={stayUpdatedContent}>
           <h2>Stay Updated with 4.2 Schedules</h2>
                      <p>
              The Roblox Volleyball League (RVL) 4.2 season brings together the most competitive teams 

@@ -3,15 +3,78 @@ import { useMediumPlayers, useSkinnySeasons } from "../hooks/allFetch";
 import { useNavigate } from "react-router-dom";
 import type { Player, Stats, Team } from "../types/interfaces";
 import Table, { type TableColumn } from "./ui/Table";
-import "../styles/Players.css";
-import "../styles/ListingPage.css";
 import SearchBar from "./Searchbar";
 import Pagination from "./Pagination";
 import FilterBar from "./ui/FilterBar";
+import FilterSelect from "./ui/FilterSelect";
 import { useRegion } from "../context/regionContext";
 import { useDebouncedValue } from "../hooks/useDebouncedValue";
 import OverflowListCell from "./ui/OverflowListCell";
 import { PLAYER_POSITIONS } from "../constants/playerPositions";
+import {
+  listingControlsToolbar,
+  listingSearchRow,
+  listingContentWrapper,
+  listingTable,
+  listingTableWrapper,
+  listingTableDetail,
+  listingTableDetailStats,
+  listingTableDetailStat,
+  listingTableDetailStatWide,
+  listingTableDetailProfileBtn,
+  listingTableOverflowList,
+  listingTableExpandToggle,
+  listingTableExpandToggleOpen,
+  listingTableEmpty,
+  listingSkeletonTable,
+} from "./listingClasses";
+
+/* Players.css restyled listing hover/expanded surfaces, the position pill, the
+   skeleton middle stop, pagination buttons in the search row, and the overflow
+   trigger. Those winners live here rather than in listingClasses.
+
+   Overflow-trigger utilities are marked important: ui.css is unlayered and
+   would otherwise win background and border at equal-or-lower specificity. */
+const playersPage =
+  "w-[min(100%,1600px)] max-w-[1600px] mx-auto box-border min-h-screen " +
+  "py-[20px] px-[clamp(1rem,2.5vw,2.5rem)] [contain:layout_style_paint] " +
+  "[&_.listing-search-row_button]:h-[30px] [&_.listing-search-row_button]:py-0 " +
+  "[&_.listing-search-row_button]:px-[8px] [&_.listing-search-row_button]:border " +
+  "[&_.listing-search-row_button]:border-brand-primary [&_.listing-search-row_button]:rounded-[6px] " +
+  "[&_.listing-search-row_button]:bg-brand-primary [&_.listing-search-row_button]:text-white " +
+  "[&_.listing-search-row_button]:text-[14px] [&_.listing-search-row_button]:font-[inherit] " +
+  "[&_.listing-search-row_button]:cursor-pointer " +
+  "[&_.listing-search-row_button]:transition-[background,border] [&_.listing-search-row_button]:duration-[0.18s] " +
+  "[&_.listing-search-row_button:hover:not(:disabled)]:bg-brand-primary-hover " +
+  "[&_.listing-search-row_button:hover:not(:disabled)]:border-brand-primary-hover " +
+  "[&_.listing-search-row_button:hover:not(:disabled)]:text-white " +
+  "[&_.listing-search-row_button:disabled]:bg-[#e5e7eb] [&_.listing-search-row_button:disabled]:border-[#e5e7eb] " +
+  "[&_.listing-search-row_button:disabled]:text-[#9ca3af] [&_.listing-search-row_button:disabled]:cursor-not-allowed " +
+  "[&_.ui-overflow-list-trigger]:border-[rgba(var(--color-brand-primary-rgb),0.25)]! " +
+  "[&_.ui-overflow-list-trigger]:bg-bg! " +
+  "[&_.ui-overflow-list-trigger:hover]:bg-[rgba(var(--color-brand-primary-rgb),0.08)]! " +
+  "[&_.ui-overflow-list-trigger:hover]:border-brand-primary! " +
+  "[&_.ui-overflow-list-trigger:focus-visible]:bg-[rgba(var(--color-brand-primary-rgb),0.08)]! " +
+  "[&_.ui-overflow-list-trigger:focus-visible]:border-brand-primary!";
+
+const playersRowClickable = "listing-row-clickable cursor-pointer hover:bg-bg-muted";
+
+const playersRowExpanded =
+  "listing-row-clickable listing-row-expanded cursor-pointer bg-bg-light hover:bg-bg-light border-b-0";
+
+const playersTableDetailRow =
+  "listing-table-detail-row cursor-default " +
+  "[&_td]:bg-bg-light [&_td]:pt-0 [&_td]:px-[1.25rem] [&_td]:pb-[1.25rem] " +
+  "hover:[&_td]:bg-bg-light";
+
+const playersPositionPill =
+  "inline-block text-[0.6875rem] font-bold uppercase tracking-[0.03em] " +
+  "text-brand-primary bg-[rgba(var(--color-brand-primary-rgb),0.1)] " +
+  "py-[0.2rem] px-[0.6rem] rounded-[999px] border border-brand-primary";
+
+const playersSkeletonRow =
+  "h-[48px] rounded-sm bg-[length:200%_100%] animate-listing-shimmer " +
+  "bg-[linear-gradient(90deg,var(--color-bg-muted)_25%,var(--color-bg-light)_50%,var(--color-bg-muted)_75%)]";
 
 const LISTING_OVERFLOW_VISIBLE = 2;
 
@@ -136,7 +199,7 @@ const Players: React.FC = () => {
         header: "Position",
         render: (player) =>
           player.position && player.position !== "N/A" ? (
-            <span className="listing-table-position-pill">{player.position}</span>
+            <span className={playersPositionPill}>{player.position}</span>
           ) : (
             "Unknown"
           ),
@@ -146,7 +209,7 @@ const Players: React.FC = () => {
         header: "Teams",
         render: (player) => (
           <OverflowListCell
-            className="listing-table-overflow-list"
+            className={listingTableOverflowList}
             items={getPlayerTeamLabels(player)}
             maxVisible={LISTING_OVERFLOW_VISIBLE}
             popoverTitle="Teams"
@@ -158,7 +221,7 @@ const Players: React.FC = () => {
         header: "Seasons",
         render: (player) => (
           <OverflowListCell
-            className="listing-table-overflow-list"
+            className={listingTableOverflowList}
             items={getPlayerSeasonLabels(player)}
             maxVisible={LISTING_OVERFLOW_VISIBLE}
             popoverTitle="Seasons"
@@ -170,7 +233,9 @@ const Players: React.FC = () => {
         header: "",
         render: (player) => (
           <span
-            className={`listing-table-expand-toggle${expandedRows[player.id] ? " expanded" : ""}`}
+            className={
+              expandedRows[player.id] ? listingTableExpandToggleOpen : listingTableExpandToggle
+            }
             aria-hidden="true"
           >
             ▶
@@ -194,49 +259,41 @@ const Players: React.FC = () => {
   };
 
   return (
-    <div className={`players-page ${loading ? "loading" : ""}`}>
-      <div className="listing-controls-toolbar">
+    <div className={`${playersPage} ${loading ? "opacity-80 pointer-events-none" : ""}`}>
+      <div className={listingControlsToolbar}>
           <FilterBar onReset={clearFilters}>
-            <div className="players-season-filter">
-              <select
-                id="season-filter"
-                aria-label="Season"
-                value={seasonFilter}
-                onChange={(e) => {
-                  setSeasonFilter(e.target.value);
-                  setCurrentPage(1);
-                }}
-              >
-                <option value="">All Seasons</option>
-                {seasonOptions.map((season) => (
-                  <option key={season.id} value={season.id.toString()}>
-                    Season {season.seasonNumber}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <FilterSelect
+              id="season-filter"
+              label="Season"
+              value={seasonFilter}
+              onChange={(value) => {
+                setSeasonFilter(value);
+                setCurrentPage(1);
+              }}
+              placeholder="All Seasons"
+              options={seasonOptions.map((season) => ({
+                value: season.id.toString(),
+                label: `Season ${season.seasonNumber}`,
+              }))}
+            />
 
-            <div className="players-position-filter">
-              <select
-                id="position-filter"
-                aria-label="Position"
-                value={positionFilter}
-                onChange={(e) => {
-                  setPositionFilter(e.target.value);
-                  setCurrentPage(1);
-                }}
-              >
-                <option value="">All Positions</option>
-                {PLAYER_POSITIONS.map((position) => (
-                  <option key={position} value={position}>
-                    {position}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <FilterSelect
+              id="position-filter"
+              label="Position"
+              value={positionFilter}
+              onChange={(value) => {
+                setPositionFilter(value);
+                setCurrentPage(1);
+              }}
+              placeholder="All Positions"
+              options={PLAYER_POSITIONS.map((position) => ({
+                value: position,
+                label: position,
+              }))}
+            />
           </FilterBar>
 
-          <div className="listing-search-row">
+          <div className={listingSearchRow}>
             <SearchBar
               onSearch={handleSearch}
               placeholder="Search players..."
@@ -252,26 +309,26 @@ const Players: React.FC = () => {
       {error ? (
         <div>Error: {error}</div>
       ) : (
-        <div className="listing-content-wrapper">
+        <div className={listingContentWrapper}>
           {loading ? (
-            <div className="listing-table-wrapper">
-              <div className="listing-skeleton-table">
+            <div className={listingTableWrapper}>
+              <div className={listingSkeletonTable}>
                 {Array.from({ length: 10 }).map((_, index) => (
-                  <div key={index} className="listing-skeleton-row" />
+                  <div key={index} className={playersSkeletonRow} />
                 ))}
               </div>
             </div>
           ) : !paginatedPlayers || paginatedPlayers.length === 0 ? (
-            <div className="listing-table-empty">No players match your filters.</div>
+            <div className={listingTableEmpty}>No players match your filters.</div>
           ) : (
             <Table
               columns={playerColumns}
               rows={paginatedPlayers}
               rowKey={(player) => player.id}
-              tableClassName="listing-table"
-              wrapperClassName="listing-table-wrapper"
+              tableClassName={listingTable}
+              wrapperClassName={listingTableWrapper}
               rowClassName={(player) =>
-                `listing-row-clickable${expandedRows[player.id] ? " listing-row-expanded" : ""}`
+                expandedRows[player.id] ? playersRowExpanded : playersRowClickable
               }
               onRowClick={(player) => toggleRow(player.id)}
               renderAfterRow={(player) => {
@@ -281,35 +338,35 @@ const Players: React.FC = () => {
                 const seasonsPlayed = formatPlayerSeasons(player);
 
                 return (
-                  <tr className="listing-table-detail-row">
+                  <tr className={playersTableDetailRow}>
                     <td colSpan={playerColumns.length}>
-                      <div className="listing-table-detail">
-                        <dl className="listing-table-detail-stats">
-                          <div className="listing-table-detail-stat">
+                      <div className={listingTableDetail}>
+                        <dl className={listingTableDetailStats}>
+                          <div className={listingTableDetailStat}>
                             <dt>Awards</dt>
                             <dd>{formatAwardsSummary(player)}</dd>
                           </div>
-                          <div className="listing-table-detail-stat">
+                          <div className={listingTableDetailStat}>
                             <dt>Kills</dt>
                             <dd>{totals.kills}</dd>
                           </div>
-                          <div className="listing-table-detail-stat">
+                          <div className={listingTableDetailStat}>
                             <dt>Assists</dt>
                             <dd>{totals.assists}</dd>
                           </div>
-                          <div className="listing-table-detail-stat">
+                          <div className={listingTableDetailStat}>
                             <dt>Blocks</dt>
                             <dd>{totals.blocks}</dd>
                           </div>
-                          <div className="listing-table-detail-stat">
+                          <div className={listingTableDetailStat}>
                             <dt>Receives</dt>
                             <dd>{totals.receives}</dd>
                           </div>
-                          <div className="listing-table-detail-stat">
+                          <div className={listingTableDetailStat}>
                             <dt>Aces</dt>
                             <dd>{totals.aces}</dd>
                           </div>
-                          <div className="listing-table-detail-stat listing-table-detail-stat--wide">
+                          <div className={listingTableDetailStatWide}>
                             <dt>Seasons played</dt>
                             <dd>{seasonsPlayed}</dd>
                           </div>
@@ -317,7 +374,7 @@ const Players: React.FC = () => {
 
                         <button
                           type="button"
-                          className="ui-btn ui-btn-primary listing-table-detail-profile-btn"
+                          className={`ui-btn ui-btn-primary ${listingTableDetailProfileBtn}`}
                           onClick={(e) => {
                             e.stopPropagation();
                             navigate(`/players/${player.id}`);

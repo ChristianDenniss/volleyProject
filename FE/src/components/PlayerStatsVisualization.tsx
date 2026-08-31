@@ -16,6 +16,7 @@ import { Radar, Bar } from 'react-chartjs-2';
 import { Player, Stats } from '../types/interfaces';
 import { useSinglePlayer, usePlayers, useSkinnySeasons } from '../hooks/allFetch';
 import { useRegion } from '../context/regionContext';
+import { playerVisualization, visualizationGrid, visualizationChart } from './statsLeaderboardClasses';
 
 ChartJS.register(
   RadialLinearScale,
@@ -275,7 +276,7 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
 
   if (playerLoading || peersLoading) {
     return (
-      <div className="player-visualization">
+      <div className={playerVisualization}>
         <p>Loading player stats…</p>
       </div>
     );
@@ -283,7 +284,7 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
 
   if (!player) {
     return (
-      <div className="player-visualization">
+      <div className={playerVisualization}>
         <p>Player not found.</p>
       </div>
     );
@@ -296,7 +297,7 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
 
   if (!playerStats) {
     return (
-      <div className="player-visualization">
+      <div className={playerVisualization}>
         <p>No stats available for this player in the selected season.</p>
       </div>
     );
@@ -383,7 +384,7 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
 
   if (!playerPerSetStats) {
     return (
-      <div className="player-visualization">
+      <div className={playerVisualization}>
         <p>No stats available for this player in the selected season.</p>
       </div>
     );
@@ -699,12 +700,12 @@ const PlayerStatsVisualization: React.FC<PlayerStatsVisualizationProps> = ({
   };
 
   return (
-    <div className="player-visualization">
-      <div className="visualization-grid">
-        <div className="visualization-chart">
+    <div className={playerVisualization}>
+      <div className={visualizationGrid}>
+        <div className={visualizationChart}>
           <Radar data={radarData} options={radarOptions} />
         </div>
-        <div className="visualization-chart">
+        <div className={visualizationChart}>
           {React.createElement(rightChartComponent, { data: rightChartData, options: rightChartOptions })}
         </div>
       </div>

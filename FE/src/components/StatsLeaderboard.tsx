@@ -1,15 +1,58 @@
-import React, { useState, useRef, useEffect, useMemo } from "react";
+﻿import React, { useState, useRef, useEffect, useMemo } from "react";
 import ReactDOM from "react-dom";
 import { useLeaderboard } from "../hooks/allFetch";
 import { useRegion } from "../context/regionContext";
 import { useDebouncedValue } from "../hooks/useDebouncedValue";
-import "../styles/StatsLeaderboard.css";
+import Table, { type TableColumn } from "./ui/Table";
+import {
+  statsPage,
+  statsRecordsNav,
+  statsRecordsButton,
+  statsControlsWrapper,
+  statsControlsContainer,
+  statsFiltersRow,
+  statsFilterWrap,
+  statsStageSelect,
+  statsSelect,
+  statsFilterMenu,
+  filterMenuButton,
+  advancedFilterWrap,
+  advancedFilterButton,
+  advancedFilterButtonActive,
+  statsSearchControls,
+  statsPaginationWrapper,
+  filterMenuDropdown,
+  filterMenuHeader,
+  filterMenuItems,
+  filterMenuItem,
+  advancedFilterPanel,
+  advancedFilter,
+  advancedFilterHeader,
+  addFilterButton,
+  noFiltersMessage,
+  filterCondition,
+  filterStatSelect,
+  filterOperatorSelect,
+  filterValueInput,
+  filterPercentageSymbol,
+  removeFilterButton,
+  statsTableWrapper,
+  statsTableWrapperLoading,
+  statsTable,
+  statsSkeletonTable,
+  statsTableSortable,
+  sortArrow,
+  statsPillLink,
+  statsSkeletonRow,
+  statsSkeletonBar,
+  statsPlayerRow,
+  playerVisualizationRow,
+} from "./statsLeaderboardClasses";
 import SearchBar from "./Searchbar";
 import Pagination from "./Pagination";
 import SeasonFilter from "./SeasonFilterBar";
 import { Link } from "react-router-dom";
 import PlayerStatsVisualization from "./PlayerStatsVisualization";
-import Table, { type TableColumn } from "./ui/Table";
 
 type StatCategory =
   | "spikeKills"
@@ -100,9 +143,9 @@ function formatStatValue(stat: StatCategory, value: number): string {
 }
 
 function getSkeletonBarClass(columnKey: string, variantSeed: number): string {
-  if (columnKey === "rank") return "stats-skeleton-bar short";
-  if (columnKey === "name") return "stats-skeleton-bar long";
-  return variantSeed % 2 === 0 ? "stats-skeleton-bar medium" : "stats-skeleton-bar short";
+  if (columnKey === "rank") return `${statsSkeletonBar} short`;
+  if (columnKey === "name") return `${statsSkeletonBar} long`;
+  return variantSeed % 2 === 0 ? `${statsSkeletonBar} medium` : `${statsSkeletonBar} short`;
 }
 
 const AdvancedFilter: React.FC<{
@@ -126,29 +169,29 @@ const AdvancedFilter: React.FC<{
   };
 
   return (
-    <div className="advanced-filter">
-      <div className="advanced-filter-header">
+    <div className={advancedFilter}>
+      <div className={advancedFilterHeader}>
         <h3>Advanced Filters</h3>
-        <button className="add-filter-button" onClick={addCondition} type="button">
+        <button className={addFilterButton} onClick={addCondition} type="button">
           + Add Filter
         </button>
       </div>
 
       {conditions.length === 0 && (
-        <div className="no-filters-message">
+        <div className={noFiltersMessage}>
           No filters applied. Click &quot;Add Filter&quot; to create conditions.
         </div>
       )}
 
       {conditions.map((condition) => (
-        <div key={condition.id} className="filter-condition">
+        <div key={condition.id} className={filterCondition}>
           <div className="filter-condition-row">
             <select
               value={condition.stat}
               onChange={(e) =>
                 updateCondition(condition.id, { stat: e.target.value as StatCategory })
               }
-              className="filter-stat-select"
+              className={filterStatSelect}
             >
               {statCategories.map((stat) => (
                 <option key={stat} value={stat}>
@@ -164,14 +207,14 @@ const AdvancedFilter: React.FC<{
                   operator: e.target.value as ComparisonOperator,
                 })
               }
-              className="filter-operator-select"
+              className={filterOperatorSelect}
             >
               <option value="==">=</option>
-              <option value="!=">≠</option>
+              <option value="!=">â‰ </option>
               <option value=">">&gt;</option>
-              <option value=">=">≥</option>
+              <option value=">=">â‰¥</option>
               <option value="<">&lt;</option>
-              <option value="<=">≤</option>
+              <option value="<=">â‰¤</option>
             </select>
 
             <div className="filter-value-container">
@@ -189,22 +232,22 @@ const AdvancedFilter: React.FC<{
                     : inputValue;
                   updateCondition(condition.id, { value: actualValue });
                 }}
-                className="filter-value-input"
+                className={filterValueInput}
                 step="1"
                 min="0"
                 max={condition.stat.includes("%") ? "100" : undefined}
               />
               {condition.stat.includes("%") && (
-                <span className="filter-percentage-symbol">%</span>
+                <span className={filterPercentageSymbol}>%</span>
               )}
             </div>
 
             <button
               onClick={() => removeCondition(condition.id)}
-              className="remove-filter-button"
+              className={removeFilterButton}
               type="button"
             >
-              ×
+              Ã—
             </button>
           </div>
         </div>
@@ -360,13 +403,13 @@ const StatsLeaderboard: React.FC = () => {
           <>
             {viewType === "team" ? "Team" : "Player"}
             {sortColumn === "name" && (
-              <span className={`sort-arrow ${sortDirection}`}>
-                {sortDirection === "desc" ? "↓" : "↑"}
+              <span className={`${sortArrow} ${sortDirection}`}>
+                {sortDirection === "desc" ? "â†“" : "â†‘"}
               </span>
             )}
           </>
         ),
-        headerClassName: "sortable",
+        headerClassName: statsTableSortable,
         onHeaderClick: () => handleSort("name"),
         render: (item) =>
           viewType === "team" ? (
@@ -380,7 +423,7 @@ const StatsLeaderboard: React.FC = () => {
           ) : (
             <Link
               to={`/players/${item.id}`}
-              className="stats-pill-link"
+              className={statsPillLink}
               onClick={(e) => e.stopPropagation()}
             >
               {item.name}
@@ -401,13 +444,13 @@ const StatsLeaderboard: React.FC = () => {
                 ? "(Per Set)"
                 : ""}
             {sortColumn === stat && (
-              <span className={`sort-arrow ${sortDirection}`}>
-                {sortDirection === "desc" ? "↓" : "↑"}
+              <span className={`${sortArrow} ${sortDirection}`}>
+                {sortDirection === "desc" ? "â†“" : "â†‘"}
               </span>
             )}
           </>
         ),
-        headerClassName: "sortable",
+        headerClassName: statsTableSortable,
         onHeaderClick: () => handleSort(stat),
         render: (item) => {
           const raw = Number(item[stat] ?? 0);
@@ -428,10 +471,10 @@ const StatsLeaderboard: React.FC = () => {
   ]);
 
   return (
-    <div className={`stats-leaderboard-page ${loading ? "loading" : ""}`}>
-      <div className="stats-records-nav">
+    <div className={`${statsPage} ${loading ? "opacity-80 pointer-events-none" : ""}`}>
+      <div className={statsRecordsNav}>
         <button
-          className="stats-records-button"
+          className={statsRecordsButton}
           onClick={() => {
             window.location.href = "/records";
           }}
@@ -440,19 +483,20 @@ const StatsLeaderboard: React.FC = () => {
         </button>
       </div>
 
-      <div className="stats-controls-wrapper">
-        <div className="stats-controls-container">
-          <div className="stats-filters-row">
-            <div className="stats-season-filter">
+      <div className={statsControlsWrapper}>
+        <div className={statsControlsContainer}>
+          <div className={statsFiltersRow}>
+            <div className={statsFilterWrap}>
               <SeasonFilter
                 selectedSeason={selectedSeason}
                 onSeasonChange={handleSeasonChange}
               />
             </div>
-            <div className="stats-stage-filter">
+            <div className={statsFilterWrap}>
               <select
                 id="stage-round"
                 aria-label="Round"
+                className={statsStageSelect}
                 value={selectedStageRound}
                 onChange={(e) =>
                   handleStageRoundChange(e.target.value as StageRound)
@@ -467,10 +511,11 @@ const StatsLeaderboard: React.FC = () => {
                 <option value="R6">R6 - Grand Finals</option>
               </select>
             </div>
-            <div className="stats-type-filter">
+            <div className={statsFilterWrap}>
               <select
                 id="stat-type"
                 aria-label="Stat type"
+                className={statsSelect}
                 value={statType}
                 onChange={(e) => {
                   setStatType(e.target.value as StatType);
@@ -482,10 +527,11 @@ const StatsLeaderboard: React.FC = () => {
                 <option value="perSet">Per Set</option>
               </select>
             </div>
-            <div className="stats-view-filter">
+            <div className={statsFilterWrap}>
               <select
                 id="view-type"
                 aria-label="View"
+                className={statsSelect}
                 value={viewType}
                 onChange={(e) => {
                   setViewType(e.target.value as ViewType);
@@ -497,32 +543,32 @@ const StatsLeaderboard: React.FC = () => {
                 <option value="team">Teams</option>
               </select>
             </div>
-            <div className="stats-filter-menu">
+            <div className={statsFilterMenu}>
               <button
-                className="filter-menu-button"
+                className={filterMenuButton}
                 ref={filterButtonRef}
                 onClick={() => setShowFilterMenu(!showFilterMenu)}
               >
                 Filter Stats
               </button>
             </div>
-            <div className="stats-advanced-filter">
+            <div className={advancedFilterWrap}>
               <button
-                className={`advanced-filter-button ${showAdvancedFilter ? "active" : ""}`}
+                className={showAdvancedFilter ? advancedFilterButtonActive : advancedFilterButton}
                 onClick={() => setShowAdvancedFilter(!showAdvancedFilter)}
               >
                 Advanced Filters{" "}
                 {filterConditions.length > 0 && `(${filterConditions.length})`}
               </button>
             </div>
-            <div className="stats-search-controls">
+            <div className={statsSearchControls}>
               <SearchBar
                 onSearch={handleSearch}
                 placeholder={
                   viewType === "team" ? "Search Teams..." : "Search Players..."
                 }
               />
-              <div className="stats-pagination-wrapper">
+              <div className={statsPaginationWrapper}>
                 <Pagination
                   currentPage={currentPage}
                   totalPages={totalPages}
@@ -536,8 +582,8 @@ const StatsLeaderboard: React.FC = () => {
 
       {showFilterMenu &&
         ReactDOM.createPortal(
-          <div className="filter-menu-dropdown" style={dropdownStyle}>
-            <div className="filter-menu-header">
+          <div className={filterMenuDropdown} style={dropdownStyle}>
+            <div className={filterMenuHeader}>
               <label>
                 <input
                   type="checkbox"
@@ -547,9 +593,9 @@ const StatsLeaderboard: React.FC = () => {
                 All Stats
               </label>
             </div>
-            <div className="filter-menu-items">
+            <div className={filterMenuItems}>
               {STAT_CATEGORIES.map((stat) => (
-                <label key={stat} className="filter-menu-item">
+                <label key={stat} className={filterMenuItem}>
                   <input
                     type="checkbox"
                     checked={visibleStats[stat]}
@@ -564,7 +610,7 @@ const StatsLeaderboard: React.FC = () => {
         )}
 
       {showAdvancedFilter && (
-        <div className="advanced-filter-panel">
+        <div className={advancedFilterPanel}>
           <AdvancedFilter
             conditions={filterConditions}
             onConditionsChange={handleFilterConditionsChange}
@@ -576,8 +622,8 @@ const StatsLeaderboard: React.FC = () => {
       {error ? (
         <div>Error: {error}</div>
       ) : loading ? (
-        <div className="stats-table-wrapper loading">
-          <table className="stats-table stats-skeleton-table">
+        <div className={statsTableWrapperLoading}>
+          <table className={statsSkeletonTable}>
             <thead>
               <tr>
                 {leaderboardColumns.map((col) => (
@@ -591,7 +637,7 @@ const StatsLeaderboard: React.FC = () => {
               {Array.from({ length: playersPerPage }).map((_, rowIndex) => (
                 <tr
                   key={rowIndex}
-                  className="stats-skeleton-row"
+                  className={statsSkeletonRow}
                   style={
                     { "--row-delay": `${(rowIndex % 5) * 0.06}s` } as React.CSSProperties
                   }
@@ -617,9 +663,9 @@ const StatsLeaderboard: React.FC = () => {
               ? `${item.id}-${item.seasonNumber ?? "all"}`
               : item.id
           }
-          tableClassName="stats-table"
-          wrapperClassName="stats-table-wrapper"
-          rowClassName={() => (viewType === "player" ? "player-row" : undefined)}
+          tableClassName={statsTable}
+          wrapperClassName={statsTableWrapper}
+          rowClassName={() => (viewType === "player" ? statsPlayerRow : undefined)}
           onRowClick={(item) => {
             if (viewType === "player") handleRowClick(String(item.id));
           }}
@@ -628,7 +674,7 @@ const StatsLeaderboard: React.FC = () => {
             const rowId = String(item.id);
             if (!expandedRows[rowId]) return null;
             return (
-              <tr className="player-visualization-row" key={`viz-${rowId}`}>
+              <tr className={playerVisualizationRow} key={`viz-${rowId}`}>
                 <td colSpan={leaderboardColumns.length}>
                   <PlayerStatsVisualization
                     playerId={item.id}

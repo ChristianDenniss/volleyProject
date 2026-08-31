@@ -5,31 +5,25 @@ interface SeasonFilterProps {
   onSeasonChange: (season: number | null) => void;
 }
 
-/* The select's own styling. Every value is literal rather than a scale step,
-   because the originals were literal too: 15px sits off the type scale, and
-   4px is the token radius but was hardcoded here, so it stays hardcoded until
-   the tokens are adopted deliberately rather than by accident.
-
-   bg-none is not decorative. The rule this replaces used the `background`
-   shorthand, which resets background-image; `bg-brand-primary` alone sets only
-   background-color and would leave any inherited image in place. */
+/* StatsLeaderboard.css used to restyle this select with !important (8px/16px
+   padding, 32px chevron gutter, navy fill + white chevron). This component is
+   only used on that page, so the stats winner is the look. max-h-[200px] was
+   never overridden and stays. */
 const seasonSelect =
-  "max-h-[200px] py-[6px] px-[12px] text-[15px] rounded-[4px] " +
-  "border border-brand-primary bg-brand-primary bg-none text-white cursor-pointer " +
+  "max-h-[200px] py-[8px] px-[16px] pr-[32px] text-[15px] rounded-[4px] " +
+  "border border-brand-primary bg-brand-primary text-white cursor-pointer " +
+  "bg-[image:var(--chevron-down-white)] bg-no-repeat bg-[right_8px_center] bg-[length:20px] " +
+  "shadow-none appearance-none " +
   "transition-[background-color] duration-200 ease-[ease] " +
   "hover:bg-brand-primary-hover hover:border-brand-primary-hover " +
-  "focus:outline-none focus:border-brand-primary-hover " +
-  "focus:shadow-[0_0_0_2px_var(--color-focus-ring)]";
+  "focus:bg-brand-primary-hover focus:border-brand-primary-hover " +
+  "focus:outline-none focus:shadow-[0_0_0_2px_var(--color-focus-ring)]";
 
 const SeasonFilter: React.FC<SeasonFilterProps> = ({ selectedSeason, onSeasonChange }) => {
   const seasons = Array.from({ length: 14 }, (_, i) => i + 1); // Generates seasons 1 to 14
 
   return (
-    /* `season-filter-bar` carries no styles of its own any more, but it is not
-       dead: StatsLeaderboard.css reaches this select through
-       `.stats-season-filter .season-filter-bar select`. Dropping the class
-       would silently unstyle the filter on the stats page. */
-    <div className="season-filter-bar flex items-center">
+    <div className="flex items-center">
       <select
         id="season"
         aria-label="Season"

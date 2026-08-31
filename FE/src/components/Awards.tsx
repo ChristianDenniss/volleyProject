@@ -1,18 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useSkinnyAwards, useSkinnySeasons } from "../hooks/allFetch";
 import { Link, useLocation } from "react-router-dom";
-import "../styles/ListingPage.css";
 import SearchBar from "./Searchbar";
 import Pagination from "./Pagination";
 import FilterBar from "./ui/FilterBar";
 import { useRegion } from "../context/regionContext";
 import { useDebouncedValue } from "../hooks/useDebouncedValue";
 import { AWARD_TYPES } from "../constants/awardTypes";
-
-/* The listing toolbar (.listing-controls-toolbar, .listing-search-row) stays
-   a class: Searchbar, ListingPage, Players and Teams all write into those
-   hooks, and converting them here would change which layered page rule wins
-   depending on chunk load order. */
+import { listingControlsToolbar, listingSearchRow } from "./listingClasses";
 
 const awardsContainer =
   "w-full py-[2rem] px-[4vw] box-border flex flex-col gap-[2rem] " +
@@ -109,7 +104,7 @@ const Awards: React.FC = () => {
 
   return (
     <div className={`${awardsContainer} ${loading ? "opacity-80 pointer-events-none" : ""}`}>
-      <div className="listing-controls-toolbar">
+      <div className={listingControlsToolbar}>
         <FilterBar onReset={(searchQuery || seasonFilter || typeFilter) ? clearFilters : undefined}>
           <div className="awards-season-filter">
             <select
@@ -150,7 +145,7 @@ const Awards: React.FC = () => {
           </div>
         </FilterBar>
 
-        <div className="listing-search-row">
+        <div className={listingSearchRow}>
           <SearchBar onSearch={handleSearch} placeholder="Search awards by player..." />
           <Pagination
             currentPage={currentPage}

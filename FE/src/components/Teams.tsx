@@ -2,14 +2,69 @@ import React, { useState, useEffect } from "react";
 /* Bring in the navigate helper from React Router */
 import { useNavigate }                          from "react-router-dom";
 import { useMediumTeams, useSkinnySeasons }                             from "../hooks/allFetch";
-import "../styles/Teams.css";
-import "../styles/ListingPage.css";
 import SearchBar                                from "./Searchbar";
 import Pagination                               from "./Pagination";
 import FilterBar                                from "./ui/FilterBar";
+import FilterSelect                             from "./ui/FilterSelect";
 import { useRegion } from "../context/regionContext";
 import { useDebouncedValue } from "../hooks/useDebouncedValue";
 import { TEAM_PLACEMENTS } from "../constants/teamPlacements";
+import {
+    listingControlsToolbar,
+    listingSearchRow,
+    listingTableEmpty,
+} from "./listingClasses";
+
+const teamsPage =
+    "w-full max-w-[1200px] mx-auto py-[20px] px-[20px] box-border min-h-screen " +
+    "[contain:layout_style_paint]";
+
+const teamsWrapper =
+    "py-[10px] px-0 min-h-[600px] [content-visibility:auto] [contain-intrinsic-size:600px] " +
+    "upto-md:min-h-[500px]";
+
+const teamsContainer =
+    "grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] [grid-template-rows:auto] gap-[1.5rem] " +
+    "py-[10px] px-0 min-h-[500px] content-start upto-md:min-h-[400px] " +
+    "empty:before:content-[''] empty:before:block empty:before:h-[500px] empty:before:w-full";
+
+/* Hover animates `transform`, so the lift is one arbitrary value rather than
+   a translate utility. Active used the same declarations as hover. */
+const teamCard =
+    "relative overflow-hidden bg-[#141414] " +
+    "bg-[linear-gradient(180deg,rgba(255,255,255,0.07),transparent_45%)] " +
+    "rounded-[0.85rem] border border-[#1e1e1e] pt-[1.75rem] px-[1.25rem] pb-[1.4rem] " +
+    "transition-[transform,box-shadow] duration-[140ms] ease-[ease] cursor-pointer " +
+    "min-h-[120px] box-border [contain:layout_style] [transform:translateZ(0)] " +
+    "[backface-visibility:hidden] " +
+    "hover:[transform:translateY(-4px)] " +
+    "hover:shadow-[0_8px_22px_rgba(var(--color-brand-primary-rgb),0.25)]";
+
+/* Active used the same transform/shadow as hover. It is not an extension of
+   teamCard: both set `transform`, and composing them would leave the winner
+   to Tailwind source order. */
+const teamCardActive =
+    "relative overflow-hidden bg-[#141414] " +
+    "bg-[linear-gradient(180deg,rgba(255,255,255,0.07),transparent_45%)] " +
+    "rounded-[0.85rem] border border-[#1e1e1e] pt-[1.75rem] px-[1.25rem] pb-[1.4rem] " +
+    "transition-[transform,box-shadow] duration-[140ms] ease-[ease] cursor-pointer " +
+    "min-h-[120px] box-border [contain:layout_style] [transform:translateY(-4px)] " +
+    "[backface-visibility:hidden] " +
+    "shadow-[0_8px_22px_rgba(var(--color-brand-primary-rgb),0.25)] " +
+    "hover:[transform:translateY(-4px)] " +
+    "hover:shadow-[0_8px_22px_rgba(var(--color-brand-primary-rgb),0.25)]";
+
+const teamCardLogoBg =
+    "absolute top-0 right-0 w-[200px] h-[200px] bg-contain bg-no-repeat bg-right " +
+    "opacity-25 pointer-events-none z-0 translate-x-[30%]";
+
+const teamName = "text-[1.25rem] font-extrabold text-[#fafafa] mb-[0.5rem]";
+
+const teamMeta = "text-[0.875rem] font-medium text-[#a0a0a0] mb-[0.25rem]";
+
+const teamsSkeleton =
+    "bg-[image:var(--skeleton-shimmer)] bg-[length:200%_100%] animate-skeleton-sweep " +
+    "rounded-[0.85rem] h-[120px] mb-[1.5rem]";
 
 const Teams: React.FC = () =>
 {
@@ -100,49 +155,41 @@ const Teams: React.FC = () =>
     }
 
     return (
-        <div className={`teams-page ${loading ? 'loading' : ''}`}>
-            <div className="listing-controls-toolbar">
+        <div className={`${teamsPage} ${loading ? "opacity-80 pointer-events-none" : ""}`}>
+            <div className={listingControlsToolbar}>
                     <FilterBar onReset={(searchQuery || seasonFilter || placementFilter) ? clearFilters : undefined}>
-                        <div className="teams-season-filter">
-                            <select
-                                id="season-filter"
-                                aria-label="Season"
-                                value={seasonFilter}
-                                onChange={(e) => {
-                                    setSeasonFilter(e.target.value)
-                                    setCurrentPage(1)
-                                }}
-                            >
-                                <option value="">All Seasons</option>
-                                {seasonOptions.map(season => (
-                                    <option key={season.id} value={season.id.toString()}>
-                                        Season {season.seasonNumber}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
+                        <FilterSelect
+                            id="season-filter"
+                            label="Season"
+                            value={seasonFilter}
+                            onChange={(value) => {
+                                setSeasonFilter(value)
+                                setCurrentPage(1)
+                            }}
+                            placeholder="All Seasons"
+                            options={seasonOptions.map((season) => ({
+                                value: season.id.toString(),
+                                label: `Season ${season.seasonNumber}`,
+                            }))}
+                        />
 
-                        <div className="teams-placement-filter">
-                            <select
-                                id="placement-filter"
-                                aria-label="Placement"
-                                value={placementFilter}
-                                onChange={(e) => {
-                                    setPlacementFilter(e.target.value)
-                                    setCurrentPage(1)
-                                }}
-                            >
-                                <option value="">All Placements</option>
-                                {TEAM_PLACEMENTS.map(placement => (
-                                    <option key={placement} value={placement}>
-                                        {placement}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
+                        <FilterSelect
+                            id="placement-filter"
+                            label="Placement"
+                            value={placementFilter}
+                            onChange={(value) => {
+                                setPlacementFilter(value)
+                                setCurrentPage(1)
+                            }}
+                            placeholder="All Placements"
+                            options={TEAM_PLACEMENTS.map((placement) => ({
+                                value: placement,
+                                label: placement,
+                            }))}
+                        />
                     </FilterBar>
 
-                    <div className="listing-search-row">
+                    <div className={listingSearchRow}>
                         <SearchBar 
                             onSearch={handleSearch} 
                             placeholder="Search teams..." 
@@ -158,23 +205,22 @@ const Teams: React.FC = () =>
             {error ? (
                 <div>Error: {error}</div>
             ) : loading ? (
-                <div className="teams-wrapper">
-                    <div className="teams-container">
-                        {/* Skeleton loaders */}
+                <div className={teamsWrapper}>
+                    <div className={teamsContainer}>
                         {Array.from({ length: 12 }).map((_, index) => (
-                            <div key={index} className="teams-skeleton"></div>
+                            <div key={index} className={teamsSkeleton}></div>
                         ))}
                     </div>
                 </div>
             ) : (paginatedTeams ?? []).length === 0 ? (
-                <div className="listing-table-empty">No teams match your filters.</div>
+                <div className={listingTableEmpty}>No teams match your filters.</div>
             ) : (
-                <div className="teams-wrapper">
-                    <div className="teams-container">
+                <div className={teamsWrapper}>
+                    <div className={teamsContainer}>
                         {(paginatedTeams ?? []).map(team => (
                             <div
                                 key={team.id}
-                                className={`team-card ${activeTeam === team.name ? "active" : ""}`}
+                                className={activeTeam === team.name ? teamCardActive : teamCard}
                                 role="link"
                                 tabIndex={0}
                                 onClick={() => handleCardClick(team.name)}
@@ -183,30 +229,30 @@ const Teams: React.FC = () =>
                             >
                                 {team.logoUrl && (
                                     <div 
-                                        className="team-card-logo-bg"
+                                        className={teamCardLogoBg}
                                         style={{
                                             backgroundImage: `url(${team.logoUrl})`
                                         }}
                                     />
                                 )}
                                 
-                                <div className="team-name">
+                                <div className={teamName}>
                                     <strong>{team.name}</strong>
                                 </div>
 
-                                <div className="team-id">
+                                <div className={teamMeta}>
                                     <strong>ID:</strong> {team.id}
                                 </div>
 
-                                <div className="team-season">
+                                <div className={teamMeta}>
                                     <strong>Season:</strong> {team.season.seasonNumber}
                                 </div>
 
-                                <div className="team-card-stage">
+                                <div className={teamMeta}>
                                     <strong>Placement:</strong> {team.placement}
                                 </div>
 
-                                <div className="team-players">
+                                <div className={teamMeta}>
                                     <strong>Players:</strong> {team.players?.length || 0}
                                 </div>
                             </div>

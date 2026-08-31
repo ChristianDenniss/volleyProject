@@ -6,8 +6,6 @@ import { useNavigate } from "react-router-dom"
 
 import type { Game, Team } from "../types/interfaces"
 
-import "../styles/ListingPage.css"
-
 import SearchBar from "./Searchbar"
 
 import Pagination from "./Pagination"
@@ -21,6 +19,7 @@ import { formatGameStage } from "../utils/gameLabels"
 import { useRegion } from "../context/regionContext"
 
 import { useDebouncedValue } from "../hooks/useDebouncedValue"
+import { listingControlsToolbar, listingSearchRow, listingContentWrapper, listingTableEmpty } from "./listingClasses"
 
 /* ── Scoreboard tile classes ────────────────────────────────────────────────
    Carried over from Game.css. The card keeps its left navy accent on desktop
@@ -201,7 +200,7 @@ const Games: React.FC = () => {
 
     <div className={`mx-auto box-border min-h-screen w-[min(100%,1600px)] max-w-[1600px] px-[clamp(1rem,2.5vw,2.5rem)] py-5 [contain:layout_style_paint] ${loading ? "pointer-events-none opacity-80" : ""}`}>
 
-      <div className="listing-controls-toolbar">
+      <div className={listingControlsToolbar}>
 
           <FilterBar onReset={(searchQuery || seasonFilter || stageFilter) ? clearFilters : undefined}>
 
@@ -236,7 +235,7 @@ const Games: React.FC = () => {
 
 
 
-          <div className="listing-search-row">
+          <div className={listingSearchRow}>
 
             <SearchBar
 
@@ -268,7 +267,7 @@ const Games: React.FC = () => {
 
       ) : (
 
-        <div className="listing-content-wrapper">
+        <div className={listingContentWrapper}>
 
           {loading ? (
 
@@ -288,7 +287,7 @@ const Games: React.FC = () => {
 
           ) : !paginatedGames || paginatedGames.length === 0 ? (
 
-            <div className="listing-table-empty">No games match your filters.</div>
+            <div className={listingTableEmpty}>No games match your filters.</div>
 
           ) : (
 
