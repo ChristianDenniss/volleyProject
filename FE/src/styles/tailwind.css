@@ -240,6 +240,8 @@
 @custom-variant upto-md   (@media (max-width: 768px));
 @custom-variant upto-xs   (@media (max-width: 480px));
 @custom-variant upto-420  (@media (max-width: 420px));
+/* FAQ and the public Applications page both pin a 360px query last. */
+@custom-variant upto-360  (@media (max-width: 360px));
 
 /* Coarse pointers get non-interactive cursors and :active feedback instead of
    hover. Carried over verbatim from the page stylesheets. */

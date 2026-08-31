@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import SEO from "./SEO";
-import "../styles/FAQ.css";
 import { 
     FaChevronDown, 
     FaChevronUp, 
@@ -29,6 +28,96 @@ interface FAQLink {
     icon: React.ReactNode;
     isExternal?: boolean;
 }
+
+const faqPage =
+    "w-[90%] mx-auto p-[2rem] [font-family:'Segoe_UI',Tahoma,Geneva,Verdana,sans-serif] text-text " +
+    "upto-md:p-[1rem] upto-xs:p-[0.75rem] upto-360:p-[0.5rem]";
+
+const faqHeader = "text-center mb-[3rem]";
+
+const faqTitle =
+    "text-[2.5rem] text-brand-primary mb-[1rem] font-bold " +
+    "upto-md:text-[2rem] upto-xs:text-[1.75rem] upto-360:text-[1.5rem]";
+
+const faqLead =
+    "text-[1.1rem] text-text-muted-alt max-w-[800px] my-0 mx-auto leading-[1.6] " +
+    "upto-md:text-[1rem] upto-md:px-[1rem] upto-xs:text-[0.95rem] upto-xs:px-[0.5rem]";
+
+const faqContent = "flex flex-col gap-[3rem]";
+
+const faqLinksH2 =
+    "text-[1.75rem] text-brand-primary mb-[1.5rem] font-semibold " +
+    "upto-xs:text-[1.5rem] upto-xs:mb-[1rem]";
+
+const faqQuestionsH2 =
+    "text-[1.75rem] text-brand-primary mb-[2rem] font-semibold " +
+    "upto-xs:text-[1.5rem] upto-xs:mb-[1rem]";
+
+const faqLinksGrid =
+    "grid grid-cols-[repeat(auto-fit,minmax(350px,1fr))] gap-[1.5rem] " +
+    "upto-md:grid-cols-[1fr] upto-md:gap-[1rem]";
+
+/* Hover restyles the icon and the external-arrow through descendant rules.
+   `group` plus group-hover on those two children is the same pair of
+   elements, driven from the card that used to carry the ancestor class. */
+const faqLinkCard =
+    "group flex items-center bg-bg border border-border rounded-md p-[1.5rem] no-underline text-inherit " +
+    "transition-all duration-300 ease-[ease] relative " +
+    "hover:[transform:translateY(-2px)] hover:shadow-md hover:border-brand-primary " +
+    "upto-md:p-[1.25rem] upto-xs:p-[1rem] upto-360:p-[0.75rem]";
+
+const linkIcon =
+    "flex items-center justify-center w-[50px] h-[50px] bg-brand-primary rounded-md mr-[1rem] " +
+    "text-[1.25rem] text-text-on-brand shrink-0 transition-all duration-300 ease-[ease] " +
+    "group-hover:bg-accent group-hover:text-brand-primary group-hover:[transform:scale(1.05)] " +
+    "upto-md:w-[45px] upto-md:h-[45px] upto-md:text-[1.1rem] " +
+    "upto-xs:w-[40px] upto-xs:h-[40px] upto-xs:text-[1rem] upto-xs:mr-[0.75rem] " +
+    "upto-360:w-[35px] upto-360:h-[35px] upto-360:text-[0.9rem]";
+
+const linkContent = "flex-1";
+
+const linkTitle =
+    "text-[1.1rem] font-semibold text-brand-primary mt-0 mr-0 mb-[0.5rem] ml-0 " +
+    "upto-md:text-[1rem] upto-xs:text-[0.95rem]";
+
+const linkDesc =
+    "text-[0.9rem] text-text-muted-alt m-0 leading-[1.4] " +
+    "upto-md:text-[0.85rem] upto-xs:text-[0.8rem]";
+
+const externalIcon =
+    "text-[0.8rem] text-brand-primary transition-[transform] duration-300 ease-[ease] " +
+    "group-hover:[transform:translateX(2px)]";
+
+const faqCategory = "mb-[2.5rem]";
+
+const categoryTitle =
+    "text-[1.25rem] text-brand-primary mb-[1rem] pb-[0.5rem] border-b-2 border-b-brand-primary font-semibold " +
+    "upto-md:text-[1.1rem] upto-xs:text-[1rem] upto-xs:mb-[0.75rem]";
+
+const faqItemsCol = "flex flex-col gap-[0.5rem]";
+
+const faqItem =
+    "bg-bg border border-border rounded-md overflow-hidden transition-all duration-300 ease-[ease] " +
+    "hover:border-brand-primary hover:shadow-sm";
+
+const faqQuestion =
+    "w-full flex justify-between items-center p-[1.25rem] [background:none] border-none text-left " +
+    "text-[1rem] font-medium text-brand-primary cursor-pointer " +
+    "transition-[background-color] duration-300 ease-[ease] hover:bg-bg-light " +
+    "upto-md:p-[1rem] upto-md:text-[0.95rem] " +
+    "upto-xs:p-[0.875rem] upto-xs:text-[0.9rem] " +
+    "upto-360:p-[0.75rem] upto-360:text-[0.85rem]";
+
+const faqQuestionText = "flex-1 mr-[1rem]";
+
+const faqChevron =
+    "text-[0.875rem] text-text-muted-alt transition-[transform] duration-300 ease-[ease]";
+
+const faqAnswer =
+    "pt-0 px-[1.25rem] pb-[1.25rem] text-text-muted leading-[1.6] text-[0.95rem] bg-bg-light border-t border-t-border " +
+    "upto-md:px-[1rem] upto-md:pb-[1rem] upto-md:text-[0.9rem] " +
+    "upto-xs:px-[0.875rem] upto-xs:pb-[0.875rem] upto-xs:text-[0.85rem] " +
+    "upto-360:px-[0.75rem] upto-360:pb-[0.75rem] upto-360:text-[0.8rem]";
 
 const FAQ: React.FC = () => {
     const [openItems, setOpenItems] = useState<Set<string>>(new Set());
@@ -211,68 +300,68 @@ const FAQ: React.FC = () => {
     }, {} as Record<string, FAQItem[]>);
 
     return (
-        <div className="faq-page">
+        <div className={faqPage}>
             <SEO
                 title="FAQ"
                 description="Frequently asked questions about the Roblox Volleyball League (RVL), applications, rules, and support."
                 url="https://volleyball4-2.com/faq"
             />
-            <div className="faq-header">
-                <h1>Frequently Asked Questions</h1>
-                <p>Find answers to common questions about RVL and quick links to important pages</p>
+            <div className={faqHeader}>
+                <h1 className={faqTitle}>Frequently Asked Questions</h1>
+                <p className={faqLead}>Find answers to common questions about RVL and quick links to important pages</p>
             </div>
 
-            <div className="faq-content">
-                <div className="faq-links-section">
-                    <h2>Quick Links</h2>
-                    <div className="faq-links-grid">
+            <div className={faqContent}>
+                <div>
+                    <h2 className={faqLinksH2}>Quick Links</h2>
+                    <div className={faqLinksGrid}>
                         {faqLinks.map((link) => (
                             link.isExternal ? (
-                                <a key={link.id} href={link.url} className="faq-link-card" target="_blank" rel="noopener noreferrer">
-                                    <div className="link-icon">
+                                <a key={link.id} href={link.url} className={faqLinkCard} target="_blank" rel="noopener noreferrer">
+                                    <div className={linkIcon}>
                                         {link.icon}
                                     </div>
-                                    <div className="link-content">
-                                        <h3>{link.title}</h3>
-                                        <p>{link.description}</p>
+                                    <div className={linkContent}>
+                                        <h3 className={linkTitle}>{link.title}</h3>
+                                        <p className={linkDesc}>{link.description}</p>
                                     </div>
-                                    <FaExternalLinkAlt className="external-link-icon" />
+                                    <FaExternalLinkAlt className={externalIcon} />
                                 </a>
                             ) : (
-                                <Link key={link.id} to={link.url} className="faq-link-card">
-                                    <div className="link-icon">
+                                <Link key={link.id} to={link.url} className={faqLinkCard}>
+                                    <div className={linkIcon}>
                                         {link.icon}
                                     </div>
-                                    <div className="link-content">
-                                        <h3>{link.title}</h3>
-                                        <p>{link.description}</p>
+                                    <div className={linkContent}>
+                                        <h3 className={linkTitle}>{link.title}</h3>
+                                        <p className={linkDesc}>{link.description}</p>
                                     </div>
-                                    <FaExternalLinkAlt className="external-link-icon" />
+                                    <FaExternalLinkAlt className={externalIcon} />
                                 </Link>
                             )
                         ))}
                     </div>
                 </div>
 
-                <div className="faq-questions-section">
-                    <h2>Common Questions</h2>
+                <div>
+                    <h2 className={faqQuestionsH2}>Common Questions</h2>
                     {Object.entries(groupedFAQ).map(([category, items]) => (
-                        <div key={category} className="faq-category">
-                            <h3 className="category-title">{categories[category as keyof typeof categories]}</h3>
-                            <div className="faq-items">
+                        <div key={category} className={faqCategory}>
+                            <h3 className={categoryTitle}>{categories[category as keyof typeof categories]}</h3>
+                            <div className={faqItemsCol}>
                                 {items.map((item) => (
-                                    <div key={item.id} className="faq-item">
+                                    <div key={item.id} className={faqItem}>
                                         <button 
-                                            className="faq-question"
+                                            className={faqQuestion}
                                             onClick={() => toggleItem(item.id)}
                                             aria-expanded={openItems.has(item.id)}
                                             aria-controls={`faq-answer-${item.id}`}
                                         >
-                                            <span>{item.question}</span>
-                                            {openItems.has(item.id) ? <FaChevronUp /> : <FaChevronDown />}
+                                            <span className={faqQuestionText}>{item.question}</span>
+                                            {openItems.has(item.id) ? <FaChevronUp className={faqChevron} /> : <FaChevronDown className={faqChevron} />}
                                         </button>
                                         {openItems.has(item.id) && (
-                                            <div className="faq-answer" id={`faq-answer-${item.id}`}>
+                                            <div className={faqAnswer} id={`faq-answer-${item.id}`}>
                                                 {item.answer}
                                             </div>
                                         )}
@@ -287,4 +376,4 @@ const FAQ: React.FC = () => {
     );
 };
 
-export default FAQ; 
+export default FAQ;
