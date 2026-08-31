@@ -170,6 +170,48 @@
       transform: translateY(0);
     }
   }
+
+  /* SingleArticle like button. Three distinct motions: a one-shot pop on
+     liked, a repeating pulse while the request is in flight, and a slower
+     pulse on the emoji shown while like-status is still loading. */
+  --animate-like: like 0.3s ease;
+  @keyframes like {
+    0% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.2);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  --animate-liking: liking 1s ease infinite;
+  @keyframes liking {
+    0%,
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(1.1);
+      opacity: 0.7;
+    }
+  }
+
+  --animate-like-loading: like-loading 1.5s ease infinite;
+  @keyframes like-loading {
+    0%,
+    100% {
+      opacity: 0.7;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.05);
+    }
+  }
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
