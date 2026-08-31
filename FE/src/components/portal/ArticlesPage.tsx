@@ -4,7 +4,61 @@ import { useArticleMutations } from '../../hooks/allPatch';
 import Table, { type TableColumn } from '../ui/Table';
 import Pagination from '../Pagination';
 import type { Article } from '../../types/interfaces';
-import '../../styles/ArticlesPage.css';
+
+const page = "p-[2rem] max-w-[1200px] my-0 mx-auto";
+
+const header = "flex justify-between items-center mb-[2rem]";
+
+const filterControls = "flex gap-[1rem]";
+
+const filterBtn =
+    "py-[0.5rem] px-[1rem] border border-solid border-brand-primary rounded-sm " +
+    "cursor-pointer transition-all duration-200";
+
+const filterBtnIdle = "bg-white text-brand-primary hover:bg-[#f8fafc]";
+
+const filterBtnActive = "bg-brand-primary text-white border-brand-primary";
+
+const tableWrap = "bg-white rounded-md shadow-sm overflow-hidden";
+
+const articleRow =
+    "cursor-pointer transition-colors duration-200 hover:bg-[#f8f9fa]";
+
+const articleRowExpanded = "cursor-pointer transition-colors duration-200 bg-[#f0f7ff]";
+
+const detailsRow = "bg-[#f8f9fa]";
+
+const articleContent =
+    "p-[1.5rem] flex gap-[2rem] items-start max-w-full overflow-hidden " +
+    "upto-md:flex-col upto-576:p-[1rem]";
+
+const articleImage =
+    "flex-[0_0_300px] max-w-[300px] relative " +
+    "upto-md:flex-none upto-md:w-full upto-md:max-w-full upto-md:mb-[1rem]";
+
+const articleImg =
+    "w-full h-auto max-h-[400px] object-contain rounded-md shadow-sm upto-md:max-h-[300px]";
+
+const articleText =
+    "flex-1 min-w-0 [overflow-wrap:break-word] [word-break:break-all]";
+
+const articleTextH3 =
+    "mt-0 mr-0 mb-[0.5rem] ml-0 text-[#333] text-[1.1rem] upto-576:text-[1rem]";
+
+const articleTextP =
+    "mt-0 mx-0 mb-[1.5rem] text-[#666] leading-[1.6] whitespace-pre-wrap " +
+    "[word-wrap:break-word] [overflow-wrap:break-word] [word-break:break-all] " +
+    "upto-576:text-[0.9rem]";
+
+const actionButtons = "flex gap-[0.5rem] flex-wrap upto-md:justify-start";
+
+const approveBtn =
+    "py-[0.5rem] px-[1rem] border-none rounded-sm cursor-pointer font-medium " +
+    "transition-all duration-200 whitespace-nowrap bg-[#28a745] text-white hover:bg-[#218838]";
+
+const rejectBtn =
+    "py-[0.5rem] px-[1rem] border-none rounded-sm cursor-pointer font-medium " +
+    "transition-all duration-200 whitespace-nowrap bg-[#dc3545] text-white hover:bg-[#c82333]";
 
 const ARTICLES_PER_PAGE = 10;
 
@@ -93,10 +147,10 @@ const ArticlesPage: React.FC = () => {
             key: 'actions',
             header: 'Actions',
             render: (article) => (
-                <div className="action-buttons">
+                <div className={actionButtons}>
                     {article.approved !== true && (
                         <button
-                            className="approve-btn"
+                            className={approveBtn}
                             onClick={(e) => {
                                 e.stopPropagation();
                                 handleApprove(article.id);
@@ -107,7 +161,7 @@ const ArticlesPage: React.FC = () => {
                     )}
                     {article.approved !== false && (
                         <button
-                            className="reject-btn"
+                            className={rejectBtn}
                             onClick={(e) => {
                                 e.stopPropagation();
                                 handleReject(article.id);
@@ -125,11 +179,11 @@ const ArticlesPage: React.FC = () => {
     if (error) return <div>Error: {error}</div>;
 
     return (
-        <div className="articles-page">
-            <div className="page-header">
-                <div className="filter-controls">
+        <div className={page}>
+            <div className={header}>
+                <div className={filterControls}>
                     <button
-                        className={`filter-btn ${filter === 'all' ? 'active' : ''}`}
+                        className={`${filterBtn} ${filter === 'all' ? filterBtnActive : filterBtnIdle}`}
                         onClick={() => {
                             setFilter('all');
                             setCurrentPage(1);
@@ -138,7 +192,7 @@ const ArticlesPage: React.FC = () => {
                         All Articles
                     </button>
                     <button
-                        className={`filter-btn ${filter === 'pending' ? 'active' : ''}`}
+                        className={`${filterBtn} ${filter === 'pending' ? filterBtnActive : filterBtnIdle}`}
                         onClick={() => {
                             setFilter('pending');
                             setCurrentPage(1);
@@ -154,28 +208,28 @@ const ArticlesPage: React.FC = () => {
                 />
             </div>
 
-            <div className="articles-table">
+            <div className={tableWrap}>
                 <Table
                     columns={columns}
                     rows={articles}
                     rowKey={(article) => article.id}
                     rowClassName={(article) =>
-                        `article-row${expandedArticleId === article.id ? ' expanded' : ''}`
+                        expandedArticleId === article.id ? articleRowExpanded : articleRow
                     }
                     onRowClick={(article) => toggleExpand(article.id)}
                     renderAfterRow={(article) =>
                         expandedArticleId === article.id ? (
-                            <tr className="article-details" key={`details-${article.id}`}>
+                            <tr className={detailsRow} key={`details-${article.id}`}>
                                 <td colSpan={columns.length}>
-                                    <div className="article-content">
-                                        <div className="article-image">
-                                            <img src={article.imageUrl} alt={article.title} />
+                                    <div className={articleContent}>
+                                        <div className={articleImage}>
+                                            <img src={article.imageUrl} alt={article.title} className={articleImg} />
                                         </div>
-                                        <div className="article-text">
-                                            <h3>Summary</h3>
-                                            <p>{article.summary}</p>
-                                            <h3>Content</h3>
-                                            <p>{article.content}</p>
+                                        <div className={articleText}>
+                                            <h3 className={articleTextH3}>Summary</h3>
+                                            <p className={articleTextP}>{article.summary}</p>
+                                            <h3 className={articleTextH3}>Content</h3>
+                                            <p className={articleTextP}>{article.content}</p>
                                         </div>
                                     </div>
                                 </td>
