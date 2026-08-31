@@ -5,7 +5,27 @@ import { BACKEND_URL } from "../constants/api";
 import { useAuth } from "../context/authContext";
 import type { TeamRegistration } from "../types/interfaces";
 import { RegStatusBadge } from "./RegStatusBadge";
-import "../styles/TeamRegistrations.css";
+import {
+  teamRegForm,
+  teamRegGate,
+  teamRegGateMuted,
+  teamRegCard,
+  teamRegBack,
+  teamRegsError,
+  teamRegsNav,
+  teamRegsNavActive,
+  teamRegDetailTitleRow,
+  teamRegsDetailStatsSpaced,
+  teamRegsDetailStat,
+  teamRegsDetailStatWide,
+  teamRegsColorSwatch,
+  teamRegSection,
+  teamRegsRoster,
+  teamRegsRosterLabel,
+  teamRegsMuted,
+  formActions,
+  teamRegsCtaDanger,
+} from "./teamRegClasses";
 
 const TeamRegistrationDetail: React.FC = () => {
   const { id } = useParams();
@@ -37,9 +57,9 @@ const TeamRegistrationDetail: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="team-reg-form">
-        <div className="team-reg-card team-reg-gate">
-          <p className="team-regs-muted">Loading…</p>
+      <div className={teamRegForm}>
+        <div className={teamRegGate}>
+          <p className={teamRegGateMuted}>Loading…</p>
         </div>
       </div>
     );
@@ -47,12 +67,12 @@ const TeamRegistrationDetail: React.FC = () => {
 
   if (error || !row) {
     return (
-      <div className="team-reg-form">
-        <div className="team-reg-card">
-          <Link className="team-reg-back" to="/teams/registrations">
+      <div className={teamRegForm}>
+        <div className={teamRegCard}>
+          <Link className={teamRegBack} to="/teams/registrations">
             ← Back to registrations
           </Link>
-          <p className="form-error">{error || "Not found"}</p>
+          <p className={teamRegsError}>{error || "Not found"}</p>
         </div>
       </div>
     );
@@ -61,34 +81,34 @@ const TeamRegistrationDetail: React.FC = () => {
   const isOwner = isAuthenticated && user?.id === row.submittedByUserId;
 
   return (
-    <div className="team-reg-form">
-      <div className="team-regs-nav">
+    <div className={teamRegForm}>
+      <div className={teamRegsNav}>
         <Link to="/teams">League teams</Link>
         <span aria-hidden="true">·</span>
         <Link to="/teams/registrations">Team registrations</Link>
         <span aria-hidden="true">·</span>
-        <span className="team-regs-nav-active">{row.teamName}</span>
+        <span className={teamRegsNavActive}>{row.teamName}</span>
       </div>
 
-      <div className="team-reg-card">
-        <Link className="team-reg-back" to="/teams/registrations">
+      <div className={teamRegCard}>
+        <Link className={teamRegBack} to="/teams/registrations">
           ← Back to registrations
         </Link>
 
-        <div className="team-reg-detail-title-row">
+        <div className={teamRegDetailTitleRow}>
           <h1>{row.teamName}</h1>
           <RegStatusBadge status={row.status} />
         </div>
 
-        <dl className="team-regs-detail-stats" style={{ margin: "1.25rem 0" }}>
-          <div className="team-regs-detail-stat">
+        <dl className={teamRegsDetailStatsSpaced}>
+          <div className={teamRegsDetailStat}>
             <dt>Captain</dt>
             <dd>
               {row.captainDiscord} / {row.captainRoblox}
             </dd>
           </div>
           {(row.viceDiscord || row.viceRoblox) && (
-            <div className="team-regs-detail-stat">
+            <div className={teamRegsDetailStat}>
               <dt>Vice captain</dt>
               <dd>
                 {row.viceDiscord} / {row.viceRoblox}
@@ -96,17 +116,17 @@ const TeamRegistrationDetail: React.FC = () => {
             </div>
           )}
           {row.hexColor && (
-            <div className="team-regs-detail-stat">
+            <div className={teamRegsDetailStat}>
               <dt>Colors</dt>
               <dd>
-                <span className="team-regs-color-swatch" style={{ background: row.hexColor }} aria-hidden />
+                <span className={teamRegsColorSwatch} style={{ background: row.hexColor }} aria-hidden />
                 {row.hexColor}
                 {row.brickColor ? ` · ${row.brickColor}` : ""}
               </dd>
             </div>
           )}
           {row.priorLeagueExperience && (
-            <div className="team-regs-detail-stat team-regs-detail-stat--wide">
+            <div className={teamRegsDetailStatWide}>
               <dt>Prior experience</dt>
               <dd>{row.priorLeagueExperience}</dd>
             </div>
@@ -114,14 +134,14 @@ const TeamRegistrationDetail: React.FC = () => {
         </dl>
 
         {row.roster && row.roster.length > 0 && (
-          <section className="team-reg-section">
+          <section className={teamRegSection}>
             <h2>Roster</h2>
-            <ul className="team-regs-roster">
+            <ul className={teamRegsRoster}>
               {row.roster.map((p, i) => (
                 <li key={i}>
-                  <span className="team-regs-roster-label">P{i + 1}</span>
+                  <span className={teamRegsRosterLabel}>P{i + 1}</span>
                   <span>{p.discord}</span>
-                  <span className="team-regs-muted">·</span>
+                  <span className={teamRegsMuted}>·</span>
                   <span>{p.roblox}</span>
                 </li>
               ))}
@@ -130,8 +150,8 @@ const TeamRegistrationDetail: React.FC = () => {
         )}
 
         {isOwner && (row.status === "pending" || row.status === "conflict") && (
-          <div className="form-actions">
-            <button type="button" className="team-regs-cta team-regs-cta--danger" onClick={() => void withdraw()}>
+          <div className={formActions}>
+            <button type="button" className={teamRegsCtaDanger} onClick={() => void withdraw()}>
               Withdraw application
             </button>
           </div>

@@ -3,6 +3,7 @@ import { useAuth } from "../context/authContext";
 import { authFetch } from "../hooks/authFetch";
 import { BACKEND_URL } from "../constants/api";
 import type { Team, Player } from "../types/interfaces";
+import { rosterRow, formActions } from "./teamRegClasses";
 
 const TeamStaffEdit: React.FC<{ team: Team; onUpdated?: (t: Team) => void }> = ({ team, onUpdated }) => {
   const { user, isAuthenticated } = useAuth();
@@ -49,7 +50,7 @@ const TeamStaffEdit: React.FC<{ team: Team; onUpdated?: (t: Team) => void }> = (
 
   if (!meta?.captainCanEdit) {
     if (user && (team.captainUserId === user.id || team.viceCaptainUserId === user.id || team.courtCaptainUserId === user.id)) {
-      return <p className="text-muted">Team editing is locked for this season or team.</p>;
+      return <p className="text-[#6b7280] italic">Team editing is locked for this season or team.</p>;
     }
     return null;
   }
@@ -105,7 +106,7 @@ const TeamStaffEdit: React.FC<{ team: Team; onUpdated?: (t: Team) => void }> = (
       </label>
       <h4>Roster</h4>
       {roster.map((row, i) => (
-        <div key={i} className="roster-row">
+        <div key={i} className={rosterRow}>
           <input
             value={row.discord}
             placeholder="Discord"
@@ -125,7 +126,7 @@ const TeamStaffEdit: React.FC<{ team: Team; onUpdated?: (t: Team) => void }> = (
       <button type="button" onClick={() => setRoster((r) => [...r, { discord: "", roblox: "" }])}>
         Add player
       </button>
-      <div className="form-actions">
+      <div className={formActions}>
         <button type="button" disabled={saving} onClick={() => void save()}>
           {saving ? "Saving…" : "Save changes"}
         </button>

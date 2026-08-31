@@ -6,7 +6,30 @@ import { authFetch } from "../hooks/authFetch";
 import { BACKEND_URL } from "../constants/api";
 import { useRegistrationSummary } from "../hooks/useTeamRegistrations";
 import type { RegionCode, TeamRegistrationRosterEntry } from "../types/interfaces";
-import "../styles/TeamRegistrations.css";
+import {
+  teamRegForm,
+  teamRegsNav,
+  teamRegsNavActive,
+  teamRegCard,
+  teamRegCardH1,
+  teamRegGate,
+  teamRegGateMuted,
+  teamRegGateP,
+  teamRegGateLinks,
+  teamRegsCta,
+  teamRegsCtaSecondary,
+  teamRegsMuted,
+  teamRegsMutedLead,
+  teamRegsError,
+  teamRegsSuccess,
+  teamRegSection,
+  teamRegFormCheck,
+  teamRegFormGroup,
+  teamRegColorRow,
+  rosterRow,
+  rosterRowRemove,
+  formActions,
+} from "./teamRegClasses";
 
 const emptyRoster = (): TeamRegistrationRosterEntry[] =>
   Array.from({ length: 10 }, () => ({ discord: "", roblox: "" }));
@@ -48,9 +71,9 @@ const TeamRegister: React.FC = () => {
 
   if (authLoading) {
     return (
-      <div className="team-reg-form">
-        <div className="team-reg-card team-reg-gate">
-          <p className="team-regs-muted">Loading…</p>
+      <div className={teamRegForm}>
+        <div className={teamRegGate}>
+          <p className={teamRegGateMuted}>Loading…</p>
         </div>
       </div>
     );
@@ -58,22 +81,22 @@ const TeamRegister: React.FC = () => {
 
   if (!isAuthenticated) {
     return (
-      <div className="team-reg-form">
-        <div className="team-regs-nav">
+      <div className={teamRegForm}>
+        <div className={teamRegsNav}>
           <Link to="/teams">League teams</Link>
           <span aria-hidden="true">·</span>
           <Link to="/teams/registrations">Team registrations</Link>
           <span aria-hidden="true">·</span>
-          <span className="team-regs-nav-active">Register a team</span>
+          <span className={teamRegsNavActive}>Register a team</span>
         </div>
-        <div className="team-reg-card team-reg-gate">
-          <h1>Register a team</h1>
-          <p>You must be logged in to submit a team application.</p>
-          <div className="team-reg-gate-links">
-            <Link className="team-regs-cta" to="/login">
+        <div className={teamRegGate}>
+          <h1 className={teamRegCardH1}>Register a team</h1>
+          <p className={teamRegGateP}>You must be logged in to submit a team application.</p>
+          <div className={teamRegGateLinks}>
+            <Link className={teamRegsCta} to="/login">
               Log in
             </Link>
-            <Link className="team-regs-cta team-regs-cta--secondary" to="/signup">
+            <Link className={teamRegsCtaSecondary} to="/signup">
               Sign up
             </Link>
           </div>
@@ -142,38 +165,38 @@ const TeamRegister: React.FC = () => {
   const normalizedHex = hexColor.startsWith("#") ? hexColor : `#${hexColor}`;
 
   return (
-    <div className="team-reg-form">
-      <div className="team-regs-nav">
+    <div className={teamRegForm}>
+      <div className={teamRegsNav}>
         <Link to="/teams">League teams</Link>
         <span aria-hidden="true">·</span>
         <Link to="/teams/registrations">Team registrations</Link>
         <span aria-hidden="true">·</span>
-        <span className="team-regs-nav-active">Register a team</span>
+        <span className={teamRegsNavActive}>Register a team</span>
       </div>
 
-      <div className="team-reg-card">
-        <h1>Register your team</h1>
-        <p className="team-regs-muted">
+      <div className={teamRegCard}>
+        <h1 className={teamRegCardH1}>Register your team</h1>
+        <p className={teamRegsMutedLead}>
           Anyone with a site account can submit. Season start: <strong>{startLabel}</strong>.
         </p>
 
-        {error && <p className="form-error">{error}</p>}
-        {success && <p className="form-success">{success}</p>}
+        {error && <p className={teamRegsError}>{error}</p>}
+        {success && <p className={teamRegsSuccess}>{success}</p>}
 
         <form onSubmit={handleSubmit}>
-          <section className="team-reg-section">
+          <section className={teamRegSection}>
             <h2>Eligibility</h2>
-            <label className="form-check">
+            <label className={teamRegFormCheck}>
               <input type="checkbox" checked={agreeCivil} onChange={(e) => setAgreeCivil(e.target.checked)} />
               <span>I understand and agree to be civil and accommodating when scheduling matches.</span>
             </label>
-            <label className="form-check">
+            <label className={teamRegFormCheck}>
               <input type="checkbox" checked={confident} onChange={(e) => setConfident(e.target.checked)} />
               <span>
                 This season is set to start on {startLabel}. I am confident the team will still participate by then.
               </span>
             </label>
-            <div className="form-group">
+            <div className={teamRegFormGroup}>
               <label htmlFor="team-reg-region">Region</label>
               <select
                 id="team-reg-region"
@@ -185,7 +208,7 @@ const TeamRegister: React.FC = () => {
                 <option value="as">Asian (AS)</option>
               </select>
             </div>
-            <div className="form-group">
+            <div className={teamRegFormGroup}>
               <label htmlFor="team-reg-experience">Prior competitive Roblox Volleyball leagues (optional)</label>
               <textarea
                 id="team-reg-experience"
@@ -197,9 +220,9 @@ const TeamRegister: React.FC = () => {
             </div>
           </section>
 
-          <section className="team-reg-section">
+          <section className={teamRegSection}>
             <h2>Team</h2>
-            <div className="form-group">
+            <div className={teamRegFormGroup}>
               <label htmlFor="team-reg-name">Team name</label>
               <input
                 id="team-reg-name"
@@ -208,9 +231,9 @@ const TeamRegister: React.FC = () => {
                 required
               />
             </div>
-            <div className="form-group">
+            <div className={teamRegFormGroup}>
               <label htmlFor="team-reg-hex">Hex color</label>
-              <div className="team-reg-color-row">
+              <div className={teamRegColorRow}>
                 <input
                   type="color"
                   aria-label="Pick hex color"
@@ -227,7 +250,7 @@ const TeamRegister: React.FC = () => {
                 />
               </div>
             </div>
-            <div className="form-group">
+            <div className={teamRegFormGroup}>
               <label htmlFor="team-reg-brick">Brick color</label>
               <input
                 id="team-reg-brick"
@@ -237,15 +260,15 @@ const TeamRegister: React.FC = () => {
                 placeholder="Roblox brick color name"
               />
             </div>
-            <label className="form-check">
+            <label className={teamRegFormCheck}>
               <input type="checkbox" checked={logoAck} onChange={(e) => setLogoAck(e.target.checked)} />
               <span>I will prepare a logo &amp; jerseys if accepted to RVL</span>
             </label>
           </section>
 
-          <section className="team-reg-section">
+          <section className={teamRegSection}>
             <h2>Captain &amp; Vice</h2>
-            <div className="form-group">
+            <div className={teamRegFormGroup}>
               <label htmlFor="team-reg-cap-discord">Captain Discord</label>
               <input
                 id="team-reg-cap-discord"
@@ -254,7 +277,7 @@ const TeamRegister: React.FC = () => {
                 required
               />
             </div>
-            <div className="form-group">
+            <div className={teamRegFormGroup}>
               <label htmlFor="team-reg-cap-roblox">Captain Roblox</label>
               <input
                 id="team-reg-cap-roblox"
@@ -263,7 +286,7 @@ const TeamRegister: React.FC = () => {
                 required
               />
             </div>
-            <div className="form-group">
+            <div className={teamRegFormGroup}>
               <label htmlFor="team-reg-vice-discord">Vice Discord</label>
               <input
                 id="team-reg-vice-discord"
@@ -272,7 +295,7 @@ const TeamRegister: React.FC = () => {
                 required
               />
             </div>
-            <div className="form-group">
+            <div className={teamRegFormGroup}>
               <label htmlFor="team-reg-vice-roblox">Vice Roblox</label>
               <input
                 id="team-reg-vice-roblox"
@@ -283,13 +306,13 @@ const TeamRegister: React.FC = () => {
             </div>
           </section>
 
-          <section className="team-reg-section">
+          <section className={teamRegSection}>
             <h2>Roster</h2>
-            <p className="team-regs-muted" style={{ marginBottom: "1rem" }}>
+            <p className={`${teamRegsMuted} mb-[1rem]`}>
               Minimum 10 players, including captain &amp; vice (rows 1–2).
             </p>
             {roster.map((row, i) => (
-              <div className="roster-row" key={i}>
+              <div className={rosterRow} key={i}>
                 <input
                   placeholder={`Player ${i + 1} Discord`}
                   aria-label={`Player ${i + 1} Discord`}
@@ -307,7 +330,7 @@ const TeamRegister: React.FC = () => {
                 {i >= 10 && (
                   <button
                     type="button"
-                    className="roster-row-remove"
+                    className={rosterRowRemove}
                     onClick={() => setRoster((r) => r.filter((_, idx) => idx !== i))}
                   >
                     Remove
@@ -317,18 +340,18 @@ const TeamRegister: React.FC = () => {
             ))}
             <button
               type="button"
-              className="team-regs-cta team-regs-cta--secondary"
+              className={teamRegsCtaSecondary}
               onClick={() => setRoster((r) => [...r, { discord: "", roblox: "" }])}
             >
               Add player
             </button>
           </section>
 
-          <div className="form-actions">
-            <Link className="team-regs-cta team-regs-cta--secondary" to="/teams/registrations">
+          <div className={formActions}>
+            <Link className={teamRegsCtaSecondary} to="/teams/registrations">
               Cancel
             </Link>
-            <button className="team-regs-cta" type="submit" disabled={submitting}>
+            <button className={teamRegsCta} type="submit" disabled={submitting}>
               {submitting ? "Submitting…" : "Submit application"}
             </button>
           </div>

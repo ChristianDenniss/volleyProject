@@ -6,7 +6,38 @@ import { BACKEND_URL } from "../../constants/api";
 import type { RegionCode, TeamRegistration } from "../../types/interfaces";
 import { RegStatusBadge } from "../RegStatusBadge";
 import Modal from "../ui/Modal";
-import "../../styles/TeamRegistrations.css";
+import {
+  teamRegsPage,
+  teamRegsHeader,
+  teamRegsHeaderBody,
+  teamRegsSpots,
+  teamRegsRegionTabs,
+  teamRegsRegionTab,
+  teamRegsRegionTabActive,
+  teamRegsSuccess,
+  teamRegsError,
+  teamRegsMuted,
+  teamRegsTableWrap,
+  teamRegsTable,
+  teamRegsTableRowClickable,
+  teamRegsTableRowSelected,
+  teamRegsTableRow,
+  teamRegsDetailRow,
+  teamRegsEmptyCell,
+  teamRegsDetail,
+  teamRegsDetailStats,
+  teamRegsDetailStat,
+  teamRegsColorSwatch,
+  teamRegsRoster,
+  teamRegsRosterLabel,
+  formActionsStart,
+  formActions,
+  teamRegsCta,
+  teamRegsCtaDanger,
+  teamRegsCtaSecondary,
+  teamRegsConflictModal,
+  teamRegsConflictList,
+} from "../teamRegClasses";
 
 type Conflict = {
   type: string;
@@ -73,26 +104,26 @@ const RegistrationsHubPage: React.FC = () => {
   };
 
   return (
-    <div className="team-regs-page">
-      <header className="team-regs-header">
-        <div className="team-regs-header-body">
+    <div className={teamRegsPage}>
+      <header className={teamRegsHeader}>
+        <div className={teamRegsHeaderBody}>
           <h1>Registrations</h1>
           <p>
             Manage team applications. Other registration types can be added here later.{" "}
             <Link to="/portal/teams">League teams CRUD</Link>
           </p>
-          <p className="team-regs-spots">
+          <p className={teamRegsSpots}>
             Teams · {region.toUpperCase()} · {header}
           </p>
         </div>
       </header>
 
-      <div className="team-regs-region-tabs">
+      <div className={teamRegsRegionTabs}>
         {(["na", "eu", "as"] as RegionCode[]).map((r) => (
           <button
             key={r}
             type="button"
-            className={region === r ? "active" : undefined}
+            className={region === r ? teamRegsRegionTabActive : teamRegsRegionTab}
             onClick={() => {
               setRegion(r);
               setExpanded(null);
@@ -103,12 +134,12 @@ const RegistrationsHubPage: React.FC = () => {
         ))}
       </div>
 
-      {msg && <p className={msg === "Updated" ? "form-success" : "form-error"}>{msg}</p>}
-      {loading && <p className="team-regs-muted">Loading…</p>}
-      {error && <p className="form-error">{error}</p>}
+      {msg && <p className={msg === "Updated" ? teamRegsSuccess : teamRegsError}>{msg}</p>}
+      {loading && <p className={teamRegsMuted}>Loading…</p>}
+      {error && <p className={teamRegsError}>{error}</p>}
 
-      <div className="team-regs-table-wrap">
-        <table className="team-regs-table">
+      <div className={teamRegsTableWrap}>
+        <table className={teamRegsTable}>
           <thead>
             <tr>
               <th>Team</th>
@@ -123,7 +154,7 @@ const RegistrationsHubPage: React.FC = () => {
               return (
                 <React.Fragment key={row.id}>
                   <tr
-                    className={`listing-row-clickable ${isOpen ? "selected listing-row-expanded" : ""}`}
+                    className={isOpen ? teamRegsTableRowSelected : teamRegsTableRowClickable}
                     onClick={() => setExpanded(isOpen ? null : row.id)}
                   >
                     <td className="team-name-cell">{row.teamName}</td>
@@ -136,16 +167,16 @@ const RegistrationsHubPage: React.FC = () => {
                     </td>
                   </tr>
                   {isOpen && (
-                    <tr className="listing-table-detail-row">
+                    <tr className={teamRegsDetailRow}>
                       <td colSpan={4}>
-                        <div className="team-regs-detail">
-                          <dl className="team-regs-detail-stats">
-                            <div className="team-regs-detail-stat">
+                        <div className={teamRegsDetail}>
+                          <dl className={teamRegsDetailStats}>
+                            <div className={teamRegsDetailStat}>
                               <dt>Colors</dt>
                               <dd>
                                 {row.hexColor && (
                                   <span
-                                    className="team-regs-color-swatch"
+                                    className={teamRegsColorSwatch}
                                     style={{ background: row.hexColor }}
                                     aria-hidden
                                   />
@@ -153,29 +184,29 @@ const RegistrationsHubPage: React.FC = () => {
                                 {row.hexColor} · {row.brickColor}
                               </dd>
                             </div>
-                            <div className="team-regs-detail-stat">
+                            <div className={teamRegsDetailStat}>
                               <dt>Vice</dt>
                               <dd>
                                 {row.viceDiscord} / {row.viceRoblox}
                               </dd>
                             </div>
                           </dl>
-                          <ul className="team-regs-roster">
+                          <ul className={teamRegsRoster}>
                             {(row.roster || []).map((p, i) => (
                               <li key={i}>
-                                <span className="team-regs-roster-label">P{i + 1}</span>
+                                <span className={teamRegsRosterLabel}>P{i + 1}</span>
                                 <span>{p.discord}</span>
-                                <span className="team-regs-muted">·</span>
+                                <span className={teamRegsMuted}>·</span>
                                 <span>{p.roblox}</span>
                               </li>
                             ))}
                           </ul>
-                          <div className="form-actions" style={{ justifyContent: "flex-start" }}>
+                          <div className={formActionsStart}>
                             {(row.status === "pending" || row.status === "conflict") && (
                               <>
                                 <button
                                   type="button"
-                                  className="team-regs-cta"
+                                  className={teamRegsCta}
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     void act(row.id, "accept");
@@ -185,7 +216,7 @@ const RegistrationsHubPage: React.FC = () => {
                                 </button>
                                 <button
                                   type="button"
-                                  className="team-regs-cta team-regs-cta--danger"
+                                  className={teamRegsCtaDanger}
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     void act(row.id, "deny");
@@ -198,7 +229,7 @@ const RegistrationsHubPage: React.FC = () => {
                             {row.status === "accepted" && (
                               <button
                                 type="button"
-                                className="team-regs-cta team-regs-cta--secondary"
+                                className={teamRegsCtaSecondary}
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   void act(row.id, "revoke");
@@ -216,8 +247,8 @@ const RegistrationsHubPage: React.FC = () => {
               );
             })}
             {data.length === 0 && !loading && (
-              <tr>
-                <td colSpan={4} className="listing-table-empty">
+              <tr className={teamRegsTableRow}>
+                <td colSpan={4} className={teamRegsEmptyCell}>
                   No registrations for this region.
                 </td>
               </tr>
@@ -231,12 +262,12 @@ const RegistrationsHubPage: React.FC = () => {
         onClose={closeConflicts}
         title="Resolve conflicts"
       >
-        <div className="team-regs-conflict-modal">
+        <div className={teamRegsConflictModal}>
           <label>
             Team name
             <input value={rename} onChange={(e) => setRename(e.target.value)} />
           </label>
-          <ul className="team-regs-conflict-list">
+          <ul className={teamRegsConflictList}>
             {(conflicts || []).map((c, i) => (
               <li key={i}>
                 {c.type === "name" && <>Name clash: {c.teamName}</>}
@@ -261,25 +292,25 @@ const RegistrationsHubPage: React.FC = () => {
               </li>
             ))}
           </ul>
-          <div className="form-actions">
-            <button type="button" className="team-regs-cta" onClick={() => void resolve()}>
+          <div className={formActions}>
+            <button type="button" className={teamRegsCta} onClick={() => void resolve()}>
               Apply &amp; accept
             </button>
             <button
               type="button"
-              className="team-regs-cta team-regs-cta--secondary"
+              className={teamRegsCtaSecondary}
               onClick={() => void resolve("pending")}
             >
               Revert pending
             </button>
             <button
               type="button"
-              className="team-regs-cta team-regs-cta--danger"
+              className={teamRegsCtaDanger}
               onClick={() => void resolve("denied")}
             >
               Deny
             </button>
-            <button type="button" className="team-regs-cta team-regs-cta--secondary" onClick={closeConflicts}>
+            <button type="button" className={teamRegsCtaSecondary} onClick={closeConflicts}>
               Close
             </button>
           </div>
