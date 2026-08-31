@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { HelmetProvider } from '@dr.pogodin/react-helmet'
 import './styles/tokens.css'
 import './styles/App.css'
+import './styles/tailwind.css'
 import App from './App.tsx'
 import { enableMocking } from './mocks'
 
