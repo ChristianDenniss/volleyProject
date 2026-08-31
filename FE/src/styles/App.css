@@ -108,18 +108,6 @@ body {
   min-height: 0;
 }
 
-/* Footer container */
-.footer {
-  width: 100%;
-  background-color: #585858;
-  color: white;
-  padding: 10px 0;
-  text-align: center;
-  margin: 0;
-  position: relative;
-  flex-shrink: 0; /* Prevent it from shrinking */
-}
-
 /* Route-level Suspense fallback */
 .page-loading {
   display: flex;
