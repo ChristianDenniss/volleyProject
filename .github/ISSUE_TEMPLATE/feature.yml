@@ -1,0 +1,38 @@
+name: Feature request
+description: A new capability or a meaningful improvement.
+title: "feat: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: Please discuss larger ideas here before opening a PR.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      placeholder: What is painful or missing today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      placeholder: What should change? Keep it concrete enough that someone could pick it up.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Frontend
+        - Backend
+        - Both
+        - Docs / DX
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      placeholder: Alternatives you considered, related issues, mockups.

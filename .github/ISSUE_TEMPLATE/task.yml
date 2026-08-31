@@ -1,0 +1,27 @@
+name: Contributor task
+description: A scoped ticket from the backlog (tests, docs, cleanup).
+title: "chore: "
+labels: ["help wanted"]
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      placeholder: What does done look like?
+    validations:
+      required: true
+  - type: textarea
+    id: files
+    attributes:
+      label: Likely files
+      placeholder: Paths a contributor should open first.
+  - type: dropdown
+    id: difficulty
+    attributes:
+      label: Difficulty
+      options:
+        - Good first issue
+        - Intermediate
+        - Needs context from a maintainer
+    validations:
+      required: true

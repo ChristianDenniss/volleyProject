@@ -1,6 +1,11 @@
-# Volleyball Project
+# Volleyball 4.2
 
-A full-stack TypeScript application for managing volleyball statistics, teams, players, seasons, games, awards, articles, website users, and migrations.
+[![CI](https://github.com/ChristianDenniss/volleyProject/actions/workflows/ci.yml/badge.svg)](https://github.com/ChristianDenniss/volleyProject/actions/workflows/ci.yml)
+[![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](LICENSE)
+
+A full-stack TypeScript app for Roblox Volleyball League stats, teams, players, seasons, games, awards, articles, and registrations. Live: [volleyball4-2.com](https://volleyball4-2.com/).
+
+Contributions are welcome. Start with [CONTRIBUTING.md](CONTRIBUTING.md) and the [`good first issue`](https://github.com/ChristianDenniss/volleyProject/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) list.
 
 ## Tech Stack
 
@@ -51,7 +56,7 @@ A full-stack TypeScript application for managing volleyball statistics, teams, p
 
 - **Build Tools**:
   - Vite: Fast development server and production build optimizer
-  - SASS: CSS preprocessor for better styling organization
+  - Tailwind CSS v4: Utility classes on converted pages; shared tokens in `FE/src/styles/tokens.css`
 
 - **Routing**: React Router DOM
   - Handles client-side routing
@@ -64,7 +69,6 @@ A full-stack TypeScript application for managing volleyball statistics, teams, p
 - **UI Components**:
   - React Icons & FontAwesome: Icon libraries for UI elements
   - React Select: Enhanced dropdown components
-  - SimpleBar: Custom scrollbar for better UX
 
 - **Code Quality**: ESLint
   - Enforces code style
@@ -101,7 +105,7 @@ A full-stack TypeScript application for managing volleyball statistics, teams, p
   - SWC: Fast compilation
 
 ### Testing & Quality Assurance
-- Jest: Testing framework for both frontend and backend
+- Jest: Testing framework for the backend
 - Supertest: API endpoint testing
 - ESLint: Code quality and style enforcement
 - TypeScript: Type checking and error prevention
@@ -124,7 +128,7 @@ volley-project/
 └── FE/                 # Frontend
     ├── src/
     │   ├── components/ # React components
-    │   ├── styles/    # SASS styles
+    │   ├── styles/    # Design tokens, Tailwind, remnant CSS
     │   └── types/     # TypeScript types
     └── public/        # Static assets
 ```
@@ -163,11 +167,21 @@ See `docker-compose.yml` for ports (`BE` 3000, `FE` via `DOCKER_FE_PORT`, DB via
 
 ### Testing
 - Backend: `cd BE && npm test`
-- Frontend: `cd FE && npm test`
+- Frontend: `cd FE && npm run lint` and `cd FE && npm run build`
 
 ### Production
 - Backend: `cd BE && npm run build` then deploy/`npm run start:prod`
 - Frontend: `cd FE && npm run build`
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, Conventional Commits, and PR
+expectations. Releases are automated from those commits —
+[docs/architecture/versioning.md](docs/architecture/versioning.md).
+
+Please follow the [Code of Conduct](CODE_OF_CONDUCT.md). Security reports go
+through [SECURITY.md](SECURITY.md), not public issues.
+
 ## License
-ISC 
+
+[ISC](LICENSE)

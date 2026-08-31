@@ -1,0 +1,46 @@
+name: Bug report
+description: Something is broken or looks wrong.
+title: "fix: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for the report. Please search existing issues first.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      placeholder: What did you see, and what did you expect instead?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Go to …
+        2. Click …
+        3. See …
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Frontend
+        - Backend
+        - Both / unsure
+        - CI / Docker / docs
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      description: Browser + OS, or `main` commit SHA if you know it.
+  - type: textarea
+    id: extra
+    attributes:
+      label: Extra context
+      placeholder: Screenshots, logs, network tab, related files.
