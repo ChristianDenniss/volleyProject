@@ -81,7 +81,8 @@ how a screen looks unless the issue says to.
 Standard GitHub PR review. A PR cannot merge into `main` until:
 
 - CI is green (Backend build + Frontend build)
-- It has an approving review from a code owner (`CODEOWNERS` is `@ChristianDenniss`)
+- It has an approving review from a code owner (`CODEOWNERS` is
+  `@ChristianDenniss` or `@Stenimated`)
 
 Direct pushes to `main` are blocked for everyone except maintainers. Maintainers
 should still open PRs so CI and review run; GitHub will not let you approve
