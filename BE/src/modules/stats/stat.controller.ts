@@ -9,8 +9,8 @@ import {
     LeaderboardStatType,
     LeaderboardView,
     parseLeaderboardFilters,
-} from './stat.leaderboard.js';
-import { STAGE_ROUND_KEYS, StageRound } from '../games/stageRounds.js';
+} from './utils/stat.leaderboard.js';
+import { STAGE_ROUND_KEYS, StageRound } from '../games/utils/stageRounds.js';
 
 const STATS_DEFAULT_LIMIT = 25;
 const LEADERBOARD_DEFAULT_LIMIT = 25;

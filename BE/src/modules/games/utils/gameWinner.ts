@@ -1,4 +1,4 @@
-import type { Teams } from '../teams/team.entity.js';
+import type { Teams } from '../../teams/team.entity.js';
 
 export function resolveWinnerTeamId(
     team1Score: number | null | undefined,

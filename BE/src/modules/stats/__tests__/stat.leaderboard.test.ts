@@ -4,8 +4,8 @@ import {
     countParamsFrom,
     parseLeaderboardFilters,
     LEADERBOARD_DEFAULT_SORT,
-} from '../stat.leaderboard.js';
-import type { LeaderboardParams } from '../stat.leaderboard.js';
+} from '../utils/stat.leaderboard.js';
+import type { LeaderboardParams } from '../utils/stat.leaderboard.js';
 
 function baseParams(overrides: Partial<LeaderboardParams> = {}): LeaderboardParams {
     return {

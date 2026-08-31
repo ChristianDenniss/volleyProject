@@ -1,5 +1,5 @@
 import { describe, it, expect } from '@jest/globals';
-import { resolveWinnerTeamId, resolveWinnerTeam, applyWinnerToGame, orderTeamsByIds } from '../gameWinner.js';
+import { resolveWinnerTeamId, resolveWinnerTeam, applyWinnerToGame, orderTeamsByIds } from '../utils/gameWinner.js';
 
 const TEAM_ONE = { id: 1, name: 'One' } as any;
 const TEAM_TWO = { id: 2, name: 'Two' } as any;

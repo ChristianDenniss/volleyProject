@@ -1,4 +1,4 @@
-import { GameBracket, GamePhase } from './game.entity.js';
+import { GameBracket, GamePhase } from '../game.entity.js';
 
 export function inferBracketFromStage(stage: string): GameBracket | null {
     const lower = stage.toLowerCase();

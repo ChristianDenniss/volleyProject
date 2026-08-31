@@ -9,8 +9,8 @@ import { ConflictError } from '../../errors/ConflictError.js';
 import { DuplicateError } from '../../errors/DuplicateError.js';
 import { InvalidFormatError } from '../../errors/InvalidFormatError.js';
 import { PaginationParams, SortParams } from '../../utils/pagination.js';
-import { orderTeamsByIds, applyWinnerToGame } from './gameWinner.js';
-import { resolveGameBracket } from './gameBracket.js';
+import { orderTeamsByIds, applyWinnerToGame } from './utils/gameWinner.js';
+import { resolveGameBracket } from './utils/gameBracket.js';
 
 export interface GameFilters {
     search?: string;

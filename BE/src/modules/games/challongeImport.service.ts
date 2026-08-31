@@ -1,10 +1,10 @@
 import { AppDataSource } from '../../db/data-source.js';
 import { Games, GameStatus, GamePhase } from './game.entity.js';
-import { resolveWinnerTeamId } from './gameWinner.js';
+import { resolveWinnerTeamId } from './utils/gameWinner.js';
 import { Teams } from '../teams/team.entity.js';
 import { Seasons } from '../seasons/season.entity.js';
-import { mapChallongeToStage, parseRegionFromTournamentName } from './challongeStageMapper.js';
-import { inferBracketFromChallonge } from './gameBracket.js';
+import { mapChallongeToStage, parseRegionFromTournamentName } from './utils/challongeStageMapper.js';
+import { inferBracketFromChallonge } from './utils/gameBracket.js';
 import type { ImportChallongeInput } from './games.schema.js';
 import { RegionCode } from '../regions/region.entity.js';
 
