@@ -135,9 +135,11 @@
     }
   }
 
-  /* Games page: the skeleton tile sweep while results load. */
-  --animate-game-card-shimmer: game-card-shimmer 1.5s infinite;
-  @keyframes game-card-shimmer {
+  /* The skeleton sweep used while a list or tile grid loads. Declared once and
+     shared: the Games grid and the Home article cards had byte-identical
+     keyframes under two different names. */
+  --animate-skeleton-sweep: skeleton-sweep 1.5s infinite;
+  @keyframes skeleton-sweep {
     0% {
       background-position: 200% 0;
     }
@@ -155,3 +157,43 @@
     }
   }
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   LEGACY BREAKPOINT VARIANTS
+
+   The stylesheets are written max-width-first, and Tailwind is min-width-first.
+   Its built-in `max-*` variants are not a drop-in substitute: `max-md:` compiles
+   to `(width < 768px)`, whereas `@media (max-width: 768px)` includes 768px
+   itself. Converting a rule with `max-md:` therefore changes what renders at
+   exactly that width.
+
+   These variants spell the queries out so a conversion is exact. They are named
+   `upto-*` rather than `max-*` to make it obvious at the call site that the
+   bound is inclusive.
+
+   Order matters here and is load-bearing. Custom variants are emitted in the
+   order they are registered, and two max-width queries both match a narrow
+   screen - at 400px, upto-xs and upto-md are both live, so whichever is emitted
+   last wins. The stylesheets put their narrowest query last, so these are
+   registered widest first to reproduce that precedence. Reordering these lines
+   silently changes which rule wins on small screens.
+───────────────────────────────────────────────────────────────────────────── */
+@custom-variant upto-xl   (@media (max-width: 1200px));
+@custom-variant upto-1024 (@media (max-width: 1024px));
+@custom-variant upto-md   (@media (max-width: 768px));
+@custom-variant upto-xs   (@media (max-width: 480px));
+
+/* Coarse pointers get non-interactive cursors and :active feedback instead of
+   hover. Carried over verbatim from the page stylesheets. */
+@custom-variant coarse (@media (hover: none) and (pointer: coarse));
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   VIEWPORT VARIANTS
+
+   Header, Navbar and Home also branch on `html[data-viewport="..."]`, which the
+   app sets from the visual viewport so that browser zoom is treated like a
+   narrower screen - something a media query alone cannot detect. These are
+   attribute selectors, not media queries, so they need their own variants.
+───────────────────────────────────────────────────────────────────────────── */
+@custom-variant vp-compact (html[data-viewport="compact"] &);
+@custom-variant vp-mobile  (html[data-viewport="mobile"] &);
