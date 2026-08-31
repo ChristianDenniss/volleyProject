@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from "react";
 /* Bring in the navigate helper from React Router */
 import { useNavigate }                          from "react-router-dom";
-import { Link } from "react-router-dom";
 import { useMediumTeams, useSkinnySeasons }                             from "../hooks/allFetch";
 import "../styles/Teams.css";
 import "../styles/ListingPage.css";
-import "../styles/TeamRegistrations.css";
 import SearchBar                                from "./Searchbar";
 import Pagination                               from "./Pagination";
 import FilterBar                                from "./ui/FilterBar";
@@ -103,13 +101,6 @@ const Teams: React.FC = () =>
 
     return (
         <div className={`teams-page ${loading ? 'loading' : ''}`}>
-            <div className="team-regs-nav" style={{ padding: "0.75rem 1rem" }}>
-                <span className="team-regs-nav-active">League teams</span>
-                <span>·</span>
-                <Link to="/teams/registrations">Team registrations</Link>
-                <span>·</span>
-                <Link to="/teams/register">Register a team</Link>
-            </div>
             <div className="listing-controls-toolbar">
                     <FilterBar onReset={(searchQuery || seasonFilter || placementFilter) ? clearFilters : undefined}>
                         <div className="teams-season-filter">
