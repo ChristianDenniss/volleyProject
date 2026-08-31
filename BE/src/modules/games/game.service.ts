@@ -1,8 +1,10 @@
 import { Repository, In, ILike, FindOptionsWhere, FindOptionsOrder } from 'typeorm';
 import { AppDataSource } from '../../db/data-source.js';
 import { Games, GameStatus, GamePhase, GameBracket } from './game.entity.js';
+import { GameStaff, GameStaffRole, GAME_STAFF_ROLES, type GameStaffInput } from './game-staff.entity.js';
 import { Teams } from '../teams/team.entity.js';
 import { Seasons } from '../seasons/season.entity.js';
+import { User } from '../user/user.entity.js';
 import { MissingFieldError } from '../../errors/MissingFieldError.js';
 import { NotFoundError } from '../../errors/NotFoundError.js';
 import { ConflictError } from '../../errors/ConflictError.js';
@@ -11,6 +13,21 @@ import { InvalidFormatError } from '../../errors/InvalidFormatError.js';
 import { PaginationParams, SortParams } from '../../utils/pagination.js';
 import { orderTeamsByIds, applyWinnerToGame } from './utils/gameWinner.js';
 import { resolveGameBracket } from './utils/gameBracket.js';
+
+const GAME_DETAIL_RELATIONS = [
+    "season",
+    "teams",
+    "teams.players",
+    "winner",
+    "stats",
+    "stats.player",
+    "region",
+    "staff",
+    "staff.user",
+] as const;
+
+const GAME_LIST_RELATIONS = ["season", "teams", "winner", "stats", "region", "staff", "staff.user"] as const;
+const GAME_SKINNY_RELATIONS = ["season", "region", "teams", "staff", "staff.user"] as const;
 
 export interface GameFilters {
     search?: string;
@@ -30,11 +47,71 @@ export class GameService {
     private gameRepository: Repository<Games>;
     private teamRepository: Repository<Teams>;
     private seasonRepository: Repository<Seasons>;
+    private staffRepository: Repository<GameStaff>;
+    private userRepository: Repository<User>;
 
     constructor() {
         this.gameRepository = AppDataSource.getRepository(Games);
         this.teamRepository = AppDataSource.getRepository(Teams);
         this.seasonRepository = AppDataSource.getRepository(Seasons);
+        this.staffRepository = AppDataSource.getRepository(GameStaff);
+        this.userRepository = AppDataSource.getRepository(User);
+    }
+
+    private sanitizeStaff(game: Games): Games {
+        if (!game.staff?.length) {
+            game.staff = game.staff ?? [];
+            return game;
+        }
+
+        game.staff = game.staff.map((row) => {
+            if (!row.user) return row;
+            row.user = {
+                id: row.user.id,
+                username: row.user.username,
+                robloxUsername: row.user.robloxUsername ?? null,
+            } as User;
+            return row;
+        });
+        return game;
+    }
+
+    private async replaceStaff(gameId: number, staff: GameStaffInput[] | undefined): Promise<void> {
+        if (staff === undefined || !gameId) return;
+
+        const seen = new Set<string>();
+        for (const entry of staff) {
+            if (!GAME_STAFF_ROLES.includes(entry.role as GameStaffRole)) {
+                throw new InvalidFormatError(`Invalid staff role: ${entry.role}`);
+            }
+            const key = `${entry.userId}:${entry.role}`;
+            if (seen.has(key)) {
+                throw new InvalidFormatError("Duplicate staff assignment for the same user and role");
+            }
+            seen.add(key);
+        }
+
+        const userIds = [...new Set(staff.map((entry) => entry.userId))];
+        if (userIds.length > 0) {
+            const users = await this.userRepository.findBy({ id: In(userIds) });
+            if (users.length !== userIds.length) {
+                const found = new Set(users.map((user) => user.id));
+                const missing = userIds.filter((id) => !found.has(id));
+                throw new NotFoundError(`Users with IDs ${missing.join(", ")} not found`);
+            }
+        }
+
+        await this.staffRepository.delete({ gameId });
+        if (staff.length === 0) return;
+
+        const rows = staff.map((entry) => {
+            const row = new GameStaff();
+            row.gameId = gameId;
+            row.userId = entry.userId;
+            row.role = entry.role;
+            return row;
+        });
+        await this.staffRepository.save(rows);
     }
 
     /**
@@ -56,6 +133,7 @@ export class GameService {
             setScores?: string[];
             tags?: string[];
             name?: string;
+            staff?: GameStaffInput[];
         }
     ): Promise<Games> {
         try {
@@ -113,7 +191,12 @@ export class GameService {
             newGame.set5Score = setScores[4] ?? null;
             applyWinnerToGame(newGame);
 
-            return this.gameRepository.save(newGame);
+            const saved = await this.gameRepository.save(newGame);
+            if (options?.staff !== undefined && saved.id) {
+                await this.replaceStaff(saved.id, options.staff);
+                return this.getGameById(saved.id);
+            }
+            return saved;
         } catch (error) {
             // Log error details for debugging
             console.error("Error creating game:", error);
@@ -222,13 +305,14 @@ export class GameService {
         filters: GameFilters = {},
         sort?: SortParams<GameSortField>
     ): Promise<[Games[], number]> {
-        return this.gameRepository.findAndCount({
+        const [data, total] = await this.gameRepository.findAndCount({
             where: this.buildWhere(filters),
-            relations: ["season", "teams", "winner", "stats", "region"],
+            relations: [...GAME_LIST_RELATIONS],
             order: this.buildOrder(sort), // Defaults to most recent games first
             skip: pagination.skip,
             take: pagination.take
         });
+        return [data.map((game) => this.sanitizeStaff(game)), total];
     }
 
     /**
@@ -239,13 +323,14 @@ export class GameService {
         filters: GameFilters = {},
         sort?: SortParams<GameSortField>
     ): Promise<[Games[], number]> {
-        return this.gameRepository.findAndCount({
+        const [data, total] = await this.gameRepository.findAndCount({
             where: this.buildWhere(filters),
-            relations: ["season", "region", "teams"],
+            relations: [...GAME_SKINNY_RELATIONS],
             order: this.buildOrder(sort), // Defaults to most recent games first
             skip: pagination.skip,
             take: pagination.take
         });
+        return [data.map((game) => this.sanitizeStaff(game)), total];
     }
 
     /**
@@ -281,6 +366,7 @@ export class GameService {
             setScores?: string[];
             tags?: string[];
             name?: string;
+            staff?: GameStaffInput[];
         }
     ): Promise<Games> {
         console.log("Received createGameByNames parameters:", { date, seasonId, teamNames, team1Score, team2Score, videoUrl, stage });
@@ -344,12 +430,12 @@ export class GameService {
     
         const game = await this.gameRepository.findOne({
             where: { id },
-            relations: ["season", "teams", "teams.players", "winner", "stats", "stats.player", "region"],
+            relations: [...GAME_DETAIL_RELATIONS],
         });
     
         if (!game) throw new NotFoundError(`Game with ID ${id} not found`);
     
-        return game;
+        return this.sanitizeStaff(game);
     }
     
 
@@ -390,6 +476,7 @@ export class GameService {
             setScores?: string[];
             tags?: string[];
             name?: string;
+            staff?: GameStaffInput[];
         }
     ): Promise<Games> {
         if (!id) throw new MissingFieldError("Game ID");
@@ -475,7 +562,12 @@ export class GameService {
             game.set5Score = setScores[4] ?? null;
         }
 
-        return this.gameRepository.save(game);
+        const saved = await this.gameRepository.save(game);
+        if (options?.staff !== undefined && saved.id) {
+            await this.replaceStaff(saved.id, options.staff);
+            return this.getGameById(saved.id);
+        }
+        return this.sanitizeStaff(saved);
     }
 
     /**

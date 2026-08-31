@@ -5,6 +5,12 @@ import { httpUrlSchema } from '../../utils/urlSchema.js';
 export const gamePhaseSchema = z.enum(['qualifiers', 'playoffs', 'pre_season']);
 export const gameBracketSchema = z.enum(['winners', 'losers']).nullable().optional();
 export const regionCodeSchema = z.enum(REGION_CODES);
+export const gameStaffRoleSchema = z.enum(['referee', 'streamer', 'commentator']);
+export const gameStaffEntrySchema = z.object({
+    userId: z.number().int().positive(),
+    role: gameStaffRoleSchema,
+});
+export const gameStaffListSchema = z.array(gameStaffEntrySchema).optional();
 
 export const createGameSchema = z.object({
     team1Id: z.number().int().positive().optional(),
@@ -22,6 +28,7 @@ export const createGameSchema = z.object({
     setScores: z.array(z.string()).max(5).optional(),
     tags: z.array(z.string()).optional(),
     name: z.string().optional(),
+    staff: gameStaffListSchema,
 });
 
 /** Portal game create by team names — same fields as createGameSchema but with teamNames instead of team IDs. */
@@ -39,6 +46,7 @@ export const createGameByNamesSchema = z.object({
     setScores: z.array(z.string()).max(5).optional(),
     tags: z.array(z.string()).optional(),
     name: z.string().optional(),
+    staff: gameStaffListSchema,
 });
 
 export const updateGameSchema = z.object({
@@ -54,6 +62,7 @@ export const updateGameSchema = z.object({
     bracket: gameBracketSchema,
     setScores: z.array(z.string()).max(5).optional(),
     tags: z.array(z.string()).optional(),
+    staff: gameStaffListSchema,
 });
 
 export const importChallongeSchema = z.object({

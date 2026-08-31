@@ -41,6 +41,10 @@ const mockPlayerRepository = {
     save: jest.fn(),
 };
 
+const mockStaffRepository = {
+    find: jest.fn(),
+};
+
 function baseUser(overrides: Record<string, unknown> = {}) {
     return {
         id: 1,
@@ -75,10 +79,12 @@ describe('UserService', () => {
         mockPlayerRepository.createQueryBuilder.mockReturnValue(mockPlayerQueryBuilder);
         mockUserRepository.save.mockImplementation(async (entity: any) => entity);
 
+        mockStaffRepository.find.mockResolvedValue([] as never);
         userService = new UserService();
         (userService as any).userRepository = mockUserRepository;
         (userService as any).auditLogRepository = mockAuditLogRepository;
         (userService as any).playerRepository = mockPlayerRepository;
+        (userService as any).staffRepository = mockStaffRepository;
     });
 
     describe('toPublicUser', () => {
@@ -380,6 +386,47 @@ describe('UserService', () => {
             expect(mockUserRepository.findOne).toHaveBeenCalledWith(
                 expect.objectContaining({ relations: ['articles'] })
             );
+        });
+
+        it('includes credited matches newest first', async () => {
+            mockUserRepository.findOne.mockResolvedValueOnce(baseUser() as never);
+            mockStaffRepository.find.mockResolvedValueOnce([
+                {
+                    role: 'commentator',
+                    game: {
+                        id: 2,
+                        name: 'Older',
+                        date: new Date('2024-01-01'),
+                        stage: 'Semis',
+                        videoUrl: '',
+                        teams: [{ id: 1, name: 'A' }, { id: 2, name: 'B' }],
+                    },
+                },
+                {
+                    role: 'referee',
+                    game: {
+                        id: 3,
+                        name: 'Newer',
+                        date: new Date('2025-06-01'),
+                        stage: 'Finals',
+                        videoUrl: 'https://youtu.be/x',
+                        teams: [{ id: 3, name: 'C' }, { id: 4, name: 'D' }],
+                    },
+                },
+            ] as never);
+
+            const profile = await userService.getProfile(1);
+
+            expect(profile.staffedGames).toEqual([
+                expect.objectContaining({
+                    role: 'referee',
+                    game: expect.objectContaining({ id: 3, name: 'Newer' }),
+                }),
+                expect.objectContaining({
+                    role: 'commentator',
+                    game: expect.objectContaining({ id: 2, name: 'Older' }),
+                }),
+            ]);
         });
     });
 

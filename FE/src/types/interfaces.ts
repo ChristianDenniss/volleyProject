@@ -8,6 +8,19 @@ interface Region {
   sortOrder?: number;
 }
 
+interface GameStaffUser {
+  id: number;
+  username: string;
+  robloxUsername?: string | null;
+}
+
+type GameStaffRole = "referee" | "streamer" | "commentator";
+
+interface GameStaffCredit {
+  role: GameStaffRole;
+  user: GameStaffUser;
+}
+
 interface Game 
 {
   id: number;
@@ -36,6 +49,7 @@ interface Game
   winnerTeamId?: number | null;
   winner?: Team | null;
   stats?: Stats[];
+  staff?: GameStaffCredit[];
 }
 
 interface Award
@@ -54,6 +68,18 @@ interface Award
 
 type Role = "user" | "captain" | "vice_captain" | "court_captain" | "admin" | "superadmin"
 
+interface StaffedGame {
+  role: GameStaffRole;
+  game: {
+    id: number;
+    name: string | null;
+    date: Date | string;
+    stage: string;
+    videoUrl: string | null;
+    teams: { id: number; name: string }[];
+  };
+}
+
 interface User 
 {
   id: number;
@@ -64,6 +90,9 @@ interface User
   robloxUserId?: string | null;
   robloxUsername?: string | null;
   hasPassword?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  staffedGames?: StaffedGame[];
 }
 
 interface Player 
@@ -253,7 +282,7 @@ interface Application {
   updatedAt?: string;
 }
 
-export type { Game, Player, Stats, Team, Season, Article, User, Award, Records, AuthContextType, Role, Application, Region };
+export type { Game, Player, Stats, Team, Season, Article, User, Award, Records, AuthContextType, Role, Application, Region, GameStaffRole, GameStaffCredit, GameStaffUser, StaffedGame };
 
 export interface PaginatedResponse<T> {
   data: T[];
@@ -280,6 +309,7 @@ export type CreateGameInput = {
   bracket?: 'winners' | 'losers' | null;
   region?: RegionCode;
   tags?: string[];
+  staff?: { userId: number; role: GameStaffRole }[];
 };
 
 export type CreateSeasonInput = {

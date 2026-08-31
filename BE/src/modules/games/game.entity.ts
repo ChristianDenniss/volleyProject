@@ -3,6 +3,7 @@ import type { Seasons } from '../seasons/season.entity.js';
 import type { Teams } from '../teams/team.entity.js';
 import type { Stats } from '../stats/stat.entity.js';
 import type { Region } from '../regions/region.entity.js';
+import type { GameStaff } from './game-staff.entity.js';
 
 export enum GameStatus {
     SCHEDULED = 'scheduled',
@@ -129,4 +130,7 @@ export class Games {
 
     @OneToMany('Stats', 'game')
     stats!: Stats[];
+
+    @OneToMany('GameStaff', 'game')
+    staff!: GameStaff[];
 }

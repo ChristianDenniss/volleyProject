@@ -19,6 +19,7 @@ import { isSafeExternalUrl } from "../../utils/url"
 // Import SEO component
 import SEO from "../SEO"
 import { formatGameStage } from "../../utils/gameLabels"
+import { formatStaffNames, GAME_STAFF_LABELS, GAME_STAFF_ROLES } from "../../utils/gameStaff"
 
 const sgContainer =
     "max-w-[1100px] mx-auto pt-[0.5rem] px-[1.5rem] pb-[5rem] " +
@@ -73,6 +74,12 @@ const upcomingNoticeIcon = "text-[2rem] text-brand-primary mb-[0.75rem]"
 const upcomingNoticeTitle = "mt-0 mx-0 mb-[0.75rem] text-[1.75rem] text-brand-primary"
 
 const upcomingNoticeText = "m-0 text-[1.05rem] leading-[1.6] text-text-muted"
+
+const crewLine =
+    "flex justify-center flex-wrap gap-x-[1.25rem] gap-y-[0.35rem] mt-[-0.5rem] mb-[1.75rem] " +
+    "text-[0.95rem] text-text-muted font-semibold"
+
+const crewRole = "text-brand-primary"
 
 const statsSection =
     "mt-[4.5rem] min-h-[400px] [content-visibility:auto] [contain-intrinsic-size:400px]"
@@ -361,6 +368,21 @@ const SingleGame: React.FC = () =>
                                         {isUpcoming && <> at {formattedTime}</>}
                                     </p>
                                 </div>
+
+                                {GAME_STAFF_ROLES.some((role) => formatStaffNames(game.staff, role)) && (
+                                    <div className={crewLine}>
+                                        {GAME_STAFF_ROLES.map((role) => {
+                                            const names = formatStaffNames(game.staff, role);
+                                            if (!names) return null;
+                                            return (
+                                                <p key={role} className="m-0">
+                                                    <span className={crewRole}>{GAME_STAFF_LABELS[role]}:</span>{" "}
+                                                    {names}
+                                                </p>
+                                            );
+                                        })}
+                                    </div>
+                                )}
 
                                 
                                 {/* Divider */}

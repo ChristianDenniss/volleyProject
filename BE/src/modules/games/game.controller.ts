@@ -22,7 +22,7 @@ export class GameController {
 
     createGame = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-            const { date, seasonId, teamIds, team1Score, team2Score, stage, videoUrl, status, phase, bracket, setScores, tags, name } = req.body;
+            const { date, seasonId, teamIds, team1Score, team2Score, stage, videoUrl, status, phase, bracket, setScores, tags, name, staff } = req.body;
 
             if (!date || !seasonId || !stage|| !teamIds || teamIds.length !== 2) {
                 console.error("Invalid input fields:", { date, seasonId, teamIds });
@@ -51,6 +51,7 @@ export class GameController {
                     setScores,
                     tags,
                     name,
+                    staff,
                 }
             );
 
@@ -63,7 +64,7 @@ export class GameController {
 
     createGameByNames = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-            const { date, seasonId, teamNames, team1Score, team2Score, stage, videoUrl, status, phase, bracket, setScores, tags, name } = req.body;
+            const { date, seasonId, teamNames, team1Score, team2Score, stage, videoUrl, status, phase, bracket, setScores, tags, name, staff } = req.body;
 
             if (!date || !seasonId || !teamNames || !stage || teamNames.length !== 2) {
                 console.error("Invalid input fields:", { date, seasonId, teamNames, team1Score, team2Score });
@@ -92,6 +93,7 @@ export class GameController {
                     setScores,
                     tags,
                     name,
+                    staff,
                 }
             );
 
@@ -149,7 +151,7 @@ export class GameController {
     updateGame = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const { id } = req.params;
-            const { date, seasonId, teamIds, team1Score, team2Score, videoUrl, stage, status, phase, bracket, region, setScores, tags, name } = req.body;
+            const { date, seasonId, teamIds, team1Score, team2Score, videoUrl, stage, status, phase, bracket, region, setScores, tags, name, staff } = req.body;
             const updatedGame = await this.gameService.updateGame(
                 parseInt(id), date, seasonId, teamIds, team1Score, team2Score, stage, videoUrl,
                 {
@@ -159,6 +161,7 @@ export class GameController {
                     setScores,
                     tags,
                     name,
+                    staff,
                 }
             );
             res.json(updatedGame);
