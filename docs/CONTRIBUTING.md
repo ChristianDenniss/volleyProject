@@ -78,8 +78,14 @@ how a screen looks unless the issue says to.
 
 ## Code review
 
-Standard GitHub PR review. Direct pushes to `main` are blocked for everyone
-except maintainers — please still use PRs so CI runs.
+Standard GitHub PR review. A PR cannot merge into `main` until:
+
+- CI is green (Backend build + Frontend build)
+- It has an approving review from a code owner (`CODEOWNERS` is `@ChristianDenniss`)
+
+Direct pushes to `main` are blocked for everyone except maintainers. Maintainers
+should still open PRs so CI and review run; GitHub will not let you approve
+your own PR, so use the admin bypass only when you are merging your own work.
 
 By contributing, you agree that your work is licensed under the
 [ISC License](../LICENSE).
