@@ -5,7 +5,7 @@
 
 A full-stack TypeScript app for Roblox Volleyball League stats, teams, players, seasons, games, awards, articles, and registrations. Live: [volleyball4-2.com](https://volleyball4-2.com/).
 
-Contributions are welcome. Start with [CONTRIBUTING.md](CONTRIBUTING.md) and the [`good first issue`](https://github.com/ChristianDenniss/volleyProject/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) list.
+Contributions are welcome. Start with [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) and the [`good first issue`](https://github.com/ChristianDenniss/volleyProject/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) list.
 
 ## Tech Stack
 
@@ -175,8 +175,10 @@ See `docker-compose.yml` for ports (`BE` 3000, `FE` via `DOCKER_FE_PORT`, DB via
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, Conventional Commits, and PR
-expectations. Releases are automated from those commits —
+See [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) for branching, commits, and
+the PR checklist. Local setup is in
+[`docs/guides/local-setup.md`](docs/guides/local-setup.md). Releases are
+automated from Conventional Commits —
 [docs/architecture/versioning.md](docs/architecture/versioning.md).
 
 Please follow the [Code of Conduct](CODE_OF_CONDUCT.md). Security reports go

@@ -1,2 +1,4 @@
 # Default review request for all changes.
-* @ChristianDenniss
+# Either owner can approve; GitHub requires one code-owner review, not both.
+* @ChristianDenniss @Stenimated
+

@@ -34,7 +34,7 @@ jobs:
       issues: write # comment on issues included in the release
       pull-requests: write # comment on PRs included in the release
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # semantic-release needs full history + tags to compute the next version.
           fetch-depth: 0
