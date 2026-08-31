@@ -197,3 +197,11 @@
 ───────────────────────────────────────────────────────────────────────────── */
 @custom-variant vp-compact (html[data-viewport="compact"] &);
 @custom-variant vp-mobile  (html[data-viewport="mobile"] &);
+@custom-variant vp-wide    (html[data-viewport="wide"] &);
+
+/* The attribute is written by syncViewportLayout() on the html element, so it is
+   absent only until that first runs. Navbar.css uses html:not([data-viewport])
+   to give wide screens their full-size layout on the very first paint, before
+   the measurement lands, rather than letting the nav render small and resize.
+   Reproduced here so that first frame still looks the same. */
+@custom-variant vp-unset   (html:not([data-viewport]) &);
