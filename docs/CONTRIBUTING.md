@@ -26,22 +26,55 @@ ticket, and comment on it before starting so work is not duplicated.
 Follow [`guides/local-setup.md`](./guides/local-setup.md) to get the stack
 running (Docker Compose, or frontend/backend run separately against Postgres).
 
-## Branching and commits
+## Branching, commits, and PR titles
 
-Branch names and commit messages drive automatic semantic-release versioning -
-see [`architecture/versioning.md`](./architecture/versioning.md) for the full
-explanation. In short:
+Releases are cut automatically from [Conventional Commits](https://www.conventionalcommits.org/)
+that land on `main`. Because we **squash-merge**, the **PR title** is the
+message semantic-release reads — not the commits on the branch. CI rejects a PR
+whose title or branch name does not match the types below. Full explanation:
+[`architecture/versioning.md`](./architecture/versioning.md).
 
-- Branch: `feat-<issue>-short-name` (or `fix-<issue>-short-name`), matching the
-  GitHub issue, e.g. `feat-131-login-css`.
-- Commit / PR title: `<type>: <short description>`, e.g. `feat: add a skip-to-content link`.
-- Types: `feat` (minor bump), `fix`/`perf`/`revert` (patch bump),
-  `chore`/`docs`/`refactor`/`style`/`test`/`ci`/`build` (no version bump).
-- Breaking change: `feat!: ...` or a `BREAKING CHANGE:` footer.
-- PRs are squash-merged into `main`; the squash commit message is what
-  semantic-release reads, so get that **PR title** right even if intermediate
-  commits on the branch are looser. GitHub is set to use the PR title as the
-  squash subject.
+### Names
+
+| | Pattern | Example |
+|---|---|---|
+| **Branch** | `<type>/<issue>-short-name` (hyphen after the type is also fine) | `feat/131-login-css`, `fix-136-header-alt` |
+| **PR title** | `<type>: <what changed>` | `feat: reconnect the Login.css remnant` |
+| **Commits on the branch** | Same form if you can; they are discarded on squash | `fix: give the header logo a descriptive alt` |
+
+```bash
+git checkout main && git pull
+git checkout -b feat/131-login-css
+```
+
+PR title (this is the one that must be right):
+
+```
+feat: reconnect the Login.css remnant
+```
+
+A scope is optional: `fix(api): …`, `docs(fe): …`.
+
+### Types
+
+| Type | Version | Use for |
+|---|---|---|
+| `feat` | **minor** | A new user-facing capability |
+| `fix` | **patch** | A bug fix |
+| `perf` | **patch** | A performance improvement |
+| `revert` | **patch** | Reverting a previous change |
+| `chore` | none | Tooling, deps, housekeeping |
+| `docs` | none | Documentation only |
+| `style` | none | Formatting, no behavior change |
+| `refactor` | none | Internal restructure, no behavior change |
+| `test` | none | Tests only |
+| `ci` / `build` | none | Workflows, build tooling |
+
+Breaking change (forces a **major** bump): `feat!: …` or a `BREAKING CHANGE:`
+footer in the squash message.
+
+A PR that is only `chore` / `docs` / `refactor` / `test` / `ci` / `build` /
+`style` does **not** cut a release. That is expected.
 
 ## Before opening a PR
 
@@ -80,7 +113,7 @@ how a screen looks unless the issue says to.
 
 Standard GitHub PR review. A PR cannot merge into `main` until:
 
-- CI is green (Backend build + Frontend build)
+- CI is green (**Backend build**, **Frontend build**, and **PR conventions**)
 - It has an approving review from a code owner (`CODEOWNERS` is
   `@ChristianDenniss` or `@Stenimated`)
 
