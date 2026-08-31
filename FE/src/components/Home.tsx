@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
-import "../styles/Home.css";
 import promoImg from "../images/callToAction.png";
 import { useArticles } from "../hooks/allFetch";
 import SEO from "./SEO";
@@ -22,6 +21,101 @@ const SIDE_ARTICLE_GAP = 16;
    attribute the app sets from the visual viewport, so it also fires when the
    page is zoomed rather than merely narrow. It carries higher specificity than
    a media query, which is what let it win before and what lets it win now. */
+/* ── Landing page utilities ──────────────────────────────────────────────────
+   Named because several are long and two are used more than once. Every value
+   is literal rather than a scale step: this page was written in rem and px that
+   do not line up with Tailwind's scale, and rounding them is a look change.
+
+   The vp-* variants are not duplicates of the upto-* ones. upto-* are width
+   media queries; vp-* key off the data-viewport attribute the app derives from
+   the visual viewport, so they also fire when the page is zoomed rather than
+   merely narrow, and they outrank a media query on specificity - which is how
+   the originals behaved. */
+
+const headlineSection =
+    "w-full max-w-[2400px] mx-auto py-0 px-[2vw] flex gap-[2rem] mt-[2rem] mb-[4rem] min-h-[400px] items-stretch " +
+    "upto-xl:gap-[1.5rem] min-[1400px]:gap-[2.5rem] min-[1600px]:gap-[3rem] " +
+    "upto-1024:flex-col upto-1024:gap-[2rem] upto-1024:items-stretch " +
+    "upto-md:mt-[1rem] upto-md:mb-[2rem] " +
+    "vp-compact:flex-col vp-compact:gap-[2rem] vp-compact:items-stretch " +
+    "vp-mobile:flex-col vp-mobile:gap-[2rem] vp-mobile:items-stretch " +
+    "vp-mobile:mt-[1rem] vp-mobile:mb-[2rem] " +
+    // Reserves the column height before the articles arrive, so nothing jumps.
+    "empty:before:content-[''] empty:before:block empty:before:h-[400px] empty:before:w-full";
+
+/* `featured-article` is a JS hook, not decoration: the ResizeObserver effect
+   above calls querySelector(".featured-article") to measure the card and decide
+   how many side articles fit. Removing the class breaks that measurement. */
+const featuredArticleBase =
+    "featured-article flex-1 relative rounded-[8px] overflow-hidden " +
+    "shadow-[0_2px_8px_rgb(0_0_0_/_0.1)] aspect-[17.5/9] min-h-[300px] w-full max-w-none " +
+    "upto-1024:aspect-[16/9] vp-compact:aspect-[16/9] vp-mobile:aspect-[16/9]";
+
+/* Only the card inside the <Link> animates; the loading and empty cards are not
+   wrapped in one, and the original selector was scoped to `> a` accordingly. */
+const featuredArticleLinked =
+    featuredArticleBase + " transition-[transform] duration-300 ease-[ease] group-hover:[transform:scale(1.02)]";
+
+const featuredText =
+    "absolute bottom-0 w-full text-white py-[1rem] px-[1.5rem] " +
+    "bg-[linear-gradient(to_top,rgba(0,0,0,0.75),transparent)] " +
+    "upto-md:py-[0.75rem] upto-md:px-[1rem] vp-mobile:py-[0.75rem] vp-mobile:px-[1rem]";
+
+const featuredHeading =
+    "m-0 mb-[1rem] text-[2.5rem] font-bold " +
+    "upto-1024:text-[2rem] upto-md:text-[1.5rem] upto-md:mb-[0.5rem] upto-xs:text-[1.25rem] " +
+    "vp-compact:text-[2rem] vp-mobile:text-[1.5rem] vp-mobile:mb-[0.5rem]";
+
+const featuredSummary = "m-0 text-[1rem] font-medium upto-md:text-[0.9rem] vp-mobile:text-[0.9rem]";
+
+const badgeBase =
+    "inline-block font-semibold text-[0.75rem] py-[0.15rem] px-[0.5rem] rounded-[4px] mb-[0.3rem] " +
+    "upto-xs:text-[0.7rem] upto-xs:py-[0.1rem] upto-xs:px-[0.4rem]";
+
+const sideArticlesPanel =
+    "flex-1 flex flex-col gap-[1rem] min-w-[280px] max-w-[400px] pl-[1.5rem] " +
+    "border-l border-l-[#eee] justify-stretch items-stretch box-border min-h-0 overflow-hidden " +
+    "upto-xl:min-w-[260px] upto-xl:max-w-[350px] upto-xl:pl-[1rem] " +
+    "min-[1400px]:min-w-[320px] min-[1400px]:max-w-[450px] min-[1400px]:pl-[2rem] " +
+    "min-[1600px]:pl-[2.5rem] " +
+    "upto-1024:pl-0 upto-1024:border-l-0 upto-1024:border-t upto-1024:border-t-[#eee] upto-1024:pt-[1.5rem] upto-1024:min-w-auto upto-1024:max-w-none upto-1024:overflow-visible " +
+    "vp-compact:pl-0 vp-compact:border-l-0 vp-compact:border-t vp-compact:border-t-[#eee] vp-compact:pt-[1.5rem] vp-compact:min-w-auto vp-compact:max-w-none vp-compact:overflow-visible " +
+    "vp-mobile:pl-0 vp-mobile:border-l-0 vp-mobile:border-t vp-mobile:border-t-[#eee] vp-mobile:pt-[1.5rem] vp-mobile:min-w-auto vp-mobile:max-w-none vp-mobile:overflow-visible";
+
+const sideArticleLink =
+    "group flex flex-1 min-h-0 no-underline text-inherit " +
+    "upto-1024:flex-none vp-compact:flex-none vp-mobile:flex-none";
+
+/* transition-[transform], not transition-all: the base rule said `all`, but the
+   more specific `.side-articles > a article` overrode it with `transform`, and
+   every side article is inside that link. This is the value that actually won. */
+const sideArticleCard =
+    "flex justify-between items-center gap-[1rem] rounded-[8px] shadow-[0_2px_6px_rgb(0_0_0_/_0.1)] " +
+    "p-[0.75rem] bg-white cursor-pointer flex-1 min-h-0 box-border w-full " +
+    "transition-[transform] duration-300 ease-[ease] " +
+    "hover:bg-[#f0f0f0] group-hover:[transform:scale(1.02)] " +
+    "min-[1400px]:p-[1rem] " +
+    "upto-1024:flex-none upto-1024:h-[90px] upto-1024:min-h-[90px] " +
+    "upto-xs:flex-col upto-xs:items-start upto-xs:min-h-auto " +
+    "vp-compact:flex-none vp-compact:h-[90px] vp-compact:min-h-[90px] " +
+    "vp-mobile:flex-none vp-mobile:h-[90px] vp-mobile:min-h-[90px] " +
+    "coarse:cursor-default coarse:active:bg-[#f0f0f0]";
+
+const sideArticleTitle =
+    "m-0 text-[1.1rem] font-semibold leading-[1.3] flex-1 no-underline text-inherit " +
+    "upto-md:text-[1rem] upto-xs:text-[0.9rem] vp-mobile:text-[1rem]";
+
+const sideArticleThumb =
+    "w-[100px] h-[60px] object-cover rounded-[6px] shrink-0 " +
+    "min-[1400px]:w-[110px] min-[1400px]:h-[70px] " +
+    "upto-1024:w-[100px] upto-1024:h-[70px] " +
+    "upto-xs:w-full upto-xs:h-[150px] upto-xs:mt-[0.5rem] " +
+    "vp-compact:w-[100px] vp-compact:h-[70px] vp-mobile:w-[100px] vp-mobile:h-[70px]";
+
+const skeletonBase =
+    "bg-[linear-gradient(90deg,#f0f0f0_25%,#e0e0e0_50%,#f0f0f0_75%)] bg-[length:200%_100%] " +
+    "animate-skeleton-sweep rounded-[8px] w-full";
+
 const joinButton =
     "bg-[#edbb00] text-black border-none px-[1.5rem] py-[0.6rem] text-[1.1rem] " +
     "font-bold rounded-[6px] cursor-pointer " +
@@ -233,55 +327,62 @@ const Home: React.FC = () => {
                 }}
             />
 
-            <main className={`home ${loading ? 'loading' : ''}`}>
-                <section className="headline-section" ref={headlineSectionRef}>
-                    <div className="headline-featured" ref={featuredRef}>
+            <main
+                className={`w-full max-w-[2400px] mx-auto my-0 py-[1rem] px-[2vw] text-[#222] box-border min-h-screen [contain:layout_style_paint] [font-family:'Segoe_UI',Tahoma,Geneva,Verdana,sans-serif] upto-md:p-[0.5rem] vp-mobile:p-[0.5rem] ${loading ? 'opacity-80 pointer-events-none' : ''}`}
+            >
+                <section className={headlineSection} ref={headlineSectionRef}>
+                    <div className="flex-[2] min-w-0 flex flex-col self-start" ref={featuredRef}>
                         {loading ? (
-                            <div className="featured-article">
-                                <div className="home-skeleton-featured"></div>
+                            <div className={featuredArticleBase}>
+                                <div className={`${skeletonBase} h-full min-h-[300px]`}></div>
                             </div>
                         ) : featuredArticle ? (
-                            <Link to={`/articles/${featuredArticle.id}`}>
-                                <div className="featured-article">
+                            <Link
+                                to={`/articles/${featuredArticle.id}`}
+                                className="group flex flex-1 min-h-0 no-underline text-inherit hover:no-underline hover:text-inherit"
+                            >
+                                <div className={featuredArticleLinked}>
                                     {error && <p>Error: {error}</p>}
                                     {!error && (
                                         <>
                                             <img
                                                 src={featuredArticle.imageUrl}
                                                 alt={featuredArticle.title}
-                                                className="featured-image"
+                                                className="w-full h-full object-cover block"
                                             />
-                                            <div className="featured-text">
-                                                <span className="tag">
+                                            <div className={featuredText}>
+                                                <span className={`${badgeBase} bg-[#edbb00]`}>
                                                     By {featuredArticle.author.username}
                                                 </span>
-                                                <span className="date-tag">
+                                                <span className={`${badgeBase} bg-[silver]`}>
                                                     {new Date(
                                                         featuredArticle.createdAt
                                                     ).toLocaleDateString()}
                                                 </span>
-                                                <h2>{featuredArticle.title}</h2>
-                                                <p>{featuredArticle.summary}</p>
+                                                <h2 className={featuredHeading}>{featuredArticle.title}</h2>
+                                                <p className={featuredSummary}>{featuredArticle.summary}</p>
                                             </div>
                                         </>
                                     )}
                                 </div>
                             </Link>
                         ) : (
-                            <div className="featured-article">
-                                <div className="featured-text">
-                                    <h2>No Featured Articles Yet</h2>
-                                    <p>Check back soon for the latest news and updates!</p>
+                            <div className={featuredArticleBase}>
+                                <div className={featuredText}>
+                                    <h2 className={featuredHeading}>No Featured Articles Yet</h2>
+                                    <p className={featuredSummary}>
+                                        Check back soon for the latest news and updates!
+                                    </p>
                                 </div>
                             </div>
                         )}
                     </div>
 
-                    <aside className="side-articles" ref={sideArticlesRef}>
+                    <aside className={sideArticlesPanel} ref={sideArticlesRef}>
                         {loading ? (
                             // Skeleton loaders for side articles
                             Array.from({ length: visibleSideCount }).map((_, index) => (
-                                <div key={index} className="home-skeleton-side"></div>
+                                <div key={index} className={`${skeletonBase} flex-1 min-h-[80px]`}></div>
                             ))
                         ) : error ? (
                             <p>Error loading articles: {error}</p>
@@ -290,11 +391,16 @@ const Home: React.FC = () => {
                                 <Link
                                     key={article.id}
                                     to={`/articles/${article.id}`}
+                                    className={sideArticleLink}
                                 >
-                                    <article>
-                                        <h4>{article.title}</h4>
+                                    <article className={sideArticleCard}>
+                                        <h4 className={sideArticleTitle}>{article.title}</h4>
                                         {article.imageUrl && (
-                                            <img src={article.imageUrl} alt={article.title} />
+                                            <img
+                                                src={article.imageUrl}
+                                                alt={article.title}
+                                                className={sideArticleThumb}
+                                            />
                                         )}
                                     </article>
                                 </Link>
