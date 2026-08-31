@@ -63,6 +63,13 @@
   --color-error-border: #fecaca;
   --error-bg: #E74C3C;
 
+  /* ── Form control chrome ──
+     The white chevron drawn on the navy filter selects. It was duplicated
+     verbatim in 14 rules across 7 stylesheets; declaring it once here means the
+     shared FilterSelect component (and any CSS still waiting to be converted)
+     reference the same glyph. */
+  --chevron-down-white: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
+
   /* ── Radius ── */
   --radius-sm: 4px;
   --radius-md: 8px;

@@ -6,8 +6,6 @@ import { useNavigate } from "react-router-dom"
 
 import type { Game, Team } from "../types/interfaces"
 
-import "../styles/Game.css"
-
 import "../styles/ListingPage.css"
 
 import SearchBar from "./Searchbar"
@@ -16,13 +14,53 @@ import Pagination from "./Pagination"
 
 import FilterBar from "./ui/FilterBar"
 
+import FilterSelect from "./ui/FilterSelect"
+
 import { formatGameStage } from "../utils/gameLabels"
 
 import { useRegion } from "../context/regionContext"
 
 import { useDebouncedValue } from "../hooks/useDebouncedValue"
 
+/* ── Scoreboard tile classes ────────────────────────────────────────────────
+   Carried over from Game.css. The card keeps its left navy accent on desktop
+   and flips it to a top accent under 768px, where the body also stacks and the
+   score moves above the two teams (`order-first`). */
 
+const CARD =
+  "flex flex-col gap-[0.9rem] w-full justify-self-stretch bg-bg " +
+  "border border-border border-l-4 border-l-brand-primary rounded-md shadow-sm " +
+  "px-5 pt-[1.15rem] pb-4 cursor-pointer box-border " +
+  "transition-[transform,box-shadow] duration-[140ms] ease-[ease] " +
+  "hover:-translate-y-[3px] hover:shadow-md " +
+  "max-md:border-l-0 max-md:border-t-4 max-md:border-t-brand-primary " +
+  "max-md:px-4 max-md:pt-[0.9rem] max-md:pb-3"
+
+const CARD_BODY =
+  "grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-y-[0.85rem] gap-x-[1.15rem] " +
+  "max-md:grid-cols-1 max-md:gap-3"
+
+const CARD_SIDE =
+  "flex flex-row items-center justify-center gap-[0.65rem] min-w-0 max-md:text-center"
+
+const CARD_CENTER =
+  "flex flex-col items-center justify-center gap-1 min-w-[4.75rem] px-1 max-md:order-first"
+
+const CARD_SCORE =
+  "flex items-center gap-[0.4rem] text-2xl font-extrabold leading-none text-text max-md:text-[1.35rem]"
+
+const CARD_FOOTER =
+  "flex items-center justify-center flex-wrap gap-[0.45rem] pt-[0.65rem] " +
+  "border-t border-border text-[0.8125rem] text-text-muted text-center"
+
+const TEAM_LOGO_BASE = "w-14 h-14 object-contain shrink-0"
+
+const TEAM_LOGO_FALLBACK_BASE =
+  "inline-flex items-center justify-center w-14 h-14 rounded-full " +
+  "bg-bg-muted border border-border text-[0.8125rem] font-bold text-brand-primary shrink-0"
+
+/** The losing side's crest is dimmed and desaturated, as before. */
+const MUTED = "opacity-40 grayscale"
 
 function getGameTeams(game: Game): [Team | null, Team | null] {
 
@@ -64,16 +102,14 @@ function formatGameDateParts(date: Date | string) {
 
 
 function TeamLogo({ team, name, muted = false }: { team: Team | null; name: string; muted?: boolean }) {
-  const className = muted ? "game-card-team-logo muted" : "game-card-team-logo"
-
   if (team?.logoUrl) {
-    return <img src={team.logoUrl} alt="" className={className} />
+    return <img src={team.logoUrl} alt="" className={`${TEAM_LOGO_BASE}${muted ? ` ${MUTED}` : ""}`} />
   }
 
   const initials = name.trim().slice(0, 2).toUpperCase() || "?"
   return (
     <span
-      className={`game-card-team-logo-fallback${muted ? " muted" : ""}`}
+      className={`${TEAM_LOGO_FALLBACK_BASE}${muted ? ` ${MUTED}` : ""}`}
       aria-hidden="true"
     >
       {initials}
@@ -163,85 +199,38 @@ const Games: React.FC = () => {
 
   return (
 
-    <div className={`games-page ${loading ? "loading" : ""}`}>
+    <div className={`mx-auto box-border min-h-screen w-[min(100%,1600px)] max-w-[1600px] px-[clamp(1rem,2.5vw,2.5rem)] py-5 [contain:layout_style_paint] ${loading ? "pointer-events-none opacity-80" : ""}`}>
 
       <div className="listing-controls-toolbar">
 
           <FilterBar onReset={(searchQuery || seasonFilter || stageFilter) ? clearFilters : undefined}>
 
-            <div className="games-season-filter">
+            <FilterSelect
+              id="season-filter"
+              label="Season"
+              value={seasonFilter}
+              onChange={(value) => {
+                setSeasonFilter(value)
+                setCurrentPage(1)
+              }}
+              placeholder="All Seasons"
+              options={seasonOptions.map((season) => ({
+                value: season.id.toString(),
+                label: `Season ${season.seasonNumber}`,
+              }))}
+            />
 
-              <select
-
-                id="season-filter"
-
-                aria-label="Season"
-
-                value={seasonFilter}
-
-                onChange={(e) => {
-
-                  setSeasonFilter(e.target.value)
-
-                  setCurrentPage(1)
-
-                }}
-
-              >
-
-                <option value="">All Seasons</option>
-
-                {seasonOptions.map((season) => (
-
-                  <option key={season.id} value={season.id.toString()}>
-
-                    Season {season.seasonNumber}
-
-                  </option>
-
-                ))}
-
-              </select>
-
-            </div>
-
-
-
-            <div className="games-stage-filter">
-
-              <select
-
-                id="stage-filter"
-
-                aria-label="Stage"
-
-                value={stageFilter}
-
-                onChange={(e) => {
-
-                  setStageFilter(e.target.value)
-
-                  setCurrentPage(1)
-
-                }}
-
-              >
-
-                <option value="">All Stages</option>
-
-                {(uniqueStages ?? []).map((stage) => (
-
-                  <option key={stage} value={stage}>
-
-                    {stage}
-
-                  </option>
-
-                ))}
-
-              </select>
-
-            </div>
+            <FilterSelect
+              id="stage-filter"
+              label="Stage"
+              value={stageFilter}
+              onChange={(value) => {
+                setStageFilter(value)
+                setCurrentPage(1)
+              }}
+              placeholder="All Stages"
+              options={(uniqueStages ?? []).map((stage) => ({ value: stage, label: stage }))}
+            />
 
           </FilterBar>
 
@@ -283,13 +272,13 @@ const Games: React.FC = () => {
 
           {loading ? (
 
-            <div className="game-cards-wrapper">
+            <div className="min-h-[500px] py-2.5 max-md:min-h-[400px]">
 
-              <div className="game-cards-list">
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,280px),1fr))] items-start gap-4 min-[960px]:grid-cols-3 max-md:grid-cols-1">
 
                 {Array.from({ length: 20 }).map((_, index) => (
 
-                  <div key={index} className="game-card-skeleton" />
+                  <div key={index} className="h-[140px] animate-game-card-shimmer rounded-md bg-[image:var(--skeleton-shimmer)] bg-[length:200%_100%]" />
 
                 ))}
 
@@ -303,9 +292,9 @@ const Games: React.FC = () => {
 
           ) : (
 
-            <div className="game-cards-wrapper">
+            <div className="min-h-[500px] py-2.5 max-md:min-h-[400px]">
 
-              <div className="game-cards-list">
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,280px),1fr))] items-start gap-4 min-[960px]:grid-cols-3 max-md:grid-cols-1">
 
                 {paginatedGames.map((game) => {
 
@@ -323,6 +312,12 @@ const Games: React.FC = () => {
 
                   const dateLabel = formatGameDateParts(game.date)
 
+                  const teamName = (winner: boolean) =>
+                    `text-[0.9375rem] font-bold leading-[1.3] text-center [overflow-wrap:break-word] ${winner ? "text-brand-primary" : "text-text"}`
+
+                  const scoreValue = (winner: boolean) =>
+                    `min-w-[1.1rem] text-center${winner ? " text-brand-primary" : ""}`
+
 
 
                   return (
@@ -331,17 +326,17 @@ const Games: React.FC = () => {
 
                       key={game.id}
 
-                      className="game-card"
+                      className={CARD}
 
                       onClick={() => navigate(`/games/${game.id}`)}
 
                     >
 
-                      <div className="game-card-body">
+                      <div className={CARD_BODY}>
 
-                        <div className="game-card-side game-card-side-home">
+                        <div className={CARD_SIDE}>
 
-                          <span className={`game-card-team-name${team1Wins ? " winner" : ""}`}>
+                          <span className={teamName(team1Wins)}>
 
                             {team1Name}
 
@@ -353,19 +348,19 @@ const Games: React.FC = () => {
 
 
 
-                        <div className="game-card-center">
+                        <div className={CARD_CENTER}>
 
-                          <div className="game-card-score">
+                          <div className={CARD_SCORE}>
 
-                            <span className={`game-card-score-value${team1Wins ? " winner" : ""}`}>
+                            <span className={scoreValue(team1Wins)}>
 
                               {hasScore ? game.team1Score : "–"}
 
                             </span>
 
-                            <span className="game-card-score-sep">:</span>
+                            <span className="font-semibold text-text-subtle">:</span>
 
-                            <span className={`game-card-score-value${team2Wins ? " winner" : ""}`}>
+                            <span className={scoreValue(team2Wins)}>
 
                               {hasScore ? game.team2Score : "–"}
 
@@ -373,15 +368,15 @@ const Games: React.FC = () => {
 
                           </div>
 
-                          <span className="game-card-date">{dateLabel}</span>
+                          <span className="text-[0.6875rem] font-semibold uppercase tracking-[0.05em] text-text-muted">{dateLabel}</span>
 
                         </div>
 
 
 
-                        <div className="game-card-side game-card-side-away">
+                        <div className={CARD_SIDE}>
                           <TeamLogo team={team2} name={team2Name} muted={hasScore && team1Wins} />
-                          <span className={`game-card-team-name${team2Wins ? " winner" : ""}`}>
+                          <span className={teamName(team2Wins)}>
                             {team2Name}
                           </span>
                         </div>
@@ -390,11 +385,11 @@ const Games: React.FC = () => {
 
 
 
-                      <div className="game-card-footer">
+                      <div className={CARD_FOOTER}>
 
-                        <span className="game-card-season-chip">Season {game.season.seasonNumber}</span>
+                        <span className="rounded-[0.35rem] bg-accent-pale px-2 py-[0.15rem] text-[0.6875rem] font-bold text-brand-primary">Season {game.season.seasonNumber}</span>
 
-                        <span className="game-card-footer-sep">·</span>
+                        <span className="text-text-subtle">·</span>
 
                         <span>{formatGameStage(game)}</span>
 
@@ -425,5 +420,3 @@ const Games: React.FC = () => {
 
 
 export default Games
-
-

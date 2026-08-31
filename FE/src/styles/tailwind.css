@@ -81,6 +81,13 @@
   --color-error-bg: var(--color-error-bg);
   --color-error-border: var(--color-error-border);
 
+  /* ── Shadow. Registered for the same reason as radius: without these,
+     `shadow-sm` and `shadow-md` resolve to Tailwind's own two-layer defaults
+     rather than the single-layer shadows the app already uses. ── */
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-modal: var(--shadow-modal);
+
   /* ── Radius ── */
   --radius-sm: var(--radius-sm);
   --radius-md: var(--radius-md);
@@ -125,6 +132,17 @@
   @keyframes shimmer {
     to {
       background-position: -200% center;
+    }
+  }
+
+  /* Games page: the skeleton tile sweep while results load. */
+  --animate-game-card-shimmer: game-card-shimmer 1.5s infinite;
+  @keyframes game-card-shimmer {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
     }
   }
 
