@@ -17,6 +17,20 @@ const LARGE_SIDE_ARTICLE_COUNT = 5;
 const SIDE_ARTICLE_MIN_HEIGHT = 80;
 const SIDE_ARTICLE_GAP = 16;
 
+/* The CTA button. The three narrow-screen cases are not redundant: upto-md and
+   upto-xs are width media queries, while vp-mobile keys off the data-viewport
+   attribute the app sets from the visual viewport, so it also fires when the
+   page is zoomed rather than merely narrow. It carries higher specificity than
+   a media query, which is what let it win before and what lets it win now. */
+const joinButton =
+    "bg-[#edbb00] text-black border-none px-[1.5rem] py-[0.6rem] text-[1.1rem] " +
+    "font-bold rounded-[6px] cursor-pointer " +
+    "transition-[background-color] duration-300 ease-[ease] hover:bg-[#c49a00] " +
+    "upto-md:text-[1rem] upto-md:px-[1.2rem] upto-md:py-[0.5rem] " +
+    "upto-xs:text-[0.9rem] upto-xs:px-[1rem] upto-xs:py-[0.4rem] " +
+    "vp-mobile:text-[1rem] vp-mobile:px-[1.2rem] vp-mobile:py-[0.5rem] " +
+    "coarse:cursor-default coarse:active:bg-[#c49a00]";
+
 const Home: React.FC = () => {
     const playerRef = useRef<any>(null);
     const videoContainerRef = useRef<HTMLDivElement>(null);
@@ -294,23 +308,37 @@ const Home: React.FC = () => {
                     </aside>
                 </section>
 
+                {/* Full-bleed breakout: 100vw plus a negative margin pulls the
+                    section out of the padded page column. pt-[56.25%] is the 16:9
+                    box the absolutely-positioned player fills. */}
                 <section
-                    className="video-section"
+                    className="relative w-screen ml-[calc(-50vw_+_50%)] pt-[56.25%] mb-[-1px] rounded-[10px] overflow-hidden shadow-[0_3px_12px_rgb(0_0_0_/_0.1)] [&>iframe]:absolute! [&>iframe]:top-0 [&>iframe]:left-0 [&>iframe]:w-full! [&>iframe]:h-full! upto-md:ml-[-0.5rem] upto-md:mr-[-0.5rem] upto-md:w-[calc(100%_+_1rem)] upto-md:rounded-none"
                     ref={videoContainerRef}
                     aria-label="Volleyball promotional video"
                 >
-                    <div id="yt-player" className="yt-player" />
+                    {/* The player is styled from the section via [&>iframe], not
+                        from a class on the div. The YouTube API destroys this div
+                        and inserts an iframe in its place, so any class written
+                        here only survives if the API copies the attribute across;
+                        targeting the child instead does not depend on that. The
+                        importants stay because the API writes width and height
+                        inline on the iframe and these have to outrank it. */}
+                    <div id="yt-player" className="absolute! top-0 left-0 w-full! h-full!" />
                 </section>
 
-                <section className="call-to-action">
+                {/* min-h-[500px] is deliberately left at 500 on narrow screens.
+                    The original set height to 300/250 there without touching
+                    min-height, so the floor won and the banner stayed 500 tall.
+                    Reproduced rather than corrected - that is a look change. */}
+                <section className="relative w-screen ml-[calc(-50vw_+_50%)] mt-0 mb-[-1rem] h-[500px] min-h-[500px] rounded-[10px] overflow-hidden shadow-[0_3px_12px_rgb(0_0_0_/_0.1)] min-[1600px]:h-[600px] min-[1600px]:min-h-[600px] min-[2000px]:h-[700px] min-[2000px]:min-h-[700px] upto-md:h-[300px] upto-xs:h-[250px] vp-mobile:h-[300px]">
                     <img
                         src={promoImg}
                         alt="Volleyball App Promo"
-                        className="promo-banner"
+                        className="absolute top-0 left-0 w-full h-full object-cover z-[1]"
                     />
                     <div className="cta-text">
                         <button
-                            className="join-button"
+                            className={joinButton}
                             onClick={() => alert("Join RVL Today!")}
                         >
                             Join RVL Today

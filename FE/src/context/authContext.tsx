@@ -15,6 +15,8 @@ import type {
 import { MOCK_AUTH_TOKEN, mockAuthUser } from "../mocks/data"
 import { isMockMode, clearClientAuthState } from "../utils/authStorage"
 import { BACKEND_URL } from "../constants/api"
+import { classifyServiceError, type ServiceErrorKind } from "../errors/classifyServiceError"
+import ServiceErrorPage from "../components/misc/ServiceErrorPage"
 
 const API_BASE = BACKEND_URL
 
@@ -25,6 +27,15 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
     const [user,    setUser]    = useState<User | null>(null)
     const [token,   setToken]   = useState<string | null>(null)
     const [loading, setLoading] = useState(true)
+
+    /* The profile probe below is the app's first request, so it doubles as a health check: if
+       it can't reach the API at all (or the API answers 5xx), nothing else on the site will
+       work either and the whole tree is replaced with the branded outage screen.
+
+       Only outages count. A 401 here is the ordinary "not logged in" answer and a 404 is a
+       missing record - classifyServiceError returns null for both, and the site renders as
+       normal for a signed-out visitor. */
+    const [serviceError, setServiceError] = useState<ServiceErrorKind | null>(null)
 
     useEffect(() =>
     {
@@ -48,6 +59,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
 
                 if (!res.ok)
                 {
+                    setServiceError(classifyServiceError(res))
                     clearClientAuthState()
                     setToken(null)
                     setUser(null)
@@ -60,8 +72,11 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
                 setUser(userWithoutPassword)
                 setToken(null)
             }
-            catch
+            catch (err)
             {
+                // fetch only rejects when the request never reached the server, so this is
+                // almost always the "can't reach the API" outage rather than a bad session.
+                setServiceError(classifyServiceError(err))
                 clearClientAuthState()
                 setToken(null)
                 setUser(null)
@@ -111,7 +126,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
                 loading
             }}
         >
-            {children}
+            {serviceError ? <ServiceErrorPage kind={serviceError} fullScreen /> : children}
         </AuthContext.Provider>
     )
 }

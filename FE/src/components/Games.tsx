@@ -278,7 +278,7 @@ const Games: React.FC = () => {
 
                 {Array.from({ length: 20 }).map((_, index) => (
 
-                  <div key={index} className="h-[140px] animate-game-card-shimmer rounded-md bg-[image:var(--skeleton-shimmer)] bg-[length:200%_100%]" />
+                  <div key={index} className="h-[140px] animate-skeleton-sweep rounded-md bg-[image:var(--skeleton-shimmer)] bg-[length:200%_100%]" />
 
                 ))}
 
