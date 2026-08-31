@@ -1,3 +1,15 @@
+---
+title: Versioning
+type: architecture
+status: current
+area: [ci-cd, docs]
+created: 2026-08-31
+verified: 2026-08-31
+summary: Semantic-release from Conventional Commits on main — types, merge strategy, and what the Release workflow publishes.
+related:
+  - CONTRIBUTING.md
+---
+
 # Versioning
 
 Volleyball 4.2 versions itself **automatically**. You never edit a version
