@@ -113,3 +113,27 @@
   --breakpoint-lg: 900px;
   --breakpoint-xl: 1200px;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   ANIMATIONS — keyframes cannot be expressed as a utility, so they are declared
+   here and exposed as `animate-*` classes. Values are carried over verbatim from
+   the page stylesheets they came from.
+───────────────────────────────────────────────────────────────────────────── */
+@theme {
+  /* Credits page: the gradient sweep across the heading text. */
+  --animate-shimmer: shimmer 2.5s linear infinite;
+  @keyframes shimmer {
+    to {
+      background-position: -200% center;
+    }
+  }
+
+  /* Credits page: cards slide up and fade in on mount. */
+  --animate-card-in: card-in 0.6s ease-out forwards;
+  @keyframes card-in {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
