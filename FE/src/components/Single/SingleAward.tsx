@@ -38,7 +38,60 @@ const awardTypeDescriptions: { [key: string]: string } =
         "LuvLate Award – Special recognition for outstanding contribution to the community"
 };
 
+const awardContainer =
+    "my-[4rem] mx-auto max-w-[1050px] px-[1.5rem] bg-[#0e0e0e] rounded-lg " +
+    "shadow-[0_8px_22px_rgb(0_0_0_/_0.45)] overflow-hidden " +
+    "font-['Poppins','Segoe_UI',Tahoma,Geneva,Verdana,sans-serif] text-[#f5f5f5] " +
+    "min-h-screen box-border [contain:layout_style_paint] " +
+    "upto-sm:my-[2rem] upto-sm:px-[1rem] " +
+    "empty:before:content-[''] empty:before:block empty:before:h-[800px] empty:before:w-full"
 
+/* The overlay is a ::before so it stays a pseudo-element. */
+const awardHeader =
+    "relative h-[320px] min-h-[320px] bg-cover bg-center " +
+    "transition-[background-image] duration-300 ease-out " +
+    "rounded-t-lg upto-sm:h-[220px] " +
+    "before:content-[''] before:absolute before:inset-0 " +
+    "before:bg-[linear-gradient(to_bottom,rgba(0,0,0,0.55)_0%,rgba(0,0,0,0.35)_40%,rgba(0,0,0,0.55)_100%)]"
+
+const awardTitleSection =
+    "absolute top-1/2 left-1/2 [transform:translate(-50%,-50%)] z-[1] text-center w-[90%] max-w-[900px]"
+
+const awardTitle =
+    "text-[5.5rem] font-bold whitespace-nowrap text-[#c9e4fd] mb-[1rem] upto-sm:text-[3.8rem]"
+
+const awardSeason = "inline-block text-[2.2rem] font-semibold text-[#f5f5f5] upto-sm:text-[1.8rem]"
+
+const awardTypeDescription =
+    "py-[1.75rem] px-[2rem] bg-[#161616] border-b border-b-[rgba(255,255,255,0.08)] " +
+    "[&_p]:m-0 [&_p]:text-[1.25rem] [&_p]:leading-[1.55]"
+
+const awardContent =
+    "p-[2rem] grid gap-[2rem] min-h-[400px] [content-visibility:auto] [contain-intrinsic-size:400px] " +
+    "upto-sm:p-[1.5rem] " +
+    "[&_h2]:m-0 [&_h2]:mb-[0.75rem] [&_h2]:text-[1.8rem] [&_h2]:text-[#c9e4fd]"
+
+const awardDescriptionP = "text-[1.5rem] leading-[1.6] text-[#f5f5f5]"
+
+const recipientInfo = "whitespace-normal text-[1.5rem]"
+
+const playerLink =
+    "text-[#f5f5f5] font-semibold no-underline transition-[color] duration-200 ease-[ease] text-[1.5rem] " +
+    "hover:text-[#c9e4fd]"
+
+const awardMeta =
+    "grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-[1.25rem] bg-[#161616] p-[1.5rem] rounded-lg"
+
+const metaItem = "flex flex-col"
+
+const metaHeading =
+    "m-0 mb-[0.4rem] text-[1.1rem] font-bold uppercase text-[#c1c1c1] tracking-[0.05em]"
+
+const metaValue = "m-0 text-[1.25rem] font-semibold"
+
+const skeletonSweep =
+    "bg-[linear-gradient(90deg,#2a2a2a_25%,#3a3a3a_50%,#2a2a2a_75%)] bg-[length:200%_100%] " +
+    "animate-skeleton-sweep"
 
 const SingleAward: React.FC = () => {
     const { id } = useParams<{ id: string }>()
@@ -52,28 +105,28 @@ const SingleAward: React.FC = () => {
         }
     }, [])
 
-    if (!id) return <div className="award-container">URL ID is undefined</div>
+    if (!id) return <div className={awardContainer}>URL ID is undefined</div>
 
     return (
-        <div className={`award-container ${loading ? 'loading' : ''}`}>
+        <div className={`${awardContainer} ${loading ? "opacity-80 pointer-events-none" : ""}`}>
             {loading ? (
                 <>
-                    <div className="award-skeleton-header"></div>
-                    <div className="award-skeleton-description"></div>
-                    <div className="award-content">
-                        <div className="award-skeleton-section"></div>
-                        <div className="award-skeleton-section"></div>
-                        <div className="award-skeleton-meta">
-                            <div className="award-skeleton-meta-item"></div>
-                            <div className="award-skeleton-meta-item"></div>
-                            <div className="award-skeleton-meta-item"></div>
+                    <div className={`${skeletonSweep} h-[320px] w-full rounded-t-lg`}></div>
+                    <div className={`${skeletonSweep} h-[60px] w-full py-[1.75rem] px-[2rem] bg-[#161616] border-b border-b-[rgba(255,255,255,0.08)]`}></div>
+                    <div className={awardContent}>
+                        <div className={`${skeletonSweep} h-[100px] w-full rounded-lg`}></div>
+                        <div className={`${skeletonSweep} h-[100px] w-full rounded-lg`}></div>
+                        <div className={awardMeta}>
+                            <div className={`${skeletonSweep} h-[80px] w-full rounded-[8px]`}></div>
+                            <div className={`${skeletonSweep} h-[80px] w-full rounded-[8px]`}></div>
+                            <div className={`${skeletonSweep} h-[80px] w-full rounded-[8px]`}></div>
                         </div>
                     </div>
                 </>
             ) : error ? (
-                <div className="award-container">Error: {error}</div>
+                <div className={awardContainer}>Error: {error}</div>
             ) : !award ? (
-                <div className="award-container">No award found.</div>
+                <div className={awardContainer}>No award found.</div>
             ) : (
                 <>
                     {/* SEO Meta Tags for Social Media Embedding */}
@@ -111,32 +164,32 @@ const SingleAward: React.FC = () => {
                         }}
                     />
 
-                    <div className="award-header" style={{ backgroundImage: `url(${award.imageUrl || defaultImage})` }}>
-                        <div className="award-title-section">
-                            <h1>{award.type}</h1>
-                            <span className="award-season">Season {award.season.seasonNumber}</span>
+                    <div className={awardHeader} style={{ backgroundImage: `url(${award.imageUrl || defaultImage})` }}>
+                        <div className={awardTitleSection}>
+                            <h1 className={awardTitle}>{award.type}</h1>
+                            <span className={awardSeason}>Season {award.season.seasonNumber}</span>
                         </div>
                     </div>
 
-                    <div className="award-type-description">
+                    <div className={awardTypeDescription}>
                         <p>{awardTypeDescriptions[award.type] || "A special recognition for outstanding achievement"}</p>
                     </div>
 
-                    <div className="award-content">
+                    <div className={awardContent}>
                         {award.description && (
-                            <div className="award-description">
+                            <div>
                                 <h2>Description</h2>
-                                <p>{award.description}</p>
+                                <p className={awardDescriptionP}>{award.description}</p>
                             </div>
                         )}
 
-                        <div className="award-recipients">
+                        <div>
                             <h2>Recipient</h2>
                             {award.players && award.players.length > 0 ? (
-                                <div className="recipient-info">
+                                <div className={recipientInfo}>
                                     {award.players.map((player, index) => (
                                         <React.Fragment key={player.id}>
-                                            <a href={`/players/${player.id}`} className="player-link">
+                                            <a href={`/players/${player.id}`} className={playerLink}>
                                                 {player.name}
                                             </a>
                                             {index < award.players.length - 1 && ", "}
@@ -148,23 +201,23 @@ const SingleAward: React.FC = () => {
                             )}
                         </div>
 
-                        <div className="award-meta">
-                            <div className="meta-item">
-                                <h3>Award Type</h3>
-                                <p>{award.type}</p>
+                        <div className={awardMeta}>
+                            <div className={metaItem}>
+                                <h3 className={metaHeading}>Award Type</h3>
+                                <p className={metaValue}>{award.type}</p>
                             </div>
-                            <div className="meta-item">
-                                <h3>Season</h3>
-                                <p>Season {award.season.seasonNumber}</p>
+                            <div className={metaItem}>
+                                <h3 className={metaHeading}>Season</h3>
+                                <p className={metaValue}>Season {award.season.seasonNumber}</p>
                             </div>
-                            <div className="meta-item">
-                                <h3>Awarded On</h3>
-                                <p>{new Date(award.createdAt).toLocaleDateString()}</p>
+                            <div className={metaItem}>
+                                <h3 className={metaHeading}>Awarded On</h3>
+                                <p className={metaValue}>{new Date(award.createdAt).toLocaleDateString()}</p>
                             </div>
                             {award.players && award.players.length > 0 && (
-                                <div className="meta-item">
-                                    <h3>Team</h3>
-                                    <p>
+                                <div className={metaItem}>
+                                    <h3 className={metaHeading}>Team</h3>
+                                    <p className={metaValue}>
                                         {award.players.map((player, index) => {
                                             const seasonTeam = player.teams?.find(team => 
                                                 team.season?.seasonNumber === award.season.seasonNumber

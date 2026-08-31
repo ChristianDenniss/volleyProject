@@ -238,6 +238,7 @@
 @custom-variant upto-1024 (@media (max-width: 1024px));
 @custom-variant upto-lg   (@media (max-width: 900px));
 @custom-variant upto-md   (@media (max-width: 768px));
+@custom-variant upto-sm   (@media (max-width: 600px));
 @custom-variant upto-xs   (@media (max-width: 480px));
 @custom-variant upto-420  (@media (max-width: 420px));
 /* FAQ and the public Applications page both pin a 360px query last. */
