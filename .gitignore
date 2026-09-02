@@ -20,6 +20,7 @@ baselines/*.jpg
 .wrangler/
 
 # Editor directories and files
+.cursor/
 .env*
 .dev.vars
 .vscode/*
