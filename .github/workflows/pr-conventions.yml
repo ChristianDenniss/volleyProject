@@ -39,7 +39,6 @@ jobs:
             Allowed types: feat, fix, perf, revert, chore, docs, style, refactor, test, build, ci.
 
       - name: Validate branch name
-        if: github.actor != 'dependabot[bot]'
         env:
           BRANCH: ${{ github.head_ref }}
         run: |
