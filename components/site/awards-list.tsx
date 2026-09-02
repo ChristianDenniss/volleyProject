@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { FilterSelect } from "./controls";
 
 export interface AwardListRow {
   id: number;
@@ -12,9 +13,6 @@ export interface AwardListRow {
   seasonNumber: number | null;
   players: { id: number; name: string }[];
 }
-
-const selectClass =
-  "rounded-lg border border-[#ccc] bg-white px-3 py-1.5 text-[0.95rem] text-[#222] transition-colors duration-200 focus:border-[#8f54ff] focus:outline-none";
 
 export function AwardsList({ awards }: { awards: AwardListRow[] }) {
   const [season, setSeason] = useState("");
@@ -45,66 +43,81 @@ export function AwardsList({ awards }: { awards: AwardListRow[] }) {
 
   return (
     <>
-      <div className="flex min-h-[60px] flex-wrap items-center justify-center gap-4 max-[480px]:min-h-20">
-        <select
+      <div className="flex flex-wrap items-end gap-5 border-b border-rvl-line px-5 py-7 sm:px-8 xl:px-14">
+        <FilterSelect
+          id="award-season-filter"
+          label="Season"
           value={season}
-          onChange={(event) => setSeason(event.target.value)}
-          className={selectClass}
-          aria-label="Filter by season"
+          onChange={setSeason}
         >
-          <option value="">All Seasons</option>
+          <option value="">All seasons</option>
           {seasons.map((value) => (
             <option key={value} value={String(value)}>
               Season {value}
             </option>
           ))}
-        </select>
+        </FilterSelect>
 
-        <select
-          value={type}
-          onChange={(event) => setType(event.target.value)}
-          className={selectClass}
-          aria-label="Filter by award"
-        >
-          <option value="">All Awards</option>
+        <FilterSelect id="award-type-filter" label="Award" value={type} onChange={setType}>
+          <option value="">All awards</option>
           {types.map((value) => (
             <option key={value} value={value}>
               {value}
             </option>
           ))}
-        </select>
+        </FilterSelect>
+
+        <span className="self-end pb-2.5 font-mono text-[0.68rem] uppercase tracking-[0.14em] text-rvl-dim">
+          {visible.length} awards
+        </span>
       </div>
 
-      <div className="grid w-full [grid-template-columns:repeat(auto-fill,minmax(240px,1fr))] [column-gap:clamp(1rem,2vw,1.4rem)] [row-gap:clamp(1.5rem,3vw,2.2rem)] max-[480px]:grid-cols-1">
+      <div className="grid grid-cols-1 gap-6 px-5 py-12 sm:grid-cols-2 sm:px-8 lg:grid-cols-3 xl:px-14 2xl:grid-cols-4">
         {visible.map((award) => (
           <Link
             key={award.id}
             href={`/awards/${award.id}`}
-            style={
-              award.imageUrl ? { backgroundImage: `url(${award.imageUrl})` } : undefined
-            }
-            className="group relative box-border flex min-h-[200px] cursor-pointer flex-col gap-2.5 overflow-hidden rounded-2xl border border-brand-ink bg-cover bg-right p-5 text-inherit no-underline shadow-[0_2px_4px_rgba(0,0,0,0.15)] transition-[transform,box-shadow,border-color] duration-250 hover:-translate-y-1 hover:scale-[1.02] hover:border-[#8f54ff] hover:shadow-[0_6px_14px_rgba(0,0,0,0.35)]"
+            className="group relative flex flex-col overflow-hidden border border-rvl-line p-6 text-inherit no-underline transition-colors hover:border-rvl-accent-soft"
           >
-            <span className="pointer-events-none absolute inset-0 bg-black/40 transition-colors duration-250 group-hover:bg-black/30" />
-
-            <span className="relative z-1 inline-block w-min whitespace-nowrap rounded-full bg-[#333]/80 px-3.5 py-1.5 text-[1.05rem] font-semibold leading-none text-white backdrop-blur-[2px]">
-              {award.type}
-            </span>
-
-            {award.seasonNumber != null ? (
-              <span className="relative z-1 inline-block w-min whitespace-nowrap rounded-full bg-[#c9e4fd]/25 px-3.5 py-1.5 text-[1.05rem] font-medium leading-none text-[#c9e4fd] backdrop-blur-[2px] transition-all duration-200 hover:bg-[#a9d6f5]/35 hover:text-[#a9d6f5]">
-                Season {award.seasonNumber}
-              </span>
+            {award.imageUrl ? (
+              <img
+                src={award.imageUrl}
+                alt=""
+                aria-hidden="true"
+                className="pointer-events-none absolute -right-8 -top-8 size-36 object-contain opacity-[0.07] transition-opacity group-hover:opacity-15"
+              />
             ) : null}
 
-            {award.players.map((player) => (
-              <span
-                key={player.id}
-                className="relative z-1 inline-block w-min whitespace-nowrap rounded-full bg-[#c9e4fd]/25 px-3.5 py-1.5 text-[1.05rem] font-medium capitalize leading-none text-[#c9e4fd] backdrop-blur-[2px] transition-all duration-200 hover:bg-[#a9d6f5]/35 hover:text-[#a9d6f5]"
-              >
-                {player.name}
-              </span>
-            ))}
+            <span className="relative font-mono text-[0.6rem] uppercase tracking-[0.2em] text-rvl-accent">
+              Season {award.seasonNumber ?? "—"}
+            </span>
+
+            <h2 className="relative mt-3 mb-0 text-[1.25rem] font-bold uppercase leading-tight tracking-[-0.02em]">
+              {award.type}
+            </h2>
+
+            {award.description ? (
+              <p className="relative m-0 mt-3 line-clamp-3 text-[0.88rem] text-rvl-ink-2">
+                {award.description}
+              </p>
+            ) : null}
+
+            <div className="relative mt-5 flex flex-wrap gap-2">
+              {award.players.length > 0 ? (
+                award.players.map((player) => (
+                  <span
+                    key={player.id}
+                    className="border border-rvl-line px-2.5 py-1 font-mono text-[0.62rem] uppercase tracking-[0.12em] text-rvl-ink-2"
+                  >
+                    {player.name}
+                  </span>
+                ))
+              ) : (
+                <span className="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-rvl-dim">
+                  No recipient recorded
+                </span>
+              )}
+            </div>
           </Link>
         ))}
       </div>

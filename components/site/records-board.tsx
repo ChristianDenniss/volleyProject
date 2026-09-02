@@ -19,15 +19,6 @@ export interface RecordRow {
   gameName: string | null;
 }
 
-const rankBadge = (rank: number) =>
-  rank === 1
-    ? "bg-brand-gold text-[#1a1a1a]"
-    : rank === 2
-      ? "bg-brand-silver text-[#1a1a1a]"
-      : rank === 3
-        ? "bg-[#cd7f32] text-white"
-        : "bg-brand-navy text-white";
-
 export function RecordsBoard({ records }: { records: RecordRow[] }) {
   const types = useMemo(() => {
     const values = new Set<string>();
@@ -54,15 +45,20 @@ export function RecordsBoard({ records }: { records: RecordRow[] }) {
 
   return (
     <>
-      <div className="mb-8 flex justify-center">
+      <div className="flex flex-wrap items-center gap-2 border-b border-rvl-line px-5 py-6 sm:px-8 xl:px-14">
+        <span className="mr-3 font-mono text-[0.58rem] uppercase tracking-[0.22em] text-rvl-dim">
+          Record book
+        </span>
         {types.map((value) => (
           <button
             key={value}
             type="button"
             onClick={() => setType(value)}
             className={cn(
-              "mx-2 cursor-pointer rounded border-2 border-brand-navy px-6 py-3 font-bold uppercase text-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_4px_8px_rgba(0,0,0,0.2)] max-[480px]:px-4 max-[480px]:py-2 max-[480px]:text-[0.9rem]",
-              type === value ? "bg-brand-navy" : "bg-[#1a1a1a]",
+              "cursor-pointer rounded-xs border px-4 py-2.5 font-mono text-[0.68rem] uppercase tracking-[0.14em] transition-colors",
+              type === value
+                ? "border-rvl-accent-bg bg-rvl-accent-bg text-rvl-on-accent"
+                : "border-rvl-line bg-transparent text-rvl-dim hover:border-rvl-accent-soft hover:text-rvl-accent",
             )}
           >
             {value} records
@@ -70,85 +66,54 @@ export function RecordsBoard({ records }: { records: RecordRow[] }) {
         ))}
       </div>
 
-      <div className="mb-8 grid grid-cols-3 gap-8 max-[1200px]:grid-cols-2 max-md:grid-cols-1 max-md:gap-6">
+      <div className="grid grid-cols-1 gap-x-12 gap-y-14 px-5 py-12 sm:px-8 lg:grid-cols-2 xl:grid-cols-3 xl:px-14">
         {groups.map(([label, rows]) => (
-          <section key={label} className="mb-8">
-            <h2 className="relative mx-auto mb-4 max-w-fit text-center text-2xl font-bold uppercase leading-tight text-[#1a1a1a] max-md:text-[1.3rem] max-[480px]:text-[1.2rem]">
+          <section key={label}>
+            <h2 className="m-0 mb-5 border-b border-rvl-line-strong pb-3 font-mono text-[0.7rem] font-bold uppercase tracking-[0.22em] text-rvl-accent">
               {label}
             </h2>
 
-            <div className="mb-4 max-h-[500px] overflow-y-auto rounded-lg border-2 border-brand-navy bg-[#1a1a1a] p-4 shadow-[0_4px_12px_rgba(0,0,0,0.3)] max-md:max-h-[300px] max-md:overflow-x-auto">
-              <table className="m-0 w-full border-collapse text-[0.85rem] max-md:text-[0.8em]">
-                <thead className="sticky top-0 z-10 bg-brand-navy text-white">
-                  <tr>
-                    <th className="border-b-2 border-[#1a1a1a] px-1 py-2 text-left text-xs font-bold uppercase">
-                      #
-                    </th>
-                    <th className="border-b-2 border-[#1a1a1a] px-1 py-2 text-left text-xs font-bold uppercase">
-                      Player
-                    </th>
-                    <th className="border-b-2 border-[#1a1a1a] px-1 py-2 text-left text-xs font-bold uppercase">
-                      Value
-                    </th>
-                    <th className="border-b-2 border-[#1a1a1a] px-1 py-2 text-left text-xs font-bold uppercase">
-                      Where
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((record, index) => (
-                    <tr
-                      key={record.id}
-                      className={cn(
-                        "text-white transition-colors duration-200 hover:bg-[#333]",
-                        index % 2 === 1 ? "bg-[#2a2a2a]" : "bg-[#1a1a1a]",
-                      )}
-                    >
-                      <td className="border-b border-[#333] px-1 py-1.5 text-center align-middle font-bold">
-                        <span
-                          className={cn(
-                            "inline-block size-6 rounded-full text-center text-[0.8rem] font-bold leading-6",
-                            rankBadge(record.rank),
-                          )}
-                        >
-                          {record.rank}
-                        </span>
-                      </td>
-                      <td className="border-b border-[#333] px-1 py-1.5 align-middle">
-                        <Link
-                          href={`/players/${record.playerId}`}
-                          className="text-[0.85rem] font-medium capitalize text-white no-underline transition-colors duration-200 hover:text-brand-navy-hover hover:underline"
-                        >
-                          {record.playerName}
-                        </Link>
-                      </td>
-                      <td className="border-b border-[#333] px-1 py-1.5 align-middle text-base font-bold text-white">
-                        {record.value}
-                      </td>
-                      <td className="border-b border-[#333] px-1 py-1.5 align-middle">
-                        {record.gameId ? (
-                          <Link
-                            href={`/games/${record.gameId}`}
-                            className="text-[0.85rem] font-medium text-white no-underline transition-colors duration-200 hover:text-brand-navy-hover hover:underline"
-                          >
-                            {record.gameName ?? `Game ${record.gameId}`}
-                          </Link>
-                        ) : record.seasonNumber ? (
-                          <Link
-                            href={`/seasons/${record.seasonId}`}
-                            className="text-[0.85rem] font-medium text-white no-underline transition-colors duration-200 hover:text-brand-navy-hover hover:underline"
-                          >
-                            Season {record.seasonNumber}
-                          </Link>
-                        ) : (
-                          <span className="text-[0.8rem] text-[#ccc]">—</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <ol className="m-0 flex list-none flex-col p-0">
+              {rows.map((record) => (
+                <li
+                  key={record.id}
+                  className="flex items-baseline gap-4 border-b border-rvl-line py-3"
+                >
+                  <span
+                    className={cn(
+                      "w-6 shrink-0 font-mono text-[0.72rem] tabular-nums",
+                      record.rank === 1 ? "font-bold text-rvl-accent" : "text-rvl-dim",
+                    )}
+                  >
+                    {record.rank}
+                  </span>
+
+                  <Link
+                    href={`/players/${record.playerId}`}
+                    className="text-[0.95rem] font-semibold capitalize text-rvl-ink no-underline transition-colors hover:text-rvl-accent"
+                  >
+                    {record.playerName}
+                  </Link>
+
+                  <span
+                    className={cn(
+                      "ml-auto font-mono text-[1.05rem] tabular-nums",
+                      record.rank === 1 ? "font-bold text-rvl-accent" : "text-rvl-ink-2",
+                    )}
+                  >
+                    {record.value}
+                  </span>
+                </li>
+              ))}
+            </ol>
+
+            <p className="m-0 mt-3 font-mono text-[0.6rem] uppercase tracking-[0.14em] text-rvl-dim">
+              {rows[0]?.gameId
+                ? `Top mark: ${rows[0].gameName ?? `Game ${rows[0].gameId}`}`
+                : rows[0]?.seasonNumber
+                  ? `Top mark: Season ${rows[0].seasonNumber}`
+                  : "Top ten, all time"}
+            </p>
           </section>
         ))}
       </div>

@@ -3,6 +3,7 @@ import { getDb } from "@db";
 import { games } from "@server/services";
 import { EmptyState } from "@components/site/empty-state";
 import { GamesList } from "@components/site/games-list";
+import { PageHeader, PageMetric } from "@components/site/page-header";
 
 export const dynamic = "force-dynamic";
 
@@ -14,11 +15,30 @@ export const metadata: Metadata = {
 export default async function GamesPage() {
   const rows = await games.list(getDb());
 
+  const seasonCount = new Set(
+    rows.flatMap((game) => (game.seasonNumber == null ? [] : [game.seasonNumber])),
+  ).size;
+  const withVideo = rows.filter((game) => Boolean(game.videoUrl)).length;
+
   return (
-    <div className="mx-auto box-border min-h-screen w-full max-w-[1200px] p-5">
-      <h1 className="m-0 mb-5 border-none p-0 text-[2rem] font-bold text-[#222]">All Games</h1>
+    <div className="font-display">
+      <PageHeader
+        eyebrow="Match log"
+        title="Games"
+        description="Every game the league has recorded, with the set result and the stage it was played at."
+        meta={
+          <>
+            <PageMetric label="Games" value={rows.length} />
+            <PageMetric label="Seasons" value={seasonCount} />
+            <PageMetric label="With VOD" value={withVideo} />
+          </>
+        }
+      />
+
       {rows.length === 0 ? (
-        <EmptyState>No games have been recorded yet.</EmptyState>
+        <div className="px-5 py-14 sm:px-8 xl:px-14">
+          <EmptyState>No games have been recorded yet.</EmptyState>
+        </div>
       ) : (
         <GamesList
           games={rows.map((game) => ({

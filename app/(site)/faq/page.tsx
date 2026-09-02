@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { PageHeader, PageMetric } from "@components/site/page-header";
 
 export const metadata: Metadata = {
   title: "FAQ",
@@ -154,32 +155,40 @@ const LINKS = [
 ];
 
 export default function FaqPage() {
-  return (
-    <div className="mx-auto w-[90%] p-8 max-md:w-full max-md:p-4">
-      <header className="mb-12 text-center">
-        <h1 className="mb-4 text-[2.5rem] font-bold text-brand-navy max-md:text-[2rem]">
-          Frequently Asked Questions
-        </h1>
-        <p className="mx-auto max-w-[800px] text-[1.1rem] leading-relaxed text-[#6b7280] max-md:text-base">
-          Answers to common questions about RVL, plus quick links to the pages people look for.
-        </p>
-      </header>
+  const questionCount = GROUPS.reduce((sum, group) => sum + group.items.length, 0);
 
-      <div className="flex flex-col gap-12">
-        <section>
-          <h2 className="mb-6 text-[1.75rem] font-semibold text-brand-navy">Quick Links</h2>
-          <div className="grid gap-6 [grid-template-columns:repeat(auto-fit,minmax(350px,1fr))] max-md:grid-cols-1 max-md:gap-4">
+  return (
+    <div className="font-display">
+      <PageHeader
+        eyebrow="Help desk"
+        title="Frequently asked questions"
+        description="How the league runs, how to join it, and where to go when something breaks."
+        meta={
+          <>
+            <PageMetric label="Questions" value={questionCount} />
+            <PageMetric label="Topics" value={GROUPS.length} />
+            <PageMetric label="Links" value={LINKS.length} />
+          </>
+        }
+      />
+
+      <section className="grid grid-cols-1 gap-8 border-b border-rvl-line px-5 py-12 sm:px-8 md:grid-cols-[210px_1fr] md:gap-14 xl:px-14">
+        <div>
+          <h2 className="m-0 mb-3 font-mono text-[0.72rem] font-bold uppercase tracking-[0.24em] text-rvl-accent">
+            Quick links
+          </h2>
+          <p className="m-0 text-[0.84rem] text-rvl-dim">The pages people ask for most.</p>
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {LINKS.map((link) => {
               const content = (
                 <>
-                  <span className="mr-4 flex size-[50px] shrink-0 items-center justify-center rounded-[10px] bg-brand-sky text-xl text-brand-navy transition-all duration-300 group-hover:scale-105 group-hover:bg-brand-navy group-hover:text-white max-md:size-[45px] max-md:text-[1.1rem]">
+                  <span className="flex size-9 shrink-0 items-center justify-center border border-rvl-line font-mono text-[0.85rem] text-rvl-dim transition-colors group-hover:border-rvl-accent-soft group-hover:text-rvl-accent">
                     {link.external ? "\u2197" : "\u2192"}
                   </span>
                   <span className="flex-1">
-                    <span className="mb-2 block text-[1.1rem] font-semibold text-brand-navy max-md:text-base">
-                      {link.title}
-                    </span>
-                    <span className="block text-[0.9rem] leading-snug text-[#6b7280] max-md:text-[0.85rem]">
+                    <span className="block text-[0.98rem] font-semibold">{link.title}</span>
+                    <span className="mt-1 block text-[0.84rem] leading-snug text-rvl-ink-2">
                       {link.description}
                     </span>
                   </span>
@@ -187,7 +196,7 @@ export default function FaqPage() {
               );
 
               const className =
-                "group relative flex items-center rounded-lg border border-[#e5e7eb] bg-white p-6 text-inherit no-underline transition-all duration-300 hover:-translate-y-0.5 hover:border-brand-sky hover:shadow-[0_8px_25px_rgba(0,0,0,0.1)] max-md:p-5";
+                "group flex items-start gap-4 border border-rvl-line p-5 text-inherit no-underline transition-colors hover:border-rvl-accent-soft";
 
               return link.external ? (
                 <a
@@ -205,38 +214,43 @@ export default function FaqPage() {
                 </Link>
               );
             })}
+        </div>
+      </section>
+
+      {GROUPS.map((group) => (
+        <section
+          key={group.category}
+          className="grid grid-cols-1 gap-8 border-b border-rvl-line px-5 py-12 sm:px-8 md:grid-cols-[210px_1fr] md:gap-14 xl:px-14"
+        >
+          <div>
+            <h2 className="m-0 mb-3 font-mono text-[0.72rem] font-bold uppercase tracking-[0.24em] text-rvl-accent">
+              {group.category}
+            </h2>
+            <p className="m-0 font-mono text-[0.64rem] uppercase tracking-[0.14em] text-rvl-dim">
+              {group.items.length} questions
+            </p>
+          </div>
+
+          <div className="border-t border-rvl-line">
+            {group.items.map((item) => (
+              <details key={item.question} className="group border-b border-rvl-line">
+                <summary className="flex cursor-pointer list-none items-center gap-5 py-5 text-[1rem] font-semibold transition-colors marker:hidden hover:text-rvl-accent [&::-webkit-details-marker]:hidden">
+                  <span className="flex-1">{item.question}</span>
+                  <span
+                    aria-hidden="true"
+                    className="shrink-0 font-mono text-[1.1rem] text-rvl-dim transition-transform group-open:rotate-45"
+                  >
+                    +
+                  </span>
+                </summary>
+                <p className="m-0 max-w-[70ch] pb-6 text-[0.94rem] leading-relaxed text-rvl-ink-2">
+                  {item.answer}
+                </p>
+              </details>
+            ))}
           </div>
         </section>
-
-        <section>
-          <h2 className="mb-8 text-[1.75rem] font-semibold text-brand-navy">Questions</h2>
-          {GROUPS.map((group) => (
-            <div key={group.category} className="mb-10">
-              <h3 className="mb-4 border-b-2 border-brand-sky pb-2 text-xl font-semibold text-brand-navy max-md:text-[1.1rem]">
-                {group.category}
-              </h3>
-              <div className="flex flex-col gap-2">
-                {group.items.map((item) => (
-                  <details
-                    key={item.question}
-                    className="overflow-hidden rounded-lg border border-[#e5e7eb] bg-white transition-all duration-300 hover:border-brand-sky hover:shadow-[0_2px_8px_rgba(0,0,0,0.05)]"
-                  >
-                    <summary className="flex cursor-pointer list-none items-center justify-between p-5 text-base font-medium text-brand-navy transition-colors duration-300 marker:hidden hover:bg-[#f8fafc] max-md:p-4 max-md:text-[0.95rem]">
-                      <span className="mr-4 flex-1">{item.question}</span>
-                      <span aria-hidden="true" className="text-[0.875rem] text-[#6b7280]">
-                        +
-                      </span>
-                    </summary>
-                    <div className="border-t border-[#e5e7eb] bg-[#f8fafc] px-5 pb-5 pt-5 text-[0.95rem] leading-relaxed text-[#4b5563] max-md:px-4 max-md:pb-4 max-md:text-[0.9rem]">
-                      {item.answer}
-                    </div>
-                  </details>
-                ))}
-              </div>
-            </div>
-          ))}
-        </section>
-      </div>
+      ))}
     </div>
   );
 }

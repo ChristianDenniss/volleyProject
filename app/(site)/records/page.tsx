@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getDb } from "@db";
 import { records } from "@server/services";
 import { EmptyState } from "@components/site/empty-state";
+import { PageHeader, PageMetric } from "@components/site/page-header";
 import { RecordsBoard } from "@components/site/records-board";
 
 export const dynamic = "force-dynamic";
@@ -14,21 +15,31 @@ export const metadata: Metadata = {
 export default async function RecordsPage() {
   const rows = await records.list(getDb());
 
+  const metricCount = new Set(rows.map((row) => row.metric)).size;
+  const holders = new Set(rows.map((row) => row.playerId)).size;
+
   return (
-    <div className="box-border min-h-screen bg-white px-8 text-[#1a1a1a] max-md:px-4">
-      <h1 className="relative mx-auto my-8 max-w-fit min-h-20 text-center text-[4rem] font-black uppercase leading-tight text-[#1a1a1a] max-md:text-[2.5rem] max-[480px]:text-[2rem]">
-        <span
-          aria-hidden="true"
-          className="absolute left-1/2 top-1/2 -z-1 h-[0.25em] w-[120%] -translate-x-1/2 -translate-y-1/2 -skew-x-[25deg] bg-brand-navy"
-        />
-        Records
-      </h1>
+    <div className="font-display">
+      <PageHeader
+        eyebrow="Record book"
+        title="Records"
+        description="The top ten marks for every metric, split between single-game and full-season performances."
+        meta={
+          <>
+            <PageMetric label="Entries" value={rows.length} />
+            <PageMetric label="Metrics" value={metricCount} />
+            <PageMetric label="Holders" value={holders} />
+          </>
+        }
+      />
 
       {rows.length === 0 ? (
-        <EmptyState>
-          No records have been calculated yet. An administrator can trigger a recalculation from the
-          portal.
-        </EmptyState>
+        <div className="px-5 py-14 sm:px-8 xl:px-14">
+          <EmptyState>
+            No records have been calculated yet. An administrator can trigger a recalculation from
+            the portal.
+          </EmptyState>
+        </div>
       ) : (
         <RecordsBoard
           records={rows.map((row) => ({

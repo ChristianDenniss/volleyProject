@@ -16,6 +16,13 @@ export interface GameListRow {
 
 const PER_PAGE = 25;
 
+function shortDate(value: string) {
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime())
+    ? value
+    : parsed.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
 export function GamesList({ games }: { games: GameListRow[] }) {
   const [search, setSearch] = useState("");
   const [season, setSeason] = useState("");
@@ -62,98 +69,86 @@ export function GamesList({ games }: { games: GameListRow[] }) {
 
   return (
     <>
-      <div className="my-5">
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-row flex-wrap items-center gap-4 max-md:flex-col max-md:items-stretch max-md:gap-2.5">
-            <FilterSelect
-              id="season-filter"
-              label="Season:"
-              value={season}
-              onChange={(value) => {
-                setSeason(value);
-                setPage(1);
-              }}
-            >
-              <option value="">All Seasons</option>
-              {seasons.map((value) => (
-                <option key={value} value={String(value)}>
-                  Season {value}
-                </option>
-              ))}
-            </FilterSelect>
+      <div className="flex flex-col gap-6 border-b border-rvl-line px-5 py-7 sm:px-8 xl:px-14">
+        <div className="flex flex-wrap items-end gap-5">
+          <FilterSelect
+            id="season-filter"
+            label="Season"
+            value={season}
+            onChange={(value) => {
+              setSeason(value);
+              setPage(1);
+            }}
+          >
+            <option value="">All seasons</option>
+            {seasons.map((value) => (
+              <option key={value} value={String(value)}>
+                Season {value}
+              </option>
+            ))}
+          </FilterSelect>
 
-            <FilterSelect
-              id="stage-filter"
-              label="Stage:"
-              value={stage}
-              onChange={(value) => {
-                setStage(value);
-                setPage(1);
-              }}
-            >
-              <option value="">All Stages</option>
-              {stages.map((value) => (
-                <option key={value} value={value}>
-                  {value}
-                </option>
-              ))}
-            </FilterSelect>
+          <FilterSelect
+            id="stage-filter"
+            label="Stage"
+            value={stage}
+            onChange={(value) => {
+              setStage(value);
+              setPage(1);
+            }}
+          >
+            <option value="">All stages</option>
+            {stages.map((value) => (
+              <option key={value} value={value}>
+                {value}
+              </option>
+            ))}
+          </FilterSelect>
 
-            {search || season || stage ? <ClearFiltersButton onClick={clearFilters} /> : null}
-          </div>
+          <SearchBar
+            className="max-w-[340px]"
+            value={search}
+            placeholder="Search games"
+            onSearch={(value) => {
+              setSearch(value);
+              setPage(1);
+            }}
+          />
 
-          <div className="flex flex-row flex-wrap items-center justify-between gap-4 max-md:flex-col max-md:items-stretch max-md:gap-2.5">
-            <SearchBar
-              value={search}
-              placeholder="Search games..."
-              onSearch={(value) => {
-                setSearch(value);
-                setPage(1);
-              }}
+          {search || season || stage ? <ClearFiltersButton onClick={clearFilters} /> : null}
+
+          <div className="ml-auto self-end">
+            <Pagination
+              variant="compact"
+              currentPage={current}
+              totalPages={totalPages}
+              onPageChange={setPage}
             />
-            <div className="whitespace-nowrap">
-              <Pagination
-                variant="compact"
-                currentPage={current}
-                totalPages={totalPages}
-                onPageChange={setPage}
-              />
-            </div>
           </div>
         </div>
       </div>
 
-      <div className="w-full overflow-x-auto py-2.5">
-        <div className="flex min-w-[700px] flex-col gap-2.5 py-2.5">
+      <div className="px-5 py-12 sm:px-8 xl:px-14">
+        <div className="border-t border-rvl-line">
           {visible.map((game) => (
             <Link
               key={game.id}
               href={`/games/${game.id}`}
-              className="box-border grid min-h-[60px] w-full cursor-pointer items-center gap-5 rounded-lg border border-[#d1e7ff] bg-[#f0f5ff] px-5 py-2.5 leading-snug text-[#2d3748] no-underline shadow-[0_1px_3px_rgba(0,0,0,0.05)] transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-[#e6f2ff] hover:shadow-[0_4px_10px_rgba(0,0,0,0.08)] [grid-template-columns:3fr_1fr_1.5fr_1fr_2.5fr_1.5fr]"
+              className="flex flex-wrap items-center gap-x-8 gap-y-2 border-b border-rvl-line py-5 text-inherit no-underline transition-colors hover:bg-rvl-panel"
             >
-              <div className="truncate text-left text-base font-bold text-[#1a202c]">
-                <strong>{game.name}</strong>
-              </div>
-              <div className="truncate text-left text-[15px] font-medium">
-                <strong className="mr-1.5 font-semibold text-[#4a5568]">ID:</strong>
-                {game.id}
-              </div>
-              <div className="truncate text-left text-[15px] font-medium">
-                <strong className="mr-1.5 font-semibold text-[#4a5568]">Score:</strong>
-                {game.team1Score} - {game.team2Score}
-              </div>
-              <div className="truncate text-left text-[15px] font-medium">
-                <strong className="mr-1.5 font-semibold text-[#4a5568]">Season:</strong>
-                {game.seasonNumber ?? "N/A"}
-              </div>
-              <div className="truncate text-left text-[15px] font-medium">
-                <strong className="mr-1.5 font-semibold text-[#4a5568]">Stage:</strong>
-                {game.stage || "N/A"}
-              </div>
-              <div className="truncate text-left text-[15px] font-medium">
-                <strong className="mr-1.5 font-semibold text-[#4a5568]">Date:</strong>
-                {game.date}
-              </div>
+              <span className="w-[150px] shrink-0 font-mono text-[0.66rem] uppercase tracking-[0.16em] text-rvl-dim">
+                {shortDate(game.date)}
+              </span>
+              <span className="text-[1.02rem] font-semibold capitalize">{game.name}</span>
+              <span className="font-mono text-[1.15rem] font-bold tabular-nums text-rvl-accent">
+                {game.team1Score}
+                <span className="px-1.5 text-rvl-dim">–</span>
+                {game.team2Score}
+              </span>
+              <span className="font-mono text-[0.64rem] uppercase tracking-[0.14em] text-rvl-dim md:ml-auto">
+                S{game.seasonNumber ?? "—"}
+                {game.stage ? ` · ${game.stage}` : ""}
+              </span>
             </Link>
           ))}
         </div>

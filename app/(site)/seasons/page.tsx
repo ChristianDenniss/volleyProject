@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getDb } from "@db";
 import { seasons } from "@server/services";
 import { EmptyState } from "@components/site/empty-state";
+import { PageHeader, PageMetric } from "@components/site/page-header";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
 
 const formatDate = (value: string | null) =>
   value
-    ? new Date(value).toLocaleDateString(undefined, {
+    ? new Date(value).toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",
         year: "numeric",
@@ -23,57 +24,77 @@ const formatDate = (value: string | null) =>
 export default async function SeasonsPage() {
   const rows = await seasons.list(getDb());
 
+  const totalTeams = rows.reduce((sum, season) => sum + season.teamCount, 0);
+  const totalGames = rows.reduce((sum, season) => sum + season.gameCount, 0);
+
   return (
-    <div className="mx-auto box-border min-h-screen w-full max-w-[1480px] px-8 pb-16 pt-14 text-[#222] max-md:px-5">
-      <h1 className="mb-11 text-center text-[2.4rem] font-extrabold max-[600px]:text-[2rem]">
-        All Seasons
-      </h1>
+    <div className="font-display">
+      <PageHeader
+        eyebrow="Archive"
+        title="Seasons"
+        description="Every season the league has run, newest first, with its theme and the size of its field."
+        meta={
+          <>
+            <PageMetric label="Seasons" value={rows.length} />
+            <PageMetric label="Teams" value={totalTeams} />
+            <PageMetric label="Games" value={totalGames} />
+          </>
+        }
+      />
 
       {rows.length === 0 ? (
-        <EmptyState>No seasons have been created yet.</EmptyState>
+        <div className="px-5 py-14 sm:px-8 xl:px-14">
+          <EmptyState>No seasons have been created yet.</EmptyState>
+        </div>
       ) : (
-        <div className="grid grid-cols-3 gap-10 max-[900px]:grid-cols-2 max-[600px]:grid-cols-1">
+        <div className="grid grid-cols-1 gap-8 px-5 py-12 sm:px-8 lg:grid-cols-2 xl:grid-cols-3 xl:px-14">
           {rows.map((season) => (
-            <div
+            <Link
               key={season.id}
-              className="box-border flex min-h-[300px] min-w-[325px] flex-col overflow-hidden rounded-[14px] border border-[#e6f2ff] bg-white shadow-[0_2px_6px_rgba(0,0,0,0.05)] transition-[transform,box-shadow] duration-200 hover:-translate-y-[3px] hover:shadow-[0_6px_12px_rgba(0,0,0,0.08)] max-[600px]:min-w-0"
+              href={`/seasons/${season.id}`}
+              className="group flex flex-col border border-rvl-line text-inherit no-underline transition-colors hover:border-rvl-accent-soft"
             >
               <img
                 src={season.image ?? "/images/callToAction.png"}
-                alt={`Season ${season.seasonNumber} banner`}
-                className="aspect-[16/6] w-full rounded-t-[14px] object-cover"
+                alt=""
+                className="aspect-16/6 w-full border-b border-rvl-line object-cover"
               />
 
-              <div className="flex flex-1 flex-col px-10 pb-8 max-[600px]:px-9">
-                <header className="m-0 flex items-center gap-3">
-                  <h2 className="m-0 text-[1.6rem] font-bold">Season {season.seasonNumber}</h2>
-                  <div className="m-0 flex items-center text-base font-semibold text-[#5d6673]">
-                    {formatDate(season.startDate)} – {formatDate(season.endDate)}
+              <div className="flex flex-1 flex-col p-6">
+                <span className="font-mono text-[0.62rem] uppercase tracking-[0.2em] text-rvl-accent">
+                  {formatDate(season.startDate)} – {formatDate(season.endDate)}
+                </span>
+
+                <h2 className="mt-3 mb-0 text-[1.8rem] font-black uppercase leading-none tracking-[-0.03em]">
+                  Season {season.seasonNumber}
+                </h2>
+
+                {season.theme ? (
+                  <span className="mt-4 self-start border border-rvl-line px-2.5 py-1 font-mono text-[0.6rem] uppercase tracking-[0.18em] text-rvl-dim">
+                    {season.theme}
+                  </span>
+                ) : null}
+
+                <dl className="mt-6 flex gap-8 font-mono">
+                  <div className="flex flex-col gap-1">
+                    <dt className="text-[0.56rem] uppercase tracking-[0.2em] text-rvl-dim">
+                      Teams
+                    </dt>
+                    <dd className="m-0 text-[0.95rem] tabular-nums">{season.teamCount}</dd>
                   </div>
-                </header>
+                  <div className="flex flex-col gap-1">
+                    <dt className="text-[0.56rem] uppercase tracking-[0.2em] text-rvl-dim">
+                      Games
+                    </dt>
+                    <dd className="m-0 text-[0.95rem] tabular-nums">{season.gameCount}</dd>
+                  </div>
+                </dl>
 
-                <ul className="m-0 list-none p-0 text-[1.1rem] font-semibold leading-relaxed text-[#4a4a4a]">
-                  <li>
-                    <strong>Theme:</strong> {season.theme ?? "N/A"}
-                  </li>
-                  <li className="mt-3">
-                    <strong>Teams:</strong> {season.teamCount}
-                  </li>
-                  <li className="mt-3">
-                    <strong>Games:</strong> {season.gameCount}
-                  </li>
-                </ul>
-
-                <footer className="-m-4 text-right">
-                  <Link
-                    href={`/seasons/${season.id}`}
-                    className="text-[0.95rem] font-bold leading-none text-[#78b5fa] no-underline hover:underline"
-                  >
-                    View Details →
-                  </Link>
-                </footer>
+                <span className="mt-6 self-start border-b border-rvl-line pb-0.5 font-mono text-[0.66rem] uppercase tracking-[0.14em] text-rvl-ink-2 transition-colors group-hover:border-rvl-accent-soft group-hover:text-rvl-accent">
+                  Season detail →
+                </span>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}

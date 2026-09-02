@@ -3,8 +3,9 @@ import Link from "next/link";
 import { getDb } from "@db";
 import { articles } from "@server/services";
 import { getSessionUser } from "@server/session";
-import { EmptyState } from "@components/site/empty-state";
 import { ArticlesList } from "@components/site/articles-list";
+import { EmptyState } from "@components/site/empty-state";
+import { PageHeader, PageMetric } from "@components/site/page-header";
 
 export const dynamic = "force-dynamic";
 
@@ -19,27 +20,45 @@ export default async function ArticlesPage() {
     getSessionUser(),
   ]);
 
-  return (
-    <div className="min-h-screen p-4">
-      <h1 className="mb-5 text-[2rem] font-bold text-[#222]">Articles</h1>
+  const authors = new Set(rows.map((article) => article.authorName)).size;
+  const likes = rows.reduce((sum, article) => sum + article.likes, 0);
 
-      <div className="mb-5 flex justify-end">
-        {user ? (
-          <Link
-            href="/articles/create"
-            className="inline-flex h-10 w-[140px] items-center justify-center rounded bg-brand-navy font-medium text-white no-underline transition-colors duration-200 hover:bg-brand-steel"
-          >
-            Create Article
-          </Link>
-        ) : (
-          <div className="w-full rounded border border-[#ffeeba] bg-[#fff3cd] p-3 text-[#856404]">
-            Sign in to write an article.
-          </div>
-        )}
-      </div>
+  return (
+    <div className="font-display">
+      <PageHeader
+        eyebrow="League desk"
+        title="Articles"
+        description="Match reports, roster news and explainers written by the community."
+        actions={
+          user ? (
+            <Link
+              href="/articles/create"
+              className="bg-rvl-accent-bg px-5 py-3 font-mono text-[0.7rem] font-bold uppercase tracking-[0.14em] text-rvl-on-accent no-underline transition-opacity hover:opacity-85"
+            >
+              Write an article
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              className="border border-rvl-line px-5 py-3 font-mono text-[0.7rem] uppercase tracking-[0.14em] text-rvl-ink-2 no-underline transition-colors hover:border-rvl-accent-soft hover:text-rvl-accent"
+            >
+              Sign in to write
+            </Link>
+          )
+        }
+        meta={
+          <>
+            <PageMetric label="Published" value={rows.length} />
+            <PageMetric label="Authors" value={authors} />
+            <PageMetric label="Likes" value={likes.toLocaleString()} />
+          </>
+        }
+      />
 
       {rows.length === 0 ? (
-        <EmptyState>Nothing has been published yet.</EmptyState>
+        <div className="px-5 py-14 sm:px-8 xl:px-14">
+          <EmptyState>Nothing has been published yet.</EmptyState>
+        </div>
       ) : (
         <ArticlesList
           articles={rows.map((article) => ({

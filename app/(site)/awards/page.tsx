@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { getDb } from "@db";
 import { awards } from "@server/services";
-import { EmptyState } from "@components/site/empty-state";
 import { AwardsList } from "@components/site/awards-list";
+import { EmptyState } from "@components/site/empty-state";
+import { PageHeader, PageMetric } from "@components/site/page-header";
 
 export const dynamic = "force-dynamic";
 
@@ -14,14 +15,30 @@ export const metadata: Metadata = {
 export default async function AwardsPage() {
   const rows = await awards.list(getDb());
 
+  const seasonCount = new Set(
+    rows.flatMap((award) => (award.seasonNumber == null ? [] : [award.seasonNumber])),
+  ).size;
+  const recipients = new Set(rows.flatMap((award) => award.players.map((player) => player.id))).size;
+
   return (
-    <div className="box-border flex min-h-screen w-full flex-col gap-8 px-[4vw] py-8">
-      <h1 className="m-0 text-center text-[clamp(1.8rem,4vw,2.4rem)] font-semibold">
-        League Awards
-      </h1>
+    <div className="font-display">
+      <PageHeader
+        eyebrow="Honours"
+        title="Awards"
+        description="Every award the league has handed out, by season and by recipient."
+        meta={
+          <>
+            <PageMetric label="Awards" value={rows.length} />
+            <PageMetric label="Seasons" value={seasonCount} />
+            <PageMetric label="Recipients" value={recipients} />
+          </>
+        }
+      />
 
       {rows.length === 0 ? (
-        <EmptyState>No awards have been given out yet.</EmptyState>
+        <div className="px-5 py-14 sm:px-8 xl:px-14">
+          <EmptyState>No awards have been given out yet.</EmptyState>
+        </div>
       ) : (
         <AwardsList
           awards={rows.map((award) => ({

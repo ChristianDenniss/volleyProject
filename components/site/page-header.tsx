@@ -5,11 +5,13 @@ export function PageHeader({
   title,
   description,
   meta,
+  actions,
 }: {
   eyebrow: string;
   title: string;
   description?: string;
   meta?: ReactNode;
+  actions?: ReactNode;
 }) {
   return (
     <header className="flex flex-col gap-6 border-b border-rvl-line px-5 py-12 sm:px-8 sm:py-14 lg:flex-row lg:items-end xl:px-14">
@@ -23,6 +25,7 @@ export function PageHeader({
         {description ? (
           <p className="m-0 mt-4 text-[0.98rem] text-rvl-ink-2">{description}</p>
         ) : null}
+        {actions ? <div className="mt-6 flex flex-wrap gap-3">{actions}</div> : null}
       </div>
       {meta ? (
         <div className="flex flex-wrap gap-8 font-mono lg:ml-auto lg:justify-end">{meta}</div>

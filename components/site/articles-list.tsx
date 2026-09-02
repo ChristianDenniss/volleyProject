@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { FilterSelect, SearchBar } from "./controls";
 
 export interface ArticleListRow {
   id: number;
@@ -14,6 +15,13 @@ export interface ArticleListRow {
 }
 
 type SortKey = "newest" | "oldest" | "likes" | "title";
+
+function shortDate(value: string) {
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime())
+    ? value
+    : parsed.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
 
 export function ArticlesList({ articles }: { articles: ArticleListRow[] }) {
   const [search, setSearch] = useState("");
@@ -37,56 +45,90 @@ export function ArticlesList({ articles }: { articles: ArticleListRow[] }) {
     });
   }, [articles, search, sort]);
 
+  const [lead, ...rest] = visible;
+
   return (
     <>
-      <div className="mb-4 flex min-h-12 flex-wrap items-center gap-3">
-        <span className="min-w-[120px] font-bold">{visible.length} articles</span>
-        <input
-          type="text"
-          value={search}
-          placeholder="Search articles..."
-          onChange={(event) => setSearch(event.target.value)}
-          className="min-w-[200px] flex-1 rounded border border-[#ccc] p-2"
-        />
-        <select
+      <div className="flex flex-wrap items-end gap-5 border-b border-rvl-line px-5 py-7 sm:px-8 xl:px-14">
+        <FilterSelect
+          id="articles-sort"
+          label="Sort"
           value={sort}
-          onChange={(event) => setSort(event.target.value as SortKey)}
-          className="min-w-[100px] rounded border border-[#ccc] p-2"
+          onChange={(value) => setSort(value as SortKey)}
         >
           <option value="newest">Newest</option>
           <option value="oldest">Oldest</option>
           <option value="likes">Most liked</option>
-          <option value="title">Title</option>
-        </select>
-        <span className="rounded-full bg-brand-navy px-3 py-1 text-xs font-semibold text-white shadow-[0_2px_8px_rgba(45,60,80,0.3)]">
-          {sort === "likes" ? "By likes" : sort === "title" ? "A → Z" : `By date`}
+          <option value="title">Title A–Z</option>
+        </FilterSelect>
+
+        <SearchBar
+          className="max-w-[380px]"
+          value={search}
+          placeholder="Search titles, summaries, authors"
+          onSearch={setSearch}
+        />
+
+        <span className="self-end pb-2.5 font-mono text-[0.68rem] uppercase tracking-[0.14em] text-rvl-dim">
+          {visible.length} articles
         </span>
       </div>
 
-      <div className="grid min-h-[600px] grid-cols-1 gap-4 md:grid-cols-2">
-        {visible.map((article) => (
+      {lead ? (
+        <div className="border-b border-rvl-line px-5 py-12 sm:px-8 xl:px-14">
+          <Link
+            href={`/articles/${lead.id}`}
+            className="grid grid-cols-1 items-center gap-8 text-inherit no-underline lg:grid-cols-[1.15fr_1fr] lg:gap-12"
+          >
+            <div>
+              <span className="font-mono text-[0.62rem] uppercase tracking-[0.2em] text-rvl-accent">
+                {sort === "likes" ? "Most liked" : sort === "title" ? "First A–Z" : "Latest"}
+              </span>
+              <h2 className="mt-5 mb-4 text-balance text-[2rem] font-black uppercase leading-[0.95] tracking-[-0.035em] sm:text-[2.5rem]">
+                {lead.title}
+              </h2>
+              <p className="m-0 mb-6 max-w-[46ch] text-[1rem] text-rvl-ink-2">{lead.summary}</p>
+              <div className="flex flex-wrap gap-5 font-mono text-[0.68rem] uppercase tracking-[0.13em] text-rvl-dim">
+                <span>{lead.authorName}</span>
+                <span className="tabular-nums">{shortDate(lead.createdAt)}</span>
+                <span className="tabular-nums text-rvl-accent">♥ {lead.likes}</span>
+              </div>
+            </div>
+            <img
+              src={lead.imageUrl}
+              alt={lead.title}
+              className="aspect-4/3 w-full border border-rvl-line object-cover"
+            />
+          </Link>
+        </div>
+      ) : null}
+
+      <div className="grid grid-cols-1 gap-8 px-5 py-12 sm:grid-cols-2 sm:px-8 lg:grid-cols-3 xl:px-14">
+        {rest.map((article) => (
           <Link
             key={article.id}
             href={`/articles/${article.id}`}
-            className="min-h-[350px] text-inherit no-underline max-md:min-h-[300px]"
+            className="group flex flex-col border border-rvl-line text-inherit no-underline transition-colors hover:border-rvl-accent-soft"
           >
-            <article className="flex min-h-[350px] flex-col overflow-hidden rounded-lg border border-[#ddd] bg-white transition-shadow duration-200 hover:shadow-[0_2px_8px_rgba(0,0,0,0.1)] max-md:min-h-[300px]">
-              <img
-                src={article.imageUrl}
-                alt={article.title}
-                className="h-[250px] w-full object-cover"
-              />
-              <h2 className="mx-4 mb-2 mt-3 text-xl">{article.title}</h2>
-              <p className="mx-4 mb-4 text-base text-[#555]">{article.summary}</p>
-              <div className="mt-auto flex items-center justify-between px-4 pb-4 text-sm text-[#666]">
-                <span className="flex items-center gap-1 font-medium hover:text-[#d32f2f]">
-                  ♥ {article.likes}
-                </span>
-                <span className="italic text-[#888]">
-                  {new Date(article.createdAt).toLocaleDateString()}
-                </span>
-              </div>
-            </article>
+            <img
+              src={article.imageUrl}
+              alt={article.title}
+              className="aspect-16/9 w-full border-b border-rvl-line object-cover"
+            />
+            <div className="flex flex-1 flex-col p-6">
+              <span className="font-mono text-[0.62rem] uppercase tracking-[0.2em] text-rvl-accent">
+                {article.authorName}
+              </span>
+              <h3 className="mt-4 mb-3 text-[1.12rem] font-semibold leading-[1.28]">
+                {article.title}
+              </h3>
+              <p className="m-0 mb-5 line-clamp-3 text-[0.88rem] text-rvl-ink-2">
+                {article.summary}
+              </p>
+              <span className="mt-auto font-mono text-[0.64rem] uppercase tracking-[0.12em] text-rvl-dim">
+                {shortDate(article.createdAt)} · ♥ {article.likes}
+              </span>
+            </div>
           </Link>
         ))}
       </div>

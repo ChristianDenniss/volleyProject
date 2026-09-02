@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getDb } from "@db";
 import { trivia } from "@server/services";
 import { EmptyState } from "@components/site/empty-state";
+import { PageHeader, PageMetric } from "@components/site/page-header";
 import { TriviaBoard } from "@components/site/trivia-board";
 import type { Difficulty, TriviaKind } from "@server/services/trivia";
 
@@ -97,11 +98,24 @@ export default async function TriviaPage({
   }
 
   return (
-    <div className="mx-auto box-border min-h-[80vh] w-full max-w-[1200px] px-8 pb-8 pt-22 text-[#2c3e50] max-md:px-4 max-md:pt-10">
+    <div className="font-display">
+      <PageHeader
+        eyebrow="Guessing game"
+        title="Volleyball trivia"
+        description="Pick a subject and a difficulty, read the clues one at a time, and name it."
+        meta={
+          <>
+            <PageMetric label="Subject" value={kind} />
+            <PageMetric label="Difficulty" value={difficulty} />
+            <PageMetric label="Clues" value={subject?.clues.length ?? 0} />
+          </>
+        }
+      />
+
       {subject === null ? (
         <>
           <TriviaBoard kind={kind} difficulty={difficulty} subject={null} />
-          <div className="mt-4">
+          <div className="px-5 py-14 sm:px-8 xl:px-14">
             <EmptyState>{error}</EmptyState>
           </div>
         </>
