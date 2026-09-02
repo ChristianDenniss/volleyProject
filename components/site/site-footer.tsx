@@ -10,6 +10,7 @@ const NAV = [
   },
   { href: "/about", label: "About", external: false },
   { href: "/privacy-policy", label: "Privacy Policy", external: false },
+  { href: "/terms-of-service", label: "Terms of Service", external: false },
   { href: "/contact", label: "Contact Us", external: false },
   { href: "/credits", label: "Credits", external: false },
 ];
