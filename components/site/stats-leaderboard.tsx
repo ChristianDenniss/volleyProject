@@ -73,6 +73,10 @@ export function StatsLeaderboard({
   const current = Math.min(page, totalPages);
   const visible = sorted.slice((current - 1) * PER_PAGE, current * PER_PAGE);
 
+  const podium = sorted.slice(0, 3);
+  const sortLabel = COLUMNS.find((column) => column.key === sortKey)?.label ?? "";
+  const sortSuffix = COLUMNS.find((column) => column.key === sortKey)?.suffix ?? "";
+
   const toggleSort = (key: keyof LeaderboardRow) => {
     if (key === sortKey) {
       setAscending((value) => !value);
@@ -84,15 +88,15 @@ export function StatsLeaderboard({
 
   return (
     <>
-      <div className="my-5 flex flex-col gap-4">
-        <div className="flex w-full flex-row flex-wrap items-center justify-between gap-4 max-md:flex-col max-md:items-stretch max-md:gap-2.5">
+      <div className="flex flex-col gap-6 border-b border-rvl-line px-5 py-7 sm:px-8 xl:px-14">
+        <div className="flex flex-wrap items-end gap-5">
           <FilterSelect
             id="stats-season-filter"
-            label="Season:"
+            label="Season"
             value={seasonId ? String(seasonId) : ""}
             onChange={(value) => router.push(value ? `/stats?season=${value}` : "/stats")}
           >
-            <option value="">All Seasons</option>
+            <option value="">All seasons</option>
             {seasons.map((season) => (
               <option key={season.id} value={String(season.id)}>
                 Season {season.seasonNumber}
@@ -100,21 +104,21 @@ export function StatsLeaderboard({
             ))}
           </FilterSelect>
 
-          <div className="ml-auto w-[300px] max-md:ml-0 max-md:w-full">
-            <SearchBar
-              value={search}
-              placeholder="Search players..."
-              onSearch={(value) => {
-                setSearch(value);
-                setPage(1);
-              }}
-            />
-          </div>
-        </div>
+          <SearchBar
+            className="max-w-[340px]"
+            value={search}
+            placeholder="Search players"
+            onSearch={(value) => {
+              setSearch(value);
+              setPage(1);
+            }}
+          />
 
-        <div className="flex flex-row flex-wrap items-center justify-between gap-4 max-md:flex-col max-md:items-stretch max-md:gap-2.5">
-          <span className="font-medium text-[#2d3748]">{sorted.length} players</span>
-          <div className="whitespace-nowrap">
+          <span className="self-end pb-2.5 font-mono text-[0.68rem] uppercase tracking-[0.14em] text-rvl-dim">
+            {sorted.length} players
+          </span>
+
+          <div className="ml-auto self-end">
             <Pagination
               variant="compact"
               currentPage={current}
@@ -125,37 +129,81 @@ export function StatsLeaderboard({
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-t shadow-[0_2px_8px_rgba(26,54,93,0.08)]">
-        <table className="w-full min-w-[800px] border-collapse">
+      {podium.length > 0 && sortKey !== "playerName" ? (
+        <div className="grid grid-cols-1 gap-8 border-b border-rvl-line px-5 py-12 sm:grid-cols-3 sm:px-8 xl:px-14">
+          {podium.map((row, index) => (
+            <Link
+              key={row.playerId}
+              href={`/players/${row.playerId}`}
+              className="block text-inherit no-underline"
+            >
+              <div className="font-mono text-[0.62rem] uppercase tracking-[0.2em] text-rvl-dim">
+                {ascending ? "Lowest" : "Top"} {sortLabel} · #{index + 1}
+              </div>
+              <div className="my-3 font-mono text-[2.6rem] font-bold leading-none tracking-[-0.045em] tabular-nums text-rvl-accent">
+                {row[sortKey]}
+                {sortSuffix}
+              </div>
+              <div className="text-[1.02rem] font-semibold capitalize">{row.playerName}</div>
+              <div className="mt-1 font-mono text-[0.62rem] uppercase tracking-[0.12em] text-rvl-dim">
+                {row.gamesPlayed} games
+              </div>
+            </Link>
+          ))}
+        </div>
+      ) : null}
+
+      <div className="overflow-x-auto px-5 py-12 sm:px-8 xl:px-14">
+        <table className="w-full min-w-[820px] border-collapse">
           <thead>
             <tr>
+              <th className="border-b border-rvl-line-strong pb-3 pr-4 text-left font-mono text-[0.6rem] uppercase tracking-[0.2em] text-rvl-dim">
+                #
+              </th>
               {COLUMNS.map((column) => (
                 <th
                   key={column.key}
                   onClick={() => toggleSort(column.key)}
-                  className="cursor-pointer select-none border-b border-[#e2e8f0] bg-brand-navy p-3 text-center font-semibold text-white transition-colors duration-200 hover:bg-brand-navy-hover max-md:px-[3px] max-md:py-1.5 max-md:text-[11px]"
+                  className={cn(
+                    "cursor-pointer select-none border-b border-rvl-line-strong px-4 pb-3 font-mono text-[0.6rem] font-bold uppercase tracking-[0.2em] transition-colors",
+                    column.key === "playerName" ? "text-left" : "text-right",
+                    sortKey === column.key
+                      ? "text-rvl-accent"
+                      : "text-rvl-dim hover:text-rvl-ink",
+                  )}
                 >
                   {column.label}
                   {sortKey === column.key ? (
-                    <span className="ml-1.5 text-[0.8em]">{ascending ? "▲" : "▼"}</span>
+                    <span className="ml-1.5">{ascending ? "▲" : "▼"}</span>
                   ) : null}
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {visible.map((row) => (
-              <tr key={row.playerId} className="transition-colors hover:bg-[#f7fafc]">
+            {visible.map((row, index) => (
+              <tr key={row.playerId} className="transition-colors hover:bg-rvl-panel">
+                <td className="border-b border-rvl-line py-3.5 pr-4 font-mono text-[0.72rem] tabular-nums text-rvl-dim">
+                  {(current - 1) * PER_PAGE + index + 1}
+                </td>
                 {COLUMNS.map((column) => (
                   <td
                     key={column.key}
                     className={cn(
-                      "border-b border-[#e2e8f0] p-3 text-center max-md:px-[3px] max-md:py-1.5 max-md:text-[11px]",
-                      column.key === "playerName" && "font-medium capitalize",
+                      "border-b border-rvl-line px-4 py-3.5",
+                      column.key === "playerName"
+                        ? "text-left text-[0.98rem] font-semibold capitalize"
+                        : "text-right font-mono text-[0.88rem] tabular-nums",
+                      sortKey === column.key && column.key !== "playerName"
+                        ? "font-bold text-rvl-accent"
+                        : "text-rvl-ink-2",
                     )}
                   >
                     {column.key === "playerName" ? (
-                      <Link href={`/players/${row.playerId}`} className="hover:underline">
+                      <Link
+                        href={`/players/${row.playerId}`}
+                        className="text-rvl-ink no-underline hover:text-rvl-accent"
+                      >
                         {row.playerName}
                       </Link>
                     ) : (

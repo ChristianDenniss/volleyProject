@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getDb } from "@db";
 import { seasons, stats } from "@server/services";
 import { EmptyState } from "@components/site/empty-state";
+import { PageHeader, PageMetric } from "@components/site/page-header";
 import { StatsLeaderboard } from "@components/site/stats-leaderboard";
 
 export const dynamic = "force-dynamic";
@@ -23,12 +24,34 @@ export default async function StatsPage({
 
   const [rows, allSeasons] = await Promise.all([stats.leaderboard(db, seasonId), seasons.list(db)]);
 
+  const totalKills = rows.reduce((sum, row) => sum + Number(row.totalKills ?? 0), 0);
+  const totalGames = new Set(rows.flatMap((row) => (row.gamesPlayed ? [row.playerId] : []))).size;
+
   return (
-    <div className="mx-auto box-border min-h-screen w-full max-w-[1200px] p-5">
-      <h1 className="m-0 border-none p-0 text-[2rem] font-bold text-[#222]">Stat Leaders</h1>
+    <div className="font-display">
+      <PageHeader
+        eyebrow="Leaderboard"
+        title="Stat leaders"
+        description="Sort any column to rank the league. Season totals come from every recorded stat line."
+        meta={
+          <>
+            <PageMetric label="Players" value={rows.length} />
+            <PageMetric label="With games" value={totalGames} />
+            <PageMetric label="Kills logged" value={totalKills.toLocaleString()} />
+            <PageMetric
+              label="Season"
+              value={
+                seasonId
+                  ? (allSeasons.find((entry) => entry.id === seasonId)?.seasonNumber ?? "—")
+                  : "All"
+              }
+            />
+          </>
+        }
+      />
 
       {rows.length === 0 ? (
-        <div className="mt-5">
+        <div className="px-5 py-14 sm:px-8 xl:px-14">
           <EmptyState>No stat lines have been recorded yet.</EmptyState>
         </div>
       ) : (

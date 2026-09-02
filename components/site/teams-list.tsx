@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 import { ClearFiltersButton, FilterSelect, Pagination, SearchBar } from "./controls";
 
 export interface TeamListRow {
@@ -17,6 +18,8 @@ const PER_PAGE = 24;
 
 const normalizePlacement = (placement: string | null) =>
   (placement ?? "").replace(/\s*\([Dd]\d\)$/, "").trim();
+
+const isPodium = (placement: string) => /champion|1st|2nd|3rd|runner/i.test(placement);
 
 export function TeamsList({ teams }: { teams: TeamListRow[] }) {
   const [search, setSearch] = useState("");
@@ -65,99 +68,129 @@ export function TeamsList({ teams }: { teams: TeamListRow[] }) {
 
   return (
     <>
-      <div className="my-5">
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-row flex-wrap items-center gap-4 max-md:flex-col max-md:items-stretch max-md:gap-2.5">
-            <FilterSelect
-              id="season-filter"
-              label="Season:"
-              value={season}
-              onChange={(value) => {
-                setSeason(value);
-                setPage(1);
-              }}
-            >
-              <option value="">All Seasons</option>
-              {seasons.map((value) => (
-                <option key={value} value={String(value)}>
-                  Season {value}
-                </option>
-              ))}
-            </FilterSelect>
+      <div className="flex flex-col gap-6 border-b border-rvl-line px-5 py-7 sm:px-8 xl:px-14">
+        <div className="flex flex-wrap items-end gap-5">
+          <FilterSelect
+            id="season-filter"
+            label="Season"
+            value={season}
+            onChange={(value) => {
+              setSeason(value);
+              setPage(1);
+            }}
+          >
+            <option value="">All seasons</option>
+            {seasons.map((value) => (
+              <option key={value} value={String(value)}>
+                Season {value}
+              </option>
+            ))}
+          </FilterSelect>
 
-            <FilterSelect
-              id="placement-filter"
-              label="Placement:"
-              value={placement}
-              onChange={(value) => {
-                setPlacement(value);
-                setPage(1);
-              }}
-            >
-              <option value="">All Placements</option>
-              {placements.map((value) => (
-                <option key={value} value={value}>
-                  {value}
-                </option>
-              ))}
-            </FilterSelect>
+          <FilterSelect
+            id="placement-filter"
+            label="Placement"
+            value={placement}
+            onChange={(value) => {
+              setPlacement(value);
+              setPage(1);
+            }}
+          >
+            <option value="">All placements</option>
+            {placements.map((value) => (
+              <option key={value} value={value}>
+                {value}
+              </option>
+            ))}
+          </FilterSelect>
 
-            {search || season || placement ? <ClearFiltersButton onClick={clearFilters} /> : null}
-          </div>
+          <SearchBar
+            className="max-w-[340px]"
+            value={search}
+            placeholder="Search teams"
+            onSearch={(value) => {
+              setSearch(value);
+              setPage(1);
+            }}
+          />
 
-          <div className="flex flex-row flex-wrap items-center justify-between gap-4 max-md:flex-col max-md:items-stretch max-md:gap-2.5">
-            <SearchBar
-              value={search}
-              placeholder="Search teams..."
-              onSearch={(value) => {
-                setSearch(value);
-                setPage(1);
-              }}
+          {search || season || placement ? <ClearFiltersButton onClick={clearFilters} /> : null}
+
+          <div className="ml-auto self-end">
+            <Pagination
+              variant="compact"
+              currentPage={current}
+              totalPages={totalPages}
+              onPageChange={setPage}
             />
-            <div className="whitespace-nowrap">
-              <Pagination
-                variant="compact"
-                currentPage={current}
-                totalPages={totalPages}
-                onPageChange={setPage}
-              />
-            </div>
           </div>
         </div>
       </div>
 
-      <div className="grid content-start gap-6 py-2.5 [grid-template-columns:repeat(auto-fill,minmax(250px,1fr))]">
-        {visible.map((team) => (
-          <Link
-            key={team.id}
-            href={`/teams/${encodeURIComponent(team.name)}`}
-            className="group relative box-border block min-h-[120px] cursor-pointer overflow-hidden rounded-[0.85rem] border border-[#1e1e1e] bg-[#141414] bg-linear-to-b from-white/7 from-0% to-transparent to-45% px-5 pb-[1.4rem] pt-7 no-underline transition-[transform,box-shadow] duration-150 hover:-translate-y-1 hover:shadow-[0_8px_22px_rgba(0,122,255,0.25)]"
-          >
-            {team.logoUrl ? (
-              <div
-                aria-hidden="true"
-                style={{ backgroundImage: `url(${team.logoUrl})` }}
-                className="pointer-events-none absolute right-0 top-0 z-0 size-[200px] translate-x-[30%] bg-contain bg-right bg-no-repeat opacity-25"
-              />
-            ) : null}
+      <div className="grid grid-cols-1 gap-6 px-5 py-12 sm:grid-cols-2 sm:px-8 lg:grid-cols-3 xl:px-14 2xl:grid-cols-4">
+        {visible.map((team) => {
+          const place = normalizePlacement(team.placement);
 
-            <div className="relative z-1 mb-2 text-xl font-extrabold capitalize text-[#fafafa]">
-              <strong>{team.name}</strong>
-            </div>
-            <div className="relative z-1 mb-1 text-sm font-medium text-[#a0a0a0]">
-              <strong>ID:</strong> {team.id}
-            </div>
-            <div className="relative z-1 mb-1 text-sm font-medium text-[#a0a0a0]">
-              <strong>Season:</strong> {team.seasonNumber ?? "N/A"}
-            </div>
-            <div className="relative z-1 mb-1 text-sm font-medium text-[#a0a0a0]">
-              <strong>Placement:</strong> {team.placement || "N/A"}
-            </div>
-            <div className="relative z-1 mb-1 text-sm font-medium text-[#a0a0a0]">
-              <strong>Players:</strong> {team.playerCount}
-            </div>
-          </Link>
-        ))}
+          return (
+            <Link
+              key={team.id}
+              href={`/teams/${encodeURIComponent(team.name)}`}
+              className="group relative block overflow-hidden border border-rvl-line p-6 text-inherit no-underline transition-colors hover:border-rvl-accent-soft"
+            >
+              {team.logoUrl ? (
+                <img
+                  src={team.logoUrl}
+                  alt=""
+                  aria-hidden="true"
+                  className="pointer-events-none absolute -right-6 -top-6 size-32 object-contain opacity-[0.07] transition-opacity group-hover:opacity-15"
+                />
+              ) : null}
+
+              <div className="relative flex items-center gap-3">
+                {team.logoUrl ? (
+                  <img
+                    src={team.logoUrl}
+                    alt=""
+                    className="size-10 shrink-0 rounded-xs border border-rvl-line object-cover"
+                  />
+                ) : null}
+                <h2 className="m-0 text-[1.2rem] font-bold capitalize leading-tight">
+                  {team.name}
+                </h2>
+              </div>
+
+              {place ? (
+                <span
+                  className={cn(
+                    "relative mt-4 inline-block border px-2.5 py-1 font-mono text-[0.6rem] uppercase tracking-[0.18em]",
+                    isPodium(place)
+                      ? "border-rvl-accent-soft text-rvl-accent"
+                      : "border-rvl-line text-rvl-dim",
+                  )}
+                >
+                  {place}
+                </span>
+              ) : null}
+
+              <dl className="relative mt-5 flex gap-7 font-mono">
+                <div className="flex flex-col gap-1">
+                  <dt className="text-[0.56rem] uppercase tracking-[0.2em] text-rvl-dim">Season</dt>
+                  <dd className="m-0 text-[0.95rem] tabular-nums">{team.seasonNumber ?? "—"}</dd>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <dt className="text-[0.56rem] uppercase tracking-[0.2em] text-rvl-dim">
+                    Players
+                  </dt>
+                  <dd className="m-0 text-[0.95rem] tabular-nums">{team.playerCount}</dd>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <dt className="text-[0.56rem] uppercase tracking-[0.2em] text-rvl-dim">ID</dt>
+                  <dd className="m-0 text-[0.95rem] tabular-nums text-rvl-dim">{team.id}</dd>
+                </div>
+              </dl>
+            </Link>
+          );
+        })}
       </div>
     </>
   );

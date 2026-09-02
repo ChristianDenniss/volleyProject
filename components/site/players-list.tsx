@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ClearFiltersButton, FilterSelect, Pagination, SearchBar } from "./controls";
 
@@ -64,144 +65,142 @@ export function PlayersList({ players }: { players: PlayerListRow[] }) {
 
   return (
     <>
-      <div className="my-5">
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-row flex-wrap items-center gap-4 max-md:flex-col max-md:items-stretch max-md:gap-2.5">
-            <FilterSelect
-              id="season-filter"
-              label="Season:"
-              value={season}
-              onChange={(value) => {
-                setSeason(value);
-                setPage(1);
-              }}
-            >
-              <option value="">All Seasons</option>
-              {seasons.map((value) => (
-                <option key={value} value={String(value)}>
-                  Season {value}
-                </option>
-              ))}
-            </FilterSelect>
+      <div className="flex flex-col gap-6 border-b border-rvl-line px-5 py-7 sm:px-8 xl:px-14">
+        <div className="flex flex-wrap items-end gap-5">
+          <FilterSelect
+            id="season-filter"
+            label="Season"
+            value={season}
+            onChange={(value) => {
+              setSeason(value);
+              setPage(1);
+            }}
+          >
+            <option value="">All seasons</option>
+            {seasons.map((value) => (
+              <option key={value} value={String(value)}>
+                Season {value}
+              </option>
+            ))}
+          </FilterSelect>
 
-            <FilterSelect
-              id="position-filter"
-              label="Position:"
-              value={position}
-              onChange={(value) => {
-                setPosition(value);
-                setPage(1);
-              }}
-            >
-              <option value="">All Positions</option>
-              {positions.map((value) => (
-                <option key={value} value={value}>
-                  {value}
-                </option>
-              ))}
-            </FilterSelect>
+          <FilterSelect
+            id="position-filter"
+            label="Position"
+            value={position}
+            onChange={(value) => {
+              setPosition(value);
+              setPage(1);
+            }}
+          >
+            <option value="">All positions</option>
+            {positions.map((value) => (
+              <option key={value} value={value}>
+                {value}
+              </option>
+            ))}
+          </FilterSelect>
 
-            {search || season || position ? <ClearFiltersButton onClick={clearFilters} /> : null}
-          </div>
+          <SearchBar
+            className="max-w-[340px]"
+            value={search}
+            placeholder="Search players"
+            onSearch={(value) => {
+              setSearch(value);
+              setPage(1);
+            }}
+          />
 
-          <div className="flex flex-row flex-wrap items-center justify-between gap-4 max-md:flex-col max-md:items-stretch max-md:gap-2.5">
-            <SearchBar
-              value={search}
-              placeholder="Search players..."
-              onSearch={(value) => {
-                setSearch(value);
-                setPage(1);
-              }}
+          {search || season || position ? <ClearFiltersButton onClick={clearFilters} /> : null}
+
+          <div className="ml-auto self-end">
+            <Pagination
+              variant="compact"
+              currentPage={current}
+              totalPages={totalPages}
+              onPageChange={setPage}
             />
-            <div className="whitespace-nowrap">
-              <Pagination
-                variant="compact"
-                currentPage={current}
-                totalPages={totalPages}
-                onPageChange={setPage}
-              />
-            </div>
           </div>
         </div>
       </div>
 
-      <div className="flex flex-col gap-2.5 py-2.5">
-        {visible.map((player) => {
-          const open = expanded === player.id;
-          const teamLines = player.teams.reduce<{ name: string; seasonNumber: number | null }[][]>(
-            (groups, team, index) => {
-              const chunk = Math.floor(index / 5);
-              groups[chunk] = groups[chunk] ?? [];
-              groups[chunk].push(team);
-              return groups;
-            },
-            [],
-          );
+      <div className="px-5 py-12 sm:px-8 xl:px-14">
+        <div className="border-t border-rvl-line">
+          {visible.map((player) => {
+            const open = expanded === player.id;
 
-          return (
-            <div
-              key={player.id}
-              onClick={() => setExpanded(open ? null : player.id)}
-              className={cn(
-                "box-border min-h-[80px] cursor-pointer overflow-hidden rounded-[20px] border-2 border-[#CFFFFF] bg-[#e6f2ff] text-black shadow-[0_2px_6px_rgba(0,0,0,0.05)] transition-[background-color,transform] duration-300 hover:scale-[1.02] hover:bg-[#cce0ff]",
-              )}
-            >
-              <div className="flex h-[60px] min-h-[60px] flex-row items-center justify-between whitespace-nowrap px-[30px] max-md:h-auto max-md:min-h-0 max-md:flex-col max-md:items-start max-md:gap-1 max-md:px-5 max-md:py-3">
-                <div className="mx-5 shrink-0 whitespace-nowrap text-[22px] font-bold capitalize max-md:mx-0 max-md:text-lg">
-                  <strong>{player.name}</strong>
-                </div>
-                <div className="mx-5 shrink-0 whitespace-nowrap text-[22px] font-bold max-md:mx-0 max-md:text-base">
-                  <strong>ID:</strong> {player.id}
-                </div>
-                <div className="mx-5 shrink-0 whitespace-nowrap text-[22px] font-bold max-md:mx-0 max-md:text-base">
-                  <strong>Total Teams:</strong> {player.teams.length}
-                </div>
-              </div>
+            return (
+              <div key={player.id} className="border-b border-rvl-line">
+                <button
+                  type="button"
+                  aria-expanded={open}
+                  onClick={() => setExpanded(open ? null : player.id)}
+                  className="flex w-full cursor-pointer items-center gap-5 border-none bg-transparent px-0 py-5 text-left transition-colors hover:text-rvl-accent sm:gap-8"
+                >
+                  <span className="w-12 shrink-0 font-mono text-[0.72rem] tabular-nums text-rvl-dim">
+                    {player.id}
+                  </span>
+                  <span className="text-[1.05rem] font-semibold capitalize">{player.name}</span>
+                  {player.position && player.position !== "N/A" ? (
+                    <span className="hidden border border-rvl-line px-2.5 py-1 font-mono text-[0.6rem] uppercase tracking-[0.18em] text-rvl-dim sm:inline-block">
+                      {player.position}
+                    </span>
+                  ) : null}
+                  <span className="ml-auto font-mono text-[0.66rem] uppercase tracking-[0.14em] text-rvl-dim">
+                    {player.teams.length} {player.teams.length === 1 ? "team" : "teams"}
+                  </span>
+                  <ChevronDown
+                    className={cn(
+                      "size-4 shrink-0 text-rvl-dim transition-transform",
+                      open && "rotate-180",
+                    )}
+                  />
+                </button>
 
-              <div
-                className={cn(
-                  "overflow-hidden bg-[#f3f9ff] px-[30px] text-lg leading-relaxed text-[#333] transition-all duration-300 ease-out max-md:px-5",
-                  open ? "max-h-[800px] py-4" : "max-h-0 py-0",
-                )}
-              >
-                <p className="my-2.5">
-                  <strong className="inline-block w-[100px] text-[#005999]">Position:</strong>{" "}
-                  {player.position || "N/A"}
-                </p>
-                <p className="my-2.5">
-                  <strong className="inline-block w-[100px] text-[#005999]">Teams:</strong>
-                </p>
-                {player.teams.length > 0 ? (
-                  teamLines.map((group, index) => (
-                    <div key={index} className="my-[5px]">
-                      {group.map((team) => (
-                        <Link
-                          key={`${team.name}-${team.seasonNumber}`}
-                          href={`/teams/${encodeURIComponent(team.name)}`}
-                          onClick={(event) => event.stopPropagation()}
-                          className="m-0.5 inline-block rounded border border-[#CFFFFF] bg-[#e6f2ff] px-2 py-1 text-[#005999] no-underline hover:bg-[#cce0ff]"
-                        >
-                          {team.name} (Season {team.seasonNumber ?? "N/A"})
-                        </Link>
-                      ))}
+                {open ? (
+                  <div className="flex flex-col gap-5 border-t border-rvl-line bg-rvl-panel px-5 py-6 sm:px-8">
+                    <div className="flex flex-col gap-2">
+                      <span className="font-mono text-[0.58rem] uppercase tracking-[0.22em] text-rvl-dim">
+                        Position
+                      </span>
+                      <span className="text-[0.95rem]">{player.position || "Unlisted"}</span>
                     </div>
-                  ))
-                ) : (
-                  <span>No Teams To Show</span>
-                )}
-                <div className="mt-4 pr-[30px] text-right max-md:pr-0">
-                  <Link
-                    href={`/players/${player.id}`}
-                    onClick={(event) => event.stopPropagation()}
-                    className="inline-block rounded-md bg-[#cce0ff] px-5 py-2 text-base font-semibold text-[#005999] no-underline transition-all duration-200 hover:bg-[#CFFFFF]"
-                  >
-                    See More
-                  </Link>
-                </div>
+
+                    <div className="flex flex-col gap-2.5">
+                      <span className="font-mono text-[0.58rem] uppercase tracking-[0.22em] text-rvl-dim">
+                        Teams
+                      </span>
+                      {player.teams.length > 0 ? (
+                        <div className="flex flex-wrap gap-2">
+                          {player.teams.map((team) => (
+                            <Link
+                              key={`${team.name}-${team.seasonNumber}`}
+                              href={`/teams/${encodeURIComponent(team.name)}`}
+                              className="border border-rvl-line px-3 py-1.5 font-mono text-[0.66rem] uppercase tracking-[0.1em] text-rvl-ink-2 no-underline transition-colors hover:border-rvl-accent-soft hover:text-rvl-accent"
+                            >
+                              {team.name} · S{team.seasonNumber ?? "—"}
+                            </Link>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="font-mono text-[0.72rem] uppercase tracking-[0.12em] text-rvl-dim">
+                          No teams yet
+                        </span>
+                      )}
+                    </div>
+
+                    <Link
+                      href={`/players/${player.id}`}
+                      className="self-start border-b border-rvl-line pb-0.5 font-mono text-[0.66rem] uppercase tracking-[0.14em] text-rvl-ink-2 no-underline transition-colors hover:border-rvl-accent-soft hover:text-rvl-accent"
+                    >
+                      Full profile →
+                    </Link>
+                  </div>
+                ) : null}
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     </>
   );

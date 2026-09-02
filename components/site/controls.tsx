@@ -1,10 +1,11 @@
 "use client";
 
 import type { ChangeEvent, ReactNode } from "react";
+import { Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const ARROW =
-  "url(\"data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e\")";
+  "url(\"data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%237a8391'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e\")";
 
 export function FilterSelect({
   id,
@@ -22,8 +23,11 @@ export function FilterSelect({
   className?: string;
 }) {
   return (
-    <div className={cn("m-0 whitespace-nowrap", className)}>
-      <label htmlFor={id} className="mr-2 font-medium text-[#2d3748]">
+    <div className={cn("flex flex-col gap-1.5", className)}>
+      <label
+        htmlFor={id}
+        className="font-mono text-[0.58rem] uppercase tracking-[0.22em] text-rvl-dim"
+      >
         {label}
       </label>
       <select
@@ -34,9 +38,9 @@ export function FilterSelect({
           backgroundImage: ARROW,
           backgroundRepeat: "no-repeat",
           backgroundPosition: "right 8px center",
-          backgroundSize: "20px",
+          backgroundSize: "18px",
         }}
-        className="cursor-pointer appearance-none rounded border border-brand-navy bg-brand-navy py-2 pl-4 pr-8 text-[15px] text-white shadow-none transition-colors duration-200 hover:border-brand-steel hover:bg-brand-steel focus:border-brand-steel focus:bg-brand-steel focus:shadow-[0_0_0_2px_rgba(45,60,80,0.2)] focus:outline-none"
+        className="min-w-[150px] cursor-pointer appearance-none rounded-xs border border-rvl-line bg-transparent py-2.5 pl-3.5 pr-9 font-mono text-[0.78rem] uppercase tracking-[0.08em] text-rvl-ink transition-colors hover:border-rvl-line-strong focus:border-rvl-accent-soft focus:outline-none"
       >
         {children}
       </select>
@@ -49,9 +53,9 @@ export function ClearFiltersButton({ onClick }: { onClick: () => void }) {
     <button
       type="button"
       onClick={onClick}
-      className="cursor-pointer whitespace-nowrap rounded-md border border-[#ff6b6b] bg-[#ff6b6b] px-4 py-2 text-sm text-white transition-all duration-300 hover:border-[#ff5252] hover:bg-[#ff5252]"
+      className="cursor-pointer self-end whitespace-nowrap rounded-xs border border-rvl-line bg-transparent px-4 py-2.5 font-mono text-[0.68rem] uppercase tracking-[0.14em] text-rvl-dim transition-colors hover:border-rvl-accent-soft hover:text-rvl-accent"
     >
-      Clear Filters
+      Clear filters
     </button>
   );
 }
@@ -68,13 +72,14 @@ export function SearchBar({
   className?: string;
 }) {
   return (
-    <div className={cn("flex grow justify-center", className)}>
+    <div className={cn("relative flex grow items-center", className)}>
+      <Search className="pointer-events-none absolute left-3 size-4 text-rvl-dim" />
       <input
         type="text"
         value={value}
         placeholder={placeholder}
         onChange={(event) => onSearch(event.target.value)}
-        className="w-full max-w-[400px] rounded-[5px] border border-[#ccc] p-2.5 text-base max-md:max-w-none"
+        className="w-full rounded-xs border border-rvl-line bg-transparent py-2.5 pl-10 pr-3 text-[0.9rem] text-rvl-ink placeholder:text-rvl-dim focus:border-rvl-accent-soft focus:outline-none"
       />
     </div>
   );
@@ -93,17 +98,10 @@ export function Pagination({
 }) {
   const pages = Math.max(totalPages, 1);
   const buttonClass =
-    variant === "compact"
-      ? "h-[30px] cursor-pointer rounded-md border border-brand-navy bg-brand-navy px-2 text-sm text-white transition-colors duration-200 hover:enabled:border-brand-steel hover:enabled:bg-brand-steel disabled:cursor-not-allowed disabled:border-[#e5e7eb] disabled:bg-[#e5e7eb] disabled:text-[#9ca3af]"
-      : "cursor-pointer rounded-[5px] border-none bg-brand-sky-pale px-5 py-2.5 text-sm text-white transition duration-300 hover:enabled:scale-105 hover:enabled:bg-[#4b5563] disabled:cursor-not-allowed disabled:bg-[#dde3e9]";
+    "cursor-pointer rounded-xs border border-rvl-line bg-transparent px-3 py-2 font-mono text-[0.66rem] uppercase tracking-[0.14em] text-rvl-ink-2 transition-colors hover:enabled:border-rvl-accent-soft hover:enabled:text-rvl-accent disabled:cursor-not-allowed disabled:border-rvl-line disabled:text-rvl-dim disabled:opacity-50";
 
   return (
-    <div
-      className={cn(
-        "flex items-center justify-center gap-2.5",
-        variant === "default" && "my-5",
-      )}
-    >
+    <div className={cn("flex items-center gap-2", variant === "default" && "my-5 justify-center")}>
       <button
         type="button"
         className={buttonClass}
@@ -120,7 +118,7 @@ export function Pagination({
       >
         Prev
       </button>
-      <span className="text-base font-bold text-[#1f2937]">
+      <span className="px-1 font-mono text-[0.72rem] tabular-nums text-rvl-dim">
         {currentPage} / {pages}
       </span>
       <button

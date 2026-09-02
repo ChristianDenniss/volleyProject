@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Pagination, SearchBar } from "./controls";
+import { ClearFiltersButton, FilterSelect, Pagination, SearchBar } from "./controls";
 
 export interface ScheduleMatch {
   id: number;
@@ -23,8 +23,12 @@ export interface ScheduleMatch {
 
 const PER_PAGE = 40;
 
-const filterSelectClass =
-  "min-w-[150px] rounded-md border-2 border-[#e1e5e9] bg-white px-3 py-2 text-[0.9rem] focus:border-brand-navy focus:outline-none";
+function longDate(value: string) {
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime())
+    ? value
+    : parsed.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
 
 export function SchedulesBoard({
   matches,
@@ -41,7 +45,6 @@ export function SchedulesBoard({
   const [status, setStatus] = useState("");
   const [round, setRound] = useState("");
   const [page, setPage] = useState(1);
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
 
   const regions = useMemo(
     () => [...new Set(matches.map((match) => match.region))].sort(),
@@ -89,118 +92,92 @@ export function SchedulesBoard({
 
   return (
     <>
-      <div className="mb-8 rounded-xl bg-[#f8f9fa] p-5 shadow-[0_2px_8px_rgba(0,0,0,0.1)]">
-        <div className="mb-5 flex flex-wrap items-center gap-5">
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="schedule-season" className="text-[0.9rem] font-semibold text-[#555]">
-              Season
-            </label>
-            <select
-              id="schedule-season"
-              value={seasonId ? String(seasonId) : ""}
-              onChange={(event) =>
-                router.push(event.target.value ? `/schedules?season=${event.target.value}` : "/schedules")
-              }
-              className={filterSelectClass}
-            >
-              <option value="">All Seasons</option>
-              {seasons.map((season) => (
-                <option key={season.id} value={String(season.id)}>
-                  Season {season.seasonNumber}
-                </option>
-              ))}
-            </select>
-          </div>
+      <div className="flex flex-col gap-6 border-b border-rvl-line px-5 py-7 sm:px-8 xl:px-14">
+        <div className="flex flex-wrap items-end gap-5">
+          <FilterSelect
+            id="schedule-season"
+            label="Season"
+            value={seasonId ? String(seasonId) : ""}
+            onChange={(value) => router.push(value ? `/schedules?season=${value}` : "/schedules")}
+          >
+            <option value="">All seasons</option>
+            {seasons.map((season) => (
+              <option key={season.id} value={String(season.id)}>
+                Season {season.seasonNumber}
+              </option>
+            ))}
+          </FilterSelect>
 
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="schedule-region" className="text-[0.9rem] font-semibold text-[#555]">
-              Region
-            </label>
-            <select
-              id="schedule-region"
-              value={region}
-              onChange={(event) => {
-                setRegion(event.target.value);
-                setPage(1);
-              }}
-              className={filterSelectClass}
-            >
-              <option value="">All Regions</option>
-              {regions.map((value) => (
-                <option key={value} value={value}>
-                  {value}
-                </option>
-              ))}
-            </select>
-          </div>
+          <FilterSelect
+            id="schedule-region"
+            label="Region"
+            value={region}
+            onChange={(value) => {
+              setRegion(value);
+              setPage(1);
+            }}
+          >
+            <option value="">All regions</option>
+            {regions.map((value) => (
+              <option key={value} value={value}>
+                {value}
+              </option>
+            ))}
+          </FilterSelect>
 
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="schedule-status" className="text-[0.9rem] font-semibold text-[#555]">
-              Status
-            </label>
-            <select
-              id="schedule-status"
-              value={status}
-              onChange={(event) => {
-                setStatus(event.target.value);
-                setPage(1);
-              }}
-              className={filterSelectClass}
-            >
-              <option value="">All Statuses</option>
-              {statuses.map((value) => (
-                <option key={value} value={value}>
-                  {value}
-                </option>
-              ))}
-            </select>
-          </div>
+          <FilterSelect
+            id="schedule-status"
+            label="Status"
+            value={status}
+            onChange={(value) => {
+              setStatus(value);
+              setPage(1);
+            }}
+          >
+            <option value="">All statuses</option>
+            {statuses.map((value) => (
+              <option key={value} value={value}>
+                {value}
+              </option>
+            ))}
+          </FilterSelect>
 
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="schedule-round" className="text-[0.9rem] font-semibold text-[#555]">
-              Round
-            </label>
-            <select
-              id="schedule-round"
-              value={round}
-              onChange={(event) => {
-                setRound(event.target.value);
-                setPage(1);
-              }}
-              className={filterSelectClass}
-            >
-              <option value="">All Rounds</option>
-              {rounds.map((value) => (
-                <option key={value} value={value}>
-                  {value}
-                </option>
-              ))}
-            </select>
-          </div>
+          <FilterSelect
+            id="schedule-round"
+            label="Round"
+            value={round}
+            onChange={(value) => {
+              setRound(value);
+              setPage(1);
+            }}
+          >
+            <option value="">All rounds</option>
+            {rounds.map((value) => (
+              <option key={value} value={value}>
+                {value}
+              </option>
+            ))}
+          </FilterSelect>
 
           {search || region || status || round ? (
-            <button
-              type="button"
-              onClick={clearFilters}
-              className="cursor-pointer self-end rounded-md border-none bg-[#dc3545] px-4 py-2 font-semibold text-white transition-colors duration-200 hover:bg-[#c82333]"
-            >
-              Clear Filters
-            </button>
+            <ClearFiltersButton onClick={clearFilters} />
           ) : null}
         </div>
 
-        <div className="flex items-center justify-between gap-5 max-md:flex-col max-md:items-stretch">
-          <div className="max-w-[400px] flex-1">
-            <SearchBar
-              value={search}
-              placeholder="Search matches..."
-              onSearch={(value) => {
-                setSearch(value);
-                setPage(1);
-              }}
-            />
-          </div>
-          <div className="flex items-center">
+        <div className="flex flex-wrap items-center gap-5">
+          <SearchBar
+            className="max-w-[380px]"
+            value={search}
+            placeholder="Search matches, teams, match numbers"
+            onSearch={(value) => {
+              setSearch(value);
+              setPage(1);
+            }}
+          />
+          <span className="font-mono text-[0.68rem] uppercase tracking-[0.14em] text-rvl-dim">
+            {filtered.length} matches
+          </span>
+          <div className="ml-auto">
             <Pagination
               variant="compact"
               currentPage={current}
@@ -211,147 +188,97 @@ export function SchedulesBoard({
         </div>
       </div>
 
-      <div className="flex flex-col gap-8 pb-16">
-        {byDate.length === 0 ? (
-          <p className="px-5 py-16 text-center text-[1.1rem] text-[#666]">
-            No matches match those filters.
-          </p>
-        ) : (
-          byDate.map(([date, entries]) => (
-            <section
-              key={date}
-              className="overflow-hidden rounded-xl bg-white shadow-[0_4px_12px_rgba(0,0,0,0.1)]"
-            >
-              <button
-                type="button"
-                onClick={() => setCollapsed((state) => ({ ...state, [date]: !state[date] }))}
-                className="flex w-full cursor-pointer items-center justify-between bg-[#2c3e50] px-5 py-4 text-white transition-colors duration-200 hover:bg-[#34495e]"
-              >
-                <h2 className="m-0 text-[1.3rem] font-semibold">{date}</h2>
-                <span
-                  className={cn(
-                    "text-base transition-transform duration-300",
-                    collapsed[date] && "-rotate-90",
-                  )}
-                >
-                  ▼
-                </span>
-              </button>
+      {byDate.length === 0 ? (
+        <div className="px-5 py-20 text-center font-mono text-[0.78rem] uppercase tracking-[0.14em] text-rvl-dim sm:px-8 xl:px-14">
+          No matches match those filters.
+        </div>
+      ) : (
+        byDate.map(([date, entries]) => (
+          <section
+            key={date}
+            className="grid grid-cols-1 gap-8 border-b border-rvl-line px-5 py-12 sm:px-8 md:grid-cols-[210px_1fr] md:gap-14 xl:px-14"
+          >
+            <div>
+              <h2 className="m-0 font-mono text-[0.72rem] font-bold uppercase tracking-[0.24em] text-rvl-accent">
+                {longDate(date)}
+              </h2>
+              <p className="m-0 mt-2 font-mono text-[0.64rem] uppercase tracking-[0.14em] text-rvl-dim">
+                {entries.length} {entries.length === 1 ? "match" : "matches"}
+              </p>
+            </div>
 
-              <div
-                className={cn(
-                  "flex flex-col gap-2 overflow-hidden p-2.5 transition-all duration-300",
-                  collapsed[date] && "max-h-0 p-0 opacity-0",
-                )}
-              >
-                {entries.map((match) => {
-                  const team1Wins = (match.team1Score ?? 0) > (match.team2Score ?? 0);
-                  const team2Wins = (match.team2Score ?? 0) > (match.team1Score ?? 0);
+            <div className="flex flex-col gap-7">
+              {entries.map((match) => {
+                const scheduled = match.status !== "completed";
+                const team1Wins = (match.team1Score ?? 0) > (match.team2Score ?? 0);
+                const team2Wins = (match.team2Score ?? 0) > (match.team1Score ?? 0);
+                const sets = match.setScores.filter(Boolean).join(" · ");
 
-                  return (
-                    <article
-                      key={match.id}
-                      className="rounded-md border border-[#e1e5e9] bg-[#f8f9fa] p-1.5 transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,0,0,0.15)]"
-                    >
-                      <div className="mb-1.5 flex items-center justify-between border-b border-[#e1e5e9] pb-1">
-                        <div className="flex flex-col gap-1">
-                          <span className="text-[0.9rem] font-bold text-[#2c3e50]">
-                            {match.matchNumber}
-                          </span>
-                          <span className="text-[0.9rem] text-[#666]">
-                            {match.round} · {match.region}
-                          </span>
-                        </div>
-                        <span
-                          className={cn(
-                            "rounded-[20px] px-3 py-1 text-[0.8rem] font-semibold uppercase",
-                            match.status === "completed"
-                              ? "bg-[#d4edda] text-[#155724]"
-                              : "bg-[#fff3cd] text-[#856404]",
-                          )}
-                        >
-                          {match.status}
+                return (
+                  <article key={match.id} className="flex flex-wrap items-center gap-x-8 gap-y-3">
+                    <span className="w-[170px] shrink-0 font-mono text-[0.66rem] uppercase leading-relaxed tracking-[0.16em] text-rvl-dim">
+                      {match.matchNumber}
+                      <br />
+                      {match.round} · {match.region}
+                    </span>
+
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[1.15rem]">
+                      <span className="flex items-center gap-2.5">
+                        {match.team1LogoUrl ? (
+                          <img
+                            src={match.team1LogoUrl}
+                            alt=""
+                            className="size-7 shrink-0 rounded-xs object-cover"
+                          />
+                        ) : null}
+                        <span className={cn(team1Wins ? "font-bold" : "text-rvl-ink-2")}>
+                          {match.team1Name ?? "TBD"}
                         </span>
-                      </div>
+                      </span>
 
-                      <div className="mb-1.5 flex flex-col gap-1">
-                        {(
-                          [
-                            {
-                              name: match.team1Name,
-                              logo: match.team1LogoUrl,
-                              score: match.team1Score,
-                              winning: team1Wins,
-                            },
-                            {
-                              name: match.team2Name,
-                              logo: match.team2LogoUrl,
-                              score: match.team2Score,
-                              winning: team2Wins,
-                            },
-                          ] as const
-                        ).map((team, index) => (
-                          <div
-                            key={index}
-                            className={cn(
-                              "flex items-center justify-between border-b border-[#e5e7eb] px-6 py-0.5 transition-all duration-200 last:border-b-0",
-                              team.winning &&
-                                "border-l-4 border-l-[#a1d5b4] bg-linear-to-br from-[#f0fdf4] to-[#dcfce7] shadow-[0_2px_8px_rgba(34,197,94,0.15)]",
-                            )}
-                          >
-                            <div className="flex flex-1 items-center gap-1.5">
-                              {team.logo ? (
-                                <img
-                                  src={team.logo}
-                                  alt=""
-                                  className={cn(
-                                    "size-8 rounded-full border-2 border-[#e5e7eb] object-cover",
-                                    team.winning &&
-                                      "border-[#f59e0b] shadow-[0_0_8px_rgba(245,158,11,0.3)]",
-                                  )}
-                                />
-                              ) : null}
-                              <span
-                                className={cn(
-                                  "text-base font-semibold capitalize text-[#1f2937]",
-                                  team.winning && "font-bold text-[#166534]",
-                                )}
-                              >
-                                {team.name ?? "TBD"}
-                              </span>
-                            </div>
-                            <span
-                              className={cn(
-                                "pr-6 text-[1.3rem] font-bold text-[#374151]",
-                                team.winning && "text-[#166534]",
-                              )}
-                            >
-                              {team.score ?? "–"}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
+                      {scheduled ? (
+                        <span className="font-mono text-[0.8rem] uppercase tracking-[0.16em] text-rvl-dim">
+                          vs
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-3 font-mono text-[1.3rem] font-bold tabular-nums text-rvl-accent">
+                          {match.team1Score ?? 0}
+                          <span className="text-rvl-dim">–</span>
+                          {match.team2Score ?? 0}
+                        </span>
+                      )}
 
-                      {match.setScores.some(Boolean) ? (
-                        <div className="flex flex-wrap gap-1 px-6 pb-1">
-                          {match.setScores.filter(Boolean).map((set, index) => (
-                            <span
-                              key={index}
-                              className="rounded-sm px-1 py-px text-[0.9rem] font-medium text-[#666]"
-                            >
-                              {set}
-                            </span>
-                          ))}
-                        </div>
-                      ) : null}
-                    </article>
-                  );
-                })}
-              </div>
-            </section>
-          ))
-        )}
-      </div>
+                      <span className="flex items-center gap-2.5">
+                        <span className={cn(team2Wins ? "font-bold" : "text-rvl-ink-2")}>
+                          {match.team2Name ?? "TBD"}
+                        </span>
+                        {match.team2LogoUrl ? (
+                          <img
+                            src={match.team2LogoUrl}
+                            alt=""
+                            className="size-7 shrink-0 rounded-xs object-cover"
+                          />
+                        ) : null}
+                      </span>
+                    </div>
+
+                    <span
+                      className={cn(
+                        "font-mono text-[0.68rem] tracking-[0.08em] md:ml-auto",
+                        scheduled
+                          ? "uppercase tracking-[0.16em] text-rvl-mint"
+                          : "text-rvl-dim",
+                      )}
+                    >
+                      {scheduled ? "Scheduled" : sets}
+                    </span>
+                  </article>
+                );
+              })}
+            </div>
+          </section>
+        ))
+      )}
     </>
   );
 }

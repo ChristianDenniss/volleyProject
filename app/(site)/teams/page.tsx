@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getDb } from "@db";
 import { teams } from "@server/services";
 import { EmptyState } from "@components/site/empty-state";
+import { PageHeader, PageMetric } from "@components/site/page-header";
 import { TeamsList } from "@components/site/teams-list";
 
 export const dynamic = "force-dynamic";
@@ -14,11 +15,30 @@ export const metadata: Metadata = {
 export default async function TeamsPage() {
   const rows = await teams.list(getDb());
 
+  const seasonCount = new Set(
+    rows.flatMap((team) => (team.seasonNumber == null ? [] : [team.seasonNumber])),
+  ).size;
+  const rostered = rows.reduce((sum, team) => sum + team.playerCount, 0);
+
   return (
-    <div className="mx-auto box-border min-h-screen w-full max-w-[1200px] p-5">
-      <h1 className="m-0 mb-5 border-none p-0 text-[2rem] font-bold text-[#222]">Teams Info</h1>
+    <div className="font-display">
+      <PageHeader
+        eyebrow="Rosters"
+        title="Teams"
+        description="Every roster the league has fielded, with the season it played and where it finished."
+        meta={
+          <>
+            <PageMetric label="Teams" value={rows.length} />
+            <PageMetric label="Seasons" value={seasonCount} />
+            <PageMetric label="Roster spots" value={rostered} />
+          </>
+        }
+      />
+
       {rows.length === 0 ? (
-        <EmptyState>No teams have been created yet.</EmptyState>
+        <div className="px-5 py-14 sm:px-8 xl:px-14">
+          <EmptyState>No teams have been created yet.</EmptyState>
+        </div>
       ) : (
         <TeamsList
           teams={rows.map((team) => ({
