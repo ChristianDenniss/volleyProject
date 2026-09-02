@@ -4,6 +4,7 @@ import { getDb } from "@db";
 import { articles } from "@server/services";
 import { getSessionUser } from "@server/session";
 import { LikeButton } from "@components/site/like-button";
+import { ArticleContent } from "@components/site/article-content";
 
 export const dynamic = "force-dynamic";
 
@@ -68,13 +69,11 @@ export default async function ArticlePage({ params }: Params) {
           {article.summary}
         </p>
 
-        <div className="mb-8 columns-2 gap-12 text-justify text-[1.1rem] leading-[1.7] max-md:columns-1 [&>p:first-of-type::first-letter]:float-left [&>p:first-of-type::first-letter]:mr-2 [&>p:first-of-type::first-letter]:mt-1 [&>p:first-of-type::first-letter]:text-[4rem] [&>p:first-of-type::first-letter]:font-bold [&>p:first-of-type::first-letter]:leading-none [&>p:first-of-type::first-letter]:text-[#800000]">
-          {article.content.split(/\n{2,}/).map((paragraph, index) => (
-            <p key={index} className="mb-6">
-              {paragraph}
-            </p>
-          ))}
-        </div>
+        <ArticleContent
+          content={article.content}
+          className="mb-8 columns-2 gap-12 text-justify text-[1.1rem] leading-[1.7] max-md:columns-1 [&>p:first-of-type::first-letter]:float-left [&>p:first-of-type::first-letter]:mr-2 [&>p:first-of-type::first-letter]:mt-1 [&>p:first-of-type::first-letter]:text-[4rem] [&>p:first-of-type::first-letter]:font-bold [&>p:first-of-type::first-letter]:leading-none [&>p:first-of-type::first-letter]:text-[#800000]"
+        />
+
 
         <div className="mt-8">
           <LikeButton

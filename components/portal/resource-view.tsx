@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { RichTextEditor } from "@components/site/rich-text-editor";
 import {
   Dialog,
   DialogContent,
@@ -15,7 +16,15 @@ import {
   DialogTrigger,
 } from "@components/ui/dialog";
 
-export type FieldType = "text" | "number" | "date" | "url" | "textarea" | "select" | "checkbox";
+export type FieldType =
+  | "text"
+  | "number"
+  | "date"
+  | "url"
+  | "textarea"
+  | "richtext"
+  | "select"
+  | "checkbox";
 
 export interface FieldSpec {
   name: string;
@@ -72,6 +81,10 @@ function FieldInput({
   value: string;
   onChange: (next: string) => void;
 }) {
+  if (field.type === "richtext") {
+    return <RichTextEditor value={value} onChange={onChange} />;
+  }
+
   if (field.type === "textarea") {
     return (
       <textarea
@@ -161,7 +174,12 @@ function EntityDialog({
       }}
     >
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
+      <DialogContent
+        className={cn(
+          "max-h-[85vh] overflow-y-auto",
+          fields.some((field) => field.type === "richtext") ? "sm:max-w-3xl" : "sm:max-w-lg",
+        )}
+      >
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>

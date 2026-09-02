@@ -8,6 +8,7 @@ import {
   RECORD_TYPES,
   USER_ROLES,
 } from "@db/schema";
+import { articleContentSchema } from "@/lib/tiptap-doc";
 
 export const PLAYER_POSITIONS = [
   "N/A",
@@ -190,7 +191,7 @@ export const matchImportChallonge = z.object({
 export const articleCreate = z.object({
   title: z.string().min(1),
   summary: z.string().min(1),
-  content: z.string().min(1),
+  content: articleContentSchema,
   imageUrl: z.string().url(),
 });
 export const articleUpdate = z.object({

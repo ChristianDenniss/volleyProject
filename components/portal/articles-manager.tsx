@@ -34,7 +34,7 @@ const FIELDS: FieldSpec[] = [
   { name: "title", label: "Title", type: "text", required: true },
   { name: "summary", label: "Summary", type: "text", required: true },
   { name: "imageUrl", label: "Image URL", type: "url", required: true },
-  { name: "content", label: "Content", type: "textarea", required: true },
+  { name: "content", label: "Content", type: "richtext", required: true },
   { name: "approved", label: "Published", type: "checkbox" },
 ];
 
