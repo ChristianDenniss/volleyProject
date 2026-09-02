@@ -23,11 +23,19 @@ export interface ScheduleMatch {
 
 const PER_PAGE = 40;
 
+// The match date is a plain YYYY-MM-DD string, which Date parses as UTC midnight.
+// Formatting it in the viewer's zone would shift it a day west of UTC and disagree
+// with the server render, so pin the calendar to UTC.
 function longDate(value: string) {
   const parsed = new Date(value);
   return Number.isNaN(parsed.getTime())
     ? value
-    : parsed.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    : parsed.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        timeZone: "UTC",
+      });
 }
 
 export function SchedulesBoard({

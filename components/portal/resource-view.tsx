@@ -78,8 +78,25 @@ const editButtonClass =
 
 const PER_PAGE = 25;
 
+const CLEAR_SELECT = "__none";
+
 function emptyValues(fields: FieldSpec[]): Values {
   return Object.fromEntries(fields.map((field) => [field.name, ""]));
+}
+
+// Rows carry nested relations (a game's teams, an award's players) that are
+// rendered as columns, so the search has to look inside them instead of
+// stringifying them to "[object Object]".
+function searchableText(value: unknown): string {
+  if (value === null || value === undefined) return "";
+  if (value instanceof Date) return value.toISOString();
+  if (Array.isArray(value)) return value.map(searchableText).join(" ");
+  if (typeof value === "object") {
+    return Object.values(value as Record<string, unknown>)
+      .map(searchableText)
+      .join(" ");
+  }
+  return String(value);
 }
 
 function FieldInput({
@@ -111,7 +128,11 @@ function FieldInput({
 
   if (field.type === "select") {
     return (
-      <Select value={value} onValueChange={onChange}>
+      <Select
+        value={value}
+        onValueChange={(next) => onChange(next === CLEAR_SELECT ? "" : next)}
+        required={field.required ?? false}
+      >
         <SelectTrigger
           id={field.name}
           className="w-full rounded-xs border-rvl-line bg-transparent px-3.5 text-[0.9rem] data-[size=default]:h-10 hover:border-rvl-line-strong focus-visible:border-rvl-accent-soft focus-visible:ring-0"
@@ -119,6 +140,16 @@ function FieldInput({
           <SelectValue placeholder="Choose…" />
         </SelectTrigger>
         <SelectContent className="rounded-xs border-rvl-line">
+          {/* Radix forbids an item with an empty value, so an optional field needs a
+              sentinel item to get back to "unset" once something has been picked. */}
+          {field.required ? null : (
+            <SelectItem
+              value={CLEAR_SELECT}
+              className="rounded-xs text-[0.88rem] text-rvl-dim focus:bg-rvl-panel focus:text-rvl-accent"
+            >
+              None
+            </SelectItem>
+          )}
           {field.options?.map((option) => (
             <SelectItem
               key={option.value}
@@ -263,13 +294,7 @@ export function ResourceView<Row extends { id: number | string }>({
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
     if (query === "") return rows;
-    return rows.filter((row) =>
-      Object.values(row as Record<string, unknown>)
-        .map((value) => (value === null || value === undefined ? "" : String(value)))
-        .join(" ")
-        .toLowerCase()
-        .includes(query),
-    );
+    return rows.filter((row) => searchableText(row).toLowerCase().includes(query));
   }, [rows, search]);
 
   const totalPages = Math.max(Math.ceil(filtered.length / PER_PAGE), 1);

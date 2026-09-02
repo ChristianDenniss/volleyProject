@@ -1,4 +1,4 @@
-import { and, asc, eq, isNull } from "drizzle-orm";
+import { and, asc, desc, eq, isNull } from "drizzle-orm";
 import type { Db } from "@db";
 import { games, players, RECORD_METRICS, RECORD_TYPES, records, seasons } from "@db/schema";
 import { found, NotFoundError } from "./errors";
@@ -53,7 +53,15 @@ export async function listBySeason(db: Db, seasonId: number) {
     .orderBy(asc(records.metric), asc(records.minAttempts), asc(records.rank));
 }
 
-export async function listByMetric(db: Db, metric: RecordMetric, minAttempts?: number | null) {
+// `rank` is assigned per season, so a metric holds one rank-1 row per season for
+// each of the "game" and "season" types. Callers that want the single best mark
+// have to narrow by type and order by value, not by rank.
+export async function listByMetric(
+  db: Db,
+  metric: RecordMetric,
+  minAttempts?: number | null,
+  type?: RecordType | null,
+) {
   return base(db)
     .where(
       and(
@@ -61,9 +69,10 @@ export async function listByMetric(db: Db, metric: RecordMetric, minAttempts?: n
         minAttempts === undefined || minAttempts === null
           ? isNull(records.minAttempts)
           : eq(records.minAttempts, minAttempts),
+        ...(type ? [eq(records.type, type)] : []),
       ),
     )
-    .orderBy(asc(records.rank));
+    .orderBy(desc(records.value), asc(records.rank));
 }
 
 export async function listByPlayer(db: Db, playerId: number) {

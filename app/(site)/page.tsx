@@ -56,9 +56,9 @@ export default async function HomePage() {
   const [matchRows, leaders, killRecords, blockRecords, aceRecords] = await Promise.all([
     season ? trpc.matches.list({ seasonId: season.id }) : Promise.resolve([]),
     season ? trpc.stats.leaderboard({ seasonId: season.id }) : Promise.resolve([]),
-    trpc.records.byMetric({ metric: "total kills" }),
-    trpc.records.byMetric({ metric: "blocks" }),
-    trpc.records.byMetric({ metric: "aces" }),
+    trpc.records.byMetric({ metric: "total kills", type: "game" }),
+    trpc.records.byMetric({ metric: "blocks", type: "game" }),
+    trpc.records.byMetric({ metric: "aces", type: "game" }),
   ]);
 
   const sortedArticles = [...articleRows].sort((a, b) => b.id - a.id);
@@ -285,7 +285,7 @@ export default async function HomePage() {
                 <span className="flex items-center gap-4 text-[1.25rem]">
                   <span
                     className={
-                      (match.team1Score ?? 0) >= (match.team2Score ?? 0)
+                      (match.team1Score ?? 0) > (match.team2Score ?? 0)
                         ? "font-bold"
                         : "text-rvl-ink-2"
                     }

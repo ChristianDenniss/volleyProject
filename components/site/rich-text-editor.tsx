@@ -39,7 +39,7 @@ const extensions = [
 ];
 
 const editorClass = [
-  "min-h-[320px] w-full px-4 py-3 text-base leading-[1.7] outline-none",
+  "min-h-[320px] w-full px-4 py-3 text-base leading-[1.7] text-rvl-ink outline-none",
   "[&_p]:mb-4",
   "[&_h2]:mb-3 [&_h2]:mt-6 [&_h2]:text-[1.6rem] [&_h2]:font-bold",
   "[&_h3]:mb-2 [&_h3]:mt-5 [&_h3]:text-[1.3rem] [&_h3]:font-bold",
@@ -47,9 +47,9 @@ const editorClass = [
   "[&_ul]:mb-4 [&_ul]:list-disc [&_ul]:pl-6",
   "[&_ol]:mb-4 [&_ol]:list-decimal [&_ol]:pl-6",
   "[&_li]:mb-1",
-  "[&_blockquote]:mb-4 [&_blockquote]:border-l-2 [&_blockquote]:border-rvl-accent-soft [&_blockquote]:pl-4 [&_blockquote]:italic",
+  "[&_blockquote]:mb-4 [&_blockquote]:border-l-2 [&_blockquote]:border-rvl-accent-soft [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-rvl-ink",
   "[&_pre]:mb-4 [&_pre]:overflow-x-auto [&_pre]:rounded-xs [&_pre]:border [&_pre]:border-rvl-line [&_pre]:bg-rvl-panel [&_pre]:p-3 [&_pre]:font-mono [&_pre]:text-[0.88rem] [&_pre]:text-rvl-ink",
-  "[&_code]:rounded-xs [&_code]:bg-rvl-panel [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-[0.88em]",
+  "[&_code]:rounded-xs [&_code]:bg-rvl-panel [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-[0.88em] [&_code]:text-rvl-ink",
   "[&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_pre_code]:text-inherit",
   "[&_hr]:my-6 [&_hr]:border-t [&_hr]:border-rvl-line-strong",
   "[&_img]:my-4 [&_img]:max-w-full [&_img]:rounded-xs",
@@ -163,10 +163,14 @@ export function RichTextEditor({
   value,
   onChange,
   className,
+  label = "Article body",
 }: {
   value: string;
   onChange: (json: string) => void;
   className?: string;
+  // A contenteditable cannot be the target of a <label htmlFor>, so the only way
+  // to give it an accessible name is to label the element itself.
+  label?: string;
 }) {
   const [draft, setDraft] = useState<Draft>(null);
 
@@ -174,7 +178,7 @@ export function RichTextEditor({
     extensions,
     content: initialContent(value),
     immediatelyRender: false,
-    editorProps: { attributes: { class: editorClass } },
+    editorProps: { attributes: { class: editorClass, role: "textbox", "aria-label": label } },
     onUpdate: ({ editor: instance }) => onChange(JSON.stringify(instance.getJSON())),
   });
 

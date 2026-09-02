@@ -18,16 +18,18 @@ export function PortalSelect({
   value,
   onChange,
   options,
+  required,
   placeholder = "Choose…",
 }: {
   id?: string;
   value: string;
   onChange: (value: string) => void;
   options: { value: string; label: string }[];
+  required?: boolean;
   placeholder?: string;
 }) {
   return (
-    <Select value={value} onValueChange={onChange}>
+    <Select value={value} onValueChange={onChange} required={required ?? false}>
       <SelectTrigger id={id} className={triggerClass}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>

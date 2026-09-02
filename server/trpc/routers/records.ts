@@ -10,7 +10,9 @@ export const recordsRouter = router({
 
   byMetric: publicProcedure
     .input(recordsByMetric)
-    .query(({ ctx, input }) => records.listByMetric(ctx.db, input.metric, input.minAttempts)),
+    .query(({ ctx, input }) =>
+      records.listByMetric(ctx.db, input.metric, input.minAttempts, input.type),
+    ),
 
   count: adminProcedure.query(({ ctx }) => records.count(ctx.db)),
 

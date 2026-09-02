@@ -16,11 +16,18 @@ export interface ArticleListRow {
 
 type SortKey = "newest" | "oldest" | "likes" | "title";
 
+// Formatted in UTC so the server render and the client hydration agree; a local
+// zone would flip the day for anything published near midnight UTC.
 function shortDate(value: string) {
   const parsed = new Date(value);
   return Number.isNaN(parsed.getTime())
     ? value
-    : parsed.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    : parsed.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        timeZone: "UTC",
+      });
 }
 
 export function ArticlesList({ articles }: { articles: ArticleListRow[] }) {
@@ -83,7 +90,13 @@ export function ArticlesList({ articles }: { articles: ArticleListRow[] }) {
           >
             <div>
               <span className="font-mono text-[0.62rem] uppercase tracking-[0.2em] text-rvl-accent">
-                {sort === "likes" ? "Most liked" : sort === "title" ? "First A–Z" : "Latest"}
+                {sort === "likes"
+                  ? "Most liked"
+                  : sort === "title"
+                    ? "First A–Z"
+                    : sort === "oldest"
+                      ? "Oldest"
+                      : "Latest"}
               </span>
               <h2 className="mt-5 mb-4 text-balance text-[2rem] font-black uppercase leading-[0.95] tracking-[-0.035em] sm:text-[2.5rem]">
                 {lead.title}

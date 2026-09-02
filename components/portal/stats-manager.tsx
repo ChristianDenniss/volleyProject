@@ -122,6 +122,7 @@ function CsvUpload({ games }: { games: { id: number; label: string }[] }) {
             <Label htmlFor="csv-game">Game</Label>
             <PortalSelect
               id="csv-game"
+              required
               value={gameId}
               onChange={setGameId}
               options={games.map((game) => ({ value: String(game.id), label: game.label }))}

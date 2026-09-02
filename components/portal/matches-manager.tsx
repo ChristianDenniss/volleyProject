@@ -127,6 +127,7 @@ function ChallongeImport({ seasons }: { seasons: { id: number; label: string }[]
             <Label htmlFor="import-season">Season</Label>
             <PortalSelect
               id="import-season"
+              required
               value={seasonId}
               onChange={setSeasonId}
               options={seasons.map((season) => ({

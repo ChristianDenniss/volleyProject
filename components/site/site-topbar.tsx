@@ -16,7 +16,9 @@ export async function SiteTopbar() {
         className="flex shrink-0 items-center gap-2.5 font-mono text-[1.02rem] font-bold uppercase tracking-[-0.02em] text-rvl-ink no-underline"
       >
         <img src="/rvlLogo.png" alt="" className="size-8 shrink-0 object-contain" />
-        <span className="hidden whitespace-nowrap xs:inline">Volleyball 4-2</span>
+        {/* sr-only rather than hidden: below xs the wordmark is the link's only
+            accessible name, and `hidden` would strip it from the a11y tree. */}
+        <span className="sr-only whitespace-nowrap xs:not-sr-only xs:inline">Volleyball 4-2</span>
       </Link>
 
       <SiteTopbarNav isAdmin={user !== null && isAdmin(user.role)} />

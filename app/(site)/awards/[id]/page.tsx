@@ -1,3 +1,4 @@
+import { cache } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -9,11 +10,12 @@ interface Params {
   params: Promise<{ id: string }>;
 }
 
-async function load(id: string) {
+// Cached so generateMetadata and the page share one fetch per request.
+const load = cache(async (id: string) => {
   const parsed = Number.parseInt(id, 10);
   if (!Number.isInteger(parsed) || parsed <= 0) return null;
   return (await api()).awards.byId({ id: parsed });
-}
+});
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { id } = await params;

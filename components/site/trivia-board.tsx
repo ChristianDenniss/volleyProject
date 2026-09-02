@@ -94,7 +94,9 @@ export function TriviaBoard({
               Name the {kind}
             </h2>
             <p className="m-0 font-mono text-[0.64rem] uppercase tracking-[0.14em] text-rvl-dim">
-              {difficulty} · {subject.hintCount} hints allowed
+              {/* hintCount is the difficulty's allowance, but the page only ever
+                  builds 4-6 clues, so quote what can actually be revealed. */}
+              {difficulty} · {Math.min(subject.hintCount, subject.clues.length)} clues available
             </p>
           </div>
 

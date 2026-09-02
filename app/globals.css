@@ -37,40 +37,46 @@
   --rvl-accent-soft: #f0dcbb;
   --rvl-on-accent: #14161b;
   --rvl-mint: #0f766e;
-  --card: #ffffff;
-  --card-foreground: #1a1a1a;
-  --popover: #ffffff;
-  --popover-foreground: #1a1a1a;
-  --primary: #2d3c50;
-  --primary-foreground: #ffffff;
-  --secondary: #f0f0f0;
-  --secondary-foreground: #2d3c50;
-  --muted: #f5f7fa;
-  --muted-foreground: #5d6673;
-  --accent: #d6ebff;
-  --accent-foreground: #1a365d;
+
+  /* The shadcn semantic tokens are aliases onto the Open Deck palette above.
+     Every primitive in components/ui (and therefore the whole admin portal)
+     resolves through these, so the portal renders in the same scheme as the
+     site instead of the old navy one. Only the rvl-* values are redefined for
+     dark mode — these aliases follow automatically. */
+  --background: var(--rvl-ground);
+  --foreground: var(--rvl-ink);
+  --card: var(--rvl-ground);
+  --card-foreground: var(--rvl-ink);
+  --popover: var(--rvl-ground);
+  --popover-foreground: var(--rvl-ink);
+  --primary: var(--rvl-accent-bg);
+  --primary-foreground: var(--rvl-on-accent);
+  --secondary: var(--rvl-panel);
+  --secondary-foreground: var(--rvl-ink);
+  --muted: var(--rvl-panel);
+  --muted-foreground: var(--rvl-dim);
+  --accent: var(--rvl-panel);
+  --accent-foreground: var(--rvl-accent);
   --destructive: #dc2626;
-  --success: #27ae60;
-  --warning: #f39c12;
-  --border: #e0e0e0;
-  --input: #e0e0e0;
-  --ring: #5b7dab;
-  --chart-1: #2d3c50;
-  --chart-2: #5b7dab;
-  --chart-3: #a1d2ff;
-  --chart-4: #ffd700;
-  --chart-5: #dc2626;
+  --success: var(--rvl-mint);
+  --warning: var(--rvl-accent-bg);
+  --border: var(--rvl-line);
+  --input: var(--rvl-line);
+  --ring: var(--rvl-accent-soft);
+  --chart-1: var(--rvl-accent-bg);
+  --chart-2: var(--rvl-mint);
+  --chart-3: var(--rvl-ink-2);
+  --chart-4: var(--rvl-accent-soft);
+  --chart-5: var(--rvl-dim);
   --radius: 0.5rem;
-  --sidebar: #2d3c50;
-  --sidebar-foreground: #f5f5f5;
-  --sidebar-primary: #a1d2ff;
-  --sidebar-primary-foreground: #1a365d;
-  --sidebar-accent: #2a4a7d;
-  --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #3a4a60;
-  --sidebar-ring: #a1d2ff;
-  --background: #ffffff;
-  --foreground: #1a1a1a;
+  --sidebar: var(--rvl-panel);
+  --sidebar-foreground: var(--rvl-ink);
+  --sidebar-primary: var(--rvl-accent-bg);
+  --sidebar-primary-foreground: var(--rvl-on-accent);
+  --sidebar-accent: var(--rvl-line);
+  --sidebar-accent-foreground: var(--rvl-ink);
+  --sidebar-border: var(--rvl-line);
+  --sidebar-ring: var(--rvl-accent-soft);
 }
 
 @theme inline {
@@ -173,39 +179,11 @@
   --rvl-accent-soft: #8a6316;
   --rvl-on-accent: #08090b;
   --rvl-mint: #46d0a0;
-  --background: #1a1a1a;
-  --foreground: #f5f5f5;
-  --card: #262626;
-  --card-foreground: #f5f5f5;
-  --popover: #262626;
-  --popover-foreground: #f5f5f5;
-  --primary: #a1d2ff;
-  --primary-foreground: #0b1e35;
-  --secondary: #2a2a2a;
-  --secondary-foreground: #f5f5f5;
-  --muted: #2a2a2a;
-  --muted-foreground: #c1c1c1;
-  --accent: #3a3a3a;
-  --accent-foreground: #a1d2ff;
+
+  /* Redefining the palette is enough — the semantic aliases in :root resolve
+     against these on the same element, so background/card/popover/sidebar and
+     the rest all follow the dark Open Deck scheme. */
   --destructive: #f87171;
-  --success: #4ade80;
-  --warning: #fbbf24;
-  --border: #3a3a3a;
-  --input: #3a3a3a;
-  --ring: #a1d2ff;
-  --chart-1: #a1d2ff;
-  --chart-2: #5b7dab;
-  --chart-3: #d6ebff;
-  --chart-4: #ffd700;
-  --chart-5: #f87171;
-  --sidebar: #0b1e35;
-  --sidebar-foreground: #f5f5f5;
-  --sidebar-primary: #a1d2ff;
-  --sidebar-primary-foreground: #0b1e35;
-  --sidebar-accent: #1a365d;
-  --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #1f2937;
-  --sidebar-ring: #a1d2ff;
 }
 
 @layer base {

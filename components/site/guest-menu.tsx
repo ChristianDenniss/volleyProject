@@ -15,7 +15,7 @@ import {
 export function GuestMenu() {
   return (
     <div className="flex items-center gap-3 sm:gap-5">
-      <span className="whitespace-nowrap text-lg font-black text-brand-ink">Guest</span>
+      <span className="whitespace-nowrap text-lg font-black text-rvl-ink">Guest</span>
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>

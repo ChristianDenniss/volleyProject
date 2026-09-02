@@ -1,3 +1,4 @@
+import { cache } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -18,9 +19,14 @@ function decode(value: string): string {
   }
 }
 
+// Cached so generateMetadata and the page share one fetch per request.
+const load = cache(async (teamName: string) =>
+  (await api()).teams.byName({ name: decode(teamName) }),
+);
+
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { teamName } = await params;
-  const team = await (await api()).teams.byName({ name: decode(teamName) });
+  const team = await load(teamName);
   if (!team) return { title: "Team not found" };
 
   const description = `${team.name}: ${team.players.length} players, ${team.games.length} games, ${team.placement}.`;
@@ -38,7 +44,7 @@ const railHeadingClass =
 
 export default async function TeamPage({ params }: Params) {
   const { teamName } = await params;
-  const team = await (await api()).teams.byName({ name: decode(teamName) });
+  const team = await load(teamName);
   if (!team) notFound();
 
   return (

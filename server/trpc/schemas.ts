@@ -218,4 +218,5 @@ export const optionalSeason = z.object({ seasonId: id.optional() });
 export const recordsByMetric = z.object({
   metric: z.enum(RECORD_METRICS),
   minAttempts: z.number().int().positive().nullable().optional(),
+  type: z.enum(RECORD_TYPES).nullable().optional(),
 });
