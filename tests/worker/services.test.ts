@@ -130,8 +130,8 @@ describe("stats", () => {
     const rows = await stats.leaderboard(db);
     expect(rows).toHaveLength(4);
     const top = rows[0];
-    expect(top.gamesPlayed).toBe(4);
-    expect(top.spikingPercentage).toBeGreaterThan(0);
+    expect(top?.gamesPlayed).toBe(4);
+    expect(top?.spikingPercentage).toBeGreaterThan(0);
   });
 
   it("scopes the leaderboard to one season", async () => {
@@ -165,7 +165,7 @@ describe("awards", () => {
   it("lists awards with their players", async () => {
     const rows = await awards.list(db);
     expect(rows).toHaveLength(2);
-    expect(rows.find((row) => row.type === "MVP")?.players[0].name).toBe(FIXTURES.playerName);
+    expect(rows.find((row) => row.type === "MVP")?.players[0]?.name).toBe(FIXTURES.playerName);
   });
 
   it("creates an award from player names", async () => {
@@ -190,7 +190,7 @@ describe("records", () => {
   it("returns the top ten for one season and metric", async () => {
     const rows = await records.top10(db, "spike kills", FIXTURES.seasonId);
     expect(rows.map((row) => row.rank)).toEqual([1, 2]);
-    expect(rows[0].playerName).toBeDefined();
+    expect(rows[0]?.playerName).toBeDefined();
   });
 });
 
@@ -210,8 +210,8 @@ describe("matches", () => {
       team1Name: FIXTURES.teamName,
       team2Name: "Nobody",
     });
-    expect(created.team1LogoUrl).toBe("/images/rvlLogo.png");
-    expect(created.team2LogoUrl).toBeNull();
+    expect(created?.team1LogoUrl).toBe("/images/rvlLogo.png");
+    expect(created?.team2LogoUrl).toBeNull();
   });
 
   it("imports challonge matches and skips ones already present", async () => {
@@ -270,7 +270,7 @@ describe("articles", () => {
     expect(await articles.list(db)).toHaveLength(2);
     const approved = await articles.list(db, { approvedOnly: true });
     expect(approved).toHaveLength(1);
-    expect(approved[0].authorName).toBe("fixtureadmin");
+    expect(approved[0]?.authorName).toBe("fixtureadmin");
   });
 
   it("likes once and unlikes back to zero", async () => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { ResourceView, optionalText, type ColumnSpec, type FieldSpec } from "./resource-view";
+import { pick, ResourceView, optionalText, type ColumnSpec, type FieldSpec } from "./resource-view";
 import { trpc } from "@/lib/trpc";
 
 const AWARD_TYPES = [
@@ -106,21 +106,21 @@ export function AwardsManager({
       })}
       onCreate={(values) =>
         create.mutateAsync({
-          type: values.type as AwardType,
-          seasonId: Number.parseInt(values.seasonId, 10),
-          description: values.description,
-          imageUrl: optionalText(values.imageUrl) ?? null,
-          playerNames: names(values.playerNames),
+          type: pick(values, "type") as AwardType,
+          seasonId: Number.parseInt(pick(values, "seasonId"), 10),
+          description: pick(values, "description"),
+          imageUrl: optionalText(pick(values, "imageUrl")) ?? null,
+          playerNames: names(pick(values, "playerNames")),
         })
       }
       onUpdate={(id, values) =>
         update.mutateAsync({
           id: id as number,
           patch: {
-            type: values.type as AwardType,
-            seasonId: Number.parseInt(values.seasonId, 10),
-            description: values.description,
-            imageUrl: optionalText(values.imageUrl) ?? null,
+            type: pick(values, "type") as AwardType,
+            seasonId: Number.parseInt(pick(values, "seasonId"), 10),
+            description: pick(values, "description"),
+            imageUrl: optionalText(pick(values, "imageUrl")) ?? null,
           },
         })
       }

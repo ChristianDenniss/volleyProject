@@ -2,16 +2,17 @@ import { asc, eq, inArray } from "drizzle-orm";
 import type { Db } from "@db";
 import { insertMany } from "@db/insert";
 import { AWARD_TYPES, awards, awardsPlayers, players, seasons } from "@db/schema";
-import { found, NotFoundError } from "./errors";
+import { found, inserted, NotFoundError } from "./errors";
+import type { PartialInput } from "./input";
 
 export type AwardType = (typeof AWARD_TYPES)[number];
 
 export interface AwardInput {
   type: AwardType;
   description: string;
-  imageUrl?: string | null;
+  imageUrl?: string | null | undefined;
   seasonId: number;
-  playerIds?: number[];
+  playerIds?: number[] | undefined;
 }
 
 const columns = {
@@ -125,7 +126,8 @@ export async function create(db: Db, input: AwardInput) {
   if (!season) throw new NotFoundError(`Season ${input.seasonId}`);
 
   const { playerIds = [], ...values } = input;
-  const [row] = await db.insert(awards).values(values).returning();
+  const [created] = await db.insert(awards).values(values).returning();
+  const row = inserted(created, "Award");
 
   if (playerIds.length > 0) {
     await insertMany(
@@ -152,7 +154,7 @@ export async function createWithPlayerNames(
   return create(db, { ...rest, playerIds: matched.map((player) => player.id) });
 }
 
-export async function update(db: Db, id: number, input: Partial<AwardInput>) {
+export async function update(db: Db, id: number, input: PartialInput<AwardInput>) {
   const { playerIds, ...values } = input;
   const [row] = await db.update(awards).set(values).where(eq(awards.id, id)).returning();
   found(row, `Award ${id}`);

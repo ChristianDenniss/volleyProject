@@ -1,6 +1,6 @@
 "use client";
 
-import { ResourceView, optionalText, type ColumnSpec, type FieldSpec } from "./resource-view";
+import { pick, ResourceView, optionalText, type ColumnSpec, type FieldSpec } from "./resource-view";
 import { trpc } from "@/lib/trpc";
 
 interface Row {
@@ -61,17 +61,17 @@ export function PlayersManager({ rows, teams }: { rows: Row[]; teams: string[] }
       toValues={(row) => ({ name: row.name, position: row.position, teamName: "" })}
       onCreate={(values) =>
         create.mutateAsync({
-          name: values.name,
-          position: values.position as Position,
-          teamName: optionalText(values.teamName),
+          name: pick(values, "name"),
+          position: pick(values, "position") as Position,
+          teamName: optionalText(pick(values, "teamName")),
         })
       }
       onUpdate={(id, values) =>
         update.mutateAsync({
           id: id as number,
           patch: {
-            name: values.name,
-            position: values.position as Position,
+            name: pick(values, "name"),
+            position: pick(values, "position") as Position,
           },
         })
       }

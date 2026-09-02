@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ResourceView, type ColumnSpec, type FieldSpec } from "./resource-view";
+import { pick, ResourceView, type ColumnSpec, type FieldSpec } from "./resource-view";
 import {
   Dialog,
   DialogContent,
@@ -205,8 +205,8 @@ export function StatsManager({
       })}
       onCreate={(values) =>
         create.mutateAsync({
-          playerName: values.playerName,
-          gameId: Number.parseInt(values.gameId, 10),
+          playerName: pick(values, "playerName"),
+          gameId: Number.parseInt(pick(values, "gameId"), 10),
           ...counterValues(values),
         })
       }

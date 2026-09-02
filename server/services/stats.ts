@@ -3,23 +3,24 @@ import type { Db } from "@db";
 import { insertMany } from "@db/insert";
 import { games, players, stats } from "@db/schema";
 import { ConflictError, found, NotFoundError } from "./errors";
+import type { PartialInput } from "./input";
 
 export interface StatInput {
   playerId: number;
   gameId: number;
-  spikeKills?: number;
-  spikeAttempts?: number;
-  spikingErrors?: number;
-  apeKills?: number;
-  apeAttempts?: number;
-  assists?: number;
-  settingErrors?: number;
-  blocks?: number;
-  blockFollows?: number;
-  digs?: number;
-  aces?: number;
-  servingErrors?: number;
-  miscErrors?: number;
+  spikeKills?: number | undefined;
+  spikeAttempts?: number | undefined;
+  spikingErrors?: number | undefined;
+  apeKills?: number | undefined;
+  apeAttempts?: number | undefined;
+  assists?: number | undefined;
+  settingErrors?: number | undefined;
+  blocks?: number | undefined;
+  blockFollows?: number | undefined;
+  digs?: number | undefined;
+  aces?: number | undefined;
+  servingErrors?: number | undefined;
+  miscErrors?: number | undefined;
 }
 
 export interface StatRowByName extends Omit<StatInput, "playerId" | "gameId"> {
@@ -183,7 +184,7 @@ export async function addToGame(db: Db, gameId: number, rows: StatRowByName[]) {
   return createManyFromRows(db, gameId, rows);
 }
 
-export async function update(db: Db, id: number, input: Partial<Omit<StatInput, "playerId" | "gameId">>) {
+export async function update(db: Db, id: number, input: PartialInput<Omit<StatInput, "playerId" | "gameId">>) {
   const [row] = await db.update(stats).set(input).where(eq(stats.id, id)).returning();
   return found(row, `Stat ${id}`);
 }

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
+import { RichTextEditor, emptyDocJson, isEmptyDoc } from "@components/site/rich-text-editor";
 
 const inputClass =
   "w-full rounded border border-[#ddd] p-3 text-base focus:border-brand-navy focus:outline-none";
@@ -11,7 +12,12 @@ const inputClass =
 export function ArticleForm() {
   const router = useRouter();
   const create = trpc.articles.create.useMutation();
-  const [form, setForm] = useState({ title: "", summary: "", content: "", imageUrl: "" });
+  const [form, setForm] = useState({
+    title: "",
+    summary: "",
+    content: emptyDocJson(),
+    imageUrl: "",
+  });
 
   const field = (key: keyof typeof form) => ({
     id: key,
@@ -25,10 +31,14 @@ export function ArticleForm() {
       className="rounded-lg bg-white p-8 shadow-[0_2px_4px_rgba(0,0,0,0.1)] max-md:p-5"
       onSubmit={async (event) => {
         event.preventDefault();
+        if (isEmptyDoc(form.content)) {
+          toast.error("The article body is empty.");
+          return;
+        }
         try {
           const article = await create.mutateAsync(form);
           toast.success("Article submitted for review.");
-          router.push(`/articles/${article.id}`);
+          router.push(article ? `/articles/${article.id}` : "/articles");
         } catch (error) {
           toast.error(error instanceof Error ? error.message : "The article was not saved.");
         }
@@ -65,15 +75,14 @@ export function ArticleForm() {
       </div>
 
       <div className="mb-6">
-        <label htmlFor="content" className="mb-2 block font-medium text-[#333]">
-          Article
-        </label>
-        <textarea
-          required
-          rows={14}
-          className={`${inputClass} min-h-[200px] resize-y`}
-          {...field("content")}
+        <span className="mb-2 block font-medium text-[#333]">Article</span>
+        <RichTextEditor
+          value={form.content}
+          onChange={(content) => setForm((current) => ({ ...current, content }))}
         />
+        <p className="mt-2 text-[0.9rem] text-[#666]">
+          Images are inserted by pasting a direct link; uploads are not supported.
+        </p>
       </div>
 
       <div className="mt-8 flex justify-end gap-3">

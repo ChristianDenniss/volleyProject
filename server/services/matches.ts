@@ -10,6 +10,7 @@ import {
   teams,
 } from "@db/schema";
 import { BadRequestError, found, NotFoundError } from "./errors";
+import type { PartialInput } from "./input";
 
 export type MatchStatus = (typeof MATCH_STATUSES)[number];
 export type MatchPhase = (typeof MATCH_PHASES)[number];
@@ -18,26 +19,26 @@ export type MatchRegion = (typeof MATCH_REGIONS)[number];
 export interface MatchInput {
   matchNumber: string;
   round: string;
-  status?: MatchStatus;
-  phase?: MatchPhase;
-  region?: MatchRegion;
+  status?: MatchStatus | undefined;
+  phase?: MatchPhase | undefined;
+  region?: MatchRegion | undefined;
   date: string;
   seasonId: number;
-  team1Name?: string | null;
-  team2Name?: string | null;
-  team1LogoUrl?: string | null;
-  team2LogoUrl?: string | null;
-  team1Score?: number | null;
-  team2Score?: number | null;
-  set1Score?: string | null;
-  set2Score?: string | null;
-  set3Score?: string | null;
-  set4Score?: string | null;
-  set5Score?: string | null;
-  challongeMatchId?: string | null;
-  challongeTournamentId?: string | null;
-  challongeRound?: number | null;
-  tags?: string[] | null;
+  team1Name?: string | null | undefined;
+  team2Name?: string | null | undefined;
+  team1LogoUrl?: string | null | undefined;
+  team2LogoUrl?: string | null | undefined;
+  team1Score?: number | null | undefined;
+  team2Score?: number | null | undefined;
+  set1Score?: string | null | undefined;
+  set2Score?: string | null | undefined;
+  set3Score?: string | null | undefined;
+  set4Score?: string | null | undefined;
+  set5Score?: string | null | undefined;
+  challongeMatchId?: string | null | undefined;
+  challongeTournamentId?: string | null | undefined;
+  challongeRound?: number | null | undefined;
+  tags?: string[] | null | undefined;
 }
 
 export async function list(db: Db) {
@@ -92,7 +93,7 @@ export async function create(db: Db, input: MatchInput) {
   return row;
 }
 
-export async function update(db: Db, id: number, input: Partial<MatchInput>) {
+export async function update(db: Db, id: number, input: PartialInput<MatchInput>) {
   const [row] = await db.update(matches).set(input).where(eq(matches.id, id)).returning();
   return found(row, `Match ${id}`);
 }
@@ -107,13 +108,13 @@ interface ChallongeMatch {
   id: number | string;
   round: number;
   state: string;
-  scores_csv?: string | null;
-  player1_id?: number | null;
-  player2_id?: number | null;
-  suggested_play_order?: number | null;
-  updated_at?: string | null;
-  started_at?: string | null;
-  scheduled_time?: string | null;
+  scores_csv?: string | null | undefined;
+  player1_id?: number | null | undefined;
+  player2_id?: number | null | undefined;
+  suggested_play_order?: number | null | undefined;
+  updated_at?: string | null | undefined;
+  started_at?: string | null | undefined;
+  scheduled_time?: string | null | undefined;
 }
 
 interface ChallongeParticipant {
@@ -125,10 +126,10 @@ export interface ChallongeImportInput {
   tournamentId: string;
   seasonId: number;
   apiKey: string;
-  phase?: MatchPhase;
-  region?: MatchRegion;
-  tags?: string[] | null;
-  fetchImpl?: typeof fetch;
+  phase?: MatchPhase | undefined;
+  region?: MatchRegion | undefined;
+  tags?: string[] | null | undefined;
+  fetchImpl?: typeof fetch | undefined;
 }
 
 function setScores(scoresCsv: string | null | undefined) {
@@ -140,6 +141,7 @@ function setScores(scoresCsv: string | null | undefined) {
   let team2Score = 0;
   for (const set of sets) {
     const [left, right] = set.split("-").map((value) => Number.parseInt(value, 10));
+    if (left === undefined || right === undefined) continue;
     if (Number.isNaN(left) || Number.isNaN(right)) continue;
     if (left > right) team1Score += 1;
     else if (right > left) team2Score += 1;

@@ -2,17 +2,18 @@ import { asc, desc, eq, inArray, sql } from "drizzle-orm";
 import type { Db } from "@db";
 import { insertMany } from "@db/insert";
 import { games, players, seasons, stats, teams, teamsGames } from "@db/schema";
-import { BadRequestError, found, NotFoundError } from "./errors";
+import { BadRequestError, found, inserted, NotFoundError } from "./errors";
+import type { PartialInput } from "./input";
 
 export interface GameInput {
-  name?: string | null;
+  name?: string | null | undefined;
   date: string;
   seasonId: number;
   teamIds: number[];
   team1Score: number;
   team2Score: number;
-  stage?: string;
-  videoUrl?: string | null;
+  stage?: string | undefined;
+  videoUrl?: string | null | undefined;
 }
 
 const listColumns = {
@@ -165,7 +166,7 @@ export async function create(db: Db, input: GameInput) {
   }
 
   const name = input.name ?? `${linked.map((team) => team.name).join(" Vs. ")}`;
-  const [row] = await db
+  const [created] = await db
     .insert(games)
     .values({
       name,
@@ -178,6 +179,7 @@ export async function create(db: Db, input: GameInput) {
     })
     .returning();
 
+  const row = inserted(created, "Game");
   await insertMany(
     db,
     teamsGames,
@@ -205,7 +207,7 @@ export async function createByNames(
   return create(db, { ...input, teamIds: linked.map((team) => team.id) });
 }
 
-export async function update(db: Db, id: number, input: Partial<Omit<GameInput, "teamIds">> & { teamIds?: number[] }) {
+export async function update(db: Db, id: number, input: PartialInput<Omit<GameInput, "teamIds">> & { teamIds?: number[] | undefined }) {
   const { teamIds, ...rest } = input;
   const [row] = await db.update(games).set(rest).where(eq(games.id, id)).returning();
   found(row, `Game ${id}`);

@@ -1,6 +1,6 @@
 "use client";
 
-import { ResourceView, type ColumnSpec, type FieldSpec } from "./resource-view";
+import { pick, ResourceView, type ColumnSpec, type FieldSpec } from "./resource-view";
 import { Badge } from "@components/ui/badge";
 import { trpc } from "@/lib/trpc";
 
@@ -49,7 +49,7 @@ export function UsersManager({ rows }: { rows: Row[] }) {
       fields={FIELDS}
       toValues={(row) => ({ role: row.role })}
       onUpdate={(id, values) =>
-        setRole.mutateAsync({ id: id as string, role: values.role as Role })
+        setRole.mutateAsync({ id: id as string, role: pick(values, "role") as Role })
       }
     />
   );

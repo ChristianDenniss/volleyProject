@@ -1,6 +1,6 @@
 "use client";
 
-import { ResourceView, optionalText, type ColumnSpec, type FieldSpec } from "./resource-view";
+import { pick, ResourceView, optionalText, type ColumnSpec, type FieldSpec } from "./resource-view";
 import { trpc } from "@/lib/trpc";
 
 interface Row {
@@ -85,24 +85,24 @@ export function GamesManager({
       })}
       onCreate={(values) =>
         create.mutateAsync({
-          date: values.date,
-          seasonId: Number.parseInt(values.seasonId, 10),
-          teamNames: [values.team1, values.team2],
-          team1Score: Number.parseInt(values.team1Score, 10),
-          team2Score: Number.parseInt(values.team2Score, 10),
-          stage: optionalText(values.stage),
-          videoUrl: optionalText(values.videoUrl) ?? null,
+          date: pick(values, "date"),
+          seasonId: Number.parseInt(pick(values, "seasonId"), 10),
+          teamNames: [pick(values, "team1"), pick(values, "team2")],
+          team1Score: Number.parseInt(pick(values, "team1Score"), 10),
+          team2Score: Number.parseInt(pick(values, "team2Score"), 10),
+          stage: optionalText(pick(values, "stage")),
+          videoUrl: optionalText(pick(values, "videoUrl")) ?? null,
         })
       }
       onUpdate={(id, values) =>
         update.mutateAsync({
           id: id as number,
           patch: {
-            date: values.date,
-            team1Score: Number.parseInt(values.team1Score, 10),
-            team2Score: Number.parseInt(values.team2Score, 10),
-            stage: optionalText(values.stage),
-            videoUrl: optionalText(values.videoUrl) ?? null,
+            date: pick(values, "date"),
+            team1Score: Number.parseInt(pick(values, "team1Score"), 10),
+            team2Score: Number.parseInt(pick(values, "team2Score"), 10),
+            stage: optionalText(pick(values, "stage")),
+            videoUrl: optionalText(pick(values, "videoUrl")) ?? null,
           },
         })
       }

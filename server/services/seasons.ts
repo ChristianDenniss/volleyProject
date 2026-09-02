@@ -3,13 +3,14 @@ import type { Db } from "@db";
 import { correlatedCount } from "@db/sqlx";
 import { awards, games, matches, records, seasons, teams } from "@db/schema";
 import { found } from "./errors";
+import type { PartialInput } from "./input";
 
 export interface SeasonInput {
   seasonNumber: number;
   startDate: string;
-  endDate?: string | null;
-  image?: string | null;
-  theme?: string | null;
+  endDate?: string | null | undefined;
+  image?: string | null | undefined;
+  theme?: string | null | undefined;
 }
 
 export async function list(db: Db) {
@@ -57,7 +58,7 @@ export async function create(db: Db, input: SeasonInput) {
   return row;
 }
 
-export async function update(db: Db, id: number, input: Partial<SeasonInput>) {
+export async function update(db: Db, id: number, input: PartialInput<SeasonInput>) {
   const [row] = await db.update(seasons).set(input).where(eq(seasons.id, id)).returning();
   return found(row, `Season ${id}`);
 }

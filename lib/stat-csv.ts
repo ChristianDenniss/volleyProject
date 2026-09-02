@@ -80,7 +80,7 @@ export function parseStatCsv(input: string): ParsedStatRow[] {
 
   if (lines.length < 2) return [];
 
-  const headers = splitRow(lines[0]).map(normalizeHeader);
+  const headers = splitRow(lines[0] ?? "").map(normalizeHeader);
   if (!headers.includes("playerName")) {
     throw new Error("The CSV needs a player column");
   }

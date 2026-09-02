@@ -4,12 +4,13 @@ import { correlatedCount } from "@db/sqlx";
 import { insertMany } from "@db/insert";
 import { games, players, seasons, teams, teamsGames, teamsPlayers } from "@db/schema";
 import { ConflictError, found } from "./errors";
+import type { PartialInput } from "./input";
 
 export interface TeamInput {
   name: string;
-  logoUrl?: string | null;
-  placement?: string;
-  seasonId?: number | null;
+  logoUrl?: string | null | undefined;
+  placement?: string | undefined;
+  seasonId?: number | null | undefined;
 }
 
 const withSeason = {
@@ -139,7 +140,7 @@ export async function createMany(db: Db, input: TeamInput[]) {
   return db.select().from(teams).where(inArray(teams.name, names));
 }
 
-export async function update(db: Db, id: number, input: Partial<TeamInput>) {
+export async function update(db: Db, id: number, input: PartialInput<TeamInput>) {
   const [row] = await db.update(teams).set(input).where(eq(teams.id, id)).returning();
   return found(row, `Team ${id}`);
 }

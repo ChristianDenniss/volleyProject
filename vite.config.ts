@@ -6,6 +6,10 @@ import { cdnAdapter } from "@vinext/cloudflare/cache/cdn-adapter";
 
 const r = (p: string) => fileURLToPath(new URL(p, import.meta.url));
 
+const cdn = cdnAdapter();
+const cdnCache =
+  cdn.options === undefined ? { adapter: cdn.adapter } : { adapter: cdn.adapter, options: cdn.options };
+
 export default defineConfig({
   resolve: {
     alias: [
@@ -19,7 +23,7 @@ export default defineConfig({
   },
   plugins: [
     vinext({
-      cache: { cdn: cdnAdapter() },
+      cache: { cdn: cdnCache },
     }),
     cloudflare({
       viteEnvironment: {

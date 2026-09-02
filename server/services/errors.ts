@@ -33,6 +33,13 @@ export function required<T>(value: T | null | undefined, what: string): T {
   return value;
 }
 
+export function inserted<T>(value: T | null | undefined, what: string): T {
+  if (value === null || value === undefined) {
+    throw new ServiceError(`${what} could not be created`, "BAD_REQUEST");
+  }
+  return value;
+}
+
 export function found<T>(value: T | null | undefined, what: string): T {
   if (value === null || value === undefined) throw new NotFoundError(what);
   return value;
