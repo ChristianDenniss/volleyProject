@@ -57,16 +57,16 @@ export interface ResourceViewProps<Row extends { id: number | string }> {
 }
 
 const inputClass =
-  "w-full rounded border border-[#ccc] bg-white px-3 py-2 text-base text-[#374151] outline-none transition-colors duration-200 focus:border-[#38bdf8] focus:bg-[#f8fafc]";
+  "w-full rounded-xs border border-rvl-line bg-transparent px-3.5 py-2.5 text-[0.92rem] text-rvl-ink outline-none transition-colors placeholder:text-rvl-dim focus:border-rvl-accent-soft";
 
 const createButtonClass =
-  "cursor-pointer rounded border-none bg-[#007bff] px-4 py-2 text-base text-white transition-colors duration-200 hover:enabled:bg-[#0056b3] disabled:cursor-not-allowed disabled:bg-[#ccc]";
+  "inline-flex cursor-pointer items-center gap-1.5 border-none bg-rvl-accent-bg px-4 py-2.5 font-mono text-[0.68rem] font-bold uppercase tracking-[0.14em] text-rvl-on-accent transition-opacity hover:enabled:opacity-85 disabled:cursor-not-allowed disabled:opacity-50";
 
 const deleteButtonClass =
-  "cursor-pointer rounded border-none bg-[#dc3545] px-2 py-1 text-white transition-colors duration-200 hover:enabled:bg-[#c82333] disabled:cursor-not-allowed disabled:bg-[#ccc]";
+  "cursor-pointer rounded-xs border border-rvl-line bg-transparent p-1.5 text-rvl-dim transition-colors hover:enabled:border-destructive hover:enabled:text-destructive disabled:cursor-not-allowed disabled:opacity-50";
 
 const editButtonClass =
-  "cursor-pointer rounded border border-[#2d3c50] bg-white px-2 py-1 text-[#2d3c50] transition-colors duration-200 hover:bg-[#2d3c50] hover:text-white";
+  "cursor-pointer rounded-xs border border-rvl-line bg-transparent p-1.5 text-rvl-dim transition-colors hover:border-rvl-accent-soft hover:text-rvl-accent";
 
 function emptyValues(fields: FieldSpec[]): Values {
   return Object.fromEntries(fields.map((field) => [field.name, ""]));
@@ -125,7 +125,7 @@ function FieldInput({
         type="checkbox"
         checked={value === "true"}
         onChange={(event) => onChange(String(event.target.checked))}
-        className="size-4 rounded border border-[#ccc]"
+        className="size-4 rounded-xs border border-rvl-line accent-rvl-accent-bg"
       />
     );
   }
@@ -204,7 +204,10 @@ function EntityDialog({
         >
           {fields.map((field) => (
             <div key={field.name} className="space-y-2">
-              <label htmlFor={field.name} className="block font-medium text-[#333]">
+              <label
+                htmlFor={field.name}
+                className="block font-mono text-[0.58rem] uppercase tracking-[0.22em] text-rvl-dim"
+              >
                 {field.label}
               </label>
               <FieldInput
@@ -243,7 +246,7 @@ export function ResourceView<Row extends { id: number | string }>({
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm italic text-[#6b7280]">
+        <p className="m-0 font-mono text-[0.66rem] uppercase tracking-[0.14em] text-rvl-dim">
           {rows.length} {rows.length === 1 ? "row" : "rows"}
         </p>
         <div className="flex flex-wrap gap-2">
@@ -267,15 +270,15 @@ export function ResourceView<Row extends { id: number | string }>({
         </div>
       </div>
 
-      <div className="w-full overflow-x-auto rounded-md shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
-        <table className="w-full min-w-[800px] border-collapse bg-white">
+      <div className="w-full overflow-x-auto border border-rvl-line">
+        <table className="w-full min-w-[800px] border-collapse">
           <thead>
             <tr>
               {columns.map((column) => (
                 <th
                   key={column.key}
                   className={cn(
-                    "border-b border-[#e2e8f0] bg-brand-navy px-4 py-3 text-left font-semibold text-white",
+                    "border-b border-rvl-line bg-rvl-panel px-4 py-3 text-left font-mono text-[0.58rem] font-bold uppercase tracking-[0.2em] text-rvl-dim",
                     column.align === "right" && "text-right",
                   )}
                 >
@@ -283,7 +286,7 @@ export function ResourceView<Row extends { id: number | string }>({
                 </th>
               ))}
               {onUpdate || onDelete ? (
-                <th className="border-b border-[#e2e8f0] bg-brand-navy px-4 py-3 text-right font-semibold text-white">
+                <th className="border-b border-rvl-line bg-rvl-panel px-4 py-3 text-right font-mono text-[0.58rem] font-bold uppercase tracking-[0.2em] text-rvl-dim">
                   Actions
                 </th>
               ) : null}
@@ -291,20 +294,20 @@ export function ResourceView<Row extends { id: number | string }>({
           </thead>
           <tbody>
             {rows.map((row) => (
-              <tr key={String(row.id)} className="hover:bg-[#f8fafc]">
+              <tr key={String(row.id)} className="transition-colors hover:bg-rvl-panel">
                 {columns.map((column) => (
                   <td
                     key={column.key}
                     className={cn(
-                      "border-b border-[#e2e8f0] px-4 py-3 text-left",
-                      column.align === "right" && "text-right tabular-nums",
+                      "border-b border-rvl-line px-4 py-3 text-left text-[0.92rem]",
+                      column.align === "right" && "text-right font-mono tabular-nums",
                     )}
                   >
                     {column.render(row)}
                   </td>
                 ))}
                 {onUpdate || onDelete ? (
-                  <td className="border-b border-[#e2e8f0] px-4 py-3 text-right">
+                  <td className="border-b border-rvl-line px-4 py-3 text-right">
                     <div className="flex justify-end gap-2">
                       {onUpdate && toValues ? (
                         <EntityDialog

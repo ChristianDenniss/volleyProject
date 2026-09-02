@@ -1,11 +1,27 @@
 import type { ReactNode } from "react";
 
-export function StatTile({ label, value, hint }: { label: string; value: ReactNode; hint?: string }) {
+export function StatTile({
+  label,
+  value,
+  hint,
+}: {
+  label: string;
+  value: ReactNode;
+  hint?: string;
+}) {
   return (
-    <div className="rounded-[20px] border-2 border-[#CFFFFF] bg-[#e6f2ff] px-5 py-4 shadow-[0_2px_6px_rgba(0,0,0,0.05)]">
-      <p className="m-0 text-sm font-semibold uppercase tracking-[0.12em] text-[#005999]">{label}</p>
-      <p className="m-0 mt-1 text-2xl font-bold tabular-nums text-[#141414]">{value}</p>
-      {hint ? <p className="m-0 text-sm text-[#4b5563]">{hint}</p> : null}
+    <div className="border border-rvl-line px-5 py-4">
+      <p className="m-0 font-mono text-[0.58rem] uppercase tracking-[0.22em] text-rvl-dim">
+        {label}
+      </p>
+      <p className="m-0 mt-2.5 font-mono text-[1.9rem] font-bold leading-none tracking-[-0.045em] tabular-nums text-rvl-accent">
+        {value}
+      </p>
+      {hint ? (
+        <p className="m-0 mt-2 font-mono text-[0.6rem] uppercase tracking-[0.12em] text-rvl-dim">
+          {hint}
+        </p>
+      ) : null}
     </div>
   );
 }

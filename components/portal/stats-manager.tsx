@@ -87,7 +87,7 @@ function CsvUpload({ games }: { games: { id: number; label: string }[] }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <button type="button" className={"cursor-pointer rounded border border-[#2d3c50] bg-white px-4 py-2 text-base text-[#2d3c50] transition-colors duration-200 hover:bg-[#2d3c50] hover:text-white"}>
+        <button type="button" className="cursor-pointer border border-rvl-line bg-transparent px-4 py-2.5 font-mono text-[0.68rem] uppercase tracking-[0.14em] text-rvl-ink-2 transition-colors hover:border-rvl-accent-soft hover:text-rvl-accent">
           Upload CSV
         </button>
       </DialogTrigger>
@@ -148,7 +148,7 @@ function CsvUpload({ games }: { games: { id: number; label: string }[] }) {
           </div>
 
           <DialogFooter>
-            <button type="submit" className={"cursor-pointer rounded border-none bg-[#007bff] px-4 py-2 text-base text-white transition-colors duration-200 hover:enabled:bg-[#0056b3] disabled:cursor-not-allowed disabled:bg-[#ccc]"} disabled={upload.isPending}>
+            <button type="submit" className="cursor-pointer border-none bg-rvl-accent-bg px-5 py-2.5 font-mono text-[0.68rem] font-bold uppercase tracking-[0.14em] text-rvl-on-accent transition-opacity hover:enabled:opacity-85 disabled:cursor-not-allowed disabled:opacity-50" disabled={upload.isPending}>
               {upload.isPending ? "Uploading…" : "Upload"}
             </button>
           </DialogFooter>

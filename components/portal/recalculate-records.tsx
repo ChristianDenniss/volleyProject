@@ -15,7 +15,7 @@ export function RecalculateRecords({ seasons }: { seasons: { id: number; label: 
       <select
         value={seasonId}
         onChange={(event) => setSeasonId(event.target.value)}
-        className="rounded border border-[#ccc] bg-white px-3 py-2 text-base text-[#374151] focus:border-[#38bdf8] focus:outline-none"
+        className="cursor-pointer rounded-xs border border-rvl-line bg-transparent px-3.5 py-2.5 font-mono text-[0.78rem] uppercase tracking-[0.08em] text-rvl-ink transition-colors hover:border-rvl-line-strong focus:border-rvl-accent-soft focus:outline-none"
       >
         <option value="">Every season</option>
         {seasons.map((season) => (
@@ -27,7 +27,7 @@ export function RecalculateRecords({ seasons }: { seasons: { id: number; label: 
 
       <button
         type="button"
-        className="cursor-pointer rounded border-none bg-[#007bff] px-4 py-2 text-base text-white transition-colors duration-200 hover:enabled:bg-[#0056b3] disabled:cursor-not-allowed disabled:bg-[#ccc]"
+        className="cursor-pointer border-none bg-rvl-accent-bg px-5 py-2.5 font-mono text-[0.68rem] font-bold uppercase tracking-[0.14em] text-rvl-on-accent transition-opacity hover:enabled:opacity-85 disabled:cursor-not-allowed disabled:opacity-50"
         disabled={recalculate.isPending}
         onClick={async () => {
           try {

@@ -16,10 +16,18 @@ import {
 import { PortalPage } from "@components/portal/portal-page";
 import { RecalculateRecords } from "@components/portal/recalculate-records";
 import { StatRow, StatTile } from "@components/site/stat-tile";
+import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
 export const metadata = { title: "Portal" };
+
+function statusClass(status: string | undefined) {
+  if (status === "succeeded") return "text-rvl-mint";
+  if (status === "failed") return "text-destructive";
+  if (status === "running" || status === "queued") return "text-rvl-accent";
+  return "text-rvl-dim";
+}
 
 export default async function PortalDashboard() {
   const db = getDb();
@@ -53,55 +61,76 @@ export default async function PortalDashboard() {
 
   return (
     <PortalPage title="Dashboard" description="What is in the database right now.">
-      <div className="mb-6 space-y-6">
-      <StatRow>
-        <StatTile label="Seasons" value={seasonCount} />
-        <StatTile label="Teams" value={teamCount} />
-        <StatTile label="Players" value={playerCount} />
-        <StatTile label="Games" value={gameCount} />
-      </StatRow>
-      <StatRow>
-        <StatTile label="Stat lines" value={statCount} />
-        <StatTile label="Matches" value={matchCount} />
-        <StatTile label="Awards" value={awardCount} />
-        <StatTile label="Articles" value={articleCount} />
-      </StatRow>
-      <StatRow>
-        <StatTile label="Users" value={userCount} />
-        <StatTile label="Records" value={recordCount} />
-      </StatRow>
+      <div className="flex flex-col gap-4">
+        <StatRow>
+          <StatTile label="Seasons" value={seasonCount} />
+          <StatTile label="Teams" value={teamCount} />
+          <StatTile label="Players" value={playerCount} />
+          <StatTile label="Games" value={gameCount} />
+        </StatRow>
+        <StatRow>
+          <StatTile label="Stat lines" value={statCount} />
+          <StatTile label="Matches" value={matchCount} />
+          <StatTile label="Awards" value={awardCount} />
+          <StatTile label="Articles" value={articleCount} />
+        </StatRow>
+        <StatRow>
+          <StatTile label="Users" value={userCount} />
+          <StatTile label="Records" value={recordCount} />
+        </StatRow>
       </div>
 
-      <section className="mt-8 rounded-lg bg-white p-6 shadow-[0_2px_8px_rgba(0,0,0,0.1)]">
-        <h2 className="mb-4 text-[1.3rem] font-semibold text-[#1e3d59]">Records</h2>
-        <p className="mb-4 text-base text-[#666]">
-          Recalculation runs on a queue. It clears the record table for the chosen scope and
-          rewrites every family from the stat table.
-        </p>
-        {job ? (
-          <p className="mb-4 text-base text-[#333]">
-            Last run: <span className="font-semibold">{job.status}</span>
-            {job.rowsWritten ? ` · ${job.rowsWritten} rows` : ""}
-            {job.error ? ` · ${job.error}` : ""}
+      <section className="grid grid-cols-1 gap-8 border border-rvl-line p-6 md:grid-cols-[210px_1fr] md:gap-12">
+        <div>
+          <h2 className="m-0 mb-3 font-mono text-[0.66rem] font-bold uppercase tracking-[0.24em] text-rvl-accent">
+            Record job
+          </h2>
+          <p className="m-0 text-[0.84rem] text-rvl-dim">
+            Clears the record table for the chosen scope, then rewrites every family from the stat
+            table. Runs on a queue.
           </p>
-        ) : (
-          <p className="mb-4 text-base text-[#666]">No recalculation has been run yet.</p>
-        )}
-        <RecalculateRecords
-          seasons={seasonList.map((season) => ({
-            id: season.id,
-            label: `Season ${season.seasonNumber}`,
-          }))}
-        />
-        <p className="mt-4 text-sm text-[#666]">
-          The public page is at{" "}
-          <Link href="/records" className="text-[#1e3d59] underline">
-            /records
+          <Link
+            href="/records"
+            className="mt-4 inline-block border-b border-rvl-line pb-0.5 font-mono text-[0.64rem] uppercase tracking-[0.14em] text-rvl-ink-2 no-underline transition-colors hover:border-rvl-accent-soft hover:text-rvl-accent"
+          >
+            Public page →
           </Link>
-          .
-        </p>
-      </section>
+        </div>
 
+        <div className="flex flex-col gap-6">
+          <div className="flex flex-wrap items-center gap-x-8 gap-y-3 border-b border-rvl-line pb-5 font-mono">
+            <div className="flex flex-col gap-1">
+              <span className="text-[0.56rem] uppercase tracking-[0.22em] text-rvl-dim">
+                Last run
+              </span>
+              <span className={cn("text-[0.95rem] uppercase", statusClass(job?.status))}>
+                {job?.status ?? "never"}
+              </span>
+            </div>
+            <div className="flex flex-col gap-1">
+              <span className="text-[0.56rem] uppercase tracking-[0.22em] text-rvl-dim">
+                Rows written
+              </span>
+              <span className="text-[0.95rem] tabular-nums">{job?.rowsWritten ?? "—"}</span>
+            </div>
+            {job?.error ? (
+              <div className="flex min-w-0 flex-col gap-1">
+                <span className="text-[0.56rem] uppercase tracking-[0.22em] text-rvl-dim">
+                  Error
+                </span>
+                <span className="truncate text-[0.85rem] text-destructive">{job.error}</span>
+              </div>
+            ) : null}
+          </div>
+
+          <RecalculateRecords
+            seasons={seasonList.map((season) => ({
+              id: season.id,
+              label: `Season ${season.seasonNumber}`,
+            }))}
+          />
+        </div>
+      </section>
     </PortalPage>
   );
 }
