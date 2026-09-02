@@ -24,6 +24,20 @@ describe("article content validation", () => {
     expect(articleContentSchema.parse(input)).toBe(input);
   });
 
+  it("accepts the width and height attributes the image extension emits", () => {
+    const input = doc({
+      type: "image",
+      attrs: { src: "https://example.com/a.jpg", alt: null, title: null, width: null, height: null },
+    });
+    expect(articleContentSchema.safeParse(input).success).toBe(true);
+
+    const sized = doc({
+      type: "image",
+      attrs: { src: "https://example.com/a.jpg", width: 640, height: "480px" },
+    });
+    expect(articleContentSchema.safeParse(sized).success).toBe(true);
+  });
+
   it("rejects javascript: link hrefs", () => {
     const input = doc(paragraph("click", [{ type: "link", attrs: { href: "javascript:alert(1)" } }]));
     expect(articleContentSchema.safeParse(input).success).toBe(false);

@@ -111,6 +111,8 @@ function renderNode(node: TiptapNode): ReactNode {
           src={node.attrs.src}
           alt={node.attrs.alt ?? ""}
           title={node.attrs.title ?? undefined}
+          width={node.attrs.width ?? undefined}
+          height={node.attrs.height ?? undefined}
           className="mb-6 block w-full rounded object-cover"
         />
       );

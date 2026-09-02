@@ -39,7 +39,7 @@ const extensions = [
 ];
 
 const editorClass = [
-  "min-h-[320px] w-full px-4 py-3 text-base leading-[1.7] outline-none",
+  "min-h-[320px] w-full bg-background px-4 py-3 text-base leading-[1.7] text-foreground outline-none",
   "[&_p]:mb-4",
   "[&_h2]:mb-3 [&_h2]:mt-6 [&_h2]:text-[1.6rem] [&_h2]:font-bold",
   "[&_h3]:mb-2 [&_h3]:mt-5 [&_h3]:text-[1.3rem] [&_h3]:font-bold",
@@ -47,14 +47,14 @@ const editorClass = [
   "[&_ul]:mb-4 [&_ul]:list-disc [&_ul]:pl-6",
   "[&_ol]:mb-4 [&_ol]:list-decimal [&_ol]:pl-6",
   "[&_li]:mb-1",
-  "[&_blockquote]:mb-4 [&_blockquote]:border-l-4 [&_blockquote]:border-[#1a1a1a] [&_blockquote]:pl-4 [&_blockquote]:italic",
-  "[&_pre]:mb-4 [&_pre]:overflow-x-auto [&_pre]:rounded [&_pre]:bg-[#1a1a1a] [&_pre]:p-3 [&_pre]:font-mono [&_pre]:text-[0.9rem] [&_pre]:text-[#f5f5f5]",
-  "[&_code]:rounded [&_code]:bg-[#eee] [&_code]:px-1 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-[0.9em]",
-  "[&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_pre_code]:text-inherit",
-  "[&_hr]:my-6 [&_hr]:border-t [&_hr]:border-[#ccc]",
+  "[&_blockquote]:mb-4 [&_blockquote]:border-l-4 [&_blockquote]:border-border [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-muted-foreground",
+  "[&_pre]:mb-4 [&_pre]:overflow-x-auto [&_pre]:rounded [&_pre]:border [&_pre]:border-border [&_pre]:bg-muted [&_pre]:p-3 [&_pre]:font-mono [&_pre]:text-[0.9rem] [&_pre]:text-foreground",
+  "[&_code]:rounded [&_code]:bg-muted [&_code]:px-1 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-[0.9em] [&_code]:text-foreground",
+  "[&_pre_code]:border-0 [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_pre_code]:text-inherit",
+  "[&_hr]:my-6 [&_hr]:border-t [&_hr]:border-border",
   "[&_img]:my-4 [&_img]:max-w-full [&_img]:rounded",
-  "[&_a]:text-brand-navy [&_a]:underline",
-  "[&_.ProseMirror-selectednode]:outline [&_.ProseMirror-selectednode]:outline-2 [&_.ProseMirror-selectednode]:outline-brand-navy",
+  "[&_a]:text-primary [&_a]:underline",
+  "[&_.ProseMirror-selectednode]:outline [&_.ProseMirror-selectednode]:outline-2 [&_.ProseMirror-selectednode]:outline-ring",
 ].join(" ");
 
 function initialContent(value: string): JSONContent {
@@ -84,9 +84,9 @@ function ToolbarButton({
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        "flex size-8 cursor-pointer items-center justify-center rounded border border-transparent text-[#333] transition-colors duration-150",
-        "hover:enabled:bg-[#e9ecef] disabled:cursor-not-allowed disabled:opacity-40",
-        active && "border-[#ccd] bg-[#dbe4ef] text-brand-navy",
+        "flex size-8 cursor-pointer items-center justify-center rounded border border-transparent text-foreground transition-colors duration-150",
+        "hover:enabled:bg-accent hover:enabled:text-accent-foreground disabled:cursor-not-allowed disabled:opacity-40",
+        active && "border-border bg-accent text-accent-foreground",
       )}
     >
       {children}
@@ -95,7 +95,7 @@ function ToolbarButton({
 }
 
 function Divider() {
-  return <span className="mx-1 h-6 w-px self-center bg-[#ddd]" />;
+  return <span className="mx-1 h-6 w-px self-center bg-border" />;
 }
 
 type Draft = { kind: "link" | "image"; value: string } | null;
@@ -125,7 +125,7 @@ function UrlBar({
   };
 
   return (
-    <div className="flex items-center gap-2 border-b border-[#ddd] bg-white px-2 py-2">
+    <div className="flex items-center gap-2 border-b border-border bg-background px-2 py-2">
       <input
         autoFocus
         type="url"
@@ -139,19 +139,19 @@ function UrlBar({
           }
           if (event.key === "Escape") setDraft(null);
         }}
-        className="w-full rounded border border-[#ddd] px-2 py-1 text-sm focus:border-brand-navy focus:outline-none"
+        className="w-full rounded border border-input bg-background px-2 py-1 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none"
       />
       <button
         type="button"
         onClick={submit}
-        className="cursor-pointer rounded bg-brand-navy px-3 py-1 text-sm text-white hover:bg-brand-steel"
+        className="cursor-pointer rounded bg-primary px-3 py-1 text-sm text-primary-foreground hover:bg-primary/90"
       >
         {draft.kind === "link" ? "Link" : "Insert"}
       </button>
       <button
         type="button"
         onClick={() => setDraft(null)}
-        className="cursor-pointer rounded border border-[#ddd] px-3 py-1 text-sm text-[#333] hover:bg-[#e9ecef]"
+        className="cursor-pointer rounded border border-border px-3 py-1 text-sm text-foreground hover:bg-accent hover:text-accent-foreground"
       >
         Cancel
       </button>
@@ -180,13 +180,18 @@ export function RichTextEditor({
 
   if (!editor) {
     return (
-      <div className={cn("min-h-[380px] rounded border border-[#ddd] bg-[#fafafa]", className)} />
+      <div className={cn("min-h-[380px] rounded border border-border bg-muted", className)} />
     );
   }
 
   return (
-    <div className={cn("overflow-hidden rounded border border-[#ddd] bg-white", className)}>
-      <div className="flex flex-wrap gap-1 border-b border-[#ddd] bg-[#f8f9fa] p-2">
+    <div
+      className={cn(
+        "overflow-hidden rounded border border-border bg-background text-foreground",
+        className,
+      )}
+    >
+      <div className="flex flex-wrap gap-1 border-b border-border bg-muted p-2">
         <ToolbarButton
           label="Heading 2"
           active={editor.isActive("heading", { level: 2 })}

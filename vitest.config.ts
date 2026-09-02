@@ -1,6 +1,7 @@
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 import { cloudflareTest, readD1Migrations } from "@cloudflare/vitest-pool-workers";
+import react from "@vitejs/plugin-react";
 
 const r = (p: string) => fileURLToPath(new URL(p, import.meta.url));
 
@@ -42,6 +43,16 @@ export default defineConfig({
           name: "node",
           environment: "node",
           include: ["tests/node/**/*.test.ts"],
+        },
+      },
+      {
+        plugins: [react()],
+        resolve: { alias },
+        test: {
+          name: "dom",
+          environment: "jsdom",
+          include: ["tests/dom/**/*.test.tsx"],
+          setupFiles: ["./tests/dom/setup.ts"],
         },
       },
     ],
