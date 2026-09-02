@@ -1,5 +1,5 @@
-import { PaginationParams, SortDir } from '../../utils/pagination.js';
-import { StageRound, buildStageRoundSql } from '../games/stageRounds.js';
+import { PaginationParams, SortDir } from '../../../utils/pagination.js';
+import { StageRound, buildStageRoundSql } from '../../games/utils/stageRounds.js';
 
 /** Exact keys the FE sends for sortBy / advanced filters (including % suffixes). */
 export const LEADERBOARD_STAT_FIELDS = [

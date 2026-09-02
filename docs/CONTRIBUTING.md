@@ -107,6 +107,8 @@ how a screen looks unless the issue says to.
 ### Backend
 
 - Feature code lives under `BE/src/modules/<name>/`.
+- Helpers that are not a service, controller, entity, or schema live in
+  `BE/src/modules/<name>/utils/`.
 - Tests are Jest + Supertest next to the module in `__tests__/`.
 
 ## Code review

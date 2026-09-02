@@ -2,6 +2,7 @@ import { jest, describe, it, expect, beforeEach } from '@jest/globals';
 import { ILike } from 'typeorm';
 import { GameService } from '../game.service.js';
 import { GameStatus, GamePhase, GameBracket } from '../game.entity.js';
+import { GameStaffRole } from '../game-staff.entity.js';
 import { MissingFieldError } from '../../../errors/MissingFieldError.js';
 import { NotFoundError } from '../../../errors/NotFoundError.js';
 import { ConflictError } from '../../../errors/ConflictError.js';
@@ -27,6 +28,18 @@ const mockTeamRepository = {
 const mockSeasonRepository = {
     findOne: jest.fn(),
     findOneBy: jest.fn(),
+};
+
+const mockStaffRepository = {
+    find: jest.fn(),
+    findBy: jest.fn(),
+    save: jest.fn(),
+    delete: jest.fn(),
+};
+
+const mockUserRepository = {
+    findBy: jest.fn(),
+    findOne: jest.fn(),
 };
 
 const mockStageQueryBuilder = {
@@ -75,6 +88,8 @@ describe('GameService', () => {
         (gameService as any).gameRepository = mockGameRepository;
         (gameService as any).teamRepository = mockTeamRepository;
         (gameService as any).seasonRepository = mockSeasonRepository;
+        (gameService as any).staffRepository = mockStaffRepository;
+        (gameService as any).userRepository = mockUserRepository;
 
         jest.spyOn(console, 'log').mockImplementation(() => {});
         jest.spyOn(console, 'error').mockImplementation(() => {});
@@ -330,6 +345,25 @@ describe('GameService', () => {
 
             await expect(gameService.getGameById(1)).resolves.toBe(found);
         });
+
+        it('loads staff and strips extra user fields', async () => {
+            const found = game({
+                staff: [{
+                    role: 'referee',
+                    user: { id: 9, username: 'refbot', robloxUsername: 'RefBot', email: 'secret@x.com', password: 'nope' },
+                }],
+            });
+            mockGameRepository.findOne.mockResolvedValueOnce(found as never);
+
+            const result = await gameService.getGameById(1);
+
+            expect(result.staff[0].user).toEqual({
+                id: 9,
+                username: 'refbot',
+                robloxUsername: 'RefBot',
+            });
+            expect(result.staff[0].user).not.toHaveProperty('email');
+        });
     });
 
     describe('getScoreByGameId', () => {
@@ -448,6 +482,37 @@ describe('GameService', () => {
             });
 
             expect(updated.bracket).toBe(GameBracket.WINNERS);
+        });
+
+        it('replaces match crew when staff is supplied', async () => {
+            mockGameRepository.findOne.mockResolvedValueOnce(game() as never);
+            mockUserRepository.findBy.mockResolvedValueOnce([{ id: 9, username: 'refbot' }] as never);
+            mockStaffRepository.delete.mockResolvedValueOnce(undefined as never);
+            mockStaffRepository.save.mockResolvedValueOnce([] as never);
+            mockGameRepository.findOne.mockResolvedValueOnce(
+                game({
+                    staff: [{ role: 'referee', user: { id: 9, username: 'refbot', robloxUsername: null } }],
+                }) as never
+            );
+
+            const updated = await gameService.updateGame(1, undefined, undefined, undefined, undefined, undefined, undefined, undefined, {
+                staff: [{ userId: 9, role: GameStaffRole.REFEREE }],
+            });
+
+            expect(mockStaffRepository.delete).toHaveBeenCalledWith({ gameId: 1 });
+            expect(mockStaffRepository.save).toHaveBeenCalled();
+            expect(updated.staff[0].user.username).toBe('refbot');
+        });
+
+        it('rejects an unknown staff user', async () => {
+            mockGameRepository.findOne.mockResolvedValueOnce(game() as never);
+            mockUserRepository.findBy.mockResolvedValueOnce([] as never);
+
+            await expect(
+                gameService.updateGame(1, undefined, undefined, undefined, undefined, undefined, undefined, undefined, {
+                    staff: [{ userId: 99, role: GameStaffRole.STREAMER }],
+                })
+            ).rejects.toThrow(NotFoundError);
         });
     });
 

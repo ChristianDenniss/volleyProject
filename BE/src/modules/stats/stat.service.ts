@@ -3,7 +3,7 @@ import { AppDataSource } from '../../db/data-source.js';
 import { Stats } from './stat.entity.js';
 import { Players } from '../players/player.entity.js';
 import { Games, GameStatus } from '../games/game.entity.js';
-import { resolveWinnerTeamId, applyWinnerToGame } from '../games/gameWinner.js';
+import { resolveWinnerTeamId, applyWinnerToGame } from '../games/utils/gameWinner.js';
 import { MissingFieldError } from '../../errors/MissingFieldError.js';
 import { NegativeStatError } from '../../errors/NegativeStatError.js';
 import { NotFoundError } from '../../errors/NotFoundError.js';
@@ -19,7 +19,7 @@ import {
     buildPlayerLeaderboardSql,
     buildTeamLeaderboardSql,
     countParamsFrom,
-} from './stat.leaderboard.js';
+} from './utils/stat.leaderboard.js';
 import { CreateStatDto, UpdateStatDto, CreateStatByNameDto } from './stat.schema.js';
 
 export interface StatFilters {

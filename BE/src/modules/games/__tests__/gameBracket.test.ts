@@ -1,5 +1,5 @@
 import { describe, it, expect } from '@jest/globals';
-import { inferBracketFromStage, resolveGameBracket, inferBracketFromChallonge } from '../gameBracket.js';
+import { inferBracketFromStage, resolveGameBracket, inferBracketFromChallonge } from '../utils/gameBracket.js';
 import { GameBracket, GamePhase } from '../game.entity.js';
 
 describe('inferBracketFromStage', () => {
