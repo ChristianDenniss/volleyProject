@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { getDb } from "@db";
-import { matches, seasons } from "@server/services";
+import { api } from "@server/trpc/server";
 import { EmptyState } from "@components/site/empty-state";
 import { PageHeader, PageMetric } from "@components/site/page-header";
 import { SchedulesBoard } from "@components/site/schedules-board";
@@ -18,13 +17,13 @@ export default async function SchedulesPage({
   searchParams: Promise<{ season?: string }>;
 }) {
   const { season } = await searchParams;
-  const db = getDb();
+  const trpc = await api();
   const parsed = season ? Number.parseInt(season, 10) : Number.NaN;
   const seasonId = Number.isInteger(parsed) && parsed > 0 ? parsed : undefined;
 
   const [rows, allSeasons] = await Promise.all([
-    seasonId === undefined ? matches.list(db) : matches.listBySeason(db, seasonId),
-    seasons.list(db),
+    trpc.matches.list({ seasonId }),
+    trpc.seasons.list(),
   ]);
 
   const completed = rows.filter((match) => match.status === "completed").length;

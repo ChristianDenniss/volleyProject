@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { getDb } from "@db";
-import { trivia } from "@server/services";
+import { api } from "@server/trpc/server";
 import { EmptyState } from "@components/site/empty-state";
 import { PageHeader, PageMetric } from "@components/site/page-header";
 import { TriviaBoard } from "@components/site/trivia-board";
@@ -35,8 +34,8 @@ export default async function TriviaPage({
   const pick = Number.parseInt(query.pick ?? "0", 10);
   const offset = Number.isFinite(pick) ? Math.abs(pick) : 0;
 
-  const db = getDb();
-  const choose = () => (offset % 1_000_000) / 1_000_000;
+  const trpc = await api();
+  const seed = (offset % 1_000_000) / 1_000_000;
 
   let subject:
     | { id: number; hintCount: number; clues: { label: string; value: string }[] }
@@ -45,7 +44,7 @@ export default async function TriviaPage({
 
   try {
     if (kind === "player") {
-      const player = await trivia.randomPlayer(db, difficulty, choose);
+      const player = await trpc.trivia.randomPlayer({ difficulty, seed });
       subject = {
         id: player.id,
         hintCount: player.hintCount,
@@ -62,7 +61,7 @@ export default async function TriviaPage({
         ],
       };
     } else if (kind === "team") {
-      const team = await trivia.randomTeam(db, difficulty, choose);
+      const team = await trpc.trivia.randomTeam({ difficulty, seed });
       subject = {
         id: team.id,
         hintCount: team.hintCount,
@@ -80,7 +79,7 @@ export default async function TriviaPage({
         ],
       };
     } else {
-      const season = await trivia.randomSeason(db, difficulty, choose);
+      const season = await trpc.trivia.randomSeason({ difficulty, seed });
       subject = {
         id: season.id,
         hintCount: season.hintCount,

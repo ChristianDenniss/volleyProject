@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PageHeader, PageMetric } from "@components/site/page-header";
 
 export const metadata: Metadata = {
   title: "Privacy policy",
@@ -64,22 +65,29 @@ const SECTIONS = [
 
 export default function PrivacyPolicyPage() {
   return (
-    <div className="mx-auto max-w-[1000px] bg-white p-12 leading-relaxed text-[#333] max-md:p-6">
-      <h1 className="mb-10 border-b-[3px] border-[#b8ddff] pb-2 text-center text-[2.75rem] font-bold text-[#222] max-md:text-[2rem]">
-        Privacy Policy
-      </h1>
-
-      <p className="mb-12 text-center text-[1.125rem] text-[#555]">
-        How this platform collects, uses and protects your information. Using the service means you
-        agree to it.
-      </p>
+    <div className="font-display">
+      <PageHeader
+        eyebrow="Legal"
+        title="Privacy policy"
+        description="What this platform collects, how it is used, and what you can ask us to do with it. Using the service means you agree to it."
+        meta={<PageMetric label="Sections" value={SECTIONS.length} />}
+      />
 
       {SECTIONS.map((section) => (
-        <section key={section.title} className="mb-12">
-          <h2 className="mb-4 text-[1.75rem] font-bold text-black">{section.title}</h2>
-          <ul className="m-0 list-none p-0">
+        <section
+          key={section.title}
+          className="grid grid-cols-1 gap-8 border-b border-rvl-line px-5 py-12 sm:px-8 md:grid-cols-[210px_1fr] md:gap-14 xl:px-14"
+        >
+          <h2 className="m-0 font-mono text-[0.72rem] font-bold uppercase tracking-[0.24em] text-rvl-accent">
+            {section.title}
+          </h2>
+
+          <ul className="m-0 max-w-[75ch] list-none border-t border-rvl-line p-0">
             {section.items.map((item) => (
-              <li key={item} className="mb-8 text-[1.125rem] leading-[1.7] text-[#555]">
+              <li
+                key={item}
+                className="border-b border-rvl-line py-4 text-[0.98rem] leading-relaxed text-rvl-ink-2"
+              >
                 {item}
               </li>
             ))}
@@ -87,7 +95,7 @@ export default function PrivacyPolicyPage() {
         </section>
       ))}
 
-      <p className="mt-8 text-center text-sm text-[#777]">
+      <p className="m-0 px-5 py-10 font-mono text-[0.68rem] uppercase tracking-[0.14em] text-rvl-dim sm:px-8 xl:px-14">
         Questions about this policy? Reach us through the contact page.
       </p>
     </div>

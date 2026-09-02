@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getDb } from "@db";
-import { games } from "@server/services";
-import { cn } from "@/lib/utils";
+import { api } from "@server/trpc/server";
+import { PageMetric } from "@components/site/page-header";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +13,7 @@ interface Params {
 async function load(id: string) {
   const parsed = Number.parseInt(id, 10);
   if (!Number.isInteger(parsed) || parsed <= 0) return null;
-  return games.getById(getDb(), parsed);
+  return (await api()).games.byId({ id: parsed });
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
@@ -28,8 +27,9 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 }
 
 const headerCell =
-  "sticky top-0 z-1 whitespace-nowrap bg-brand-navy-deep px-4 py-3.5 text-center font-semibold text-white";
-const bodyCell = "whitespace-nowrap border-b border-[#eef3f8] px-4 py-3 text-center";
+  "whitespace-nowrap border-b border-rvl-line-strong px-4 pb-3 text-right font-mono text-[0.58rem] font-bold uppercase tracking-[0.2em] text-rvl-dim";
+const bodyCell =
+  "whitespace-nowrap border-b border-rvl-line px-4 py-3.5 text-right font-mono text-[0.88rem] tabular-nums text-rvl-ink-2";
 
 export default async function GamePage({ params }: Params) {
   const { id } = await params;
@@ -39,79 +39,84 @@ export default async function GamePage({ params }: Params) {
   const [team1, team2] = game.teams;
 
   return (
-    <div className="mx-auto box-border min-h-screen max-w-[1100px] px-6 pb-20 pt-2 text-[#222]">
-      <h1 className="mb-6 mt-12 min-h-20 text-center text-[3.5rem] font-extrabold capitalize leading-tight tracking-wide max-md:text-[2rem]">
-        {game.name ?? `Game ${game.id}`}
-      </h1>
+    <div className="font-display">
+      <header className="border-b border-rvl-line px-5 py-12 sm:px-8 sm:py-14 xl:px-14">
+        <span className="font-mono text-[0.72rem] font-bold uppercase tracking-[0.24em] text-rvl-accent">
+          {game.stage ?? "Game"}
+        </span>
 
-      <div className="mb-9 flex flex-wrap justify-center gap-5 max-[700px]:flex-col max-[700px]:gap-1">
-        <p className="m-0 text-[0.975rem] font-semibold text-[#5d6673]">{game.date}</p>
-        {game.season ? (
-          <Link
-            href={`/seasons/${game.season.id}`}
-            className="m-0 text-[0.975rem] font-semibold text-[#5d6673] no-underline hover:underline"
-          >
-            Season {game.season.seasonNumber}
-          </Link>
-        ) : null}
-        {game.videoUrl ? (
-          <a
-            href={game.videoUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="m-0 text-[0.975rem] font-semibold text-[#5d6673] no-underline hover:underline"
-          >
-            Watch the game
-          </a>
-        ) : null}
-      </div>
+        <h1 className="mt-4 mb-8 text-balance text-[2rem] font-black uppercase leading-[0.95] tracking-[-0.035em] capitalize sm:text-[2.6rem]">
+          {game.name ?? `Game ${game.id}`}
+        </h1>
 
-      <div className="-mt-5 mb-6 flex justify-center">
-        <p className="mt-8 text-center text-2xl font-semibold text-[#5d6673]">{game.stage}</p>
-      </div>
-
-      <hr className="mx-auto mb-12 h-[3px] w-[400px] max-w-full border-none bg-brand-sky-pale" />
-
-      <div className="mb-12 flex flex-wrap items-center justify-center gap-16 max-[700px]:gap-4">
-        {[team1, team2].map((team, index) =>
-          team ? (
-            <div key={team.id} className="flex items-center gap-16 max-[700px]:gap-4">
-              {index === 1 ? (
-                <span className="rounded-full bg-brand-sky-pale px-4 py-1.5 text-[1.2rem] font-bold text-[#5d6673] shadow-[0_0_0_3px_#fff,0_0_0_6px_var(--brand-sky-pale)] max-[700px]:hidden">
-                  VS
-                </span>
-              ) : null}
-              <div className="min-w-[120px] max-w-[220px] flex-1 text-center">
+        <div className="flex flex-wrap items-center gap-x-10 gap-y-6">
+          {[team1, team2].map((team, index) =>
+            team ? (
+              <div key={team.id} className="flex items-baseline gap-5">
                 <Link
                   href={`/teams/${encodeURIComponent(team.name)}`}
-                  className="mb-1.5 block text-2xl font-bold capitalize text-inherit no-underline hover:underline"
+                  className="text-[1.3rem] font-bold capitalize text-inherit no-underline transition-colors hover:text-rvl-accent"
                 >
                   {team.name}
                 </Link>
-                <p className="mb-1 text-[4.2rem] font-extrabold leading-none text-brand-navy-deep max-[700px]:text-[3.3rem]">
+                <span className="font-mono text-[2.6rem] font-bold leading-none tracking-[-0.045em] tabular-nums text-rvl-accent">
                   {index === 0 ? game.team1Score : game.team2Score}
-                </p>
+                </span>
               </div>
-            </div>
-          ) : null,
-        )}
-      </div>
+            ) : null,
+          )}
 
-      <section className="mt-18">
-        <h2 className="mb-6 text-center text-[2.25rem] font-bold text-brand-navy-deep">
-          Player stats
-        </h2>
+          <div className="flex flex-wrap gap-8 font-mono lg:ml-auto">
+            <PageMetric label="Date" value={game.date} />
+            <PageMetric
+              label="Season"
+              value={
+                game.season ? (
+                  <Link href={`/seasons/${game.season.id}`} className="no-underline">
+                    {game.season.seasonNumber}
+                  </Link>
+                ) : (
+                  "—"
+                )
+              }
+            />
+            {game.videoUrl ? (
+              <div className="flex flex-col gap-1">
+                <span className="text-[0.58rem] uppercase tracking-[0.22em] text-rvl-dim">VOD</span>
+                <a
+                  href={game.videoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[0.95rem] text-rvl-accent no-underline"
+                >
+                  Watch →
+                </a>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      </header>
+
+      <section className="grid grid-cols-1 gap-8 px-5 py-12 sm:px-8 md:grid-cols-[210px_1fr] md:gap-14 xl:px-14">
+        <div>
+          <h2 className="m-0 mb-3 font-mono text-[0.72rem] font-bold uppercase tracking-[0.24em] text-rvl-accent">
+            Box score
+          </h2>
+          <p className="m-0 font-mono text-[0.64rem] uppercase tracking-[0.14em] text-rvl-dim">
+            {game.stats.length} stat lines
+          </p>
+        </div>
 
         {game.stats.length === 0 ? (
-          <p className="mt-6 text-center text-[1.3rem] text-[#5d6673]">
-            No stats have been uploaded for this game.
+          <p className="m-0 font-mono text-[0.78rem] uppercase tracking-[0.14em] text-rvl-dim">
+            No stats uploaded for this game.
           </p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[960px] border-collapse text-[0.93rem]">
+            <table className="w-full min-w-[860px] border-collapse">
               <thead>
                 <tr>
-                  <th className={headerCell}>Player</th>
+                  <th className={`${headerCell} text-left`}>Player</th>
                   <th className={headerCell}>Spike kills</th>
                   <th className={headerCell}>Ape kills</th>
                   <th className={headerCell}>Attempts</th>
@@ -123,16 +128,15 @@ export default async function GamePage({ params }: Params) {
                 </tr>
               </thead>
               <tbody>
-                {game.stats.map((line, index) => (
-                  <tr
-                    key={line.id}
-                    className={cn(
-                      "transition-colors duration-150 hover:bg-brand-sky-pale/45",
-                      index % 2 === 1 && "bg-[#f7fbff]",
-                    )}
-                  >
-                    <td className={`${bodyCell} capitalize`}>
-                      <Link href={`/players/${line.playerId}`} className="hover:underline">
+                {game.stats.map((line) => (
+                  <tr key={line.id} className="transition-colors hover:bg-rvl-panel">
+                    <td
+                      className={`${bodyCell} text-left font-display text-[0.98rem] font-semibold capitalize`}
+                    >
+                      <Link
+                        href={`/players/${line.playerId}`}
+                        className="text-rvl-ink no-underline transition-colors hover:text-rvl-accent"
+                      >
                         {line.playerName}
                       </Link>
                     </td>

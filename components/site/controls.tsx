@@ -1,25 +1,45 @@
 "use client";
 
-import type { ChangeEvent, ReactNode } from "react";
 import { Search } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@components/ui/select";
 
-const ARROW =
-  "url(\"data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%237a8391'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e\")";
+export const ALL_VALUE = "__all";
+
+export interface FilterOption {
+  value: string;
+  label: string;
+}
+
+export const selectTriggerClass =
+  "min-w-[150px] rounded-xs border-rvl-line bg-transparent px-3.5 font-mono text-[0.78rem] uppercase tracking-[0.08em] text-rvl-ink transition-colors data-[size=default]:h-10 hover:border-rvl-line-strong focus-visible:border-rvl-accent-soft focus-visible:ring-0";
+
+export const selectContentClass = "rounded-xs border-rvl-line";
+
+export const selectItemClass =
+  "rounded-xs font-mono text-[0.76rem] uppercase tracking-[0.08em] focus:bg-rvl-panel focus:text-rvl-accent";
 
 export function FilterSelect({
   id,
   label,
   value,
   onChange,
-  children,
+  options,
+  placeholder,
   className,
 }: {
   id: string;
   label: string;
   value: string;
   onChange: (value: string) => void;
-  children: ReactNode;
+  options: FilterOption[];
+  placeholder?: string;
   className?: string;
 }) {
   return (
@@ -30,20 +50,25 @@ export function FilterSelect({
       >
         {label}
       </label>
-      <select
-        id={id}
-        value={value}
-        onChange={(event: ChangeEvent<HTMLSelectElement>) => onChange(event.target.value)}
-        style={{
-          backgroundImage: ARROW,
-          backgroundRepeat: "no-repeat",
-          backgroundPosition: "right 8px center",
-          backgroundSize: "18px",
-        }}
-        className="min-w-[150px] cursor-pointer appearance-none rounded-xs border border-rvl-line bg-transparent py-2.5 pl-3.5 pr-9 font-mono text-[0.78rem] uppercase tracking-[0.08em] text-rvl-ink transition-colors hover:border-rvl-line-strong focus:border-rvl-accent-soft focus:outline-none"
+      <Select
+        value={value === "" ? ALL_VALUE : value}
+        onValueChange={(next) => onChange(next === ALL_VALUE ? "" : next)}
       >
-        {children}
-      </select>
+        <SelectTrigger id={id} className={selectTriggerClass}>
+          <SelectValue placeholder={placeholder ?? "Choose"} />
+        </SelectTrigger>
+        <SelectContent className={selectContentClass}>
+          {options.map((option) => (
+            <SelectItem
+              key={option.value || ALL_VALUE}
+              value={option.value === "" ? ALL_VALUE : option.value}
+              className={selectItemClass}
+            >
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   );
 }

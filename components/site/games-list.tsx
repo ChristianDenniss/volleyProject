@@ -79,14 +79,11 @@ export function GamesList({ games }: { games: GameListRow[] }) {
               setSeason(value);
               setPage(1);
             }}
-          >
-            <option value="">All seasons</option>
-            {seasons.map((value) => (
-              <option key={value} value={String(value)}>
-                Season {value}
-              </option>
-            ))}
-          </FilterSelect>
+            options={[
+              { value: "", label: "All seasons" },
+              ...seasons.map((value) => ({ value: String(value), label: `Season ${value}` })),
+            ]}
+          />
 
           <FilterSelect
             id="stage-filter"
@@ -96,14 +93,11 @@ export function GamesList({ games }: { games: GameListRow[] }) {
               setStage(value);
               setPage(1);
             }}
-          >
-            <option value="">All stages</option>
-            {stages.map((value) => (
-              <option key={value} value={value}>
-                {value}
-              </option>
-            ))}
-          </FilterSelect>
+            options={[
+              { value: "", label: "All stages" },
+              ...stages.map((value) => ({ value, label: value })),
+            ]}
+          />
 
           <SearchBar
             className="max-w-[340px]"

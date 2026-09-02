@@ -49,23 +49,22 @@ export function AwardsList({ awards }: { awards: AwardListRow[] }) {
           label="Season"
           value={season}
           onChange={setSeason}
-        >
-          <option value="">All seasons</option>
-          {seasons.map((value) => (
-            <option key={value} value={String(value)}>
-              Season {value}
-            </option>
-          ))}
-        </FilterSelect>
+          options={[
+            { value: "", label: "All seasons" },
+            ...seasons.map((value) => ({ value: String(value), label: `Season ${value}` })),
+          ]}
+        />
 
-        <FilterSelect id="award-type-filter" label="Award" value={type} onChange={setType}>
-          <option value="">All awards</option>
-          {types.map((value) => (
-            <option key={value} value={value}>
-              {value}
-            </option>
-          ))}
-        </FilterSelect>
+        <FilterSelect
+          id="award-type-filter"
+          label="Award"
+          value={type}
+          onChange={setType}
+          options={[
+            { value: "", label: "All awards" },
+            ...types.map((value) => ({ value, label: value })),
+          ]}
+        />
 
         <span className="self-end pb-2.5 font-mono text-[0.68rem] uppercase tracking-[0.14em] text-rvl-dim">
           {visible.length} awards

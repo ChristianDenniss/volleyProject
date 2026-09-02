@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { PortalSelect } from "./portal-select";
 import { pick, ResourceView, type ColumnSpec, type FieldSpec } from "./resource-view";
 import {
   Dialog,
@@ -119,20 +120,12 @@ function CsvUpload({ games }: { games: { id: number; label: string }[] }) {
         >
           <div className="space-y-2">
             <Label htmlFor="csv-game">Game</Label>
-            <select
+            <PortalSelect
               id="csv-game"
-              required
               value={gameId}
-              onChange={(event) => setGameId(event.target.value)}
-              className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
-            >
-              <option value="">Choose…</option>
-              {games.map((game) => (
-                <option key={game.id} value={String(game.id)}>
-                  {game.label}
-                </option>
-              ))}
-            </select>
+              onChange={setGameId}
+              options={games.map((game) => ({ value: String(game.id), label: game.label }))}
+            />
           </div>
 
           <div className="space-y-2">

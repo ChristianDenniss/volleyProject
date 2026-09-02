@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { getDb } from "@db";
-import { games } from "@server/services";
+import { api } from "@server/trpc/server";
 import { EmptyState } from "@components/site/empty-state";
 import { GamesList } from "@components/site/games-list";
 import { PageHeader, PageMetric } from "@components/site/page-header";
@@ -13,7 +12,8 @@ export const metadata: Metadata = {
 };
 
 export default async function GamesPage() {
-  const rows = await games.list(getDb());
+  const trpc = await api();
+  const rows = await trpc.games.list();
 
   const seasonCount = new Set(
     rows.flatMap((game) => (game.seasonNumber == null ? [] : [game.seasonNumber])),

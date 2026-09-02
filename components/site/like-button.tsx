@@ -26,7 +26,7 @@ export function LikeButton({
   const pending = like.isPending || unlike.isPending;
 
   return (
-    <div className="flex items-center gap-2 font-sans">
+    <div className="flex items-center gap-3">
       <button
         type="button"
         aria-label={liked ? "Unlike this article" : "Like this article"}
@@ -47,13 +47,16 @@ export function LikeButton({
           }
         }}
         className={cn(
-          "cursor-pointer border-none bg-transparent p-0 text-[2rem] leading-none transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-60",
-          liked ? "text-[#800000]" : "text-[#e0e0e0] hover:enabled:scale-110 hover:enabled:text-[#d32f2f]",
+          "flex cursor-pointer items-center gap-2.5 border bg-transparent px-4 py-2.5 font-mono text-[0.7rem] uppercase tracking-[0.14em] transition-colors disabled:cursor-not-allowed disabled:opacity-50",
+          liked
+            ? "border-rvl-accent-soft text-rvl-accent"
+            : "border-rvl-line text-rvl-dim hover:enabled:border-rvl-accent-soft hover:enabled:text-rvl-accent",
         )}
       >
-        ♥
+        <span className="text-[0.95rem] leading-none">♥</span>
+        {liked ? "Liked" : "Like"}
       </button>
-      <span className="text-[#555]">{likes}</span>
+      <span className="font-mono text-[0.8rem] tabular-nums text-rvl-dim">{likes}</span>
     </div>
   );
 }

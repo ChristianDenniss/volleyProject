@@ -10,7 +10,7 @@ export function RobloxSignIn({ callbackURL }: { callbackURL: string }) {
   return (
     <button
       type="button"
-      className="mt-4 w-full cursor-pointer rounded-md border-none bg-brand-sky px-4 py-3.5 text-base font-semibold text-white transition-colors duration-300 hover:enabled:bg-brand-sky-dark disabled:cursor-not-allowed disabled:bg-[#AACCEE]"
+      className="w-full cursor-pointer border-none bg-rvl-accent-bg px-5 py-4 font-mono text-[0.72rem] font-bold uppercase tracking-[0.14em] text-rvl-on-accent transition-opacity hover:enabled:opacity-85 disabled:cursor-not-allowed disabled:opacity-50"
       disabled={pending}
       onClick={async () => {
         setPending(true);

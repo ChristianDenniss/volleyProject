@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { getDb } from "@db";
-import { articles, matches, players, records, seasons, stats } from "@server/services";
+import { api } from "@server/trpc/server";
 import { HomeVideo } from "@components/site/home-video";
 
 export const dynamic = "force-dynamic";
@@ -44,22 +43,22 @@ function setLine(match: {
 }
 
 export default async function HomePage() {
-  const db = getDb();
+  const trpc = await api();
 
   const [seasonRows, articleRows, playerCount] = await Promise.all([
-    seasons.list(db),
-    articles.list(db, { approvedOnly: true }),
-    players.count(db),
+    trpc.seasons.list(),
+    trpc.articles.list(),
+    trpc.players.count(),
   ]);
 
   const season = seasonRows[0] ?? null;
 
   const [matchRows, leaders, killRecords, blockRecords, aceRecords] = await Promise.all([
-    season ? matches.listBySeason(db, season.id) : Promise.resolve([]),
-    season ? stats.leaderboard(db, season.id) : Promise.resolve([]),
-    records.listByMetric(db, "total kills"),
-    records.listByMetric(db, "blocks"),
-    records.listByMetric(db, "aces"),
+    season ? trpc.matches.list({ seasonId: season.id }) : Promise.resolve([]),
+    season ? trpc.stats.leaderboard({ seasonId: season.id }) : Promise.resolve([]),
+    trpc.records.byMetric({ metric: "total kills" }),
+    trpc.records.byMetric({ metric: "blocks" }),
+    trpc.records.byMetric({ metric: "aces" }),
   ]);
 
   const sortedArticles = [...articleRows].sort((a, b) => b.id - a.id);

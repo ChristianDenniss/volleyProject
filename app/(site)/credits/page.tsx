@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PageHeader, PageMetric } from "@components/site/page-header";
 
 export const metadata: Metadata = {
   title: "Credits",
@@ -14,32 +15,29 @@ const CONTRIBUTORS = [
 
 export default function CreditsPage() {
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#f9f9fb] p-8 text-[#1a1a1a]">
-      <h1 className="relative mb-8 text-center text-[3rem] font-black uppercase max-md:text-[2rem]">
-        <span
-          aria-hidden="true"
-          className="absolute left-1/2 top-1/2 -z-1 h-[0.3em] w-[120%] -translate-x-1/2 -translate-y-1/2 -skew-x-[20deg] bg-[#a9d6f5]"
-        />
-        Our Contributors
-      </h1>
+    <div className="font-display">
+      <PageHeader
+        eyebrow="Colophon"
+        title="Contributors"
+        description="The people who built this platform and keep it running."
+        meta={<PageMetric label="Credits" value={CONTRIBUTORS.length} />}
+      />
 
-      <p className="mx-0 mb-16 mt-0 text-center text-[1.1rem] text-[#555] opacity-80">
-        The folks who brought this project to life
-      </p>
-
-      <div className="grid w-full grid-cols-4 gap-8 [grid-template-columns:repeat(4,minmax(200px,1fr))] max-lg:grid-cols-2 max-sm:grid-cols-1">
+      <div className="grid grid-cols-1 gap-6 px-5 py-12 sm:grid-cols-2 sm:px-8 lg:grid-cols-4 xl:px-14">
         {CONTRIBUTORS.map((person) => (
           <div
             key={`${person.name}-${person.role}`}
-            className="rounded-lg bg-white p-6 text-center shadow-[0_4px_12px_rgba(0,0,0,0.05)] transition-[transform,box-shadow] duration-300 hover:-translate-y-1.5 hover:scale-105 hover:shadow-[0_8px_24px_rgba(0,0,0,0.1)]"
+            className="flex flex-col items-start border border-rvl-line p-6"
           >
             <img
               src={person.avatar}
-              alt={person.name}
-              className="mx-auto mb-4 size-[120px] rounded-full border-2 border-[#a9d6f5] object-cover"
+              alt=""
+              className="size-20 rounded-xs border border-rvl-line object-cover"
             />
-            <h3 className="m-0 text-[1.2rem] font-bold">{person.name}</h3>
-            <p className="mb-0 mt-1 text-[0.95rem] text-[#555]">{person.role}</p>
+            <h2 className="mt-5 mb-1 text-[1.15rem] font-bold">{person.name}</h2>
+            <p className="m-0 font-mono text-[0.62rem] uppercase tracking-[0.16em] text-rvl-dim">
+              {person.role}
+            </p>
           </div>
         ))}
       </div>

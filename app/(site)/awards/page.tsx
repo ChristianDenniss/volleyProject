@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { getDb } from "@db";
-import { awards } from "@server/services";
+import { api } from "@server/trpc/server";
 import { AwardsList } from "@components/site/awards-list";
 import { EmptyState } from "@components/site/empty-state";
 import { PageHeader, PageMetric } from "@components/site/page-header";
@@ -13,7 +12,8 @@ export const metadata: Metadata = {
 };
 
 export default async function AwardsPage() {
-  const rows = await awards.list(getDb());
+  const trpc = await api();
+  const rows = await trpc.awards.list();
 
   const seasonCount = new Set(
     rows.flatMap((award) => (award.seasonNumber == null ? [] : [award.seasonNumber])),

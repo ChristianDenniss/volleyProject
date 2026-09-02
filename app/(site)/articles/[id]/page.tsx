@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getDb } from "@db";
-import { articles } from "@server/services";
 import { getSessionUser } from "@server/session";
+import { api } from "@server/trpc/server";
 import { LikeButton } from "@components/site/like-button";
 import { ArticleContent } from "@components/site/article-content";
 
@@ -15,7 +14,7 @@ interface Params {
 async function load(id: string) {
   const parsed = Number.parseInt(id, 10);
   if (!Number.isInteger(parsed) || parsed <= 0) return null;
-  return articles.getById(getDb(), parsed);
+  return (await api()).articles.byId({ id: parsed });
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
@@ -42,48 +41,70 @@ export default async function ArticlePage({ params }: Params) {
   if (!article) notFound();
 
   const user = await getSessionUser();
-  const status = await articles.likeStatus(getDb(), article.id, user?.id ?? null);
+  const status = await (await api()).articles.likeStatus({ id: article.id });
 
   return (
-    <div className="box-border min-h-screen">
-      <article className="mx-auto my-4 grid max-w-[90%] grid-cols-1 overflow-hidden rounded bg-[#fdfdf9] px-8 pb-8 font-serif text-[#1a1a1a] shadow-[0_4px_12px_rgba(0,0,0,0.05)] max-md:max-w-full max-md:px-4">
-        <img
-          src={article.imageUrl}
-          alt={article.title}
-          className="mb-2 block max-h-[90vh] w-full rounded object-cover"
-        />
+    <article className="font-display">
+      <header className="border-b border-rvl-line px-5 py-12 sm:px-8 sm:py-14 xl:px-14">
+        {article.approved !== true ? (
+          <div className="mb-8 flex flex-wrap items-center gap-3 border border-rvl-line px-4 py-3 text-[0.85rem] text-rvl-ink-2">
+            <span className="border border-rvl-accent-soft px-2 py-0.5 font-mono text-[0.6rem] uppercase tracking-[0.18em] text-rvl-accent">
+              {article.approved === null ? "Pending approval" : "Rejected"}
+            </span>
+            <span>
+              {article.approved === null
+                ? "This article is awaiting review and is not visible to the public yet."
+                : "This article was rejected and is not visible to the public."}
+            </span>
+          </div>
+        ) : null}
 
-        <h1 className="mb-4 border-b-2 border-[#1a1a1a] pb-2 text-[clamp(2rem,5vw,3rem)] uppercase tracking-[2px]">
-          {article.title}
-        </h1>
+        <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-[1.15fr_1fr] lg:gap-12">
+          <div>
+            <span className="font-mono text-[0.62rem] font-bold uppercase tracking-[0.24em] text-rvl-accent">
+              {article.authorName}
+            </span>
+            <h1 className="mt-5 mb-5 text-balance text-[2.2rem] font-black uppercase leading-[0.95] tracking-[-0.035em] sm:text-[2.9rem]">
+              {article.title}
+            </h1>
+            <p className="m-0 mb-6 max-w-[52ch] text-[1.05rem] text-rvl-ink-2">
+              {article.summary}
+            </p>
+            <div className="flex flex-wrap gap-5 font-mono text-[0.68rem] uppercase tracking-[0.13em] text-rvl-dim">
+              <span className="tabular-nums">
+                {new Date(article.createdAt).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })}
+              </span>
+              <span className="tabular-nums text-rvl-accent">♥ {article.likes}</span>
+            </div>
+          </div>
 
-        <div className="mb-8 flex flex-wrap gap-4 font-sans text-[0.9rem] text-[#555]">
-          <span>By {article.authorName}</span>
-          <span className="before:mr-2 before:content-['•']">
-            {new Date(article.createdAt).toLocaleDateString()}
-          </span>
-          <span className="before:mr-2 before:content-['•']">{article.likes} likes</span>
-        </div>
-
-        <p className="mx-8 mb-8 block w-full border-y border-[#1a1a1a] px-8 py-2 text-center font-sans text-[1.2rem] [font-variant:small-caps] max-md:mx-0 max-md:px-2">
-          {article.summary}
-        </p>
-
-        <ArticleContent
-          content={article.content}
-          className="mb-8 columns-2 gap-12 text-justify text-[1.1rem] leading-[1.7] max-md:columns-1 [&>p:first-of-type::first-letter]:float-left [&>p:first-of-type::first-letter]:mr-2 [&>p:first-of-type::first-letter]:mt-1 [&>p:first-of-type::first-letter]:text-[4rem] [&>p:first-of-type::first-letter]:font-bold [&>p:first-of-type::first-letter]:leading-none [&>p:first-of-type::first-letter]:text-[#800000]"
-        />
-
-
-        <div className="mt-8">
-          <LikeButton
-            articleId={article.id}
-            initialLiked={status.liked}
-            initialLikes={article.likes}
-            signedIn={user !== null}
+          <img
+            src={article.imageUrl}
+            alt={article.title}
+            className="aspect-4/3 w-full border border-rvl-line object-cover"
           />
         </div>
-      </article>
-    </div>
+      </header>
+
+      <div className="border-b border-rvl-line px-5 py-14 sm:px-8 xl:px-14">
+        <ArticleContent
+          content={article.content}
+          className="max-w-[68ch] text-[1.05rem] leading-[1.75] text-rvl-ink-2 [&>h2]:mt-10 [&>h2]:mb-4 [&>h2]:text-[1.35rem] [&>h2]:font-bold [&>h2]:uppercase [&>h2]:tracking-[-0.02em] [&>h2]:text-rvl-ink [&>h3]:mt-8 [&>h3]:mb-3 [&>h3]:text-[1.1rem] [&>h3]:font-semibold [&>h3]:text-rvl-ink [&>p]:mb-5 [&_a]:text-rvl-accent [&_img]:my-8 [&_img]:w-full [&_img]:border [&_img]:border-rvl-line"
+        />
+      </div>
+
+      <div className="px-5 py-10 sm:px-8 xl:px-14">
+        <LikeButton
+          articleId={article.id}
+          initialLiked={status.liked}
+          initialLikes={article.likes}
+          signedIn={user !== null}
+        />
+      </div>
+    </article>
   );
 }

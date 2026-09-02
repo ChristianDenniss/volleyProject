@@ -95,14 +95,14 @@ export function StatsLeaderboard({
             label="Season"
             value={seasonId ? String(seasonId) : ""}
             onChange={(value) => router.push(value ? `/stats?season=${value}` : "/stats")}
-          >
-            <option value="">All seasons</option>
-            {seasons.map((season) => (
-              <option key={season.id} value={String(season.id)}>
-                Season {season.seasonNumber}
-              </option>
-            ))}
-          </FilterSelect>
+            options={[
+              { value: "", label: "All seasons" },
+              ...seasons.map((season) => ({
+                value: String(season.id),
+                label: `Season ${season.seasonNumber}`,
+              })),
+            ]}
+          />
 
           <SearchBar
             className="max-w-[340px]"

@@ -99,14 +99,14 @@ export function SchedulesBoard({
             label="Season"
             value={seasonId ? String(seasonId) : ""}
             onChange={(value) => router.push(value ? `/schedules?season=${value}` : "/schedules")}
-          >
-            <option value="">All seasons</option>
-            {seasons.map((season) => (
-              <option key={season.id} value={String(season.id)}>
-                Season {season.seasonNumber}
-              </option>
-            ))}
-          </FilterSelect>
+            options={[
+              { value: "", label: "All seasons" },
+              ...seasons.map((season) => ({
+                value: String(season.id),
+                label: `Season ${season.seasonNumber}`,
+              })),
+            ]}
+          />
 
           <FilterSelect
             id="schedule-region"
@@ -116,14 +116,11 @@ export function SchedulesBoard({
               setRegion(value);
               setPage(1);
             }}
-          >
-            <option value="">All regions</option>
-            {regions.map((value) => (
-              <option key={value} value={value}>
-                {value}
-              </option>
-            ))}
-          </FilterSelect>
+            options={[
+              { value: "", label: "All regions" },
+              ...regions.map((value) => ({ value, label: value })),
+            ]}
+          />
 
           <FilterSelect
             id="schedule-status"
@@ -133,14 +130,11 @@ export function SchedulesBoard({
               setStatus(value);
               setPage(1);
             }}
-          >
-            <option value="">All statuses</option>
-            {statuses.map((value) => (
-              <option key={value} value={value}>
-                {value}
-              </option>
-            ))}
-          </FilterSelect>
+            options={[
+              { value: "", label: "All statuses" },
+              ...statuses.map((value) => ({ value, label: value })),
+            ]}
+          />
 
           <FilterSelect
             id="schedule-round"
@@ -150,14 +144,11 @@ export function SchedulesBoard({
               setRound(value);
               setPage(1);
             }}
-          >
-            <option value="">All rounds</option>
-            {rounds.map((value) => (
-              <option key={value} value={value}>
-                {value}
-              </option>
-            ))}
-          </FilterSelect>
+            options={[
+              { value: "", label: "All rounds" },
+              ...rounds.map((value) => ({ value, label: value })),
+            ]}
+          />
 
           {search || region || status || round ? (
             <ClearFiltersButton onClick={clearFilters} />

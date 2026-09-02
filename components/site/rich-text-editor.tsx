@@ -47,14 +47,14 @@ const editorClass = [
   "[&_ul]:mb-4 [&_ul]:list-disc [&_ul]:pl-6",
   "[&_ol]:mb-4 [&_ol]:list-decimal [&_ol]:pl-6",
   "[&_li]:mb-1",
-  "[&_blockquote]:mb-4 [&_blockquote]:border-l-4 [&_blockquote]:border-[#1a1a1a] [&_blockquote]:pl-4 [&_blockquote]:italic",
-  "[&_pre]:mb-4 [&_pre]:overflow-x-auto [&_pre]:rounded [&_pre]:bg-[#1a1a1a] [&_pre]:p-3 [&_pre]:font-mono [&_pre]:text-[0.9rem] [&_pre]:text-[#f5f5f5]",
-  "[&_code]:rounded [&_code]:bg-[#eee] [&_code]:px-1 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-[0.9em]",
+  "[&_blockquote]:mb-4 [&_blockquote]:border-l-2 [&_blockquote]:border-rvl-accent-soft [&_blockquote]:pl-4 [&_blockquote]:italic",
+  "[&_pre]:mb-4 [&_pre]:overflow-x-auto [&_pre]:rounded-xs [&_pre]:border [&_pre]:border-rvl-line [&_pre]:bg-rvl-panel [&_pre]:p-3 [&_pre]:font-mono [&_pre]:text-[0.88rem] [&_pre]:text-rvl-ink",
+  "[&_code]:rounded-xs [&_code]:bg-rvl-panel [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-[0.88em]",
   "[&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_pre_code]:text-inherit",
-  "[&_hr]:my-6 [&_hr]:border-t [&_hr]:border-[#ccc]",
-  "[&_img]:my-4 [&_img]:max-w-full [&_img]:rounded",
-  "[&_a]:text-brand-navy [&_a]:underline",
-  "[&_.ProseMirror-selectednode]:outline [&_.ProseMirror-selectednode]:outline-2 [&_.ProseMirror-selectednode]:outline-brand-navy",
+  "[&_hr]:my-6 [&_hr]:border-t [&_hr]:border-rvl-line-strong",
+  "[&_img]:my-4 [&_img]:max-w-full [&_img]:rounded-xs",
+  "[&_a]:text-rvl-accent [&_a]:underline [&_a]:underline-offset-2",
+  "[&_.ProseMirror-selectednode]:outline [&_.ProseMirror-selectednode]:outline-2 [&_.ProseMirror-selectednode]:outline-rvl-accent",
 ].join(" ");
 
 function initialContent(value: string): JSONContent {
@@ -84,9 +84,9 @@ function ToolbarButton({
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        "flex size-8 cursor-pointer items-center justify-center rounded border border-transparent text-[#333] transition-colors duration-150",
-        "hover:enabled:bg-[#e9ecef] disabled:cursor-not-allowed disabled:opacity-40",
-        active && "border-[#ccd] bg-[#dbe4ef] text-brand-navy",
+        "flex size-8 cursor-pointer items-center justify-center rounded-xs border border-transparent text-rvl-ink-2 transition-colors duration-150",
+        "hover:enabled:bg-rvl-panel disabled:cursor-not-allowed disabled:opacity-40",
+        active && "border-rvl-accent-soft bg-rvl-accent-soft/40 text-rvl-accent",
       )}
     >
       {children}
@@ -95,7 +95,7 @@ function ToolbarButton({
 }
 
 function Divider() {
-  return <span className="mx-1 h-6 w-px self-center bg-[#ddd]" />;
+  return <span className="mx-1 h-6 w-px self-center bg-rvl-line" />;
 }
 
 type Draft = { kind: "link" | "image"; value: string } | null;
@@ -125,7 +125,7 @@ function UrlBar({
   };
 
   return (
-    <div className="flex items-center gap-2 border-b border-[#ddd] bg-white px-2 py-2">
+    <div className="flex items-center gap-2 border-b border-rvl-line bg-rvl-ground px-2 py-2">
       <input
         autoFocus
         type="url"
@@ -139,19 +139,19 @@ function UrlBar({
           }
           if (event.key === "Escape") setDraft(null);
         }}
-        className="w-full rounded border border-[#ddd] px-2 py-1 text-sm focus:border-brand-navy focus:outline-none"
+        className="w-full rounded-xs border border-rvl-line bg-rvl-ground px-2 py-1 text-sm text-rvl-ink focus:border-rvl-accent focus:outline-none"
       />
       <button
         type="button"
         onClick={submit}
-        className="cursor-pointer rounded bg-brand-navy px-3 py-1 text-sm text-white hover:bg-brand-steel"
+        className="cursor-pointer rounded-xs bg-rvl-accent-bg px-3 py-1 font-mono text-[0.68rem] uppercase tracking-[0.14em] text-rvl-on-accent transition-opacity hover:opacity-85"
       >
         {draft.kind === "link" ? "Link" : "Insert"}
       </button>
       <button
         type="button"
         onClick={() => setDraft(null)}
-        className="cursor-pointer rounded border border-[#ddd] px-3 py-1 text-sm text-[#333] hover:bg-[#e9ecef]"
+        className="cursor-pointer rounded-xs border border-rvl-line px-3 py-1 font-mono text-[0.68rem] uppercase tracking-[0.14em] text-rvl-ink-2 transition-colors hover:bg-rvl-panel"
       >
         Cancel
       </button>
@@ -180,13 +180,13 @@ export function RichTextEditor({
 
   if (!editor) {
     return (
-      <div className={cn("min-h-[380px] rounded border border-[#ddd] bg-[#fafafa]", className)} />
+      <div className={cn("min-h-[380px] border border-rvl-line bg-rvl-panel", className)} />
     );
   }
 
   return (
-    <div className={cn("overflow-hidden rounded border border-[#ddd] bg-white", className)}>
-      <div className="flex flex-wrap gap-1 border-b border-[#ddd] bg-[#f8f9fa] p-2">
+    <div className={cn("overflow-hidden border border-rvl-line bg-rvl-ground", className)}>
+      <div className="flex flex-wrap gap-1 border-b border-rvl-line bg-rvl-panel p-2">
         <ToolbarButton
           label="Heading 2"
           active={editor.isActive("heading", { level: 2 })}

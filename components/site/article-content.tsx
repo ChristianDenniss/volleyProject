@@ -31,7 +31,9 @@ function applyMarks(text: ReactNode, marks: TiptapMark[] | undefined): ReactNode
         return <s className="line-through">{node}</s>;
       case "code":
         return (
-          <code className="rounded bg-[#eee] px-1 py-0.5 font-mono text-[0.9em]">{node}</code>
+          <code className="rounded-xs bg-rvl-panel px-1.5 py-0.5 font-mono text-[0.88em]">
+            {node}
+          </code>
         );
       case "link":
         return (
@@ -39,7 +41,7 @@ function applyMarks(text: ReactNode, marks: TiptapMark[] | undefined): ReactNode
             href={mark.attrs.href}
             target="_blank"
             rel="noopener noreferrer nofollow"
-            className="text-brand-navy underline underline-offset-2 hover:text-brand-steel"
+            className="text-rvl-accent underline underline-offset-2"
           >
             {node}
           </a>
@@ -84,7 +86,7 @@ function renderNode(node: TiptapNode): ReactNode {
 
     case "blockquote":
       return (
-        <blockquote className="mb-6 border-l-4 border-[#1a1a1a] pl-4 italic">
+        <blockquote className="mb-6 border-l-2 border-rvl-accent-soft pl-5 italic text-rvl-ink">
           {renderNodes(node.content)}
         </blockquote>
       );
@@ -97,13 +99,13 @@ function renderNode(node: TiptapNode): ReactNode {
 
     case "codeBlock":
       return (
-        <pre className="mb-6 overflow-x-auto rounded bg-[#1a1a1a] p-4 font-mono text-[0.9rem] text-[#f5f5f5]">
+        <pre className="mb-6 overflow-x-auto rounded-xs border border-rvl-line bg-rvl-panel p-4 font-mono text-[0.88rem] text-rvl-ink">
           <code>{renderNodes(node.content)}</code>
         </pre>
       );
 
     case "horizontalRule":
-      return <hr className="my-8 border-t border-[#1a1a1a]" />;
+      return <hr className="my-8 border-t border-rvl-line-strong" />;
 
     case "image":
       return (

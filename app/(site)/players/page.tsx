@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { getDb } from "@db";
-import { players } from "@server/services";
+import { api } from "@server/trpc/server";
 import { EmptyState } from "@components/site/empty-state";
 import { PageHeader, PageMetric } from "@components/site/page-header";
 import { PlayersList, type PlayerListRow } from "@components/site/players-list";
@@ -13,10 +12,10 @@ export const metadata: Metadata = {
 };
 
 export default async function PlayersPage() {
-  const db = getDb();
+  const trpc = await api();
   const [rows, memberships] = await Promise.all([
-    players.list(db),
-    players.listAllMemberships(db),
+    trpc.players.list(),
+    trpc.players.memberships(),
   ]);
 
   const teamsByPlayer = new Map<number, { name: string; seasonNumber: number | null }[]>();

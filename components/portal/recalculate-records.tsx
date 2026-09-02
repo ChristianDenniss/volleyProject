@@ -4,26 +4,48 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@components/ui/select";
+
+const ALL_SEASONS = "__all";
 
 export function RecalculateRecords({ seasons }: { seasons: { id: number; label: string }[] }) {
   const router = useRouter();
-  const [seasonId, setSeasonId] = useState("");
+  const [seasonId, setSeasonId] = useState(ALL_SEASONS);
   const recalculate = trpc.records.recalculate.useMutation();
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <select
-        value={seasonId}
-        onChange={(event) => setSeasonId(event.target.value)}
-        className="cursor-pointer rounded-xs border border-rvl-line bg-transparent px-3.5 py-2.5 font-mono text-[0.78rem] uppercase tracking-[0.08em] text-rvl-ink transition-colors hover:border-rvl-line-strong focus:border-rvl-accent-soft focus:outline-none"
-      >
-        <option value="">Every season</option>
-        {seasons.map((season) => (
-          <option key={season.id} value={String(season.id)}>
-            {season.label}
-          </option>
-        ))}
-      </select>
+    <div className="flex flex-wrap items-center gap-3">
+      <Select value={seasonId} onValueChange={setSeasonId}>
+        <SelectTrigger
+          aria-label="Scope"
+          className="min-w-[180px] rounded-xs border-rvl-line bg-transparent px-3.5 font-mono text-[0.78rem] uppercase tracking-[0.08em] data-[size=default]:h-10 hover:border-rvl-line-strong focus-visible:border-rvl-accent-soft focus-visible:ring-0"
+        >
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent className="rounded-xs border-rvl-line">
+          <SelectItem
+            value={ALL_SEASONS}
+            className="rounded-xs font-mono text-[0.76rem] uppercase tracking-[0.08em] focus:bg-rvl-panel focus:text-rvl-accent"
+          >
+            Every season
+          </SelectItem>
+          {seasons.map((season) => (
+            <SelectItem
+              key={season.id}
+              value={String(season.id)}
+              className="rounded-xs font-mono text-[0.76rem] uppercase tracking-[0.08em] focus:bg-rvl-panel focus:text-rvl-accent"
+            >
+              {season.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
       <button
         type="button"

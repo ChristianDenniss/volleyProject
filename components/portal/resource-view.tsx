@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { Pagination, SearchBar } from "@components/site/controls";
 import { RichTextEditor } from "@components/site/rich-text-editor";
 import {
   Dialog,
@@ -15,6 +16,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@components/ui/select";
 
 export type FieldType =
   | "text"
@@ -68,6 +76,8 @@ const deleteButtonClass =
 const editButtonClass =
   "cursor-pointer rounded-xs border border-rvl-line bg-transparent p-1.5 text-rvl-dim transition-colors hover:border-rvl-accent-soft hover:text-rvl-accent";
 
+const PER_PAGE = 25;
+
 function emptyValues(fields: FieldSpec[]): Values {
   return Object.fromEntries(fields.map((field) => [field.name, ""]));
 }
@@ -101,20 +111,25 @@ function FieldInput({
 
   if (field.type === "select") {
     return (
-      <select
-        id={field.name}
-        required={field.required}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className={inputClass}
-      >
-        <option value="">Choose…</option>
-        {field.options?.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger
+          id={field.name}
+          className="w-full rounded-xs border-rvl-line bg-transparent px-3.5 text-[0.9rem] data-[size=default]:h-10 hover:border-rvl-line-strong focus-visible:border-rvl-accent-soft focus-visible:ring-0"
+        >
+          <SelectValue placeholder="Choose…" />
+        </SelectTrigger>
+        <SelectContent className="rounded-xs border-rvl-line">
+          {field.options?.map((option) => (
+            <SelectItem
+              key={option.value}
+              value={option.value}
+              className="rounded-xs text-[0.88rem] focus:bg-rvl-panel focus:text-rvl-accent"
+            >
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     );
   }
 
@@ -242,14 +257,53 @@ export function ResourceView<Row extends { id: number | string }>({
 }: ResourceViewProps<Row>) {
   const router = useRouter();
   const [deleting, setDeleting] = useState<Row["id"] | null>(null);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+
+  const filtered = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (query === "") return rows;
+    return rows.filter((row) =>
+      Object.values(row as Record<string, unknown>)
+        .map((value) => (value === null || value === undefined ? "" : String(value)))
+        .join(" ")
+        .toLowerCase()
+        .includes(query),
+    );
+  }, [rows, search]);
+
+  const totalPages = Math.max(Math.ceil(filtered.length / PER_PAGE), 1);
+  const current = Math.min(page, totalPages);
+  const visible = filtered.slice((current - 1) * PER_PAGE, current * PER_PAGE);
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center gap-4">
+        <SearchBar
+          className="max-w-[320px]"
+          value={search}
+          placeholder={`Search ${title.toLowerCase()}`}
+          onSearch={(value) => {
+            setSearch(value);
+            setPage(1);
+          }}
+        />
+
         <p className="m-0 font-mono text-[0.66rem] uppercase tracking-[0.14em] text-rvl-dim">
-          {rows.length} {rows.length === 1 ? "row" : "rows"}
+          {filtered.length} {filtered.length === 1 ? "row" : "rows"}
+          {filtered.length !== rows.length ? ` of ${rows.length}` : ""}
         </p>
-        <div className="flex flex-wrap gap-2">
+
+        {totalPages > 1 ? (
+          <Pagination
+            variant="compact"
+            currentPage={current}
+            totalPages={totalPages}
+            onPageChange={setPage}
+          />
+        ) : null}
+
+        <div className="ml-auto flex flex-wrap gap-2">
           {extra}
           {onCreate ? (
             <EntityDialog
@@ -293,7 +347,17 @@ export function ResourceView<Row extends { id: number | string }>({
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => (
+            {visible.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={columns.length + (onUpdate || onDelete ? 1 : 0)}
+                  className="px-4 py-16 text-center font-mono text-[0.72rem] uppercase tracking-[0.14em] text-rvl-dim"
+                >
+                  {rows.length === 0 ? "No rows yet" : "No rows match that search"}
+                </td>
+              </tr>
+            ) : null}
+            {visible.map((row) => (
               <tr key={String(row.id)} className="transition-colors hover:bg-rvl-panel">
                 {columns.map((column) => (
                   <td

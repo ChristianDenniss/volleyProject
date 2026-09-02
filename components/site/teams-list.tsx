@@ -78,14 +78,11 @@ export function TeamsList({ teams }: { teams: TeamListRow[] }) {
               setSeason(value);
               setPage(1);
             }}
-          >
-            <option value="">All seasons</option>
-            {seasons.map((value) => (
-              <option key={value} value={String(value)}>
-                Season {value}
-              </option>
-            ))}
-          </FilterSelect>
+            options={[
+              { value: "", label: "All seasons" },
+              ...seasons.map((value) => ({ value: String(value), label: `Season ${value}` })),
+            ]}
+          />
 
           <FilterSelect
             id="placement-filter"
@@ -95,14 +92,11 @@ export function TeamsList({ teams }: { teams: TeamListRow[] }) {
               setPlacement(value);
               setPage(1);
             }}
-          >
-            <option value="">All placements</option>
-            {placements.map((value) => (
-              <option key={value} value={value}>
-                {value}
-              </option>
-            ))}
-          </FilterSelect>
+            options={[
+              { value: "", label: "All placements" },
+              ...placements.map((value) => ({ value, label: value })),
+            ]}
+          />
 
           <SearchBar
             className="max-w-[340px]"

@@ -34,63 +34,70 @@ const SOCIALS = [
 
 export function SiteFooter() {
   return (
-    <footer className="w-full shrink-0 bg-black py-5 text-white">
-      <div className="flex flex-wrap items-center justify-between gap-4 px-8">
-        <div className="shrink-0">
-          <img src="/rvlLogo.png" alt="RVL Logo" className="h-[75px] w-auto" />
+    <footer className="w-full shrink-0 border-t border-rvl-line bg-rvl-panel text-rvl-ink">
+      <div className="flex flex-col gap-10 px-5 py-12 sm:px-8 xl:px-14">
+        <div className="flex flex-col gap-8 md:grid md:grid-cols-[210px_1fr] md:gap-14">
+          <div className="flex flex-col gap-4">
+            <img src="/rvlLogo.png" alt="RVL Logo" className="h-14 w-auto self-start" />
+            <span className="font-mono text-[0.62rem] uppercase tracking-[0.2em] text-rvl-dim">
+              Roblox Volleyball League
+            </span>
+          </div>
+
+          <div className="flex flex-col gap-8 sm:flex-row sm:items-start sm:justify-between">
+            <nav className="flex flex-wrap gap-x-8 gap-y-3">
+              {NAV.map((link) =>
+                link.external ? (
+                  <a
+                    key={link.label}
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-mono text-[0.68rem] uppercase tracking-[0.14em] text-rvl-ink-2 no-underline transition-colors hover:text-rvl-accent"
+                  >
+                    {link.label}
+                  </a>
+                ) : (
+                  <Link
+                    key={link.label}
+                    href={link.href}
+                    className="font-mono text-[0.68rem] uppercase tracking-[0.14em] text-rvl-ink-2 no-underline transition-colors hover:text-rvl-accent"
+                  >
+                    {link.label}
+                  </Link>
+                ),
+              )}
+            </nav>
+
+            <div className="flex gap-5">
+              {SOCIALS.map((social) => (
+                <a
+                  key={social.label}
+                  href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={social.label}
+                  className="text-rvl-dim transition-colors hover:text-rvl-accent"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    aria-hidden="true"
+                    className="size-[1.15rem]"
+                  >
+                    <path d={social.path} />
+                  </svg>
+                </a>
+              ))}
+            </div>
+          </div>
         </div>
 
-        <div className="flex flex-wrap justify-center gap-8 text-[1.1rem] font-medium">
-          {NAV.map((link) =>
-            link.external ? (
-              <a
-                key={link.label}
-                href={link.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-white no-underline transition-colors duration-300 hover:text-brand-sky-pale"
-              >
-                {link.label}
-              </a>
-            ) : (
-              <Link
-                key={link.label}
-                href={link.href}
-                className="text-white no-underline transition-colors duration-300 hover:text-brand-sky-pale"
-              >
-                {link.label}
-              </Link>
-            ),
-          )}
+        <div className="border-t border-rvl-line pt-6">
+          <p className="m-0 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-rvl-dim">
+            Copyright (C) {new Date().getFullYear()} Volleyball World · All rights reserved
+          </p>
         </div>
-
-        <div className="flex gap-6 text-white">
-          {SOCIALS.map((social) => (
-            <a
-              key={social.label}
-              href={social.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={social.label}
-              className="text-white transition duration-200 hover:scale-125 hover:text-brand-sky-pale"
-            >
-              <svg
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                aria-hidden="true"
-                className="size-[1.3rem]"
-              >
-                <path d={social.path} />
-              </svg>
-            </a>
-          ))}
-        </div>
-      </div>
-
-      <hr className="mx-8 my-4 border-none border-t border-brand-sky-pale" />
-
-      <div className="relative pb-2.5 text-center">
-        <p>Copyright (C) {new Date().getFullYear()} Volleyball World | All Rights Reserved</p>
       </div>
     </footer>
   );

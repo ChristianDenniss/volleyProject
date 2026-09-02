@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { PortalSelect } from "./portal-select";
 import { pick, ResourceView, optionalText, type ColumnSpec, type FieldSpec } from "./resource-view";
 import { Badge } from "@components/ui/badge";
 import {
@@ -124,52 +125,35 @@ function ChallongeImport({ seasons }: { seasons: { id: number; label: string }[]
 
           <div className="space-y-2">
             <Label htmlFor="import-season">Season</Label>
-            <select
+            <PortalSelect
               id="import-season"
-              required
               value={seasonId}
-              onChange={(event) => setSeasonId(event.target.value)}
-              className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
-            >
-              <option value="">Choose…</option>
-              {seasons.map((season) => (
-                <option key={season.id} value={String(season.id)}>
-                  {season.label}
-                </option>
-              ))}
-            </select>
+              onChange={setSeasonId}
+              options={seasons.map((season) => ({
+                value: String(season.id),
+                label: season.label,
+              }))}
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label htmlFor="import-phase">Phase</Label>
-              <select
+              <PortalSelect
                 id="import-phase"
                 value={phase}
-                onChange={(event) => setPhase(event.target.value as Phase)}
-                className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
-              >
-                {PHASES.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
+                onChange={(value) => setPhase(value as Phase)}
+                options={PHASES.map((option) => ({ value: option, label: option }))}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="import-region">Region</Label>
-              <select
+              <PortalSelect
                 id="import-region"
                 value={region}
-                onChange={(event) => setRegion(event.target.value as Region)}
-                className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
-              >
-                {REGIONS.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
+                onChange={(value) => setRegion(value as Region)}
+                options={REGIONS.map((option) => ({ value: option, label: option }))}
+              />
             </div>
           </div>
 

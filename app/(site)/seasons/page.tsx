@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getDb } from "@db";
-import { seasons } from "@server/services";
+import { api } from "@server/trpc/server";
 import { EmptyState } from "@components/site/empty-state";
 import { PageHeader, PageMetric } from "@components/site/page-header";
 
@@ -22,7 +21,8 @@ const formatDate = (value: string | null) =>
     : "Present";
 
 export default async function SeasonsPage() {
-  const rows = await seasons.list(getDb());
+  const trpc = await api();
+  const rows = await trpc.seasons.list();
 
   const totalTeams = rows.reduce((sum, season) => sum + season.teamCount, 0);
   const totalGames = rows.reduce((sum, season) => sum + season.gameCount, 0);

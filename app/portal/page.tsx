@@ -1,26 +1,25 @@
 import Link from "next/link";
-import { getDb } from "@db";
-import { latestJob } from "@server/queue";
-import {
-  articles,
-  awards,
-  games,
-  matches,
-  players,
-  records,
-  seasons,
-  stats,
-  teams,
-  users,
-} from "@server/services";
+import { api } from "@server/trpc/server";
 import { PortalPage } from "@components/portal/portal-page";
 import { RecalculateRecords } from "@components/portal/recalculate-records";
-import { StatRow, StatTile } from "@components/site/stat-tile";
+import { StatTile } from "@components/site/stat-tile";
 import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
 export const metadata = { title: "Portal" };
+
+const RESOURCES = [
+  { key: "seasons", label: "Seasons", href: "/portal/seasons" },
+  { key: "teams", label: "Teams", href: "/portal/teams" },
+  { key: "players", label: "Players", href: "/portal/players" },
+  { key: "games", label: "Games", href: "/portal/games" },
+  { key: "stats", label: "Stat lines", href: "/portal/stats" },
+  { key: "matches", label: "Matches", href: "/portal/matches" },
+  { key: "awards", label: "Awards", href: "/portal/awards" },
+  { key: "articles", label: "Articles", href: "/portal/articles" },
+  { key: "users", label: "Users", href: "/portal/users" },
+] as const;
 
 function statusClass(status: string | undefined) {
   if (status === "succeeded") return "text-rvl-mint";
@@ -30,7 +29,7 @@ function statusClass(status: string | undefined) {
 }
 
 export default async function PortalDashboard() {
-  const db = getDb();
+  const trpc = await api();
   const [
     seasonCount,
     teamCount,
@@ -45,39 +44,54 @@ export default async function PortalDashboard() {
     seasonList,
     job,
   ] = await Promise.all([
-    seasons.count(db),
-    teams.count(db),
-    players.count(db),
-    games.count(db),
-    stats.count(db),
-    awards.count(db),
-    articles.count(db),
-    matches.count(db),
-    users.count(db),
-    records.count(db),
-    seasons.list(db),
-    latestJob(db),
+    trpc.seasons.count(),
+    trpc.teams.count(),
+    trpc.players.count(),
+    trpc.games.count(),
+    trpc.stats.count(),
+    trpc.awards.count(),
+    trpc.articles.count(),
+    trpc.matches.count(),
+    trpc.users.count(),
+    trpc.records.count(),
+    trpc.seasons.list(),
+    trpc.records.latestJob(),
   ]);
+
+  const counts: Record<(typeof RESOURCES)[number]["key"], number> = {
+    seasons: seasonCount,
+    teams: teamCount,
+    players: playerCount,
+    games: gameCount,
+    stats: statCount,
+    matches: matchCount,
+    awards: awardCount,
+    articles: articleCount,
+    users: userCount,
+  };
 
   return (
     <PortalPage title="Dashboard" description="What is in the database right now.">
-      <div className="flex flex-col gap-4">
-        <StatRow>
-          <StatTile label="Seasons" value={seasonCount} />
-          <StatTile label="Teams" value={teamCount} />
-          <StatTile label="Players" value={playerCount} />
-          <StatTile label="Games" value={gameCount} />
-        </StatRow>
-        <StatRow>
-          <StatTile label="Stat lines" value={statCount} />
-          <StatTile label="Matches" value={matchCount} />
-          <StatTile label="Awards" value={awardCount} />
-          <StatTile label="Articles" value={articleCount} />
-        </StatRow>
-        <StatRow>
-          <StatTile label="Users" value={userCount} />
-          <StatTile label="Records" value={recordCount} />
-        </StatRow>
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {RESOURCES.map((resource) => (
+          <Link
+            key={resource.href}
+            href={resource.href}
+            className="group border border-rvl-line px-5 py-4 text-inherit no-underline transition-colors hover:border-rvl-accent-soft"
+          >
+            <p className="m-0 font-mono text-[0.58rem] uppercase tracking-[0.22em] text-rvl-dim">
+              {resource.label}
+            </p>
+            <p className="m-0 mt-2.5 font-mono text-[1.9rem] font-bold leading-none tracking-[-0.045em] tabular-nums text-rvl-accent">
+              {counts[resource.key]}
+            </p>
+            <p className="m-0 mt-3 font-mono text-[0.58rem] uppercase tracking-[0.16em] text-rvl-dim transition-colors group-hover:text-rvl-accent">
+              Manage →
+            </p>
+          </Link>
+        ))}
+
+        <StatTile label="Records" value={recordCount} hint="rebuilt by the job below" />
       </div>
 
       <section className="grid grid-cols-1 gap-8 border border-rvl-line p-6 md:grid-cols-[210px_1fr] md:gap-12">

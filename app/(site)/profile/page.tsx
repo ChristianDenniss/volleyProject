@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getDb } from "@db";
-import { users } from "@server/services";
 import { requireSession } from "@server/session";
+import { api } from "@server/trpc/server";
+import { PageHeader, PageMetric } from "@components/site/page-header";
 
 export const dynamic = "force-dynamic";
 
@@ -13,8 +13,8 @@ export const metadata: Metadata = {
 };
 
 export default async function ProfilePage() {
-  const session = await requireSession("/profile");
-  const profile = await users.profile(getDb(), session.id);
+  await requireSession("/profile");
+  const profile = await (await api()).users.me();
   if (!profile) notFound();
 
   const details: { label: string; value: string }[] = [
@@ -26,52 +26,84 @@ export default async function ProfilePage() {
   ];
 
   return (
-    <div className="mx-auto my-8 grid w-[90%] gap-x-8 rounded-xl bg-white p-8 text-[#333] shadow-[0_8px_20px_rgba(0,0,0,0.05)] [grid-template-areas:'header_header''card_articles'] [grid-template-columns:1fr_1fr] max-[800px]:[grid-template-areas:'header''card''articles'] max-[800px]:[grid-template-columns:1fr]">
-      <h2 className="mb-8 mt-0 text-center text-[2.25rem] font-bold text-[#4A90E2] [grid-area:header] capitalize">
-        {profile.name}
-      </h2>
+    <div className="font-display">
+      <PageHeader
+        eyebrow="Account"
+        title={profile.name}
+        description="Your account on the league platform and everything you have submitted to the desk."
+        actions={
+          <Link
+            href="/articles/create"
+            className="bg-rvl-accent-bg px-5 py-3 font-mono text-[0.7rem] font-bold uppercase tracking-[0.14em] text-rvl-on-accent no-underline transition-opacity hover:opacity-85"
+          >
+            Write an article
+          </Link>
+        }
+        meta={
+          <>
+            <PageMetric label="Role" value={profile.role} />
+            <PageMetric label="Articles" value={profile.articleCount} />
+            <PageMetric label="Status" value={profile.banned ? "Banned" : "Active"} />
+          </>
+        }
+      />
 
-      <div className="border-r border-[#e0e0e0] pb-4 pr-4 [grid-area:card] max-[800px]:border-b max-[800px]:border-r-0 max-[800px]:pr-0">
-        <p className="mb-12 text-left text-2xl font-semibold text-[#4A90E2]">Details</p>
-        {details.map((detail) => (
-          <p key={detail.label} className="mx-8 mb-4 flex items-center text-base leading-relaxed max-md:mx-0">
-            <strong className="mr-2 w-[200px] shrink-0 font-semibold text-brand-ink">
-              {detail.label}
-            </strong>
-            <span className="capitalize">{detail.value}</span>
+      <section className="grid grid-cols-1 gap-8 border-b border-rvl-line px-5 py-12 sm:px-8 md:grid-cols-[210px_1fr] md:gap-14 xl:px-14">
+        <h2 className="m-0 font-mono text-[0.72rem] font-bold uppercase tracking-[0.24em] text-rvl-accent">
+          Details
+        </h2>
+
+        <dl className="m-0 grid grid-cols-1 border-t border-rvl-line">
+          {details.map((detail) => (
+            <div
+              key={detail.label}
+              className="flex flex-wrap items-baseline gap-x-8 gap-y-1 border-b border-rvl-line py-4"
+            >
+              <dt className="w-[190px] shrink-0 font-mono text-[0.6rem] uppercase tracking-[0.2em] text-rvl-dim">
+                {detail.label}
+              </dt>
+              <dd className="m-0 text-[0.98rem] capitalize">{detail.value}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+
+      <section className="grid grid-cols-1 gap-8 border-b border-rvl-line px-5 py-12 sm:px-8 md:grid-cols-[210px_1fr] md:gap-14 xl:px-14">
+        <div>
+          <h2 className="m-0 mb-3 font-mono text-[0.72rem] font-bold uppercase tracking-[0.24em] text-rvl-accent">
+            Your articles
+          </h2>
+          <p className="m-0 font-mono text-[0.64rem] uppercase tracking-[0.14em] text-rvl-dim">
+            {profile.articles.length} submitted
           </p>
-        ))}
-      </div>
-
-      <div className="pl-4 [grid-area:articles] max-[800px]:mt-8 max-[800px]:pl-0">
-        <h3 className="mb-4 mt-0 text-center text-2xl font-semibold text-[#4A90E2]">
-          Your articles
-        </h3>
+        </div>
 
         {profile.articles.length === 0 ? (
-          <p className="my-4 text-center">
-            You have not written anything yet.{" "}
-            <Link href="/articles/create" className="text-[#4A90E2] hover:underline">
-              Write an article
-            </Link>
-            .
+          <p className="m-0 font-mono text-[0.78rem] uppercase tracking-[0.14em] text-rvl-dim">
+            Nothing written yet.
           </p>
         ) : (
-          <ul className="m-0 list-none p-0">
+          <ul className="m-0 list-none border-t border-rvl-line p-0">
             {profile.articles.map((article) => (
               <li
                 key={article.id}
-                className="mb-4 flex justify-between gap-4 rounded-lg bg-[#b5d3ff] px-4 py-3 text-left shadow-[0_4px_12px_rgba(0,0,0,0.03)] transition-[transform,box-shadow] duration-200 hover:-translate-y-[3px] hover:shadow-[0_8px_24px_rgba(0,0,0,0.1)]"
+                className="flex flex-wrap items-center gap-4 border-b border-rvl-line py-4"
               >
                 <Link
                   href={`/articles/${article.id}`}
-                  className="text-[0.95rem] font-medium text-brand-ink no-underline hover:text-[#4A90E2]"
+                  className="text-[0.98rem] font-semibold text-rvl-ink no-underline transition-colors hover:text-rvl-accent"
                 >
                   {article.title}
                 </Link>
-                <span className="shrink-0 text-[0.8rem] text-brand-ink/70">
+                <span
+                  className={
+                    article.approved
+                      ? "ml-auto font-mono text-[0.62rem] uppercase tracking-[0.16em] text-rvl-mint"
+                      : "ml-auto font-mono text-[0.62rem] uppercase tracking-[0.16em] text-rvl-dim"
+                  }
+                >
                   {article.approved === null
-                    ? "Awaiting review"
+                    ? "Pending approval"
                     : article.approved
                       ? "Published"
                       : "Rejected"}
@@ -80,7 +112,7 @@ export default async function ProfilePage() {
             ))}
           </ul>
         )}
-      </div>
+      </section>
     </div>
   );
 }

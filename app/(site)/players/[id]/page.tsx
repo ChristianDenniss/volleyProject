@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getDb } from "@db";
-import { players } from "@server/services";
+import { api } from "@server/trpc/server";
+import { PageMetric } from "@components/site/page-header";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +13,7 @@ interface Params {
 async function load(id: string) {
   const parsed = Number.parseInt(id, 10);
   if (!Number.isInteger(parsed) || parsed <= 0) return null;
-  return players.getById(getDb(), parsed);
+  return (await api()).players.byId({ id: parsed });
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
@@ -27,15 +27,25 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
 function StatItem({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="box-border min-h-12 truncate border-b border-r border-[#262626] p-4 text-center font-semibold text-white last:border-r-0">
-      <span className="mb-1 block truncate text-[0.9rem] font-semibold text-white/60">{label}</span>
-      <span className="text-[1.4rem] font-extrabold text-white/60">{value}</span>
+    <div className="border border-rvl-line px-4 py-3.5">
+      <span className="block font-mono text-[0.56rem] uppercase tracking-[0.2em] text-rvl-dim">
+        {label}
+      </span>
+      <span className="mt-2 block font-mono text-[1.5rem] font-bold leading-none tracking-[-0.045em] tabular-nums text-rvl-accent">
+        {value}
+      </span>
     </div>
   );
 }
 
 const pillClass =
-  "block rounded-md bg-[#202020] px-5 py-2.5 font-medium text-white no-underline transition-all duration-200 hover:scale-105 hover:bg-[#626262]";
+  "block border border-rvl-line px-3.5 py-2 font-mono text-[0.66rem] uppercase tracking-[0.1em] text-rvl-ink-2 no-underline transition-colors hover:border-rvl-accent-soft hover:text-rvl-accent";
+
+const railClass =
+  "grid grid-cols-1 gap-8 border-b border-rvl-line px-5 py-12 sm:px-8 md:grid-cols-[210px_1fr] md:gap-14 xl:px-14";
+const railHeadingClass =
+  "m-0 mb-3 font-mono text-[0.72rem] font-bold uppercase tracking-[0.24em] text-rvl-accent";
+const emptyClass = "m-0 font-mono text-[0.78rem] uppercase tracking-[0.14em] text-rvl-dim";
 
 export default async function PlayerPage({ params }: Params) {
   const { id } = await params;
@@ -58,103 +68,131 @@ export default async function PlayerPage({ params }: Params) {
   const percentage = totals.attempts === 0 ? 0 : (100 * totals.kills) / totals.attempts;
 
   return (
-    <div className="box-border flex min-h-screen w-full flex-col bg-[#0e0e0e] px-8 py-4 text-[#f5f5f5] max-md:px-4">
-      <header className="mb-8 flex flex-wrap items-start justify-center gap-8">
-        <div className="mx-auto flex w-full max-w-[1200px] flex-nowrap items-center justify-center gap-8 px-4 max-[900px]:flex-col">
-          <div className="flex flex-col items-center">
-            <img
-              src="/images/pfpLogo.png"
-              alt={player.name}
-              className="size-[580px] rounded-xl object-cover max-[900px]:size-[350px] max-[600px]:size-[250px]"
-            />
-          </div>
-
-          <div className="flex flex-col justify-start">
-            <h1 className="mb-4 text-[2.8rem] font-bold uppercase text-white max-[900px]:text-[2rem] max-[600px]:text-2xl">
+    <div className="font-display">
+      <header className="flex flex-col gap-6 border-b border-rvl-line px-5 py-12 sm:px-8 sm:py-14 lg:flex-row lg:items-end xl:px-14">
+        <div className="flex items-center gap-5">
+          <img
+            src="/images/pfpLogo.png"
+            alt=""
+            className="size-16 shrink-0 border border-rvl-line object-cover sm:size-20"
+          />
+          <div>
+            <span className="font-mono text-[0.72rem] font-bold uppercase tracking-[0.24em] text-rvl-accent">
+              Player · {player.position || "unlisted"}
+            </span>
+            <h1 className="mt-3 mb-0 text-[2.2rem] font-black uppercase leading-[0.95] tracking-[-0.035em] sm:text-[2.7rem]">
               {player.name}
             </h1>
-            <div className="flex flex-col gap-2 text-base font-medium text-[#ccc]">
-              <span>ID: {player.id}</span>
-              <span>Position: {player.position || "N/A"}</span>
-              <span>Teams: {player.teams.length}</span>
-              <span>Games with stats: {player.stats.length}</span>
-              <span>Awards: {player.awards.length}</span>
-              <span>Records: {player.records.length}</span>
-            </div>
           </div>
+        </div>
+
+        <div className="flex flex-wrap gap-8 font-mono lg:ml-auto">
+          <PageMetric label="Teams" value={player.teams.length} />
+          <PageMetric label="Games" value={player.stats.length} />
+          <PageMetric label="Awards" value={player.awards.length} />
+          <PageMetric label="Records" value={player.records.length} />
         </div>
       </header>
 
-      <div className="mx-auto mb-8 flex w-full flex-col gap-8">
-        <section className="box-border w-full rounded-xl bg-[#1a1a1a] px-8 pb-8 pt-2 shadow-[0_0_12px_rgba(0,0,0,0.3)] max-md:px-4">
-          <div className="flex flex-col gap-8">
-            <div>
-              <h3 className="mb-4 text-xl font-bold text-[#eee]">Career totals</h3>
-              <div className="grid w-full overflow-hidden rounded-lg bg-[#262626] [grid-template-columns:repeat(auto-fit,minmax(140px,1fr))] min-[900px]:grid-cols-7">
-                <StatItem label="Games" value={player.stats.length} />
-                <StatItem label="Kills" value={totals.kills} />
-                <StatItem label="Attempts" value={totals.attempts} />
-                <StatItem label="Kill %" value={`${percentage.toFixed(1)}%`} />
-                <StatItem label="Assists" value={totals.assists} />
-                <StatItem label="Blocks" value={totals.blocks} />
-                <StatItem label="Digs" value={totals.digs} />
-                <StatItem label="Aces" value={totals.aces} />
-                <StatItem label="Errors" value={totals.errors} />
-              </div>
-            </div>
+      <section className={railClass}>
+        <div>
+          <h2 className={railHeadingClass}>Career totals</h2>
+          <p className="m-0 font-mono text-[0.64rem] uppercase tracking-[0.14em] text-rvl-dim">
+            Every recorded stat line
+          </p>
+        </div>
 
-            <div className="w-full">
-              <h3 className="mb-4 text-2xl font-bold">Teams</h3>
-              {player.teams.length === 0 ? (
-                <p className="text-[#ccc]">This player is not on any roster.</p>
-              ) : (
-                <ul className="flex w-full list-none flex-wrap items-start gap-4 p-0">
-                  {player.teams.map((team) => (
-                    <li key={team.id} className="flex">
-                      <Link href={`/teams/${encodeURIComponent(team.name)}`} className={pillClass}>
-                        {team.name}
-                        {team.seasonNumber ? ` (Season ${team.seasonNumber})` : ""}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+          <StatItem label="Games" value={player.stats.length} />
+          <StatItem label="Kills" value={totals.kills} />
+          <StatItem label="Attempts" value={totals.attempts} />
+          <StatItem label="Kill %" value={`${percentage.toFixed(1)}%`} />
+          <StatItem label="Assists" value={totals.assists} />
+          <StatItem label="Blocks" value={totals.blocks} />
+          <StatItem label="Digs" value={totals.digs} />
+          <StatItem label="Aces" value={totals.aces} />
+          <StatItem label="Errors" value={totals.errors} />
+        </div>
+      </section>
 
-            <div className="w-full">
-              <h3 className="mb-4 text-2xl font-bold">Games</h3>
-              {player.stats.length === 0 ? (
-                <p className="text-[#ccc]">No stat lines have been recorded for this player.</p>
-              ) : (
-                <ul className="flex list-none flex-wrap items-start gap-2 p-0">
-                  {player.stats.map((line) => (
-                    <li key={line.id} className="flex">
-                      <Link href={`/games/${line.gameId}`} className={pillClass}>
-                        {line.gameName ?? `Game ${line.gameId}`} · {line.gameDate}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
+      <section className={railClass}>
+        <div>
+          <h2 className={railHeadingClass}>Teams</h2>
+          <p className="m-0 font-mono text-[0.64rem] uppercase tracking-[0.14em] text-rvl-dim">
+            {player.teams.length} rosters
+          </p>
+        </div>
 
-            {player.awards.length > 0 ? (
-              <div className="w-full">
-                <h3 className="mb-4 text-2xl font-bold">Awards</h3>
-                <ul className="flex w-full list-none flex-wrap gap-4 p-0">
-                  {player.awards.map((award) => (
-                    <li key={award.id} className="flex">
-                      <Link href={`/awards/${award.id}`} className={pillClass}>
-                        {award.type}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
+        {player.teams.length === 0 ? (
+          <p className={emptyClass}>Not on any roster.</p>
+        ) : (
+          <ul className="m-0 flex list-none flex-wrap gap-2 p-0">
+            {player.teams.map((team) => (
+              <li key={team.id} className="flex">
+                <Link href={`/teams/${encodeURIComponent(team.name)}`} className={pillClass}>
+                  {team.name}
+                  {team.seasonNumber ? ` · S${team.seasonNumber}` : ""}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className={railClass}>
+        <div>
+          <h2 className={railHeadingClass}>Games</h2>
+          <p className="m-0 font-mono text-[0.64rem] uppercase tracking-[0.14em] text-rvl-dim">
+            {player.stats.length} stat lines
+          </p>
+        </div>
+
+        {player.stats.length === 0 ? (
+          <p className={emptyClass}>No stat lines recorded.</p>
+        ) : (
+          <div className="border-t border-rvl-line">
+            {player.stats.map((line) => (
+              <Link
+                key={line.id}
+                href={`/games/${line.gameId}`}
+                className="flex flex-wrap items-center gap-x-8 gap-y-2 border-b border-rvl-line py-4 text-inherit no-underline transition-colors hover:bg-rvl-panel"
+              >
+                <span className="w-[130px] shrink-0 font-mono text-[0.64rem] uppercase tracking-[0.16em] text-rvl-dim">
+                  {line.gameDate}
+                </span>
+                <span className="text-[1rem] font-semibold capitalize">
+                  {line.gameName ?? `Game ${line.gameId}`}
+                </span>
+                <span className="font-mono text-[0.66rem] uppercase tracking-[0.14em] text-rvl-dim md:ml-auto">
+                  {line.spikeKills + line.apeKills} kills · {line.assists} assists ·{" "}
+                  {line.blocks} blocks
+                </span>
+              </Link>
+            ))}
           </div>
+        )}
+      </section>
+
+      {player.awards.length > 0 ? (
+        <section className={railClass}>
+          <div>
+            <h2 className={railHeadingClass}>Awards</h2>
+            <p className="m-0 font-mono text-[0.64rem] uppercase tracking-[0.14em] text-rvl-dim">
+              {player.awards.length} won
+            </p>
+          </div>
+
+          <ul className="m-0 flex list-none flex-wrap gap-2 p-0">
+            {player.awards.map((award) => (
+              <li key={award.id} className="flex">
+                <Link href={`/awards/${award.id}`} className={pillClass}>
+                  {award.type}
+                </Link>
+              </li>
+            ))}
+          </ul>
         </section>
-      </div>
+      ) : null}
     </div>
   );
 }

@@ -55,12 +55,13 @@ export function ArticlesList({ articles }: { articles: ArticleListRow[] }) {
           label="Sort"
           value={sort}
           onChange={(value) => setSort(value as SortKey)}
-        >
-          <option value="newest">Newest</option>
-          <option value="oldest">Oldest</option>
-          <option value="likes">Most liked</option>
-          <option value="title">Title A–Z</option>
-        </FilterSelect>
+          options={[
+            { value: "newest", label: "Newest" },
+            { value: "oldest", label: "Oldest" },
+            { value: "likes", label: "Most liked" },
+            { value: "title", label: "Title A–Z" },
+          ]}
+        />
 
         <SearchBar
           className="max-w-[380px]"

@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getDb } from "@db";
-import { articles } from "@server/services";
 import { getSessionUser } from "@server/session";
+import { api } from "@server/trpc/server";
 import { ArticlesList } from "@components/site/articles-list";
 import { EmptyState } from "@components/site/empty-state";
 import { PageHeader, PageMetric } from "@components/site/page-header";
@@ -15,10 +14,8 @@ export const metadata: Metadata = {
 };
 
 export default async function ArticlesPage() {
-  const [rows, user] = await Promise.all([
-    articles.list(getDb(), { approvedOnly: true }),
-    getSessionUser(),
-  ]);
+  const trpc = await api();
+  const [rows, user] = await Promise.all([trpc.articles.list(), getSessionUser()]);
 
   const authors = new Set(rows.map((article) => article.authorName)).size;
   const likes = rows.reduce((sum, article) => sum + article.likes, 0);

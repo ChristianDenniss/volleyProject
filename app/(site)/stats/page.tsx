@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { getDb } from "@db";
-import { seasons, stats } from "@server/services";
+import { api } from "@server/trpc/server";
 import { EmptyState } from "@components/site/empty-state";
 import { PageHeader, PageMetric } from "@components/site/page-header";
 import { StatsLeaderboard } from "@components/site/stats-leaderboard";
@@ -18,11 +17,14 @@ export default async function StatsPage({
   searchParams: Promise<{ season?: string }>;
 }) {
   const { season } = await searchParams;
-  const db = getDb();
+  const trpc = await api();
   const parsed = season ? Number.parseInt(season, 10) : Number.NaN;
   const seasonId = Number.isInteger(parsed) && parsed > 0 ? parsed : undefined;
 
-  const [rows, allSeasons] = await Promise.all([stats.leaderboard(db, seasonId), seasons.list(db)]);
+  const [rows, allSeasons] = await Promise.all([
+    trpc.stats.leaderboard({ seasonId }),
+    trpc.seasons.list(),
+  ]);
 
   const totalKills = rows.reduce((sum, row) => sum + Number(row.totalKills ?? 0), 0);
   const totalGames = new Set(rows.flatMap((row) => (row.gamesPlayed ? [row.playerId] : []))).size;

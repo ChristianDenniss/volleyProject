@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { PageHeader } from "@components/site/page-header";
 
 export const metadata: Metadata = {
   title: "Contact",
@@ -8,62 +9,72 @@ export const metadata: Metadata = {
 
 const CHANNELS = [
   {
-    icon: "✉️",
+    label: "Email",
     title: "Talk to a team member",
     description: "We will help you get the right support and answers when available.",
     action: { label: "Email us", href: "mailto:aottgpvp@gmail.com", external: true },
   },
   {
-    icon: "💬",
-    title: "Join our Discord",
+    label: "Discord",
+    title: "Join our server",
     description:
       "Hop into our server to reach the league and game administration team through the ticketing system.",
     action: { label: "Join Discord", href: "https://discord.gg/volleyball", external: true },
   },
+  {
+    label: "Self serve",
+    title: "Frequently asked questions",
+    description: "Not sure who to contact? Browse the answers we give most often.",
+    action: { label: "Read the FAQ", href: "/faq", external: false },
+  },
 ];
 
-const FAQ_CHANNEL = {
-  icon: "❓",
-  title: "Frequently asked questions",
-  description: "Not sure who to contact? Browse the answers we give most often.",
-  action: { label: "Read the FAQ", href: "/faq" },
-};
-
-const cardClass =
-  "box-border w-full min-w-[300px] max-w-[500px] flex-1 rounded-xl border border-[#ddd] bg-[#f9f9f9] p-8 shadow-[0_2px_6px_rgba(0,0,0,0.06)]";
-const buttonClass =
-  "inline-block rounded-full bg-brand-sky-pale px-8 py-3 font-semibold text-black no-underline transition-colors duration-300 hover:bg-[#b8d9f2]";
+const actionClass =
+  "self-start border-b border-rvl-line pb-0.5 font-mono text-[0.66rem] uppercase tracking-[0.14em] text-rvl-ink-2 no-underline transition-colors group-hover:border-rvl-accent-soft group-hover:text-rvl-accent";
 
 export default function ContactPage() {
   return (
-    <div className="mx-auto max-w-[1200px] px-8 py-16 text-center max-md:px-4 max-md:py-10">
-      <h1 className="mb-12 text-[3rem] font-bold max-md:text-[2rem]">Contact Us</h1>
+    <div className="font-display">
+      <PageHeader
+        eyebrow="Get in touch"
+        title="Contact"
+        description="Three ways to reach the people who run the league. Discord is the fastest."
+      />
 
-      <div className="mb-8 flex flex-wrap justify-center gap-8 max-[900px]:flex-col max-[900px]:items-center">
-        {CHANNELS.map((channel) => (
-          <div key={channel.title} className={cardClass}>
-            <div className="mb-4 text-[2rem]">{channel.icon}</div>
-            <h2 className="mb-4 text-2xl font-semibold">{channel.title}</h2>
-            <p className="mb-6 text-base text-[#444]">{channel.description}</p>
+      <div className="grid grid-cols-1 gap-6 px-5 py-12 sm:px-8 lg:grid-cols-3 xl:px-14">
+        {CHANNELS.map((channel) => {
+          const body = (
+            <>
+              <span className="font-mono text-[0.62rem] uppercase tracking-[0.2em] text-rvl-accent">
+                {channel.label}
+              </span>
+              <h2 className="mt-4 mb-3 text-[1.25rem] font-bold uppercase leading-tight tracking-[-0.02em]">
+                {channel.title}
+              </h2>
+              <p className="m-0 mb-6 text-[0.9rem] text-rvl-ink-2">{channel.description}</p>
+              <span className={actionClass}>{channel.action.label} →</span>
+            </>
+          );
+
+          const className =
+            "group flex flex-col border border-rvl-line p-6 text-inherit no-underline transition-colors hover:border-rvl-accent-soft";
+
+          return channel.action.external ? (
             <a
+              key={channel.title}
               href={channel.action.href}
               target="_blank"
               rel="noopener noreferrer"
-              className={buttonClass}
+              className={className}
             >
-              {channel.action.label}
+              {body}
             </a>
-          </div>
-        ))}
-      </div>
-
-      <div className={`${cardClass} mx-auto`}>
-        <div className="mb-4 text-[2rem]">{FAQ_CHANNEL.icon}</div>
-        <h2 className="mb-4 text-2xl font-semibold">{FAQ_CHANNEL.title}</h2>
-        <p className="mb-6 text-base text-[#444]">{FAQ_CHANNEL.description}</p>
-        <Link href={FAQ_CHANNEL.action.href} className={buttonClass}>
-          {FAQ_CHANNEL.action.label}
-        </Link>
+          ) : (
+            <Link key={channel.title} href={channel.action.href} className={className}>
+              {body}
+            </Link>
+          );
+        })}
       </div>
     </div>
   );

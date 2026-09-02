@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getDb } from "@db";
-import { teams } from "@server/services";
+import { api } from "@server/trpc/server";
+import { PageMetric } from "@components/site/page-header";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +20,7 @@ function decode(value: string): string {
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { teamName } = await params;
-  const team = await teams.getByName(getDb(), decode(teamName));
+  const team = await (await api()).teams.byName({ name: decode(teamName) });
   if (!team) return { title: "Team not found" };
 
   const description = `${team.name}: ${team.players.length} players, ${team.games.length} games, ${team.placement}.`;
@@ -31,58 +31,72 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   };
 }
 
-const sectionTitleClass =
-  "mb-4 mt-8 border-b-[3px] border-brand-sky-pale pb-2 text-[2rem] font-bold tracking-wide text-[#1e3d59]";
+const railClass =
+  "grid grid-cols-1 gap-8 border-b border-rvl-line px-5 py-12 sm:px-8 md:grid-cols-[210px_1fr] md:gap-14 xl:px-14";
+const railHeadingClass =
+  "m-0 mb-3 font-mono text-[0.72rem] font-bold uppercase tracking-[0.24em] text-rvl-accent";
 
 export default async function TeamPage({ params }: Params) {
   const { teamName } = await params;
-  const team = await teams.getByName(getDb(), decode(teamName));
+  const team = await (await api()).teams.byName({ name: decode(teamName) });
   if (!team) notFound();
 
   return (
-    <div className="mx-auto my-10 box-border min-h-screen w-[90%] max-w-[1600px] p-5 capitalize text-[#333]">
-      <div className="mb-8 flex items-center justify-center gap-4">
-        {team.logoUrl ? (
-          <img
-            src={team.logoUrl}
-            alt={`${team.name} logo`}
-            className="size-20 object-contain max-md:size-[60px]"
-          />
-        ) : null}
-        <h1 className="text-center text-[3rem] font-extrabold text-[#1a1a1a] [text-shadow:1px_1px_2px_rgba(0,0,0,0.15)] max-md:text-[2rem]">
-          {team.name}
-        </h1>
-        {team.logoUrl ? (
-          <img
-            src={team.logoUrl}
-            alt=""
-            aria-hidden="true"
-            className="size-20 -scale-x-100 object-contain max-md:size-[60px]"
-          />
-        ) : null}
-      </div>
+    <div className="font-display">
+      <header className="flex flex-col gap-6 border-b border-rvl-line px-5 py-12 sm:px-8 sm:py-14 lg:flex-row lg:items-end xl:px-14">
+        <div className="flex items-center gap-5">
+          {team.logoUrl ? (
+            <img
+              src={team.logoUrl}
+              alt=""
+              className="size-16 shrink-0 border border-rvl-line object-cover sm:size-20"
+            />
+          ) : null}
+          <div>
+            <span className="font-mono text-[0.72rem] font-bold uppercase tracking-[0.24em] text-rvl-accent">
+              Team
+            </span>
+            <h1 className="mt-3 mb-0 text-[2.2rem] font-black uppercase leading-[0.95] tracking-[-0.035em] sm:text-[2.7rem]">
+              {team.name}
+            </h1>
+          </div>
+        </div>
 
-      <p className="mb-2.5 text-center text-[1.4rem]">
-        {team.season ? `Season ${team.season.seasonNumber}` : "No season"} · {team.placement}
-      </p>
-      <p className="mb-2.5 text-center text-[1.4rem]">
-        {team.players.length} players · {team.games.length} games
-      </p>
+        <div className="flex flex-wrap gap-8 font-mono lg:ml-auto">
+          <PageMetric
+            label="Season"
+            value={team.season ? team.season.seasonNumber : "—"}
+          />
+          <PageMetric label="Placement" value={team.placement} />
+          <PageMetric label="Players" value={team.players.length} />
+          <PageMetric label="Games" value={team.games.length} />
+        </div>
+      </header>
 
-      <section>
-        <h2 className={sectionTitleClass}>Players</h2>
+      <section className={railClass}>
+        <div>
+          <h2 className={railHeadingClass}>Roster</h2>
+          <p className="m-0 font-mono text-[0.64rem] uppercase tracking-[0.14em] text-rvl-dim">
+            {team.players.length} players
+          </p>
+        </div>
+
         {team.players.length === 0 ? (
-          <p className="text-lg">No players are on this roster.</p>
+          <p className="m-0 font-mono text-[0.78rem] uppercase tracking-[0.14em] text-rvl-dim">
+            No players on this roster.
+          </p>
         ) : (
-          <ul className="flex list-none flex-wrap gap-4 p-0">
+          <ul className="m-0 grid list-none grid-cols-1 border-t border-rvl-line p-0 sm:grid-cols-2 sm:gap-x-10">
             {team.players.map((player) => (
-              <li key={player.id} className="flex">
+              <li key={player.id} className="border-b border-rvl-line">
                 <Link
                   href={`/players/${player.id}`}
-                  className="block rounded-md bg-brand-sky-pale px-5 py-2.5 font-medium text-[#1e3d59] no-underline transition-colors duration-300 hover:bg-[#c1e0ff]"
+                  className="flex items-center gap-4 py-4 text-inherit no-underline transition-colors hover:text-rvl-accent"
                 >
-                  {player.name}
-                  <span className="ml-2 text-sm text-[#1e3d59]/70">{player.position}</span>
+                  <span className="text-[1rem] font-semibold capitalize">{player.name}</span>
+                  <span className="ml-auto font-mono text-[0.62rem] uppercase tracking-[0.16em] text-rvl-dim">
+                    {player.position}
+                  </span>
                 </Link>
               </li>
             ))}
@@ -90,24 +104,40 @@ export default async function TeamPage({ params }: Params) {
         )}
       </section>
 
-      <section className="mt-10">
-        <h2 className={sectionTitleClass}>Games</h2>
+      <section className={railClass}>
+        <div>
+          <h2 className={railHeadingClass}>Games</h2>
+          <p className="m-0 font-mono text-[0.64rem] uppercase tracking-[0.14em] text-rvl-dim">
+            {team.games.length} played
+          </p>
+        </div>
+
         {team.games.length === 0 ? (
-          <p className="text-lg">This team has no recorded games.</p>
+          <p className="m-0 font-mono text-[0.78rem] uppercase tracking-[0.14em] text-rvl-dim">
+            No recorded games.
+          </p>
         ) : (
-          <div className="flex gap-4 overflow-x-auto py-3">
+          <div className="border-t border-rvl-line">
             {team.games.map((game) => (
               <Link
                 key={game.id}
                 href={`/games/${game.id}`}
-                className="box-border flex min-h-[250px] w-[270px] shrink-0 flex-col justify-start rounded-2xl bg-brand-sky-pale px-3 py-3.5 text-left text-inherit no-underline shadow-[0_2px_6px_rgba(0,0,0,0.1)] transition-transform duration-200 hover:scale-105"
+                className="flex flex-wrap items-center gap-x-8 gap-y-2 border-b border-rvl-line py-4 text-inherit no-underline transition-colors hover:bg-rvl-panel"
               >
-                <p className="mb-8 text-[1.1em] text-[#1e3d59]">{game.name ?? `Game ${game.id}`}</p>
-                <p className="my-1.5 text-lg text-black">Date: {game.date}</p>
-                <p className="my-1.5 text-lg text-black">Stage: {game.stage}</p>
-                <p className="my-1.5 text-lg text-black">
-                  Score: {game.team1Score} - {game.team2Score}
-                </p>
+                <span className="w-[130px] shrink-0 font-mono text-[0.64rem] uppercase tracking-[0.16em] text-rvl-dim">
+                  {game.date}
+                </span>
+                <span className="text-[1rem] font-semibold capitalize">
+                  {game.name ?? `Game ${game.id}`}
+                </span>
+                <span className="font-mono text-[1.05rem] font-bold tabular-nums text-rvl-accent">
+                  {game.team1Score}
+                  <span className="px-1.5 text-rvl-dim">–</span>
+                  {game.team2Score}
+                </span>
+                <span className="font-mono text-[0.62rem] uppercase tracking-[0.14em] text-rvl-dim md:ml-auto">
+                  {game.stage}
+                </span>
               </Link>
             ))}
           </div>
