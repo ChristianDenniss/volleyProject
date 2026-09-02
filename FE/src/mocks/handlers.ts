@@ -294,13 +294,15 @@ export const handlers = [
   http.get(api("articles"), ({ request }) => json(paginated(db.articles, request))),
   http.post(api("articles"), async ({ request }) => {
     const body = (await request.json()) as Record<string, unknown>;
+    const author = getAuthUser();
+    const isAdmin = author.role === "admin" || author.role === "superadmin";
     const article = {
       id: bumpId("articles"),
       likes: 0,
-      approved: null,
-      author: getAuthUser(),
+      author,
       createdAt: new Date().toISOString(),
       ...body,
+      approved: isAdmin ? true : null,
     };
     db.articles.push(article as (typeof db.articles)[number]);
     return json(article, 201);

@@ -50,7 +50,8 @@ export class ArticleService {
         newArticle.imageUrl = imageUrl;
         newArticle.author = user;  // Linking author to article
         newArticle.likes = 0;  // Initialize likes to 0
-        newArticle.approved = null;  // Initialize approved as null
+        const isAdmin = user.role === 'admin' || user.role === 'superadmin';
+        newArticle.approved = isAdmin ? true : null;
 
         return this.articleRepository.save(newArticle);
     }

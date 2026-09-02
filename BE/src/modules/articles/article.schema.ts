@@ -8,7 +8,6 @@ export const createArticleSchema = z.object({
     userId: z.number().int().positive().optional(),
     summary: z.string().min(50, { message: "Summary is required, min 50 characters" }),
     likes: z.number().int().positive().default(0).optional(),
-    approved: z.boolean().nullable().optional(),
 });
 
 export const updateArticleSchema = createArticleSchema.partial().extend({

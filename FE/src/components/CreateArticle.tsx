@@ -141,6 +141,8 @@ const CreateArticle: React.FC = () => {
         setValidationErrors([]);
     };
 
+    const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
+
     const isFormValid = () => {
         return Object.values(fieldValidation).every(field => field.isValid);
     };
@@ -172,7 +174,6 @@ const CreateArticle: React.FC = () => {
                 ...formData,
                 userId: user.id,
                 createdAt: new Date().toISOString(),
-                approved: null // Articles start as pending approval
             });
 
             if (result) {
@@ -222,9 +223,11 @@ const CreateArticle: React.FC = () => {
             )}
 
             <form onSubmit={handleSubmit} className={form}>
-                <div className={approvalNotice}>
-                    Note: Your article will be reviewed by an administrator before being published.
-                </div>
+                {!isAdmin && (
+                    <div className={approvalNotice}>
+                        Note: Your article will be reviewed by an administrator before being published.
+                    </div>
+                )}
 
                 {error && <div className={errorBox}>{error}</div>}
                 {validationErrors.length > 0 && (
@@ -238,7 +241,9 @@ const CreateArticle: React.FC = () => {
                 )}
                 {submitStatus === 'success' && (
                     <div className={successBox}>
-                        Article submitted successfully! Redirecting to articles page...
+                        {isAdmin
+                            ? 'Article published successfully! Redirecting to articles page...'
+                            : 'Article submitted successfully! Redirecting to articles page...'}
                     </div>
                 )}
                 
