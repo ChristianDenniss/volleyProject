@@ -2,20 +2,21 @@ import { and, asc, eq, isNull } from "drizzle-orm";
 import type { Db } from "@db";
 import { games, players, RECORD_METRICS, RECORD_TYPES, records, seasons } from "@db/schema";
 import { found, NotFoundError } from "./errors";
+import type { PartialInput } from "./input";
 
 export type RecordMetric = (typeof RECORD_METRICS)[number];
 export type RecordType = (typeof RECORD_TYPES)[number];
 
 export interface RecordInput {
   metric: RecordMetric;
-  minAttempts?: number | null;
+  minAttempts?: number | null | undefined;
   type: RecordType;
   rank: number;
   value: number;
-  date?: string | null;
+  date?: string | null | undefined;
   seasonId: number;
   playerId: number;
-  gameId?: number | null;
+  gameId?: number | null | undefined;
 }
 
 const columns = {
@@ -73,7 +74,7 @@ export async function top10(
   db: Db,
   metric: RecordMetric,
   seasonId: number,
-  minAttempts?: number | null,
+  minAttempts?: number | null | undefined,
 ) {
   return base(db)
     .where(
@@ -109,7 +110,7 @@ export async function create(db: Db, input: RecordInput) {
   return row;
 }
 
-export async function update(db: Db, id: number, input: Partial<RecordInput>) {
+export async function update(db: Db, id: number, input: PartialInput<RecordInput>) {
   const [row] = await db.update(records).set(input).where(eq(records.id, id)).returning();
   return found(row, `Record ${id}`);
 }

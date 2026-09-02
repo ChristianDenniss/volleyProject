@@ -32,7 +32,7 @@ describe("recalculation in SQL", () => {
 
     const spikeKills = await recordsService.listByMetric(db, "spike kills");
     expect(spikeKills.length).toBeGreaterThan(0);
-    expect(spikeKills[0].rank).toBe(1);
+    expect(spikeKills[0]?.rank).toBe(1);
     expect(spikeKills.every((row) => row.rank >= 1 && row.rank <= 10)).toBe(true);
   });
 

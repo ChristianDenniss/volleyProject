@@ -109,7 +109,7 @@ const imageNode = z
   })
   .strict();
 
-const blockNode: z.ZodType<TiptapNode> = z.lazy(() =>
+const blockNode: z.ZodType<TiptapNode, unknown> = z.lazy(() =>
   z.discriminatedUnion("type", [
     paragraphNode,
     headingNode,
@@ -144,27 +144,37 @@ const orderedListNode = z
 
 type Attrs = Record<string, string | number | boolean | null | undefined>;
 
+type Content = TiptapNode[] | undefined;
+type Marks = TiptapMark[] | undefined;
+
 export type TiptapNode =
-  | { type: "text"; text: string; marks?: TiptapMark[] }
-  | { type: "hardBreak"; attrs?: Attrs; marks?: TiptapMark[] }
-  | { type: "paragraph"; attrs?: Attrs; content?: TiptapNode[] }
-  | { type: "heading"; attrs: { level: number }; content?: TiptapNode[] }
-  | { type: "codeBlock"; attrs?: { language?: string | null }; content?: TiptapNode[] }
-  | { type: "horizontalRule"; attrs?: Attrs }
-  | { type: "image"; attrs: { src: string; alt?: string | null; title?: string | null } }
-  | { type: "blockquote"; attrs?: Attrs; content?: TiptapNode[] }
-  | { type: "bulletList"; attrs?: Attrs; content?: TiptapListItem[] }
-  | { type: "orderedList"; attrs?: Attrs; content?: TiptapListItem[] };
+  | { type: "text"; text: string; marks?: Marks }
+  | { type: "hardBreak"; attrs?: Attrs | undefined; marks?: Marks }
+  | { type: "paragraph"; attrs?: Attrs | undefined; content?: Content }
+  | { type: "heading"; attrs: { level: number }; content?: Content }
+  | {
+      type: "codeBlock";
+      attrs?: { language?: string | null | undefined } | undefined;
+      content?: Content;
+    }
+  | { type: "horizontalRule"; attrs?: Attrs | undefined }
+  | {
+      type: "image";
+      attrs: { src: string; alt?: string | null | undefined; title?: string | null | undefined };
+    }
+  | { type: "blockquote"; attrs?: Attrs | undefined; content?: Content }
+  | { type: "bulletList"; attrs?: Attrs | undefined; content?: TiptapListItem[] | undefined }
+  | { type: "orderedList"; attrs?: Attrs | undefined; content?: TiptapListItem[] | undefined };
 
 export interface TiptapListItem {
   type: "listItem";
-  attrs?: Attrs;
-  content?: TiptapNode[];
+  attrs?: Attrs | undefined;
+  content?: Content;
 }
 
 export interface TiptapDoc {
   type: "doc";
-  content?: TiptapNode[];
+  content?: Content;
 }
 
 function walk(node: unknown, depth: number, budget: { nodes: number; chars: number }): boolean {

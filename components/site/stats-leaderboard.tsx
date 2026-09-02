@@ -46,7 +46,7 @@ export function StatsLeaderboard({
 }: {
   rows: LeaderboardRow[];
   seasons: { id: number; seasonNumber: number }[];
-  seasonId?: number;
+  seasonId?: number | undefined;
 }) {
   const router = useRouter();
   const [search, setSearch] = useState("");

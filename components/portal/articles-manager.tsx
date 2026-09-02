@@ -1,6 +1,6 @@
 "use client";
 
-import { ResourceView, type ColumnSpec, type FieldSpec } from "./resource-view";
+import { pick, ResourceView, type ColumnSpec, type FieldSpec } from "./resource-view";
 import { Badge } from "@components/ui/badge";
 import { trpc } from "@/lib/trpc";
 
@@ -59,11 +59,11 @@ export function ArticlesManager({ rows }: { rows: Row[] }) {
         update.mutateAsync({
           id: id as number,
           patch: {
-            title: values.title,
-            summary: values.summary,
-            imageUrl: values.imageUrl,
-            content: values.content,
-            approved: values.approved === "true",
+            title: pick(values, "title"),
+            summary: pick(values, "summary"),
+            imageUrl: pick(values, "imageUrl"),
+            content: pick(values, "content"),
+            approved: pick(values, "approved") === "true",
           },
         })
       }

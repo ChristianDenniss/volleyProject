@@ -1,9 +1,9 @@
 interface UsernameLookup {
-  data?: { id: number }[];
+  data?: { id: number }[] | undefined;
 }
 
 interface ThumbnailLookup {
-  data?: { imageUrl: string }[];
+  data?: { imageUrl: string }[] | undefined;
 }
 
 export async function avatarByUsername(

@@ -13,11 +13,12 @@ import {
   teams,
   teamsPlayers,
 } from "@db/schema";
-import { ConflictError, found, NotFoundError } from "./errors";
+import { ConflictError, found, inserted, NotFoundError } from "./errors";
+import type { PartialInput } from "./input";
 
 export interface PlayerInput {
   name: string;
-  position?: string;
+  position?: string | undefined;
 }
 
 const teamCount = correlatedCount("teams_players", "player_id", "players", "id");
@@ -142,16 +143,17 @@ export async function count(db: Db) {
   return db.$count(players);
 }
 
-export async function create(db: Db, input: PlayerInput & { teamId?: number | null }) {
+export async function create(db: Db, input: PlayerInput & { teamId?: number | null | undefined }) {
   const name = input.name.toLowerCase();
   const existing = await db.query.players.findFirst({ where: eq(players.name, name) });
   if (existing) throw new ConflictError(`Player "${input.name}" already exists`);
 
-  const [row] = await db
+  const [created] = await db
     .insert(players)
     .values({ name, position: input.position ?? "N/A" })
     .returning();
 
+  const row = inserted(created, "Player");
   if (input.teamId) await attachToTeam(db, row.id, input.teamId);
   return row;
 }
@@ -198,7 +200,7 @@ async function attachToTeam(db: Db, playerId: number, teamId: number) {
   await db.insert(teamsPlayers).values({ teamId, playerId }).onConflictDoNothing();
 }
 
-export async function update(db: Db, id: number, input: Partial<PlayerInput>) {
+export async function update(db: Db, id: number, input: PartialInput<PlayerInput>) {
   const values = input.name ? { ...input, name: input.name.toLowerCase() } : input;
   const [row] = await db.update(players).set(values).where(eq(players.id, id)).returning();
   return found(row, `Player ${id}`);

@@ -3,8 +3,8 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { routeManifest, type RouteManifestEntry } from "../../route-manifest";
 import { FIXTURES } from "../fixtures/seed";
 
-const BASE = process.env.SITE_URL ?? "http://localhost:3000";
-const SECRET = process.env.BETTER_AUTH_SECRET ?? "local-development-secret-not-for-production";
+const BASE = process.env["SITE_URL"] ?? "http://localhost:3000";
+const SECRET = process.env["BETTER_AUTH_SECRET"] ?? "local-development-secret-not-for-production";
 
 const CONCRETE: Record<string, string> = {
   ":id": String(FIXTURES.seasonId),
@@ -34,7 +34,7 @@ const USER_COOKIE = cookieFor("t3-user-token");
 async function visit(path: string, cookie?: string) {
   const response = await fetch(`${BASE}${path}`, {
     redirect: "manual",
-    headers: cookie ? { cookie } : undefined,
+    ...(cookie ? { headers: { cookie } } : {}),
   });
   const body = response.status < 400 ? await response.text() : "";
   return { status: response.status, location: response.headers.get("location"), body };
@@ -43,7 +43,7 @@ async function visit(path: string, cookie?: string) {
 function mainText(html: string): string {
   const match = /<main[^>]*>([\s\S]*?)<\/main>/.exec(html);
   if (!match) return "";
-  return match[1].replace(/<[^>]+>/g, "").trim();
+  return (match[1] ?? "").replace(/<[^>]+>/g, "").trim();
 }
 
 const buildable = routeManifest.filter((entry) => entry.status !== "removed");

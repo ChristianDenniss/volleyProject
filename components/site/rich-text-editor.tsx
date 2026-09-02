@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { EditorContent, useEditor, type Editor } from "@tiptap/react";
+import { EditorContent, useEditor, type Editor, type JSONContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import {
@@ -23,7 +23,7 @@ import {
   Unlink,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { parseTiptapDoc, plainTextToDoc, type TiptapDoc } from "@/lib/tiptap-doc";
+import { parseTiptapDoc, plainTextToDoc } from "@/lib/tiptap-doc";
 
 const extensions = [
   StarterKit.configure({
@@ -57,10 +57,9 @@ const editorClass = [
   "[&_.ProseMirror-selectednode]:outline [&_.ProseMirror-selectednode]:outline-2 [&_.ProseMirror-selectednode]:outline-brand-navy",
 ].join(" ");
 
-function initialContent(value: string): TiptapDoc {
-  const doc = parseTiptapDoc(value);
-  if (doc) return doc;
-  return plainTextToDoc(value);
+function initialContent(value: string): JSONContent {
+  const doc = parseTiptapDoc(value) ?? plainTextToDoc(value);
+  return { type: "doc", content: (doc.content ?? []) as JSONContent[] };
 }
 
 function ToolbarButton({
@@ -277,7 +276,7 @@ export function RichTextEditor({
           label="Add link"
           active={editor.isActive("link")}
           onClick={() =>
-            setDraft({ kind: "link", value: (editor.getAttributes("link").href as string) ?? "" })
+            setDraft({ kind: "link", value: (editor.getAttributes("link")["href"] as string) ?? "" })
           }
         >
           <LinkIcon className="size-4" />

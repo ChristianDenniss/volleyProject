@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ResourceView, optionalText, type ColumnSpec, type FieldSpec } from "./resource-view";
+import { pick, ResourceView, optionalText, type ColumnSpec, type FieldSpec } from "./resource-view";
 import { Badge } from "@components/ui/badge";
 import {
   Dialog,
@@ -231,18 +231,18 @@ export function MatchesManager({
   ];
 
   const toInput = (values: Record<string, string>) => {
-    const team1Score = Number.parseInt(values.team1Score, 10);
-    const team2Score = Number.parseInt(values.team2Score, 10);
+    const team1Score = Number.parseInt(pick(values, "team1Score"), 10);
+    const team2Score = Number.parseInt(pick(values, "team2Score"), 10);
     return {
-      matchNumber: values.matchNumber,
-      round: values.round,
-      date: values.date,
-      seasonId: Number.parseInt(values.seasonId, 10),
-      status: (optionalText(values.status) as Status) ?? "scheduled",
-      phase: (optionalText(values.phase) as Phase) ?? "qualifiers",
-      region: (optionalText(values.region) as Region) ?? "na",
-      team1Name: optionalText(values.team1Name) ?? null,
-      team2Name: optionalText(values.team2Name) ?? null,
+      matchNumber: pick(values, "matchNumber"),
+      round: pick(values, "round"),
+      date: pick(values, "date"),
+      seasonId: Number.parseInt(pick(values, "seasonId"), 10),
+      status: (optionalText(pick(values, "status")) as Status) ?? "scheduled",
+      phase: (optionalText(pick(values, "phase")) as Phase) ?? "qualifiers",
+      region: (optionalText(pick(values, "region")) as Region) ?? "na",
+      team1Name: optionalText(pick(values, "team1Name")) ?? null,
+      team2Name: optionalText(pick(values, "team2Name")) ?? null,
       team1Score: Number.isFinite(team1Score) ? team1Score : null,
       team2Score: Number.isFinite(team2Score) ? team2Score : null,
     };

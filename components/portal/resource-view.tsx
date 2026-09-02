@@ -357,6 +357,10 @@ export function ResourceView<Row extends { id: number | string }>({
   );
 }
 
+export function pick(values: Values, key: string): string {
+  return values[key] ?? "";
+}
+
 export function optionalNumber(value: string): number | undefined {
   const parsed = Number.parseInt(value, 10);
   return Number.isFinite(parsed) ? parsed : undefined;

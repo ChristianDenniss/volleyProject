@@ -40,10 +40,11 @@ const plainUser = () =>
   );
 
 function invoke(caller: ReturnType<typeof createCaller>, path: string): Promise<unknown> {
-  const [namespace, name] = path.split(".");
+  const [namespace = "", name = ""] = path.split(".");
   const group = (caller as unknown as Record<string, Record<string, (input: unknown) => Promise<unknown>>>)[
     namespace
   ];
+  if (!group?.[name]) throw new Error(`Unknown procedure ${path}`);
   return group[name](undefined);
 }
 

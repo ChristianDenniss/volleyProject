@@ -3,7 +3,7 @@ import path from "node:path";
 import { chromium, type Browser } from "playwright";
 import { routeManifest } from "../route-manifest";
 
-const SITE = process.env.BASELINE_SITE_URL ?? "https://volleyball4-2.com";
+const SITE = process.env["BASELINE_SITE_URL"] ?? "https://volleyball4-2.com";
 const outDir = path.join(import.meta.dirname, "..", "baselines");
 
 const VIEWPORTS = [

@@ -1,6 +1,6 @@
 "use client";
 
-import { ResourceView, optionalText, type ColumnSpec, type FieldSpec } from "./resource-view";
+import { pick, ResourceView, optionalText, type ColumnSpec, type FieldSpec } from "./resource-view";
 import { trpc } from "@/lib/trpc";
 
 interface Row {
@@ -50,12 +50,12 @@ export function TeamsManager({
   ];
 
   const toInput = (values: Record<string, string>) => {
-    const seasonId = Number.parseInt(values.seasonId, 10);
+    const seasonId = Number.parseInt(pick(values, "seasonId"), 10);
     return {
-      name: values.name,
+      name: pick(values, "name"),
       seasonId: Number.isFinite(seasonId) ? seasonId : null,
-      placement: optionalText(values.placement),
-      logoUrl: optionalText(values.logoUrl) ?? null,
+      placement: optionalText(pick(values, "placement")),
+      logoUrl: optionalText(pick(values, "logoUrl")) ?? null,
     };
   };
 

@@ -11,7 +11,7 @@ import {
   teamsGames,
   teamsPlayers,
 } from "@db/schema";
-import { NotFoundError } from "./errors";
+import { BadRequestError, NotFoundError } from "./errors";
 
 export type Difficulty = "easy" | "medium" | "hard" | "impossible";
 export type TriviaKind = "player" | "team" | "season";
@@ -57,7 +57,9 @@ export function normalizeGuess(value: string): string {
 }
 
 function pick<T>(candidates: T[], random: () => number): T {
-  return candidates[Math.floor(random() * candidates.length)];
+  const chosen = candidates[Math.floor(random() * candidates.length)];
+  if (chosen === undefined) throw new BadRequestError("No trivia candidates are available");
+  return chosen;
 }
 
 export async function randomPlayer(db: Db, difficulty: Difficulty, random: () => number = Math.random) {

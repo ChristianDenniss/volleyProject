@@ -38,7 +38,7 @@ export function ArticleForm() {
         try {
           const article = await create.mutateAsync(form);
           toast.success("Article submitted for review.");
-          router.push(`/articles/${article.id}`);
+          router.push(article ? `/articles/${article.id}` : "/articles");
         } catch (error) {
           toast.error(error instanceof Error ? error.message : "The article was not saved.");
         }

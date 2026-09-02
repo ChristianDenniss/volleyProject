@@ -2,13 +2,14 @@ import { and, desc, eq, sql } from "drizzle-orm";
 import type { Db } from "@db";
 import { articleLikes, articles, user } from "@db/schema";
 import { found, NotFoundError } from "./errors";
+import type { PartialInput } from "./input";
 
 export interface ArticleInput {
   title: string;
   summary: string;
   content: string;
   imageUrl: string;
-  approved?: boolean | null;
+  approved?: boolean | null | undefined;
 }
 
 const columns = {
@@ -77,7 +78,7 @@ export async function create(db: Db, authorId: string, input: ArticleInput) {
   return row;
 }
 
-export async function update(db: Db, id: number, input: Partial<ArticleInput>) {
+export async function update(db: Db, id: number, input: PartialInput<ArticleInput>) {
   const [row] = await db.update(articles).set(input).where(eq(articles.id, id)).returning();
   return found(row, `Article ${id}`);
 }

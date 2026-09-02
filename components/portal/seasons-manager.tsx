@@ -1,6 +1,6 @@
 "use client";
 
-import { ResourceView, optionalText, type ColumnSpec, type FieldSpec } from "./resource-view";
+import { pick, ResourceView, optionalText, type ColumnSpec, type FieldSpec } from "./resource-view";
 import { trpc } from "@/lib/trpc";
 
 interface Row {
@@ -50,22 +50,22 @@ export function SeasonsManager({ rows }: { rows: Row[] }) {
       })}
       onCreate={(values) =>
         create.mutateAsync({
-          seasonNumber: Number.parseInt(values.seasonNumber, 10),
-          startDate: values.startDate,
-          endDate: optionalText(values.endDate) ?? null,
-          theme: optionalText(values.theme) ?? null,
-          image: optionalText(values.image) ?? null,
+          seasonNumber: Number.parseInt(pick(values, "seasonNumber"), 10),
+          startDate: pick(values, "startDate"),
+          endDate: optionalText(pick(values, "endDate")) ?? null,
+          theme: optionalText(pick(values, "theme")) ?? null,
+          image: optionalText(pick(values, "image")) ?? null,
         })
       }
       onUpdate={(id, values) =>
         update.mutateAsync({
           id: id as number,
           patch: {
-            seasonNumber: Number.parseInt(values.seasonNumber, 10),
-            startDate: values.startDate,
-            endDate: optionalText(values.endDate) ?? null,
-            theme: optionalText(values.theme) ?? null,
-            image: optionalText(values.image) ?? null,
+            seasonNumber: Number.parseInt(pick(values, "seasonNumber"), 10),
+            startDate: pick(values, "startDate"),
+            endDate: optionalText(pick(values, "endDate")) ?? null,
+            theme: optionalText(pick(values, "theme")) ?? null,
+            image: optionalText(pick(values, "image")) ?? null,
           },
         })
       }
