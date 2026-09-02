@@ -25,6 +25,18 @@
   --brand-slate-soft: #cbd5e1;
   --brand-slate-surface: #f8fafc;
   --brand-sky-active: #38bdf8;
+  --rvl-ground: #ffffff;
+  --rvl-panel: #f6f7f9;
+  --rvl-ink: #14161b;
+  --rvl-ink-2: #4b5361;
+  --rvl-dim: #7a8391;
+  --rvl-line: #e3e6eb;
+  --rvl-line-strong: #d2d7de;
+  --rvl-accent: #b45f06;
+  --rvl-accent-bg: #ffb020;
+  --rvl-accent-soft: #f0dcbb;
+  --rvl-on-accent: #14161b;
+  --rvl-mint: #0f766e;
   --card: #ffffff;
   --card-foreground: #1a1a1a;
   --popover: #ffffff;
@@ -62,11 +74,12 @@
 }
 
 @theme inline {
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-display);
   --font-sans:
     Inter, "Segoe UI", Tahoma, Geneva, Verdana, ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-chivo), Inter, ui-sans-serif, system-ui, sans-serif;
   --font-serif: "EB Garamond", Georgia, serif;
-  --font-mono: "Courier New", ui-monospace, monospace;
+  --font-mono: var(--font-jetbrains), ui-monospace, "Courier New", monospace;
   --breakpoint-xs: 30rem;
   --breakpoint-sm: 37.5rem;
   --breakpoint-md: 48rem;
@@ -92,6 +105,18 @@
   --color-brand-slate-soft: var(--brand-slate-soft);
   --color-brand-slate-surface: var(--brand-slate-surface);
   --color-brand-sky-active: var(--brand-sky-active);
+  --color-rvl-ground: var(--rvl-ground);
+  --color-rvl-panel: var(--rvl-panel);
+  --color-rvl-ink: var(--rvl-ink);
+  --color-rvl-ink-2: var(--rvl-ink-2);
+  --color-rvl-dim: var(--rvl-dim);
+  --color-rvl-line: var(--rvl-line);
+  --color-rvl-line-strong: var(--rvl-line-strong);
+  --color-rvl-accent: var(--rvl-accent);
+  --color-rvl-accent-bg: var(--rvl-accent-bg);
+  --color-rvl-accent-soft: var(--rvl-accent-soft);
+  --color-rvl-on-accent: var(--rvl-on-accent);
+  --color-rvl-mint: var(--rvl-mint);
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-sidebar-ring: var(--sidebar-ring);
@@ -136,6 +161,18 @@
 
 .dark {
   color-scheme: dark;
+  --rvl-ground: #08090b;
+  --rvl-panel: #0e1013;
+  --rvl-ink: #e9ebee;
+  --rvl-ink-2: #aeb4bc;
+  --rvl-dim: #757b85;
+  --rvl-line: #1d2126;
+  --rvl-line-strong: #2a2f38;
+  --rvl-accent: #ffb020;
+  --rvl-accent-bg: #ffb020;
+  --rvl-accent-soft: #8a6316;
+  --rvl-on-accent: #08090b;
+  --rvl-mint: #46d0a0;
   --background: #1a1a1a;
   --foreground: #f5f5f5;
   --card: #262626;

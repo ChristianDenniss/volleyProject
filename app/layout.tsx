@@ -1,11 +1,24 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Chivo, Inter, JetBrains_Mono } from "next/font/google";
+import { ThemeProvider } from "@components/theme-provider";
 import { Toaster } from "@components/ui/sonner";
 import { TrpcProvider } from "@/lib/trpc";
 import { cn } from "@/lib/utils";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--font-sans" });
+
+const chivo = Chivo({
+  subsets: ["latin"],
+  weight: ["400", "600", "700", "900"],
+  variable: "--font-chivo",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "700"],
+  variable: "--font-jetbrains",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://volleyball4-2.com"),
@@ -30,10 +43,16 @@ export const viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={cn("font-sans", inter.variable)}>
-      <body className="min-h-screen overflow-x-hidden bg-white text-foreground antialiased">
-        <TrpcProvider>{children}</TrpcProvider>
-        <Toaster richColors position="top-right" />
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={cn("font-sans", inter.variable, chivo.variable, jetbrainsMono.variable)}
+    >
+      <body className="min-h-screen overflow-x-hidden bg-background text-foreground antialiased">
+        <ThemeProvider>
+          <TrpcProvider>{children}</TrpcProvider>
+          <Toaster richColors position="top-right" />
+        </ThemeProvider>
       </body>
     </html>
   );

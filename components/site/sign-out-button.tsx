@@ -13,7 +13,7 @@ export function SignOutButton() {
         await signOut();
         router.refresh();
       }}
-      className="ml-1 cursor-pointer rounded-md border-none bg-brand-ink px-3 py-2 text-base text-white transition-colors duration-300 hover:bg-brand-line hover:text-brand-ink"
+      className="cursor-pointer rounded-xs border border-rvl-line bg-transparent px-3 py-2 font-mono text-[0.68rem] uppercase tracking-[0.14em] text-rvl-dim transition-colors hover:border-rvl-line-strong hover:text-rvl-ink"
     >
       Logout
     </button>
