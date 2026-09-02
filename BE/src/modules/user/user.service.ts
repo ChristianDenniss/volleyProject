@@ -16,6 +16,7 @@ import {
 } from "../../middleware/authValidation.js";
 import { validatePasswordStrength } from "../../utils/passwordPolicy.js";
 import { Players } from "../players/player.entity.js";
+import { GameStaff } from "../games/game-staff.entity.js";
 
 export interface UserFilters {
     search?: string;
@@ -32,11 +33,13 @@ export class UserService {
     private userRepository: Repository<User>;
     private auditLogRepository: Repository<RoleAuditLog>;
     private playerRepository: Repository<Players>;
+    private staffRepository: Repository<GameStaff>;
 
     constructor() {
         this.userRepository = AppDataSource.getRepository(User);
         this.auditLogRepository = AppDataSource.getRepository(RoleAuditLog);
         this.playerRepository = AppDataSource.getRepository(Players);
+        this.staffRepository = AppDataSource.getRepository(GameStaff);
     }
 
     private async hashPassword(password: string): Promise<string> {
@@ -200,7 +203,38 @@ export class UserService {
             throw new NotFoundError("User not found");
         }
 
-        return this.toPublicUser(user);
+        const publicUser = this.toPublicUser(user);
+        publicUser.staffedGames = await this.getStaffedGames(userId);
+        return publicUser;
+    }
+
+    private async getStaffedGames(userId: number): Promise<Record<string, unknown>[]> {
+        const credits = await this.staffRepository.find({
+            where: { userId },
+            relations: ["game", "game.teams"],
+        });
+
+        return credits
+            .slice()
+            .sort((a, b) => {
+                const aTime = a.game?.date ? new Date(a.game.date).getTime() : 0;
+                const bTime = b.game?.date ? new Date(b.game.date).getTime() : 0;
+                return bTime - aTime;
+            })
+            .map((credit) => ({
+                role: credit.role,
+                game: {
+                    id: credit.game.id,
+                    name: credit.game.name,
+                    date: credit.game.date,
+                    stage: credit.game.stage,
+                    videoUrl: credit.game.videoUrl,
+                    teams: (credit.game.teams ?? []).map((team) => ({
+                        id: team.id,
+                        name: team.name,
+                    })),
+                },
+            }));
     }
 
     async linkPlayersToUser(user: User): Promise<void> {

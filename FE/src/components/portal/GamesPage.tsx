@@ -10,6 +10,7 @@ import { useRegion } from "../../context/regionContext";
 import type { Game, CreateGameInput, ChallongeImportResult } from "../../types/interfaces";
 import ChallongeImport from "../ChallongeImport";
 import GameStatUploadModal from "./GameStatUploadModal";
+import GameStaffEditor from "./GameStaffEditor";
 import "../../styles/GamesPage.css";
 import "../../styles/PortalPlayersPage.css";
 import SearchBar from "../Searchbar";
@@ -22,6 +23,11 @@ import { getStageOptionsForPhase } from "../../constants/gameStages";
 import RegionSeasonFields from "../ui/RegionSeasonFields";
 import { useFormRegionSeason } from "../../hooks/useFormRegionSeason";
 import { useDebouncedValue } from "../../hooks/useDebouncedValue";
+import {
+  staffCreditsToDraft,
+  staffDraftToPayload,
+  type StaffDraft,
+} from "../../utils/gameStaff";
 import {
   createButton,
   filterGroup,
@@ -125,7 +131,11 @@ const GamesPage: React.FC = () => {
   const [newVideoUrl, setNewVideoUrl] = useState<string>("");
   const [newTeam1Name, setNewTeam1Name] = useState<string>("");
   const [newTeam2Name, setNewTeam2Name] = useState<string>("");
+  const [newStaff, setNewStaff] = useState<StaffDraft[]>([]);
   const [formError, setFormError] = useState<string>("");
+  const [crewGame, setCrewGame] = useState<Game | null>(null);
+  const [crewDraft, setCrewDraft] = useState<StaffDraft[]>([]);
+  const [crewSaving, setCrewSaving] = useState(false);
 
   const createStageOptions = useMemo(
     () => getStageOptionsForPhase(newPhase),
@@ -186,6 +196,34 @@ const GamesPage: React.FC = () => {
     }
   };
 
+  const openCrew = (game: Game) => {
+    setCrewGame(game);
+    setCrewDraft(staffCreditsToDraft(game.staff));
+  };
+
+  const closeCrew = () => {
+    setCrewGame(null);
+    setCrewDraft([]);
+  };
+
+  const saveCrew = async () => {
+    if (!crewGame) return;
+    setCrewSaving(true);
+    try {
+      const updatedGame = await patchGame(crewGame.id, {
+        staff: staffDraftToPayload(crewDraft),
+      } as unknown as Partial<Game>);
+      setLocalGames((prev) => prev.map((g) => (g.id === crewGame.id ? updatedGame : g)));
+      closeCrew();
+      refetch();
+    } catch (error) {
+      console.error("Error updating match crew:", error);
+      alert("Failed to update match crew");
+    } finally {
+      setCrewSaving(false);
+    }
+  };
+
   // Open "Create Game" modal
   const openModal = () => {
     setIsModalOpen(true);
@@ -201,6 +239,7 @@ const GamesPage: React.FC = () => {
     setNewVideoUrl("");
     setNewTeam1Name("");
     setNewTeam2Name("");
+    setNewStaff([]);
   };
 
   // Close modal
@@ -229,6 +268,7 @@ const GamesPage: React.FC = () => {
         phase: newPhase,
         bracket: newPhase === "playoffs" ? newBracket : null,
         status: newStatus as 'scheduled' | 'completed',
+        staff: staffDraftToPayload(newStaff),
       } satisfies CreateGameInput);
       setIsModalOpen(false);
       setNewName("");
@@ -240,6 +280,7 @@ const GamesPage: React.FC = () => {
       setNewVideoUrl("");
       setNewDate("");
       setNewStage("");
+      setNewStaff([]);
       refetch();
     } catch (error) {
       console.error("Error creating game:", error);
@@ -549,6 +590,9 @@ const GamesPage: React.FC = () => {
           <button onClick={() => setStatUploadGame(g)} className={createButtonGames} style={{ padding: '0.25rem 0.5rem' }}>
             Upload Stats
           </button>
+          <button onClick={() => openCrew(g)} className={createButtonGames} style={{ padding: '0.25rem 0.5rem' }}>
+            Crew
+          </button>
           {user?.role === "superadmin" && (
             <button
               onClick={() => handleDelete(g.id)}
@@ -811,6 +855,10 @@ const GamesPage: React.FC = () => {
             />
           </label>
 
+          <div style={{ marginBottom: "1rem" }}>
+            <GameStaffEditor value={newStaff} onChange={setNewStaff} />
+          </div>
+
           {/* Submit Button */}
           <button
             type="submit"
@@ -825,6 +873,22 @@ const GamesPage: React.FC = () => {
             </p>
           )}
         </form>
+      </Modal>
+
+      <Modal
+        isOpen={!!crewGame}
+        onClose={closeCrew}
+        title={crewGame ? `Match crew — ${crewGame.name || `Game ${crewGame.id}`}` : "Match crew"}
+      >
+        <GameStaffEditor value={crewDraft} onChange={setCrewDraft} />
+        <div className="flex justify-end gap-[0.5rem] mt-[1rem]">
+          <button type="button" onClick={closeCrew} className={gameBtnRemove} style={{ background: "#64748b" }}>
+            Cancel
+          </button>
+          <button type="button" onClick={() => void saveCrew()} disabled={crewSaving} className={createButton}>
+            {crewSaving ? "Saving…" : "Save crew"}
+          </button>
+        </div>
       </Modal>
 
       {isImportModalOpen && (

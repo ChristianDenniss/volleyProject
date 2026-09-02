@@ -1,5 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany, Index } from 'typeorm';
 import type { Article } from "../articles/article.entity.js";
+import type { GameStaff } from "../games/game-staff.entity.js";
 
 @Entity()
 export class User
@@ -38,4 +39,7 @@ export class User
 
     @OneToMany('Article', 'author')
     articles!: Article[];
+
+    @OneToMany('GameStaff', 'user')
+    gameStaff!: GameStaff[];
 }
