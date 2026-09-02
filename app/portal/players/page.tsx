@@ -1,5 +1,4 @@
-import { getDb } from "@db";
-import { players, teams } from "@server/services";
+import { api } from "@server/trpc/server";
 import { PortalPage } from "@components/portal/portal-page";
 import { PlayersManager } from "@components/portal/players-manager";
 
@@ -8,8 +7,8 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "Players — Portal" };
 
 export default async function PortalPlayersPage() {
-  const db = getDb();
-  const [rows, teamRows] = await Promise.all([players.list(db), teams.list(db)]);
+  const trpc = await api();
+  const [rows, teamRows] = await Promise.all([trpc.players.list(), trpc.teams.list()]);
 
   return (
     <PortalPage title="Players" description="Names are stored lowercase and must be unique.">

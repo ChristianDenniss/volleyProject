@@ -1,9 +1,24 @@
 import { stats } from "@server/services";
-import { adminProcedure, router } from "../init";
+import { adminProcedure, publicProcedure, router } from "../init";
 import { revalidate } from "../revalidate";
-import { byId, statCreate, statCreateByName, statRows, statUpdate } from "../schemas";
+import {
+  byId,
+  optionalSeason,
+  statCreate,
+  statCreateByName,
+  statRows,
+  statUpdate,
+} from "../schemas";
 
 export const statsRouter = router({
+  list: adminProcedure.query(({ ctx }) => stats.list(ctx.db)),
+
+  leaderboard: publicProcedure
+    .input(optionalSeason)
+    .query(({ ctx, input }) => stats.leaderboard(ctx.db, input.seasonId)),
+
+  count: adminProcedure.query(({ ctx }) => stats.count(ctx.db)),
+
   create: adminProcedure.input(statCreate).mutation(async ({ ctx, input }) => {
     const row = await stats.create(ctx.db, input);
     revalidate("/stats", `/games/${input.gameId}`, "/portal/stats");

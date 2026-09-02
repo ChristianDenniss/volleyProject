@@ -1,5 +1,4 @@
-import { getDb } from "@db";
-import { games, players, stats } from "@server/services";
+import { api } from "@server/trpc/server";
 import { PortalPage } from "@components/portal/portal-page";
 import { StatsManager } from "@components/portal/stats-manager";
 
@@ -8,11 +7,11 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "Stats — Portal" };
 
 export default async function PortalStatsPage() {
-  const db = getDb();
+  const trpc = await api();
   const [rows, gameList, playerList] = await Promise.all([
-    stats.list(db),
-    games.list(db),
-    players.list(db),
+    trpc.stats.list(),
+    trpc.games.list(),
+    trpc.players.list(),
   ]);
 
   return (

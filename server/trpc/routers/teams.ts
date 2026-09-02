@@ -1,10 +1,22 @@
 import { teams } from "@server/services";
-import { adminProcedure, router } from "../init";
+import { adminProcedure, publicProcedure, router } from "../init";
 import { revalidate } from "../revalidate";
-import { byId, teamCreate, teamUpdate } from "../schemas";
+import { bySeason, byTeamName, byId, teamCreate, teamUpdate } from "../schemas";
 import { z } from "zod";
 
 export const teamsRouter = router({
+  list: publicProcedure.query(({ ctx }) => teams.list(ctx.db)),
+
+  byName: publicProcedure
+    .input(byTeamName)
+    .query(({ ctx, input }) => teams.getByName(ctx.db, input.name)),
+
+  playersBySeason: publicProcedure
+    .input(bySeason)
+    .query(({ ctx, input }) => teams.listPlayersBySeason(ctx.db, input.seasonId)),
+
+  count: adminProcedure.query(({ ctx }) => teams.count(ctx.db)),
+
   create: adminProcedure.input(teamCreate).mutation(async ({ ctx, input }) => {
     const row = await teams.create(ctx.db, input);
     revalidate("/teams", "/portal/teams");

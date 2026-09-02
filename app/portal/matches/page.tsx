@@ -1,5 +1,4 @@
-import { getDb } from "@db";
-import { matches, seasons } from "@server/services";
+import { api } from "@server/trpc/server";
 import { PortalPage } from "@components/portal/portal-page";
 import { MatchesManager } from "@components/portal/matches-manager";
 
@@ -8,8 +7,8 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "Matches — Portal" };
 
 export default async function PortalMatchesPage() {
-  const db = getDb();
-  const [rows, seasonList] = await Promise.all([matches.list(db), seasons.list(db)]);
+  const trpc = await api();
+  const [rows, seasonList] = await Promise.all([trpc.matches.list({}), trpc.seasons.list()]);
 
   return (
     <PortalPage

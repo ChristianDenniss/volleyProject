@@ -1,9 +1,15 @@
 import { games } from "@server/services";
-import { adminProcedure, router } from "../init";
+import { adminProcedure, publicProcedure, router } from "../init";
 import { revalidate } from "../revalidate";
 import { byId, gameCreate, gameCreateByNames, gameCreateMany, gameUpdate } from "../schemas";
 
 export const gamesRouter = router({
+  list: publicProcedure.query(({ ctx }) => games.list(ctx.db)),
+
+  byId: publicProcedure.input(byId).query(({ ctx, input }) => games.getById(ctx.db, input.id)),
+
+  count: adminProcedure.query(({ ctx }) => games.count(ctx.db)),
+
   create: adminProcedure.input(gameCreate).mutation(async ({ ctx, input }) => {
     const row = await games.create(ctx.db, input);
     revalidate("/games", "/portal/games");

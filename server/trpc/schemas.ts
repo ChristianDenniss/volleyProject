@@ -206,3 +206,16 @@ export const triviaGuess = z.object({
   id,
   guess: z.string().min(1),
 });
+
+export const triviaSubject = z.object({
+  difficulty: z.enum(["easy", "medium", "hard", "impossible"]),
+  seed: z.number().min(0).max(1),
+});
+
+export const bySeason = z.object({ seasonId: id });
+export const byTeamName = z.object({ name: z.string().min(1) });
+export const optionalSeason = z.object({ seasonId: id.optional() });
+export const recordsByMetric = z.object({
+  metric: z.enum(RECORD_METRICS),
+  minAttempts: z.number().int().positive().nullable().optional(),
+});

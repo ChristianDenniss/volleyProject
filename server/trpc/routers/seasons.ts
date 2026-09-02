@@ -1,9 +1,15 @@
 import { seasons } from "@server/services";
-import { adminProcedure, router } from "../init";
+import { adminProcedure, publicProcedure, router } from "../init";
 import { revalidate } from "../revalidate";
 import { byId, seasonCreate, seasonUpdate } from "../schemas";
 
 export const seasonsRouter = router({
+  list: publicProcedure.query(({ ctx }) => seasons.list(ctx.db)),
+
+  byId: publicProcedure.input(byId).query(({ ctx, input }) => seasons.getById(ctx.db, input.id)),
+
+  count: adminProcedure.query(({ ctx }) => seasons.count(ctx.db)),
+
   create: adminProcedure.input(seasonCreate).mutation(async ({ ctx, input }) => {
     const row = await seasons.create(ctx.db, input);
     revalidate("/seasons", "/portal/seasons");

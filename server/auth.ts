@@ -1,5 +1,6 @@
 import { env } from "cloudflare:workers";
 import { betterAuth, type BetterAuthOptions } from "better-auth";
+import { and, eq } from "drizzle-orm";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { admin } from "better-auth/plugins";
 import { createAccessControl } from "better-auth/plugins/access";
@@ -20,9 +21,34 @@ export interface AuthEnvironment {
   BETTER_AUTH_URL: string;
   ROBLOX_CLIENT_ID: string;
   ROBLOX_CLIENT_SECRET: string;
+  ROOT_ROBLOX_IDS?: string | undefined;
+}
+
+export function parseRootRobloxIds(raw: string | undefined): string[] {
+  return (raw ?? "")
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter((entry) => entry.length > 0);
+}
+
+async function promoteRootUser(db: Db, userId: string, rootIds: string[]): Promise<void> {
+  if (rootIds.length === 0) return;
+
+  const [row] = await db
+    .select({ role: schema.user.role, accountId: schema.account.accountId })
+    .from(schema.account)
+    .innerJoin(schema.user, eq(schema.user.id, schema.account.userId))
+    .where(and(eq(schema.account.userId, userId), eq(schema.account.providerId, "roblox")))
+    .limit(1);
+
+  if (!row || row.role === "superadmin" || !rootIds.includes(row.accountId)) return;
+
+  await db.update(schema.user).set({ role: "superadmin" }).where(eq(schema.user.id, userId));
 }
 
 export function buildAuthOptions(db: Db, environment: AuthEnvironment): BetterAuthOptions {
+  const rootIds = parseRootRobloxIds(environment.ROOT_ROBLOX_IDS);
+
   return {
     appName: "volley-project",
     baseURL: environment.BETTER_AUTH_URL,
@@ -52,6 +78,15 @@ export function buildAuthOptions(db: Db, environment: AuthEnvironment): BetterAu
         role: { type: "string", defaultValue: "user", input: false },
       },
     },
+    databaseHooks: {
+      session: {
+        create: {
+          after: async (createdSession) => {
+            await promoteRootUser(db, createdSession.userId, rootIds);
+          },
+        },
+      },
+    },
     plugins: [
       admin({
         ac: accessControl,
@@ -78,6 +113,7 @@ export function getAuth(): Auth {
       BETTER_AUTH_URL: env.BETTER_AUTH_URL,
       ROBLOX_CLIENT_ID: env.ROBLOX_CLIENT_ID,
       ROBLOX_CLIENT_SECRET: env.ROBLOX_CLIENT_SECRET,
+      ROOT_ROBLOX_IDS: env.ROOT_ROBLOX_IDS,
     });
   }
   return cached;

@@ -1,5 +1,5 @@
 import { players } from "@server/services";
-import { adminProcedure, router } from "../init";
+import { adminProcedure, publicProcedure, router } from "../init";
 import { revalidate } from "../revalidate";
 import {
   byId,
@@ -12,6 +12,14 @@ import {
 } from "../schemas";
 
 export const playersRouter = router({
+  list: publicProcedure.query(({ ctx }) => players.list(ctx.db)),
+
+  byId: publicProcedure.input(byId).query(({ ctx, input }) => players.getById(ctx.db, input.id)),
+
+  memberships: publicProcedure.query(({ ctx }) => players.listAllMemberships(ctx.db)),
+
+  count: publicProcedure.query(({ ctx }) => players.count(ctx.db)),
+
   create: adminProcedure.input(playerCreate).mutation(async ({ ctx, input }) => {
     const row = input.teamName
       ? await players.createByTeamName(ctx.db, {

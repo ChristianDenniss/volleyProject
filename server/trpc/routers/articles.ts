@@ -1,7 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { articles } from "@server/services";
 import { isAdmin } from "@server/services/users";
-import { protectedProcedure, router } from "../init";
+import { adminProcedure, protectedProcedure, publicProcedure, router } from "../init";
 import { revalidate } from "../revalidate";
 import { articleCreate, articleUpdate, byId } from "../schemas";
 
@@ -15,6 +15,24 @@ async function assertMayEdit(ctx: { db: Parameters<typeof articles.getById>[0]; 
 }
 
 export const articlesRouter = router({
+  list: publicProcedure.query(({ ctx }) => articles.list(ctx.db, { approvedOnly: true })),
+
+  listAll: adminProcedure.query(({ ctx }) => articles.list(ctx.db)),
+
+  byId: publicProcedure.input(byId).query(async ({ ctx, input }) => {
+    const article = await articles.getById(ctx.db, input.id);
+    if (!article) return null;
+    if (article.approved === true) return article;
+    if (!ctx.user) return null;
+    return article.authorId === ctx.user.id || isAdmin(ctx.user.role) ? article : null;
+  }),
+
+  likeStatus: publicProcedure
+    .input(byId)
+    .query(({ ctx, input }) => articles.likeStatus(ctx.db, input.id, ctx.user?.id ?? null)),
+
+  count: adminProcedure.query(({ ctx }) => articles.count(ctx.db)),
+
   create: protectedProcedure.input(articleCreate).mutation(async ({ ctx, input }) => {
     const row = await articles.create(ctx.db, ctx.user.id, input);
     revalidate("/", "/articles", "/portal/articles");

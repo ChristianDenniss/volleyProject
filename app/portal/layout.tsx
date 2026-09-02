@@ -1,38 +1,36 @@
 import type { ReactNode } from "react";
-import Link from "next/link";
+import { cookies } from "next/headers";
 import { requireAdmin } from "@server/session";
-import { PortalNav } from "@components/portal/portal-nav";
+import { PortalBreadcrumb } from "@components/portal/portal-breadcrumb";
+import { PortalSidebar } from "@components/portal/portal-sidebar";
+import { Separator } from "@/components/ui/separator";
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 export const dynamic = "force-dynamic";
 
 export default async function PortalLayout({ children }: { children: ReactNode }) {
   const user = await requireAdmin("/portal");
+  const sidebarState = (await cookies()).get("sidebar_state")?.value;
 
   return (
-    <div className="grid min-h-screen [grid-template-columns:180px_1fr] max-md:grid-cols-1">
-      <aside className="box-border flex w-full min-w-[120px] max-w-[220px] flex-col bg-[#1f2937] px-4 py-6 text-[#f9fafb] max-md:max-w-none max-md:flex-row max-md:items-center max-md:justify-between">
-        <div>
-          <h2 className="mb-5 text-xl font-semibold">
-            <Link href="/portal" className="text-white no-underline">
-              League portal
-            </Link>
-          </h2>
-          <p className="mb-5 text-xs text-white/70">
-            {user.name} ({user.role})
-          </p>
-        </div>
-
-        <PortalNav />
-
-        <Link
-          href="/"
-          className="mt-8 text-sm font-medium text-[#cbd5e1] no-underline transition-colors duration-150 hover:text-white max-md:mt-0"
-        >
-          Back to the site
-        </Link>
-      </aside>
-
-      <main className="min-w-0 overflow-y-auto bg-[#f8fafc] px-10 py-8 max-md:p-6">{children}</main>
-    </div>
+    <TooltipProvider>
+      <SidebarProvider defaultOpen={sidebarState !== "false"}>
+        <PortalSidebar user={user} />
+        <SidebarInset>
+          <header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+            <div className="flex items-center gap-2 px-4">
+              <SidebarTrigger className="-ml-1" />
+              <Separator
+                orientation="vertical"
+                className="mr-2 data-vertical:h-4 data-vertical:self-auto"
+              />
+              <PortalBreadcrumb />
+            </div>
+          </header>
+          <div className="flex flex-1 flex-col gap-4 p-6">{children}</div>
+        </SidebarInset>
+      </SidebarProvider>
+    </TooltipProvider>
   );
 }

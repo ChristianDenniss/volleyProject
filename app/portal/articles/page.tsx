@@ -1,5 +1,4 @@
-import { getDb } from "@db";
-import { articles } from "@server/services";
+import { api } from "@server/trpc/server";
 import { PortalPage } from "@components/portal/portal-page";
 import { ArticlesManager } from "@components/portal/articles-manager";
 
@@ -8,7 +7,7 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "Articles — Portal" };
 
 export default async function PortalArticlesPage() {
-  const rows = await articles.list(getDb());
+  const rows = await (await api()).articles.listAll();
 
   return (
     <PortalPage

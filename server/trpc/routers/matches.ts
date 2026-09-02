@@ -1,11 +1,21 @@
 import { env } from "cloudflare:workers";
 import { TRPCError } from "@trpc/server";
 import { matches } from "@server/services";
-import { adminProcedure, router } from "../init";
+import { adminProcedure, publicProcedure, router } from "../init";
 import { revalidate } from "../revalidate";
-import { byId, matchCreate, matchImportChallonge, matchUpdate } from "../schemas";
+import { byId, matchCreate, matchImportChallonge, matchUpdate, optionalSeason } from "../schemas";
 
 export const matchesRouter = router({
+  list: publicProcedure
+    .input(optionalSeason)
+    .query(({ ctx, input }) =>
+      input.seasonId === undefined
+        ? matches.list(ctx.db)
+        : matches.listBySeason(ctx.db, input.seasonId),
+    ),
+
+  count: adminProcedure.query(({ ctx }) => matches.count(ctx.db)),
+
   create: adminProcedure.input(matchCreate).mutation(async ({ ctx, input }) => {
     const row = await matches.create(ctx.db, input);
     revalidate("/schedules", "/portal/matches");

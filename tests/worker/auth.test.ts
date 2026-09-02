@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { eq } from "drizzle-orm";
 import { makeDb, type Db } from "@db";
 import { account, user } from "@db/schema";
-import { buildAuthOptions, makeAuth, type Auth } from "@server/auth";
+import { buildAuthOptions, makeAuth, parseRootRobloxIds, type Auth } from "@server/auth";
 import { users } from "@server/services";
 import { FIXTURES, seed } from "../fixtures/seed";
 import { createSessionFor } from "../helpers/session";
@@ -116,5 +116,66 @@ describe("admin bootstrap", () => {
   it("leaves an ordinary account without admin rights", async () => {
     const plain = await users.getById(db, FIXTURES.userId);
     expect(users.isAdmin(plain?.role)).toBe(false);
+  });
+});
+
+describe("root accounts from the environment", () => {
+  const ROOT_ID = "4815162342";
+
+  const runSessionHook = async (rootIds: string | undefined, userId: string) => {
+    const options = buildAuthOptions(db, { ...environment, ROOT_ROBLOX_IDS: rootIds });
+    const after = options.databaseHooks?.session?.create?.after;
+    expect(after).toBeDefined();
+    await after?.({ userId } as never, null);
+  };
+
+  const linkRoblox = (userId: string, accountId: string) =>
+    db.insert(account).values({
+      id: `account-${userId}`,
+      userId,
+      accountId,
+      providerId: "roblox",
+    });
+
+  it("reads a comma separated list and ignores blanks", () => {
+    expect(parseRootRobloxIds(" 1 , ,2 ")).toEqual(["1", "2"]);
+    expect(parseRootRobloxIds(undefined)).toEqual([]);
+  });
+
+  it("promotes a listed Roblox id on sign-in", async () => {
+    await linkRoblox(FIXTURES.userId, ROOT_ID);
+    await runSessionHook(`999,${ROOT_ID}`, FIXTURES.userId);
+
+    const promoted = await users.getById(db, FIXTURES.userId);
+    expect(promoted?.role).toBe("superadmin");
+  });
+
+  it("leaves an unlisted Roblox id alone", async () => {
+    await linkRoblox(FIXTURES.userId, "not-listed");
+    await runSessionHook(ROOT_ID, FIXTURES.userId);
+
+    const untouched = await users.getById(db, FIXTURES.userId);
+    expect(untouched?.role).toBe("user");
+  });
+
+  it("does nothing when the variable is unset", async () => {
+    await linkRoblox(FIXTURES.userId, ROOT_ID);
+    await runSessionHook(undefined, FIXTURES.userId);
+
+    const untouched = await users.getById(db, FIXTURES.userId);
+    expect(untouched?.role).toBe("user");
+  });
+
+  it("ignores accounts from another provider", async () => {
+    await db.insert(account).values({
+      id: "account-other",
+      userId: FIXTURES.userId,
+      accountId: ROOT_ID,
+      providerId: "github",
+    });
+    await runSessionHook(ROOT_ID, FIXTURES.userId);
+
+    const untouched = await users.getById(db, FIXTURES.userId);
+    expect(untouched?.role).toBe("user");
   });
 });
