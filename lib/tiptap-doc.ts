@@ -32,6 +32,11 @@ const mediaUrl = z
 
 const shortText = z.string().max(500).nullable().optional();
 
+const dimension = z
+  .union([z.number().int().min(1).max(10_000), z.string().regex(/^\d{1,5}(px|%)?$/)])
+  .nullable()
+  .optional();
+
 const plainAttrs = z
   .record(z.string().max(64), z.union([z.string().max(500), z.number(), z.boolean(), z.null()]))
   .optional();
@@ -105,7 +110,15 @@ const horizontalRuleNode = z
 const imageNode = z
   .object({
     type: z.literal("image"),
-    attrs: z.object({ src: mediaUrl, alt: shortText, title: shortText }).strict(),
+    attrs: z
+      .object({
+        src: mediaUrl,
+        alt: shortText,
+        title: shortText,
+        width: dimension,
+        height: dimension,
+      })
+      .strict(),
   })
   .strict();
 
@@ -160,7 +173,13 @@ export type TiptapNode =
   | { type: "horizontalRule"; attrs?: Attrs | undefined }
   | {
       type: "image";
-      attrs: { src: string; alt?: string | null | undefined; title?: string | null | undefined };
+      attrs: {
+        src: string;
+        alt?: string | null | undefined;
+        title?: string | null | undefined;
+        width?: number | string | null | undefined;
+        height?: number | string | null | undefined;
+      };
     }
   | { type: "blockquote"; attrs?: Attrs | undefined; content?: Content }
   | { type: "bulletList"; attrs?: Attrs | undefined; content?: TiptapListItem[] | undefined }
