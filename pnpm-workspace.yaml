@@ -3,6 +3,12 @@ allowBuilds:
   esbuild: true
   workerd: true
 
+overrides:
+  # @esbuild-kit/core-utils (deprecated, pulled in by drizzle-kit via
+  # @esbuild-kit/esm-loader) hard-pins esbuild ~0.18.20, which is affected by
+  # GHSA-67mh-4wv8-2f99. No upstream fix exists, so pin it forward.
+  '@esbuild-kit/core-utils>esbuild': ^0.25.0
+
 minimumReleaseAgeExclude:
   - '@vinext/cloudflare@1.0.0-beta.6'
   - vinext@1.0.0-beta.6
