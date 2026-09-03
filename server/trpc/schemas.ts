@@ -220,6 +220,13 @@ export const triviaSubject = z.object({
 export const bySeason = z.object({ seasonId: id });
 export const byTeamName = z.object({ name: z.string().min(1) });
 export const optionalSeason = z.object({ seasonId: id.optional() });
+
+export const STAGE_ROUNDS = ["R1", "R2", "R3", "R4", "R5", "R6", "all"] as const;
+
+export const leaderboardInput = z.object({
+  seasonId: id.optional(),
+  stageRound: z.enum(STAGE_ROUNDS).optional(),
+});
 export const recordsByMetric = z.object({
   metric: z.enum(RECORD_METRICS),
   minAttempts: z.number().int().positive().nullable().optional(),
