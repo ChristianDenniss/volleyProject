@@ -6,6 +6,7 @@ import {
   awards,
   awardsPlayers,
   games,
+  gameStaff,
   matches,
   players,
   records,
@@ -181,6 +182,12 @@ export async function seed(db: Db): Promise<typeof FIXTURES> {
     { teamId: 4, gameId: 3 },
     { teamId: 2, gameId: 4 },
     { teamId: 4, gameId: 4 },
+  ]);
+
+  await insertMany(db, gameStaff, [
+    { gameId: FIXTURES.gameId, userId: FIXTURES.adminId, role: "streamed" },
+    { gameId: 2, userId: FIXTURES.adminId, role: "reffed" },
+    { gameId: FIXTURES.gameId, userId: FIXTURES.userId, role: "commentated" },
   ]);
 
   const statRows = [];

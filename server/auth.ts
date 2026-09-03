@@ -7,6 +7,7 @@ import { createAccessControl } from "better-auth/plugins/access";
 import { adminAc, defaultStatements, userAc } from "better-auth/plugins/admin/access";
 import { makeDb, type Db } from "@db";
 import * as schema from "@db/schema";
+import { ensureLinkedToUser } from "@server/services/players";
 
 const accessControl = createAccessControl(defaultStatements);
 
@@ -83,6 +84,7 @@ export function buildAuthOptions(db: Db, environment: AuthEnvironment): BetterAu
         create: {
           after: async (createdSession) => {
             await promoteRootUser(db, createdSession.userId, rootIds);
+            await ensureLinkedToUser(db, createdSession.userId);
           },
         },
       },

@@ -176,7 +176,7 @@ export function TriviaBoard({
                     : "border-rvl-line-strong text-rvl-ink-2",
                 )}
               >
-                {outcome.correct ? `Correct — ${outcome.answer}.` : "Not quite. Try another clue."}
+                {outcome.correct ? `Correct: ${outcome.answer}.` : "Not quite. Try another clue."}
               </p>
             ) : null}
           </div>

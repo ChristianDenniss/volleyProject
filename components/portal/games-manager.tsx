@@ -11,7 +11,13 @@ interface Row {
   team1Score: number;
   team2Score: number;
   seasonNumber: number | null;
+  videoUrl: string | null;
   teams: { id: number; name: string }[];
+  staff: {
+    streamed: { id: string; name: string; email: string } | null;
+    reffed: { id: string; name: string; email: string } | null;
+    commentated: { id: string; name: string; email: string } | null;
+  };
 }
 
 const COLUMNS: ColumnSpec<Row>[] = [
@@ -24,7 +30,7 @@ const COLUMNS: ColumnSpec<Row>[] = [
   {
     key: "season",
     label: "Season",
-    render: (row) => (row.seasonNumber ? `S${row.seasonNumber}` : "—"),
+    render: (row) => (row.seasonNumber ? `S${row.seasonNumber}` : "-"),
   },
   { key: "stage", label: "Stage", render: (row) => row.stage },
   {
@@ -65,6 +71,9 @@ export function GamesManager({
     { name: "team2Score", label: "Team 2 score", type: "number", required: true },
     { name: "stage", label: "Stage", type: "text" },
     { name: "videoUrl", label: "Video URL", type: "url" },
+    { name: "streamer", label: "Streamer", type: "text", placeholder: "Roblox username" },
+    { name: "referee", label: "Referee", type: "text", placeholder: "Roblox username" },
+    { name: "commentator", label: "Commentator", type: "text", placeholder: "Roblox username" },
   ];
 
   return (
@@ -81,7 +90,10 @@ export function GamesManager({
         team1Score: String(row.team1Score),
         team2Score: String(row.team2Score),
         stage: row.stage,
-        videoUrl: "",
+        videoUrl: row.videoUrl ?? "",
+        streamer: row.staff.streamed?.email ?? "",
+        referee: row.staff.reffed?.email ?? "",
+        commentator: row.staff.commentated?.email ?? "",
       })}
       onCreate={(values) =>
         create.mutateAsync({
@@ -92,6 +104,9 @@ export function GamesManager({
           team2Score: Number.parseInt(pick(values, "team2Score"), 10),
           stage: optionalText(pick(values, "stage")),
           videoUrl: optionalText(pick(values, "videoUrl")) ?? null,
+          streamer: pick(values, "streamer").trim() || null,
+          referee: pick(values, "referee").trim() || null,
+          commentator: pick(values, "commentator").trim() || null,
         })
       }
       onUpdate={(id, values) =>
@@ -103,6 +118,9 @@ export function GamesManager({
             team2Score: Number.parseInt(pick(values, "team2Score"), 10),
             stage: optionalText(pick(values, "stage")),
             videoUrl: optionalText(pick(values, "videoUrl")) ?? null,
+            streamer: pick(values, "streamer").trim() || null,
+            referee: pick(values, "referee").trim() || null,
+            commentator: pick(values, "commentator").trim() || null,
           },
         })
       }

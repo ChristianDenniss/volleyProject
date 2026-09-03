@@ -1,8 +1,9 @@
-import { asc, eq } from "drizzle-orm";
+import { asc, desc, eq } from "drizzle-orm";
 import type { Db } from "@db";
 import { correlatedCount } from "@db/sqlx";
-import { articles, USER_ROLES, user } from "@db/schema";
+import { articles, gameStaff, games, USER_ROLES, user } from "@db/schema";
 import { found } from "./errors";
+import { ensureLinkedToUser, listTeams } from "./players";
 
 export type UserRole = (typeof USER_ROLES)[number];
 
@@ -29,19 +30,58 @@ export async function getById(db: Db, id: string) {
 export async function profile(db: Db, id: string) {
   const row = await getById(db, id);
   if (!row) return null;
-  const authored = await db
-    .select({
-      id: articles.id,
-      title: articles.title,
-      summary: articles.summary,
-      imageUrl: articles.imageUrl,
-      approved: articles.approved,
-      likes: articles.likes,
-      createdAt: articles.createdAt,
-    })
-    .from(articles)
-    .where(eq(articles.authorId, id));
-  return { ...row, articles: authored };
+  const [authored, linked, staffed] = await Promise.all([
+    db
+      .select({
+        id: articles.id,
+        title: articles.title,
+        summary: articles.summary,
+        imageUrl: articles.imageUrl,
+        approved: articles.approved,
+        likes: articles.likes,
+        createdAt: articles.createdAt,
+      })
+      .from(articles)
+      .where(eq(articles.authorId, id)),
+    ensureLinkedToUser(db, id),
+    db
+      .select({
+        id: gameStaff.id,
+        role: gameStaff.role,
+        gameId: games.id,
+        gameName: games.name,
+        date: games.date,
+      })
+      .from(gameStaff)
+      .innerJoin(games, eq(gameStaff.gameId, games.id))
+      .where(eq(gameStaff.userId, id))
+      .orderBy(desc(games.date)),
+  ]);
+
+  const player = linked
+    ? {
+        id: linked.id,
+        name: linked.name,
+        position: linked.position,
+        teams: await listTeams(db, linked.id),
+      }
+    : null;
+
+  const articlesApproved = authored.filter((article) => article.approved === true).length;
+
+  return {
+    ...row,
+    articles: authored,
+    player,
+    staff: staffed,
+    contributions: {
+      streamed: staffed.filter((entry) => entry.role === "streamed").length,
+      reffed: staffed.filter((entry) => entry.role === "reffed").length,
+      commentated: staffed.filter((entry) => entry.role === "commentated").length,
+      articlesApproved,
+      articlesTotal: authored.length,
+    },
+  };
 }
 
 export async function count(db: Db) {

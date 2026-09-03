@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { api } from "@server/trpc/server";
 import { EmptyState } from "@components/site/empty-state";
-import { PageHeader, PageMetric } from "@components/site/page-header";
+import { PageHeader } from "@components/site/page-header";
 import { SchedulesBoard } from "@components/site/schedules-board";
 
 export const dynamic = "force-dynamic";
@@ -26,29 +26,12 @@ export default async function SchedulesPage({
     trpc.seasons.list(),
   ]);
 
-  const completed = rows.filter((match) => match.status === "completed").length;
-
   return (
     <div className="font-display">
       <PageHeader
         eyebrow="Fixtures"
         title="Schedules"
         description="Every match across regions and phases, grouped by the day it was played."
-        meta={
-          <>
-            <PageMetric label="Matches" value={rows.length} />
-            <PageMetric label="Played" value={completed} />
-            <PageMetric label="Scheduled" value={rows.length - completed} />
-            <PageMetric
-              label="Season"
-              value={
-                seasonId
-                  ? (allSeasons.find((entry) => entry.id === seasonId)?.seasonNumber ?? "—")
-                  : "All"
-              }
-            />
-          </>
-        }
       />
 
       {rows.length === 0 ? (

@@ -4,7 +4,7 @@ import { GamesManager } from "@components/portal/games-manager";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Games — Portal" };
+export const metadata = { title: "Games · Portal" };
 
 export default async function PortalGamesPage() {
   const trpc = await api();
@@ -17,7 +17,7 @@ export default async function PortalGamesPage() {
   return (
     <PortalPage
       title="Games"
-      description="A new game is created from two team names; the game name is derived from them."
+      description="A new game is created from two team names. Streamer, referee, and commentator usernames are logged on the game and show up on that user's profile."
     >
       <GamesManager
         rows={rows}

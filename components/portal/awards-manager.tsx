@@ -35,7 +35,7 @@ const COLUMNS: ColumnSpec<Row>[] = [
   {
     key: "season",
     label: "Season",
-    render: (row) => (row.seasonNumber ? `S${row.seasonNumber}` : "—"),
+    render: (row) => (row.seasonNumber ? `S${row.seasonNumber}` : "-"),
   },
   {
     key: "players",

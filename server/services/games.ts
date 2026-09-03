@@ -1,9 +1,31 @@
-import { asc, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, or, sql } from "drizzle-orm";
 import type { Db } from "@db";
 import { insertMany } from "@db/insert";
-import { games, players, seasons, stats, teams, teamsGames } from "@db/schema";
+import {
+  gameStaff,
+  games,
+  players,
+  seasons,
+  stats,
+  teams,
+  teamsGames,
+  user,
+  type ContributionRole,
+} from "@db/schema";
 import { BadRequestError, found, inserted, NotFoundError } from "./errors";
 import type { PartialInput } from "./input";
+
+export interface GameStaffMember {
+  id: string;
+  name: string;
+  email: string;
+}
+
+export interface GameStaffSlots {
+  streamed: GameStaffMember | null;
+  reffed: GameStaffMember | null;
+  commentated: GameStaffMember | null;
+}
 
 export interface GameInput {
   name?: string | null | undefined;
@@ -14,6 +36,9 @@ export interface GameInput {
   team2Score: number;
   stage?: string | undefined;
   videoUrl?: string | null | undefined;
+  streamer?: string | null | undefined;
+  referee?: string | null | undefined;
+  commentator?: string | null | undefined;
 }
 
 const listColumns = {
@@ -59,7 +84,12 @@ export async function listByTeam(db: Db, teamId: number) {
 }
 
 async function attachTeams<T extends { id: number }>(db: Db, rows: T[]) {
-  if (rows.length === 0) return rows.map((row) => ({ ...row, teams: [] as TeamRef[] }));
+  if (rows.length === 0) {
+    return attachStaff(
+      db,
+      rows.map((row) => ({ ...row, teams: [] as TeamRef[] })),
+    );
+  }
 
   const links = await db
     .select({
@@ -84,7 +114,76 @@ async function attachTeams<T extends { id: number }>(db: Db, rows: T[]) {
     byGame.set(link.gameId, bucket);
   }
 
-  return rows.map((row) => ({ ...row, teams: byGame.get(row.id) ?? [] }));
+  const withTeams = rows.map((row) => ({ ...row, teams: byGame.get(row.id) ?? [] }));
+  return attachStaff(db, withTeams);
+}
+
+function emptyStaff(): GameStaffSlots {
+  return { streamed: null, reffed: null, commentated: null };
+}
+
+async function attachStaff<T extends { id: number }>(db: Db, rows: T[]) {
+  if (rows.length === 0) return rows.map((row) => ({ ...row, staff: emptyStaff() }));
+
+  const links = await db
+    .select({
+      gameId: gameStaff.gameId,
+      role: gameStaff.role,
+      id: user.id,
+      name: user.name,
+      email: user.email,
+    })
+    .from(gameStaff)
+    .innerJoin(user, eq(gameStaff.userId, user.id))
+    .where(
+      inArray(
+        gameStaff.gameId,
+        rows.map((row) => row.id),
+      ),
+    );
+
+  const byGame = new Map<number, GameStaffSlots>();
+  for (const link of links) {
+    const bucket = byGame.get(link.gameId) ?? emptyStaff();
+    bucket[link.role] = { id: link.id, name: link.name, email: link.email };
+    byGame.set(link.gameId, bucket);
+  }
+
+  return rows.map((row) => ({ ...row, staff: byGame.get(row.id) ?? emptyStaff() }));
+}
+
+async function findUserByHandle(db: Db, handle: string) {
+  const row = await db
+    .select({ id: user.id, name: user.name, email: user.email })
+    .from(user)
+    .where(or(eq(user.email, handle), eq(user.name, handle)))
+    .get();
+  return row ?? null;
+}
+
+async function setStaffRole(
+  db: Db,
+  gameId: number,
+  role: ContributionRole,
+  handle: string | null | undefined,
+) {
+  if (handle === undefined) return;
+  await db.delete(gameStaff).where(and(eq(gameStaff.gameId, gameId), eq(gameStaff.role, role)));
+  if (!handle) return;
+
+  const person = await findUserByHandle(db, handle);
+  if (!person) throw new NotFoundError(`User ${handle}`);
+  await db.insert(gameStaff).values({ gameId, userId: person.id, role });
+}
+
+async function syncStaff(
+  db: Db,
+  gameId: number,
+  staff: Pick<GameInput, "streamer" | "referee" | "commentator">,
+) {
+  await setStaffRole(db, gameId, "streamed", staff.streamer);
+  await setStaffRole(db, gameId, "reffed", staff.referee);
+  await setStaffRole(db, gameId, "commentated", staff.commentator);
 }
 
 interface TeamRef {
@@ -97,7 +196,7 @@ export async function getById(db: Db, id: number) {
   const game = await db.query.games.findFirst({ where: eq(games.id, id) });
   if (!game) return null;
 
-  const [gameTeams, gameStats, season] = await Promise.all([
+  const [gameTeams, gameStats, season, [withStaff]] = await Promise.all([
     db
       .select({ id: teams.id, name: teams.name, logoUrl: teams.logoUrl, placement: teams.placement })
       .from(teamsGames)
@@ -129,9 +228,16 @@ export async function getById(db: Db, id: number) {
     game.seasonId
       ? db.query.seasons.findFirst({ where: eq(seasons.id, game.seasonId) })
       : Promise.resolve(undefined),
+    attachStaff(db, [{ id }]),
   ]);
 
-  return { ...game, teams: gameTeams, stats: gameStats, season: season ?? null };
+  return {
+    ...game,
+    teams: gameTeams,
+    stats: gameStats,
+    season: season ?? null,
+    staff: withStaff?.staff ?? emptyStaff(),
+  };
 }
 
 export async function getScore(db: Db, id: number) {
@@ -185,6 +291,7 @@ export async function create(db: Db, input: GameInput) {
     teamsGames,
     input.teamIds.map((teamId) => ({ teamId, gameId: row.id })),
   );
+  await syncStaff(db, row.id, input);
 
   return row;
 }
@@ -208,9 +315,14 @@ export async function createByNames(
 }
 
 export async function update(db: Db, id: number, input: PartialInput<Omit<GameInput, "teamIds">> & { teamIds?: number[] | undefined }) {
-  const { teamIds, ...rest } = input;
-  const [row] = await db.update(games).set(rest).where(eq(games.id, id)).returning();
-  found(row, `Game ${id}`);
+  const { teamIds, streamer, referee, commentator, ...rest } = input;
+  const existing = await db.query.games.findFirst({ where: eq(games.id, id) });
+  found(existing, `Game ${id}`);
+
+  const [row] =
+    Object.keys(rest).length > 0
+      ? await db.update(games).set(rest).where(eq(games.id, id)).returning()
+      : [existing];
 
   if (teamIds) {
     await db.delete(teamsGames).where(eq(teamsGames.gameId, id));
@@ -220,6 +332,7 @@ export async function update(db: Db, id: number, input: PartialInput<Omit<GameIn
       teamIds.map((teamId) => ({ teamId, gameId: id })),
     );
   }
+  await syncStaff(db, id, { streamer, referee, commentator });
 
   return row;
 }

@@ -236,6 +236,17 @@ export const routeManifest: RouteManifestEntry[] = [
     status: "done",
   },
   {
+    path: "/vector-graph",
+    origin: "ported",
+    source: "FE/src/App.tsx",
+    target: "app/(site)/vector-graph/page.tsx",
+    rendering: "ssr",
+    auth: "public",
+    services: ["stats.vectorGraph", "seasons.list"],
+    metadata: "static",
+    status: "done",
+  },
+  {
     path: "/schedules",
     origin: "ported",
     source: "FE/src/App.tsx:76",

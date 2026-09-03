@@ -4,7 +4,7 @@ import { TeamsManager } from "@components/portal/teams-manager";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Teams — Portal" };
+export const metadata = { title: "Teams · Portal" };
 
 export default async function PortalTeamsPage() {
   const trpc = await api();

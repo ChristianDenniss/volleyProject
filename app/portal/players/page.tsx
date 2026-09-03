@@ -4,7 +4,7 @@ import { PlayersManager } from "@components/portal/players-manager";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Players — Portal" };
+export const metadata = { title: "Players · Portal" };
 
 export default async function PortalPlayersPage() {
   const trpc = await api();

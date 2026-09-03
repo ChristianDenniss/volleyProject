@@ -172,7 +172,7 @@ export function PlayersList({ players }: { players: PlayerListRow[] }) {
                               href={`/teams/${encodeURIComponent(team.name)}`}
                               className="border border-rvl-line px-3 py-1.5 font-mono text-[0.66rem] uppercase tracking-[0.1em] text-rvl-ink-2 no-underline transition-colors hover:border-rvl-accent-soft hover:text-rvl-accent"
                             >
-                              {team.name} · S{team.seasonNumber ?? "—"}
+                              {team.name} · S{team.seasonNumber ?? "-"}
                             </Link>
                           ))}
                         </div>

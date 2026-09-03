@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { api } from "@server/trpc/server";
 import { EmptyState } from "@components/site/empty-state";
-import { PageHeader, PageMetric } from "@components/site/page-header";
+import { PageHeader } from "@components/site/page-header";
 import { RecordsBoard } from "@components/site/records-board";
 
 export const dynamic = "force-dynamic";
@@ -15,22 +15,12 @@ export default async function RecordsPage() {
   const trpc = await api();
   const rows = await trpc.records.list();
 
-  const metricCount = new Set(rows.map((row) => row.metric)).size;
-  const holders = new Set(rows.map((row) => row.playerId)).size;
-
   return (
     <div className="font-display">
       <PageHeader
         eyebrow="Record book"
         title="Records"
         description="The top ten marks for every metric, split between single-game and full-season performances."
-        meta={
-          <>
-            <PageMetric label="Entries" value={rows.length} />
-            <PageMetric label="Metrics" value={metricCount} />
-            <PageMetric label="Holders" value={holders} />
-          </>
-        }
       />
 
       {rows.length === 0 ? (

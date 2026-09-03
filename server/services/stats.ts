@@ -1,7 +1,8 @@
 import { and, asc, desc, eq, sql } from "drizzle-orm";
 import type { Db } from "@db";
 import { insertMany } from "@db/insert";
-import { games, players, stats } from "@db/schema";
+import { games, players, seasons, stats } from "@db/schema";
+import type { VectorGraphPlayer } from "@/lib/analytics/stats-vectorization";
 import { ConflictError, found, NotFoundError } from "./errors";
 import type { PartialInput } from "./input";
 
@@ -92,6 +93,65 @@ export async function listByGame(db: Db, gameId: number) {
 
 export async function count(db: Db) {
   return db.$count(stats);
+}
+
+export async function vectorGraph(db: Db): Promise<VectorGraphPlayer[]> {
+  const rows = await db
+    .select({
+      playerId: players.id,
+      playerName: players.name,
+      spikeKills: stats.spikeKills,
+      spikeAttempts: stats.spikeAttempts,
+      spikingErrors: stats.spikingErrors,
+      apeKills: stats.apeKills,
+      apeAttempts: stats.apeAttempts,
+      assists: stats.assists,
+      settingErrors: stats.settingErrors,
+      blocks: stats.blocks,
+      blockFollows: stats.blockFollows,
+      digs: stats.digs,
+      aces: stats.aces,
+      servingErrors: stats.servingErrors,
+      miscErrors: stats.miscErrors,
+      team1Score: games.team1Score,
+      team2Score: games.team2Score,
+      seasonNumber: seasons.seasonNumber,
+    })
+    .from(stats)
+    .innerJoin(players, eq(stats.playerId, players.id))
+    .innerJoin(games, eq(stats.gameId, games.id))
+    .innerJoin(seasons, eq(games.seasonId, seasons.id))
+    .orderBy(asc(players.name), desc(games.date));
+
+  const byPlayer = new Map<number, VectorGraphPlayer>();
+  for (const row of rows) {
+    let player = byPlayer.get(row.playerId);
+    if (!player) {
+      player = { id: row.playerId, name: row.playerName, stats: [] };
+      byPlayer.set(row.playerId, player);
+    }
+    player.stats.push({
+      spikeKills: row.spikeKills,
+      spikeAttempts: row.spikeAttempts,
+      spikingErrors: row.spikingErrors,
+      apeKills: row.apeKills,
+      apeAttempts: row.apeAttempts,
+      assists: row.assists,
+      settingErrors: row.settingErrors,
+      blocks: row.blocks,
+      blockFollows: row.blockFollows,
+      digs: row.digs,
+      aces: row.aces,
+      servingErrors: row.servingErrors,
+      miscErrors: row.miscErrors,
+      game: {
+        team1Score: row.team1Score,
+        team2Score: row.team2Score,
+        season: { seasonNumber: row.seasonNumber },
+      },
+    });
+  }
+  return [...byPlayer.values()];
 }
 
 const totalKills = sql<number>`sum(${stats.spikeKills} + ${stats.apeKills})`;

@@ -3,6 +3,7 @@ import type { Db } from "@db";
 import { correlatedCount } from "@db/sqlx";
 import { insertMany } from "@db/insert";
 import {
+  account,
   awards,
   awardsPlayers,
   games,
@@ -12,6 +13,7 @@ import {
   stats,
   teams,
   teamsPlayers,
+  user,
 } from "@db/schema";
 import { ConflictError, found, inserted, NotFoundError } from "./errors";
 import type { PartialInput } from "./input";
@@ -59,6 +61,7 @@ export async function getById(db: Db, id: number) {
         gameName: games.name,
         gameDate: games.date,
         seasonId: games.seasonId,
+        seasonNumber: seasons.seasonNumber,
         spikeKills: stats.spikeKills,
         spikeAttempts: stats.spikeAttempts,
         spikingErrors: stats.spikingErrors,
@@ -75,6 +78,7 @@ export async function getById(db: Db, id: number) {
       })
       .from(stats)
       .innerJoin(games, eq(stats.gameId, games.id))
+      .leftJoin(seasons, eq(games.seasonId, seasons.id))
       .where(eq(stats.playerId, id))
       .orderBy(asc(games.date)),
     db
@@ -84,9 +88,11 @@ export async function getById(db: Db, id: number) {
         description: awards.description,
         imageUrl: awards.imageUrl,
         seasonId: awards.seasonId,
+        seasonNumber: seasons.seasonNumber,
       })
       .from(awardsPlayers)
       .innerJoin(awards, eq(awardsPlayers.awardId, awards.id))
+      .leftJoin(seasons, eq(awards.seasonId, seasons.id))
       .where(eq(awardsPlayers.playerId, id)),
     db.select().from(records).where(eq(records.playerId, id)),
   ]);
@@ -212,11 +218,82 @@ export async function remove(db: Db, id: number) {
   return { id };
 }
 
+export function usernameForUser(row: { name: string; email: string }): string {
+  const email = row.email.trim();
+  if (email.includes("@")) return row.name.trim().toLowerCase();
+  return email.toLowerCase();
+}
+
+export async function ensureLinkedToUser(db: Db, userId: string) {
+  const already = await db.query.players.findFirst({ where: eq(players.userId, userId) });
+  if (already) return already;
+
+  const roblox = await db.query.account.findFirst({
+    where: and(eq(account.userId, userId), eq(account.providerId, "roblox")),
+  });
+  const robloxUserId = roblox?.accountId ?? null;
+
+  if (robloxUserId) {
+    const byRoblox = await db.query.players.findFirst({
+      where: eq(players.robloxUserId, robloxUserId),
+    });
+    if (byRoblox && !byRoblox.userId) {
+      const [updated] = await db
+        .update(players)
+        .set({ userId })
+        .where(eq(players.id, byRoblox.id))
+        .returning();
+      return updated ?? byRoblox;
+    }
+    if (byRoblox?.userId === userId) return byRoblox;
+  }
+
+  const siteUser = await db.query.user.findFirst({ where: eq(user.id, userId) });
+  if (!siteUser) return null;
+
+  const username = usernameForUser(siteUser);
+  if (!username) return null;
+
+  const byName = await db.query.players.findFirst({
+    where: sql`lower(${players.name}) = ${username}`,
+  });
+
+  if (byName) {
+    if (byName.userId && byName.userId !== userId) return null;
+    const [updated] = await db
+      .update(players)
+      .set({ userId, robloxUserId: byName.robloxUserId ?? robloxUserId })
+      .where(eq(players.id, byName.id))
+      .returning();
+    return updated ?? byName;
+  }
+
+  const [created] = await db
+    .insert(players)
+    .values({ name: username, position: "N/A", userId, robloxUserId })
+    .returning();
+  return created ?? null;
+}
+
 export async function merge(db: Db, targetId: number, mergedId: number) {
   const target = await db.query.players.findFirst({ where: eq(players.id, targetId) });
   if (!target) throw new NotFoundError(`Target player ${targetId}`);
   const merged = await db.query.players.findFirst({ where: eq(players.id, mergedId) });
   if (!merged) throw new NotFoundError(`Player to merge ${mergedId}`);
+
+  if (merged.userId || merged.robloxUserId) {
+    await db
+      .update(players)
+      .set({ userId: null, robloxUserId: null })
+      .where(eq(players.id, mergedId));
+    await db
+      .update(players)
+      .set({
+        userId: target.userId ?? merged.userId,
+        robloxUserId: target.robloxUserId ?? merged.robloxUserId,
+      })
+      .where(eq(players.id, targetId));
+  }
 
   const [mergedTeams, mergedAwards] = await Promise.all([
     db

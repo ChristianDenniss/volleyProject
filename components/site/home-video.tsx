@@ -79,7 +79,7 @@ export function HomeVideo({ videoId }: { videoId: string }) {
     <section
       ref={containerRef}
       aria-label="Volleyball promotional video"
-      className="relative -mb-px ml-[calc(-50vw+50%)] w-screen overflow-hidden rounded-[10px] pt-[56.25%] shadow-[0_3px_12px_rgba(0,0,0,0.1)] max-md:rounded-none"
+      className="relative w-full overflow-hidden pt-[56.25%]"
     >
       <div id="yt-player" className="absolute! inset-0 h-full! w-full!" />
     </section>

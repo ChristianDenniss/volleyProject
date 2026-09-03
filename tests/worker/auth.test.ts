@@ -2,7 +2,7 @@ import { env } from "cloudflare:test";
 import { beforeEach, describe, expect, it } from "vitest";
 import { eq } from "drizzle-orm";
 import { makeDb, type Db } from "@db";
-import { account, user } from "@db/schema";
+import { account, players, user } from "@db/schema";
 import { buildAuthOptions, makeAuth, parseRootRobloxIds, type Auth } from "@server/auth";
 import { users } from "@server/services";
 import { FIXTURES, seed } from "../fixtures/seed";
@@ -177,5 +177,16 @@ describe("root accounts from the environment", () => {
 
     const untouched = await users.getById(db, FIXTURES.userId);
     expect(untouched?.role).toBe("user");
+  });
+
+  it("links the signed-in Roblox account to a player on session create", async () => {
+    await linkRoblox(FIXTURES.userId, ROOT_ID);
+    await runSessionHook(undefined, FIXTURES.userId);
+
+    const linked = await db.query.players.findFirst({
+      where: eq(players.userId, FIXTURES.userId),
+    });
+    expect(linked?.name).toBe("fixtureplayer");
+    expect(linked?.robloxUserId).toBe(ROOT_ID);
   });
 });
