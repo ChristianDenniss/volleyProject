@@ -185,15 +185,36 @@ export const games = sqliteTable(
   {
     id: integer().primaryKey({ autoIncrement: true }),
     name: text(),
-    team1Score: integer().notNull().default(0),
-    team2Score: integer().notNull().default(0),
+    matchNumber: text(),
+    round: text(),
+    status: text({ enum: MATCH_STATUSES }).notNull().default("completed"),
+    phase: text({ enum: MATCH_PHASES }).notNull().default("qualifiers"),
+    region: text({ enum: MATCH_REGIONS }).notNull().default("na"),
+    team1Score: integer(),
+    team2Score: integer(),
+    set1Score: text(),
+    set2Score: text(),
+    set3Score: text(),
+    set4Score: text(),
+    set5Score: text(),
     date: text().notNull(),
     videoUrl: text(),
     stage: text().notNull().default("Winners Bracket; Round of 16"),
     seasonId: integer().references(() => seasons.id, { onDelete: "cascade" }),
+    challongeMatchId: text(),
+    challongeTournamentId: text(),
+    challongeRound: integer(),
+    tags: text({ mode: "json" }).$type<string[]>(),
     ...timestamps,
   },
-  (table) => [index("games_season_id_idx").on(table.seasonId), index("games_date_idx").on(table.date)],
+  (table) => [
+    index("games_season_id_idx").on(table.seasonId),
+    index("games_date_idx").on(table.date),
+    index("games_round_idx").on(table.round),
+    check("games_status_check", sql`${table.status} in ${inList(MATCH_STATUSES)}`),
+    check("games_phase_check", sql`${table.phase} in ${inList(MATCH_PHASES)}`),
+    check("games_region_check", sql`${table.region} in ${inList(MATCH_REGIONS)}`),
+  ],
 );
 
 export const stats = sqliteTable(
@@ -282,45 +303,6 @@ export const records = sqliteTable(
   ],
 );
 
-export const matches = sqliteTable(
-  "matches",
-  {
-    id: integer().primaryKey({ autoIncrement: true }),
-    matchNumber: text().notNull(),
-    round: text().notNull(),
-    status: text({ enum: MATCH_STATUSES }).notNull().default("scheduled"),
-    phase: text({ enum: MATCH_PHASES }).notNull().default("qualifiers"),
-    region: text({ enum: MATCH_REGIONS }).notNull().default("na"),
-    date: text().notNull(),
-    team1Name: text(),
-    team2Name: text(),
-    team1LogoUrl: text(),
-    team2LogoUrl: text(),
-    team1Score: integer(),
-    team2Score: integer(),
-    set1Score: text(),
-    set2Score: text(),
-    set3Score: text(),
-    set4Score: text(),
-    set5Score: text(),
-    challongeMatchId: text(),
-    challongeTournamentId: text(),
-    challongeRound: integer(),
-    tags: text({ mode: "json" }).$type<string[]>(),
-    seasonId: integer()
-      .notNull()
-      .references(() => seasons.id, { onDelete: "cascade" }),
-    ...timestamps,
-  },
-  (table) => [
-    index("matches_season_id_idx").on(table.seasonId),
-    index("matches_round_idx").on(table.round),
-    check("matches_status_check", sql`${table.status} in ${inList(MATCH_STATUSES)}`),
-    check("matches_phase_check", sql`${table.phase} in ${inList(MATCH_PHASES)}`),
-    check("matches_region_check", sql`${table.region} in ${inList(MATCH_REGIONS)}`),
-  ],
-);
-
 export const articles = sqliteTable(
   "articles",
   {
@@ -358,16 +340,18 @@ export const teamsPlayers = sqliteTable(
 export const teamsGames = sqliteTable(
   "teams_games",
   {
-    teamId: integer()
-      .notNull()
-      .references(() => teams.id, { onDelete: "cascade" }),
     gameId: integer()
       .notNull()
       .references(() => games.id, { onDelete: "cascade" }),
+    slot: integer().notNull(),
+    teamId: integer()
+      .notNull()
+      .references(() => teams.id, { onDelete: "cascade" }),
   },
   (table) => [
-    primaryKey({ columns: [table.teamId, table.gameId] }),
-    index("teams_games_game_id_idx").on(table.gameId),
+    primaryKey({ columns: [table.gameId, table.slot] }),
+    check("teams_games_slot_check", sql`${table.slot} in (1, 2)`),
+    index("teams_games_team_id_idx").on(table.teamId),
   ],
 );
 
@@ -463,7 +447,6 @@ export const accountRelations = relations(account, ({ one }) => ({
 export const seasonsRelations = relations(seasons, ({ many }) => ({
   teams: many(teams),
   games: many(games),
-  matches: many(matches),
   awards: many(awards),
   records: many(records),
 }));
@@ -505,10 +488,6 @@ export const recordsRelations = relations(records, ({ one }) => ({
   game: one(games, { fields: [records.gameId], references: [games.id] }),
 }));
 
-export const matchesRelations = relations(matches, ({ one }) => ({
-  season: one(seasons, { fields: [matches.seasonId], references: [seasons.id] }),
-}));
-
 export const articlesRelations = relations(articles, ({ one, many }) => ({
   author: one(user, { fields: [articles.authorId], references: [user.id] }),
   likedBy: many(articleLikes),
@@ -547,7 +526,6 @@ export type Game = typeof games.$inferSelect;
 export type Stat = typeof stats.$inferSelect;
 export type Award = typeof awards.$inferSelect;
 export type Record_ = typeof records.$inferSelect;
-export type Match = typeof matches.$inferSelect;
 export type Article = typeof articles.$inferSelect;
 export type JobRun = typeof jobRuns.$inferSelect;
 export type GameStaff = typeof gameStaff.$inferSelect;
