@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { PageHeader, PageMetric } from "@components/site/page-header";
+import { PageHeader } from "@components/site/page-header";
 
 export const metadata: Metadata = {
   title: "FAQ",
@@ -155,21 +155,12 @@ const LINKS = [
 ];
 
 export default function FaqPage() {
-  const questionCount = GROUPS.reduce((sum, group) => sum + group.items.length, 0);
-
   return (
     <div className="font-display">
       <PageHeader
         eyebrow="Help desk"
         title="Frequently asked questions"
         description="How the league runs, how to join it, and where to go when something breaks."
-        meta={
-          <>
-            <PageMetric label="Questions" value={questionCount} />
-            <PageMetric label="Topics" value={GROUPS.length} />
-            <PageMetric label="Links" value={LINKS.length} />
-          </>
-        }
       />
 
       <section className="grid grid-cols-1 gap-8 border-b border-rvl-line px-5 py-12 sm:px-8 md:grid-cols-[210px_1fr] md:gap-14 xl:px-14">

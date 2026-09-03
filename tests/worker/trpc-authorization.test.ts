@@ -184,6 +184,7 @@ describe("authorization sweep", () => {
       "seasons.list",
       "seasons.byId",
       "stats.leaderboard",
+      "stats.vectorGraph",
       "teams.list",
       "teams.byName",
       "teams.playersBySeason",

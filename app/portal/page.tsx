@@ -125,7 +125,7 @@ export default async function PortalDashboard() {
               <span className="text-[0.56rem] uppercase tracking-[0.22em] text-rvl-dim">
                 Rows written
               </span>
-              <span className="text-[0.95rem] tabular-nums">{job?.rowsWritten ?? "—"}</span>
+              <span className="text-[0.95rem] tabular-nums">{job?.rowsWritten ?? "-"}</span>
             </div>
             {job?.error ? (
               <div className="flex min-w-0 flex-col gap-1">

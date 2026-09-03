@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { PageHeader, PageMetric } from "@components/site/page-header";
+import { PageHeader } from "@components/site/page-header";
 
 export const metadata: Metadata = {
   title: "About",
@@ -61,12 +61,6 @@ export default function AboutPage() {
         eyebrow="The league"
         title="About Volleyball 4.2"
         description="The central hub for the Roblox Volleyball League, with tools for players, teams and fans."
-        meta={
-          <>
-            <PageMetric label="Areas" value={SECTIONS.length} />
-            <PageMetric label="Game" value="Volleyball 4.2" />
-          </>
-        }
       />
 
       {SECTIONS.map((section) => (

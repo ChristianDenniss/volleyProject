@@ -169,7 +169,7 @@ export function TeamsList({ teams }: { teams: TeamListRow[] }) {
               <dl className="relative mt-5 flex gap-7 font-mono">
                 <div className="flex flex-col gap-1">
                   <dt className="text-[0.56rem] uppercase tracking-[0.2em] text-rvl-dim">Season</dt>
-                  <dd className="m-0 text-[0.95rem] tabular-nums">{team.seasonNumber ?? "—"}</dd>
+                  <dd className="m-0 text-[0.95rem] tabular-nums">{team.seasonNumber ?? "-"}</dd>
                 </div>
                 <div className="flex flex-col gap-1">
                   <dt className="text-[0.56rem] uppercase tracking-[0.2em] text-rvl-dim">

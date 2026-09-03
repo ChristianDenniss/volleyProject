@@ -2,9 +2,7 @@ import Link from "next/link";
 import { getSessionUser } from "@server/session";
 import { isAdmin } from "@server/services/users";
 import { GuestMenu } from "./guest-menu";
-import { SignOutButton } from "./sign-out-button";
 import { SiteTopbarNav } from "./site-topbar-nav";
-import { ThemeToggle } from "./theme-toggle";
 
 export async function SiteTopbar() {
   const user = await getSessionUser();
@@ -21,10 +19,12 @@ export async function SiteTopbar() {
         <span className="sr-only whitespace-nowrap xs:not-sr-only xs:inline">Volleyball 4-2</span>
       </Link>
 
-      <SiteTopbarNav isAdmin={user !== null && isAdmin(user.role)} />
+      <SiteTopbarNav
+        isAdmin={user !== null && isAdmin(user.role)}
+        isSignedIn={user !== null}
+      />
 
       <div className="ml-auto flex shrink-0 items-center gap-3 sm:gap-4">
-        <ThemeToggle />
         <a
           href="https://www.roblox.com/games/3840352284/Volleyball-4-2"
           target="_blank"
@@ -39,14 +39,13 @@ export async function SiteTopbar() {
             <span className="hidden font-mono text-[0.72rem] uppercase tracking-[0.12em] text-rvl-dim lg:inline">
               {user.name}
             </span>
-            <Link href="/profile" className="block size-8">
+            <Link href="/profile" className="block size-11">
               <img
                 src={user.image ?? "/images/pfpLogo.png"}
                 alt="Profile"
-                className="size-8 rounded-xs border border-rvl-line object-cover"
+                className="size-11 rounded-xs border border-rvl-line object-cover"
               />
             </Link>
-            <SignOutButton />
           </div>
         ) : (
           <GuestMenu />

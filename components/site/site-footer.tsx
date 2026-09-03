@@ -10,6 +10,7 @@ const NAV = [
   },
   { href: "/about", label: "About", external: false },
   { href: "/privacy-policy", label: "Privacy Policy", external: false },
+  { href: "/terms-of-service", label: "Terms of Service", external: false },
   { href: "/contact", label: "Contact Us", external: false },
   { href: "/credits", label: "Credits", external: false },
 ];
@@ -35,13 +36,16 @@ const SOCIALS = [
 export function SiteFooter() {
   return (
     <footer className="w-full shrink-0 border-t border-rvl-line bg-rvl-panel text-rvl-ink">
-      <div className="flex flex-col gap-10 px-5 py-12 sm:px-8 xl:px-14">
+      <div className="px-5 py-12 sm:px-8 xl:px-14">
         <div className="flex flex-col gap-8 md:grid md:grid-cols-[210px_1fr] md:gap-14">
           <div className="flex flex-col gap-4">
             <img src="/rvlLogo.png" alt="RVL Logo" className="h-14 w-auto self-start" />
             <span className="font-mono text-[0.62rem] uppercase tracking-[0.2em] text-rvl-dim">
               Roblox Volleyball League
             </span>
+            <p className="m-0 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-rvl-dim">
+              Copyright (C) {new Date().getFullYear()} Volleyball World · All rights reserved
+            </p>
           </div>
 
           <div className="flex flex-col gap-8 sm:flex-row sm:items-start sm:justify-between">
@@ -91,12 +95,6 @@ export function SiteFooter() {
               ))}
             </div>
           </div>
-        </div>
-
-        <div className="border-t border-rvl-line pt-6">
-          <p className="m-0 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-rvl-dim">
-            Copyright (C) {new Date().getFullYear()} Volleyball World · All rights reserved
-          </p>
         </div>
       </div>
     </footer>

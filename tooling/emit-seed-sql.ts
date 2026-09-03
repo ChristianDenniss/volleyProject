@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { drizzle } from "drizzle-orm/sqlite-proxy";
 import * as schema from "../server/db/schema";
-import { seed } from "../tests/fixtures/seed";
+import { seedDev } from "../tests/fixtures/dev-seed";
 import type { Db } from "../server/db";
 
 const outFile = path.join(import.meta.dirname, "..", "tests", "fixtures", "seed.sql");
@@ -37,7 +37,7 @@ async function main(): Promise<void> {
     { schema, casing: "snake_case" },
   ) as unknown as Db;
 
-  await seed(db);
+  await seedDev(db);
 
   const header = [
     "delete from article_likes;",
@@ -48,6 +48,7 @@ async function main(): Promise<void> {
     "delete from stats;",
     "delete from teams_games;",
     "delete from teams_players;",
+    "delete from game_staff;",
     "delete from matches;",
     "delete from games;",
     "delete from teams;",

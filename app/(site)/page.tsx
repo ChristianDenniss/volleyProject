@@ -111,21 +111,21 @@ export default async function HomePage() {
       metric: "Kills · one game",
       value: killRecords[0].value,
       name: killRecords[0].playerName,
-      context: `S${killRecords[0].seasonNumber ?? "—"} · record`,
+      context: `S${killRecords[0].seasonNumber ?? "-"} · record`,
       href: "/records",
     },
     blockRecords[0] && {
       metric: "Blocks · one game",
       value: blockRecords[0].value,
       name: blockRecords[0].playerName,
-      context: `S${blockRecords[0].seasonNumber ?? "—"} · record`,
+      context: `S${blockRecords[0].seasonNumber ?? "-"} · record`,
       href: "/records",
     },
     aceRecords[0] && {
       metric: "Aces · one game",
       value: aceRecords[0].value,
       name: aceRecords[0].playerName,
-      context: `S${aceRecords[0].seasonNumber ?? "—"} · record`,
+      context: `S${aceRecords[0].seasonNumber ?? "-"} · record`,
       href: "/records",
     },
   ].flatMap((entry) => (entry ? [entry] : []));
@@ -136,7 +136,7 @@ export default async function HomePage() {
         <div className="flex flex-col gap-1">
           <span className="text-[0.58rem] uppercase tracking-[0.22em] text-rvl-dim">Season</span>
           <span className="text-[1.05rem] font-medium tabular-nums text-rvl-accent">
-            {season?.seasonNumber ?? "—"}
+            {season?.seasonNumber ?? "-"}
           </span>
         </div>
         <div className="flex flex-col gap-1">
@@ -339,7 +339,7 @@ export default async function HomePage() {
       ) : null}
 
       {numbers.length > 0 ? (
-        <section className={railband}>
+        <section className="grid grid-cols-1 gap-10 px-5 pt-14 pb-8 sm:px-8 sm:pt-20 md:grid-cols-[210px_1fr] md:gap-16 xl:px-14">
           <div>
             <h2 className={railHeading}>Numbers</h2>
             <p className="m-0 mb-4 text-[0.84rem] text-rvl-dim">
@@ -371,42 +371,22 @@ export default async function HomePage() {
         </section>
       ) : null}
 
-      <section className="border-b border-rvl-line">
-        <div className="px-5 pt-14 pb-7 sm:px-8 sm:pt-18 xl:px-14">
-          <h2 className="m-0 font-mono text-[0.72rem] font-bold uppercase tracking-[0.24em] text-rvl-accent">
-            Watch
-          </h2>
-        </div>
-        <HomeVideo videoId="jUYJKjPvPoQ" />
-      </section>
+      <HomeVideo videoId="jUYJKjPvPoQ" />
 
-      <section className="flex flex-col gap-8 border-b border-rvl-line bg-rvl-panel px-5 py-14 sm:px-8 lg:flex-row lg:items-center lg:gap-11 xl:px-14">
-        <div>
-          <h2 className="m-0 mb-2.5 text-[1.7rem] font-black uppercase leading-none tracking-[-0.03em] sm:text-[2.1rem]">
-            {season ? `Tryouts open before Season ${season.seasonNumber + 1}` : "Tryouts are open"}
-          </h2>
-          <p className="m-0 max-w-[52ch] text-[0.95rem] text-rvl-ink-2">
-            Play on Roblox, then sign up in Discord — rosters lock the week qualifiers start.
-          </p>
-        </div>
-        <div className="flex shrink-0 flex-wrap gap-3 lg:ml-auto">
-          <a
-            href="https://www.roblox.com/games/3840352284/Volleyball-4-2"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bg-rvl-accent-bg px-6 py-4 text-[0.84rem] font-bold uppercase tracking-[0.11em] text-rvl-on-accent no-underline transition-opacity hover:opacity-85"
-          >
-            Play on Roblox
-          </a>
-          <a
-            href="https://discord.gg/volleyball"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="border border-rvl-line px-6 py-4 text-[0.84rem] font-semibold uppercase tracking-[0.11em] no-underline transition-colors hover:border-rvl-accent-soft hover:text-rvl-accent"
-          >
-            Join Discord
-          </a>
-        </div>
+      <section className="relative h-[500px] min-h-[500px] overflow-hidden max-md:h-[300px] max-md:min-h-0 max-[480px]:h-[250px] min-[1600px]:h-[600px] min-[1600px]:min-h-[600px] min-[2000px]:h-[700px] min-[2000px]:min-h-[700px]">
+        <img
+          src="/images/callToAction.png"
+          alt="Volleyball App Promo"
+          className="absolute inset-0 size-full object-cover"
+        />
+        <a
+          href="https://discord.gg/volleyball"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="absolute top-5 right-5 bg-rvl-accent-bg px-6 py-2.5 text-[0.84rem] font-bold uppercase tracking-[0.11em] text-rvl-on-accent no-underline transition-opacity hover:opacity-85 max-md:px-5 max-md:py-2 max-md:text-[0.78rem] max-[480px]:px-4 max-[480px]:py-1.5 max-[480px]:text-[0.72rem]"
+        >
+          Join RVL Today
+        </a>
       </section>
     </div>
   );

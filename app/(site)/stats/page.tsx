@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { api } from "@server/trpc/server";
 import { EmptyState } from "@components/site/empty-state";
-import { PageHeader, PageMetric } from "@components/site/page-header";
+import { PageHeader } from "@components/site/page-header";
 import { StatsLeaderboard } from "@components/site/stats-leaderboard";
 
 export const dynamic = "force-dynamic";
@@ -26,30 +26,12 @@ export default async function StatsPage({
     trpc.seasons.list(),
   ]);
 
-  const totalKills = rows.reduce((sum, row) => sum + Number(row.totalKills ?? 0), 0);
-  const totalGames = new Set(rows.flatMap((row) => (row.gamesPlayed ? [row.playerId] : []))).size;
-
   return (
     <div className="font-display">
       <PageHeader
         eyebrow="Leaderboard"
         title="Stat leaders"
         description="Sort any column to rank the league. Season totals come from every recorded stat line."
-        meta={
-          <>
-            <PageMetric label="Players" value={rows.length} />
-            <PageMetric label="With games" value={totalGames} />
-            <PageMetric label="Kills logged" value={totalKills.toLocaleString()} />
-            <PageMetric
-              label="Season"
-              value={
-                seasonId
-                  ? (allSeasons.find((entry) => entry.id === seasonId)?.seasonNumber ?? "—")
-                  : "All"
-              }
-            />
-          </>
-        }
       />
 
       {rows.length === 0 ? (

@@ -80,6 +80,8 @@ export const playerUpdate = z.object({
 
 export const playerMerge = z.object({ targetId: id, mergedId: id });
 
+const staffHandle = z.string().min(1).nullable().optional();
+
 export const gameCreate = z.object({
   name: z.string().min(1).nullable().optional(),
   date: isoDate,
@@ -89,6 +91,9 @@ export const gameCreate = z.object({
   team2Score: count,
   stage: z.string().min(1).optional(),
   videoUrl: url,
+  streamer: staffHandle,
+  referee: staffHandle,
+  commentator: staffHandle,
 });
 
 export const gameCreateByNames = gameCreate

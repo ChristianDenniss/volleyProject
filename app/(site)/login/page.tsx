@@ -26,7 +26,7 @@ export default async function LoginPage({
         </h1>
 
         <p className="m-0 mb-8 text-[0.92rem] leading-relaxed text-rvl-ink-2">
-          Roblox is the only way in — there is no password. We receive your Roblox username and
+          Roblox is the only way in. There is no password. We receive your Roblox username and
           avatar. Renaming on Roblox keeps your account, your articles and your role intact.
         </p>
 

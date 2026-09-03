@@ -4,7 +4,7 @@ import { ArticlesManager } from "@components/portal/articles-manager";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Articles — Portal" };
+export const metadata = { title: "Articles · Portal" };
 
 export default async function PortalArticlesPage() {
   const rows = await (await api()).articles.listAll();

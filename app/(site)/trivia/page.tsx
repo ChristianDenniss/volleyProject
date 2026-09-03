@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { api } from "@server/trpc/server";
 import { EmptyState } from "@components/site/empty-state";
-import { PageHeader, PageMetric } from "@components/site/page-header";
+import { PageHeader } from "@components/site/page-header";
 import { TriviaBoard } from "@components/site/trivia-board";
 import type { Difficulty, TriviaKind } from "@server/services/trivia";
 
@@ -102,13 +102,6 @@ export default async function TriviaPage({
         eyebrow="Guessing game"
         title="Volleyball trivia"
         description="Pick a subject and a difficulty, read the clues one at a time, and name it."
-        meta={
-          <>
-            <PageMetric label="Subject" value={kind} />
-            <PageMetric label="Difficulty" value={difficulty} />
-            <PageMetric label="Clues" value={subject?.clues.length ?? 0} />
-          </>
-        }
       />
 
       {subject === null ? (

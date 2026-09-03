@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   if (!game) return { title: "Game not found" };
 
   const title = game.name ?? `Game ${game.id}`;
-  const description = `${title} — ${game.team1Score}–${game.team2Score} on ${game.date}.`;
+  const description = `${title}: ${game.team1Score}-${game.team2Score} on ${game.date}.`;
   return { title, description, openGraph: { title, description } };
 }
 
@@ -78,10 +78,19 @@ export default async function GamePage({ params }: Params) {
                     {game.season.seasonNumber}
                   </Link>
                 ) : (
-                  "—"
+                  "-"
                 )
               }
             />
+            {game.staff.streamed ? (
+              <PageMetric label="Streamed" value={game.staff.streamed.name} />
+            ) : null}
+            {game.staff.reffed ? (
+              <PageMetric label="Reffed" value={game.staff.reffed.name} />
+            ) : null}
+            {game.staff.commentated ? (
+              <PageMetric label="Commentated" value={game.staff.commentated.name} />
+            ) : null}
             {game.videoUrl ? (
               <div className="flex flex-col gap-1">
                 <span className="text-[0.58rem] uppercase tracking-[0.22em] text-rvl-dim">VOD</span>

@@ -3,15 +3,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { api } from "@server/trpc/server";
-import { PageHeader, PageMetric } from "@components/site/page-header";
+import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
-
-const railClass =
-  "grid grid-cols-1 gap-8 border-b border-rvl-line px-5 py-12 sm:px-8 md:grid-cols-[210px_1fr] md:gap-14 xl:px-14";
-const railHeadingClass =
-  "m-0 mb-3 font-mono text-[0.72rem] font-bold uppercase tracking-[0.24em] text-rvl-accent";
-const emptyClass = "m-0 font-mono text-[0.78rem] uppercase tracking-[0.14em] text-rvl-dim";
 
 interface Params {
   params: Promise<{ id: string }>;
@@ -41,118 +35,167 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   };
 }
 
+function shortDate(value: string) {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  const month = String(parsed.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(parsed.getUTCDate()).padStart(2, "0");
+  const year = String(parsed.getUTCFullYear()).slice(-2);
+  return `${month}/${day}/${year}`;
+}
+
+function placementRank(placement: string) {
+  const value = placement.toLowerCase();
+  if (/didn/.test(value)) return 90;
+  if (/champion|\b1st\b/.test(value)) return 0;
+  if (/runner|finalist|\b2nd\b/.test(value)) return 1;
+  if (/\b3rd\b/.test(value)) return 2;
+  if (/semi/.test(value)) return 3;
+  if (/quarter/.test(value)) return 4;
+  if (/playoff/.test(value)) return 5;
+  return 50;
+}
+
+function isPodium(placement: string) {
+  return /champion|1st|2nd|3rd|runner/i.test(placement);
+}
+
 export default async function SeasonPage({ params }: Params) {
   const { id } = await params;
   const season = await load(id);
   if (!season) notFound();
 
   const roster = await (await api()).teams.playersBySeason({ seasonId: season.id });
-  const byTeam = new Map<number, { id: number; name: string }[]>();
+  const byTeam = new Map<number, { id: number; name: string; position: string }[]>();
   for (const row of roster) {
-    byTeam.set(row.teamId, [...(byTeam.get(row.teamId) ?? []), { id: row.id, name: row.name }]);
+    byTeam.set(row.teamId, [
+      ...(byTeam.get(row.teamId) ?? []),
+      { id: row.id, name: row.name, position: row.position },
+    ]);
   }
 
+  const rankedTeams = [...season.teams].sort((a, b) => {
+    const rank = placementRank(a.placement) - placementRank(b.placement);
+    return rank !== 0 ? rank : a.name.localeCompare(b.name);
+  });
+
+  const pillClass =
+    "border border-rvl-accent-soft bg-rvl-accent-soft px-4 py-2 text-center text-base text-rvl-ink";
+
   return (
-    <div className="font-display">
-      <PageHeader
-        eyebrow={season.theme ? `Theme · ${season.theme}` : "Season"}
-        title={`Season ${season.seasonNumber}`}
-        description={`${season.startDate} → ${season.endDate ?? "present"}`}
-        actions={
-          <Link
-            href="/awards"
-            className="border border-rvl-line px-5 py-3 font-mono text-[0.7rem] uppercase tracking-[0.14em] text-rvl-ink-2 no-underline transition-colors hover:border-rvl-accent-soft hover:text-rvl-accent"
-          >
-            Season awards ({season.awards.length})
-          </Link>
-        }
-        meta={
-          <>
-            <PageMetric label="Teams" value={season.teams.length} />
-            <PageMetric label="Games" value={season.games.length} />
-            <PageMetric label="Matches" value={season.matches.length} />
-          </>
-        }
-      />
+    <div className="font-display text-rvl-ink">
+      <h1 className="relative mx-auto mt-8 mb-3 min-h-20 max-w-fit text-center text-[4rem] font-black uppercase leading-tight max-md:text-[2.5rem]">
+        <span
+          aria-hidden="true"
+          className="absolute top-1/2 left-1/2 -z-1 h-[0.4em] w-[120%] -translate-x-1/2 -translate-y-1/2 -skew-x-[25deg] bg-rvl-accent-soft"
+        />
+        Season {season.seasonNumber}
+      </h1>
 
-      <section className={railClass}>
-        <div>
-          <h2 className={railHeadingClass}>Field</h2>
-          <p className="m-0 font-mono text-[0.64rem] uppercase tracking-[0.14em] text-rvl-dim">
-            {season.teams.length} teams
-          </p>
-        </div>
+      <p className="m-0 mb-6 text-center font-mono text-[0.95rem] tabular-nums text-rvl-accent">
+        {shortDate(season.startDate)} - {season.endDate ? shortDate(season.endDate) : "present"}
+      </p>
 
-        {season.teams.length === 0 ? (
-          <p className={emptyClass}>No teams registered.</p>
-        ) : (
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
-            {season.teams.map((team) => (
-              <Link
+      <div className="mb-8 flex flex-wrap items-center justify-center gap-4">
+        {season.theme ? <span className={pillClass}>Theme: {season.theme}</span> : null}
+        <span className={pillClass}>Teams: {season.teams.length}</span>
+        <span className={pillClass}>Games: {season.games.length}</span>
+        <Link
+          href="/awards"
+          className={`${pillClass} no-underline transition-all duration-200 hover:-translate-y-0.5 hover:opacity-85`}
+        >
+          View awards
+        </Link>
+      </div>
+
+      {rankedTeams.length === 0 ? (
+        <p className="pb-16 text-center text-lg">No teams are registered for this season.</p>
+      ) : (
+        <div className="mb-16 grid grid-cols-1 gap-5 overflow-visible px-5 pb-8 sm:grid-cols-2 sm:px-8 lg:grid-cols-3 xl:grid-cols-4 xl:px-14">
+          {rankedTeams.map((team, index) => {
+            const players = byTeam.get(team.id) ?? [];
+
+            return (
+              <article
                 key={team.id}
-                href={`/teams/${encodeURIComponent(team.name)}`}
-                className="flex flex-col border border-rvl-line p-5 text-inherit no-underline transition-colors hover:border-rvl-accent-soft"
+                className="group relative z-0 flex h-[425px] flex-col overflow-hidden border border-rvl-line transition-[transform,border-color,box-shadow] duration-200 hover:z-10 hover:scale-[1.03] hover:border-rvl-accent-soft hover:shadow-[0_4px_12px_rgba(0,0,0,0.18)]"
               >
-                <span className="text-[1.1rem] font-bold capitalize leading-tight">
-                  {team.name}
-                </span>
-                <span className="mt-2 font-mono text-[0.6rem] uppercase tracking-[0.18em] text-rvl-dim">
-                  {team.placement}
+                <Link
+                  href={`/teams/${encodeURIComponent(team.name)}`}
+                  className="absolute inset-0 z-0"
+                >
+                  <span className="sr-only">{team.name}</span>
+                </Link>
+
+                <span className="pointer-events-none absolute top-3 left-3 z-1 font-mono text-[0.78rem] font-bold tabular-nums text-rvl-dim">
+                  {index + 1}
                 </span>
 
-                <ul className="m-0 mt-4 list-none border-t border-rvl-line p-0">
-                  {(byTeam.get(team.id) ?? []).map((player) => (
-                    <li
-                      key={player.id}
-                      className="border-b border-rvl-line py-2 text-[0.88rem] capitalize text-rvl-ink-2"
-                    >
-                      {player.name}
+                {team.logoUrl ? (
+                  <img
+                    src={team.logoUrl}
+                    alt=""
+                    aria-hidden="true"
+                    className="pointer-events-none absolute -top-8 -right-8 size-32 object-contain opacity-[0.07] transition-opacity group-hover:opacity-15"
+                  />
+                ) : null}
+
+                <div className="pointer-events-none relative flex min-h-16 flex-col">
+                  <div className="flex items-center justify-center gap-3 px-10 py-4">
+                    {team.logoUrl ? (
+                      <img
+                        src={team.logoUrl}
+                        alt=""
+                        className="size-9 shrink-0 border border-rvl-line object-cover"
+                      />
+                    ) : null}
+                    <span className="text-center text-[1.08rem] font-bold capitalize leading-tight transition-colors group-hover:text-rvl-accent">
+                      {team.name}
+                    </span>
+                  </div>
+                  <div
+                    className={cn(
+                      "border-t border-rvl-line bg-rvl-panel py-2 text-center font-mono text-[0.62rem] uppercase tracking-[0.16em]",
+                      isPodium(team.placement) ? "text-rvl-accent" : "text-rvl-dim",
+                    )}
+                  >
+                    {team.placement}
+                  </div>
+                </div>
+
+                <ul className="pointer-events-none relative z-1 m-0 flex-1 list-none overflow-y-auto p-0">
+                  {players.length === 0 ? (
+                    <li className="px-4 py-3 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-rvl-dim">
+                      No roster
                     </li>
-                  ))}
+                  ) : (
+                    players.map((player, playerIndex) => (
+                      <li key={player.id} className="border-t border-rvl-line">
+                        <Link
+                          href={`/players/${player.id}`}
+                          className="pointer-events-auto relative z-10 flex items-center gap-3 px-4 py-2.5 text-rvl-ink-2 no-underline transition-colors hover:text-rvl-accent"
+                        >
+                          <span className="w-4 shrink-0 font-mono text-[0.62rem] tabular-nums text-rvl-dim">
+                            {playerIndex + 1}
+                          </span>
+                          <span className="min-w-0 flex-1 truncate text-[0.88rem] capitalize">
+                            {player.name}
+                          </span>
+                          {player.position && player.position !== "N/A" ? (
+                            <span className="shrink-0 font-mono text-[0.56rem] uppercase tracking-[0.14em] text-rvl-dim">
+                              {player.position}
+                            </span>
+                          ) : null}
+                        </Link>
+                      </li>
+                    ))
+                  )}
                 </ul>
-              </Link>
-            ))}
-          </div>
-        )}
-      </section>
-
-      <section className={railClass}>
-        <div>
-          <h2 className={railHeadingClass}>Games</h2>
-          <p className="m-0 font-mono text-[0.64rem] uppercase tracking-[0.14em] text-rvl-dim">
-            {season.games.length} recorded
-          </p>
+              </article>
+            );
+          })}
         </div>
-
-        {season.games.length === 0 ? (
-          <p className={emptyClass}>No games recorded.</p>
-        ) : (
-          <div className="border-t border-rvl-line">
-            {season.games.map((game) => (
-              <Link
-                key={game.id}
-                href={`/games/${game.id}`}
-                className="flex flex-wrap items-center gap-x-8 gap-y-2 border-b border-rvl-line py-4 text-inherit no-underline transition-colors hover:bg-rvl-panel"
-              >
-                <span className="w-[130px] shrink-0 font-mono text-[0.64rem] uppercase tracking-[0.16em] text-rvl-dim">
-                  {game.date}
-                </span>
-                <span className="text-[1rem] font-semibold capitalize">
-                  {game.name ?? `Game ${game.id}`}
-                </span>
-                <span className="font-mono text-[1.05rem] font-bold tabular-nums text-rvl-accent">
-                  {game.team1Score}
-                  <span className="px-1.5 text-rvl-dim">–</span>
-                  {game.team2Score}
-                </span>
-                <span className="font-mono text-[0.62rem] uppercase tracking-[0.14em] text-rvl-dim md:ml-auto">
-                  {game.stage}
-                </span>
-              </Link>
-            ))}
-          </div>
-        )}
-      </section>
+      )}
     </div>
   );
 }

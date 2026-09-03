@@ -4,7 +4,7 @@ import { SeasonsManager } from "@components/portal/seasons-manager";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Seasons — Portal" };
+export const metadata = { title: "Seasons · Portal" };
 
 export default async function PortalSeasonsPage() {
   const rows = await (await api()).seasons.list();

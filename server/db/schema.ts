@@ -64,6 +64,8 @@ export const MATCH_PHASES = ["qualifiers", "playoffs"] as const;
 export const MATCH_REGIONS = ["na", "eu", "as", "sa"] as const;
 export const USER_ROLES = ["user", "admin", "superadmin"] as const;
 export const JOB_STATUSES = ["queued", "running", "succeeded", "failed"] as const;
+export const CONTRIBUTION_ROLES = ["streamed", "reffed", "commentated"] as const;
+export type ContributionRole = (typeof CONTRIBUTION_ROLES)[number];
 
 export const user = sqliteTable("user", {
   id: text().primaryKey(),
@@ -167,9 +169,15 @@ export const players = sqliteTable(
     id: integer().primaryKey({ autoIncrement: true }),
     name: text().notNull(),
     position: text().notNull().default("N/A"),
+    robloxUserId: text(),
+    userId: text().references(() => user.id, { onDelete: "set null" }),
     ...timestamps,
   },
-  (table) => [uniqueIndex("players_name_idx").on(table.name)],
+  (table) => [
+    uniqueIndex("players_name_idx").on(table.name),
+    uniqueIndex("players_roblox_user_id_idx").on(table.robloxUserId),
+    uniqueIndex("players_user_id_idx").on(table.userId),
+  ],
 );
 
 export const games = sqliteTable(
@@ -379,6 +387,26 @@ export const awardsPlayers = sqliteTable(
   ],
 );
 
+export const gameStaff = sqliteTable(
+  "game_staff",
+  {
+    id: integer().primaryKey({ autoIncrement: true }),
+    role: text({ enum: CONTRIBUTION_ROLES }).notNull(),
+    gameId: integer()
+      .notNull()
+      .references(() => games.id, { onDelete: "cascade" }),
+    userId: text()
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    ...timestamps,
+  },
+  (table) => [
+    uniqueIndex("game_staff_game_role_idx").on(table.gameId, table.role),
+    index("game_staff_user_id_idx").on(table.userId),
+    check("game_staff_role_check", sql`${table.role} in ${inList(CONTRIBUTION_ROLES)}`),
+  ],
+);
+
 export const articleLikes = sqliteTable(
   "article_likes",
   {
@@ -415,11 +443,13 @@ export const jobRuns = sqliteTable(
   ],
 );
 
-export const userRelations = relations(user, ({ many }) => ({
+export const userRelations = relations(user, ({ many, one }) => ({
   sessions: many(session),
   accounts: many(account),
   articles: many(articles),
   likes: many(articleLikes),
+  gameStaff: many(gameStaff),
+  player: one(players, { fields: [user.id], references: [players.userId] }),
 }));
 
 export const sessionRelations = relations(session, ({ one }) => ({
@@ -444,17 +474,19 @@ export const teamsRelations = relations(teams, ({ one, many }) => ({
   games: many(teamsGames),
 }));
 
-export const playersRelations = relations(players, ({ many }) => ({
+export const playersRelations = relations(players, ({ many, one }) => ({
   teams: many(teamsPlayers),
   stats: many(stats),
   awards: many(awardsPlayers),
   records: many(records),
+  user: one(user, { fields: [players.userId], references: [user.id] }),
 }));
 
 export const gamesRelations = relations(games, ({ one, many }) => ({
   season: one(seasons, { fields: [games.seasonId], references: [seasons.id] }),
   teams: many(teamsGames),
   stats: many(stats),
+  staff: many(gameStaff),
 }));
 
 export const statsRelations = relations(stats, ({ one }) => ({
@@ -502,6 +534,11 @@ export const articleLikesRelations = relations(articleLikes, ({ one }) => ({
   user: one(user, { fields: [articleLikes.userId], references: [user.id] }),
 }));
 
+export const gameStaffRelations = relations(gameStaff, ({ one }) => ({
+  game: one(games, { fields: [gameStaff.gameId], references: [games.id] }),
+  user: one(user, { fields: [gameStaff.userId], references: [user.id] }),
+}));
+
 export type User = typeof user.$inferSelect;
 export type Season = typeof seasons.$inferSelect;
 export type Team = typeof teams.$inferSelect;
@@ -513,3 +550,4 @@ export type Record_ = typeof records.$inferSelect;
 export type Match = typeof matches.$inferSelect;
 export type Article = typeof articles.$inferSelect;
 export type JobRun = typeof jobRuns.$inferSelect;
+export type GameStaff = typeof gameStaff.$inferSelect;

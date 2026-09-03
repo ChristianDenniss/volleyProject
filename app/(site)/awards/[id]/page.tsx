@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   if (!award) return { title: "Award not found" };
 
   const names = award.players.map((player) => player.name).join(", ");
-  const title = award.seasonNumber ? `${award.type} — Season ${award.seasonNumber}` : award.type;
+  const title = award.seasonNumber ? `${award.type} · Season ${award.seasonNumber}` : award.type;
   const description = names ? `${title}: ${names}. ${award.description}` : award.description;
 
   return {

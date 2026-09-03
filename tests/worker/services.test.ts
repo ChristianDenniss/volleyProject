@@ -1,6 +1,8 @@
 import { env } from "cloudflare:test";
 import { beforeEach, describe, expect, it } from "vitest";
+import { eq } from "drizzle-orm";
 import { makeDb, type Db } from "@db";
+import { players as playerRows } from "@db/schema";
 import {
   articles,
   awards,
@@ -69,8 +71,49 @@ describe("players", () => {
     const player = await players.getById(db, FIXTURES.playerId);
     expect(player?.teams).toHaveLength(1);
     expect(player?.stats).toHaveLength(4);
+    expect(player?.stats[0]?.seasonNumber).toBe(1);
     expect(player?.awards).toHaveLength(1);
+    expect(player?.awards[0]?.seasonNumber).toBe(1);
     expect(player?.records).toHaveLength(1);
+  });
+
+  it("links a sign-in to an existing player with the same Roblox name", async () => {
+    await db
+      .update(playerRows)
+      .set({ name: "fixtureplayer" })
+      .where(eq(playerRows.id, FIXTURES.playerId));
+    const attached = await players.ensureLinkedToUser(db, FIXTURES.userId);
+    expect(attached?.id).toBe(FIXTURES.playerId);
+    expect(attached?.userId).toBe(FIXTURES.userId);
+
+    const again = await players.ensureLinkedToUser(db, FIXTURES.userId);
+    expect(again?.id).toBe(FIXTURES.playerId);
+  });
+
+  it("creates a bare player when the Roblox name is new", async () => {
+    const created = await players.ensureLinkedToUser(db, FIXTURES.userId);
+    expect(created?.name).toBe("fixtureplayer");
+    expect(created?.position).toBe("N/A");
+    expect(created?.userId).toBe(FIXTURES.userId);
+
+    const hydrated = await players.getById(db, created!.id);
+    expect(hydrated?.teams).toHaveLength(0);
+    expect(hydrated?.stats).toHaveLength(0);
+  });
+
+  it("does not steal a player already claimed by another account", async () => {
+    await players.ensureLinkedToUser(db, FIXTURES.adminId);
+    await db
+      .update(playerRows)
+      .set({ name: "fixtureplayer" })
+      .where(eq(playerRows.userId, FIXTURES.adminId));
+
+    const stolen = await players.ensureLinkedToUser(db, FIXTURES.userId);
+    expect(stolen).toBeNull();
+    const claimed = await db.query.players.findFirst({
+      where: eq(playerRows.userId, FIXTURES.adminId),
+    });
+    expect(claimed?.name).toBe("fixtureplayer");
   });
 
   it("merges one player into another, moving stats and links", async () => {
@@ -105,11 +148,16 @@ describe("games", () => {
       teamNames: [FIXTURES.teamName, FIXTURES.otherTeamName],
       team1Score: 3,
       team2Score: 0,
+      streamer: "fixtureadmin",
+      commentator: "fixtureplayer",
     });
 
     const hydrated = await games.getById(db, created.id);
     expect(hydrated?.teams).toHaveLength(2);
     expect(hydrated?.name).toBe("Ocean Spikers Vs. Mountain Blockers");
+    expect(hydrated?.staff.streamed?.email).toBe("fixtureadmin");
+    expect(hydrated?.staff.reffed).toBeNull();
+    expect(hydrated?.staff.commentated?.email).toBe("fixtureplayer");
   });
 
   it("rejects a negative score", async () => {
@@ -122,6 +170,14 @@ describe("games", () => {
         team2Score: 0,
       }),
     ).rejects.toThrow(/negative/);
+  });
+
+  it("replaces game staff on update", async () => {
+    await games.update(db, FIXTURES.gameId, { streamer: "fixtureplayer", referee: null });
+    const hydrated = await games.getById(db, FIXTURES.gameId);
+    expect(hydrated?.staff.streamed?.email).toBe("fixtureplayer");
+    expect(hydrated?.staff.reffed).toBeNull();
+    expect(hydrated?.staff.commentated?.email).toBe("fixtureplayer");
   });
 });
 
@@ -137,6 +193,16 @@ describe("stats", () => {
   it("scopes the leaderboard to one season", async () => {
     const rows = await stats.leaderboard(db, FIXTURES.seasonId);
     expect(rows.every((row) => row.gamesPlayed === 2)).toBe(true);
+  });
+
+  it("returns per-game stat lines with season scores for the vector graph", async () => {
+    const players = await stats.vectorGraph(db);
+    expect(players.length).toBeGreaterThan(0);
+    const first = players[0];
+    expect(first?.stats.length).toBeGreaterThan(0);
+    const line = first?.stats[0];
+    expect(line?.game?.season?.seasonNumber).toBeGreaterThan(0);
+    expect((line?.game?.team1Score ?? 0) + (line?.game?.team2Score ?? 0)).toBeGreaterThan(0);
   });
 
   it("refuses a second stat line for the same player and game", async () => {
@@ -296,6 +362,26 @@ describe("users", () => {
     const profile = await users.profile(db, FIXTURES.adminId);
     expect(profile?.articles).toHaveLength(1);
     expect(profile?.role).toBe("admin");
+    expect(profile?.player?.name).toBe("fixtureadmin");
+    expect(profile?.player?.teams).toEqual([]);
+    expect(profile?.contributions).toEqual({
+      streamed: 1,
+      reffed: 1,
+      commentated: 0,
+      articlesApproved: 1,
+      articlesTotal: 1,
+    });
+  });
+
+  it("counts unapproved articles on the author's profile", async () => {
+    const profile = await users.profile(db, FIXTURES.userId);
+    expect(profile?.contributions).toEqual({
+      streamed: 0,
+      reffed: 0,
+      commentated: 1,
+      articlesApproved: 0,
+      articlesTotal: 1,
+    });
   });
 
   it("promotes a user", async () => {

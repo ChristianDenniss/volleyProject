@@ -4,7 +4,7 @@ import { getSessionUser } from "@server/session";
 import { api } from "@server/trpc/server";
 import { ArticlesList } from "@components/site/articles-list";
 import { EmptyState } from "@components/site/empty-state";
-import { PageHeader, PageMetric } from "@components/site/page-header";
+import { PageHeader } from "@components/site/page-header";
 
 export const dynamic = "force-dynamic";
 
@@ -16,9 +16,6 @@ export const metadata: Metadata = {
 export default async function ArticlesPage() {
   const trpc = await api();
   const [rows, user] = await Promise.all([trpc.articles.list(), getSessionUser()]);
-
-  const authors = new Set(rows.map((article) => article.authorName)).size;
-  const likes = rows.reduce((sum, article) => sum + article.likes, 0);
 
   return (
     <div className="font-display">
@@ -42,13 +39,6 @@ export default async function ArticlesPage() {
               Sign in to write
             </Link>
           )
-        }
-        meta={
-          <>
-            <PageMetric label="Published" value={rows.length} />
-            <PageMetric label="Authors" value={authors} />
-            <PageMetric label="Likes" value={likes.toLocaleString()} />
-          </>
         }
       />
 

@@ -4,7 +4,7 @@ import { MatchesManager } from "@components/portal/matches-manager";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Matches — Portal" };
+export const metadata = { title: "Matches · Portal" };
 
 export default async function PortalMatchesPage() {
   const trpc = await api();
