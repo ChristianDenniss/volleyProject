@@ -32,12 +32,13 @@ export const trpcManifest: TrpcManifestEntry[] = [
   { endpoint: "PUT /api/games/:id", procedure: null, access: "admin", status: "removed", rationale: PUT_DUPLICATE },
   { endpoint: "POST /api/games/batch", procedure: "games.createMany", access: "admin", status: "done" },
   { endpoint: "POST /api/games/createByNames", procedure: "games.createByNames", access: "admin", status: "done" },
+  { endpoint: "POST /api/games/import-challonge", procedure: "games.importFromChallonge", access: "admin", status: "done" },
 
-  { endpoint: "POST /api/matches", procedure: "matches.create", access: "admin", status: "done" },
-  { endpoint: "PATCH /api/matches/:id", procedure: "matches.update", access: "admin", status: "done" },
-  { endpoint: "DELETE /api/matches/:id", procedure: "matches.delete", access: "admin", status: "done" },
+  { endpoint: "POST /api/matches", procedure: null, access: "admin", status: "removed", rationale: "matches merged into games" },
+  { endpoint: "PATCH /api/matches/:id", procedure: null, access: "admin", status: "removed", rationale: "matches merged into games" },
+  { endpoint: "DELETE /api/matches/:id", procedure: null, access: "admin", status: "removed", rationale: "matches merged into games" },
   { endpoint: "PUT /api/matches/:id", procedure: null, access: "admin", status: "removed", rationale: PUT_DUPLICATE },
-  { endpoint: "POST /api/matches/import-challonge", procedure: "matches.importFromChallonge", access: "admin", status: "done" },
+  { endpoint: "POST /api/matches/import-challonge", procedure: null, access: "admin", status: "removed", rationale: "matches merged into games" },
 
   { endpoint: "POST /api/players", procedure: "players.create", access: "admin", status: "done" },
   { endpoint: "PATCH /api/players/:id", procedure: "players.update", access: "admin", status: "done" },
