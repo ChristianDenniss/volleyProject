@@ -6,7 +6,6 @@ import {
   awards,
   awardsPlayers,
   games,
-  matches,
   players,
   records,
   seasons,
@@ -247,7 +246,9 @@ export async function seedDev(db: Db): Promise<void> {
   await insertMany(
     db,
     teamsGames,
-    gameRows.flatMap((game) => game.teamIds.map((teamId) => ({ teamId, gameId: game.id }))),
+    gameRows.flatMap((game) =>
+      game.teamIds.map((teamId, index) => ({ gameId: game.id, slot: index + 1, teamId })),
+    ),
   );
 
   const roster = new Map<number, number[]>();
@@ -401,9 +402,34 @@ export async function seedDev(db: Db): Promise<void> {
   await insertMany(db, records, recordRows);
 
   const setLine = (a: number, b: number) => `${a}-${b}`;
-  await insertMany(db, matches, [
+  const teamIdByName = new Map<string, number>(
+    [...S3_TEAMS, ...S4_TEAMS].map((team) => [team.name, team.id]),
+  );
+
+  type ScheduleFixture = {
+    id: number;
+    matchNumber: string;
+    round: string;
+    status: "scheduled" | "completed";
+    phase: "qualifiers" | "playoffs";
+    region: "na" | "eu" | "as" | "sa";
+    date: string;
+    team1Name: string;
+    team2Name: string;
+    team1Score: number | null;
+    team2Score: number | null;
+    set1Score?: string | null;
+    set2Score?: string | null;
+    set3Score?: string | null;
+    set4Score?: string | null;
+    set5Score?: string | null;
+    tags: string[] | null;
+    seasonId: number;
+  };
+
+  const scheduleFixtures: ScheduleFixture[] = [
     {
-      id: 3,
+      id: 30,
       matchNumber: "Quarter-Finals - Match 1",
       round: "Quarter-Finals",
       status: "completed",
@@ -412,8 +438,6 @@ export async function seedDev(db: Db): Promise<void> {
       date: "2026-08-08",
       team1Name: "Echo Block",
       team2Name: "Lunar Serve",
-      team1LogoUrl: LOGO,
-      team2LogoUrl: LOGO,
       team1Score: 3,
       team2Score: 0,
       set1Score: setLine(25, 16),
@@ -425,7 +449,7 @@ export async function seedDev(db: Db): Promise<void> {
       seasonId: SEASON_4,
     },
     {
-      id: 4,
+      id: 31,
       matchNumber: "Quarter-Finals - Match 2",
       round: "Quarter-Finals",
       status: "completed",
@@ -434,8 +458,6 @@ export async function seedDev(db: Db): Promise<void> {
       date: "2026-08-15",
       team1Name: "Volt Diggers",
       team2Name: "Sand Kings",
-      team1LogoUrl: LOGO,
-      team2LogoUrl: LOGO,
       team1Score: 3,
       team2Score: 0,
       set1Score: setLine(25, 18),
@@ -447,7 +469,7 @@ export async function seedDev(db: Db): Promise<void> {
       seasonId: SEASON_4,
     },
     {
-      id: 5,
+      id: 32,
       matchNumber: "Quarter-Finals - Match 3",
       round: "Quarter-Finals",
       status: "completed",
@@ -456,8 +478,6 @@ export async function seedDev(db: Db): Promise<void> {
       date: "2026-08-16",
       team1Name: "Night Owls",
       team2Name: "Polar Tips",
-      team1LogoUrl: LOGO,
-      team2LogoUrl: LOGO,
       team1Score: 3,
       team2Score: 1,
       set1Score: setLine(25, 23),
@@ -469,7 +489,7 @@ export async function seedDev(db: Db): Promise<void> {
       seasonId: SEASON_4,
     },
     {
-      id: 6,
+      id: 33,
       matchNumber: "Quarter-Finals - Match 4",
       round: "Quarter-Finals",
       status: "completed",
@@ -478,8 +498,6 @@ export async function seedDev(db: Db): Promise<void> {
       date: "2026-08-17",
       team1Name: "Crimson Floor",
       team2Name: "Glass Cannons",
-      team1LogoUrl: LOGO,
-      team2LogoUrl: LOGO,
       team1Score: 3,
       team2Score: 1,
       set1Score: setLine(25, 19),
@@ -491,7 +509,7 @@ export async function seedDev(db: Db): Promise<void> {
       seasonId: SEASON_4,
     },
     {
-      id: 7,
+      id: 34,
       matchNumber: "Semi-Finals - Match 1",
       round: "Semi-Finals",
       status: "completed",
@@ -500,8 +518,6 @@ export async function seedDev(db: Db): Promise<void> {
       date: "2026-08-23",
       team1Name: "Volt Diggers",
       team2Name: "Echo Block",
-      team1LogoUrl: LOGO,
-      team2LogoUrl: LOGO,
       team1Score: 3,
       team2Score: 1,
       set1Score: setLine(25, 20),
@@ -513,7 +529,7 @@ export async function seedDev(db: Db): Promise<void> {
       seasonId: SEASON_4,
     },
     {
-      id: 8,
+      id: 35,
       matchNumber: "Semi-Finals - Match 2",
       round: "Semi-Finals",
       status: "completed",
@@ -522,8 +538,6 @@ export async function seedDev(db: Db): Promise<void> {
       date: "2026-08-30",
       team1Name: "Night Owls",
       team2Name: "Crimson Floor",
-      team1LogoUrl: LOGO,
-      team2LogoUrl: LOGO,
       team1Score: 2,
       team2Score: 3,
       set1Score: setLine(25, 22),
@@ -535,7 +549,7 @@ export async function seedDev(db: Db): Promise<void> {
       seasonId: SEASON_4,
     },
     {
-      id: 9,
+      id: 36,
       matchNumber: "Third Place - Match 1",
       round: "Third Place",
       status: "scheduled",
@@ -544,15 +558,13 @@ export async function seedDev(db: Db): Promise<void> {
       date: "2026-09-05",
       team1Name: "Echo Block",
       team2Name: "Night Owls",
-      team1LogoUrl: LOGO,
-      team2LogoUrl: LOGO,
       team1Score: null,
       team2Score: null,
       tags: ["Playoffs"],
       seasonId: SEASON_4,
     },
     {
-      id: 10,
+      id: 37,
       matchNumber: "Finals - Match 1",
       round: "Finals",
       status: "scheduled",
@@ -561,15 +573,13 @@ export async function seedDev(db: Db): Promise<void> {
       date: "2026-09-06",
       team1Name: "Volt Diggers",
       team2Name: "Crimson Floor",
-      team1LogoUrl: LOGO,
-      team2LogoUrl: LOGO,
       team1Score: null,
       team2Score: null,
       tags: ["Finals", "Floodlights"],
       seasonId: SEASON_4,
     },
     {
-      id: 12,
+      id: 38,
       matchNumber: "Night Court Final",
       round: "Finals",
       status: "completed",
@@ -578,8 +588,6 @@ export async function seedDev(db: Db): Promise<void> {
       date: "2026-07-26",
       team1Name: "Tide Breakers",
       team2Name: "Iron Setters",
-      team1LogoUrl: LOGO,
-      team2LogoUrl: LOGO,
       team1Score: 3,
       team2Score: 2,
       set1Score: setLine(25, 23),
@@ -590,7 +598,30 @@ export async function seedDev(db: Db): Promise<void> {
       tags: ["Night Court"],
       seasonId: SEASON_3,
     },
-  ]);
+  ];
+
+  await insertMany(
+    db,
+    games,
+    scheduleFixtures.map(({ team1Name, team2Name, ...fixture }) => ({
+      ...fixture,
+      name: `${team1Name} Vs. ${team2Name}`,
+      stage: fixture.round,
+      videoUrl: null,
+    })),
+  );
+  await insertMany(
+    db,
+    teamsGames,
+    scheduleFixtures.flatMap((fixture) => {
+      const team1Id = teamIdByName.get(fixture.team1Name);
+      const team2Id = teamIdByName.get(fixture.team2Name);
+      const rows = [];
+      if (team1Id) rows.push({ gameId: fixture.id, slot: 1, teamId: team1Id });
+      if (team2Id) rows.push({ gameId: fixture.id, slot: 2, teamId: team2Id });
+      return rows;
+    }),
+  );
 
   await insertMany(db, articles, [
     {

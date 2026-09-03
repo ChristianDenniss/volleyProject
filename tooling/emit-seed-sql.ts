@@ -49,7 +49,6 @@ async function main(): Promise<void> {
     "delete from teams_games;",
     "delete from teams_players;",
     "delete from game_staff;",
-    "delete from matches;",
     "delete from games;",
     "delete from teams;",
     "delete from players;",
