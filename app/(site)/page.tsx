@@ -54,7 +54,7 @@ export default async function HomePage() {
   const season = seasonRows[0] ?? null;
 
   const [matchRows, leaders, killRecords, blockRecords, aceRecords] = await Promise.all([
-    season ? trpc.matches.list({ seasonId: season.id }) : Promise.resolve([]),
+    season ? trpc.games.listSchedule({ seasonId: season.id }) : Promise.resolve([]),
     season ? trpc.stats.leaderboard({ seasonId: season.id }) : Promise.resolve([]),
     trpc.records.byMetric({ metric: "total kills", type: "game" }),
     trpc.records.byMetric({ metric: "blocks", type: "game" }),

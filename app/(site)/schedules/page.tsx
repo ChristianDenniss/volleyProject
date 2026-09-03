@@ -22,7 +22,7 @@ export default async function SchedulesPage({
   const seasonId = Number.isInteger(parsed) && parsed > 0 ? parsed : undefined;
 
   const [rows, allSeasons] = await Promise.all([
-    trpc.matches.list({ seasonId }),
+    trpc.games.listSchedule({ seasonId }),
     trpc.seasons.list(),
   ]);
 
