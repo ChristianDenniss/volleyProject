@@ -1,7 +1,7 @@
-import { asc, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, isNotNull, or } from "drizzle-orm";
 import type { Db } from "@db";
 import { correlatedCount } from "@db/sqlx";
-import { awards, games, matches, records, seasons, teams } from "@db/schema";
+import { awards, games, records, seasons, teams } from "@db/schema";
 import { found } from "./errors";
 import type { PartialInput } from "./input";
 
@@ -33,14 +33,23 @@ export async function getById(db: Db, id: number) {
   const season = await db.query.seasons.findFirst({ where: eq(seasons.id, id) });
   if (!season) return null;
 
-  const [seasonTeams, seasonGames, seasonAwards, seasonMatches] = await Promise.all([
+  const [seasonTeams, seasonGames, seasonAwards, seasonSchedule] = await Promise.all([
     db.select().from(teams).where(eq(teams.seasonId, id)).orderBy(asc(teams.name)),
     db.select().from(games).where(eq(games.seasonId, id)).orderBy(asc(games.date)),
     db.select().from(awards).where(eq(awards.seasonId, id)),
-    db.select().from(matches).where(eq(matches.seasonId, id)).orderBy(asc(matches.date)),
+    db
+      .select()
+      .from(games)
+      .where(
+        and(
+          eq(games.seasonId, id),
+          or(isNotNull(games.matchNumber), eq(games.status, "scheduled")),
+        ),
+      )
+      .orderBy(asc(games.date)),
   ]);
 
-  return { ...season, teams: seasonTeams, games: seasonGames, awards: seasonAwards, matches: seasonMatches };
+  return { ...season, teams: seasonTeams, games: seasonGames, awards: seasonAwards, schedule: seasonSchedule };
 }
 
 export async function getBySeasonNumber(db: Db, seasonNumber: number) {

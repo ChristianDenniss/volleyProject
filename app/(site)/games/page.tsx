@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 export default async function GamesPage() {
   const trpc = await api();
-  const rows = await trpc.games.list();
+  const rows = await trpc.games.listPlayed();
 
   return (
     <div className="font-display">
@@ -35,8 +35,8 @@ export default async function GamesPage() {
             date: game.date,
             stage: game.stage ?? null,
             seasonNumber: game.seasonNumber ?? null,
-            team1Score: game.team1Score,
-            team2Score: game.team2Score,
+            team1Score: game.team1Score ?? 0,
+            team2Score: game.team2Score ?? 0,
           }))}
         />
       )}

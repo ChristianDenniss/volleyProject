@@ -7,7 +7,6 @@ import {
   articles,
   awards,
   games,
-  matches,
   players,
   records,
   seasons,
@@ -33,12 +32,12 @@ describe("seasons", () => {
     expect(rows.find((row) => row.seasonNumber === 1)?.gameCount).toBe(2);
   });
 
-  it("hydrates one season with its teams, games, awards and matches", async () => {
+  it("hydrates one season with its teams, games, awards and schedule", async () => {
     const season = await seasons.getById(db, FIXTURES.seasonId);
     expect(season?.teams).toHaveLength(2);
     expect(season?.games).toHaveLength(2);
     expect(season?.awards).toHaveLength(1);
-    expect(season?.matches).toHaveLength(1);
+    expect(season?.schedule).toHaveLength(1);
   });
 
   it("returns null for a missing season", async () => {
@@ -137,7 +136,7 @@ describe("players", () => {
 describe("games", () => {
   it("attaches both teams to every listed game", async () => {
     const rows = await games.list(db);
-    expect(rows).toHaveLength(4);
+    expect(rows).toHaveLength(5);
     expect(rows.every((row) => row.teams.length === 2)).toBe(true);
   });
 
@@ -260,24 +259,28 @@ describe("records", () => {
   });
 });
 
-describe("matches", () => {
+describe("games schedule", () => {
   it("lists by season and by round", async () => {
-    expect(await matches.listBySeason(db, FIXTURES.seasonId)).toHaveLength(1);
-    expect(await matches.listByRound(db, FIXTURES.seasonId, "Round 1")).toHaveLength(1);
-    expect(await matches.listByRound(db, FIXTURES.seasonId, "Finals")).toHaveLength(0);
+    expect(await games.listSchedule(db, FIXTURES.seasonId)).toHaveLength(1);
+    expect(await games.listByRound(db, FIXTURES.seasonId, "Round 1")).toHaveLength(1);
+    expect(await games.listByRound(db, FIXTURES.seasonId, "Finals")).toHaveLength(0);
   });
 
-  it("fills a missing logo from the team of the same name", async () => {
-    const created = await matches.create(db, {
+  it("exposes team logos from slotted teams", async () => {
+    await games.create(db, {
       matchNumber: "Round 2 - Match 1",
       round: "Round 2",
       date: "2026-02-02",
       seasonId: FIXTURES.seasonId,
-      team1Name: FIXTURES.teamName,
-      team2Name: "Nobody",
+      status: "scheduled",
+      team1Id: FIXTURES.teamId,
+      team2Id: null,
     });
-    expect(created?.team1LogoUrl).toBe("/images/rvlLogo.png");
-    expect(created?.team2LogoUrl).toBeNull();
+    const row = (await games.listSchedule(db, FIXTURES.seasonId)).find(
+      (game) => game.matchNumber === "Round 2 - Match 1",
+    );
+    expect(row?.team1LogoUrl).toBe("/images/rvlLogo.png");
+    expect(row?.team2LogoUrl).toBeNull();
   });
 
   it("imports challonge matches and skips ones already present", async () => {
@@ -307,7 +310,7 @@ describe("matches", () => {
       return new Response(JSON.stringify(body), { status: 200 });
     }) as typeof fetch;
 
-    const first = await matches.importFromChallonge(db, {
+    const first = await games.importFromChallonge(db, {
       tournamentId: "abc123",
       seasonId: FIXTURES.seasonId,
       apiKey: "test-key",
@@ -315,7 +318,7 @@ describe("matches", () => {
     });
     expect(first).toEqual({ imported: 1, skipped: 0 });
 
-    const second = await matches.importFromChallonge(db, {
+    const second = await games.importFromChallonge(db, {
       tournamentId: "abc123",
       seasonId: FIXTURES.seasonId,
       apiKey: "test-key",
@@ -323,8 +326,8 @@ describe("matches", () => {
     });
     expect(second).toEqual({ imported: 0, skipped: 1 });
 
-    const imported = (await matches.listBySeason(db, FIXTURES.seasonId)).find(
-      (match) => match.challongeMatchId === "501",
+    const imported = (await games.listSchedule(db, FIXTURES.seasonId)).find(
+      (game) => game.team1Score === 2 && game.set2Score === "25-22",
     );
     expect(imported?.team1Score).toBe(2);
     expect(imported?.set2Score).toBe("25-22");

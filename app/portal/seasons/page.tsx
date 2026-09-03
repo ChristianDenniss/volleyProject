@@ -9,7 +9,7 @@ export const metadata = { title: "Seasons · Portal" };
 export default async function PortalSeasonsPage() {
   const rows = await (await api()).seasons.list();
   return (
-    <PortalPage title="Seasons" description="Deleting a season cascades to its teams, games, matches, awards and records.">
+    <PortalPage title="Seasons" description="Deleting a season cascades to its teams, games, awards and records.">
       <SeasonsManager rows={rows} />
     </PortalPage>
   );
