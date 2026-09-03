@@ -3,7 +3,7 @@ import { adminProcedure, publicProcedure, router } from "../init";
 import { revalidate } from "../revalidate";
 import {
   byId,
-  optionalSeason,
+  leaderboardInput,
   statCreate,
   statCreateByName,
   statRows,
@@ -14,8 +14,13 @@ export const statsRouter = router({
   list: adminProcedure.query(({ ctx }) => stats.list(ctx.db)),
 
   leaderboard: publicProcedure
-    .input(optionalSeason)
-    .query(({ ctx, input }) => stats.leaderboard(ctx.db, input.seasonId)),
+    .input(leaderboardInput)
+    .query(({ ctx, input }) =>
+      stats.leaderboard(ctx.db, {
+        seasonId: input.seasonId,
+        stageRound: input.stageRound,
+      }),
+    ),
 
   vectorGraph: publicProcedure.query(({ ctx }) => stats.vectorGraph(ctx.db)),
 
