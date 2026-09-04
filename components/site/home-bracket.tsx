@@ -97,9 +97,7 @@ function StandingTable({ rows }: { rows: StandingRow[] }) {
                 key={label}
                 className={cn(
                   "border-b border-rvl-line-strong pb-3 font-mono text-[0.6rem] font-bold uppercase tracking-[0.2em] text-rvl-dim",
-                  label === "#" || label === "Team" || label === "Stage"
-                    ? "pr-4 text-left"
-                    : "px-4 text-right",
+                  label === "#" || label === "Team" ? "pr-4 text-left" : "px-4 text-right",
                 )}
               >
                 {label}
@@ -155,7 +153,7 @@ function StandingTable({ rows }: { rows: StandingRow[] }) {
               <td className="border-b border-rvl-line px-4 py-3.5 text-right font-mono text-[0.88rem] tabular-nums text-rvl-ink-2">
                 {formatWinPct(row.wins, row.played)}
               </td>
-              <td className="border-b border-rvl-line py-3.5 pr-0 font-mono text-[0.62rem] uppercase tracking-[0.12em] text-rvl-dim">
+              <td className="border-b border-rvl-line px-4 py-3.5 text-right font-mono text-[0.62rem] uppercase tracking-[0.12em] text-rvl-dim">
                 {row.placement ?? "—"}
               </td>
             </tr>
