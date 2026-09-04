@@ -1,11 +1,19 @@
 import type { Db } from "@db";
 import { cacheDelete, cacheRead, cacheWrite } from "../cache";
 import { avatarByUsername } from "./roblox";
-import * as records from "./records";
 import * as stats from "./stats";
 
 export const HOME_NUMBERS_TTL = 60 * 60 * 24;
-const HOME_NUMBERS_KEY = "https://volley.internal/cache/home-numbers";
+const HOME_NUMBERS_KEY = "https://volley.internal/cache/home-numbers-season-v2";
+
+const SEASON_METRICS = [
+  { key: "totalKills", metric: "Kills · season" },
+  { key: "assists", metric: "Assists · season" },
+  { key: "digs", metric: "Digs · season" },
+  { key: "blocks", metric: "Blocks · season" },
+  { key: "blockFollows", metric: "Block follows · season" },
+  { key: "aces", metric: "Aces · season" },
+] as const;
 
 export interface HomeNumber {
   metric: string;
@@ -33,7 +41,7 @@ async function defaultAvatar(name: string) {
 
 function leaderIn(
   leaders: Awaited<ReturnType<typeof stats.leaderboard>>,
-  key: "totalKills" | "assists" | "digs",
+  key: (typeof SEASON_METRICS)[number]["key"],
 ) {
   return [...leaders].sort((a, b) => Number(b[key] ?? 0) - Number(a[key] ?? 0))[0] ?? null;
 }
@@ -43,61 +51,22 @@ export async function computeHomeNumbers(
   seasonId: number | null,
   avatarFor: AvatarLookup = defaultAvatar,
 ): Promise<HomeNumbersPayload> {
-  const [leaders, killRecords, blockRecords, aceRecords] = await Promise.all([
-    seasonId ? stats.leaderboard(db, seasonId) : Promise.resolve([]),
-    records.listByMetric(db, "total kills", undefined, "game"),
-    records.listByMetric(db, "blocks", undefined, "game"),
-    records.listByMetric(db, "aces", undefined, "game"),
-  ]);
+  const leaders = seasonId ? await stats.leaderboard(db, seasonId) : [];
 
-  const killLeader = leaderIn(leaders, "totalKills");
-  const assistLeader = leaderIn(leaders, "assists");
-  const digLeader = leaderIn(leaders, "digs");
-
-  const numbers = [
-    killLeader && {
-      metric: "Kills · season",
-      value: Number(killLeader.totalKills ?? 0),
-      name: killLeader.playerName,
-      context: `${killLeader.gamesPlayed} games`,
-      href: `/players/${killLeader.playerId}`,
-    },
-    assistLeader && {
-      metric: "Assists · season",
-      value: Number(assistLeader.assists ?? 0),
-      name: assistLeader.playerName,
-      context: `${assistLeader.gamesPlayed} games`,
-      href: `/players/${assistLeader.playerId}`,
-    },
-    digLeader && {
-      metric: "Digs · season",
-      value: Number(digLeader.digs ?? 0),
-      name: digLeader.playerName,
-      context: `${digLeader.gamesPlayed} games`,
-      href: `/players/${digLeader.playerId}`,
-    },
-    killRecords[0] && {
-      metric: "Kills · one game",
-      value: killRecords[0].value,
-      name: killRecords[0].playerName,
-      context: `S${killRecords[0].seasonNumber ?? "-"} · record`,
-      href: "/records",
-    },
-    blockRecords[0] && {
-      metric: "Blocks · one game",
-      value: blockRecords[0].value,
-      name: blockRecords[0].playerName,
-      context: `S${blockRecords[0].seasonNumber ?? "-"} · record`,
-      href: "/records",
-    },
-    aceRecords[0] && {
-      metric: "Aces · one game",
-      value: aceRecords[0].value,
-      name: aceRecords[0].playerName,
-      context: `S${aceRecords[0].seasonNumber ?? "-"} · record`,
-      href: "/records",
-    },
-  ].flatMap((entry) => (entry ? [entry] : []));
+  const numbers = SEASON_METRICS.flatMap(({ key, metric }) => {
+    const leader = leaderIn(leaders, key);
+    return leader
+      ? [
+          {
+            metric,
+            value: Number(leader[key] ?? 0),
+            name: leader.playerName,
+            context: `${leader.gamesPlayed} games`,
+            href: `/players/${leader.playerId}`,
+          },
+        ]
+      : [];
+  });
 
   const avatars = Object.fromEntries(
     await Promise.all(

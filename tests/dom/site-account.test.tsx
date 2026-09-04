@@ -21,7 +21,7 @@ describe("SiteAccount", () => {
       <SiteAccount initialUser={{ name: "fixtureplayer", image: "/images/pfpLogo.png" }} />,
     );
 
-    expect(screen.getByText("Guest")).toBeDefined();
+    expect(screen.getByLabelText("Signed out")).toBeDefined();
     expect(screen.queryByText("fixtureplayer")).toBeNull();
     expect(screen.queryByAltText("Profile")).toBeNull();
 
@@ -31,7 +31,7 @@ describe("SiteAccount", () => {
       <SiteAccount initialUser={{ name: "fixtureplayer", image: "/images/pfpLogo.png" }} />,
     );
 
-    expect(screen.getByText("Guest")).toBeDefined();
+    expect(screen.getByLabelText("Signed out")).toBeDefined();
     expect(screen.queryByText("fixtureplayer")).toBeNull();
   });
 });

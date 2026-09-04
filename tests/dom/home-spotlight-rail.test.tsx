@@ -18,8 +18,8 @@ describe("HomeSpotlightRail", () => {
           },
           {
             kind: "stat",
-            href: "/records",
-            title: "Kills · one game",
+            href: "/players/1",
+            title: "Kills · season",
             value: 42,
             name: "ava nine",
           },

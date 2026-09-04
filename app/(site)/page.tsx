@@ -161,7 +161,7 @@ export default async function HomePage() {
           <div>
             <h2 className={railHeading}>Numbers</h2>
             <p className="m-0 mb-4 text-[0.84rem] text-rvl-dim">
-              Season leaders and the all-time single-game marks.
+              Season leaders across the core counting stats.
             </p>
             <Link href="/stats" className={railMore}>
               Stats

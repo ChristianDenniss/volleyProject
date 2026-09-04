@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Menu } from "lucide-react";
+import { Menu, UserRoundX } from "lucide-react";
 import { Button } from "@components/ui/button";
 import {
   DropdownMenu,
@@ -14,8 +14,13 @@ import {
 
 export function GuestMenu() {
   return (
-    <div className="flex items-center gap-3 sm:gap-5">
-      <span className="whitespace-nowrap font-display text-lg font-black text-rvl-ink">Guest</span>
+    <div className="flex items-center gap-3 sm:gap-4">
+      <span
+        className="flex size-9 items-center justify-center rounded-xs border border-rvl-line text-rvl-dim"
+        aria-label="Signed out"
+      >
+        <UserRoundX className="size-4" />
+      </span>
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>

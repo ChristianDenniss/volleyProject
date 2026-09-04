@@ -17,13 +17,22 @@ beforeEach(async () => {
 });
 
 describe("home numbers cache", () => {
-  it("bundles season leaders, records and faces", async () => {
+  it("bundles season leaders and faces", async () => {
     const payload = await computeHomeNumbers(db, FIXTURES.seasonId, async (name) => {
       return `https://avatars.test/${name}`;
     });
 
     expect(payload.seasonId).toBe(FIXTURES.seasonId);
-    expect(payload.numbers.length).toBeGreaterThan(0);
+    expect(payload.numbers.map((entry) => entry.metric)).toEqual([
+      "Kills · season",
+      "Assists · season",
+      "Digs · season",
+      "Blocks · season",
+      "Block follows · season",
+      "Aces · season",
+    ]);
+    expect(payload.numbers.every((entry) => entry.metric.endsWith("· season"))).toBe(true);
+    expect(payload.numbers.every((entry) => entry.href.startsWith("/players/"))).toBe(true);
     expect(payload.numbers.every((entry) => entry.name in payload.avatars)).toBe(true);
     expect(Object.values(payload.avatars).every((url) => url?.startsWith("https://avatars.test/"))).toBe(
       true,

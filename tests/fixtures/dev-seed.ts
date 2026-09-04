@@ -452,7 +452,86 @@ export async function seedDev(db: Db): Promise<void> {
     teamIds: [teamIdByName.get(team1Name)!, teamIdByName.get(team2Name)!] as const,
   }));
 
-  const allGames = [...gameRows, ...playoffGames];
+  const densityDays = [
+    { date: "2026-08-29", count: 1 },
+    { date: "2026-08-31", count: 2 },
+    { date: "2026-09-01", count: 3 },
+    { date: "2026-09-02", count: 4 },
+    { date: "2026-09-03", count: 5 },
+    { date: "2026-09-04", count: 6 },
+    { date: "2026-09-07", count: 2 },
+    { date: "2026-09-08", count: 5 },
+    { date: "2026-09-10", count: 3 },
+    { date: "2026-09-12", count: 1 },
+  ] as const;
+  const densityPairs = [
+    [9, 10],
+    [11, 12],
+    [13, 14],
+    [15, 16],
+    [9, 11],
+    [10, 12],
+    [13, 15],
+    [14, 16],
+    [9, 13],
+    [10, 14],
+    [11, 15],
+    [12, 16],
+    [9, 14],
+    [10, 15],
+    [11, 16],
+    [12, 13],
+    [9, 12],
+    [10, 13],
+    [11, 14],
+    [15, 16],
+    [9, 16],
+    [10, 11],
+    [12, 14],
+    [13, 16],
+    [9, 15],
+    [10, 16],
+    [11, 13],
+    [12, 15],
+    [14, 9],
+    [13, 10],
+    [16, 12],
+    [15, 13],
+  ] as const;
+
+  let densityId = 31;
+  let densityPair = 0;
+  const densityGames = densityDays.flatMap(({ date, count }) =>
+    Array.from({ length: count }, (_, index) => {
+      const [a, b] = densityPairs[densityPair % densityPairs.length]!;
+      densityPair += 1;
+      const id = densityId;
+      densityId += 1;
+      const scheduled = date >= "2026-09-04";
+      return {
+        id,
+        name: `${teamById.get(a)} Vs. ${teamById.get(b)}`,
+        matchNumber: `Weeknight - Match ${index + 1}`,
+        round: "Weeknight",
+        status: (scheduled ? "scheduled" : "completed") as "scheduled" | "completed",
+        phase: "qualifiers" as const,
+        region: REGIONS[index % REGIONS.length],
+        team1Score: scheduled ? null : index % 2 === 0 ? 3 : 1,
+        team2Score: scheduled ? null : index % 2 === 0 ? 1 : 3,
+        set1Score: scheduled ? null : setLine(25, 20 + (index % 4)),
+        set2Score: scheduled ? null : setLine(22 + (index % 3), 25),
+        set3Score: scheduled ? null : setLine(25, 18 + (index % 5)),
+        date,
+        stage: "Weeknight",
+        videoUrl: null,
+        tags: ["Weeknight"],
+        seasonId: SEASON_4,
+        teamIds: [a, b] as const,
+      };
+    }),
+  );
+
+  const allGames = [...gameRows, ...playoffGames, ...densityGames];
 
   await insertMany(
     db,
