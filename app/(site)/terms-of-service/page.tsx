@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { PageHeader } from "@components/site/page-header";
+import { PageHeader, PageMetric } from "@components/site/page-header";
 
 export const metadata: Metadata = {
   title: "Terms of service",
@@ -48,6 +48,7 @@ export default function TermsOfServicePage() {
         eyebrow="Legal"
         title="Terms of service"
         description="Rules for using this platform. By signing in or browsing the site, you agree to these terms."
+        meta={<PageMetric label="Sections" value={SECTIONS.length} />}
       />
 
       {SECTIONS.map((section) => (
