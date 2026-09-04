@@ -28,7 +28,6 @@ export const FIXTURES = {
   gameId: 1,
   articleId: 1,
   awardId: 1,
-  matchId: 1,
   userId: "fixture-user",
   adminId: "fixture-admin",
   missingId: 999999,
