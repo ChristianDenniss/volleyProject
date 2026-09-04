@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { awardBanner } from "@/lib/award-banners";
 import { FilterSelect } from "./controls";
 
 export interface AwardListRow {
@@ -72,53 +73,56 @@ export function AwardsList({ awards }: { awards: AwardListRow[] }) {
       </div>
 
       <div className="grid grid-cols-1 gap-6 px-5 py-12 sm:grid-cols-2 sm:px-8 lg:grid-cols-3 xl:px-14 2xl:grid-cols-4">
-        {visible.map((award) => (
-          <Link
-            key={award.id}
-            href={`/awards/${award.id}`}
-            className="group relative flex flex-col overflow-hidden border border-rvl-line p-6 text-inherit no-underline transition-colors hover:border-rvl-accent-soft"
-          >
-            {award.imageUrl ? (
-              <img
-                src={award.imageUrl}
-                alt=""
-                aria-hidden="true"
-                className="pointer-events-none absolute -right-8 -top-8 size-36 object-contain opacity-[0.07] transition-opacity group-hover:opacity-15"
-              />
-            ) : null}
+        {visible.map((award) => {
+          const banner = awardBanner(award.type, award.imageUrl);
+          return (
+            <Link
+              key={award.id}
+              href={`/awards/${award.id}`}
+              className="group relative flex flex-col overflow-hidden border border-rvl-line p-6 text-inherit no-underline transition-colors hover:border-rvl-accent-soft"
+            >
+              {banner ? (
+                <img
+                  src={banner}
+                  alt=""
+                  aria-hidden="true"
+                  className="pointer-events-none absolute -right-8 -top-8 size-36 object-contain opacity-[0.07] transition-opacity group-hover:opacity-15"
+                />
+              ) : null}
 
-            <span className="relative font-mono text-[0.6rem] uppercase tracking-[0.2em] text-rvl-accent">
-              Season {award.seasonNumber ?? "-"}
-            </span>
+              <span className="relative font-mono text-[0.6rem] uppercase tracking-[0.2em] text-rvl-accent">
+                Season {award.seasonNumber ?? "-"}
+              </span>
 
-            <h2 className="relative mt-3 mb-0 font-display text-[1.25rem] font-bold uppercase leading-tight tracking-[-0.02em]">
-              {award.type}
-            </h2>
+              <h2 className="relative mt-3 mb-0 font-display text-[1.25rem] font-bold uppercase leading-tight tracking-[-0.02em]">
+                {award.type}
+              </h2>
 
-            {award.description ? (
-              <p className="relative m-0 mt-3 line-clamp-3 text-[0.88rem] text-rvl-ink-2">
-                {award.description}
-              </p>
-            ) : null}
+              {award.description ? (
+                <p className="relative m-0 mt-3 line-clamp-3 text-[0.88rem] text-rvl-ink-2">
+                  {award.description}
+                </p>
+              ) : null}
 
-            <div className="relative mt-5 flex flex-wrap gap-2">
-              {award.players.length > 0 ? (
-                award.players.map((player) => (
-                  <span
-                    key={player.id}
-                    className="border border-rvl-line px-2.5 py-1 font-mono text-[0.62rem] uppercase tracking-[0.12em] text-rvl-ink-2"
-                  >
-                    {player.name}
+              <div className="relative mt-5 flex flex-wrap gap-2">
+                {award.players.length > 0 ? (
+                  award.players.map((player) => (
+                    <span
+                      key={player.id}
+                      className="border border-rvl-line px-2.5 py-1 font-mono text-[0.62rem] uppercase tracking-[0.12em] text-rvl-ink-2"
+                    >
+                      {player.name}
+                    </span>
+                  ))
+                ) : (
+                  <span className="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-rvl-dim">
+                    No recipient recorded
                   </span>
-                ))
-              ) : (
-                <span className="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-rvl-dim">
-                  No recipient recorded
-                </span>
-              )}
-            </div>
-          </Link>
-        ))}
+                )}
+              </div>
+            </Link>
+          );
+        })}
       </div>
     </>
   );

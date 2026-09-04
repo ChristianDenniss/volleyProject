@@ -2,6 +2,7 @@ import { cache } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { awardBanner } from "@/lib/award-banners";
 import { api } from "@server/trpc/server";
 
 export const dynamic = "force-dynamic";
@@ -25,11 +26,12 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const names = award.players.map((player) => player.name).join(", ");
   const title = award.seasonNumber ? `${award.type} — Season ${award.seasonNumber}` : award.type;
   const description = names ? `${title}: ${names}. ${award.description}` : award.description;
+  const banner = awardBanner(award.type, award.imageUrl);
 
   return {
     title,
     description,
-    openGraph: { title, description, images: award.imageUrl ? [award.imageUrl] : undefined },
+    openGraph: { title, description, images: banner ? [banner] : undefined },
   };
 }
 
@@ -38,11 +40,13 @@ export default async function AwardPage({ params }: Params) {
   const award = await load(id);
   if (!award) notFound();
 
+  const banner = awardBanner(award.type, award.imageUrl);
+
   return (
     <div className="bg-rvl-ground px-5 py-12 font-display text-rvl-ink sm:px-8 sm:py-16 xl:px-14">
       <article className="mx-auto max-w-[1050px] overflow-hidden border border-rvl-line bg-rvl-ground">
         <header
-          style={award.imageUrl ? { backgroundImage: `url(${award.imageUrl})` } : undefined}
+          style={banner ? { backgroundImage: `url(${banner})` } : undefined}
           className="relative h-80 bg-[#0c0d10] bg-cover bg-center max-[600px]:h-[220px]"
         >
           <span
