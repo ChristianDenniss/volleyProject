@@ -91,7 +91,7 @@ export function AwardsList({ awards }: { awards: AwardListRow[] }) {
               Season {award.seasonNumber ?? "-"}
             </span>
 
-            <h2 className="relative mt-3 mb-0 text-[1.25rem] font-bold uppercase leading-tight tracking-[-0.02em]">
+            <h2 className="relative mt-3 mb-0 font-display text-[1.25rem] font-bold uppercase leading-tight tracking-[-0.02em]">
               {award.type}
             </h2>
 

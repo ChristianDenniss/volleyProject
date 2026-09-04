@@ -72,7 +72,7 @@ export default async function TeamPage({ params }: Params) {
   if (!team) notFound();
 
   return (
-    <div className="font-display">
+    <div>
       <header className="flex flex-col gap-6 border-b border-rvl-line px-5 py-12 sm:px-8 sm:py-14 lg:flex-row lg:items-end xl:px-14">
         <div className="flex items-center gap-5">
           {team.logoUrl ? (
@@ -86,7 +86,7 @@ export default async function TeamPage({ params }: Params) {
             <span className="font-mono text-[0.72rem] font-bold uppercase tracking-[0.24em] text-rvl-accent">
               Team
             </span>
-            <h1 className="mt-3 mb-0 text-[2.2rem] font-black uppercase leading-[0.95] tracking-[-0.035em] sm:text-[2.7rem]">
+            <h1 className="mt-3 mb-0 font-display text-[2.2rem] font-black uppercase leading-[0.95] tracking-[-0.035em] sm:text-[2.7rem]">
               {team.name}
             </h1>
           </div>

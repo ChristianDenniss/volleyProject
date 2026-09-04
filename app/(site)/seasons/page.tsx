@@ -25,7 +25,7 @@ export default async function SeasonsPage() {
   const rows = await trpc.seasons.list();
 
   return (
-    <div className="font-display">
+    <div>
       <PageHeader
         eyebrow="Archive"
         title="Seasons"
@@ -55,7 +55,7 @@ export default async function SeasonsPage() {
                   {formatDate(season.startDate)} – {formatDate(season.endDate)}
                 </span>
 
-                <h2 className="mt-3 mb-0 text-[1.8rem] font-black uppercase leading-none tracking-[-0.03em]">
+                <h2 className="mt-3 mb-0 font-display text-[1.8rem] font-black uppercase leading-none tracking-[-0.03em]">
                   Season {season.seasonNumber}
                 </h2>
 

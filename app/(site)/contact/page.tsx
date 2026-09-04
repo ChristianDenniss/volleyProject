@@ -34,7 +34,7 @@ const actionClass =
 
 export default function ContactPage() {
   return (
-    <div className="font-display">
+    <div>
       <PageHeader
         eyebrow="Get in touch"
         title="Contact"
@@ -48,7 +48,7 @@ export default function ContactPage() {
               <span className="font-mono text-[0.62rem] uppercase tracking-[0.2em] text-rvl-accent">
                 {channel.label}
               </span>
-              <h2 className="mt-4 mb-3 text-[1.25rem] font-bold uppercase leading-tight tracking-[-0.02em]">
+              <h2 className="mt-4 mb-3 font-display text-[1.25rem] font-bold uppercase leading-tight tracking-[-0.02em]">
                 {channel.title}
               </h2>
               <p className="m-0 mb-6 text-[0.9rem] text-rvl-ink-2">{channel.description}</p>

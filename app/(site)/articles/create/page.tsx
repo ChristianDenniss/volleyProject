@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function CreateArticlePage() {
   return (
-    <div className="font-display">
+    <div>
       <PageHeader
         eyebrow="League desk"
         title="Write an article"

@@ -98,7 +98,7 @@ export function ArticlesList({ articles }: { articles: ArticleListRow[] }) {
                       ? "Oldest"
                       : "Latest"}
               </span>
-              <h2 className="mt-5 mb-4 text-balance text-[2rem] font-black uppercase leading-[0.95] tracking-[-0.035em] sm:text-[2.5rem]">
+              <h2 className="mt-5 mb-4 text-balance font-display text-[2rem] font-black uppercase leading-[0.95] tracking-[-0.035em] sm:text-[2.5rem]">
                 {lead.title}
               </h2>
               <p className="m-0 mb-6 max-w-[46ch] text-[1rem] text-rvl-ink-2">{lead.summary}</p>

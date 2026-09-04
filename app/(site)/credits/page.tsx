@@ -15,7 +15,7 @@ const CONTRIBUTORS = [
 export default function CreditsPage() {
   return (
     <div className="min-h-full overflow-x-hidden bg-rvl-panel px-5 py-12 text-rvl-ink sm:px-8 sm:py-16 xl:px-14">
-      <h1 className="relative mb-8 text-center text-[3rem] font-black uppercase max-md:text-[2rem]">
+      <h1 className="relative mb-8 text-center font-display text-[3rem] font-black uppercase max-md:text-[2rem]">
         <span
           aria-hidden="true"
           className="absolute top-1/2 left-1/2 -z-1 h-[0.3em] w-[120%] -translate-x-1/2 -translate-y-1/2 -skew-x-[20deg] bg-rvl-accent-soft"

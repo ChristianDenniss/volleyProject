@@ -39,14 +39,14 @@ export default async function AwardPage({ params }: Params) {
   if (!award) notFound();
 
   return (
-    <div className="font-display">
+    <div>
       <header className="border-b border-rvl-line px-5 py-12 sm:px-8 sm:py-14 xl:px-14">
         <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-[1.15fr_1fr] lg:gap-12">
           <div>
             <span className="font-mono text-[0.72rem] font-bold uppercase tracking-[0.24em] text-rvl-accent">
               {award.seasonNumber ? `Season ${award.seasonNumber}` : "Award"}
             </span>
-            <h1 className="mt-4 mb-5 text-balance text-[2.2rem] font-black uppercase leading-[0.95] tracking-[-0.035em] sm:text-[2.9rem]">
+            <h1 className="mt-4 mb-5 text-balance font-display text-[2.2rem] font-black uppercase leading-[0.95] tracking-[-0.035em] sm:text-[2.9rem]">
               {award.type}
             </h1>
             <p className="m-0 max-w-[52ch] text-[1.02rem] text-rvl-ink-2">{award.description}</p>

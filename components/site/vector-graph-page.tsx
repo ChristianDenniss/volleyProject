@@ -24,7 +24,7 @@ const vectorGraphPage =
 const vectorGraphHeader = "mt-0 mr-0 mb-[20px] ml-0 p-0 border-none";
 
 const vectorGraphHeaderTitle =
-  "mt-0 mr-0 mb-[10px] ml-0 p-0 border-none text-[2rem] font-bold text-text upto-md:text-[1.75rem]";
+  "mt-0 mr-0 mb-[10px] ml-0 p-0 border-none font-display text-[2rem] font-bold text-text upto-md:text-[1.75rem]";
 
 const vectorGraphSubtitle = "text-[1rem] text-rvl-ink-2 leading-[1.5] m-0";
 
