@@ -1,6 +1,7 @@
 export * as articles from "./articles";
 export * as awards from "./awards";
 export * as games from "./games";
+export * as homeNumbers from "./home-numbers";
 export * as players from "./players";
 export * as records from "./records";
 export * as roblox from "./roblox";

@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { makeDb, type Db } from "@db";
 import { jobRuns } from "@db/schema";
 import { recalculateRecords } from "./records-recalculation";
+import { invalidateHomeNumbers } from "./services/home-numbers";
 
 export const RECORDS_RECALCULATION = "records.recalculate";
 
@@ -47,6 +48,7 @@ export async function runRecordsJob(db: Db, message: RecordsJobMessage): Promise
 
   try {
     const { rowsWritten } = await recalculateRecords(db, { seasonId: message.seasonId });
+    await invalidateHomeNumbers();
     await db
       .update(jobRuns)
       .set({ status: "succeeded", finishedAt: new Date(), rowsWritten })
