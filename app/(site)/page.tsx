@@ -2,9 +2,11 @@ import Link from "next/link";
 import { getDb } from "@db";
 import { api } from "@server/trpc/server";
 import { homeNumbers } from "@server/services";
+import { HomeBracket } from "@components/site/home-bracket";
 import { HomeMatches } from "@components/site/home-matches";
 import { HomeSpotlightRail, type SpotlightCard } from "@components/site/home-spotlight-rail";
 import { HomeVideo } from "@components/site/home-video";
+import { rankStandings } from "@/lib/standings";
 
 export const dynamic = "force-dynamic";
 
@@ -61,9 +63,10 @@ export default async function HomePage() {
 
   const season = seasonRows[0] ?? null;
 
-  const [matchRows, { numbers, avatars }] = await Promise.all([
+  const [matchRows, { numbers, avatars }, teamRows] = await Promise.all([
     season ? trpc.games.listSchedule({ seasonId: season.id }) : Promise.resolve([]),
     homeNumbers.loadHomeNumbers(getDb(), season?.id ?? null),
+    trpc.teams.list(),
   ]);
 
   const sortedArticles = [...articleRows].sort((a, b) => b.id - a.id);
@@ -71,6 +74,17 @@ export default async function HomePage() {
   const latest = sortedArticles.slice(1, 8);
 
   const phase = matchRows.some((match) => match.phase === "playoffs") ? "Playoffs" : "Qualifiers";
+  const standings = rankStandings(
+    teamRows
+      .filter((team) => team.seasonId === season?.id)
+      .map((team) => ({
+        id: team.id,
+        name: team.name,
+        logoUrl: team.logoUrl,
+        placement: team.placement,
+      })),
+    matchRows,
+  );
 
   const railCards: SpotlightCard[] = [
     ...latest.map((article, index) => ({
@@ -197,6 +211,8 @@ export default async function HomePage() {
       ) : null}
 
       <HomeVideo videoId="jUYJKjPvPoQ" />
+
+      <HomeBracket phase={phase} standings={standings} />
 
       <section className="relative h-[500px] min-h-[500px] overflow-hidden max-md:h-[300px] max-md:min-h-0 max-[480px]:h-[250px] min-[1600px]:h-[600px] min-[1600px]:min-h-[600px] min-[2000px]:h-[700px] min-[2000px]:min-h-[700px]">
         <img
