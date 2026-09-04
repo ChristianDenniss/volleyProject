@@ -72,7 +72,7 @@
   },
   "type": "module",
   "scripts": {
-    "dev": "vinext dev",
+    "dev": "pnpm db:migrate:local && vinext dev",
     "build": "vinext build",
     "start": "wrangler dev --config dist/server/wrangler.json",
     "deploy": "vinext-cloudflare deploy --config dist/server/wrangler.json",
