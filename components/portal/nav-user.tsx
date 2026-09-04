@@ -97,7 +97,7 @@ export function NavUser({ user }: NavUserProps) {
             <DropdownMenuItem
               onSelect={async () => {
                 await signOut();
-                router.push("/");
+                router.replace("/");
                 router.refresh();
               }}
             >

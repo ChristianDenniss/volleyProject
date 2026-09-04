@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { useLiveSession } from "./use-live-session";
 
 const PRIMARY = [
   { href: "/", label: "Home" },
@@ -20,15 +21,15 @@ const PRIMARY = [
   { href: "/stats", label: "Stats" },
   { href: "/teams", label: "Teams" },
   { href: "/players", label: "Players" },
+  { href: "/games", label: "Games" },
+  { href: "/records", label: "Records" },
+  { href: "/awards", label: "Awards" },
+  { href: "/articles", label: "Articles" },
 ];
 
 const LEAGUE = [
-  { href: "/games", label: "Games" },
   { href: "/seasons", label: "Seasons" },
-  { href: "/records", label: "Records" },
   { href: "/vector-graph", label: "Stats vector" },
-  { href: "/awards", label: "Awards" },
-  { href: "/articles", label: "Articles" },
   { href: "/trivia", label: "Trivia" },
   { href: "/faq", label: "FAQ" },
   { href: "/applications", label: "Applications" },
@@ -49,7 +50,7 @@ const EXTERNAL = [
 ];
 
 const linkClass =
-  "rounded-xs px-3.5 py-2.5 text-[0.8rem] font-semibold uppercase tracking-[0.11em] text-rvl-dim no-underline transition-colors hover:text-rvl-ink";
+  "whitespace-nowrap rounded-xs px-2.5 py-2 font-mono text-[0.74rem] font-semibold uppercase tracking-[0.1em] text-rvl-dim no-underline transition-colors hover:text-rvl-ink lg:px-3.5 lg:py-2.5";
 
 function accountLinks(isSignedIn: boolean) {
   return isSignedIn
@@ -61,12 +62,15 @@ function accountLinks(isSignedIn: boolean) {
 }
 
 export function SiteTopbarNav({
-  isAdmin,
-  isSignedIn,
+  isAdmin: initialAdmin,
+  isSignedIn: initialSignedIn,
 }: {
   isAdmin: boolean;
   isSignedIn: boolean;
 }) {
+  const live = useLiveSession();
+  const isSignedIn = live.isSignedIn ?? initialSignedIn;
+  const isAdmin = live.isAdmin ?? initialAdmin;
   const pathname = usePathname();
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
@@ -142,7 +146,7 @@ export function SiteTopbarNav({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <ul className="hidden min-w-0 list-none items-center gap-1.5 p-0 md:flex">
+      <ul className="no-scrollbar hidden min-w-0 list-none items-center gap-0.5 overflow-x-auto p-0 md:flex">
         {PRIMARY.map((link) => (
           <li key={link.href}>
             <Link
