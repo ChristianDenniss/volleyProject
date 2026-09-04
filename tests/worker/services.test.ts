@@ -190,7 +190,7 @@ describe("stats", () => {
   });
 
   it("scopes the leaderboard to one season", async () => {
-    const rows = await stats.leaderboard(db, FIXTURES.seasonId);
+    const rows = await stats.leaderboard(db, { seasonId: FIXTURES.seasonId });
     expect(rows.every((row) => row.gamesPlayed === 2)).toBe(true);
   });
 
