@@ -10,6 +10,7 @@ export const metadata = {
     "Join the official Roblox Volleyball League (RVL). Watch matches, track player stats, view team rankings, and stay updated with the latest volleyball news and events.",
 };
 
+
 const REGIONS = [
   { code: "na", label: "NA" },
   { code: "eu", label: "EU" },
@@ -54,7 +55,7 @@ export default async function HomePage() {
   const season = seasonRows[0] ?? null;
 
   const [matchRows, leaders, killRecords, blockRecords, aceRecords] = await Promise.all([
-    season ? trpc.matches.list({ seasonId: season.id }) : Promise.resolve([]),
+    season ? trpc.games.listSchedule({ seasonId: season.id }) : Promise.resolve([]),
     season ? trpc.stats.leaderboard({ seasonId: season.id }) : Promise.resolve([]),
     trpc.records.byMetric({ metric: "total kills", type: "game" }),
     trpc.records.byMetric({ metric: "blocks", type: "game" }),
@@ -111,32 +112,76 @@ export default async function HomePage() {
       metric: "Kills · one game",
       value: killRecords[0].value,
       name: killRecords[0].playerName,
-      context: `S${killRecords[0].seasonNumber ?? "—"} · record`,
+      context: `S${killRecords[0].seasonNumber ?? "-"} · record`,
       href: "/records",
     },
     blockRecords[0] && {
       metric: "Blocks · one game",
       value: blockRecords[0].value,
       name: blockRecords[0].playerName,
-      context: `S${blockRecords[0].seasonNumber ?? "—"} · record`,
+      context: `S${blockRecords[0].seasonNumber ?? "-"} · record`,
       href: "/records",
     },
     aceRecords[0] && {
       metric: "Aces · one game",
       value: aceRecords[0].value,
       name: aceRecords[0].playerName,
-      context: `S${aceRecords[0].seasonNumber ?? "—"} · record`,
+      context: `S${aceRecords[0].seasonNumber ?? "-"} · record`,
       href: "/records",
     },
   ].flatMap((entry) => (entry ? [entry] : []));
 
+  // ── Standings: derive W/L from completed matches ──────────────────────────
+  const teamWins = new Map<string, number>();
+  const teamLosses = new Map<string, number>();
+  for (const m of matchRows.filter((m) => m.status === "completed")) {
+    const t1 = m.team1Name ?? null;
+    const t2 = m.team2Name ?? null;
+    if (!t1 || !t2) continue;
+    const t1Wins = (m.team1Score ?? 0) > (m.team2Score ?? 0);
+    teamWins.set(t1, (teamWins.get(t1) ?? 0) + (t1Wins ? 1 : 0));
+    teamLosses.set(t1, (teamLosses.get(t1) ?? 0) + (t1Wins ? 0 : 1));
+    teamWins.set(t2, (teamWins.get(t2) ?? 0) + (t1Wins ? 0 : 1));
+    teamLosses.set(t2, (teamLosses.get(t2) ?? 0) + (t1Wins ? 1 : 0));
+  }
+  const standingsRows = [...new Set([...teamWins.keys(), ...teamLosses.keys()])]
+    .map((name) => ({ name, wins: teamWins.get(name) ?? 0, losses: teamLosses.get(name) ?? 0 }))
+    .sort((a, b) => b.wins - a.wins || a.losses - b.losses);
+
+  // ── Spotlight leaders ──────────────────────────────────────────────────────
+  const spotlightLeaders = [
+    killLeader && {
+      stat: "Season Kills",
+      value: Number(killLeader.totalKills ?? 0),
+      name: killLeader.playerName,
+      position: killLeader.position ?? "—",
+      href: `/players/${killLeader.playerId}`,
+    },
+    assistLeader && {
+      stat: "Season Assists",
+      value: Number(assistLeader.assists ?? 0),
+      name: assistLeader.playerName,
+      position: assistLeader.position ?? "—",
+      href: `/players/${assistLeader.playerId}`,
+    },
+    digLeader && {
+      stat: "Season Digs",
+      value: Number(digLeader.digs ?? 0),
+      name: digLeader.playerName,
+      position: digLeader.position ?? "—",
+      href: `/players/${digLeader.playerId}`,
+    },
+  ].flatMap((e) => (e ? [e] : []));
+
   return (
     <div className="bg-rvl-ground font-display text-rvl-ink">
-      <section className="flex flex-wrap items-center gap-x-10 gap-y-5 border-b border-rvl-line px-5 py-5 font-mono sm:gap-x-13 sm:px-8 xl:px-14">
+
+      {/* ── League ticker ─────────────────────────────────────────────────── */}
+      <section className="flex flex-wrap items-center gap-x-10 gap-y-5 px-5 py-5 font-mono sm:gap-x-13 sm:px-8 xl:px-14">
         <div className="flex flex-col gap-1">
           <span className="text-[0.58rem] uppercase tracking-[0.22em] text-rvl-dim">Season</span>
           <span className="text-[1.05rem] font-medium tabular-nums text-rvl-accent">
-            {season?.seasonNumber ?? "—"}
+            {season?.seasonNumber ?? "-"}
           </span>
         </div>
         <div className="flex flex-col gap-1">
@@ -176,14 +221,13 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className={band}>
+
+      {/* ── Featured article hero ─────────────────────────────────────────── */}
+      <section className="border-b border-rvl-line px-5 pt-6 pb-14 sm:px-8 sm:pt-8 sm:pb-18 xl:px-14">
         {featured ? (
           <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-[1.15fr_1fr] lg:gap-12">
             <div>
-              <span className="inline-block border border-rvl-accent-soft px-3 py-1.5 font-mono text-[0.64rem] uppercase tracking-[0.2em] text-rvl-accent">
-                {season ? `Season ${season.seasonNumber} · ${phase}` : "League desk"}
-              </span>
-              <h1 className="mt-6 mb-4 text-balance text-[2.2rem] font-black uppercase leading-[0.95] tracking-[-0.035em] sm:text-[2.6rem] lg:text-[3.1rem]">
+              <h1 className="mb-4 text-balance text-[2.2rem] font-black uppercase leading-[0.95] tracking-[-0.035em] sm:text-[2.6rem] lg:text-[3.1rem]">
                 {featured.title}
               </h1>
               <p className="m-0 mb-6 max-w-[46ch] text-[1.02rem] text-rvl-ink-2">
@@ -222,9 +266,150 @@ export default async function HomePage() {
         )}
       </section>
 
+      {/* ── Standings table ───────────────────────────────────────────────── */}
+      {standingsRows.length > 0 ? (
+        <section className={railband}>
+          <div>
+            <h2 className={railHeading}>Standings</h2>
+            <p className="m-0 mb-4 text-[0.84rem] text-rvl-dim">
+              {phase} · Season {season?.seasonNumber ?? "—"}
+            </p>
+            <Link href="/schedules" className={railMore}>
+              Full bracket
+            </Link>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-85 border-collapse font-mono text-[0.78rem]">
+              <thead>
+                <tr className="border-b border-rvl-line">
+                  <th className="pb-2 text-left text-[0.6rem] uppercase tracking-[0.18em] text-rvl-dim font-normal w-7">#</th>
+                  <th className="pb-2 text-left text-[0.6rem] uppercase tracking-[0.18em] text-rvl-dim font-normal">Team</th>
+                  <th className="pb-2 text-center text-[0.6rem] uppercase tracking-[0.18em] text-rvl-dim font-normal w-10">W</th>
+                  <th className="pb-2 text-center text-[0.6rem] uppercase tracking-[0.18em] text-rvl-dim font-normal w-10">L</th>
+                  <th className="pb-2 text-center text-[0.6rem] uppercase tracking-[0.18em] text-rvl-dim font-normal w-14">Win%</th>
+                </tr>
+              </thead>
+              <tbody>
+                {standingsRows.map((row, i) => {
+                  const total = row.wins + row.losses;
+                  const pct = total === 0 ? "—" : ((row.wins / total) * 100).toFixed(0) + "%";
+                  return (
+                    <tr
+                      key={row.name}
+                      className={`border-b border-rvl-line/60 ${i === 0 ? "text-rvl-ink" : "text-rvl-ink-2"}`}
+                    >
+                      <td className="py-3 text-rvl-dim tabular-nums">{i + 1}</td>
+                      <td className="py-3 font-semibold font-display tracking-normal">
+                        <Link
+                          href={`/teams/${encodeURIComponent(row.name)}`}
+                          className="text-inherit no-underline hover:text-rvl-accent"
+                        >
+                          {row.name}
+                        </Link>
+                      </td>
+                      <td className={`py-3 text-center tabular-nums ${i === 0 ? "font-bold text-rvl-accent" : ""}`}>
+                        {row.wins}
+                      </td>
+                      <td className="py-3 text-center tabular-nums">{row.losses}</td>
+                      <td className="py-3 text-center tabular-nums text-rvl-dim">{pct}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      ) : null}
+
+      {/* ── Player spotlight ──────────────────────────────────────────────── */}
+      {spotlightLeaders.length > 0 ? (
+        <section className="border-b border-rvl-line px-5 py-14 sm:px-8 sm:py-18 xl:px-14">
+          <div className="mb-8 flex flex-wrap items-baseline gap-4">
+            <h2 className="m-0 font-mono text-[0.72rem] font-bold uppercase tracking-[0.24em] text-rvl-accent">
+              Season Leaders
+            </h2>
+            <span className="text-[0.84rem] text-rvl-dim">top performers this season</span>
+            <Link
+              href="/stats"
+              className="font-mono text-[0.68rem] uppercase tracking-[0.14em] text-rvl-ink-2 no-underline transition-colors hover:text-rvl-accent md:ml-auto"
+            >
+              Full stats →
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+            {spotlightLeaders.map((leader) => (
+              <Link
+                key={leader.stat}
+                href={leader.href}
+                className="group relative flex flex-col gap-5 border border-rvl-line bg-rvl-panel p-7 text-inherit no-underline transition-colors hover:border-rvl-accent-soft"
+              >
+                {/* Avatar placeholder */}
+                <div className="flex items-center gap-4">
+                  <div className="flex size-14 shrink-0 items-center justify-center border border-rvl-line bg-rvl-ground font-mono text-[1.15rem] font-bold uppercase text-rvl-accent">
+                    {leader.name.slice(0, 2).toUpperCase()}
+                  </div>
+                  <div>
+                    <div className="text-[1.02rem] font-bold leading-tight">{leader.name}</div>
+                    <div className="mt-0.5 font-mono text-[0.62rem] uppercase tracking-[0.18em] text-rvl-dim">
+                      {leader.position}
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="font-mono text-[3.4rem] font-bold leading-none tracking-tighter tabular-nums text-rvl-accent">
+                    {leader.value}
+                  </div>
+                  <div className="mt-1.5 font-mono text-[0.62rem] uppercase tracking-[0.2em] text-rvl-dim">
+                    {leader.stat}
+                  </div>
+                </div>
+
+                <span className="mt-auto font-mono text-[0.62rem] uppercase tracking-[0.14em] text-rvl-ink-2 transition-colors group-hover:text-rvl-accent">
+                  View profile →
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {/* ── Editorial photo band ──────────────────────────────────────────── */}
+      <section
+        className="relative w-full border-b border-rvl-line"
+        style={{
+          height: 500,
+          backgroundImage: "url('/images/callToAction.png')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+        }}
+      >
+        <div className="absolute inset-0 bg-linear-to-r from-black/70 via-black/30 to-transparent" />
+        <div className="absolute inset-0 flex flex-col justify-center px-8 sm:px-12 xl:px-16">
+          <span className="font-mono text-[0.64rem] uppercase tracking-[0.22em] text-rvl-accent-soft">
+            Season {season?.seasonNumber ?? "—"} · {phase}
+          </span>
+          <h2 className="mt-3 mb-4 max-w-[18ch] text-balance text-[2rem] font-black uppercase leading-[0.94] tracking-[-0.03em] text-white sm:text-[2.6rem]">
+            Play volleyball with the world
+          </h2>
+          <a
+            href="https://www.roblox.com/games/3840352284/Volleyball-4-2"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block w-fit bg-rvl-accent-bg px-6 py-3 text-[0.8rem] font-bold uppercase tracking-[0.11em] text-rvl-on-accent no-underline transition-opacity hover:opacity-85"
+          >
+            Play Now on Roblox
+          </a>
+        </div>
+      </section>
+
+      {/* ── Recent articles as episode cards ─────────────────────────────── */}
       {latest.length > 0 ? (
         <section className={band}>
-          <div className="mb-7 flex flex-wrap items-baseline gap-4">
+          <div className="mb-8 flex flex-wrap items-baseline gap-4">
             <h2 className="m-0 font-mono text-[0.72rem] font-bold uppercase tracking-[0.24em] text-rvl-accent">
               Latest
             </h2>
@@ -237,29 +422,54 @@ export default async function HomePage() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8">
-            {latest.map((article) => (
+          <div className="grid grid-cols-1 gap-0 divide-y divide-rvl-line border border-rvl-line sm:grid-cols-1 lg:grid-cols-3 lg:divide-x lg:divide-y-0">
+            {latest.map((article, i) => (
               <Link
                 key={article.id}
                 href={`/articles/${article.id}`}
-                className="block border border-rvl-line p-6 text-inherit no-underline transition-colors hover:border-rvl-accent-soft"
+                className="group flex flex-col gap-0 text-inherit no-underline"
               >
-                <span className="font-mono text-[0.62rem] uppercase tracking-[0.2em] text-rvl-accent">
-                  {article.authorName}
-                </span>
-                <h3 className="mt-4 mb-3 text-[1.15rem] font-semibold leading-[1.28]">
-                  {article.title}
-                </h3>
-                <p className="m-0 mb-4 text-[0.9rem] text-rvl-ink-2">{article.summary}</p>
-                <span className="font-mono text-[0.64rem] uppercase tracking-[0.12em] text-rvl-dim">
-                  {shortDate(article.createdAt)} · ♥ {article.likes}
-                </span>
+                {article.imageUrl ? (
+                  <div className="overflow-hidden">
+                    <img
+                      src={article.imageUrl}
+                      alt={article.title}
+                      className="aspect-video w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex aspect-video w-full items-center justify-center bg-rvl-panel">
+                    <span className="font-mono text-[0.64rem] uppercase tracking-[0.2em] text-rvl-dim">
+                      Episode {i + 1}
+                    </span>
+                  </div>
+                )}
+                <div className="flex grow flex-col p-6">
+                  <span className="font-mono text-[0.62rem] uppercase tracking-[0.2em] text-rvl-accent">
+                    {article.authorName}
+                  </span>
+                  <h3 className="mt-3 mb-3 text-[1.15rem] font-bold leading-[1.26]">
+                    {article.title}
+                  </h3>
+                  <p className="m-0 mb-5 text-[0.9rem] leading-relaxed text-rvl-ink-2">
+                    {article.summary}
+                  </p>
+                  <div className="mt-auto flex items-center justify-between">
+                    <span className="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-rvl-dim">
+                      {shortDate(article.createdAt)}
+                    </span>
+                    <span className="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-rvl-accent">
+                      ♥ {article.likes}
+                    </span>
+                  </div>
+                </div>
               </Link>
             ))}
           </div>
         </section>
       ) : null}
 
+      {/* ── Bracket results ───────────────────────────────────────────────── */}
       {results.length > 0 || upcoming.length > 0 ? (
         <section className={railband}>
           <div>
@@ -279,7 +489,7 @@ export default async function HomePage() {
                 href="/schedules"
                 className="flex flex-wrap items-center gap-x-8 gap-y-2 text-inherit no-underline"
               >
-                <span className="w-[158px] shrink-0 font-mono text-[0.66rem] uppercase tracking-[0.16em] text-rvl-dim">
+                <span className="w-39.5 shrink-0 font-mono text-[0.66rem] uppercase tracking-[0.16em] text-rvl-dim">
                   {shortDate(match.date)} · {match.round}
                 </span>
                 <span className="flex items-center gap-4 text-[1.25rem]">
@@ -321,7 +531,7 @@ export default async function HomePage() {
                 href="/schedules"
                 className="flex flex-wrap items-center gap-x-8 gap-y-2 text-inherit no-underline"
               >
-                <span className="w-[158px] shrink-0 font-mono text-[0.66rem] uppercase tracking-[0.16em] text-rvl-dim">
+                <span className="w-39.5 shrink-0 font-mono text-[0.66rem] uppercase tracking-[0.16em] text-rvl-dim">
                   {shortDate(match.date)} · {match.round}
                 </span>
                 <span className="flex items-center gap-4 text-[1.25rem] text-rvl-ink-2">
@@ -338,8 +548,9 @@ export default async function HomePage() {
         </section>
       ) : null}
 
+      {/* ── Numbers / records ─────────────────────────────────────────────── */}
       {numbers.length > 0 ? (
-        <section className={railband}>
+        <section className="grid grid-cols-1 gap-10 px-5 pt-14 pb-8 sm:px-8 sm:pt-20 md:grid-cols-[210px_1fr] md:gap-16 xl:px-14">
           <div>
             <h2 className={railHeading}>Numbers</h2>
             <p className="m-0 mb-4 text-[0.84rem] text-rvl-dim">
@@ -371,41 +582,37 @@ export default async function HomePage() {
         </section>
       ) : null}
 
-      <section className="border-b border-rvl-line">
-        <div className="px-5 pt-14 pb-7 sm:px-8 sm:pt-18 xl:px-14">
-          <h2 className="m-0 font-mono text-[0.72rem] font-bold uppercase tracking-[0.24em] text-rvl-accent">
-            Watch
-          </h2>
-        </div>
-        <HomeVideo videoId="jUYJKjPvPoQ" />
-      </section>
+      <HomeVideo videoId="jUYJKjPvPoQ" />
 
-      <section className="flex flex-col gap-8 border-b border-rvl-line bg-rvl-panel px-5 py-14 sm:px-8 lg:flex-row lg:items-center lg:gap-11 xl:px-14">
-        <div>
-          <h2 className="m-0 mb-2.5 text-[1.7rem] font-black uppercase leading-none tracking-[-0.03em] sm:text-[2.1rem]">
-            {season ? `Tryouts open before Season ${season.seasonNumber + 1}` : "Tryouts are open"}
-          </h2>
-          <p className="m-0 max-w-[52ch] text-[0.95rem] text-rvl-ink-2">
-            Play on Roblox, then sign up in Discord — rosters lock the week qualifiers start.
-          </p>
-        </div>
-        <div className="flex shrink-0 flex-wrap gap-3 lg:ml-auto">
-          <a
-            href="https://www.roblox.com/games/3840352284/Volleyball-4-2"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bg-rvl-accent-bg px-6 py-4 text-[0.84rem] font-bold uppercase tracking-[0.11em] text-rvl-on-accent no-underline transition-opacity hover:opacity-85"
-          >
-            Play on Roblox
-          </a>
-          <a
-            href="https://discord.gg/volleyball"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="border border-rvl-line px-6 py-4 text-[0.84rem] font-semibold uppercase tracking-[0.11em] no-underline transition-colors hover:border-rvl-accent-soft hover:text-rvl-accent"
-          >
-            Join Discord
-          </a>
+      {/* ── Join CTA ──────────────────────────────────────────────────────── */}
+      <section className="border-t border-rvl-line bg-rvl-panel px-5 py-14 sm:px-8 sm:py-18 xl:px-14">
+        <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="m-0 text-[1.8rem] font-black uppercase leading-[0.95] tracking-[-0.03em] sm:text-[2.2rem]">
+              Join the RVL community
+            </h2>
+            <p className="mt-3 max-w-[44ch] text-[1rem] text-rvl-ink-2">
+              Connect with players, follow match results, and track stats across every season.
+            </p>
+          </div>
+          <div className="flex shrink-0 flex-col gap-3 sm:items-end">
+            <a
+              href="https://www.roblox.com/games/3840352284/Volleyball-4-2"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block bg-rvl-accent-bg px-7 py-3.5 text-[0.84rem] font-bold uppercase tracking-[0.11em] text-rvl-on-accent no-underline transition-opacity hover:opacity-85"
+            >
+              Play on Roblox
+            </a>
+            <a
+              href="https://discord.gg/volleyball"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block border border-rvl-line px-7 py-3.5 text-[0.84rem] font-bold uppercase tracking-[0.11em] text-rvl-ink-2 no-underline transition-colors hover:border-rvl-accent-soft hover:text-rvl-accent"
+            >
+              Join Discord
+            </a>
+          </div>
         </div>
       </section>
     </div>

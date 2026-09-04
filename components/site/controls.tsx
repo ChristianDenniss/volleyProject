@@ -123,7 +123,7 @@ export function Pagination({
 }) {
   const pages = Math.max(totalPages, 1);
   const buttonClass =
-    "cursor-pointer rounded-xs border border-rvl-line bg-transparent px-3 py-2 font-mono text-[0.66rem] uppercase tracking-[0.14em] text-rvl-ink-2 transition-colors hover:enabled:border-rvl-accent-soft hover:enabled:text-rvl-accent disabled:cursor-not-allowed disabled:border-rvl-line disabled:text-rvl-dim disabled:opacity-50";
+    "cursor-pointer rounded-xs border border-rvl-line bg-transparent px-2.5 py-2 font-mono text-[0.78rem] leading-none text-rvl-ink-2 transition-colors hover:enabled:border-rvl-accent-soft hover:enabled:text-rvl-accent disabled:cursor-not-allowed disabled:border-rvl-line disabled:text-rvl-dim disabled:opacity-50";
 
   return (
     <div className={cn("flex items-center gap-2", variant === "default" && "my-5 justify-center")}>
@@ -132,16 +132,18 @@ export function Pagination({
         className={buttonClass}
         onClick={() => onPageChange(1)}
         disabled={currentPage === 1}
+        aria-label="First page"
       >
-        First
+        {"<<"}
       </button>
       <button
         type="button"
         className={buttonClass}
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
+        aria-label="Previous page"
       >
-        Prev
+        {"<"}
       </button>
       <span className="px-1 font-mono text-[0.72rem] tabular-nums text-rvl-dim">
         {currentPage} / {pages}
@@ -151,16 +153,18 @@ export function Pagination({
         className={buttonClass}
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === pages}
+        aria-label="Next page"
       >
-        Next
+        {">"}
       </button>
       <button
         type="button"
         className={buttonClass}
         onClick={() => onPageChange(pages)}
         disabled={currentPage === pages}
+        aria-label="Last page"
       >
-        Last
+        {">>"}
       </button>
     </div>
   );

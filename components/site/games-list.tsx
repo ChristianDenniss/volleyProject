@@ -148,7 +148,7 @@ export function GamesList({ games }: { games: GameListRow[] }) {
                 {game.team2Score}
               </span>
               <span className="font-mono text-[0.64rem] uppercase tracking-[0.14em] text-rvl-dim md:ml-auto">
-                S{game.seasonNumber ?? "—"}
+                S{game.seasonNumber ?? "-"}
                 {game.stage ? ` · ${game.stage}` : ""}
               </span>
             </Link>

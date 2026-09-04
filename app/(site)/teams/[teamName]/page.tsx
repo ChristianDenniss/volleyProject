@@ -1,7 +1,9 @@
 import { cache } from "react";
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ChevronDown } from "lucide-react";
 import { api } from "@server/trpc/server";
 import { PageMetric } from "@components/site/page-header";
 
@@ -37,10 +39,32 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   };
 }
 
-const railClass =
-  "grid grid-cols-1 gap-8 border-b border-rvl-line px-5 py-12 sm:px-8 md:grid-cols-[210px_1fr] md:gap-14 xl:px-14";
-const railHeadingClass =
-  "m-0 mb-3 font-mono text-[0.72rem] font-bold uppercase tracking-[0.24em] text-rvl-accent";
+function CollapsibleSection({
+  title,
+  hint,
+  children,
+}: {
+  title: string;
+  hint: string;
+  children: ReactNode;
+}) {
+  return (
+    <details open className="group border-b border-rvl-line">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-8 marker:hidden transition-colors hover:bg-rvl-panel sm:px-8 xl:px-14 [&::-webkit-details-marker]:hidden">
+        <div>
+          <h2 className="m-0 mb-3 font-mono text-[0.72rem] font-bold uppercase tracking-[0.24em] text-rvl-accent">
+            {title}
+          </h2>
+          <p className="m-0 font-mono text-[0.64rem] uppercase tracking-[0.14em] text-rvl-dim">
+            {hint}
+          </p>
+        </div>
+        <ChevronDown className="size-4 shrink-0 text-rvl-dim transition-transform duration-300 -rotate-90 group-open:rotate-0" />
+      </summary>
+      <div className="px-5 pb-12 sm:px-8 xl:px-14">{children}</div>
+    </details>
+  );
+}
 
 export default async function TeamPage({ params }: Params) {
   const { teamName } = await params;
@@ -69,24 +93,12 @@ export default async function TeamPage({ params }: Params) {
         </div>
 
         <div className="flex flex-wrap gap-8 font-mono lg:ml-auto">
-          <PageMetric
-            label="Season"
-            value={team.season ? team.season.seasonNumber : "—"}
-          />
+          <PageMetric label="Season" value={team.season ? team.season.seasonNumber : "-"} />
           <PageMetric label="Placement" value={team.placement} />
-          <PageMetric label="Players" value={team.players.length} />
-          <PageMetric label="Games" value={team.games.length} />
         </div>
       </header>
 
-      <section className={railClass}>
-        <div>
-          <h2 className={railHeadingClass}>Roster</h2>
-          <p className="m-0 font-mono text-[0.64rem] uppercase tracking-[0.14em] text-rvl-dim">
-            {team.players.length} players
-          </p>
-        </div>
-
+      <CollapsibleSection title="Roster" hint={`${team.players.length} players`}>
         {team.players.length === 0 ? (
           <p className="m-0 font-mono text-[0.78rem] uppercase tracking-[0.14em] text-rvl-dim">
             No players on this roster.
@@ -108,16 +120,9 @@ export default async function TeamPage({ params }: Params) {
             ))}
           </ul>
         )}
-      </section>
+      </CollapsibleSection>
 
-      <section className={railClass}>
-        <div>
-          <h2 className={railHeadingClass}>Games</h2>
-          <p className="m-0 font-mono text-[0.64rem] uppercase tracking-[0.14em] text-rvl-dim">
-            {team.games.length} played
-          </p>
-        </div>
-
+      <CollapsibleSection title="Games" hint={`${team.games.length} played`}>
         {team.games.length === 0 ? (
           <p className="m-0 font-mono text-[0.78rem] uppercase tracking-[0.14em] text-rvl-dim">
             No recorded games.
@@ -148,7 +153,7 @@ export default async function TeamPage({ params }: Params) {
             ))}
           </div>
         )}
-      </section>
+      </CollapsibleSection>
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { PageHeader, PageMetric } from "@components/site/page-header";
+import { PageHeader } from "@components/site/page-header";
 
 export const metadata: Metadata = {
   title: "Applications",
@@ -91,22 +91,12 @@ const GROUPS: { category: string; applications: Application[] }[] = [
 ];
 
 export default function ApplicationsPage() {
-  const all = GROUPS.flatMap((group) => group.applications);
-  const open = all.filter((application) => application.status === "open" && application.url).length;
-
   return (
     <div className="font-display">
       <PageHeader
         eyebrow="Join the staff"
         title="Applications"
         description="Positions open and closed across the league. Closed positions reopen when we need them, so check back."
-        meta={
-          <>
-            <PageMetric label="Positions" value={all.length} />
-            <PageMetric label="Open" value={open} />
-            <PageMetric label="Closed" value={all.length - open} />
-          </>
-        }
       />
 
       <div>

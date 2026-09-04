@@ -36,15 +36,8 @@ const SOCIALS = [
 export function SiteFooter() {
   return (
     <footer className="w-full shrink-0 border-t border-rvl-line bg-rvl-panel text-rvl-ink">
-      <div className="flex flex-col gap-10 px-5 py-12 sm:px-8 xl:px-14">
-        <div className="flex flex-col gap-8 md:grid md:grid-cols-[210px_1fr] md:gap-14">
-          <div className="flex flex-col gap-4">
-            <img src="/rvlLogo.png" alt="RVL Logo" className="h-14 w-auto self-start" />
-            <span className="font-mono text-[0.62rem] uppercase tracking-[0.2em] text-rvl-dim">
-              Roblox Volleyball League
-            </span>
-          </div>
-
+      <div className="px-5 py-6 sm:px-8 xl:px-14">
+        <div className="flex flex-col gap-6">
           <div className="flex flex-col gap-8 sm:flex-row sm:items-start sm:justify-between">
             <nav className="flex flex-wrap gap-x-8 gap-y-3">
               {NAV.map((link) =>
@@ -92,12 +85,13 @@ export function SiteFooter() {
               ))}
             </div>
           </div>
-        </div>
 
-        <div className="border-t border-rvl-line pt-6">
-          <p className="m-0 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-rvl-dim">
-            Copyright (C) {new Date().getFullYear()} Volleyball World · All rights reserved
-          </p>
+          <div className="flex items-center gap-4">
+            <img src="/rvlLogo.png" alt="RVL Logo" className="h-8 w-auto shrink-0" />
+            <p className="m-0 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-rvl-dim whitespace-nowrap">
+              Roblox Volleyball League · Copyright (C) {new Date().getFullYear()} Volleyball World · All rights reserved
+            </p>
+          </div>
         </div>
       </div>
     </footer>

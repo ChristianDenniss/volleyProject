@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { api } from "@server/trpc/server";
 import { EmptyState } from "@components/site/empty-state";
-import { PageHeader, PageMetric } from "@components/site/page-header";
+import { PageHeader } from "@components/site/page-header";
 
 export const dynamic = "force-dynamic";
 
@@ -24,22 +24,12 @@ export default async function SeasonsPage() {
   const trpc = await api();
   const rows = await trpc.seasons.list();
 
-  const totalTeams = rows.reduce((sum, season) => sum + season.teamCount, 0);
-  const totalGames = rows.reduce((sum, season) => sum + season.gameCount, 0);
-
   return (
     <div className="font-display">
       <PageHeader
         eyebrow="Archive"
         title="Seasons"
         description="Every season the league has run, newest first, with its theme and the size of its field."
-        meta={
-          <>
-            <PageMetric label="Seasons" value={rows.length} />
-            <PageMetric label="Teams" value={totalTeams} />
-            <PageMetric label="Games" value={totalGames} />
-          </>
-        }
       />
 
       {rows.length === 0 ? (

@@ -19,7 +19,7 @@ const COLUMNS: ColumnSpec<Row>[] = [
   {
     key: "season",
     label: "Season",
-    render: (row) => (row.seasonNumber ? `Season ${row.seasonNumber}` : "—"),
+    render: (row) => (row.seasonNumber ? `Season ${row.seasonNumber}` : "-"),
   },
   { key: "placement", label: "Placement", render: (row) => row.placement },
   { key: "playerCount", label: "Players", align: "right", render: (row) => row.playerCount },

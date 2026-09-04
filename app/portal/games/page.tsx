@@ -4,7 +4,7 @@ import { GamesManager } from "@components/portal/games-manager";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Games — Portal" };
+export const metadata = { title: "Games · Portal" };
 
 export default async function PortalGamesPage() {
   const trpc = await api();
@@ -17,7 +17,7 @@ export default async function PortalGamesPage() {
   return (
     <PortalPage
       title="Games"
-      description="A new game is created from two team names; the game name is derived from them."
+      description="Schedule fixtures and record completed games. Team slots can be left as TBD until bracket teams are confirmed. Streamer, referee, and commentator usernames are logged on the game."
     >
       <GamesManager
         rows={rows}
@@ -25,7 +25,11 @@ export default async function PortalGamesPage() {
           id: season.id,
           label: `Season ${season.seasonNumber}`,
         }))}
-        teams={teamList.map((team) => team.name)}
+        teams={teamList.map((team) => ({
+          id: team.id,
+          name: team.name,
+          seasonId: team.seasonId,
+        }))}
       />
     </PortalPage>
   );

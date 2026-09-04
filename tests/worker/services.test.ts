@@ -1,11 +1,12 @@
 import { env } from "cloudflare:test";
 import { beforeEach, describe, expect, it } from "vitest";
+import { eq } from "drizzle-orm";
 import { makeDb, type Db } from "@db";
+import { players as playerRows } from "@db/schema";
 import {
   articles,
   awards,
   games,
-  matches,
   players,
   records,
   seasons,
@@ -31,12 +32,12 @@ describe("seasons", () => {
     expect(rows.find((row) => row.seasonNumber === 1)?.gameCount).toBe(2);
   });
 
-  it("hydrates one season with its teams, games, awards and matches", async () => {
+  it("hydrates one season with its teams, games, awards and schedule", async () => {
     const season = await seasons.getById(db, FIXTURES.seasonId);
     expect(season?.teams).toHaveLength(2);
     expect(season?.games).toHaveLength(2);
     expect(season?.awards).toHaveLength(1);
-    expect(season?.matches).toHaveLength(1);
+    expect(season?.schedule).toHaveLength(1);
   });
 
   it("returns null for a missing season", async () => {
@@ -69,8 +70,49 @@ describe("players", () => {
     const player = await players.getById(db, FIXTURES.playerId);
     expect(player?.teams).toHaveLength(1);
     expect(player?.stats).toHaveLength(4);
+    expect(player?.stats[0]?.seasonNumber).toBe(1);
     expect(player?.awards).toHaveLength(1);
+    expect(player?.awards[0]?.seasonNumber).toBe(1);
     expect(player?.records).toHaveLength(1);
+  });
+
+  it("links a sign-in to an existing player with the same Roblox name", async () => {
+    await db
+      .update(playerRows)
+      .set({ name: "fixtureplayer" })
+      .where(eq(playerRows.id, FIXTURES.playerId));
+    const attached = await players.ensureLinkedToUser(db, FIXTURES.userId);
+    expect(attached?.id).toBe(FIXTURES.playerId);
+    expect(attached?.userId).toBe(FIXTURES.userId);
+
+    const again = await players.ensureLinkedToUser(db, FIXTURES.userId);
+    expect(again?.id).toBe(FIXTURES.playerId);
+  });
+
+  it("creates a bare player when the Roblox name is new", async () => {
+    const created = await players.ensureLinkedToUser(db, FIXTURES.userId);
+    expect(created?.name).toBe("fixtureplayer");
+    expect(created?.position).toBe("N/A");
+    expect(created?.userId).toBe(FIXTURES.userId);
+
+    const hydrated = await players.getById(db, created!.id);
+    expect(hydrated?.teams).toHaveLength(0);
+    expect(hydrated?.stats).toHaveLength(0);
+  });
+
+  it("does not steal a player already claimed by another account", async () => {
+    await players.ensureLinkedToUser(db, FIXTURES.adminId);
+    await db
+      .update(playerRows)
+      .set({ name: "fixtureplayer" })
+      .where(eq(playerRows.userId, FIXTURES.adminId));
+
+    const stolen = await players.ensureLinkedToUser(db, FIXTURES.userId);
+    expect(stolen).toBeNull();
+    const claimed = await db.query.players.findFirst({
+      where: eq(playerRows.userId, FIXTURES.adminId),
+    });
+    expect(claimed?.name).toBe("fixtureplayer");
   });
 
   it("merges one player into another, moving stats and links", async () => {
@@ -94,7 +136,7 @@ describe("players", () => {
 describe("games", () => {
   it("attaches both teams to every listed game", async () => {
     const rows = await games.list(db);
-    expect(rows).toHaveLength(4);
+    expect(rows).toHaveLength(5);
     expect(rows.every((row) => row.teams.length === 2)).toBe(true);
   });
 
@@ -105,11 +147,16 @@ describe("games", () => {
       teamNames: [FIXTURES.teamName, FIXTURES.otherTeamName],
       team1Score: 3,
       team2Score: 0,
+      streamer: "fixtureadmin",
+      commentator: "fixtureplayer",
     });
 
     const hydrated = await games.getById(db, created.id);
     expect(hydrated?.teams).toHaveLength(2);
     expect(hydrated?.name).toBe("Ocean Spikers Vs. Mountain Blockers");
+    expect(hydrated?.staff.streamed?.email).toBe("fixtureadmin");
+    expect(hydrated?.staff.reffed).toBeNull();
+    expect(hydrated?.staff.commentated?.email).toBe("fixtureplayer");
   });
 
   it("rejects a negative score", async () => {
@@ -123,6 +170,14 @@ describe("games", () => {
       }),
     ).rejects.toThrow(/negative/);
   });
+
+  it("replaces game staff on update", async () => {
+    await games.update(db, FIXTURES.gameId, { streamer: "fixtureplayer", referee: null });
+    const hydrated = await games.getById(db, FIXTURES.gameId);
+    expect(hydrated?.staff.streamed?.email).toBe("fixtureplayer");
+    expect(hydrated?.staff.reffed).toBeNull();
+    expect(hydrated?.staff.commentated?.email).toBe("fixtureplayer");
+  });
 });
 
 describe("stats", () => {
@@ -135,8 +190,18 @@ describe("stats", () => {
   });
 
   it("scopes the leaderboard to one season", async () => {
-    const rows = await stats.leaderboard(db, FIXTURES.seasonId);
+    const rows = await stats.leaderboard(db, { seasonId: FIXTURES.seasonId });
     expect(rows.every((row) => row.gamesPlayed === 2)).toBe(true);
+  });
+
+  it("returns per-game stat lines with season scores for the vector graph", async () => {
+    const players = await stats.vectorGraph(db);
+    expect(players.length).toBeGreaterThan(0);
+    const first = players[0];
+    expect(first?.stats.length).toBeGreaterThan(0);
+    const line = first?.stats[0];
+    expect(line?.game?.season?.seasonNumber).toBeGreaterThan(0);
+    expect((line?.game?.team1Score ?? 0) + (line?.game?.team2Score ?? 0)).toBeGreaterThan(0);
   });
 
   it("refuses a second stat line for the same player and game", async () => {
@@ -194,24 +259,28 @@ describe("records", () => {
   });
 });
 
-describe("matches", () => {
+describe("games schedule", () => {
   it("lists by season and by round", async () => {
-    expect(await matches.listBySeason(db, FIXTURES.seasonId)).toHaveLength(1);
-    expect(await matches.listByRound(db, FIXTURES.seasonId, "Round 1")).toHaveLength(1);
-    expect(await matches.listByRound(db, FIXTURES.seasonId, "Finals")).toHaveLength(0);
+    expect(await games.listSchedule(db, FIXTURES.seasonId)).toHaveLength(1);
+    expect(await games.listByRound(db, FIXTURES.seasonId, "Round 1")).toHaveLength(1);
+    expect(await games.listByRound(db, FIXTURES.seasonId, "Finals")).toHaveLength(0);
   });
 
-  it("fills a missing logo from the team of the same name", async () => {
-    const created = await matches.create(db, {
+  it("exposes team logos from slotted teams", async () => {
+    await games.create(db, {
       matchNumber: "Round 2 - Match 1",
       round: "Round 2",
       date: "2026-02-02",
       seasonId: FIXTURES.seasonId,
-      team1Name: FIXTURES.teamName,
-      team2Name: "Nobody",
+      status: "scheduled",
+      team1Id: FIXTURES.teamId,
+      team2Id: null,
     });
-    expect(created?.team1LogoUrl).toBe("/images/rvlLogo.png");
-    expect(created?.team2LogoUrl).toBeNull();
+    const row = (await games.listSchedule(db, FIXTURES.seasonId)).find(
+      (game) => game.matchNumber === "Round 2 - Match 1",
+    );
+    expect(row?.team1LogoUrl).toBe("/images/rvlLogo.png");
+    expect(row?.team2LogoUrl).toBeNull();
   });
 
   it("imports challonge matches and skips ones already present", async () => {
@@ -241,7 +310,7 @@ describe("matches", () => {
       return new Response(JSON.stringify(body), { status: 200 });
     }) as typeof fetch;
 
-    const first = await matches.importFromChallonge(db, {
+    const first = await games.importFromChallonge(db, {
       tournamentId: "abc123",
       seasonId: FIXTURES.seasonId,
       apiKey: "test-key",
@@ -249,7 +318,7 @@ describe("matches", () => {
     });
     expect(first).toEqual({ imported: 1, skipped: 0 });
 
-    const second = await matches.importFromChallonge(db, {
+    const second = await games.importFromChallonge(db, {
       tournamentId: "abc123",
       seasonId: FIXTURES.seasonId,
       apiKey: "test-key",
@@ -257,8 +326,8 @@ describe("matches", () => {
     });
     expect(second).toEqual({ imported: 0, skipped: 1 });
 
-    const imported = (await matches.listBySeason(db, FIXTURES.seasonId)).find(
-      (match) => match.challongeMatchId === "501",
+    const imported = (await games.listSchedule(db, FIXTURES.seasonId)).find(
+      (game) => game.team1Score === 2 && game.set2Score === "25-22",
     );
     expect(imported?.team1Score).toBe(2);
     expect(imported?.set2Score).toBe("25-22");
@@ -296,6 +365,26 @@ describe("users", () => {
     const profile = await users.profile(db, FIXTURES.adminId);
     expect(profile?.articles).toHaveLength(1);
     expect(profile?.role).toBe("admin");
+    expect(profile?.player?.name).toBe("fixtureadmin");
+    expect(profile?.player?.teams).toEqual([]);
+    expect(profile?.contributions).toEqual({
+      streamed: 1,
+      reffed: 1,
+      commentated: 0,
+      articlesApproved: 1,
+      articlesTotal: 1,
+    });
+  });
+
+  it("counts unapproved articles on the author's profile", async () => {
+    const profile = await users.profile(db, FIXTURES.userId);
+    expect(profile?.contributions).toEqual({
+      streamed: 0,
+      reffed: 0,
+      commentated: 1,
+      articlesApproved: 0,
+      articlesTotal: 1,
+    });
   });
 
   it("promotes a user", async () => {

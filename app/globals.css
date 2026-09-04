@@ -3,6 +3,7 @@
 @import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
+@custom-variant upto-md (@media (max-width: 768px));
 
 :root {
   color-scheme: light;
@@ -37,12 +38,15 @@
   --rvl-accent-soft: #f0dcbb;
   --rvl-on-accent: #14161b;
   --rvl-mint: #0f766e;
+  --chevron-down-white: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2314161b'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
+  --color-scroll-thumb-on-dark: #5a5a5a;
+  --color-scroll-thumb-on-dark-hover: #7a7a7a;
 
   /* The shadcn semantic tokens are aliases onto the Open Deck palette above.
      Every primitive in components/ui (and therefore the whole admin portal)
      resolves through these, so the portal renders in the same scheme as the
      site instead of the old navy one. Only the rvl-* values are redefined for
-     dark mode — these aliases follow automatically. */
+     dark mode. These aliases follow automatically. */
   --background: var(--rvl-ground);
   --foreground: var(--rvl-ink);
   --card: var(--rvl-ground);
@@ -111,6 +115,10 @@
   --color-brand-slate-soft: var(--brand-slate-soft);
   --color-brand-slate-surface: var(--brand-slate-surface);
   --color-brand-sky-active: var(--brand-sky-active);
+  --color-brand-primary: var(--rvl-accent-bg);
+  --color-brand-primary-hover: var(--rvl-accent);
+  --color-text: var(--rvl-ink);
+  --color-accent-border: var(--rvl-accent-soft);
   --color-rvl-ground: var(--rvl-ground);
   --color-rvl-panel: var(--rvl-panel);
   --color-rvl-ink: var(--rvl-ink);
@@ -179,8 +187,9 @@
   --rvl-accent-soft: #8a6316;
   --rvl-on-accent: #08090b;
   --rvl-mint: #46d0a0;
+  --chevron-down-white: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23e9ebee'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
 
-  /* Redefining the palette is enough — the semantic aliases in :root resolve
+  /* Redefining the palette is enough. The semantic aliases in :root resolve
      against these on the same element, so background/card/popover/sidebar and
      the rest all follow the dark Open Deck scheme. */
   --destructive: #f87171;
@@ -199,4 +208,14 @@
   html {
     @apply font-sans;
   }
+}
+
+.dark-scrollbar,
+.dark-scrollbar * {
+  scrollbar-color: var(--color-scroll-thumb-on-dark) transparent;
+}
+
+.dark-scrollbar::-webkit-scrollbar-thumb,
+.dark-scrollbar *::-webkit-scrollbar-thumb {
+  background: var(--color-scroll-thumb-on-dark);
 }

@@ -1,7 +1,6 @@
 export * as articles from "./articles";
 export * as awards from "./awards";
 export * as games from "./games";
-export * as matches from "./matches";
 export * as players from "./players";
 export * as records from "./records";
 export * as roblox from "./roblox";

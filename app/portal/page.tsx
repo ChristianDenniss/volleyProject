@@ -15,7 +15,6 @@ const RESOURCES = [
   { key: "players", label: "Players", href: "/portal/players" },
   { key: "games", label: "Games", href: "/portal/games" },
   { key: "stats", label: "Stat lines", href: "/portal/stats" },
-  { key: "matches", label: "Matches", href: "/portal/matches" },
   { key: "awards", label: "Awards", href: "/portal/awards" },
   { key: "articles", label: "Articles", href: "/portal/articles" },
   { key: "users", label: "Users", href: "/portal/users" },
@@ -38,7 +37,6 @@ export default async function PortalDashboard() {
     statCount,
     awardCount,
     articleCount,
-    matchCount,
     userCount,
     recordCount,
     seasonList,
@@ -51,7 +49,6 @@ export default async function PortalDashboard() {
     trpc.stats.count(),
     trpc.awards.count(),
     trpc.articles.count(),
-    trpc.matches.count(),
     trpc.users.count(),
     trpc.records.count(),
     trpc.seasons.list(),
@@ -64,7 +61,6 @@ export default async function PortalDashboard() {
     players: playerCount,
     games: gameCount,
     stats: statCount,
-    matches: matchCount,
     awards: awardCount,
     articles: articleCount,
     users: userCount,
@@ -125,7 +121,7 @@ export default async function PortalDashboard() {
               <span className="text-[0.56rem] uppercase tracking-[0.22em] text-rvl-dim">
                 Rows written
               </span>
-              <span className="text-[0.95rem] tabular-nums">{job?.rowsWritten ?? "—"}</span>
+              <span className="text-[0.95rem] tabular-nums">{job?.rowsWritten ?? "-"}</span>
             </div>
             {job?.error ? (
               <div className="flex min-w-0 flex-col gap-1">

@@ -80,26 +80,65 @@ export const playerUpdate = z.object({
 
 export const playerMerge = z.object({ targetId: id, mergedId: id });
 
+const staffHandle = z.string().min(1).nullable().optional();
+const setScore = z.string().regex(/^\d{1,3}-\d{1,3}$/).nullable().optional();
+
 export const gameCreate = z.object({
   name: z.string().min(1).nullable().optional(),
+  matchNumber: z.string().min(1).nullable().optional(),
+  round: z.string().min(1).nullable().optional(),
+  status: z.enum(MATCH_STATUSES).optional(),
+  phase: z.enum(MATCH_PHASES).optional(),
+  region: z.enum(MATCH_REGIONS).optional(),
   date: isoDate,
   seasonId: id,
-  teamIds: z.array(id).length(2),
-  team1Score: count,
-  team2Score: count,
+  teamIds: z.array(id).length(2).optional(),
+  team1Id: id.nullable().optional(),
+  team2Id: id.nullable().optional(),
+  team1Score: count.nullable().optional(),
+  team2Score: count.nullable().optional(),
+  set1Score: setScore,
+  set2Score: setScore,
+  set3Score: setScore,
+  set4Score: setScore,
+  set5Score: setScore,
   stage: z.string().min(1).optional(),
   videoUrl: url,
+  streamer: staffHandle,
+  referee: staffHandle,
+  commentator: staffHandle,
+  tags: z.array(z.string().min(1)).nullable().optional(),
 });
 
 export const gameCreateByNames = gameCreate
-  .omit({ teamIds: true })
+  .omit({ teamIds: true, team1Id: true, team2Id: true })
   .extend({ teamNames: z.array(z.string().min(1)).length(2) });
 
-export const gameCreateMany = z.object({ games: z.array(gameCreate).min(1) });
+export const gameCreateMany = z.object({
+  games: z
+    .array(
+      gameCreate.extend({
+        teamIds: z.array(id).length(2),
+        team1Score: count,
+        team2Score: count,
+      }),
+    )
+    .min(1),
+});
 
 export const gameUpdate = z.object({
   id,
-  patch: gameCreate.partial().extend({ teamIds: z.array(id).length(2).optional() }),
+  patch: gameCreate
+    .partial()
+    .extend({ teamIds: z.array(id).length(2).optional() }),
+});
+
+export const gameImportChallonge = z.object({
+  tournamentId: z.string().min(1),
+  seasonId: id,
+  phase: z.enum(MATCH_PHASES).optional(),
+  region: z.enum(MATCH_REGIONS).optional(),
+  tags: z.array(z.string().min(1)).nullable().optional(),
 });
 
 const statCounts = z.object({
@@ -155,39 +194,6 @@ export const recordCreate = z.object({
 export const recordUpdate = z.object({ id, patch: recordCreate.partial() });
 export const recordRecalculate = z.object({ seasonId: id.optional() });
 
-const setScore = z.string().regex(/^\d{1,3}-\d{1,3}$/).nullable().optional();
-
-export const matchCreate = z.object({
-  matchNumber: z.string().min(1),
-  round: z.string().min(1),
-  status: z.enum(MATCH_STATUSES).optional(),
-  phase: z.enum(MATCH_PHASES).optional(),
-  region: z.enum(MATCH_REGIONS).optional(),
-  date: isoDate,
-  seasonId: id,
-  team1Name: z.string().min(1).nullable().optional(),
-  team2Name: z.string().min(1).nullable().optional(),
-  team1LogoUrl: url,
-  team2LogoUrl: url,
-  team1Score: count.nullable().optional(),
-  team2Score: count.nullable().optional(),
-  set1Score: setScore,
-  set2Score: setScore,
-  set3Score: setScore,
-  set4Score: setScore,
-  set5Score: setScore,
-  tags: z.array(z.string().min(1)).nullable().optional(),
-});
-export const matchUpdate = z.object({ id, patch: matchCreate.partial() });
-
-export const matchImportChallonge = z.object({
-  tournamentId: z.string().min(1),
-  seasonId: id,
-  phase: z.enum(MATCH_PHASES).optional(),
-  region: z.enum(MATCH_REGIONS).optional(),
-  tags: z.array(z.string().min(1)).nullable().optional(),
-});
-
 export const articleCreate = z.object({
   title: z.string().min(1),
   summary: z.string().min(1),
@@ -215,6 +221,13 @@ export const triviaSubject = z.object({
 export const bySeason = z.object({ seasonId: id });
 export const byTeamName = z.object({ name: z.string().min(1) });
 export const optionalSeason = z.object({ seasonId: id.optional() });
+
+export const STAGE_ROUNDS = ["R1", "R2", "R3", "R4", "R5", "R6", "all"] as const;
+
+export const leaderboardInput = z.object({
+  seasonId: id.optional(),
+  stageRound: z.enum(STAGE_ROUNDS).optional(),
+});
 export const recordsByMetric = z.object({
   metric: z.enum(RECORD_METRICS),
   minAttempts: z.number().int().positive().nullable().optional(),

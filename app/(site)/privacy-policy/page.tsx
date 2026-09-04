@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { PageHeader, PageMetric } from "@components/site/page-header";
+import { PageHeader } from "@components/site/page-header";
 
 export const metadata: Metadata = {
   title: "Privacy policy",
@@ -70,7 +70,6 @@ export default function PrivacyPolicyPage() {
         eyebrow="Legal"
         title="Privacy policy"
         description="What this platform collects, how it is used, and what you can ask us to do with it. Using the service means you agree to it."
-        meta={<PageMetric label="Sections" value={SECTIONS.length} />}
       />
 
       {SECTIONS.map((section) => (

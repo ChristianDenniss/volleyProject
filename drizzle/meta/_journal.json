@@ -8,6 +8,27 @@
       "when": 1786820299803,
       "tag": "0000_baseline",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1788399335940,
+      "tag": "0001_player_user_link",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1788399419263,
+      "tag": "0002_game_staff",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1788462970063,
+      "tag": "0003_icy_patch",
+      "breakpoints": true
     }
   ]
 }

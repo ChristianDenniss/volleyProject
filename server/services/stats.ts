@@ -1,7 +1,9 @@
-import { and, asc, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, or, sql } from "drizzle-orm";
 import type { Db } from "@db";
 import { insertMany } from "@db/insert";
-import { games, players, stats } from "@db/schema";
+import { games, players, seasons, stats, teams, teamsPlayers } from "@db/schema";
+import type { VectorGraphPlayer } from "@/lib/analytics/stats-vectorization";
+import { STAGE_ROUNDS, type StageRound } from "@/lib/stats/stage-rounds";
 import { ConflictError, found, NotFoundError } from "./errors";
 import type { PartialInput } from "./input";
 
@@ -94,28 +96,122 @@ export async function count(db: Db) {
   return db.$count(stats);
 }
 
+export async function vectorGraph(db: Db): Promise<VectorGraphPlayer[]> {
+  const rows = await db
+    .select({
+      playerId: players.id,
+      playerName: players.name,
+      spikeKills: stats.spikeKills,
+      spikeAttempts: stats.spikeAttempts,
+      spikingErrors: stats.spikingErrors,
+      apeKills: stats.apeKills,
+      apeAttempts: stats.apeAttempts,
+      assists: stats.assists,
+      settingErrors: stats.settingErrors,
+      blocks: stats.blocks,
+      blockFollows: stats.blockFollows,
+      digs: stats.digs,
+      aces: stats.aces,
+      servingErrors: stats.servingErrors,
+      miscErrors: stats.miscErrors,
+      team1Score: games.team1Score,
+      team2Score: games.team2Score,
+      seasonNumber: seasons.seasonNumber,
+    })
+    .from(stats)
+    .innerJoin(players, eq(stats.playerId, players.id))
+    .innerJoin(games, eq(stats.gameId, games.id))
+    .innerJoin(seasons, eq(games.seasonId, seasons.id))
+    .orderBy(asc(players.name), desc(games.date));
+
+  const byPlayer = new Map<number, VectorGraphPlayer>();
+  for (const row of rows) {
+    let player = byPlayer.get(row.playerId);
+    if (!player) {
+      player = { id: row.playerId, name: row.playerName, stats: [] };
+      byPlayer.set(row.playerId, player);
+    }
+    player.stats.push({
+      spikeKills: row.spikeKills,
+      spikeAttempts: row.spikeAttempts,
+      spikingErrors: row.spikingErrors,
+      apeKills: row.apeKills,
+      apeAttempts: row.apeAttempts,
+      assists: row.assists,
+      settingErrors: row.settingErrors,
+      blocks: row.blocks,
+      blockFollows: row.blockFollows,
+      digs: row.digs,
+      aces: row.aces,
+      servingErrors: row.servingErrors,
+      miscErrors: row.miscErrors,
+      game: {
+        team1Score: row.team1Score,
+        team2Score: row.team2Score,
+        season: { seasonNumber: row.seasonNumber },
+      },
+    });
+  }
+  return [...byPlayer.values()];
+}
+
 const totalKills = sql<number>`sum(${stats.spikeKills} + ${stats.apeKills})`;
 const totalAttempts = sql<number>`sum(${stats.spikeAttempts} + ${stats.apeAttempts})`;
 const totalErrors = sql<number>`sum(${stats.spikingErrors} + ${stats.settingErrors} + ${stats.servingErrors} + ${stats.miscErrors})`;
 
-export async function leaderboard(db: Db, seasonId?: number) {
+export interface LeaderboardOptions {
+  seasonId?: number | undefined;
+  stageRound?: StageRound | undefined;
+}
+
+function buildStageRoundFilter(stageRound: StageRound | undefined) {
+  if (!stageRound || stageRound === "all") return undefined;
+
+  const keys = STAGE_ROUNDS[stageRound];
+  if (keys.length === 0) return undefined;
+
+  return or(
+    ...keys.map((key) => {
+      const stageMatch = sql`${games.stage} LIKE ${`%${key.stage}%`}`;
+      if (key.bracket === "winners") {
+        return sql`${games.stage} LIKE '%Winners%' AND ${stageMatch}`;
+      }
+      if (key.bracket === "losers") {
+        return sql`${games.stage} LIKE '%Losers%' AND ${stageMatch}`;
+      }
+      return stageMatch;
+    }),
+  );
+}
+
+export async function leaderboard(db: Db, options: LeaderboardOptions = {}) {
+  const { seasonId, stageRound } = options;
+  const stageFilter = buildStageRoundFilter(stageRound);
+
   const query = db
     .select({
       playerId: players.id,
       playerName: players.name,
+      robloxUserId: players.robloxUserId,
       position: players.position,
       gamesPlayed: sql<number>`count(distinct ${stats.gameId})`,
+      totalSets: sql<number>`sum(${games.team1Score} + ${games.team2Score})`,
       spikeKills: sql<number>`sum(${stats.spikeKills})`,
+      spikeAttempts: sql<number>`sum(${stats.spikeAttempts})`,
       apeKills: sql<number>`sum(${stats.apeKills})`,
+      apeAttempts: sql<number>`sum(${stats.apeAttempts})`,
       totalKills,
       totalAttempts,
+      spikingErrors: sql<number>`sum(${stats.spikingErrors})`,
       totalErrors,
       assists: sql<number>`sum(${stats.assists})`,
+      settingErrors: sql<number>`sum(${stats.settingErrors})`,
       blocks: sql<number>`sum(${stats.blocks})`,
       blockFollows: sql<number>`sum(${stats.blockFollows})`,
       digs: sql<number>`sum(${stats.digs})`,
       aces: sql<number>`sum(${stats.aces})`,
       servingErrors: sql<number>`sum(${stats.servingErrors})`,
+      miscErrors: sql<number>`sum(${stats.miscErrors})`,
       spikingPercentage: sql<number>`case when sum(${stats.spikeAttempts} + ${stats.apeAttempts}) = 0 then 0 else round(100.0 * sum(${stats.spikeKills} + ${stats.apeKills}) / sum(${stats.spikeAttempts} + ${stats.apeAttempts}), 2) end`,
     })
     .from(stats)
@@ -124,7 +220,44 @@ export async function leaderboard(db: Db, seasonId?: number) {
     .groupBy(players.id)
     .orderBy(desc(totalKills));
 
-  return seasonId === undefined ? query : query.where(eq(games.seasonId, seasonId));
+  const filters = [
+    seasonId === undefined ? undefined : eq(games.seasonId, seasonId),
+    stageFilter,
+  ].filter(Boolean);
+
+  const baseQuery =
+    filters.length === 0
+      ? query
+      : filters.length === 1
+        ? query.where(filters[0])
+        : query.where(and(...filters));
+
+  const rows = await baseQuery;
+
+  if (seasonId === undefined) {
+    return rows.map((row) => ({ ...row, teamName: null, teamLogoUrl: null }));
+  }
+
+  const memberships = await db
+    .select({
+      playerId: teamsPlayers.playerId,
+      teamName: teams.name,
+      teamLogoUrl: teams.logoUrl,
+    })
+    .from(teamsPlayers)
+    .innerJoin(teams, eq(teamsPlayers.teamId, teams.id))
+    .where(eq(teams.seasonId, seasonId));
+
+  const teamByPlayer = new Map(memberships.map((entry) => [entry.playerId, entry]));
+
+  return rows.map((row) => {
+    const team = teamByPlayer.get(row.playerId);
+    return {
+      ...row,
+      teamName: team?.teamName ?? null,
+      teamLogoUrl: team?.teamLogoUrl ?? null,
+    };
+  });
 }
 
 async function assertPair(db: Db, playerId: number, gameId: number) {

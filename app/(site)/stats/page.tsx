@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { api } from "@server/trpc/server";
 import { EmptyState } from "@components/site/empty-state";
-import { PageHeader, PageMetric } from "@components/site/page-header";
 import { StatsLeaderboard } from "@components/site/stats-leaderboard";
+import { isStageRound } from "@/lib/stats/stage-rounds";
 
 export const dynamic = "force-dynamic";
 
@@ -14,44 +14,21 @@ export const metadata: Metadata = {
 export default async function StatsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ season?: string }>;
+  searchParams: Promise<{ season?: string; round?: string }>;
 }) {
-  const { season } = await searchParams;
+  const { season, round } = await searchParams;
   const trpc = await api();
   const parsed = season ? Number.parseInt(season, 10) : Number.NaN;
   const seasonId = Number.isInteger(parsed) && parsed > 0 ? parsed : undefined;
+  const stageRound = round && isStageRound(round) ? round : undefined;
 
   const [rows, allSeasons] = await Promise.all([
-    trpc.stats.leaderboard({ seasonId }),
+    trpc.stats.leaderboard({ seasonId, stageRound }),
     trpc.seasons.list(),
   ]);
 
-  const totalKills = rows.reduce((sum, row) => sum + Number(row.totalKills ?? 0), 0);
-  const totalGames = new Set(rows.flatMap((row) => (row.gamesPlayed ? [row.playerId] : []))).size;
-
   return (
     <div className="font-display">
-      <PageHeader
-        eyebrow="Leaderboard"
-        title="Stat leaders"
-        description="Sort any column to rank the league. Season totals come from every recorded stat line."
-        meta={
-          <>
-            <PageMetric label="Players" value={rows.length} />
-            <PageMetric label="With games" value={totalGames} />
-            <PageMetric label="Kills logged" value={totalKills.toLocaleString()} />
-            <PageMetric
-              label="Season"
-              value={
-                seasonId
-                  ? (allSeasons.find((entry) => entry.id === seasonId)?.seasonNumber ?? "—")
-                  : "All"
-              }
-            />
-          </>
-        }
-      />
-
       {rows.length === 0 ? (
         <div className="px-5 py-14 sm:px-8 xl:px-14">
           <EmptyState>No stat lines have been recorded yet.</EmptyState>
@@ -61,13 +38,27 @@ export default async function StatsPage({
           rows={rows.map((row) => ({
             playerId: row.playerId,
             playerName: row.playerName,
+            position: row.position ?? "N/A",
+            teamName: row.teamName,
+            teamLogoUrl: row.teamLogoUrl,
             gamesPlayed: row.gamesPlayed,
+            totalSets: row.totalSets,
+            spikeKills: row.spikeKills,
+            spikeAttempts: row.spikeAttempts,
+            apeKills: row.apeKills,
+            apeAttempts: row.apeAttempts,
             totalKills: row.totalKills,
+            totalAttempts: row.totalAttempts,
             spikingPercentage: row.spikingPercentage,
+            spikingErrors: row.spikingErrors,
             assists: row.assists,
+            settingErrors: row.settingErrors,
             blocks: row.blocks,
+            blockFollows: row.blockFollows,
             digs: row.digs,
             aces: row.aces,
+            servingErrors: row.servingErrors,
+            miscErrors: row.miscErrors,
             totalErrors: row.totalErrors,
           }))}
           seasons={allSeasons.map((entry) => ({
@@ -75,6 +66,7 @@ export default async function StatsPage({
             seasonNumber: entry.seasonNumber,
           }))}
           seasonId={seasonId}
+          stageRound={stageRound ?? "all"}
         />
       )}
     </div>

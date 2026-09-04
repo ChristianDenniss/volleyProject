@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { api } from "@server/trpc/server";
 import { AwardsList } from "@components/site/awards-list";
 import { EmptyState } from "@components/site/empty-state";
-import { PageHeader, PageMetric } from "@components/site/page-header";
+import { PageHeader } from "@components/site/page-header";
 
 export const dynamic = "force-dynamic";
 
@@ -15,24 +15,12 @@ export default async function AwardsPage() {
   const trpc = await api();
   const rows = await trpc.awards.list();
 
-  const seasonCount = new Set(
-    rows.flatMap((award) => (award.seasonNumber == null ? [] : [award.seasonNumber])),
-  ).size;
-  const recipients = new Set(rows.flatMap((award) => award.players.map((player) => player.id))).size;
-
   return (
     <div className="font-display">
       <PageHeader
         eyebrow="Honours"
         title="Awards"
         description="Every award the league has handed out, by season and by recipient."
-        meta={
-          <>
-            <PageMetric label="Awards" value={rows.length} />
-            <PageMetric label="Seasons" value={seasonCount} />
-            <PageMetric label="Recipients" value={recipients} />
-          </>
-        }
       />
 
       {rows.length === 0 ? (

@@ -4,7 +4,7 @@ import { AwardsManager } from "@components/portal/awards-manager";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Awards — Portal" };
+export const metadata = { title: "Awards · Portal" };
 
 export default async function PortalAwardsPage() {
   const trpc = await api();

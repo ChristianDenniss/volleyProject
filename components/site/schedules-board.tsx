@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ClearFiltersButton, FilterSelect, Pagination, SearchBar } from "./controls";
 
@@ -21,7 +22,7 @@ export interface ScheduleMatch {
   setScores: (string | null)[];
 }
 
-const PER_PAGE = 40;
+const DAYS_PER_PAGE = 12;
 
 // The match date is a plain YYYY-MM-DD string, which Date parses as UTC midnight.
 // Formatting it in the viewer's zone would shift it a day west of UTC and disagree
@@ -31,11 +32,100 @@ function longDate(value: string) {
   return Number.isNaN(parsed.getTime())
     ? value
     : parsed.toLocaleDateString("en-US", {
-        month: "short",
+        weekday: "long",
+        month: "long",
         day: "numeric",
         year: "numeric",
         timeZone: "UTC",
       });
+}
+
+function MatchCard({ match }: { match: ScheduleMatch }) {
+  const scheduled = match.status !== "completed";
+  const team1Wins = (match.team1Score ?? 0) > (match.team2Score ?? 0);
+  const team2Wins = (match.team2Score ?? 0) > (match.team1Score ?? 0);
+  const sets = match.setScores.filter(Boolean);
+  const teams = [
+    {
+      name: match.team1Name,
+      logo: match.team1LogoUrl,
+      score: match.team1Score,
+      winning: team1Wins,
+    },
+    {
+      name: match.team2Name,
+      logo: match.team2LogoUrl,
+      score: match.team2Score,
+      winning: team2Wins,
+    },
+  ] as const;
+
+  return (
+    <article className="overflow-hidden rounded-xs border border-rvl-line bg-rvl-ground">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-rvl-line px-4 py-3 sm:px-5">
+        <div className="flex flex-col gap-1">
+          <span className="text-[0.95rem] font-semibold">{match.matchNumber}</span>
+          <span className="font-mono text-[0.64rem] uppercase tracking-[0.14em] text-rvl-dim">
+            {match.round} · {match.region}
+          </span>
+        </div>
+        <span
+          className={cn(
+            "rounded-xs border px-2.5 py-1 font-mono text-[0.6rem] uppercase tracking-[0.16em]",
+            scheduled
+              ? "border-rvl-line text-rvl-mint"
+              : "border-rvl-line text-rvl-dim",
+          )}
+        >
+          {match.status}
+        </span>
+      </div>
+
+      <div>
+        {teams.map((team, index) => (
+          <div
+            key={index}
+            className={cn(
+              "flex items-center justify-between gap-4 border-b border-rvl-line px-4 py-2.5 last:border-b-0 sm:px-5",
+              team.winning && "bg-rvl-panel",
+            )}
+          >
+            <div className="flex min-w-0 items-center gap-2.5">
+              {team.logo ? (
+                <img
+                  src={team.logo}
+                  alt=""
+                  className="size-8 shrink-0 rounded-xs border border-rvl-line object-cover"
+                />
+              ) : null}
+              <span
+                className={cn(
+                  "truncate text-[1.02rem]",
+                  team.winning ? "font-bold" : "text-rvl-ink-2",
+                )}
+              >
+                {team.name ?? "TBD"}
+              </span>
+            </div>
+            <span
+              className={cn(
+                "font-mono text-[1.25rem] font-bold tabular-nums",
+                team.winning ? "text-rvl-accent" : "text-rvl-dim",
+              )}
+            >
+              {scheduled ? "–" : (team.score ?? 0)}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {sets.length > 0 ? (
+        <div className="border-t border-rvl-line px-4 py-2.5 font-mono text-[0.68rem] tracking-[0.08em] text-rvl-dim sm:px-5">
+          {sets.join(" · ")}
+        </div>
+      ) : null}
+    </article>
+  );
 }
 
 export function SchedulesBoard({
@@ -53,6 +143,7 @@ export function SchedulesBoard({
   const [status, setStatus] = useState("");
   const [round, setRound] = useState("");
   const [page, setPage] = useState(1);
+  const [collapsedDays, setCollapsedDays] = useState<Set<string>>(new Set());
 
   const regions = useMemo(
     () => [...new Set(matches.map((match) => match.region))].sort(),
@@ -78,17 +169,26 @@ export function SchedulesBoard({
     [matches, search, region, status, round],
   );
 
-  const totalPages = Math.max(Math.ceil(filtered.length / PER_PAGE), 1);
-  const current = Math.min(page, totalPages);
-  const visible = filtered.slice((current - 1) * PER_PAGE, current * PER_PAGE);
-
   const byDate = useMemo(() => {
     const map = new Map<string, ScheduleMatch[]>();
-    visible.forEach((match) => {
+    filtered.forEach((match) => {
       map.set(match.date, [...(map.get(match.date) ?? []), match]);
     });
-    return [...map.entries()];
-  }, [visible]);
+    return [...map.entries()].sort(([a], [b]) => a.localeCompare(b));
+  }, [filtered]);
+
+  const totalPages = Math.max(Math.ceil(byDate.length / DAYS_PER_PAGE), 1);
+  const current = Math.min(page, totalPages);
+  const visibleDays = byDate.slice((current - 1) * DAYS_PER_PAGE, current * DAYS_PER_PAGE);
+
+  const toggleDay = (date: string) => {
+    setCollapsedDays((prev) => {
+      const next = new Set(prev);
+      if (next.has(date)) next.delete(date);
+      else next.add(date);
+      return next;
+    });
+  };
 
   const clearFilters = () => {
     setSearch("");
@@ -187,96 +287,51 @@ export function SchedulesBoard({
         </div>
       </div>
 
-      {byDate.length === 0 ? (
+      {visibleDays.length === 0 ? (
         <div className="px-5 py-20 text-center font-mono text-[0.78rem] uppercase tracking-[0.14em] text-rvl-dim sm:px-8 xl:px-14">
           No matches match those filters.
         </div>
       ) : (
-        byDate.map(([date, entries]) => (
-          <section
-            key={date}
-            className="grid grid-cols-1 gap-8 border-b border-rvl-line px-5 py-12 sm:px-8 md:grid-cols-[210px_1fr] md:gap-14 xl:px-14"
-          >
-            <div>
-              <h2 className="m-0 font-mono text-[0.72rem] font-bold uppercase tracking-[0.24em] text-rvl-accent">
-                {longDate(date)}
-              </h2>
-              <p className="m-0 mt-2 font-mono text-[0.64rem] uppercase tracking-[0.14em] text-rvl-dim">
-                {entries.length} {entries.length === 1 ? "match" : "matches"}
-              </p>
-            </div>
+        <div className="flex flex-col gap-6 px-5 py-12 sm:px-8 xl:px-14">
+          {visibleDays.map(([date, entries]) => {
+            const collapsed = collapsedDays.has(date);
 
-            <div className="flex flex-col gap-7">
-              {entries.map((match) => {
-                const scheduled = match.status !== "completed";
-                const team1Wins = (match.team1Score ?? 0) > (match.team2Score ?? 0);
-                const team2Wins = (match.team2Score ?? 0) > (match.team1Score ?? 0);
-                const sets = match.setScores.filter(Boolean).join(" · ");
-
-                return (
-                  <article key={match.id} className="flex flex-wrap items-center gap-x-8 gap-y-3">
-                    <span className="w-[170px] shrink-0 font-mono text-[0.66rem] uppercase leading-relaxed tracking-[0.16em] text-rvl-dim">
-                      {match.matchNumber}
-                      <br />
-                      {match.round} · {match.region}
+            return (
+              <section
+                key={date}
+                className="overflow-hidden rounded-xs border border-rvl-line"
+              >
+                <button
+                  type="button"
+                  aria-expanded={!collapsed}
+                  onClick={() => toggleDay(date)}
+                  className="flex w-full cursor-pointer items-center justify-between gap-4 border-none bg-transparent px-5 py-4 text-left text-rvl-ink transition-colors hover:bg-rvl-panel"
+                >
+                  <span className="flex min-w-0 flex-col gap-1">
+                    <span className="text-[1.15rem] font-semibold">{longDate(date)}</span>
+                    <span className="font-mono text-[0.64rem] uppercase tracking-[0.18em] text-rvl-dim">
+                      {entries.length} {entries.length === 1 ? "match" : "matches"}
                     </span>
+                  </span>
+                  <ChevronDown
+                    className={cn(
+                      "size-4 shrink-0 text-rvl-dim transition-transform duration-300",
+                      collapsed && "-rotate-90",
+                    )}
+                  />
+                </button>
 
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[1.15rem]">
-                      <span className="flex items-center gap-2.5">
-                        {match.team1LogoUrl ? (
-                          <img
-                            src={match.team1LogoUrl}
-                            alt=""
-                            className="size-7 shrink-0 rounded-xs object-cover"
-                          />
-                        ) : null}
-                        <span className={cn(team1Wins ? "font-bold" : "text-rvl-ink-2")}>
-                          {match.team1Name ?? "TBD"}
-                        </span>
-                      </span>
-
-                      {scheduled ? (
-                        <span className="font-mono text-[0.8rem] uppercase tracking-[0.16em] text-rvl-dim">
-                          vs
-                        </span>
-                      ) : (
-                        <span className="flex items-center gap-3 font-mono text-[1.3rem] font-bold tabular-nums text-rvl-accent">
-                          {match.team1Score ?? 0}
-                          <span className="text-rvl-dim">–</span>
-                          {match.team2Score ?? 0}
-                        </span>
-                      )}
-
-                      <span className="flex items-center gap-2.5">
-                        <span className={cn(team2Wins ? "font-bold" : "text-rvl-ink-2")}>
-                          {match.team2Name ?? "TBD"}
-                        </span>
-                        {match.team2LogoUrl ? (
-                          <img
-                            src={match.team2LogoUrl}
-                            alt=""
-                            className="size-7 shrink-0 rounded-xs object-cover"
-                          />
-                        ) : null}
-                      </span>
-                    </div>
-
-                    <span
-                      className={cn(
-                        "font-mono text-[0.68rem] tracking-[0.08em] md:ml-auto",
-                        scheduled
-                          ? "uppercase tracking-[0.16em] text-rvl-mint"
-                          : "text-rvl-dim",
-                      )}
-                    >
-                      {scheduled ? "Scheduled" : sets}
-                    </span>
-                  </article>
-                );
-              })}
-            </div>
-          </section>
-        ))
+                {collapsed ? null : (
+                  <div className="flex flex-col gap-2 bg-rvl-panel p-2.5">
+                    {entries.map((match) => (
+                      <MatchCard key={match.id} match={match} />
+                    ))}
+                  </div>
+                )}
+              </section>
+            );
+          })}
+        </div>
       )}
     </>
   );

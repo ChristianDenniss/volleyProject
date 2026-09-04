@@ -104,7 +104,7 @@ export function RecordsBoard({ records }: { records: RecordRow[] }) {
                       {record.playerName}
                     </Link>
 
-                    {/* Where the mark was set — without it the repeated per-season
+                    {/* Where the mark was set. Without it the repeated per-season
                         ranks are indistinguishable from one another. */}
                     {record.gameId !== null ? (
                       <Link

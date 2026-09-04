@@ -23,7 +23,7 @@ const FIELDS: FieldSpec[] = [
 
 const COLUMNS: ColumnSpec<Row>[] = [
   { key: "seasonNumber", label: "Season", render: (row) => `Season ${row.seasonNumber}` },
-  { key: "theme", label: "Theme", render: (row) => row.theme ?? "—" },
+  { key: "theme", label: "Theme", render: (row) => row.theme ?? "-" },
   { key: "startDate", label: "Start", render: (row) => row.startDate },
   { key: "endDate", label: "End", render: (row) => row.endDate ?? "in progress" },
   { key: "teamCount", label: "Teams", align: "right", render: (row) => row.teamCount },

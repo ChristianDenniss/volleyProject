@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://volleyball4-2.com"),
   title: {
     default: "Volleyball 4-2 League",
-    template: "%s — Volleyball 4-2 League",
+    template: "%s · Volleyball 4-2 League",
   },
   description:
     "Seasons, teams, players, games, stats, records and awards for the Volleyball 4-2 league.",

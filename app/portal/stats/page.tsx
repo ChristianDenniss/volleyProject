@@ -4,7 +4,7 @@ import { StatsManager } from "@components/portal/stats-manager";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Stats — Portal" };
+export const metadata = { title: "Stats · Portal" };
 
 export default async function PortalStatsPage() {
   const trpc = await api();
