@@ -215,6 +215,13 @@ function isScoreToken(value: string): boolean {
   return /^-?\d+$/.test(value.trim());
 }
 
+/** Volleyball set scores stay in a small range; ranking points (26, 306, …) are not sets. */
+function isVolleyballSetScore(value: string): boolean {
+  if (!isScoreToken(value)) return false;
+  const parsed = Number.parseInt(value, 10);
+  return parsed >= 0 && parsed <= 35;
+}
+
 function looksLikeTeam(value: string): boolean {
   const name = displayName(value);
   if (!name || name.length < 2) return false;
@@ -342,7 +349,7 @@ export function parseMasterScheduleTab(
       for (let offset = 1; offset <= 5; offset += 1) {
         const a = cell(row, index + offset);
         const b = cell(next, index + offset);
-        if (!isScoreToken(a) || !isScoreToken(b)) break;
+        if (!isVolleyballSetScore(a) || !isVolleyballSetScore(b)) break;
         topScores.push(Number.parseInt(a, 10));
         bottomScores.push(Number.parseInt(b, 10));
       }
@@ -364,6 +371,8 @@ export function parseMasterScheduleTab(
         else if (b > a) team2Wins += 1;
       }
 
+      if (team1Wins === 0 && team2Wins === 0) continue;
+
       const team1Name = displayName(top);
       const team2Name = displayName(bottom);
       games.push({
@@ -382,15 +391,20 @@ export function parseMasterScheduleTab(
     }
   }
 
-  // Deduplicate noisy bracket parses by key prefix (teams + scores), keep first.
-  const seen = new Set<string>();
-  const deduped: ParsedGame[] = [];
+  // Deduplicate noisy bracket parses — keep the best-scoring row when teams+round repeat.
+  const byPairRound = new Map<string, ParsedGame>();
   for (const game of games) {
-    const fingerprint = `${normalizeName(game.team1Name)}|${normalizeName(game.team2Name)}|${game.team1Score}-${game.team2Score}|${game.setScores.join(",")}`;
-    if (seen.has(fingerprint)) continue;
-    seen.add(fingerprint);
-    deduped.push(game);
+    const pair = `${normalizeName(game.team1Name)}|${normalizeName(game.team2Name)}|${game.round}`;
+    const existing = byPairRound.get(pair);
+    if (!existing) {
+      byPairRound.set(pair, game);
+      continue;
+    }
+    const existingTotal = (existing.team1Score ?? 0) + (existing.team2Score ?? 0);
+    const gameTotal = (game.team1Score ?? 0) + (game.team2Score ?? 0);
+    if (gameTotal > existingTotal) byPairRound.set(pair, game);
   }
+  const deduped = [...byPairRound.values()];
 
   if (deduped.length === 0) {
     warnings.push(`No playoff games parsed for ${region.toUpperCase()}`);

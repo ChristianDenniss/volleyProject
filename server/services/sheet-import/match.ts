@@ -52,6 +52,69 @@ function opponentFromBlock(block: ParsedScoreBlock): string | null {
   return null;
 }
 
+function gamePairKey(region: string, teamA: string, teamB: string): string {
+  const left = normalizeName(teamA);
+  const right = normalizeName(teamB);
+  return `${region}|${left < right ? `${left}|${right}` : `${right}|${left}`}`;
+}
+
+function attachBlock(
+  block: ParsedScoreBlock,
+  gameKeyValue: string,
+  stats: PreviewStat[],
+  matchedCountByGameKey: Map<string, number>,
+): void {
+  for (const row of block.rows) {
+    stats.push({
+      gameKey: gameKeyValue,
+      teamName: block.teamName,
+      playerName: row.playerName,
+      counts: {
+        spikeKills: row.spikeKills,
+        spikeAttempts: row.spikeAttempts,
+        spikingErrors: row.spikingErrors,
+        apeKills: row.apeKills,
+        apeAttempts: row.apeAttempts,
+        assists: row.assists,
+        settingErrors: row.settingErrors,
+        blocks: row.blocks,
+        blockFollows: row.blockFollows,
+        digs: row.digs,
+        aces: row.aces,
+        servingErrors: row.servingErrors,
+        miscErrors: row.miscErrors,
+      },
+    });
+  }
+  matchedCountByGameKey.set(
+    gameKeyValue,
+    (matchedCountByGameKey.get(gameKeyValue) ?? 0) + block.rows.length,
+  );
+}
+
+function syntheticGameFromBlock(block: ParsedScoreBlock): ParsedGame {
+  const opponent = opponentFromBlock(block);
+  if (!opponent) {
+    throw new Error("Synthetic game requires a known opponent");
+  }
+  const left = normalizeName(block.teamName);
+  const right = normalizeName(opponent);
+  const key = `${block.region}|stats|${left < right ? `${left}|${right}` : `${right}|${left}`}|${block.teamScore}-${block.opponentScore}`;
+  return {
+    key,
+    region: block.region,
+    phase: "playoffs",
+    round: "From stats sheet",
+    date: "1970-01-01",
+    team1Name: block.teamName,
+    team2Name: opponent,
+    team1Score: block.teamScore,
+    team2Score: block.opponentScore,
+    setScores: [],
+    forfeit: false,
+  };
+}
+
 export function matchStatsToGames(
   games: ParsedGame[],
   blocks: ParsedScoreBlock[],
@@ -59,10 +122,12 @@ export function matchStatsToGames(
   stats: PreviewStat[];
   matchedCountByGameKey: Map<string, number>;
   warnings: string[];
+  syntheticGames: ParsedGame[];
 } {
   const warnings: string[] = [];
   const stats: PreviewStat[] = [];
   const matchedCountByGameKey = new Map<string, number>();
+  const syntheticGames: ParsedGame[] = [];
   const usedBlocks = new Set<number>();
 
   for (const game of games) {
@@ -93,41 +158,50 @@ export function matchStatsToGames(
       usedBlocks.add(index);
       const block = blocks[index];
       if (!block) continue;
-      for (const row of block.rows) {
-        if (Object.values(row).every((value) => value === 0 || typeof value === "string") &&
-          row.spikeKills === 0 &&
-          row.apeKills === 0 &&
-          row.assists === 0 &&
-          row.digs === 0 &&
-          row.blocks === 0) {
-          // keep zero rows — still a lineup appearance
-        }
-        stats.push({
-          gameKey: game.key,
-          teamName: block.teamName,
-          playerName: row.playerName,
-          counts: {
-            spikeKills: row.spikeKills,
-            spikeAttempts: row.spikeAttempts,
-            spikingErrors: row.spikingErrors,
-            apeKills: row.apeKills,
-            apeAttempts: row.apeAttempts,
-            assists: row.assists,
-            settingErrors: row.settingErrors,
-            blocks: row.blocks,
-            blockFollows: row.blockFollows,
-            digs: row.digs,
-            aces: row.aces,
-            servingErrors: row.servingErrors,
-            miscErrors: row.miscErrors,
-          },
-        });
-      }
-      matchedCountByGameKey.set(
-        game.key,
-        (matchedCountByGameKey.get(game.key) ?? 0) + block.rows.length,
-      );
+      attachBlock(block, game.key, stats, matchedCountByGameKey);
     }
+  }
+
+  // When bracket parsing yields wrong set totals, still attach stats if the team pair is unique.
+  for (let index = 0; index < blocks.length; index += 1) {
+    if (usedBlocks.has(index)) continue;
+    const block = blocks[index];
+    if (!block || block.rows.length === 0) continue;
+
+    const opponent = opponentFromBlock(block);
+    if (!opponent) continue;
+
+    const pairKey = gamePairKey(block.region, block.teamName, opponent);
+    const candidates = games.filter(
+      (game) =>
+        game.region === block.region &&
+        gamePairKey(game.region, game.team1Name, game.team2Name) === pairKey,
+    );
+    if (candidates.length !== 1) continue;
+
+    usedBlocks.add(index);
+    attachBlock(block, candidates[0]!.key, stats, matchedCountByGameKey);
+  }
+
+  // Bracket sheets often omit or garble playoff rows — synthesize a game from the stats tab.
+  for (let index = 0; index < blocks.length; index += 1) {
+    if (usedBlocks.has(index)) continue;
+    const block = blocks[index];
+    if (!block || block.rows.length === 0) continue;
+
+    const opponent = opponentFromBlock(block);
+    if (!opponent) continue;
+
+    const pairKey = gamePairKey(block.region, block.teamName, opponent);
+    const alreadyScheduled = games.some(
+      (game) => gamePairKey(game.region, game.team1Name, game.team2Name) === pairKey,
+    );
+    if (alreadyScheduled) continue;
+
+    const synthetic = syntheticGameFromBlock(block);
+    syntheticGames.push(synthetic);
+    usedBlocks.add(index);
+    attachBlock(block, synthetic.key, stats, matchedCountByGameKey);
   }
 
   for (let index = 0; index < blocks.length; index += 1) {
@@ -139,7 +213,7 @@ export function matchStatsToGames(
     );
   }
 
-  return { stats, matchedCountByGameKey, warnings };
+  return { stats, matchedCountByGameKey, warnings, syntheticGames };
 }
 
 type RosterTeam = {

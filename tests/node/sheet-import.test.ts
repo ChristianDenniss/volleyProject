@@ -3,7 +3,7 @@ import { parseSheetNamesFromHtml } from "@server/services/sheet-import/fetch";
 import { matchStatsToGames, mergeTeamRosters, rosterSizeWarnings } from "@server/services/sheet-import/match";
 import { displayName, normalizeName, parseTeamHeader } from "@server/services/sheet-import/names";
 import { parseMasterScheduleTab, parseMasterTeamsTab } from "@server/services/sheet-import/parse-master";
-import { parseRegionalTeamTab } from "@server/services/sheet-import/parse-regional";
+import { parseRegionalPlayersLeaderboard, parseRegionalTeamTab, parseRegionalWorkbook } from "@server/services/sheet-import/parse-regional";
 import type { ParsedGame, ParsedScoreBlock } from "@server/services/sheet-import/types";
 
 describe("parseSheetNamesFromHtml", () => {
@@ -142,6 +142,28 @@ describe("parseMasterScheduleTab", () => {
     expect(games[0]?.date).toBe("2026-01-10");
     expect(games[1]?.forfeit).toBe(true);
   });
+
+  it("skips zero-set playoff rows and reads real set totals", () => {
+    const csv = [
+      `"","Losers Finals","","TT9","0","0"`,
+      `"","Losers Finals","","0 0","0","0"`,
+      `"","Grand-Finals","","TT9","25","25"`,
+      `"","Grand-Finals","","0 0","20","18"`,
+    ].join("\n");
+
+    const { games } = parseMasterScheduleTab(csv, "na", "playoffs", 2026);
+    expect(games.every((game) => (game.team1Score ?? 0) + (game.team2Score ?? 0) > 0)).toBe(true);
+    const tt9 = games.find(
+      (game) =>
+        (game.team1Name === "TT9" && game.team2Name === "0 0") ||
+        (game.team2Name === "TT9" && game.team1Name === "0 0"),
+    );
+    expect(tt9).toBeDefined();
+    const tt9Sets = tt9!.team1Name === "TT9" ? tt9!.team1Score : tt9!.team2Score;
+    const zeroSets = tt9!.team1Name === "0 0" ? tt9!.team1Score : tt9!.team2Score;
+    expect(tt9Sets).toBe(2);
+    expect(zeroSets).toBe(0);
+  });
 });
 
 describe("parseRegionalTeamTab", () => {
@@ -169,6 +191,42 @@ describe("parseRegionalTeamTab", () => {
     expect(blocks[0]?.teamScore).toBe(2);
     expect(blocks[1]?.winnerName).toBe("Tenjiku");
     expect(blocks[1]?.rows[0]?.spikeKills).toBe(1);
+  });
+
+  it("falls back to the PLAYERS tab when a team sheet is an empty playoff shell", () => {
+    const playersCsv = [
+      `"","PLAYERS","TEAM"`,
+      `"1","ace_one","SSJ"`,
+      `"2","ace_two","SSJ"`,
+    ].join("\n");
+
+    const emptyTeamCsv = [
+      `"SSJ Players SSJ","Ape Kills","Kills"`,
+      `"","0","0"`,
+      `"Score: 0-2 TT9"`,
+    ].join("\n");
+
+    const tabs = new Map<string, string[]>([
+      ["PLAYERS", playersCsv.split("\n")],
+      ["SSJ", emptyTeamCsv.split("\n")],
+    ]);
+
+    const { teams, warnings } = parseRegionalWorkbook(tabs, "na");
+    const ssj = teams.find((team) => team.name === "SSJ");
+    expect(ssj?.playerNames).toEqual(["ace_one", "ace_two"]);
+    expect(warnings.some((warning) => /No players found.*SSJ/.test(warning))).toBe(false);
+  });
+
+  it("reads the PLAYERS leaderboard into a team map", () => {
+    const csv = [
+      `"","PLAYER LEADERBOARD","TEAM"`,
+      `"1","m_ochii3","Inter Milan"`,
+      `"2","Glorry_Me","LUCIO"`,
+    ].join("\n");
+
+    const map = parseRegionalPlayersLeaderboard(csv);
+    expect(map.get("inter milan")).toEqual(["m_ochii3"]);
+    expect(map.get("lucio")).toEqual(["Glorry_Me"]);
   });
 });
 
@@ -236,5 +294,89 @@ describe("matchStatsToGames", () => {
       },
     ]);
     expect(matched.warnings[0]).toMatch(/Unmatched score block/);
+  });
+
+  it("relaxes to the only schedule row for a team pair when set totals disagree", () => {
+    const games: ParsedGame[] = [
+      {
+        key: "g1",
+        region: "eu",
+        phase: "playoffs",
+        round: "Finals",
+        date: "2026-06-01",
+        team1Name: "Imperial",
+        team2Name: "Seirin",
+        team1Score: 0,
+        team2Score: 0,
+        setScores: [],
+        forfeit: false,
+      },
+    ];
+
+    const blocks: ParsedScoreBlock[] = [
+      {
+        teamName: "Seirin",
+        region: "eu",
+        winnerName: "Imperial",
+        teamScore: 0,
+        opponentScore: 2,
+        rows: [
+          {
+            playerName: "ace",
+            spikeKills: 4,
+            spikeAttempts: 10,
+            spikingErrors: 0,
+            apeKills: 0,
+            apeAttempts: 0,
+            assists: 1,
+            settingErrors: 0,
+            blocks: 0,
+            blockFollows: 0,
+            digs: 2,
+            aces: 0,
+            servingErrors: 0,
+            miscErrors: 0,
+          },
+        ],
+      },
+    ];
+
+    const matched = matchStatsToGames(games, blocks);
+    expect(matched.stats).toHaveLength(1);
+    expect(matched.warnings).toHaveLength(0);
+  });
+
+  it("synthesizes a schedule row from a stats block when the bracket omitted the match", () => {
+    const matched = matchStatsToGames([], [
+      {
+        teamName: "0 0",
+        region: "na",
+        winnerName: "TT9",
+        teamScore: 0,
+        opponentScore: 2,
+        rows: [
+          {
+            playerName: "ace",
+            spikeKills: 1,
+            spikeAttempts: 4,
+            spikingErrors: 0,
+            apeKills: 0,
+            apeAttempts: 0,
+            assists: 0,
+            settingErrors: 0,
+            blocks: 0,
+            blockFollows: 0,
+            digs: 1,
+            aces: 0,
+            servingErrors: 0,
+            miscErrors: 0,
+          },
+        ],
+      },
+    ]);
+    expect(matched.syntheticGames).toHaveLength(1);
+    expect(matched.syntheticGames[0]?.team2Name).toBe("TT9");
+    expect(matched.stats).toHaveLength(1);
+    expect(matched.warnings).toHaveLength(0);
   });
 });
