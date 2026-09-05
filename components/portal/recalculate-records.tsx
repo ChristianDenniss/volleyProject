@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { usePortalErrorToast } from "./portal-error-detail";
 import { trpc } from "@/lib/trpc";
 import {
   Select,
@@ -16,6 +17,7 @@ const ALL_SEASONS = "__all";
 
 export function RecalculateRecords({ seasons }: { seasons: { id: number; label: string }[] }) {
   const router = useRouter();
+  const showErrorToast = usePortalErrorToast();
   const [seasonId, setSeasonId] = useState(ALL_SEASONS);
   const recalculate = trpc.records.recalculate.useMutation();
 
@@ -60,7 +62,7 @@ export function RecalculateRecords({ seasons }: { seasons: { id: number; label: 
             toast.success(`Queued as job ${result.jobId.slice(0, 8)}.`);
             router.refresh();
           } catch (error) {
-            toast.error(error instanceof Error ? error.message : "The job was not queued.");
+            showErrorToast("Recalculate failed", error);
           }
         }}
       >

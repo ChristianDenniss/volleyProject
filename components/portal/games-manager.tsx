@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { usePortalErrorToast } from "./portal-error-detail";
 import { PortalSelect } from "./portal-select";
 import { pick, ResourceView, optionalText, type ColumnSpec, type FieldSpec } from "./resource-view";
 import { Badge } from "@components/ui/badge";
@@ -89,6 +90,7 @@ const COLUMNS: ColumnSpec<Row>[] = [
 
 function ChallongeImport({ seasons }: { seasons: { id: number; label: string }[] }) {
   const router = useRouter();
+  const showErrorToast = usePortalErrorToast();
   const [open, setOpen] = useState(false);
   const [tournamentId, setTournamentId] = useState("");
   const [seasonId, setSeasonId] = useState("");
@@ -130,7 +132,7 @@ function ChallongeImport({ seasons }: { seasons: { id: number; label: string }[]
               setOpen(false);
               router.refresh();
             } catch (error) {
-              toast.error(error instanceof Error ? error.message : "The import failed.");
+              showErrorToast("Challonge import failed", error);
             }
           }}
         >

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { usePortalErrorToast } from "./portal-error-detail";
 import { PortalSelect } from "./portal-select";
 import { pick, ResourceView, type ColumnSpec, type FieldSpec } from "./resource-view";
 import {
@@ -80,6 +81,7 @@ function counterValues(values: Record<string, string>) {
 
 function CsvUpload({ games }: { games: { id: number; label: string }[] }) {
   const router = useRouter();
+  const showErrorToast = usePortalErrorToast();
   const [open, setOpen] = useState(false);
   const [gameId, setGameId] = useState("");
   const [csv, setCsv] = useState("");
@@ -114,7 +116,7 @@ function CsvUpload({ games }: { games: { id: number; label: string }[] }) {
               setCsv("");
               router.refresh();
             } catch (error) {
-              toast.error(error instanceof Error ? error.message : "That upload failed.");
+              showErrorToast("Stat upload failed", error);
             }
           }}
         >

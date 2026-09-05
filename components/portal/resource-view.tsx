@@ -4,6 +4,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { usePortalErrorToast } from "./portal-error-detail";
 import { cn } from "@/lib/utils";
 import { Pagination, SearchBar } from "@components/site/controls";
 import { RichTextEditor } from "@components/site/rich-text-editor";
@@ -207,6 +208,7 @@ function EntityDialog({
   onSubmit: (values: Values) => Promise<unknown>;
 }) {
   const router = useRouter();
+  const showErrorToast = usePortalErrorToast();
   const [open, setOpen] = useState(false);
   const [values, setValues] = useState<Values>(initial);
   const [pending, setPending] = useState(false);
@@ -242,7 +244,7 @@ function EntityDialog({
               setOpen(false);
               router.refresh();
             } catch (error) {
-              toast.error(error instanceof Error ? error.message : "That did not save.");
+              showErrorToast("Save failed", error);
             } finally {
               setPending(false);
             }
@@ -287,6 +289,7 @@ export function ResourceView<Row extends { id: number | string }>({
   extra,
 }: ResourceViewProps<Row>) {
   const router = useRouter();
+  const showErrorToast = usePortalErrorToast();
   const [deleting, setDeleting] = useState<Row["id"] | null>(null);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -426,9 +429,7 @@ export function ResourceView<Row extends { id: number | string }>({
                               toast.success("Deleted.");
                               router.refresh();
                             } catch (error) {
-                              toast.error(
-                                error instanceof Error ? error.message : "That did not delete.",
-                              );
+                              showErrorToast("Delete failed", error);
                             } finally {
                               setDeleting(null);
                             }

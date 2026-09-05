@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { usePortalErrorToast } from "./portal-error-detail";
 import { PortalSelect } from "./portal-select";
 import {
   Dialog,
@@ -362,6 +363,7 @@ function useSheetPreviewLoader() {
 
 export function SeasonSheetImport() {
   const router = useRouter();
+  const showErrorToast = usePortalErrorToast();
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<"form" | "preview">("form");
   const [seasonNumber, setSeasonNumber] = useState("");
@@ -448,7 +450,7 @@ export function SeasonSheetImport() {
                 setExcludedGames(new Set());
                 setStep("preview");
               } catch (error) {
-                toast.error(error instanceof Error ? error.message : "Preview failed");
+                showErrorToast("Preview failed", error);
               } finally {
                 setBusy(false);
               }
@@ -558,7 +560,7 @@ export function SeasonSheetImport() {
                     reset();
                     router.refresh();
                   } catch (error) {
-                    toast.error(error instanceof Error ? error.message : "Import failed");
+                    showErrorToast("Import failed", error);
                   }
                 }}
               >
@@ -578,6 +580,7 @@ export function TeamsSheetImport({
   seasons: { id: number; label: string }[];
 }) {
   const router = useRouter();
+  const showErrorToast = usePortalErrorToast();
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<"form" | "preview">("form");
   const [mode, setMode] = useState<TeamMode>("teams_and_players");
@@ -654,7 +657,7 @@ export function TeamsSheetImport({
                 setExcludedTeams(new Set());
                 setStep("preview");
               } catch (error) {
-                toast.error(error instanceof Error ? error.message : "Preview failed");
+                showErrorToast("Preview failed", error);
               } finally {
                 setBusy(false);
               }
@@ -740,7 +743,7 @@ export function TeamsSheetImport({
                     reset();
                     router.refresh();
                   } catch (error) {
-                    toast.error(error instanceof Error ? error.message : "Import failed");
+                    showErrorToast("Import failed", error);
                   }
                 }}
               >
