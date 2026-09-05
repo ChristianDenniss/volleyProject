@@ -51,7 +51,7 @@ export async function computeHomeNumbers(
   seasonId: number | null,
   avatarFor: AvatarLookup = defaultAvatar,
 ): Promise<HomeNumbersPayload> {
-  const leaders = seasonId ? await stats.leaderboard(db, seasonId) : [];
+  const leaders = seasonId ? await stats.leaderboard(db, { seasonId }) : [];
 
   const numbers = SEASON_METRICS.flatMap(({ key, metric }) => {
     const leader = leaderIn(leaders, key);
