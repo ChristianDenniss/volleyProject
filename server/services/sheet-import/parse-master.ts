@@ -1,4 +1,5 @@
 import { parseCsv, cell } from "./csv";
+import { masterGameKey } from "./keys";
 import { displayName, normalizeName, parseTeamHeader } from "./names";
 import type { ParsedGame, ParsedTeam, SheetRegion, TeamLeadershipRole } from "./types";
 
@@ -236,23 +237,6 @@ function looksLikeTeam(value: string): boolean {
   return true;
 }
 
-function gameKey(
-  region: SheetRegion,
-  phase: string,
-  team1: string,
-  team2: string,
-  score1: number | null,
-  score2: number | null,
-  round: string,
-): string {
-  const a = normalizeName(team1);
-  const b = normalizeName(team2);
-  const [left, right] = a < b ? [a, b] : [b, a];
-  const [sLeft, sRight] =
-    a < b ? [score1 ?? "x", score2 ?? "x"] : [score2 ?? "x", score1 ?? "x"];
-  return `${region}|${phase}|${round}|${left}|${right}|${sLeft}-${sRight}`;
-}
-
 export function parseMasterScheduleTab(
   csv: string,
   region: SheetRegion,
@@ -300,7 +284,7 @@ export function parseMasterScheduleTab(
       }
 
       games.push({
-        key: gameKey(region, phase, team1Name, team2Name, team1Score, team2Score, round),
+        key: masterGameKey(region, phase, team1Name, team2Name, team1Score, team2Score, round),
         region,
         phase,
         round,
@@ -376,7 +360,7 @@ export function parseMasterScheduleTab(
       const team1Name = displayName(top);
       const team2Name = displayName(bottom);
       games.push({
-        key: gameKey(region, phase, team1Name, team2Name, team1Wins, team2Wins, `${currentRound}@${index}`),
+        key: masterGameKey(region, phase, team1Name, team2Name, team1Wins, team2Wins, `${currentRound}@${index}`),
         region,
         phase,
         round: currentRound,

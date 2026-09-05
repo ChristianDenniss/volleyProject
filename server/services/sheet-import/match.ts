@@ -1,4 +1,5 @@
 import { namesEqual, normalizeName } from "./names";
+import { syntheticGameKey } from "./keys";
 import type { ParsedGame, ParsedScoreBlock, PreviewStat, SheetStatCounts } from "./types";
 
 function emptyCounts(): SheetStatCounts {
@@ -97,9 +98,13 @@ function syntheticGameFromBlock(block: ParsedScoreBlock): ParsedGame {
   if (!opponent) {
     throw new Error("Synthetic game requires a known opponent");
   }
-  const left = normalizeName(block.teamName);
-  const right = normalizeName(opponent);
-  const key = `${block.region}|stats|${left < right ? `${left}|${right}` : `${right}|${left}`}|${block.teamScore}-${block.opponentScore}`;
+  const key = syntheticGameKey(
+    block.region,
+    block.teamName,
+    opponent,
+    block.teamScore,
+    block.opponentScore,
+  );
   return {
     key,
     region: block.region,

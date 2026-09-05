@@ -49,8 +49,14 @@ async function existingPlayerNames(db: Db, names: string[]): Promise<Set<string>
 export async function validateSheetImportMeta(
   db: Db,
   input: SheetImportInput,
-): Promise<{ errors: string[]; seasonNumber: number | null; seasonId: number | null }> {
+): Promise<{
+  errors: string[];
+  warnings: string[];
+  seasonNumber: number | null;
+  seasonId: number | null;
+}> {
   const errors: string[] = [];
+  const warnings: string[] = [];
   let seasonNumber: number | null = input.seasonNumber ?? null;
   let seasonId: number | null = input.seasonId ?? null;
   const mode = input.mode;
@@ -58,14 +64,16 @@ export async function validateSheetImportMeta(
   if (mode === "full") {
     if (input.seasonNumber == null) errors.push("Season number is required");
     if (!input.startDate) errors.push("Start date is required");
-    if (!input.masterUrl && input.seasonNumber != null) {
-      // master may be supplied via assembled sources instead of URL on assemble path
-    }
     if (input.seasonNumber != null) {
       const existing = await db.query.seasons.findFirst({
         where: eq(seasons.seasonNumber, input.seasonNumber),
       });
-      if (existing) errors.push(`Season ${input.seasonNumber} already exists`);
+      if (existing) {
+        warnings.push(
+          `Season ${input.seasonNumber} already exists — import will resume into season ${existing.id}.`,
+        );
+        seasonId = existing.id;
+      }
       seasonNumber = input.seasonNumber;
     }
   } else {
@@ -80,7 +88,7 @@ export async function validateSheetImportMeta(
     }
   }
 
-  return { errors, seasonNumber, seasonId };
+  return { errors, warnings, seasonNumber, seasonId };
 }
 
 export async function assembleSheetImportPreview(
@@ -88,9 +96,10 @@ export async function assembleSheetImportPreview(
   input: SheetImportInput,
   sources: AssembledSources,
 ): Promise<SheetImportPreview> {
-  const { errors: metaErrors, seasonNumber, seasonId } = await validateSheetImportMeta(db, input);
+  const { errors: metaErrors, warnings: metaWarnings, seasonNumber, seasonId } =
+    await validateSheetImportMeta(db, input);
   const errors = [...metaErrors];
-  const warnings = [...sources.sourceWarnings];
+  const warnings = [...sources.sourceWarnings, ...metaWarnings];
   const mode = input.mode;
 
   if (mode === "full" && sources.masterTeams.length === 0) {
@@ -251,6 +260,25 @@ export async function assembleSheetImportPreview(
   warnings.push(...rosterSizeWarnings(teams));
 
   if (includePlayers) {
+    const teamsByPlayer = new Map<string, { label: string; teams: string[] }>();
+    for (const team of activeTeams) {
+      for (const playerName of team.playerNames) {
+        const key = normalizeName(playerName);
+        const entry = teamsByPlayer.get(key) ?? { label: playerName, teams: [] };
+        if (!entry.teams.includes(team.name)) entry.teams.push(team.name);
+        teamsByPlayer.set(key, entry);
+      }
+    }
+    for (const entry of teamsByPlayer.values()) {
+      if (entry.teams.length > 1) {
+        warnings.push(
+          `Player "${entry.label}" appears on multiple teams: ${entry.teams.join(", ")}`,
+        );
+      }
+    }
+  }
+
+  if (includePlayers) {
     for (const team of teams.filter((row) => row.included)) {
       const roles = team.leadership ? Object.keys(team.leadership).length : 0;
       if (team.playerNames.length > 0 && roles === 0) {
@@ -318,7 +346,8 @@ export async function buildSheetImportPreview(
       sourceWarnings.push(...regional.warnings);
     }
   } catch (error) {
-    const { errors, seasonNumber, seasonId } = await validateSheetImportMeta(db, input);
+    const { errors, warnings: metaWarnings, seasonNumber, seasonId } =
+      await validateSheetImportMeta(db, input);
     errors.push(error instanceof Error ? error.message : String(error));
     return {
       mode: input.mode,
@@ -331,14 +360,14 @@ export async function buildSheetImportPreview(
         playersExisting: 0,
         games: 0,
         stats: 0,
-        warnings: 0,
+        warnings: metaWarnings.length,
         errors: errors.length,
       },
       teams: [],
       players: [],
       games: [],
       stats: [],
-      warnings: [],
+      warnings: metaWarnings,
       errors,
     };
   }

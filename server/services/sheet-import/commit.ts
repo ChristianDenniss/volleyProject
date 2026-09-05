@@ -1,13 +1,80 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
 import type { Db } from "@db";
-import { insertMany, insertManyIgnore } from "@db/insert";
+import { insertManyIgnore } from "@db/insert";
 import { games, players, seasons, stats, teams, teamsGames, teamsPlayers } from "@db/schema";
 import { BadRequestError, NotFoundError } from "../errors";
 import type { RecordsJobMessage } from "../../queue";
 import { assembleSheetImportPreview, buildSheetImportPreview, assertPreviewCommitable } from "./preview";
 import type { FetchImpl } from "./fetch";
+import { importKeyFromStoredGame } from "./keys";
 import { normalizeName } from "./names";
 import type { SheetImportCommitResult, SheetImportInput } from "./types";
+import type { SheetRegion } from "./types";
+
+interface StoredGameTeams {
+  region: SheetRegion;
+  phase: string;
+  round: string;
+  date: string;
+  team1Score: number | null;
+  team2Score: number | null;
+  team1Name?: string;
+  team2Name?: string;
+}
+
+async function loadExistingGameIdByKey(db: Db, seasonId: number): Promise<Map<string, number>> {
+  const rows = await db
+    .select({
+      gameId: games.id,
+      region: games.region,
+      phase: games.phase,
+      round: games.round,
+      date: games.date,
+      team1Score: games.team1Score,
+      team2Score: games.team2Score,
+      slot: teamsGames.slot,
+      teamName: teams.name,
+    })
+    .from(games)
+    .innerJoin(teamsGames, eq(teamsGames.gameId, games.id))
+    .innerJoin(teams, eq(teams.id, teamsGames.teamId))
+    .where(eq(games.seasonId, seasonId));
+
+  const grouped = new Map<number, StoredGameTeams>();
+  for (const row of rows) {
+    let entry = grouped.get(row.gameId);
+    if (!entry) {
+      entry = {
+        region: row.region as SheetRegion,
+        phase: row.phase,
+        round: row.round ?? "",
+        date: row.date,
+        team1Score: row.team1Score,
+        team2Score: row.team2Score,
+      };
+      grouped.set(row.gameId, entry);
+    }
+    if (row.slot === 1) entry.team1Name = row.teamName;
+    if (row.slot === 2) entry.team2Name = row.teamName;
+  }
+
+  const byKey = new Map<string, number>();
+  for (const [gameId, entry] of grouped) {
+    if (!entry.team1Name || !entry.team2Name) continue;
+    const key = importKeyFromStoredGame({
+      region: entry.region,
+      phase: entry.phase,
+      round: entry.round,
+      date: entry.date,
+      team1Name: entry.team1Name,
+      team2Name: entry.team2Name,
+      team1Score: entry.team1Score,
+      team2Score: entry.team2Score,
+    });
+    byKey.set(key, gameId);
+  }
+  return byKey;
+}
 
 async function getOrCreatePlayer(db: Db, name: string): Promise<{ id: number; created: boolean }> {
   const lowered = name.toLowerCase();
@@ -52,9 +119,6 @@ export async function commitSheetImport(
     if (existing) {
       seasonId = existing.id;
       seasonNumber = existing.seasonNumber;
-      preview.warnings.push(
-        `Season ${input.seasonNumber} already exists — resuming import into season ${seasonId}.`,
-      );
     } else {
       const [created] = await db
         .insert(seasons)
@@ -173,7 +237,10 @@ export async function commitSheetImport(
     }
   }
 
-  const gameIdByKey = new Map<string, number>();
+  const gameIdByKey =
+    includeGames && seasonId != null
+      ? await loadExistingGameIdByKey(db, seasonId)
+      : new Map<string, number>();
 
   if (includeGames) {
     for (const game of preview.games.filter((row) => row.included)) {
@@ -183,6 +250,15 @@ export async function commitSheetImport(
         preview.warnings.push(
           `Skipped game ${game.team1Name} vs ${game.team2Name} (missing team ids)`,
         );
+        continue;
+      }
+
+      const existingGameId = gameIdByKey.get(game.key);
+      if (existingGameId != null) {
+        await insertManyIgnore(db, teamsGames, [
+          { gameId: existingGameId, teamId: team1Id, slot: 1 },
+          { gameId: existingGameId, teamId: team2Id, slot: 2 },
+        ]);
         continue;
       }
 
@@ -210,7 +286,7 @@ export async function commitSheetImport(
         .returning();
 
       if (!created) continue;
-      await insertMany(db, teamsGames, [
+      await insertManyIgnore(db, teamsGames, [
         { gameId: created.id, teamId: team1Id, slot: 1 },
         { gameId: created.id, teamId: team2Id, slot: 2 },
       ]);
@@ -231,6 +307,24 @@ export async function commitSheetImport(
       }
     }
 
+    const statRows: {
+      playerId: number;
+      gameId: number;
+      spikeKills: number;
+      spikeAttempts: number;
+      spikingErrors: number;
+      apeKills: number;
+      apeAttempts: number;
+      assists: number;
+      settingErrors: number;
+      blocks: number;
+      blockFollows: number;
+      digs: number;
+      aces: number;
+      servingErrors: number;
+      miscErrors: number;
+    }[] = [];
+
     for (const row of preview.stats) {
       const gameId = gameIdByKey.get(row.gameKey);
       if (!gameId) continue;
@@ -242,24 +336,22 @@ export async function commitSheetImport(
         playerCache.set(row.playerName.toLowerCase(), playerId);
         if (created.created) playersCreated += 1;
 
-        // Attach to team if possible
         const teamId = teamIdByName.get(normalizeName(row.teamName));
         if (teamId) {
           await db.insert(teamsPlayers).values({ teamId, playerId }).onConflictDoNothing();
         }
       }
 
-      const existing = await db.query.stats.findFirst({
-        where: and(eq(stats.playerId, playerId), eq(stats.gameId, gameId)),
-      });
-      if (existing) continue;
-
-      await db.insert(stats).values({
+      statRows.push({
         playerId,
         gameId,
         ...row.counts,
       });
-      statsCreated += 1;
+    }
+
+    if (statRows.length > 0) {
+      await insertManyIgnore(db, stats, statRows);
+      statsCreated = statRows.length;
     }
   }
 

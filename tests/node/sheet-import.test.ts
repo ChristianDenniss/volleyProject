@@ -5,6 +5,37 @@ import { displayName, normalizeName, parseTeamHeader } from "@server/services/sh
 import { parseMasterScheduleTab, parseMasterTeamsTab } from "@server/services/sheet-import/parse-master";
 import { parseRegionalPlayersLeaderboard, parseRegionalTeamTab, parseRegionalWorkbook } from "@server/services/sheet-import/parse-regional";
 import type { ParsedGame, ParsedScoreBlock } from "@server/services/sheet-import/types";
+import {
+  importKeyFromStoredGame,
+  masterGameKey,
+  syntheticGameKey,
+} from "@server/services/sheet-import/keys";
+
+describe("import game keys", () => {
+  it("builds stable master and synthetic keys", () => {
+    expect(masterGameKey("na", "qualifiers", "Teiko", "Tenjiku", 3, 1, "Round 1")).toBe(
+      "na|qualifiers|Round 1|teiko|tenjiku|3-1",
+    );
+    expect(syntheticGameKey("eu", "Night Owls", "Polar Tips", 3, 2)).toBe(
+      "eu|stats|night owls|polar tips|3-2",
+    );
+  });
+
+  it("reconstructs stored synthetic game keys", () => {
+    expect(
+      importKeyFromStoredGame({
+        region: "na",
+        phase: "playoffs",
+        round: "From stats sheet",
+        date: "1970-01-01",
+        team1Name: "Teiko",
+        team2Name: "Tenjiku",
+        team1Score: 3,
+        team2Score: 1,
+      }),
+    ).toBe("na|stats|teiko|tenjiku|3-1");
+  });
+});
 
 describe("parseSheetNamesFromHtml", () => {
   it("reads items.push name entries from public htmlview", () => {
