@@ -8,12 +8,12 @@ import {
 } from "@/lib/tiptap-doc";
 
 const HEADING_CLASS: Record<number, string> = {
-  1: "mb-4 mt-8 text-[2rem] font-bold leading-tight",
-  2: "mb-3 mt-8 text-[1.6rem] font-bold leading-tight",
-  3: "mb-3 mt-6 text-[1.3rem] font-bold leading-snug",
-  4: "mb-2 mt-6 text-[1.15rem] font-bold",
-  5: "mb-2 mt-4 text-[1.05rem] font-bold",
-  6: "mb-2 mt-4 text-[1rem] font-bold uppercase tracking-wide",
+  1: "mb-4 mt-8 font-display text-[2rem] font-bold leading-tight",
+  2: "mb-3 mt-8 font-display text-[1.6rem] font-bold leading-tight",
+  3: "mb-3 mt-6 font-display text-[1.3rem] font-bold leading-snug",
+  4: "mb-2 mt-6 font-display text-[1.15rem] font-bold",
+  5: "mb-2 mt-4 font-display text-[1.05rem] font-bold",
+  6: "mb-2 mt-4 font-display text-[1rem] font-bold uppercase tracking-wide",
 };
 
 function applyMarks(text: ReactNode, marks: TiptapMark[] | undefined): ReactNode {
@@ -31,7 +31,7 @@ function applyMarks(text: ReactNode, marks: TiptapMark[] | undefined): ReactNode
         return <s className="line-through">{node}</s>;
       case "code":
         return (
-          <code className="rounded-xs bg-rvl-panel px-1.5 py-0.5 font-mono text-[0.88em]">
+          <code className="rounded-xs bg-rvl-panel px-1.5 py-0.5 font-code text-[0.88em]">
             {node}
           </code>
         );
@@ -99,7 +99,7 @@ function renderNode(node: TiptapNode): ReactNode {
 
     case "codeBlock":
       return (
-        <pre className="mb-6 overflow-x-auto rounded-xs border border-rvl-line bg-rvl-panel p-4 font-mono text-[0.88rem] text-rvl-ink">
+        <pre className="mb-6 overflow-x-auto rounded-xs border border-rvl-line bg-rvl-panel p-4 font-code text-[0.88rem] text-rvl-ink">
           <code>{renderNodes(node.content)}</code>
         </pre>
       );

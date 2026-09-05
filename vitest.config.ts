@@ -47,7 +47,9 @@ export default defineConfig({
       },
       {
         plugins: [react()],
-        resolve: { alias },
+        resolve: {
+          alias: [{ find: /^next\/link$/, replacement: r("./tests/helpers/next-link-stub.tsx") }, ...alias],
+        },
         test: {
           name: "dom",
           environment: "jsdom",

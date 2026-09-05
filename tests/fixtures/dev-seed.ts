@@ -206,47 +206,342 @@ export async function seedDev(db: Db): Promise<void> {
   const teamById = new Map(
     [...S3_TEAMS, ...S4_TEAMS].map((team) => [team.id, team.name] as const),
   );
+  const REGIONS = ["na", "eu", "as", "sa"] as const;
+  const setLine = (a: number, b: number) => `${a}-${b}`;
+
+  function roundFromStage(stage: string) {
+    if (stage.includes("Semi")) return "Semi-Finals";
+    if (stage.includes("Quarter")) return "Quarter-Finals";
+    if (stage === "Finals") return "Finals";
+    return "Round of 16";
+  }
+
+  function scheduleFields(stage: string, index: number) {
+    const round = roundFromStage(stage);
+    return {
+      matchNumber: `${round} - Match ${index + 1}`,
+      round,
+      status: "completed" as const,
+      phase: (round === "Round of 16" ? "qualifiers" : "playoffs") as "qualifiers" | "playoffs",
+      region: REGIONS[index % REGIONS.length],
+    };
+  }
+
   const gameRows = [
-    ...s3Pairs.map(([a, b], index) => ({
-      id: 17 + index,
-      name: `${teamById.get(a)} Vs. ${teamById.get(b)}`,
-      team1Score: index % 2 === 0 ? 3 : 1,
-      team2Score: index % 2 === 0 ? 1 : 3,
-      date: `2026-06-${String(8 + index * 7).padStart(2, "0")}`,
-      stage: index === 3 ? "Finals" : "Winners Bracket; Round of 16",
-      videoUrl: index === 0 ? "https://www.youtube.com/watch?v=nightcourt1" : null,
-      seasonId: SEASON_3,
-      teamIds: [a, b] as const,
-    })),
-    ...s4Pairs.map(([a, b], index) => ({
-      id: 5 + index,
-      name: `${teamById.get(a)} Vs. ${teamById.get(b)}`,
-      team1Score: index % 3 === 2 ? 2 : 3,
-      team2Score: index % 3 === 2 ? 3 : index % 2,
-      date: `2026-08-${String(6 + index * 2).padStart(2, "0")}`,
-      stage:
+    ...s3Pairs.map(([a, b], index) => {
+      const stage = index === 3 ? "Finals" : "Winners Bracket; Round of 16";
+      return {
+        id: 18 + index,
+        name: `${teamById.get(a)} Vs. ${teamById.get(b)}`,
+        ...scheduleFields(stage, index),
+        team1Score: index % 2 === 0 ? 3 : 1,
+        team2Score: index % 2 === 0 ? 1 : 3,
+        date: `2026-06-${String(8 + index * 7).padStart(2, "0")}`,
+        stage,
+        videoUrl: index === 0 ? "https://www.youtube.com/watch?v=nightcourt1" : null,
+        tags: null,
+        seasonId: SEASON_3,
+        teamIds: [a, b] as const,
+      };
+    }),
+    ...s4Pairs.map(([a, b], index) => {
+      const stage =
         index >= 10
           ? "Finals"
           : index >= 8
             ? "Winners Bracket; Semi Finals"
             : index >= 4
               ? "Winners Bracket; Quarter Finals"
-              : "Winners Bracket; Round of 16",
-      videoUrl: index % 4 === 0 ? `https://www.youtube.com/watch?v=flood${index}` : null,
-      seasonId: SEASON_4,
-      teamIds: [a, b] as const,
-    })),
+              : "Winners Bracket; Round of 16";
+      return {
+        id: 6 + index,
+        name: `${teamById.get(a)} Vs. ${teamById.get(b)}`,
+        ...scheduleFields(stage, index),
+        team1Score: index % 3 === 2 ? 2 : 3,
+        team2Score: index % 3 === 2 ? 3 : index % 2,
+        date: `2026-08-${String(6 + index * 2).padStart(2, "0")}`,
+        stage,
+        videoUrl: index % 4 === 0 ? `https://www.youtube.com/watch?v=flood${index}` : null,
+        tags: null,
+        seasonId: SEASON_4,
+        teamIds: [a, b] as const,
+      };
+    }),
   ];
+
+  const teamIdByName = new Map(
+    [...S3_TEAMS, ...S4_TEAMS].map((team) => [team.name, team.id]),
+  );
+
+  const playoffGames = [
+    {
+      id: 22,
+      matchNumber: "Quarter-Finals - Match 1",
+      round: "Quarter-Finals",
+      status: "completed" as const,
+      phase: "playoffs" as const,
+      region: "sa" as const,
+      date: "2026-08-08",
+      team1Name: "Echo Block",
+      team2Name: "Lunar Serve",
+      team1Score: 3,
+      team2Score: 0,
+      set1Score: setLine(25, 16),
+      set2Score: setLine(25, 20),
+      set3Score: setLine(25, 19),
+      set4Score: null,
+      set5Score: null,
+      tags: ["Playoffs"],
+      seasonId: SEASON_4,
+    },
+    {
+      id: 23,
+      matchNumber: "Quarter-Finals - Match 2",
+      round: "Quarter-Finals",
+      status: "completed" as const,
+      phase: "playoffs" as const,
+      region: "na" as const,
+      date: "2026-08-15",
+      team1Name: "Volt Diggers",
+      team2Name: "Sand Kings",
+      team1Score: 3,
+      team2Score: 0,
+      set1Score: setLine(25, 18),
+      set2Score: setLine(25, 21),
+      set3Score: setLine(25, 16),
+      set4Score: null,
+      set5Score: null,
+      tags: ["Playoffs"],
+      seasonId: SEASON_4,
+    },
+    {
+      id: 24,
+      matchNumber: "Quarter-Finals - Match 3",
+      round: "Quarter-Finals",
+      status: "completed" as const,
+      phase: "playoffs" as const,
+      region: "eu" as const,
+      date: "2026-08-16",
+      team1Name: "Night Owls",
+      team2Name: "Polar Tips",
+      team1Score: 3,
+      team2Score: 1,
+      set1Score: setLine(25, 23),
+      set2Score: setLine(20, 25),
+      set3Score: setLine(25, 18),
+      set4Score: setLine(25, 21),
+      set5Score: null,
+      tags: ["Playoffs"],
+      seasonId: SEASON_4,
+    },
+    {
+      id: 25,
+      matchNumber: "Quarter-Finals - Match 4",
+      round: "Quarter-Finals",
+      status: "completed" as const,
+      phase: "playoffs" as const,
+      region: "as" as const,
+      date: "2026-08-17",
+      team1Name: "Crimson Floor",
+      team2Name: "Glass Cannons",
+      team1Score: 3,
+      team2Score: 1,
+      set1Score: setLine(25, 19),
+      set2Score: setLine(22, 25),
+      set3Score: setLine(25, 21),
+      set4Score: setLine(25, 18),
+      set5Score: null,
+      tags: ["Playoffs"],
+      seasonId: SEASON_4,
+    },
+    {
+      id: 26,
+      matchNumber: "Semi-Finals - Match 1",
+      round: "Semi-Finals",
+      status: "completed" as const,
+      phase: "playoffs" as const,
+      region: "na" as const,
+      date: "2026-08-23",
+      team1Name: "Volt Diggers",
+      team2Name: "Echo Block",
+      team1Score: 3,
+      team2Score: 1,
+      set1Score: setLine(25, 20),
+      set2Score: setLine(23, 25),
+      set3Score: setLine(25, 18),
+      set4Score: setLine(25, 22),
+      set5Score: null,
+      tags: ["Playoffs"],
+      seasonId: SEASON_4,
+    },
+    {
+      id: 27,
+      matchNumber: "Semi-Finals - Match 2",
+      round: "Semi-Finals",
+      status: "completed" as const,
+      phase: "playoffs" as const,
+      region: "eu" as const,
+      date: "2026-08-30",
+      team1Name: "Night Owls",
+      team2Name: "Crimson Floor",
+      team1Score: 2,
+      team2Score: 3,
+      set1Score: setLine(25, 22),
+      set2Score: setLine(19, 25),
+      set3Score: setLine(25, 23),
+      set4Score: setLine(21, 25),
+      set5Score: setLine(13, 15),
+      tags: ["Playoffs"],
+      seasonId: SEASON_4,
+    },
+    {
+      id: 28,
+      matchNumber: "Third Place - Match 1",
+      round: "Third Place",
+      status: "scheduled" as const,
+      phase: "playoffs" as const,
+      region: "as" as const,
+      date: "2026-09-05",
+      team1Name: "Echo Block",
+      team2Name: "Night Owls",
+      team1Score: null,
+      team2Score: null,
+      tags: ["Playoffs"],
+      seasonId: SEASON_4,
+    },
+    {
+      id: 29,
+      matchNumber: "Finals - Match 1",
+      round: "Finals",
+      status: "scheduled" as const,
+      phase: "playoffs" as const,
+      region: "na" as const,
+      date: "2026-09-06",
+      team1Name: "Volt Diggers",
+      team2Name: "Crimson Floor",
+      team1Score: null,
+      team2Score: null,
+      tags: ["Finals", "Floodlights"],
+      seasonId: SEASON_4,
+    },
+    {
+      id: 30,
+      matchNumber: "Night Court Final",
+      round: "Finals",
+      status: "completed" as const,
+      phase: "playoffs" as const,
+      region: "na" as const,
+      date: "2026-07-26",
+      team1Name: "Tide Breakers",
+      team2Name: "Iron Setters",
+      team1Score: 3,
+      team2Score: 2,
+      set1Score: setLine(25, 23),
+      set2Score: setLine(22, 25),
+      set3Score: setLine(25, 20),
+      set4Score: setLine(21, 25),
+      set5Score: setLine(15, 11),
+      tags: ["Night Court"],
+      seasonId: SEASON_3,
+    },
+  ].map(({ team1Name, team2Name, ...fixture }) => ({
+    ...fixture,
+    name: `${team1Name} Vs. ${team2Name}`,
+    stage: fixture.round,
+    videoUrl: null,
+    teamIds: [teamIdByName.get(team1Name)!, teamIdByName.get(team2Name)!] as const,
+  }));
+
+  const densityDays = [
+    { date: "2026-08-29", count: 1 },
+    { date: "2026-08-31", count: 2 },
+    { date: "2026-09-01", count: 3 },
+    { date: "2026-09-02", count: 4 },
+    { date: "2026-09-03", count: 5 },
+    { date: "2026-09-04", count: 6 },
+    { date: "2026-09-07", count: 2 },
+    { date: "2026-09-08", count: 5 },
+    { date: "2026-09-10", count: 3 },
+    { date: "2026-09-12", count: 1 },
+  ] as const;
+  const densityPairs = [
+    [9, 10],
+    [11, 12],
+    [13, 14],
+    [15, 16],
+    [9, 11],
+    [10, 12],
+    [13, 15],
+    [14, 16],
+    [9, 13],
+    [10, 14],
+    [11, 15],
+    [12, 16],
+    [9, 14],
+    [10, 15],
+    [11, 16],
+    [12, 13],
+    [9, 12],
+    [10, 13],
+    [11, 14],
+    [15, 16],
+    [9, 16],
+    [10, 11],
+    [12, 14],
+    [13, 16],
+    [9, 15],
+    [10, 16],
+    [11, 13],
+    [12, 15],
+    [14, 9],
+    [13, 10],
+    [16, 12],
+    [15, 13],
+  ] as const;
+
+  let densityId = 31;
+  let densityPair = 0;
+  const densityGames = densityDays.flatMap(({ date, count }) =>
+    Array.from({ length: count }, (_, index) => {
+      const [a, b] = densityPairs[densityPair % densityPairs.length]!;
+      densityPair += 1;
+      const id = densityId;
+      densityId += 1;
+      const scheduled = date >= "2026-09-04";
+      return {
+        id,
+        name: `${teamById.get(a)} Vs. ${teamById.get(b)}`,
+        matchNumber: `Weeknight - Match ${index + 1}`,
+        round: "Weeknight",
+        status: (scheduled ? "scheduled" : "completed") as "scheduled" | "completed",
+        phase: "qualifiers" as const,
+        region: REGIONS[index % REGIONS.length],
+        team1Score: scheduled ? null : index % 2 === 0 ? 3 : 1,
+        team2Score: scheduled ? null : index % 2 === 0 ? 1 : 3,
+        set1Score: scheduled ? null : setLine(25, 20 + (index % 4)),
+        set2Score: scheduled ? null : setLine(22 + (index % 3), 25),
+        set3Score: scheduled ? null : setLine(25, 18 + (index % 5)),
+        date,
+        stage: "Weeknight",
+        videoUrl: null,
+        tags: ["Weeknight"],
+        seasonId: SEASON_4,
+        teamIds: [a, b] as const,
+      };
+    }),
+  );
+
+  const allGames = [...gameRows, ...playoffGames, ...densityGames];
 
   await insertMany(
     db,
     games,
-    gameRows.map(({ teamIds: _teamIds, ...game }) => game),
+    allGames.map(({ teamIds: _teamIds, ...game }) => game),
   );
   await insertMany(
     db,
     teamsGames,
-    gameRows.flatMap((game) =>
+    allGames.flatMap((game) =>
       game.teamIds.map((teamId, index) => ({ gameId: game.id, slot: index + 1, teamId })),
     ),
   );
@@ -261,13 +556,15 @@ export async function seedDev(db: Db): Promise<void> {
     roster.set(teamId, [...(roster.get(teamId) ?? []), 21 + index]);
   });
 
-  const statRows = gameRows.flatMap((game) =>
-    game.teamIds.flatMap((teamId, side) =>
-      (roster.get(teamId) ?? []).map((playerId, seat) =>
-        line(playerId, game.id, game.id * 5 + side * 11 + seat * 3),
+  const statRows = allGames
+    .filter((game) => game.status === "completed")
+    .flatMap((game) =>
+      game.teamIds.flatMap((teamId, side) =>
+        (roster.get(teamId) ?? []).map((playerId, seat) =>
+          line(playerId, game.id, game.id * 5 + side * 11 + seat * 3),
+        ),
       ),
-    ),
-  );
+    );
   await insertMany(db, stats, statRows);
 
   await insertMany(db, awards, [
@@ -275,14 +572,14 @@ export async function seedDev(db: Db): Promise<void> {
       id: 3,
       type: "MVP",
       description: "Ran Night Court from the four.",
-      imageUrl: "/images/s12.png",
+      imageUrl: "/images/awards/mvp.png",
       seasonId: SEASON_3,
     },
     {
       id: 4,
       type: "Best Spiker",
       description: "Highest kill efficiency in Night Court.",
-      imageUrl: "/images/s8.png",
+      imageUrl: "/images/awards/best-spiker.png",
       seasonId: SEASON_3,
     },
     {
@@ -296,35 +593,70 @@ export async function seedDev(db: Db): Promise<void> {
       id: 6,
       type: "MVP",
       description: "The Floodlights season belongs to them.",
-      imageUrl: "/images/s13.png",
+      imageUrl: "/images/awards/mvp.png",
       seasonId: SEASON_4,
     },
     {
       id: 7,
       type: "Best Setter",
       description: "Cleanest hands under the new lights.",
-      imageUrl: "/images/s10.png",
+      imageUrl: "/images/awards/best-setter.png",
       seasonId: SEASON_4,
     },
     {
       id: 8,
       type: "Best Server",
       description: "Aces in bunches all summer.",
-      imageUrl: "/images/s7.png",
+      imageUrl: "/images/awards/best-server.png",
       seasonId: SEASON_4,
     },
     {
       id: 9,
       type: "FMVP",
       description: "Closed the final in five.",
-      imageUrl: "/images/s11.png",
+      imageUrl: "/images/awards/fmvp.png",
       seasonId: SEASON_4,
     },
     {
       id: 10,
       type: "LuvLate Award",
       description: "The clip of the season.",
-      imageUrl: "/images/LuvLate.png",
+      imageUrl: "/images/awards/community-recognition.png",
+      seasonId: SEASON_4,
+    },
+    {
+      id: 11,
+      type: "MIP",
+      description: "Biggest jump from last season to this one.",
+      imageUrl: "/images/awards/mip.png",
+      seasonId: SEASON_4,
+    },
+    {
+      id: 12,
+      type: "Best Aper",
+      description: "Lived at the net and finished every dump.",
+      imageUrl: "/images/awards/best-aper.png",
+      seasonId: SEASON_4,
+    },
+    {
+      id: 13,
+      type: "DPOS",
+      description: "The floor never stayed open for long.",
+      imageUrl: "/images/awards/dpos.png",
+      seasonId: SEASON_4,
+    },
+    {
+      id: 14,
+      type: "Best Receiver",
+      description: "First contact stayed in system all year.",
+      imageUrl: "/images/awards/best-receiver.png",
+      seasonId: SEASON_4,
+    },
+    {
+      id: 15,
+      type: "Best Blocker",
+      description: "Took away the pin and the pipe.",
+      imageUrl: "/images/awards/best-blocker.png",
       seasonId: SEASON_4,
     },
   ]);
@@ -338,6 +670,11 @@ export async function seedDev(db: Db): Promise<void> {
     { awardId: 8, playerId: 27 },
     { awardId: 9, playerId: 21 },
     { awardId: 10, playerId: 33 },
+    { awardId: 11, playerId: 22 },
+    { awardId: 12, playerId: 25 },
+    { awardId: 13, playerId: 26 },
+    { awardId: 14, playerId: 28 },
+    { awardId: 15, playerId: 29 },
   ]);
 
   const recordHolders = [21, 22, 24, 27, 29, 31, 33, 36] as const;
@@ -379,7 +716,7 @@ export async function seedDev(db: Db): Promise<void> {
         date: `2026-08-${String(10 + index).padStart(2, "0")}`,
         seasonId: SEASON_4,
         playerId: recordHolders[index] ?? 21,
-        gameId: 5 + index,
+        gameId: 6 + index,
       });
     });
   }
@@ -400,228 +737,6 @@ export async function seedDev(db: Db): Promise<void> {
     });
   }
   await insertMany(db, records, recordRows);
-
-  const setLine = (a: number, b: number) => `${a}-${b}`;
-  const teamIdByName = new Map<string, number>(
-    [...S3_TEAMS, ...S4_TEAMS].map((team) => [team.name, team.id]),
-  );
-
-  type ScheduleFixture = {
-    id: number;
-    matchNumber: string;
-    round: string;
-    status: "scheduled" | "completed";
-    phase: "qualifiers" | "playoffs";
-    region: "na" | "eu" | "as" | "sa";
-    date: string;
-    team1Name: string;
-    team2Name: string;
-    team1Score: number | null;
-    team2Score: number | null;
-    set1Score?: string | null;
-    set2Score?: string | null;
-    set3Score?: string | null;
-    set4Score?: string | null;
-    set5Score?: string | null;
-    tags: string[] | null;
-    seasonId: number;
-  };
-
-  const scheduleFixtures: ScheduleFixture[] = [
-    {
-      id: 30,
-      matchNumber: "Quarter-Finals - Match 1",
-      round: "Quarter-Finals",
-      status: "completed",
-      phase: "playoffs",
-      region: "sa",
-      date: "2026-08-08",
-      team1Name: "Echo Block",
-      team2Name: "Lunar Serve",
-      team1Score: 3,
-      team2Score: 0,
-      set1Score: setLine(25, 16),
-      set2Score: setLine(25, 20),
-      set3Score: setLine(25, 19),
-      set4Score: null,
-      set5Score: null,
-      tags: ["Playoffs"],
-      seasonId: SEASON_4,
-    },
-    {
-      id: 31,
-      matchNumber: "Quarter-Finals - Match 2",
-      round: "Quarter-Finals",
-      status: "completed",
-      phase: "playoffs",
-      region: "na",
-      date: "2026-08-15",
-      team1Name: "Volt Diggers",
-      team2Name: "Sand Kings",
-      team1Score: 3,
-      team2Score: 0,
-      set1Score: setLine(25, 18),
-      set2Score: setLine(25, 21),
-      set3Score: setLine(25, 16),
-      set4Score: null,
-      set5Score: null,
-      tags: ["Playoffs"],
-      seasonId: SEASON_4,
-    },
-    {
-      id: 32,
-      matchNumber: "Quarter-Finals - Match 3",
-      round: "Quarter-Finals",
-      status: "completed",
-      phase: "playoffs",
-      region: "eu",
-      date: "2026-08-16",
-      team1Name: "Night Owls",
-      team2Name: "Polar Tips",
-      team1Score: 3,
-      team2Score: 1,
-      set1Score: setLine(25, 23),
-      set2Score: setLine(20, 25),
-      set3Score: setLine(25, 18),
-      set4Score: setLine(25, 21),
-      set5Score: null,
-      tags: ["Playoffs"],
-      seasonId: SEASON_4,
-    },
-    {
-      id: 33,
-      matchNumber: "Quarter-Finals - Match 4",
-      round: "Quarter-Finals",
-      status: "completed",
-      phase: "playoffs",
-      region: "as",
-      date: "2026-08-17",
-      team1Name: "Crimson Floor",
-      team2Name: "Glass Cannons",
-      team1Score: 3,
-      team2Score: 1,
-      set1Score: setLine(25, 19),
-      set2Score: setLine(22, 25),
-      set3Score: setLine(25, 21),
-      set4Score: setLine(25, 18),
-      set5Score: null,
-      tags: ["Playoffs"],
-      seasonId: SEASON_4,
-    },
-    {
-      id: 34,
-      matchNumber: "Semi-Finals - Match 1",
-      round: "Semi-Finals",
-      status: "completed",
-      phase: "playoffs",
-      region: "na",
-      date: "2026-08-23",
-      team1Name: "Volt Diggers",
-      team2Name: "Echo Block",
-      team1Score: 3,
-      team2Score: 1,
-      set1Score: setLine(25, 20),
-      set2Score: setLine(23, 25),
-      set3Score: setLine(25, 18),
-      set4Score: setLine(25, 22),
-      set5Score: null,
-      tags: ["Playoffs"],
-      seasonId: SEASON_4,
-    },
-    {
-      id: 35,
-      matchNumber: "Semi-Finals - Match 2",
-      round: "Semi-Finals",
-      status: "completed",
-      phase: "playoffs",
-      region: "eu",
-      date: "2026-08-30",
-      team1Name: "Night Owls",
-      team2Name: "Crimson Floor",
-      team1Score: 2,
-      team2Score: 3,
-      set1Score: setLine(25, 22),
-      set2Score: setLine(19, 25),
-      set3Score: setLine(25, 23),
-      set4Score: setLine(21, 25),
-      set5Score: setLine(13, 15),
-      tags: ["Playoffs"],
-      seasonId: SEASON_4,
-    },
-    {
-      id: 36,
-      matchNumber: "Third Place - Match 1",
-      round: "Third Place",
-      status: "scheduled",
-      phase: "playoffs",
-      region: "as",
-      date: "2026-09-05",
-      team1Name: "Echo Block",
-      team2Name: "Night Owls",
-      team1Score: null,
-      team2Score: null,
-      tags: ["Playoffs"],
-      seasonId: SEASON_4,
-    },
-    {
-      id: 37,
-      matchNumber: "Finals - Match 1",
-      round: "Finals",
-      status: "scheduled",
-      phase: "playoffs",
-      region: "na",
-      date: "2026-09-06",
-      team1Name: "Volt Diggers",
-      team2Name: "Crimson Floor",
-      team1Score: null,
-      team2Score: null,
-      tags: ["Finals", "Floodlights"],
-      seasonId: SEASON_4,
-    },
-    {
-      id: 38,
-      matchNumber: "Night Court Final",
-      round: "Finals",
-      status: "completed",
-      phase: "playoffs",
-      region: "na",
-      date: "2026-07-26",
-      team1Name: "Tide Breakers",
-      team2Name: "Iron Setters",
-      team1Score: 3,
-      team2Score: 2,
-      set1Score: setLine(25, 23),
-      set2Score: setLine(22, 25),
-      set3Score: setLine(25, 20),
-      set4Score: setLine(21, 25),
-      set5Score: setLine(15, 11),
-      tags: ["Night Court"],
-      seasonId: SEASON_3,
-    },
-  ];
-
-  await insertMany(
-    db,
-    games,
-    scheduleFixtures.map(({ team1Name, team2Name, ...fixture }) => ({
-      ...fixture,
-      name: `${team1Name} Vs. ${team2Name}`,
-      stage: fixture.round,
-      videoUrl: null,
-    })),
-  );
-  await insertMany(
-    db,
-    teamsGames,
-    scheduleFixtures.flatMap((fixture) => {
-      const team1Id = teamIdByName.get(fixture.team1Name);
-      const team2Id = teamIdByName.get(fixture.team2Name);
-      const rows = [];
-      if (team1Id) rows.push({ gameId: fixture.id, slot: 1, teamId: team1Id });
-      if (team2Id) rows.push({ gameId: fixture.id, slot: 2, teamId: team2Id });
-      return rows;
-    }),
-  );
 
   await insertMany(db, articles, [
     {
@@ -649,7 +764,7 @@ export async function seedDev(db: Db): Promise<void> {
         "Uma Reed put up 28 kills. The block held on the second sideout after the timeout.",
         "Sand Kings never found a sideout run. Volt wait in the last four.",
       ]),
-      imageUrl: "/images/s13.png",
+      imageUrl: "/images/top-10-wing-spikers.jpg",
       approved: true,
       likes: 27,
       authorId: "fixture-admin",

@@ -38,6 +38,7 @@
   --rvl-accent-soft: #f0dcbb;
   --rvl-on-accent: #14161b;
   --rvl-mint: #0f766e;
+  --site-utility-h: 3rem;
   --chevron-down-white: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2314161b'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
   --color-scroll-thumb-on-dark: #5a5a5a;
   --color-scroll-thumb-on-dark-hover: #7a7a7a;
@@ -218,4 +219,13 @@
 .dark-scrollbar::-webkit-scrollbar-thumb,
 .dark-scrollbar *::-webkit-scrollbar-thumb {
   background: var(--color-scroll-thumb-on-dark);
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
