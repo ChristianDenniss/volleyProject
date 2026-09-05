@@ -1,12 +1,14 @@
 "use client";
 
 import { pick, ResourceView, optionalText, type ColumnSpec, type FieldSpec } from "./resource-view";
+import { TeamsSheetImport } from "./sheet-import-dialog";
 import { trpc } from "@/lib/trpc";
 
 interface Row {
   id: number;
   name: string;
   logoUrl: string | null;
+  description: string | null;
   placement: string;
   seasonId: number | null;
   seasonNumber: number | null;
@@ -47,6 +49,7 @@ export function TeamsManager({
     },
     { name: "placement", label: "Placement", type: "text", placeholder: "Didnt make playoffs" },
     { name: "logoUrl", label: "Logo URL", type: "url" },
+    { name: "description", label: "Description", type: "text", placeholder: "Optional team blurb" },
   ];
 
   const toInput = (values: Record<string, string>) => {
@@ -56,6 +59,7 @@ export function TeamsManager({
       seasonId: Number.isFinite(seasonId) ? seasonId : null,
       placement: optionalText(pick(values, "placement")),
       logoUrl: optionalText(pick(values, "logoUrl")) ?? null,
+      description: optionalText(pick(values, "description")) ?? null,
     };
   };
 
@@ -65,11 +69,13 @@ export function TeamsManager({
       rows={rows}
       columns={COLUMNS}
       fields={fields}
+      extra={<TeamsSheetImport seasons={seasons} />}
       toValues={(row) => ({
         name: row.name,
         seasonId: row.seasonId ? String(row.seasonId) : "",
         placement: row.placement,
         logoUrl: row.logoUrl ?? "",
+        description: row.description ?? "",
       })}
       onCreate={(values) => create.mutateAsync(toInput(values))}
       onUpdate={(id, values) => update.mutateAsync({ id: id as number, patch: toInput(values) })}
