@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckIcon, CopyIcon, OctagonXIcon } from "lucide-react";
+import { CheckIcon, CopyIcon, OctagonXIcon, XIcon } from "lucide-react";
 import {
   createContext,
   useCallback,
@@ -53,25 +53,40 @@ export function PortalErrorDetailProvider({ children }: { children: ReactNode })
   const showErrorToast = useCallback(
     (title: string, error: unknown) => {
       const message = formatError(error);
-      const open = () => openDetail(title, message);
       toast.custom(
-        () => (
-          <button
-            type="button"
-            onClick={open}
-            className="cn-toast group toast flex w-full cursor-pointer items-start gap-3 rounded-lg border border-rvl-line bg-rvl-ground p-4 text-left text-rvl-ink shadow-lg transition-opacity hover:opacity-90"
-          >
-            <OctagonXIcon className="mt-0.5 size-4 shrink-0 text-destructive" />
-            <div className="min-w-0 flex-1 space-y-1">
-              <p className="text-sm font-medium">{title}</p>
-              <p className="text-xs text-rvl-ink-2">
-                {preview(message)} · Click for full details
-              </p>
+        (id) => {
+          const open = () => {
+            toast.dismiss(id);
+            openDetail(title, message);
+          };
+          return (
+            <div className="cn-toast group toast relative flex w-[min(92vw,28rem)] items-start gap-3 rounded-lg border border-rvl-line bg-rvl-ground p-4 pr-10 text-left text-rvl-ink shadow-lg">
+              <button
+                type="button"
+                onClick={open}
+                className="flex min-w-0 flex-1 cursor-pointer items-start gap-3 text-left transition-opacity hover:opacity-90"
+              >
+                <OctagonXIcon className="mt-0.5 size-4 shrink-0 text-destructive" />
+                <div className="min-w-0 flex-1 space-y-1">
+                  <p className="text-sm font-medium">{title}</p>
+                  <p className="text-xs text-rvl-ink-2">
+                    {preview(message)} · Click for full details
+                  </p>
+                </div>
+                <span className="shrink-0 text-xs font-medium text-rvl-accent">Details</span>
+              </button>
+              <button
+                type="button"
+                aria-label="Dismiss"
+                onClick={() => toast.dismiss(id)}
+                className="absolute top-2 right-2 rounded-xs p-1 text-rvl-ink-2 transition-colors hover:bg-rvl-panel hover:text-rvl-ink"
+              >
+                <XIcon className="size-4" />
+              </button>
             </div>
-            <span className="shrink-0 text-xs font-medium text-rvl-accent">Details</span>
-          </button>
-        ),
-        { duration: Number.POSITIVE_INFINITY, closeButton: true },
+          );
+        },
+        { duration: 60_000 },
       );
     },
     [openDetail],
@@ -87,12 +102,12 @@ export function PortalErrorDetailProvider({ children }: { children: ReactNode })
     <PortalErrorToastContext.Provider value={showErrorToast}>
       {children}
       <Dialog open={detail != null} onOpenChange={(open) => !open && setDetail(null)}>
-        <DialogContent className="flex max-h-[85vh] w-[min(96vw,44rem)] max-w-2xl flex-col gap-3">
+        <DialogContent className="flex max-h-[92vh] w-[min(96vw,56rem)] flex-col gap-4 sm:max-w-[min(96vw,56rem)]">
           <DialogHeader>
             <DialogTitle>{detail?.title ?? "Error"}</DialogTitle>
             <DialogDescription>Full message from the server. You can scroll and copy it.</DialogDescription>
           </DialogHeader>
-          <pre className="max-h-[min(55vh,28rem)] overflow-auto rounded-lg border border-rvl-line bg-rvl-ground p-3 font-mono text-[0.72rem] leading-relaxed break-all whitespace-pre-wrap text-rvl-ink">
+          <pre className="min-h-[50vh] max-h-[70vh] flex-1 overflow-auto rounded-lg border border-rvl-line bg-rvl-ground p-4 font-mono text-[0.78rem] leading-relaxed break-all whitespace-pre-wrap text-rvl-ink">
             {detail?.message}
           </pre>
           <DialogFooter className="gap-2 sm:justify-between">

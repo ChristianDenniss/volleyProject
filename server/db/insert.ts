@@ -69,9 +69,9 @@ export type StatInsertRow = {
   miscErrors: number;
 };
 
-const STATS_INSERT_SQL = `INSERT INTO stats (player_id, game_id, spike_kills, spike_attempts, spiking_errors, ape_kills, ape_attempts, assists, setting_errors, blocks, block_follows, digs, aces, serving_errors, misc_errors) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (player_id, game_id) DO NOTHING`;
+const STATS_INSERT_SQL = `INSERT INTO stats (player_id, game_id, spike_kills, spike_attempts, spiking_errors, ape_kills, ape_attempts, assists, setting_errors, blocks, block_follows, digs, aces, serving_errors, misc_errors, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (player_id, game_id) DO NOTHING`;
 
-function bindStatRow(row: StatInsertRow) {
+function bindStatRow(row: StatInsertRow, now: number) {
   return [
     row.playerId,
     row.gameId,
@@ -88,6 +88,8 @@ function bindStatRow(row: StatInsertRow) {
     row.aces,
     row.servingErrors,
     row.miscErrors,
+    now,
+    now,
   ];
 }
 
@@ -96,8 +98,9 @@ export async function insertStatsIgnoreBatch(d1: D1Database, rows: StatInsertRow
   if (rows.length === 0) return;
   for (let index = 0; index < rows.length; index += D1_MAX_BATCH_STATEMENTS) {
     const chunk = rows.slice(index, index + D1_MAX_BATCH_STATEMENTS);
+    const now = Date.now();
     await d1.batch(
-      chunk.map((row) => d1.prepare(STATS_INSERT_SQL).bind(...bindStatRow(row))),
+      chunk.map((row) => d1.prepare(STATS_INSERT_SQL).bind(...bindStatRow(row, now))),
     );
   }
 }
