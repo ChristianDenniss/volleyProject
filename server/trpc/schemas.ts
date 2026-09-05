@@ -112,44 +112,61 @@ const sheetImportExcludes = {
   sources: sheetImportSources.optional(),
 };
 
-export const sheetImportFull = z
-  .object({
-    mode: z.literal("full"),
-    seasonNumber: z.number().int().positive(),
-    startDate: isoDate,
-    endDate: isoDate.nullable().optional(),
-    theme: z.string().min(1).nullable().optional(),
-    masterUrl: sheetUrl.optional(),
-    regionalUrls,
-    ...sheetImportExcludes,
-  })
-  .superRefine((data, ctx) => {
-    if (!data.sources && !data.masterUrl) {
-      ctx.addIssue({
-        code: "custom",
-        message: "Provide staged sources from preview or a master sheet URL",
-        path: ["masterUrl"],
-      });
-    }
-  });
+const sheetImportFullShape = {
+  mode: z.literal("full"),
+  seasonNumber: z.number().int().positive(),
+  startDate: isoDate,
+  endDate: isoDate.nullable().optional(),
+  theme: z.string().min(1).nullable().optional(),
+  masterUrl: sheetUrl.optional(),
+  regionalUrls,
+  ...sheetImportExcludes,
+} as const;
 
-export const sheetImportTeams = z
-  .object({
-    mode: z.enum(["teams", "teams_and_players", "players"]),
-    seasonId: id,
-    masterUrl: sheetUrl.optional(),
-    regionalUrls,
-    ...sheetImportExcludes,
-  })
-  .superRefine((data, ctx) => {
-    if (!data.sources && !data.masterUrl && !data.regionalUrls?.na && !data.regionalUrls?.eu && !data.regionalUrls?.as) {
-      ctx.addIssue({
-        code: "custom",
-        message: "Provide staged sources from preview or at least one sheet URL",
-        path: ["sources"],
-      });
-    }
-  });
+const sheetImportTeamsShape = {
+  mode: z.enum(["teams", "teams_and_players", "players"]),
+  seasonId: id,
+  masterUrl: sheetUrl.optional(),
+  regionalUrls,
+  ...sheetImportExcludes,
+} as const;
+
+export const sheetImportFull = z.object(sheetImportFullShape).superRefine((data, ctx) => {
+  if (!data.sources && !data.masterUrl) {
+    ctx.addIssue({
+      code: "custom",
+      message: "Provide staged sources from preview or a master sheet URL",
+      path: ["masterUrl"],
+    });
+  }
+});
+
+export const sheetImportTeams = z.object(sheetImportTeamsShape).superRefine((data, ctx) => {
+  if (
+    !data.sources &&
+    !data.masterUrl &&
+    !data.regionalUrls?.na &&
+    !data.regionalUrls?.eu &&
+    !data.regionalUrls?.as
+  ) {
+    ctx.addIssue({
+      code: "custom",
+      message: "Provide staged sources from preview or at least one sheet URL",
+      path: ["sources"],
+    });
+  }
+});
+
+/** Staged preview assembly — omit URL fields from the base shape (Zod forbids .omit on refined schemas). */
+export const sheetImportAssembleFull = z
+  .object(sheetImportFullShape)
+  .omit({ masterUrl: true, regionalUrls: true })
+  .extend({ sources: sheetImportSources });
+
+export const sheetImportAssembleTeams = z
+  .object(sheetImportTeamsShape)
+  .omit({ masterUrl: true, regionalUrls: true })
+  .extend({ sources: sheetImportSources });
 
 export const teamCreate = z.object({
   name: z.string().min(1),

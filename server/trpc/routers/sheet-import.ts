@@ -1,7 +1,11 @@
 import { z } from "zod";
 import { sheetImport, type AssembledSources } from "@server/services";
 import { adminProcedure, router } from "../init";
-import { sheetImportFull, sheetImportSources, sheetImportTeams, isoDate } from "../schemas";
+import {
+  sheetImportAssembleFull,
+  sheetImportAssembleTeams,
+  isoDate,
+} from "../schemas";
 
 const sheetUrl = z.string().url();
 
@@ -34,16 +38,7 @@ export const sheetImportRouter = router({
     }),
 
   assemblePreview: adminProcedure
-    .input(
-      z.union([
-        sheetImportFull.omit({ masterUrl: true, regionalUrls: true }).extend({
-          sources: sheetImportSources,
-        }),
-        sheetImportTeams.omit({ masterUrl: true, regionalUrls: true }).extend({
-          sources: sheetImportSources,
-        }),
-      ]),
-    )
+    .input(z.union([sheetImportAssembleFull, sheetImportAssembleTeams]))
     .mutation(async ({ ctx, input }) => {
       const { sources, ...meta } = input;
       return sheetImport.assembleSheetImportPreview(ctx.db, meta, sources as AssembledSources);
