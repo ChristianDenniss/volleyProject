@@ -196,12 +196,21 @@ export async function assembleSheetImportPreview(
   const matched =
     includeGames && sources.regionalBlocks.length > 0
       ? matchStatsToGames(sources.masterGames, sources.regionalBlocks)
-      : { stats: [], matchedCountByGameKey: new Map<string, number>(), warnings: [] as string[] };
+      : {
+          stats: [],
+          matchedCountByGameKey: new Map<string, number>(),
+          warnings: [] as string[],
+          syntheticGames: [] as ParsedGame[],
+        };
 
   warnings.push(...matched.warnings);
 
+  const importGames = includeGames
+    ? [...sources.masterGames, ...matched.syntheticGames]
+    : [];
+
   const games: PreviewGame[] = includeGames
-    ? sources.masterGames.map((game) => ({
+    ? importGames.map((game) => ({
         key: game.key,
         region: game.region,
         phase: game.phase,

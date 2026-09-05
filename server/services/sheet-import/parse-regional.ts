@@ -146,6 +146,46 @@ function defaultTeamTabFields(columnCount: number): Array<StatField | null> {
   return layout.slice(0, columnCount);
 }
 
+/** Build team → player names from the regional PLAYERS leaderboard tab. */
+export function parseRegionalPlayersLeaderboard(csv: string): Map<string, string[]> {
+  const rows = parseCsv(csv);
+  if (rows.length === 0) return new Map();
+
+  const header = rows[0] ?? [];
+  const pairs: Array<{ playerCol: number; teamCol: number }> = [];
+
+  for (let index = 1; index < header.length; index += 1) {
+    const label = cell(header, index).toLowerCase().replace(/[^a-z]/g, "");
+    if (label !== "team" && label !== "teams") continue;
+    pairs.push({ playerCol: index - 1, teamCol: index });
+  }
+
+  if (pairs.length === 0) {
+    pairs.push({ playerCol: 1, teamCol: 2 });
+  }
+
+  const byTeam = new Map<string, string[]>();
+
+  for (let rowIndex = 1; rowIndex < rows.length; rowIndex += 1) {
+    const row = rows[rowIndex] ?? [];
+    for (const { playerCol, teamCol } of pairs) {
+      const playerName = displayName(cell(row, playerCol));
+      const teamName = displayName(cell(row, teamCol));
+      if (!isPlayerRow(playerName) || !teamName || teamName.length < 2) continue;
+      if (/^team$/i.test(teamName) || /leaderboard/i.test(teamName)) continue;
+
+      const key = normalizeName(teamName);
+      const bucket = byTeam.get(key) ?? [];
+      if (!bucket.some((name) => normalizeName(name) === normalizeName(playerName))) {
+        bucket.push(playerName);
+      }
+      byTeam.set(key, bucket);
+    }
+  }
+
+  return byTeam;
+}
+
 export function parseRegionalTeamTab(
   tabName: string,
   csv: string,
@@ -246,24 +286,41 @@ export function parseRegionalWorkbook(
   const teams: ParsedTeam[] = [];
   const blocks: ParsedScoreBlock[] = [];
   const warnings: string[] = [];
+  let playersByTeam: Map<string, string[]> | null = null;
 
   for (const [tabName, lines] of tabs) {
     const normalized = tabName.trim().toLowerCase().replace(/\s+/g, " ");
+    if (normalized === "players") {
+      playersByTeam = parseRegionalPlayersLeaderboard(lines.join("\n"));
+      continue;
+    }
     if (SKIP_TABS.has(normalized)) continue;
     if (normalized.endsWith("per set")) continue;
     if (/^team leaderboard/i.test(tabName)) continue;
 
     const csv = lines.join("\n");
-    // Team tabs usually start with a header containing "Players" or the team name
-    const firstLine = lines[0] ?? "";
-    if (!/players|ape|spike|kill/i.test(firstLine) && !firstLine.includes(tabName.trim())) {
-      // still attempt — some sheets vary
-    }
-
     const parsed = parseRegionalTeamTab(tabName.trim(), csv, region);
     teams.push(parsed.team);
     blocks.push(...parsed.blocks);
     warnings.push(...parsed.warnings);
+  }
+
+  if (playersByTeam) {
+    for (const team of teams) {
+      if (team.playerNames.length > 0) continue;
+      const fallback = playersByTeam.get(normalizeName(team.name));
+      if (fallback && fallback.length > 0) team.playerNames = [...fallback];
+    }
+
+    const filled = new Set(
+      teams.filter((team) => team.playerNames.length > 0).map((team) => team.name),
+    );
+    for (let index = warnings.length - 1; index >= 0; index -= 1) {
+      const warning = warnings[index];
+      if (!warning?.includes("No players found")) continue;
+      const match = warning.match(/team "([^"]+)"/);
+      if (match?.[1] && filled.has(match[1])) warnings.splice(index, 1);
+    }
   }
 
   return { teams, blocks, warnings };

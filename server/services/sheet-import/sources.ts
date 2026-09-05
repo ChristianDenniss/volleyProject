@@ -8,7 +8,7 @@ import {
   type FetchImpl,
 } from "./fetch";
 import { parseMasterWorkbook } from "./parse-master";
-import { parseRegionalWorkbook, parseRegionalTeamTab } from "./parse-regional";
+import { parseRegionalWorkbook } from "./parse-regional";
 import type { ParsedGame, ParsedScoreBlock, ParsedTeam, SheetRegion } from "./types";
 
 export interface MasterSourcePayload {
@@ -61,6 +61,17 @@ export async function loadMasterSource(
 
 const REGIONAL_BATCH = 4;
 
+async function fetchRegionalPlayersTab(
+  spreadsheetId: string,
+  tabNames: string[],
+  fetchImpl: FetchImpl,
+): Promise<string[] | undefined> {
+  const playersTab = tabNames.find((name) => name.trim().toLowerCase() === "players");
+  if (!playersTab) return undefined;
+  const csv = await fetchSheetCsv(spreadsheetId, playersTab, fetchImpl);
+  return csv.split(/\r?\n/);
+}
+
 export async function loadRegionalSourceBatch(
   input: {
     url: string;
@@ -81,13 +92,19 @@ export async function loadRegionalSourceBatch(
   const blocks: ParsedScoreBlock[] = [];
   const warnings: string[] = [];
 
+  const playersLines = await fetchRegionalPlayersTab(spreadsheetId, all, fetchImpl);
+  const tabs = new Map<string, string[]>();
+  if (playersLines) tabs.set("PLAYERS", playersLines);
+
   for (const name of slice) {
     const csv = await fetchSheetCsv(spreadsheetId, name, fetchImpl);
-    const parsed = parseRegionalTeamTab(name, csv, input.region);
-    teams.push(parsed.team);
-    blocks.push(...parsed.blocks);
-    warnings.push(...parsed.warnings);
+    tabs.set(name, csv.split(/\r?\n/));
   }
+
+  const parsed = parseRegionalWorkbook(tabs, input.region);
+  teams.push(...parsed.teams);
+  blocks.push(...parsed.blocks);
+  warnings.push(...parsed.warnings);
 
   const nextIndex = startIndex + slice.length;
   return {
@@ -109,9 +126,14 @@ export async function loadRegionalSource(
   region: SheetRegion,
   fetchImpl: FetchImpl = fetch,
 ): Promise<Omit<RegionalSourcePayload, "loadedTabs" | "nextIndex" | "done">> {
+  const spreadsheetId = extractSpreadsheetId(url);
+  const all = await listSheetNames(spreadsheetId, fetchImpl);
   const workbook = await loadWorkbook(url, fetchImpl, regionalTabFilter);
+  const tabs = new Map(workbook.tabs);
+  const playersLines = await fetchRegionalPlayersTab(spreadsheetId, all, fetchImpl);
+  if (playersLines) tabs.set("PLAYERS", playersLines);
   const tabNames = [...workbook.tabs.keys()];
-  const parsed = parseRegionalWorkbook(workbook.tabs, region);
+  const parsed = parseRegionalWorkbook(tabs, region);
   return {
     region,
     teams: parsed.teams,
