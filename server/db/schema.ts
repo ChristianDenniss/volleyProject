@@ -66,6 +66,9 @@ export const USER_ROLES = ["user", "admin", "superadmin"] as const;
 export const JOB_STATUSES = ["queued", "running", "succeeded", "failed"] as const;
 export const CONTRIBUTION_ROLES = ["streamed", "reffed", "commentated"] as const;
 export type ContributionRole = (typeof CONTRIBUTION_ROLES)[number];
+/** Team leadership: Captain, Vice Captain, Co-Captain. */
+export const TEAM_LEADERSHIP_ROLES = ["C", "VC", "CC"] as const;
+export type TeamLeadershipRole = (typeof TEAM_LEADERSHIP_ROLES)[number];
 
 export const user = sqliteTable("user", {
   id: text().primaryKey(),
@@ -153,6 +156,7 @@ export const teams = sqliteTable(
     id: integer().primaryKey({ autoIncrement: true }),
     name: text().notNull(),
     logoUrl: text(),
+    description: text(),
     placement: text().notNull().default("Didnt make playoffs"),
     seasonId: integer().references(() => seasons.id, { onDelete: "cascade" }),
     ...timestamps,
@@ -330,10 +334,16 @@ export const teamsPlayers = sqliteTable(
     playerId: integer()
       .notNull()
       .references(() => players.id, { onDelete: "cascade" }),
+    role: text({ enum: TEAM_LEADERSHIP_ROLES }),
   },
   (table) => [
     primaryKey({ columns: [table.teamId, table.playerId] }),
     index("teams_players_player_id_idx").on(table.playerId),
+    uniqueIndex("teams_players_team_role_idx").on(table.teamId, table.role),
+    check(
+      "teams_players_role_check",
+      sql`${table.role} is null or ${table.role} in ${inList(TEAM_LEADERSHIP_ROLES)}`,
+    ),
   ],
 );
 

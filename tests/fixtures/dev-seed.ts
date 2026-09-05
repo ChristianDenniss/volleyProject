@@ -172,14 +172,20 @@ export async function seedDev(db: Db): Promise<void> {
   );
 
   await insertMany(db, teamsPlayers, [
-    ...S3_PLAYERS.map((_, index) => ({
-      teamId: 5 + Math.floor(index / 3),
-      playerId: 9 + index,
-    })),
-    ...S4_PLAYERS.map((_, index) => ({
-      teamId: 9 + Math.floor(index / 3),
-      playerId: 21 + index,
-    })),
+    ...S3_PLAYERS.map((_, index) => {
+      const teamId = 5 + Math.floor(index / 3);
+      const playerId = 9 + index;
+      const seat = index % 3;
+      const role = seat === 0 ? ("C" as const) : seat === 1 ? ("VC" as const) : ("CC" as const);
+      return { teamId, playerId, role };
+    }),
+    ...S4_PLAYERS.map((_, index) => {
+      const teamId = 9 + Math.floor(index / 3);
+      const playerId = 21 + index;
+      const seat = index % 3;
+      const role = seat === 0 ? ("C" as const) : seat === 1 ? ("VC" as const) : ("CC" as const);
+      return { teamId, playerId, role };
+    }),
   ]);
 
   const s3Pairs = [

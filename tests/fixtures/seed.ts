@@ -122,10 +122,15 @@ export async function seed(db: Db): Promise<typeof FIXTURES> {
   await insertMany(
     db,
     teamsPlayers,
-    PLAYER_NAMES.map((_, index) => ({
-      teamId: Math.floor(index / 2) + 1,
-      playerId: index + 1,
-    })),
+    PLAYER_NAMES.map((_, index) => {
+      const teamId = Math.floor(index / 2) + 1;
+      const playerId = index + 1;
+      let role: "C" | "VC" | "CC" | null = null;
+      if (teamId === 1 && playerId === 1) role = "C";
+      if (teamId === 1 && playerId === 2) role = "VC";
+      if (teamId === 2 && playerId === 3) role = "CC";
+      return { teamId, playerId, role };
+    }),
   );
 
   await insertMany(db, games, [
