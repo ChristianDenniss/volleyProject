@@ -215,18 +215,18 @@ export default async function HomePage() {
       <HomeBracket phase={phase} standings={standings} />
 
       <section className="relative h-[500px] min-h-[500px] overflow-hidden max-md:h-[300px] max-md:min-h-0 max-[480px]:h-[250px] min-[1600px]:h-[600px] min-[1600px]:min-h-[600px] min-[2000px]:h-[700px] min-[2000px]:min-h-[700px]">
-        <img
-          src="/images/callToAction.png"
-          alt="Volleyball App Promo"
-          className="absolute inset-0 size-full object-cover"
-        />
         <a
           href="https://discord.gg/volleyball"
           target="_blank"
           rel="noopener noreferrer"
-          className="absolute top-5 right-5 bg-rvl-accent-bg px-6 py-2.5 text-[0.84rem] font-bold uppercase tracking-[0.11em] text-rvl-on-accent no-underline transition-opacity hover:opacity-85 max-md:px-5 max-md:py-2 max-md:text-[0.78rem] max-[480px]:px-4 max-[480px]:py-1.5 max-[480px]:text-[0.72rem]"
+          className="absolute inset-0 block"
+          aria-label="Join RVL on Discord"
         >
-          Join RVL Today
+          <img
+            src="/images/new_calltoaction_banner_rvl.png"
+            alt="Never miss a moment of RO-VBL. Join RVL now."
+            className="size-full object-cover object-center"
+          />
         </a>
       </section>
     </div>
