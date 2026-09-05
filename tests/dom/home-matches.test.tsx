@@ -85,14 +85,14 @@ function mockDateStrip(strip: HTMLElement) {
 
   for (const [index, chip] of strip.querySelectorAll<HTMLElement>("[data-date]").entries()) {
     chip.getBoundingClientRect = () => {
-      const left = index * 84 - scrollLeft;
+      const left = index * 114 - scrollLeft;
       return {
         left,
-        width: 76,
-        right: left + 76,
+        width: 104,
+        right: left + 104,
         top: 0,
-        bottom: 80,
-        height: 80,
+        bottom: 92,
+        height: 92,
         x: left,
         y: 0,
         toJSON() {},

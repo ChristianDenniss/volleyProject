@@ -12,6 +12,7 @@ import {
   stats,
   teams,
   teamsGames,
+  teamsPlayers,
   user,
   type ContributionRole,
 } from "@db/schema";
@@ -429,9 +430,28 @@ export async function getById(db: Db, id: number) {
     attachStaff(db, [{ id }]),
   ]);
 
+  const teamIds = gameTeams.map((team) => team.id);
+  const roster =
+    teamIds.length === 0
+      ? []
+      : await db
+          .select({ teamId: teamsPlayers.teamId, playerId: teamsPlayers.playerId })
+          .from(teamsPlayers)
+          .where(inArray(teamsPlayers.teamId, teamIds));
+
+  const playerIdsByTeam = new Map<number, number[]>();
+  for (const row of roster) {
+    const bucket = playerIdsByTeam.get(row.teamId) ?? [];
+    bucket.push(row.playerId);
+    playerIdsByTeam.set(row.teamId, bucket);
+  }
+
   return {
     ...game,
-    teams: gameTeams.map(({ slot: _slot, ...team }) => team),
+    teams: gameTeams.map(({ slot: _slot, ...team }) => ({
+      ...team,
+      playerIds: playerIdsByTeam.get(team.id) ?? [],
+    })),
     stats: gameStats,
     season: season ?? null,
     staff: withStaff?.staff ?? emptyStaff(),

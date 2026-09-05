@@ -166,14 +166,14 @@ export function HomeMatches({
               aria-label="Previous day"
               disabled={selectedIndex === 0}
               onClick={() => shift(-1)}
-              className="flex size-9 shrink-0 cursor-pointer items-center justify-center border border-rvl-line bg-rvl-ground text-rvl-ink disabled:cursor-default disabled:opacity-40"
+              className="flex size-11 shrink-0 cursor-pointer items-center justify-center border border-rvl-line bg-rvl-ground text-rvl-ink disabled:cursor-default disabled:opacity-40"
             >
-              <ChevronLeft className="size-4" />
+              <ChevronLeft className="size-5" />
             </button>
             <div
               ref={stripRef}
               aria-label="Match dates"
-              className="no-scrollbar flex min-w-0 flex-1 snap-x snap-mandatory gap-2 overflow-x-auto px-[calc(50%-2.375rem)]"
+              className="no-scrollbar flex min-w-0 flex-1 snap-x snap-mandatory gap-2.5 overflow-x-auto px-[calc(50%-3.25rem)]"
             >
               {dates.map((date) => {
                 const parts = utcParts(date);
@@ -188,7 +188,7 @@ export function HomeMatches({
                     aria-label={`${parts.weekday} ${parts.day} ${parts.month}${empty ? ", no matches" : ""}`}
                     onClick={() => setSelected(date)}
                     className={cn(
-                      "flex h-[4.6rem] w-[4.75rem] shrink-0 cursor-pointer snap-center flex-col items-center justify-center border text-center",
+                      "flex h-[5.75rem] w-[6.5rem] shrink-0 cursor-pointer snap-center flex-col items-center justify-center gap-1 border text-center",
                       active
                         ? "border-rvl-accent-bg bg-rvl-accent-bg text-rvl-on-accent"
                         : empty
@@ -196,11 +196,11 @@ export function HomeMatches({
                           : "border-rvl-line bg-rvl-ground text-rvl-ink-2 hover:border-rvl-accent-soft",
                     )}
                   >
-                    <span className="font-mono text-[0.58rem] uppercase tracking-[0.12em]">
+                    <span className="font-mono text-[0.62rem] uppercase tracking-[0.14em]">
                       {parts.weekday}
                     </span>
-                    <span className="text-[1.15rem] font-bold leading-none">{parts.day}</span>
-                    <span className="font-mono text-[0.58rem] uppercase tracking-[0.12em]">
+                    <span className="text-[1.4rem] font-bold leading-none">{parts.day}</span>
+                    <span className="font-mono text-[0.62rem] uppercase tracking-[0.14em]">
                       {parts.month}
                     </span>
                   </button>
@@ -212,9 +212,9 @@ export function HomeMatches({
               aria-label="Next day"
               disabled={selectedIndex === dates.length - 1}
               onClick={() => shift(1)}
-              className="flex size-9 shrink-0 cursor-pointer items-center justify-center border border-rvl-line bg-rvl-ground text-rvl-ink disabled:cursor-default disabled:opacity-40"
+              className="flex size-11 shrink-0 cursor-pointer items-center justify-center border border-rvl-line bg-rvl-ground text-rvl-ink disabled:cursor-default disabled:opacity-40"
             >
-              <ChevronRight className="size-4" />
+              <ChevronRight className="size-5" />
             </button>
           </div>
         </div>
