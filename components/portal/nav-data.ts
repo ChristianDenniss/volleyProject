@@ -29,6 +29,7 @@ export const PORTAL_NAV: PortalNavSection[] = [
     items: [
       { title: "Games", url: "/portal/games" },
       { title: "Stats", url: "/portal/stats" },
+      { title: "Records", url: "/portal/records" },
       { title: "Awards", url: "/portal/awards" },
     ],
   },
