@@ -61,6 +61,7 @@ export const seasonsRouter = router({
       {
         queue: env.RECORDS_QUEUE,
         requestedBy: ctx.user.id,
+        d1: env.DB,
       },
     );
     revalidate(

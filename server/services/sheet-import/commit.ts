@@ -1,6 +1,6 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
 import type { Db } from "@db";
-import { insertManyIgnore } from "@db/insert";
+import { insertManyIgnore, insertStatsIgnoreBatch, type StatInsertRow } from "@db/insert";
 import { games, players, seasons, stats, teams, teamsGames, teamsPlayers } from "@db/schema";
 import { BadRequestError, NotFoundError } from "../errors";
 import type { RecordsJobMessage } from "../../queue";
@@ -92,6 +92,7 @@ export async function commitSheetImport(
     fetchImpl?: FetchImpl;
     queue?: Queue<RecordsJobMessage> | null;
     requestedBy?: string | null;
+    d1?: D1Database;
   } = {},
 ): Promise<SheetImportCommitResult> {
   const preview = input.sources
@@ -307,23 +308,8 @@ export async function commitSheetImport(
       }
     }
 
-    const statRows: {
-      playerId: number;
-      gameId: number;
-      spikeKills: number;
-      spikeAttempts: number;
-      spikingErrors: number;
-      apeKills: number;
-      apeAttempts: number;
-      assists: number;
-      settingErrors: number;
-      blocks: number;
-      blockFollows: number;
-      digs: number;
-      aces: number;
-      servingErrors: number;
-      miscErrors: number;
-    }[] = [];
+    const statRows: StatInsertRow[] = [];
+    const seenStatKeys = new Set<string>();
 
     for (const row of preview.stats) {
       const gameId = gameIdByKey.get(row.gameKey);
@@ -342,6 +328,10 @@ export async function commitSheetImport(
         }
       }
 
+      const statKey = `${playerId}:${gameId}`;
+      if (seenStatKeys.has(statKey)) continue;
+      seenStatKeys.add(statKey);
+
       statRows.push({
         playerId,
         gameId,
@@ -350,7 +340,11 @@ export async function commitSheetImport(
     }
 
     if (statRows.length > 0) {
-      await insertManyIgnore(db, stats, statRows);
+      if (options.d1) {
+        await insertStatsIgnoreBatch(options.d1, statRows);
+      } else {
+        await insertManyIgnore(db, stats, statRows);
+      }
       statsCreated = statRows.length;
     }
   }
