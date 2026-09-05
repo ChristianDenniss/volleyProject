@@ -1,26 +1,31 @@
-# vinext app
+# Roblox Volleyball League
 
-This project was created with create-vinext-app.
+Official website and management platform for the Roblox Volleyball League – a modern web application for teams, matches, and player statistics.
 
-## Scripts
+## Stack
 
-- `pnpm run dev` applies pending local D1 migrations, then starts the vinext dev server.
-- `pnpm run build` builds the Cloudflare Worker output.
-- `pnpm run start` starts the built Worker locally with Wrangler.
-- `pnpm run deploy` deploys the Cloudflare Worker.
+- **Hosting & Backend**: Cloudflare Worker with [vinext](https://github.com/vinxi/vinext) App Router
+- **Database**: Cloudflare D1 (SQLite)
+- **API**: tRPC (type-safe client-server communication)
+- **Authentication**: better-auth with Roblox OAuth
+- **Frontend**: React + Tailwind CSS
 
-## Local database
+## Local Development
 
-Dev uses a **persistent** local D1 database under `.wrangler/state/`. Schema changes land as SQL files in `drizzle/`; `pnpm dev` runs `db:migrate:local` first so new migrations apply automatically. Already-applied migrations are skipped.
+### Prerequisites
 
-First-time or reset setup (migrations + fixture seed):
+- Node.js (v18 or later)
+- [pnpm](https://pnpm.io/)
+- Cloudflare account (for D1 and Workers)
+
+### Setup
 
 ```bash
+# Install dependencies
+pnpm install
+
+# Prepare environment, run migrations, and seed local database
 pnpm t3:prepare
-```
 
-Migrations only (no seed wipe):
-
-```bash
-pnpm db:migrate:local
-```
+# Start the development server (applies migrations automatically)
+pnpm dev
