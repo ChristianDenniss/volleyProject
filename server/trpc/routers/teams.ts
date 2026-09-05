@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { teams, sheetImport } from "@server/services";
+import { teams, sheetImport, type AssembledSources } from "@server/services";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "../init";
 import { revalidate } from "../revalidate";
 import {
@@ -80,6 +80,7 @@ export const teamsRouter = router({
       seasonId: input.seasonId,
       masterUrl: input.masterUrl,
       regionalUrls: input.regionalUrls,
+      sources: input.sources as AssembledSources | undefined,
       excludeTeamKeys: input.excludeTeamKeys,
       excludeGameKeys: input.excludeGameKeys,
     });

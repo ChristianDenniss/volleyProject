@@ -28,7 +28,7 @@ export interface ParsedTeam {
   region: SheetRegion | null;
   playerNames: string[];
   /** Header-adjacent captains: first = C, second = VC, third = CC. */
-  leadership?: Partial<Record<TeamLeadershipRole, string>>;
+  leadership?: Partial<Record<TeamLeadershipRole, string>> | undefined;
 }
 
 export interface ParsedGame {
@@ -137,10 +137,19 @@ export interface RegionalUrls {
   as?: string | undefined;
 }
 
+export interface AssembledSources {
+  masterTeams: ParsedTeam[];
+  masterGames: ParsedGame[];
+  regionalTeams: ParsedTeam[];
+  regionalBlocks: ParsedScoreBlock[];
+  sourceWarnings: string[];
+}
+
 export interface SheetImportInput {
   mode: SheetImportMode;
   masterUrl?: string | undefined;
   regionalUrls?: RegionalUrls | undefined;
+  sources?: AssembledSources | undefined;
   seasonNumber?: number | undefined;
   seasonId?: number | undefined;
   startDate?: string | undefined;

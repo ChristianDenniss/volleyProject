@@ -7,6 +7,7 @@ import { normalizeName } from "./names";
 import { loadMasterSource, loadRegionalSource } from "./sources";
 import type { FetchImpl } from "./fetch";
 import type {
+  AssembledSources,
   ParsedGame,
   ParsedScoreBlock,
   ParsedTeam,
@@ -17,6 +18,8 @@ import type {
   PreviewGame,
   PreviewPlayer,
 } from "./types";
+
+export type { AssembledSources };
 
 function teamKey(name: string, region: SheetRegion | null): string {
   return `${region ?? "all"}:${normalizeName(name)}`;
@@ -41,14 +44,6 @@ async function existingPlayerNames(db: Db, names: string[]): Promise<Set<string>
     for (const row of rows) found.add(row.name);
   }
   return found;
-}
-
-export interface AssembledSources {
-  masterTeams: ParsedTeam[];
-  masterGames: ParsedGame[];
-  regionalTeams: ParsedTeam[];
-  regionalBlocks: ParsedScoreBlock[];
-  sourceWarnings: string[];
 }
 
 export async function validateSheetImportMeta(

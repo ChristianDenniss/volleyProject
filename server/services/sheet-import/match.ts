@@ -220,7 +220,7 @@ type RosterTeam = {
   name: string;
   region: string | null;
   playerNames: string[];
-  leadership?: Partial<Record<"C" | "VC" | "CC", string>>;
+  leadership?: Partial<Record<"C" | "VC" | "CC", string>> | undefined;
 };
 
 const LEADERSHIP_ROLES = ["C", "VC", "CC"] as const;

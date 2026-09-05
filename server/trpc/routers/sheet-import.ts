@@ -1,62 +1,9 @@
 import { z } from "zod";
-import { sheetImport } from "@server/services";
+import { sheetImport, type AssembledSources } from "@server/services";
 import { adminProcedure, router } from "../init";
-import { sheetImportFull, sheetImportTeams, isoDate } from "../schemas";
+import { sheetImportFull, sheetImportSources, sheetImportTeams, isoDate } from "../schemas";
 
 const sheetUrl = z.string().url();
-
-const parsedTeam = z.object({
-  name: z.string(),
-  region: z.enum(["na", "eu", "as"]).nullable(),
-  playerNames: z.array(z.string()),
-});
-
-const parsedGame = z.object({
-  key: z.string(),
-  region: z.enum(["na", "eu", "as"]),
-  phase: z.enum(["qualifiers", "playoffs"]),
-  round: z.string(),
-  date: z.string(),
-  team1Name: z.string(),
-  team2Name: z.string(),
-  team1Score: z.number().nullable(),
-  team2Score: z.number().nullable(),
-  setScores: z.array(z.string()),
-  forfeit: z.boolean(),
-});
-
-const statCounts = z.object({
-  spikeKills: z.number(),
-  spikeAttempts: z.number(),
-  spikingErrors: z.number(),
-  apeKills: z.number(),
-  apeAttempts: z.number(),
-  assists: z.number(),
-  settingErrors: z.number(),
-  blocks: z.number(),
-  blockFollows: z.number(),
-  digs: z.number(),
-  aces: z.number(),
-  servingErrors: z.number(),
-  miscErrors: z.number(),
-});
-
-const parsedBlock = z.object({
-  teamName: z.string(),
-  region: z.enum(["na", "eu", "as"]),
-  winnerName: z.string(),
-  teamScore: z.number(),
-  opponentScore: z.number(),
-  rows: z.array(statCounts.extend({ playerName: z.string() })),
-});
-
-const assembledSources = z.object({
-  masterTeams: z.array(parsedTeam),
-  masterGames: z.array(parsedGame),
-  regionalTeams: z.array(parsedTeam),
-  regionalBlocks: z.array(parsedBlock),
-  sourceWarnings: z.array(z.string()),
-});
 
 export const sheetImportRouter = router({
   loadMaster: adminProcedure
@@ -81,8 +28,8 @@ export const sheetImportRouter = router({
       return sheetImport.loadRegionalSourceBatch({
         url: input.url,
         region: input.region,
-        startIndex: input.startIndex,
-        batchSize: input.batchSize,
+        ...(input.startIndex != null ? { startIndex: input.startIndex } : {}),
+        ...(input.batchSize != null ? { batchSize: input.batchSize } : {}),
       });
     }),
 
@@ -90,15 +37,15 @@ export const sheetImportRouter = router({
     .input(
       z.union([
         sheetImportFull.omit({ masterUrl: true, regionalUrls: true }).extend({
-          sources: assembledSources,
+          sources: sheetImportSources,
         }),
         sheetImportTeams.omit({ masterUrl: true, regionalUrls: true }).extend({
-          sources: assembledSources,
+          sources: sheetImportSources,
         }),
       ]),
     )
     .mutation(async ({ ctx, input }) => {
       const { sources, ...meta } = input;
-      return sheetImport.assembleSheetImportPreview(ctx.db, meta, sources);
+      return sheetImport.assembleSheetImportPreview(ctx.db, meta, sources as AssembledSources);
     }),
 });

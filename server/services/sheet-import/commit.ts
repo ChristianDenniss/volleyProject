@@ -4,7 +4,7 @@ import { insertMany } from "@db/insert";
 import { games, players, seasons, stats, teams, teamsGames, teamsPlayers } from "@db/schema";
 import { BadRequestError, ConflictError, NotFoundError } from "../errors";
 import type { RecordsJobMessage } from "../../queue";
-import { buildSheetImportPreview, assertPreviewCommitable } from "./preview";
+import { assembleSheetImportPreview, buildSheetImportPreview, assertPreviewCommitable } from "./preview";
 import type { FetchImpl } from "./fetch";
 import { normalizeName } from "./names";
 import type { SheetImportCommitResult, SheetImportInput } from "./types";
@@ -27,7 +27,9 @@ export async function commitSheetImport(
     requestedBy?: string | null;
   } = {},
 ): Promise<SheetImportCommitResult> {
-  const preview = await buildSheetImportPreview(db, input, options.fetchImpl ?? fetch);
+  const preview = input.sources
+    ? await assembleSheetImportPreview(db, input, input.sources)
+    : await buildSheetImportPreview(db, input, options.fetchImpl ?? fetch);
   assertPreviewCommitable(preview);
 
   const includePlayers =

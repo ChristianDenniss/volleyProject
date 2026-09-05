@@ -7,6 +7,7 @@ export * as records from "./records";
 export * as roblox from "./roblox";
 export * as seasons from "./seasons";
 export * as sheetImport from "./sheet-import";
+export type { AssembledSources } from "./sheet-import";
 export * as stats from "./stats";
 export * as teams from "./teams";
 export * as trivia from "./trivia";
