@@ -5,6 +5,7 @@ import { gamesRouter } from "./routers/games";
 import { playersRouter } from "./routers/players";
 import { recordsRouter } from "./routers/records";
 import { seasonsRouter } from "./routers/seasons";
+import { sheetImportRouter } from "./routers/sheet-import";
 import { statsRouter } from "./routers/stats";
 import { teamsRouter } from "./routers/teams";
 import { triviaRouter } from "./routers/trivia";
@@ -17,6 +18,7 @@ export const appRouter = router({
   players: playersRouter,
   records: recordsRouter,
   seasons: seasonsRouter,
+  sheetImport: sheetImportRouter,
   stats: statsRouter,
   teams: teamsRouter,
   trivia: triviaRouter,
