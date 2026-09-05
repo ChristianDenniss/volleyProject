@@ -1,8 +1,8 @@
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import type { Db } from "@db";
-import { insertMany } from "@db/insert";
+import { insertMany, insertManyIgnore } from "@db/insert";
 import { games, players, seasons, stats, teams, teamsGames, teamsPlayers } from "@db/schema";
-import { BadRequestError, ConflictError, NotFoundError } from "../errors";
+import { BadRequestError, NotFoundError } from "../errors";
 import type { RecordsJobMessage } from "../../queue";
 import { assembleSheetImportPreview, buildSheetImportPreview, assertPreviewCommitable } from "./preview";
 import type { FetchImpl } from "./fetch";
@@ -49,20 +49,26 @@ export async function commitSheetImport(
     const existing = await db.query.seasons.findFirst({
       where: eq(seasons.seasonNumber, input.seasonNumber),
     });
-    if (existing) throw new ConflictError(`Season ${input.seasonNumber} already exists`);
-
-    const [created] = await db
-      .insert(seasons)
-      .values({
-        seasonNumber: input.seasonNumber,
-        startDate: input.startDate,
-        endDate: input.endDate ?? null,
-        theme: input.theme ?? null,
-      })
-      .returning();
-    if (!created) throw new BadRequestError("Could not create season");
-    seasonId = created.id;
-    seasonNumber = created.seasonNumber;
+    if (existing) {
+      seasonId = existing.id;
+      seasonNumber = existing.seasonNumber;
+      preview.warnings.push(
+        `Season ${input.seasonNumber} already exists — resuming import into season ${seasonId}.`,
+      );
+    } else {
+      const [created] = await db
+        .insert(seasons)
+        .values({
+          seasonNumber: input.seasonNumber,
+          startDate: input.startDate,
+          endDate: input.endDate ?? null,
+          theme: input.theme ?? null,
+        })
+        .returning();
+      if (!created) throw new BadRequestError("Could not create season");
+      seasonId = created.id;
+      seasonNumber = created.seasonNumber;
+    }
   } else {
     if (seasonId == null) throw new BadRequestError("Season is required");
     const season = await db.query.seasons.findFirst({ where: eq(seasons.id, seasonId) });
@@ -126,20 +132,21 @@ export async function commitSheetImport(
         }
       }
 
+      const rosterLinks: { teamId: number; playerId: number }[] = [];
       for (const playerName of team.playerNames) {
         const { id: playerId, created } = await getOrCreatePlayer(db, playerName);
         if (created) playersCreated += 1;
-        const attached = await db
-          .insert(teamsPlayers)
-          .values({ teamId, playerId, role: null })
-          .onConflictDoNothing()
-          .returning();
-        if (attached.length > 0) playersAttached += 1;
+        rosterLinks.push({ teamId, playerId });
       }
+      await insertManyIgnore(db, teamsPlayers, rosterLinks);
+      playersAttached += rosterLinks.length;
 
       // Assign leadership after the roster is linked so unique role slots stay consistent.
       if (roleByPlayer.size > 0) {
-        await db.update(teamsPlayers).set({ role: null }).where(eq(teamsPlayers.teamId, teamId));
+        await db
+          .update(teamsPlayers)
+          .set({ role: sql`NULL` })
+          .where(and(eq(teamsPlayers.teamId, teamId), sql`${teamsPlayers.role} is not null`));
         const seat = await db
           .select({ playerId: teamsPlayers.playerId, name: players.name })
           .from(teamsPlayers)
