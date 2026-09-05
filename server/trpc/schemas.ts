@@ -46,26 +46,110 @@ const regionalUrls = z
   })
   .optional();
 
-export const sheetImportFull = z.object({
-  mode: z.literal("full"),
-  seasonNumber: z.number().int().positive(),
-  startDate: isoDate,
-  endDate: isoDate.nullable().optional(),
-  theme: z.string().min(1).nullable().optional(),
-  masterUrl: sheetUrl,
-  regionalUrls,
-  excludeTeamKeys: z.array(z.string()).optional(),
-  excludeGameKeys: z.array(z.string()).optional(),
+const parsedTeam = z.object({
+  name: z.string(),
+  region: z.enum(["na", "eu", "as"]).nullable(),
+  playerNames: z.array(z.string()),
+  leadership: z
+    .object({
+      C: z.string().optional(),
+      VC: z.string().optional(),
+      CC: z.string().optional(),
+    })
+    .optional(),
 });
 
-export const sheetImportTeams = z.object({
-  mode: z.enum(["teams", "teams_and_players", "players"]),
-  seasonId: id,
-  masterUrl: sheetUrl.optional(),
-  regionalUrls,
+const parsedGame = z.object({
+  key: z.string(),
+  region: z.enum(["na", "eu", "as"]),
+  phase: z.enum(["qualifiers", "playoffs"]),
+  round: z.string(),
+  date: z.string(),
+  team1Name: z.string(),
+  team2Name: z.string(),
+  team1Score: z.number().nullable(),
+  team2Score: z.number().nullable(),
+  setScores: z.array(z.string()),
+  forfeit: z.boolean(),
+});
+
+const sheetStatCounts = z.object({
+  spikeKills: z.number(),
+  spikeAttempts: z.number(),
+  spikingErrors: z.number(),
+  apeKills: z.number(),
+  apeAttempts: z.number(),
+  assists: z.number(),
+  settingErrors: z.number(),
+  blocks: z.number(),
+  blockFollows: z.number(),
+  digs: z.number(),
+  aces: z.number(),
+  servingErrors: z.number(),
+  miscErrors: z.number(),
+});
+
+const parsedBlock = z.object({
+  teamName: z.string(),
+  region: z.enum(["na", "eu", "as"]),
+  winnerName: z.string(),
+  teamScore: z.number(),
+  opponentScore: z.number(),
+  rows: z.array(sheetStatCounts.extend({ playerName: z.string() })),
+});
+
+export const sheetImportSources = z.object({
+  masterTeams: z.array(parsedTeam),
+  masterGames: z.array(parsedGame),
+  regionalTeams: z.array(parsedTeam),
+  regionalBlocks: z.array(parsedBlock),
+  sourceWarnings: z.array(z.string()),
+});
+
+const sheetImportExcludes = {
   excludeTeamKeys: z.array(z.string()).optional(),
   excludeGameKeys: z.array(z.string()).optional(),
-});
+  sources: sheetImportSources.optional(),
+};
+
+export const sheetImportFull = z
+  .object({
+    mode: z.literal("full"),
+    seasonNumber: z.number().int().positive(),
+    startDate: isoDate,
+    endDate: isoDate.nullable().optional(),
+    theme: z.string().min(1).nullable().optional(),
+    masterUrl: sheetUrl.optional(),
+    regionalUrls,
+    ...sheetImportExcludes,
+  })
+  .superRefine((data, ctx) => {
+    if (!data.sources && !data.masterUrl) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Provide staged sources from preview or a master sheet URL",
+        path: ["masterUrl"],
+      });
+    }
+  });
+
+export const sheetImportTeams = z
+  .object({
+    mode: z.enum(["teams", "teams_and_players", "players"]),
+    seasonId: id,
+    masterUrl: sheetUrl.optional(),
+    regionalUrls,
+    ...sheetImportExcludes,
+  })
+  .superRefine((data, ctx) => {
+    if (!data.sources && !data.masterUrl && !data.regionalUrls?.na && !data.regionalUrls?.eu && !data.regionalUrls?.as) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Provide staged sources from preview or at least one sheet URL",
+        path: ["sources"],
+      });
+    }
+  });
 
 export const teamCreate = z.object({
   name: z.string().min(1),

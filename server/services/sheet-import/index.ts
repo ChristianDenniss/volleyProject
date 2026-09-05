@@ -4,6 +4,7 @@ export type {
   SheetImportPreview,
   SheetImportCommitResult,
   RegionalUrls,
+  AssembledSources,
 } from "./types";
 export { buildSheetImportPreview, assembleSheetImportPreview, yearFromDate } from "./preview";
 export { commitSheetImport } from "./commit";

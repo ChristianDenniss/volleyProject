@@ -1,5 +1,5 @@
 import { env } from "cloudflare:workers";
-import { seasons, sheetImport } from "@server/services";
+import { seasons, sheetImport, type AssembledSources } from "@server/services";
 import { adminProcedure, publicProcedure, router } from "../init";
 import { revalidate } from "../revalidate";
 import { byId, seasonCreate, seasonUpdate, sheetImportFull } from "../schemas";
@@ -54,6 +54,7 @@ export const seasonsRouter = router({
         theme: input.theme,
         masterUrl: input.masterUrl,
         regionalUrls: input.regionalUrls,
+        sources: input.sources as AssembledSources | undefined,
         excludeTeamKeys: input.excludeTeamKeys,
         excludeGameKeys: input.excludeGameKeys,
       },

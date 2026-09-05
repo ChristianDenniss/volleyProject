@@ -26,6 +26,48 @@ type TeamMode = "teams" | "teams_and_players" | "players";
 
 type Preview = SheetImportPreviewData;
 
+type StagedSources = {
+  masterTeams: Array<{ name: string; region: SheetRegion | null; playerNames: string[] }>;
+  masterGames: Array<{
+    key: string;
+    region: SheetRegion;
+    phase: "qualifiers" | "playoffs";
+    round: string;
+    date: string;
+    team1Name: string;
+    team2Name: string;
+    team1Score: number | null;
+    team2Score: number | null;
+    setScores: string[];
+    forfeit: boolean;
+  }>;
+  regionalTeams: Array<{ name: string; region: SheetRegion | null; playerNames: string[] }>;
+  regionalBlocks: Array<{
+    teamName: string;
+    region: SheetRegion;
+    winnerName: string;
+    teamScore: number;
+    opponentScore: number;
+    rows: Array<{
+      playerName: string;
+      spikeKills: number;
+      spikeAttempts: number;
+      spikingErrors: number;
+      apeKills: number;
+      apeAttempts: number;
+      assists: number;
+      settingErrors: number;
+      blocks: number;
+      blockFollows: number;
+      digs: number;
+      aces: number;
+      servingErrors: number;
+      miscErrors: number;
+    }>;
+  }>;
+  sourceWarnings: string[];
+};
+
 type ProgressState = {
   active: boolean;
   index: number;
@@ -157,7 +199,7 @@ function useSheetPreviewLoader() {
     seasonId?: number;
     endDate?: string | null;
     theme?: string | null;
-  }): Promise<Preview> => {
+  }): Promise<{ preview: Preview; sources: StagedSources }> => {
     const regionalEntries = (
       [
         ["na", input.regionalUrls.na],
@@ -278,7 +320,7 @@ function useSheetPreviewLoader() {
       }
 
       bump("Building preview…", "Matching stats and checking existing players");
-      const sources = {
+      const sources: StagedSources = {
         masterTeams,
         masterGames,
         regionalTeams,
@@ -309,7 +351,7 @@ function useSheetPreviewLoader() {
             : ""),
       );
 
-      return preview as Preview;
+      return { preview: preview as Preview, sources };
     } finally {
       setProgress((current) => ({ ...current, active: false }));
     }
@@ -331,6 +373,7 @@ export function SeasonSheetImport() {
   const [euUrl, setEuUrl] = useState("");
   const [asUrl, setAsUrl] = useState("");
   const [preview, setPreview] = useState<Preview | null>(null);
+  const [stagedSources, setStagedSources] = useState<StagedSources | null>(null);
   const [excludedTeams, setExcludedTeams] = useState<Set<string>>(new Set());
   const [excludedGames, setExcludedGames] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState(false);
@@ -341,6 +384,7 @@ export function SeasonSheetImport() {
   const reset = () => {
     setStep("form");
     setPreview(null);
+    setStagedSources(null);
     setExcludedTeams(new Set());
     setExcludedGames(new Set());
     setBusy(false);
@@ -353,12 +397,11 @@ export function SeasonSheetImport() {
       startDate,
       endDate: endDate || null,
       theme: theme || null,
-      masterUrl,
-      regionalUrls: regionalPayload(naUrl, euUrl, asUrl),
+      ...(stagedSources ? { sources: stagedSources } : { masterUrl, regionalUrls: regionalPayload(naUrl, euUrl, asUrl) }),
       excludeTeamKeys: [...excludedTeams],
       excludeGameKeys: [...excludedGames],
     }),
-    [seasonNumber, startDate, endDate, theme, masterUrl, naUrl, euUrl, asUrl, excludedTeams, excludedGames],
+    [seasonNumber, startDate, endDate, theme, masterUrl, naUrl, euUrl, asUrl, excludedTeams, excludedGames, stagedSources],
   );
 
   return (
@@ -390,7 +433,7 @@ export function SeasonSheetImport() {
               event.preventDefault();
               setBusy(true);
               try {
-                const result = await run({
+                const { preview: result, sources } = await run({
                   mode: "full",
                   seasonNumber: Number.parseInt(seasonNumber, 10),
                   startDate,
@@ -400,6 +443,7 @@ export function SeasonSheetImport() {
                   regionalUrls: regionalPayload(naUrl, euUrl, asUrl),
                 });
                 setPreview(result);
+                setStagedSources(sources);
                 setExcludedTeams(new Set());
                 setExcludedGames(new Set());
                 setStep("preview");
@@ -543,6 +587,7 @@ export function TeamsSheetImport({
   const [euUrl, setEuUrl] = useState("");
   const [asUrl, setAsUrl] = useState("");
   const [preview, setPreview] = useState<Preview | null>(null);
+  const [stagedSources, setStagedSources] = useState<StagedSources | null>(null);
   const [excludedTeams, setExcludedTeams] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState(false);
 
@@ -552,6 +597,7 @@ export function TeamsSheetImport({
   const reset = () => {
     setStep("form");
     setPreview(null);
+    setStagedSources(null);
     setExcludedTeams(new Set());
     setBusy(false);
   };
@@ -559,8 +605,12 @@ export function TeamsSheetImport({
   const baseInput = {
     mode,
     seasonId: Number.parseInt(seasonId, 10),
-    ...(masterUrl ? { masterUrl } : {}),
-    regionalUrls: regionalPayload(naUrl, euUrl, asUrl),
+    ...(stagedSources
+      ? { sources: stagedSources }
+      : {
+          ...(masterUrl ? { masterUrl } : {}),
+          regionalUrls: regionalPayload(naUrl, euUrl, asUrl),
+        }),
     excludeTeamKeys: [...excludedTeams],
   };
 
@@ -593,13 +643,14 @@ export function TeamsSheetImport({
               event.preventDefault();
               setBusy(true);
               try {
-                const result = await run({
+                const { preview: result, sources } = await run({
                   mode,
                   seasonId: Number.parseInt(seasonId, 10),
                   ...(masterUrl ? { masterUrl } : {}),
                   regionalUrls: regionalPayload(naUrl, euUrl, asUrl),
                 });
                 setPreview(result);
+                setStagedSources(sources);
                 setExcludedTeams(new Set());
                 setStep("preview");
               } catch (error) {
