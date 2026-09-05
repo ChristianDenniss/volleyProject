@@ -37,13 +37,51 @@ export const seasonCreate = z.object({
 });
 export const seasonUpdate = z.object({ id, patch: seasonCreate.partial() });
 
+const sheetUrl = z.string().url();
+const regionalUrls = z
+  .object({
+    na: sheetUrl.optional(),
+    eu: sheetUrl.optional(),
+    as: sheetUrl.optional(),
+  })
+  .optional();
+
+export const sheetImportFull = z.object({
+  mode: z.literal("full"),
+  seasonNumber: z.number().int().positive(),
+  startDate: isoDate,
+  endDate: isoDate.nullable().optional(),
+  theme: z.string().min(1).nullable().optional(),
+  masterUrl: sheetUrl,
+  regionalUrls,
+  excludeTeamKeys: z.array(z.string()).optional(),
+  excludeGameKeys: z.array(z.string()).optional(),
+});
+
+export const sheetImportTeams = z.object({
+  mode: z.enum(["teams", "teams_and_players", "players"]),
+  seasonId: id,
+  masterUrl: sheetUrl.optional(),
+  regionalUrls,
+  excludeTeamKeys: z.array(z.string()).optional(),
+  excludeGameKeys: z.array(z.string()).optional(),
+});
+
 export const teamCreate = z.object({
   name: z.string().min(1),
   logoUrl: url,
+  description: z.string().max(500).nullable().optional(),
   placement: z.string().min(1).optional(),
   seasonId: id.nullable().optional(),
 });
 export const teamUpdate = z.object({ id, patch: teamCreate.partial() });
+export const teamProfileUpdate = z.object({
+  id,
+  patch: z.object({
+    logoUrl: url,
+    description: z.string().max(500).nullable().optional(),
+  }),
+});
 
 export const playerCreate = z
   .object({

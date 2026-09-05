@@ -1,7 +1,8 @@
-import { seasons } from "@server/services";
+import { env } from "cloudflare:workers";
+import { seasons, sheetImport } from "@server/services";
 import { adminProcedure, publicProcedure, router } from "../init";
 import { revalidate } from "../revalidate";
-import { byId, seasonCreate, seasonUpdate } from "../schemas";
+import { byId, seasonCreate, seasonUpdate, sheetImportFull } from "../schemas";
 
 export const seasonsRouter = router({
   list: publicProcedure.query(({ ctx }) => seasons.list(ctx.db)),
@@ -26,5 +27,55 @@ export const seasonsRouter = router({
     const row = await seasons.remove(ctx.db, input.id);
     revalidate("/seasons", "/portal/seasons");
     return row;
+  }),
+
+  previewSheetImport: adminProcedure.input(sheetImportFull).mutation(async ({ ctx, input }) => {
+    return sheetImport.buildSheetImportPreview(ctx.db, {
+      mode: "full",
+      seasonNumber: input.seasonNumber,
+      startDate: input.startDate,
+      endDate: input.endDate,
+      theme: input.theme,
+      masterUrl: input.masterUrl,
+      regionalUrls: input.regionalUrls,
+      excludeTeamKeys: input.excludeTeamKeys,
+      excludeGameKeys: input.excludeGameKeys,
+    });
+  }),
+
+  commitSheetImport: adminProcedure.input(sheetImportFull).mutation(async ({ ctx, input }) => {
+    const result = await sheetImport.commitSheetImport(
+      ctx.db,
+      {
+        mode: "full",
+        seasonNumber: input.seasonNumber,
+        startDate: input.startDate,
+        endDate: input.endDate,
+        theme: input.theme,
+        masterUrl: input.masterUrl,
+        regionalUrls: input.regionalUrls,
+        excludeTeamKeys: input.excludeTeamKeys,
+        excludeGameKeys: input.excludeGameKeys,
+      },
+      {
+        queue: env.RECORDS_QUEUE,
+        requestedBy: ctx.user.id,
+      },
+    );
+    revalidate(
+      "/",
+      "/seasons",
+      "/portal/seasons",
+      "/portal/teams",
+      "/portal/players",
+      "/portal/games",
+      "/portal/stats",
+      "/teams",
+      "/players",
+      "/games",
+      "/stats",
+      "/schedules",
+    );
+    return result;
   }),
 });

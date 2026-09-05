@@ -1,6 +1,7 @@
 "use client";
 
 import { pick, ResourceView, optionalText, type ColumnSpec, type FieldSpec } from "./resource-view";
+import { SeasonSheetImport } from "./sheet-import-dialog";
 import { trpc } from "@/lib/trpc";
 
 interface Row {
@@ -41,6 +42,7 @@ export function SeasonsManager({ rows }: { rows: Row[] }) {
       rows={rows}
       columns={COLUMNS}
       fields={FIELDS}
+      extra={<SeasonSheetImport />}
       toValues={(row) => ({
         seasonNumber: String(row.seasonNumber),
         startDate: row.startDate,

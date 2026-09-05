@@ -59,6 +59,41 @@ export const trpcManifest: TrpcManifestEntry[] = [
   { endpoint: "PATCH /api/seasons/:id", procedure: "seasons.update", access: "admin", status: "done" },
   { endpoint: "DELETE /api/seasons/:id", procedure: "seasons.delete", access: "admin", status: "done" },
   { endpoint: "PUT /api/seasons/:id", procedure: null, access: "admin", status: "removed", rationale: PUT_DUPLICATE },
+  {
+    endpoint: "POST /api/seasons/import-sheets/preview",
+    procedure: "seasons.previewSheetImport",
+    access: "admin",
+    status: "done",
+    rationale: "parses public Google Sheets into a dry-run preview before creating a season",
+  },
+  {
+    endpoint: "POST /api/seasons/import-sheets",
+    procedure: "seasons.commitSheetImport",
+    access: "admin",
+    status: "done",
+    rationale: "re-parses the same sheet URLs and writes the season graph after preview confirmation",
+  },
+  {
+    endpoint: "POST /api/sheet-import/load-master",
+    procedure: "sheetImport.loadMaster",
+    access: "admin",
+    status: "done",
+    rationale: "loads and parses the master workbook as one preview progress step",
+  },
+  {
+    endpoint: "POST /api/sheet-import/load-regional-batch",
+    procedure: "sheetImport.loadRegionalBatch",
+    access: "admin",
+    status: "done",
+    rationale: "loads regional team tabs in batches so the portal can show parse progress",
+  },
+  {
+    endpoint: "POST /api/sheet-import/assemble-preview",
+    procedure: "sheetImport.assemblePreview",
+    access: "admin",
+    status: "done",
+    rationale: "merges staged sheet payloads into the import preview",
+  },
 
   { endpoint: "POST /api/stats", procedure: "stats.create", access: "admin", status: "done" },
   { endpoint: "PATCH /api/stats/:id", procedure: "stats.update", access: "admin", status: "done" },
@@ -73,6 +108,20 @@ export const trpcManifest: TrpcManifestEntry[] = [
   { endpoint: "DELETE /api/teams/:id", procedure: "teams.delete", access: "admin", status: "done" },
   { endpoint: "PUT /api/teams/:id", procedure: null, access: "admin", status: "removed", rationale: PUT_DUPLICATE },
   { endpoint: "POST /api/teams/batch", procedure: "teams.createMany", access: "admin", status: "done" },
+  {
+    endpoint: "POST /api/teams/import-sheets/preview",
+    procedure: "teams.previewSheetImport",
+    access: "admin",
+    status: "done",
+    rationale: "preview teams/players import modes against an existing season",
+  },
+  {
+    endpoint: "POST /api/teams/import-sheets",
+    procedure: "teams.commitSheetImport",
+    access: "admin",
+    status: "done",
+    rationale: "commit teams-only, teams+players, or players-only sheet imports",
+  },
 
   { endpoint: "POST /api/trivia/guess", procedure: "trivia.checkGuess", access: "public", status: "done" },
 

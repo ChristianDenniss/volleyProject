@@ -2,21 +2,45 @@ import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import type { Db } from "@db";
 import { correlatedCount } from "@db/sqlx";
 import { insertMany } from "@db/insert";
-import { games, players, seasons, teams, teamsGames, teamsPlayers } from "@db/schema";
+import {
+  games,
+  players,
+  seasons,
+  teams,
+  teamsGames,
+  teamsPlayers,
+  TEAM_LEADERSHIP_ROLES,
+  type TeamLeadershipRole,
+} from "@db/schema";
 import { ConflictError, found } from "./errors";
 import type { PartialInput } from "./input";
+import { isAdmin } from "./users";
+
+export type { TeamLeadershipRole };
+export { TEAM_LEADERSHIP_ROLES };
 
 export interface TeamInput {
   name: string;
   logoUrl?: string | null | undefined;
+  description?: string | null | undefined;
   placement?: string | undefined;
   seasonId?: number | null | undefined;
 }
+
+export interface TeamProfileInput {
+  logoUrl?: string | null | undefined;
+  description?: string | null | undefined;
+}
+
+const ROLE_ORDER = Object.fromEntries(
+  TEAM_LEADERSHIP_ROLES.map((role, index) => [role, index]),
+) as Record<TeamLeadershipRole, number>;
 
 const withSeason = {
   id: teams.id,
   name: teams.name,
   logoUrl: teams.logoUrl,
+  description: teams.description,
   placement: teams.placement,
   seasonId: teams.seasonId,
   seasonNumber: seasons.seasonNumber,
@@ -64,32 +88,43 @@ async function hydrate(db: Db, team: typeof teams.$inferSelect) {
   return { ...team, players: roster, games: schedule, season: season ?? null };
 }
 
+function sortRoster<T extends { name: string; role: TeamLeadershipRole | null }>(rows: T[]): T[] {
+  return [...rows].sort((left, right) => {
+    const leftRank = left.role != null ? (ROLE_ORDER[left.role] ?? 99) : 99;
+    const rightRank = right.role != null ? (ROLE_ORDER[right.role] ?? 99) : 99;
+    if (leftRank !== rightRank) return leftRank - rightRank;
+    return left.name.localeCompare(right.name);
+  });
+}
+
 export async function listPlayers(db: Db, teamId: number) {
-  return db
+  const rows = await db
     .select({
       id: players.id,
       name: players.name,
       position: players.position,
+      role: teamsPlayers.role,
     })
     .from(teamsPlayers)
     .innerJoin(players, eq(teamsPlayers.playerId, players.id))
-    .where(eq(teamsPlayers.teamId, teamId))
-    .orderBy(asc(players.name));
+    .where(eq(teamsPlayers.teamId, teamId));
+  return sortRoster(rows);
 }
 
 export async function listPlayersBySeason(db: Db, seasonId: number) {
-  return db
+  const rows = await db
     .select({
       teamId: teamsPlayers.teamId,
       id: players.id,
       name: players.name,
       position: players.position,
+      role: teamsPlayers.role,
     })
     .from(teamsPlayers)
     .innerJoin(players, eq(teamsPlayers.playerId, players.id))
     .innerJoin(teams, eq(teamsPlayers.teamId, teams.id))
-    .where(eq(teams.seasonId, seasonId))
-    .orderBy(asc(players.name));
+    .where(eq(teams.seasonId, seasonId));
+  return sortRoster(rows);
 }
 
 export async function listPlayersByTeamName(db: Db, name: string) {
@@ -145,6 +180,18 @@ export async function update(db: Db, id: number, input: PartialInput<TeamInput>)
   return found(row, `Team ${id}`);
 }
 
+export async function updateProfile(db: Db, id: number, input: TeamProfileInput) {
+  const [row] = await db
+    .update(teams)
+    .set({
+      ...(input.logoUrl !== undefined ? { logoUrl: input.logoUrl } : {}),
+      ...(input.description !== undefined ? { description: input.description } : {}),
+    })
+    .where(eq(teams.id, id))
+    .returning();
+  return found(row, `Team ${id}`);
+}
+
 export async function remove(db: Db, id: number) {
   const [row] = await db.delete(teams).where(eq(teams.id, id)).returning({ id: teams.id });
   found(row, `Team ${id}`);
@@ -159,4 +206,22 @@ export async function setPlayers(db: Db, teamId: number, playerIds: number[]) {
     playerIds.map((playerId) => ({ teamId, playerId })),
   );
   return listPlayers(db, teamId);
+}
+
+/** True when the user is an admin or a C / VC / CC on this roster. */
+export async function canManageProfile(
+  db: Db,
+  teamId: number,
+  user: { id: string; role: string } | null | undefined,
+): Promise<boolean> {
+  if (!user) return false;
+  if (isAdmin(user.role)) return true;
+
+  const linked = await db.query.players.findFirst({ where: eq(players.userId, user.id) });
+  if (!linked) return false;
+
+  const seat = await db.query.teamsPlayers.findFirst({
+    where: and(eq(teamsPlayers.teamId, teamId), eq(teamsPlayers.playerId, linked.id)),
+  });
+  return seat?.role != null && TEAM_LEADERSHIP_ROLES.includes(seat.role);
 }

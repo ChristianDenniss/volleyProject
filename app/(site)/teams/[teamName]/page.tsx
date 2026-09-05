@@ -6,6 +6,8 @@ import { notFound } from "next/navigation";
 import { ChevronDown } from "lucide-react";
 import { api } from "@server/trpc/server";
 import { PageMetric } from "@components/site/page-header";
+import { TeamLeadershipBadge } from "@components/site/team-leadership-badge";
+import { TeamProfileEditor } from "@components/site/team-profile-editor";
 
 export const dynamic = "force-dynamic";
 
@@ -31,7 +33,9 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const team = await load(teamName);
   if (!team) return { title: "Team not found" };
 
-  const description = `${team.name}: ${team.players.length} players, ${team.games.length} games, ${team.placement}.`;
+  const description =
+    team.description?.trim() ||
+    `${team.name}: ${team.players.length} players, ${team.games.length} games, ${team.placement}.`;
   return {
     title: team.name,
     description,
@@ -74,22 +78,46 @@ export default async function TeamPage({ params }: Params) {
   return (
     <div>
       <header className="flex flex-col gap-6 border-b border-rvl-line px-5 py-12 sm:px-8 sm:py-14 lg:flex-row lg:items-end xl:px-14">
-        <div className="flex items-center gap-5">
-          {team.logoUrl ? (
-            <img
-              src={team.logoUrl}
-              alt=""
-              className="size-16 shrink-0 border border-rvl-line object-cover sm:size-20"
+        <div className="flex min-w-0 flex-1 flex-col gap-5">
+          <div className="flex items-center gap-5">
+            {team.logoUrl ? (
+              <img
+                src={team.logoUrl}
+                alt=""
+                className="size-16 shrink-0 border border-rvl-line object-cover sm:size-20"
+              />
+            ) : (
+              <div
+                aria-hidden
+                className="flex size-16 shrink-0 items-center justify-center border border-rvl-line font-mono text-[0.62rem] uppercase tracking-[0.16em] text-rvl-dim sm:size-20"
+              >
+                Logo
+              </div>
+            )}
+            <div className="min-w-0">
+              <span className="font-mono text-[0.72rem] font-bold uppercase tracking-[0.24em] text-rvl-accent">
+                Team
+              </span>
+              <h1 className="mt-3 mb-0 font-display text-[2.2rem] font-black uppercase leading-[0.95] tracking-[-0.035em] sm:text-[2.7rem]">
+                {team.name}
+              </h1>
+            </div>
+          </div>
+
+          {team.description ? (
+            <p className="m-0 max-w-2xl text-[0.98rem] leading-[1.55] text-rvl-ink-2">
+              {team.description}
+            </p>
+          ) : null}
+
+          {team.canEdit ? (
+            <TeamProfileEditor
+              teamId={team.id}
+              teamName={team.name}
+              logoUrl={team.logoUrl}
+              description={team.description}
             />
           ) : null}
-          <div>
-            <span className="font-mono text-[0.72rem] font-bold uppercase tracking-[0.24em] text-rvl-accent">
-              Team
-            </span>
-            <h1 className="mt-3 mb-0 font-display text-[2.2rem] font-black uppercase leading-[0.95] tracking-[-0.035em] sm:text-[2.7rem]">
-              {team.name}
-            </h1>
-          </div>
         </div>
 
         <div className="flex flex-wrap gap-8 font-mono lg:ml-auto">
@@ -109,8 +137,9 @@ export default async function TeamPage({ params }: Params) {
               <li key={player.id} className="border-b border-rvl-line">
                 <Link
                   href={`/players/${player.id}`}
-                  className="flex items-center gap-4 py-4 text-inherit no-underline transition-colors hover:text-rvl-accent"
+                  className="flex items-center gap-3 py-4 text-inherit no-underline transition-colors hover:text-rvl-accent"
                 >
+                  <TeamLeadershipBadge role={player.role} />
                   <span className="text-[1rem] font-semibold capitalize">{player.name}</span>
                   <span className="ml-auto font-mono text-[0.62rem] uppercase tracking-[0.16em] text-rvl-dim">
                     {player.position}

@@ -1,9 +1,6 @@
 import Link from "next/link";
 import { api } from "@server/trpc/server";
 import { PortalPage } from "@components/portal/portal-page";
-import { RecalculateRecords } from "@components/portal/recalculate-records";
-import { StatTile } from "@components/site/stat-tile";
-import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -15,17 +12,11 @@ const RESOURCES = [
   { key: "players", label: "Players", href: "/portal/players" },
   { key: "games", label: "Games", href: "/portal/games" },
   { key: "stats", label: "Stat lines", href: "/portal/stats" },
+  { key: "records", label: "Records", href: "/portal/records" },
   { key: "awards", label: "Awards", href: "/portal/awards" },
   { key: "articles", label: "Articles", href: "/portal/articles" },
   { key: "users", label: "Users", href: "/portal/users" },
 ] as const;
-
-function statusClass(status: string | undefined) {
-  if (status === "succeeded") return "text-rvl-mint";
-  if (status === "failed") return "text-destructive";
-  if (status === "running" || status === "queued") return "text-rvl-accent";
-  return "text-rvl-dim";
-}
 
 export default async function PortalDashboard() {
   const trpc = await api();
@@ -35,24 +26,24 @@ export default async function PortalDashboard() {
     playerCount,
     gameCount,
     statCount,
+    recordCount,
     awardCount,
     articleCount,
     userCount,
-    recordCount,
-    seasonList,
-    job,
+    scheduleRows,
+    allArticles,
   ] = await Promise.all([
     trpc.seasons.count(),
     trpc.teams.count(),
     trpc.players.count(),
     trpc.games.count(),
     trpc.stats.count(),
+    trpc.records.count(),
     trpc.awards.count(),
     trpc.articles.count(),
     trpc.users.count(),
-    trpc.records.count(),
-    trpc.seasons.list(),
-    trpc.records.latestJob(),
+    trpc.games.listSchedule({}),
+    trpc.articles.listAll(),
   ]);
 
   const counts: Record<(typeof RESOURCES)[number]["key"], number> = {
@@ -61,10 +52,32 @@ export default async function PortalDashboard() {
     players: playerCount,
     games: gameCount,
     stats: statCount,
+    records: recordCount,
     awards: awardCount,
     articles: articleCount,
     users: userCount,
   };
+
+  const infoTiles = [
+    {
+      key: "completed",
+      label: "Finished matches",
+      value: Math.max(0, gameCount - scheduleRows.length),
+      hint: "Completed",
+    },
+    {
+      key: "scheduled",
+      label: "Upcoming matches",
+      value: scheduleRows.length,
+      hint: "Scheduled",
+    },
+    {
+      key: "pending-articles",
+      label: "Pending articles",
+      value: allArticles.filter((article) => article.approved !== true).length,
+      hint: "Awaiting approval",
+    },
+  ] as const;
 
   return (
     <PortalPage title="Dashboard" description="What is in the database right now.">
@@ -87,60 +100,42 @@ export default async function PortalDashboard() {
           </Link>
         ))}
 
-        <StatTile label="Records" value={recordCount} hint="rebuilt by the job below" />
+        {infoTiles.map((tile) => (
+          <div key={tile.key} className="border border-dashed border-rvl-line px-5 py-4">
+            <p className="m-0 font-mono text-[0.58rem] uppercase tracking-[0.22em] text-rvl-dim">
+              {tile.label}
+            </p>
+            <p className="m-0 mt-2.5 font-mono text-[1.9rem] font-bold leading-none tracking-[-0.045em] tabular-nums text-rvl-ink">
+              {tile.value}
+            </p>
+            <p className="m-0 mt-3 truncate font-mono text-[0.58rem] uppercase tracking-[0.16em] text-rvl-dim">
+              {tile.hint}
+            </p>
+          </div>
+        ))}
       </div>
 
-      <section className="grid grid-cols-1 gap-8 border border-rvl-line p-6 md:grid-cols-[210px_1fr] md:gap-12">
-        <div>
-          <h2 className="m-0 mb-3 font-mono text-[0.66rem] font-bold uppercase tracking-[0.24em] text-rvl-accent">
-            Record job
-          </h2>
-          <p className="m-0 text-[0.84rem] text-rvl-dim">
-            Clears the record table for the chosen scope, then rewrites every family from the stat
-            table. Runs on a queue.
-          </p>
-          <Link
-            href="/records"
-            className="mt-4 inline-block border-b border-rvl-line pb-0.5 font-mono text-[0.64rem] uppercase tracking-[0.14em] text-rvl-ink-2 no-underline transition-colors hover:border-rvl-accent-soft hover:text-rvl-accent"
-          >
-            Public page →
-          </Link>
+      <figure className="relative m-0 flex w-fit max-w-full items-center gap-5 overflow-hidden border-l-[3px] border-rvl-accent-bg py-5 pr-5 pl-6 max-md:flex-col max-md:items-start">
+        <span
+          aria-hidden
+          className="pointer-events-none absolute top-1 right-3 select-none font-display text-[5.5rem] leading-none text-rvl-accent-soft/70"
+        >
+          &ldquo;
+        </span>
+        <img
+          src="/images/LuvLate.png"
+          alt="LuvLate"
+          className="relative size-16 shrink-0 rounded-full border-2 border-rvl-accent-soft object-cover ring-2 ring-rvl-accent-bg/25 sm:size-[4.5rem]"
+        />
+        <div className="relative min-w-0">
+          <blockquote className="m-0 text-[clamp(1.15rem,2.2vw,1.55rem)] font-semibold italic leading-[1.4] text-rvl-ink">
+            Every great season starts with the people behind the scenes.
+          </blockquote>
+          <figcaption className="mt-2.5 font-mono text-[0.62rem] font-bold uppercase tracking-[0.22em] text-rvl-accent">
+            — LuvLate
+          </figcaption>
         </div>
-
-        <div className="flex flex-col gap-6">
-          <div className="flex flex-wrap items-center gap-x-8 gap-y-3 border-b border-rvl-line pb-5 font-mono">
-            <div className="flex flex-col gap-1">
-              <span className="text-[0.56rem] uppercase tracking-[0.22em] text-rvl-dim">
-                Last run
-              </span>
-              <span className={cn("text-[0.95rem] uppercase", statusClass(job?.status))}>
-                {job?.status ?? "never"}
-              </span>
-            </div>
-            <div className="flex flex-col gap-1">
-              <span className="text-[0.56rem] uppercase tracking-[0.22em] text-rvl-dim">
-                Rows written
-              </span>
-              <span className="text-[0.95rem] tabular-nums">{job?.rowsWritten ?? "-"}</span>
-            </div>
-            {job?.error ? (
-              <div className="flex min-w-0 flex-col gap-1">
-                <span className="text-[0.56rem] uppercase tracking-[0.22em] text-rvl-dim">
-                  Error
-                </span>
-                <span className="truncate text-[0.85rem] text-destructive">{job.error}</span>
-              </div>
-            ) : null}
-          </div>
-
-          <RecalculateRecords
-            seasons={seasonList.map((season) => ({
-              id: season.id,
-              label: `Season ${season.seasonNumber}`,
-            }))}
-          />
-        </div>
-      </section>
+      </figure>
     </PortalPage>
   );
 }

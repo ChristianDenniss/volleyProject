@@ -54,6 +54,11 @@ describe("teams", () => {
     expect(team?.season?.seasonNumber).toBe(1);
   });
 
+  it("sorts leadership roles to the top of the roster", async () => {
+    const team = await teams.getByName(db, FIXTURES.teamName);
+    expect(team?.players.map((player) => player.role)).toEqual(["C", "VC"]);
+  });
+
   it("returns null for an unknown team name", async () => {
     expect(await teams.getByName(db, FIXTURES.missingTeamName)).toBeNull();
   });
