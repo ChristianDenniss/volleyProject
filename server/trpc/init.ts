@@ -4,6 +4,7 @@ import { ZodError } from "zod";
 import type { Db } from "@db";
 import type { MatchRegion } from "@/lib/region";
 import { errorDetail, explainError, logError } from "../report";
+import { isProductionDeployment } from "../environment";
 import { ServiceError } from "../services/errors";
 import { isAdmin } from "../services/users";
 
@@ -28,13 +29,14 @@ export function scopedRegion(ctx: Context, explicit?: MatchRegion | undefined): 
 const t = initTRPC.context<Context>().create({
   transformer: superjson,
   errorFormatter({ shape, error }) {
+    const exposeInternals = !isProductionDeployment();
     return {
       ...shape,
       message: explainError(error).message,
       data: {
         ...shape.data,
         zodError: error.cause instanceof ZodError ? error.cause.flatten() : null,
-        cause: errorDetail(error.cause ?? error) || null,
+        cause: exposeInternals ? errorDetail(error.cause ?? error) || null : null,
       },
     };
   },
