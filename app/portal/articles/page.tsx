@@ -12,7 +12,7 @@ export default async function PortalArticlesPage() {
   return (
     <PortalPage
       title="Articles"
-      description="Articles are written on the public site and appear here for review. Only a published article shows on /articles."
+      description="Click an article to preview how it looks on the site. Approve or reject it from the list or the preview. Only a published article shows on /articles."
     >
       <ArticlesManager rows={rows} />
     </PortalPage>

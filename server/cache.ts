@@ -6,7 +6,10 @@ function requestFor(key: string) {
 
 function cacheStore(): Cache | null {
   try {
-    return typeof caches === "undefined" ? null : (caches.default ?? null);
+    if (typeof caches === "undefined") return null;
+    // Workers expose caches.default; the DOM CacheStorage type does not.
+    const store = (caches as CacheStorage & { default?: Cache }).default;
+    return store ?? null;
   } catch {
     return null;
   }

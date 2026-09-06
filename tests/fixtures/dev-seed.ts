@@ -275,7 +275,7 @@ export async function seedDev(db: Db): Promise<void> {
     }),
   ];
 
-  const teamIdByName = new Map(
+  const teamIdByName = new Map<string, number>(
     [...S3_TEAMS, ...S4_TEAMS].map((team) => [team.name, team.id]),
   );
 

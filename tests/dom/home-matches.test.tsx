@@ -196,7 +196,9 @@ describe("HomeMatches", () => {
     const panel = screen.getByLabelText("Matches for selected day");
     expect(panel.style.getPropertyValue("--match-slots")).toBe("2");
 
-    await user.click(screen.getAllByRole("button", { name: /no matches/i })[0]);
+    const emptyDay = screen.getAllByRole("button", { name: /no matches/i })[0];
+    if (!emptyDay) throw new Error("expected an empty-day chip");
+    await user.click(emptyDay);
     expect(screen.getByText("No matches on this day")).toBeDefined();
     expect(screen.getByLabelText("Matches for selected day").style.getPropertyValue("--match-slots")).toBe("2");
 

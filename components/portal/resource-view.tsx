@@ -62,7 +62,12 @@ export interface ResourceViewProps<Row extends { id: number | string }> {
   onCreate?: (values: Values) => Promise<unknown>;
   onUpdate?: (id: Row["id"], values: Values) => Promise<unknown>;
   onDelete?: (id: Row["id"]) => Promise<unknown>;
+  onRowClick?: (row: Row) => void;
+  rowClickLabel?: (row: Row) => string;
+  rowActions?: (row: Row) => ReactNode;
   extra?: ReactNode;
+  filters?: ReactNode;
+  emptyLabel?: string;
 }
 
 const inputClass =
@@ -286,7 +291,12 @@ export function ResourceView<Row extends { id: number | string }>({
   onCreate,
   onUpdate,
   onDelete,
+  onRowClick,
+  rowClickLabel,
+  rowActions,
   extra,
+  filters,
+  emptyLabel = "No rows yet",
 }: ResourceViewProps<Row>) {
   const router = useRouter();
   const { showErrorToast } = usePortalErrorToast();
@@ -306,7 +316,8 @@ export function ResourceView<Row extends { id: number | string }>({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-4">
+      <div className="flex flex-wrap items-end gap-4">
+        {filters}
         <SearchBar
           className="max-w-[320px]"
           value={search}
@@ -367,7 +378,7 @@ export function ResourceView<Row extends { id: number | string }>({
                   {column.label}
                 </th>
               ))}
-              {onUpdate || onDelete ? (
+              {onUpdate || onDelete || rowActions ? (
                 <th className="border-b border-rvl-line bg-rvl-panel px-4 py-3 text-right font-mono text-[0.58rem] font-bold uppercase tracking-[0.2em] text-rvl-dim">
                   Actions
                 </th>
@@ -378,15 +389,34 @@ export function ResourceView<Row extends { id: number | string }>({
             {visible.length === 0 ? (
               <tr>
                 <td
-                  colSpan={columns.length + (onUpdate || onDelete ? 1 : 0)}
+                  colSpan={columns.length + (onUpdate || onDelete || rowActions ? 1 : 0)}
                   className="px-4 py-16 text-center font-mono text-[0.72rem] uppercase tracking-[0.14em] text-rvl-dim"
                 >
-                  {rows.length === 0 ? "No rows yet" : "No rows match that search"}
+                  {rows.length === 0 ? emptyLabel : "No rows match that search"}
                 </td>
               </tr>
             ) : null}
             {visible.map((row) => (
-              <tr key={String(row.id)} className="transition-colors hover:bg-rvl-panel">
+              <tr
+                key={String(row.id)}
+                className={cn(
+                  "group/row transition-colors hover:bg-rvl-panel",
+                  onRowClick && "cursor-pointer",
+                )}
+                tabIndex={onRowClick ? 0 : undefined}
+                aria-label={onRowClick ? (rowClickLabel?.(row) ?? "Preview") : undefined}
+                onClick={onRowClick ? () => onRowClick(row) : undefined}
+                onKeyDown={
+                  onRowClick
+                    ? (event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          onRowClick(row);
+                        }
+                      }
+                    : undefined
+                }
+              >
                 {columns.map((column) => (
                   <td
                     key={column.key}
@@ -398,9 +428,13 @@ export function ResourceView<Row extends { id: number | string }>({
                     {column.render(row)}
                   </td>
                 ))}
-                {onUpdate || onDelete ? (
-                  <td className="border-b border-rvl-line px-4 py-3 text-right">
-                    <div className="flex justify-end gap-2">
+                {onUpdate || onDelete || rowActions ? (
+                  <td
+                    className="border-b border-rvl-line px-4 py-3 text-right"
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    <div className="flex flex-wrap items-center justify-end gap-2">
+                      {rowActions?.(row)}
                       {onUpdate && toValues ? (
                         <EntityDialog
                           title={`Edit ${title}`}

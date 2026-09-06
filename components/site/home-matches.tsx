@@ -77,9 +77,11 @@ function datesAroundToday(today: string) {
 }
 
 function nearestDate(dates: string[], target: string) {
-  if (dates.length === 0) return "";
+  const first = dates[0];
+  const last = dates[dates.length - 1];
+  if (first === undefined || last === undefined) return "";
   if (dates.includes(target)) return target;
-  return target < dates[0] ? dates[0] : dates[dates.length - 1];
+  return target < first ? first : last;
 }
 
 function centerDateInStrip(scroller: HTMLElement, date: string, behavior: ScrollBehavior) {

@@ -82,6 +82,7 @@ const ALL_COLUMNS: Column[] = [
 
 const DEFAULT_VISIBLE: Record<ColumnKey, boolean> = {
   playerName: true,
+  teamName: false,
   gamesPlayed: false,
   spikeKills: false,
   spikeAttempts: false,
@@ -118,6 +119,7 @@ function formatCellValue(
   statType: StatType,
 ): string {
   if (column.key === "playerName") return row.playerName;
+  if (column.key === "teamName") return row.teamName ?? "";
 
   const value = getRowStatValue(row, column.key, statType);
   if (column.isPercentage) return `${value.toFixed(2)}%`;
