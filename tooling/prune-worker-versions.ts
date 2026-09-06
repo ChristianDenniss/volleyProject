@@ -105,7 +105,11 @@ async function deleteVersion(
 }
 
 async function main(): Promise<void> {
-  const keep = Number(process.env["KEEP_VERSIONS"] ?? process.argv.find((arg) => arg.startsWith("--keep="))?.slice(6) ?? 10);
+  const keep = Number(
+    process.env["KEEP_VERSIONS"] ??
+      process.argv.find((arg: string) => arg.startsWith("--keep="))?.slice(6) ??
+      10,
+  );
   if (!Number.isFinite(keep) || keep < 1) {
     throw new Error(`Invalid keep count: ${keep}`);
   }
