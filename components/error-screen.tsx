@@ -1,30 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
+import { RefreshCw } from "lucide-react";
 import type { ErrorPresentation } from "@/lib/error-presentation";
-
-const kindAccent: Record<ErrorPresentation["kind"], string> = {
-  "not-found": "text-rvl-accent",
-  unauthorized: "text-violet-600 dark:text-violet-400",
-  forbidden: "text-rose-600 dark:text-rose-400",
-  network: "text-sky-600 dark:text-sky-400",
-  offline: "text-sky-700 dark:text-sky-300",
-  timeout: "text-orange-600 dark:text-orange-400",
-  "service-unavailable": "text-orange-600 dark:text-orange-400",
-  "api-response": "text-orange-600 dark:text-orange-400",
-  render: "text-fuchsia-600 dark:text-fuchsia-400",
-  conflict: "text-amber-600 dark:text-amber-400",
-  "bad-request": "text-amber-600 dark:text-amber-400",
-  "d1-read-limit": "text-amber-600 dark:text-amber-400",
-  "d1-write-limit": "text-amber-600 dark:text-amber-400",
-  "sql-variables": "text-orange-600 dark:text-orange-400",
-  "import-session-expired": "text-sky-600 dark:text-sky-400",
-  database: "text-amber-600 dark:text-amber-400",
-  unknown: "text-rvl-accent",
-};
-
-const actionClassName =
-  "mt-2 inline-flex cursor-pointer items-center border-0 bg-rvl-accent-bg px-6 py-3.5 font-mono text-[0.72rem] font-bold uppercase tracking-[0.14em] text-rvl-on-accent no-underline transition-opacity hover:opacity-85";
+import { Button } from "@components/ui/button";
 
 type ErrorScreenProps = {
   presentation: ErrorPresentation;
@@ -35,6 +15,14 @@ type ErrorScreenProps = {
   fullPage?: boolean;
 };
 
+function reload(onRetry?: () => void) {
+  if (onRetry) {
+    onRetry();
+    return;
+  }
+  window.location.reload();
+}
+
 export function ErrorScreen({
   presentation,
   detail = null,
@@ -42,9 +30,12 @@ export function ErrorScreen({
   onRetry,
   fullPage = false,
 }: ErrorScreenProps) {
-  const showTechnical = detail && detail !== presentation.body && detail !== presentation.summary;
-  const showRetry =
-    onRetry &&
+  const showTechnical =
+    process.env.NODE_ENV === "development" &&
+    detail &&
+    detail !== presentation.body &&
+    detail !== presentation.summary;
+  const showRefresh =
     presentation.kind !== "not-found" &&
     presentation.kind !== "forbidden" &&
     presentation.kind !== "unauthorized";
@@ -53,49 +44,44 @@ export function ErrorScreen({
     <section
       className={
         fullPage
-          ? "flex min-h-screen flex-col items-start justify-center gap-5 bg-rvl-ground px-5 font-display text-rvl-ink sm:px-8 xl:px-14"
-          : "flex flex-col items-start gap-5 px-5 py-16 font-display text-rvl-ink sm:px-8 xl:px-14"
+          ? "flex min-h-screen items-center justify-center bg-rvl-ground px-6 py-16"
+          : "flex items-center justify-center px-6 py-16"
       }
     >
-      <span
-        className={`font-mono text-[0.72rem] font-bold uppercase tracking-[0.24em] ${kindAccent[presentation.kind]}`}
-      >
-        {presentation.eyebrow}
-      </span>
-      <h1 className="m-0 max-w-[20ch] text-[2.2rem] font-black uppercase leading-[0.95] tracking-[-0.035em] sm:text-[2.8rem]">
-        {presentation.title}
-      </h1>
-      <p className="m-0 max-w-[52ch] text-[1rem] leading-relaxed text-rvl-ink-2">{presentation.body}</p>
-      {presentation.hint ? (
-        <p className="m-0 max-w-[52ch] border-l-2 border-rvl-line pl-4 text-[0.92rem] leading-relaxed text-rvl-ink">
-          {presentation.hint}
-        </p>
-      ) : null}
-      {showTechnical ? (
-        <details className="max-w-[min(100%,52rem)] rounded border border-rvl-line bg-rvl-panel/40 px-4 py-3">
-          <summary className="cursor-pointer font-mono text-[0.68rem] uppercase tracking-[0.14em] text-rvl-dim">
-            Technical details
-          </summary>
-          <pre className="mt-3 overflow-x-auto font-mono text-[0.72rem] leading-relaxed break-all whitespace-pre-wrap text-rvl-ink-2">
+      <div className="flex w-full max-w-lg flex-col items-center text-center">
+        <Image
+          src="/rvlLogo.png"
+          alt="Volleyball 4-2 League"
+          width={224}
+          height={224}
+          priority
+          className="mb-10 h-28 w-auto -rotate-6"
+        />
+        <h1 className="m-0 text-2xl font-semibold tracking-tight text-rvl-ink">{presentation.title}</h1>
+        <p className="mt-3 max-w-md text-sm leading-relaxed text-rvl-ink-2">{presentation.body}</p>
+        {presentation.hint ? (
+          <p className="mt-3 max-w-md text-sm leading-relaxed text-rvl-ink-2">{presentation.hint}</p>
+        ) : null}
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+          {presentation.link ? (
+            <Button asChild variant="default" size="lg">
+              <Link href={presentation.link.href}>{presentation.link.label}</Link>
+            </Button>
+          ) : null}
+          {showRefresh ? (
+            <Button type="button" variant={presentation.link ? "outline" : "default"} size="lg" onClick={() => reload(onRetry)}>
+              <RefreshCw />
+              Refresh
+            </Button>
+          ) : null}
+        </div>
+        {digest ? (
+          <p className="mt-6 font-mono text-[0.72rem] text-rvl-dim">Digest {digest}</p>
+        ) : null}
+        {showTechnical ? (
+          <pre className="mt-8 max-h-64 w-full overflow-auto rounded-lg border border-rvl-line bg-rvl-panel/40 p-3 text-left text-xs leading-relaxed text-rvl-ink-2">
             {detail}
           </pre>
-        </details>
-      ) : null}
-      {digest ? (
-        <p className="m-0 font-mono text-[0.72rem] uppercase tracking-[0.14em] text-rvl-dim">
-          Digest {digest}
-        </p>
-      ) : null}
-      <div className="flex flex-wrap items-center gap-3">
-        {presentation.link ? (
-          <Link href={presentation.link.href} className={actionClassName}>
-            {presentation.link.label}
-          </Link>
-        ) : null}
-        {showRetry ? (
-          <button type="button" onClick={onRetry} className={actionClassName}>
-            Try again
-          </button>
         ) : null}
       </div>
     </section>

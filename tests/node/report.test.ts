@@ -13,7 +13,7 @@ describe("presentNotFound", () => {
   it("uses the shared 404 screen", () => {
     const presentation = presentNotFound();
     expect(presentation.kind).toBe("not-found");
-    expect(presentation.title).toContain("does not exist");
+    expect(presentation.title).toContain("could not be found");
     expect(presentation.link?.href).toBe("/");
   });
 
@@ -32,10 +32,10 @@ describe("presentError", () => {
 
     const presentation = presentError(error);
     expect(presentation.kind).toBe("d1-read-limit");
-    expect(presentation.title).toContain("read limit");
-    expect(presentation.body).toContain("free tier");
+    expect(presentation.title).toContain("couldn't load league data");
+    expect(presentation.body).toContain("Sorry about that");
     expect(presentation.summary).toContain("midnight UTC");
-    expect(presentation.hint).toContain("Workers Paid");
+    expect(presentation.body).not.toContain("—");
   });
 
   it("shows a friendly D1 write-limit screen", () => {
@@ -43,35 +43,35 @@ describe("presentError", () => {
       new Error("Your account has exceeded D1's free tier daily row write limit."),
     );
     expect(presentation.kind).toBe("d1-write-limit");
-    expect(presentation.title).toContain("write limit");
+    expect(presentation.title).toContain("couldn't save");
   });
 
-  it("surfaces the D1 cause instead of the drizzle SQL dump", () => {
+  it("surfaces the D1 cause in the hint instead of the drizzle SQL dump", () => {
     const error = new Error('Failed query: select "id" from "awards"\nparams: ');
     error.cause = new Error("D1_ERROR: SQLITE_ERROR: no such column: missing");
 
     expect(presentError(error).summary).toBe("SQLITE_ERROR: no such column: missing");
-    expect(presentError(error).title).toBe("The database returned an error");
+    expect(presentError(error).title).toBe("We couldn't load league data right now.");
     expect(presentError(error).kind).toBe("database");
   });
 
   it("detects network failures", () => {
     const presentation = presentError(new TypeError("Failed to fetch"));
     expect(presentation.kind).toBe("network");
-    expect(presentation.title).toContain("reach the server");
+    expect(presentation.title).toBe("We couldn't reach the server.");
   });
 
   it("detects render and hydration failures", () => {
     const presentation = presentError(new Error("Hydration failed because the server HTML did not match."));
     expect(presentation.kind).toBe("render");
-    expect(presentation.title).toContain("broke while loading");
+    expect(presentation.title).toBe("Something went wrong.");
   });
 
   it("detects unexpected API responses", () => {
     const presentation = presentError(
       new Error("Expected JSON from the API, got 502 text/html: <!DOCTYPE html>"),
     );
-    expect(presentation.kind).toBe("api-response");
+    expect(presentation.kind).toBe("service-unavailable");
   });
 
   it("keeps an ordinary message for unknown errors", () => {
@@ -83,7 +83,7 @@ describe("presentUnknownError", () => {
   it("maps tRPC NOT_FOUND to the 404 screen", () => {
     const error = Object.assign(new Error("Article 5 not found"), { data: { code: "NOT_FOUND" } });
     expect(presentUnknownError(error).kind).toBe("not-found");
-    expect(formatErrorTitle(error)).toContain("does not exist");
+    expect(formatErrorTitle(error)).toContain("could not be found");
   });
 
   it("maps tRPC UNAUTHORIZED to a sign-in screen", () => {
@@ -133,6 +133,6 @@ describe("formatUnknownError", () => {
     });
     expect(formatUnknownError(error)).toContain("free-tier read limit");
     expect(formatUnknownError(error)).toContain("D1_ERROR");
-    expect(formatErrorTitle(error)).toContain("read limit");
+    expect(formatErrorTitle(error)).toContain("couldn't load league data");
   });
 });

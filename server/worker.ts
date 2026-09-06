@@ -12,7 +12,7 @@ function acceptsHtml(request: Request): boolean {
 }
 
 function looksBranded(body: string): boolean {
-  return body.includes("Database capacity") || body.includes("rvl-ground") || body.includes("Try again");
+  return body.includes("Sorry about that") || body.includes("rvlLogo.png") || body.includes("Refresh");
 }
 
 async function maybeBrandErrorResponse(

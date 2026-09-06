@@ -19,7 +19,6 @@ export type ErrorKind =
 
 export interface ErrorPresentation {
   kind: ErrorKind;
-  eyebrow: string;
   title: string;
   body: string;
   hint: string | null;
@@ -89,18 +88,17 @@ function genericNotFoundBody(message?: string): string {
   if (message && !/^not found$/i.test(message.trim())) {
     return message.endsWith(".") ? message : `${message}.`;
   }
-  return "The link may be out of date, or the season, team, player or article it pointed at has been removed.";
+  return "Sorry about that. The link may be out of date, or the season, team, player, or article it pointed at may have been removed.";
 }
 
 export function presentNotFound(message?: string): ErrorPresentation {
   return {
     kind: "not-found",
-    eyebrow: "404",
-    title: "That page does not exist",
+    title: "This page could not be found.",
     body: genericNotFoundBody(message),
-    hint: "Double-check the URL, or head back to the league home and browse from there.",
+    hint: null,
     summary: message && !/^not found$/i.test(message.trim()) ? message : "Page not found",
-    link: { href: "/", label: "Back to the league" },
+    link: { href: "/", label: "Back to home" },
   };
 }
 
@@ -111,38 +109,34 @@ function presentTrpcCode(code: string, message: string): ErrorPresentation | nul
     case "UNAUTHORIZED":
       return {
         kind: "unauthorized",
-        eyebrow: "Sign in required",
-        title: "You need to be signed in",
-        body: message || "This page or action requires a Roblox account linked to the league site.",
-        hint: "Sign in with Roblox, then come back to this page.",
+        title: "You need to sign in.",
+        body: "Sorry about that. This page or action needs a Roblox account linked to the league site.",
+        hint: null,
         summary: message || "Sign in required",
         link: { href: "/login", label: "Sign in" },
       };
     case "FORBIDDEN":
       return {
         kind: "forbidden",
-        eyebrow: "Access denied",
-        title: "You can't open this",
-        body: message || "Your account does not have permission to view or change this.",
-        hint: "If you think this is a mistake, ask a league admin to check your role.",
+        title: "You don't have access to this.",
+        body: message || "Sorry about that. Your account does not have permission to view or change this.",
+        hint: null,
         summary: message || "Access denied",
-        link: { href: "/", label: "Back to the league" },
+        link: { href: "/", label: "Back to home" },
       };
     case "CONFLICT":
       return {
         kind: "conflict",
-        eyebrow: "Conflict",
-        title: "That already exists",
-        body: message || "The change conflicted with data that is already on the site.",
-        hint: "Refresh the page and check whether the record was created anyway before retrying.",
-        summary: message || "Conflict — refresh and try again",
+        title: "That change could not be saved.",
+        body: message || "Sorry about that. The update conflicted with data that is already on the site.",
+        hint: "Refresh the page and check whether it went through before trying again.",
+        summary: message || "Conflict. Refresh and try again.",
       };
     case "BAD_REQUEST":
       return {
         kind: "bad-request",
-        eyebrow: "Invalid request",
-        title: "Something was wrong with that request",
-        body: message || "The server rejected the input before it could run.",
+        title: "Something was wrong with that request.",
+        body: message || "Sorry about that. The server rejected the input before it could run.",
         hint: "Check required fields and formats, then try again.",
         summary: message || "Invalid request",
       };
@@ -159,10 +153,9 @@ export function presentError(error: unknown): ErrorPresentation {
   if (match(blob, /free tier daily row read limit/)) {
     return {
       kind: "d1-read-limit",
-      eyebrow: "Database capacity",
-      title: "We probably hit today's read limit",
-      body: "League pages pull a lot of stats from Cloudflare D1. On the free tier there is a daily cap on row reads — once it is used up, data-heavy pages stop loading until the counter resets.",
-      hint: "This usually clears after midnight UTC. Admins can remove the cap by upgrading the Cloudflare account to Workers Paid.",
+      title: "We couldn't load league data right now.",
+      body: "Sorry about that. The database may have hit its daily read limit on the free tier.",
+      hint: "Try refreshing, or come back after midnight UTC. Admins can remove the cap by upgrading to Workers Paid.",
       summary:
         "The database hit today's free-tier read limit. Upgrade D1 to a paid Workers plan, or wait until midnight UTC.",
     };
@@ -171,10 +164,9 @@ export function presentError(error: unknown): ErrorPresentation {
   if (match(blob, /free tier daily row write limit/)) {
     return {
       kind: "d1-write-limit",
-      eyebrow: "Database capacity",
-      title: "We probably hit today's write limit",
-      body: "Imports and edits write rows to Cloudflare D1. The free tier only allows a limited number of row writes per day.",
-      hint: "Wait until midnight UTC or upgrade to Workers Paid, then retry the import or save.",
+      title: "We couldn't save that right now.",
+      body: "Sorry about that. The database may have hit its daily write limit on the free tier.",
+      hint: "Try again after midnight UTC, or upgrade to Workers Paid.",
       summary:
         "The database hit today's free-tier write limit. Upgrade D1 to a paid Workers plan, or wait until midnight UTC.",
     };
@@ -183,9 +175,8 @@ export function presentError(error: unknown): ErrorPresentation {
   if (match(blob, /too many sql variables/)) {
     return {
       kind: "sql-variables",
-      eyebrow: "Query limit",
-      title: "That batch was too large",
-      body: "A database query tried to use more SQL parameters than D1 allows in a single statement.",
+      title: "That batch was too large.",
+      body: "Sorry about that. A database query used more parameters than D1 allows in one statement.",
       hint: "Try a smaller import batch or split the operation and run it again.",
       summary: "A database query used too many parameters for D1. Split the batch and retry.",
     };
@@ -194,11 +185,10 @@ export function presentError(error: unknown): ErrorPresentation {
   if (match(blob, /import session expired/)) {
     return {
       kind: "import-session-expired",
-      eyebrow: "Sheet import",
-      title: "Your import preview expired",
-      body: "Loaded sheet data is kept on the server for about an hour while you review the import preview.",
+      title: "Your import preview expired.",
+      body: "Sorry about that. Loaded sheet data is kept on the server for about an hour while you review the import.",
       hint: "Go back to the import dialog and run preview again from the start.",
-      summary: "Import session expired — run preview again.",
+      summary: "Import session expired. Run preview again.",
     };
   }
 
@@ -219,30 +209,19 @@ export function presentError(error: unknown): ErrorPresentation {
     match(blob, /econnrefused/) ||
     match(blob, /enotfound/) ||
     match(blob, /socket hang up/) ||
-    match(blob, /connection reset/)
-  ) {
-    return {
-      kind: "network",
-      eyebrow: "Connection",
-      title: "We couldn't reach the server",
-      body: "The browser did not get a response from the league API. That usually means a network blip, a dropped connection, or the site being temporarily unreachable.",
-      hint: "Check your internet connection, disable VPN or ad blockers for this site, then try again.",
-      summary: "Could not connect to the server. Check your connection and try again.",
-    };
-  }
-
-  if (
+    match(blob, /connection reset/) ||
     match(blob, /\boffline\b/) ||
     match(blob, /err_internet_disconnected/) ||
     match(blob, /internet connection appears to be offline/)
   ) {
     return {
-      kind: "offline",
-      eyebrow: "Offline",
-      title: "You look offline",
-      body: "League pages need a live connection to load stats, schedules, and articles from the server.",
-      hint: "Reconnect to the internet, then reload this page.",
-      summary: "You appear to be offline. Reconnect and try again.",
+      kind: match(blob, /\boffline\b|err_internet_disconnected|internet connection appears to be offline/)
+        ? "offline"
+        : "network",
+      title: "We couldn't reach the server.",
+      body: "Sorry about that. Please try refreshing and contact us if the problem persists.",
+      hint: null,
+      summary: "Could not connect to the server. Check your connection and try again.",
     };
   }
 
@@ -255,10 +234,9 @@ export function presentError(error: unknown): ErrorPresentation {
   ) {
     return {
       kind: "timeout",
-      eyebrow: "Timed out",
-      title: "That took too long",
-      body: "The request started but did not finish before the server or browser gave up waiting.",
-      hint: "Try again in a moment. Heavy imports and busy database periods can take longer than usual.",
+      title: "We couldn't respond to your request in time.",
+      body: "Sorry about that. Please try refreshing and contact us if the problem persists.",
+      hint: null,
       summary: "The request timed out. Try again.",
     };
   }
@@ -267,19 +245,7 @@ export function presentError(error: unknown): ErrorPresentation {
     match(blob, /expected json from the api/) ||
     match(blob, /is not valid json/) ||
     match(blob, /unexpected token '<'/) ||
-    match(blob, /<!doctype/)
-  ) {
-    return {
-      kind: "api-response",
-      eyebrow: "Bad response",
-      title: "The API sent back something unexpected",
-      body: "The site expected JSON data but got an HTML error page or another non-JSON response — often from a proxy, a deploy in progress, or a request that was too large.",
-      hint: "Retry after a moment. If you were importing sheets, run preview again from the start.",
-      summary: "The API returned an unexpected response. Try again.",
-    };
-  }
-
-  if (
+    match(blob, /<!doctype/) ||
     match(blob, /\b502\b/) ||
     match(blob, /\b503\b/) ||
     match(blob, /\b504\b/) ||
@@ -288,11 +254,12 @@ export function presentError(error: unknown): ErrorPresentation {
     match(blob, /gateway timeout/)
   ) {
     return {
-      kind: "service-unavailable",
-      eyebrow: "Service unavailable",
-      title: "The site is having a moment",
-      body: "The server or an upstream service returned a temporary failure instead of the page data.",
-      hint: "Wait a minute and try again. If imports or deploys were running, give them time to finish.",
+      kind: match(blob, /502|503|504|service unavailable|bad gateway|gateway timeout/)
+        ? "service-unavailable"
+        : "api-response",
+      title: "We couldn't reach the server.",
+      body: "Sorry about that. Please try refreshing and contact us if the problem persists.",
+      hint: null,
       summary: "The service is temporarily unavailable. Try again shortly.",
     };
   }
@@ -307,10 +274,9 @@ export function presentError(error: unknown): ErrorPresentation {
   ) {
     return {
       kind: "render",
-      eyebrow: "Rendering",
-      title: "This page broke while loading",
-      body: "Something went wrong while the server or browser was building the page — often stale cached HTML, a bad deploy, or a component that crashed mid-render.",
-      hint: "Hard refresh the page. If it keeps happening, try again after the next deploy.",
+      title: "Something went wrong.",
+      body: "An unexpected error occurred while loading this page. Reloading usually fixes it.",
+      hint: null,
       summary: "The page failed to render. Refresh and try again.",
     };
   }
@@ -319,10 +285,9 @@ export function presentError(error: unknown): ErrorPresentation {
   if (d1Message) {
     return {
       kind: "database",
-      eyebrow: "Database",
-      title: "The database returned an error",
-      body: d1Message,
-      hint: "Try again in a moment. If this keeps happening, check Worker logs for the full D1 message.",
+      title: "We couldn't load league data right now.",
+      body: "Sorry about that. The database returned an error.",
+      hint: d1Message,
       summary: d1Message,
     };
   }
@@ -330,10 +295,11 @@ export function presentError(error: unknown): ErrorPresentation {
   const message = lastUsefulMessage(chain);
   return {
     kind: "unknown",
-    eyebrow: "Error",
-    title: "This page couldn't load",
-    body: message,
-    hint: "Try again, or check Worker logs if this keeps happening.",
+    title: "Something went wrong.",
+    body: message === "Something went wrong"
+      ? "An unexpected error occurred. Reloading the page usually fixes this."
+      : message,
+    hint: null,
     summary: message,
   };
 }
