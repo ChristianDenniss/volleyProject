@@ -164,6 +164,8 @@ function StandingTable({ rows }: { rows: StandingRow[] }) {
   );
 }
 
+const HOME_BRACKET_LIMIT = 10;
+
 export function HomeBracket({
   phase,
   standings,
@@ -171,7 +173,8 @@ export function HomeBracket({
   phase: string;
   standings: StandingRow[];
 }) {
-  if (standings.length === 0) return null;
+  const top = standings.slice(0, HOME_BRACKET_LIMIT);
+  if (top.length === 0) return null;
 
   return (
     <section
@@ -194,8 +197,8 @@ export function HomeBracket({
       </div>
 
       <div className="flex flex-col gap-12">
-        <Podium rows={standings.slice(0, 3)} />
-        <StandingTable rows={standings.slice(3)} />
+        <Podium rows={top.slice(0, 3)} />
+        <StandingTable rows={top.slice(3)} />
       </div>
     </section>
   );

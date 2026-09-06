@@ -49,4 +49,22 @@ describe("HomeBracket", () => {
     const { container } = render(<HomeBracket phase="Qualifiers" standings={[]} />);
     expect(container.innerHTML).toBe("");
   });
+
+  it("shows only the top 10 teams", () => {
+    const standings = Array.from({ length: 12 }, (_, index) =>
+      standing({
+        id: index + 1,
+        name: `Team ${index + 1}`,
+        rank: index + 1,
+        wins: 12 - index,
+        losses: index,
+      }),
+    );
+
+    render(<HomeBracket phase="Qualifiers" standings={standings} />);
+
+    expect(screen.getByRole("link", { name: "Team 10" })).toBeDefined();
+    expect(screen.queryByRole("link", { name: "Team 11" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Team 12" })).toBeNull();
+  });
 });
