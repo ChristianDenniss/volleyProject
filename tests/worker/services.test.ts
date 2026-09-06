@@ -216,6 +216,31 @@ describe("games", () => {
     expect(hydrated?.staff.commentated?.email).toBe("fixtureplayer");
   });
 
+  it("batch-creates games with team links", async () => {
+    const created = await games.createMany(db, [
+      {
+        date: "2026-03-01",
+        seasonId: FIXTURES.seasonId,
+        teamIds: [1, 2],
+        team1Score: 3,
+        team2Score: 1,
+      },
+      {
+        date: "2026-03-02",
+        seasonId: FIXTURES.seasonId,
+        teamIds: [1, 2],
+        team1Score: 2,
+        team2Score: 3,
+      },
+    ]);
+
+    expect(created).toHaveLength(2);
+    for (const row of created) {
+      const hydrated = await games.getById(db, row.id);
+      expect(hydrated?.teams).toHaveLength(2);
+    }
+  });
+
   it("rejects a negative score", async () => {
     await expect(
       games.create(db, {
