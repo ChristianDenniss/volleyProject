@@ -160,6 +160,12 @@ describe("players", () => {
     expect(claimed?.name).toBe("fixtureplayer");
   });
 
+  it("rejects createMany when a player name already exists", async () => {
+    await expect(
+      players.createMany(db, [{ name: FIXTURES.playerName }, { name: "brand new player" }]),
+    ).rejects.toThrow(/already exists/);
+  });
+
   it("merges one player into another, moving stats and links", async () => {
     const before = await players.getById(db, 5);
     expect(before?.stats).toHaveLength(0);
