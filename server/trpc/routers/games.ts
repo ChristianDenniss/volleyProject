@@ -45,13 +45,13 @@ export const gamesRouter = router({
 
   createMany: adminProcedure.input(gameCreateMany).mutation(async ({ ctx, input }) => {
     const rows = await games.createMany(ctx.db, input.games);
-    revalidate("/games", "/portal/games", "/profile");
+    revalidate("/games", "/portal/games", "/profile", ...schedulePaths);
     return rows;
   }),
 
   createByNames: adminProcedure.input(gameCreateByNames).mutation(async ({ ctx, input }) => {
     const row = await games.createByNames(ctx.db, input);
-    revalidate("/games", "/portal/games", "/profile");
+    revalidate("/games", "/portal/games", "/profile", ...schedulePaths);
     return row;
   }),
 
