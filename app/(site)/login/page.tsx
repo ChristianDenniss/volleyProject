@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { RobloxSignIn } from "@components/site/roblox-sign-in";
+import { safeInternalPath } from "@/lib/safe-redirect";
 
 export const metadata: Metadata = {
   title: "Sign in",
@@ -12,7 +13,7 @@ export default async function LoginPage({
   searchParams: Promise<{ next?: string }>;
 }) {
   const { next } = await searchParams;
-  const callbackURL = next && next.startsWith("/") ? next : "/";
+  const callbackURL = safeInternalPath(next);
 
   return (
     <div className="flex justify-center px-5 py-20 font-display sm:px-8">
