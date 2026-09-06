@@ -33,7 +33,7 @@ interface WorkersResponse {
 }
 
 function apiToken(): string {
-  const fromEnv = process.env.CLOUDFLARE_API_TOKEN?.trim();
+  const fromEnv = process.env["CLOUDFLARE_API_TOKEN"]?.trim();
   if (fromEnv) return fromEnv;
   return execSync("pnpm exec wrangler auth token", {
     cwd: repoRoot,
@@ -105,14 +105,14 @@ async function deleteVersion(
 }
 
 async function main(): Promise<void> {
-  const keep = Number(process.env.KEEP_VERSIONS ?? process.argv.find((arg) => arg.startsWith("--keep="))?.slice(6) ?? 10);
+  const keep = Number(process.env["KEEP_VERSIONS"] ?? process.argv.find((arg) => arg.startsWith("--keep="))?.slice(6) ?? 10);
   if (!Number.isFinite(keep) || keep < 1) {
     throw new Error(`Invalid keep count: ${keep}`);
   }
 
   const dryRun = process.argv.includes("--dry-run");
-  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID ?? wranglerConfig.account_id;
-  const scriptName = process.env.WORKER_NAME ?? wranglerConfig.name;
+  const accountId = process.env["CLOUDFLARE_ACCOUNT_ID"] ?? wranglerConfig.account_id;
+  const scriptName = process.env["WORKER_NAME"] ?? wranglerConfig.name;
   const token = apiToken();
 
   const [versions, activeId, worker] = await Promise.all([
