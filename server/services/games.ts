@@ -1,6 +1,6 @@
 import { and, asc, desc, eq, inArray, isNotNull, or, sql } from "drizzle-orm";
 import type { Db } from "@db";
-import { insertMany, chunkIds, chunkValues } from "@db/insert";
+import { insertMany, insertManyReturning, chunkIds, chunkValues } from "@db/insert";
 import {
   gameStaff,
   games,
@@ -539,8 +539,99 @@ export async function create(db: Db, input: GameInput) {
 }
 
 export async function createMany(db: Db, input: GameInput[]) {
-  const created = [];
-  for (const game of input) created.push(await create(db, game));
+  if (input.length === 0) return [];
+
+  const seasonIds = [...new Set(input.map((game) => game.seasonId))];
+  for (const seasonId of seasonIds) {
+    await assertSeason(db, seasonId);
+  }
+
+  const prepared = input.map((game) => {
+    const status = game.status ?? (game.matchNumber ? "scheduled" : "completed");
+    const ids = teamIdsFromInput(game.teamIds, game.team1Id, game.team2Id);
+    assertTeamRequirement(status, countTeams(game.teamIds, game.team1Id, game.team2Id));
+    if ((game.team1Score ?? 0) < 0 || (game.team2Score ?? 0) < 0) {
+      throw new BadRequestError("Scores cannot be negative");
+    }
+    return { game, status, ids };
+  });
+
+  for (const seasonId of seasonIds) {
+    const teamIds = [
+      ...new Set(
+        prepared
+          .filter((entry) => entry.game.seasonId === seasonId)
+          .flatMap((entry) => entry.ids),
+      ),
+    ];
+    if (teamIds.length > 0) await assertTeamsInSeason(db, seasonId, teamIds);
+  }
+
+  const allTeamIds = [...new Set(prepared.flatMap((entry) => entry.ids))];
+  const teamMap = new Map<number, TeamRef>();
+  for (const chunk of chunkIds(allTeamIds)) {
+    const part = await db
+      .select({ id: teams.id, name: teams.name, logoUrl: teams.logoUrl })
+      .from(teams)
+      .where(inArray(teams.id, chunk));
+    for (const team of part) teamMap.set(team.id, team);
+  }
+
+  const inserts = prepared.map(({ game, status }) => {
+    const {
+      teamIds: _teamIds,
+      team1Id: _team1Id,
+      team2Id: _team2Id,
+      streamer: _streamer,
+      referee: _referee,
+      commentator: _commentator,
+      ...gameFields
+    } = game;
+    const ids = teamIdsFromInput(game.teamIds, game.team1Id, game.team2Id);
+    const teamRefs = ids.map((id) => teamMap.get(id)).filter((team): team is TeamRef => !!team);
+    return {
+      values: {
+        ...gameFields,
+        name: game.name ?? defaultName(teamRefs),
+        status,
+        team1Score: game.team1Score ?? null,
+        team2Score: game.team2Score ?? null,
+      },
+      links: game,
+    };
+  });
+
+  const created = await insertManyReturning(
+    db,
+    games,
+    inserts.map((entry) => entry.values),
+  );
+
+  const teamGameRows: { gameId: number; slot: number; teamId: number }[] = [];
+  for (const [index, row] of created.entries()) {
+    const game = inserts[index]?.links;
+    if (!game) continue;
+    if (game.teamIds?.length) {
+      for (const [slotIndex, teamId] of game.teamIds.entries()) {
+        teamGameRows.push({ gameId: row.id, slot: slotIndex + 1, teamId });
+      }
+    } else {
+      if (game.team1Id) teamGameRows.push({ gameId: row.id, slot: 1, teamId: game.team1Id });
+      if (game.team2Id) teamGameRows.push({ gameId: row.id, slot: 2, teamId: game.team2Id });
+    }
+  }
+  await insertMany(db, teamsGames, teamGameRows);
+
+  for (const [index, row] of created.entries()) {
+    const game = inserts[index]?.links;
+    if (!game) continue;
+    await syncStaff(db, row.id, {
+      streamer: game.streamer,
+      referee: game.referee,
+      commentator: game.commentator,
+    });
+  }
+
   return created;
 }
 
