@@ -21,6 +21,12 @@ async function trpcFetch(input: RequestInfo | URL, init?: RequestInit): Promise<
   );
 }
 
+function trpcFetchForLink(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  if (!init) return trpcFetch(input);
+  const { signal, ...rest } = init;
+  return trpcFetch(input, signal === undefined ? rest : { ...rest, signal });
+}
+
 export function TrpcProvider({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
   const [client] = useState(() =>
@@ -29,7 +35,7 @@ export function TrpcProvider({ children }: { children: ReactNode }) {
         httpBatchLink({
           url: "/api/trpc",
           transformer: superjson,
-          fetch: trpcFetch,
+          fetch: trpcFetchForLink as NonNullable<Parameters<typeof httpBatchLink>[0]["fetch"]>,
           headers() {
             if (typeof window !== "undefined" && window.location.pathname.startsWith("/portal")) {
               return { [PORTAL_SKIP_REGION_HEADER]: "1" };

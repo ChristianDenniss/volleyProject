@@ -22,18 +22,14 @@ import {
   type SheetRegion,
 } from "./sheet-import-preview";
 import { trpc } from "@/lib/trpc";
+import type { ParsedTeam } from "@server/services/sheet-import/types";
 
 type TeamMode = "teams" | "teams_and_players" | "players";
 
 type Preview = SheetImportPreviewData;
 
 type StagedSources = {
-  masterTeams: Array<{
-    name: string;
-    region: SheetRegion | null;
-    playerNames: string[];
-    leadership?: Partial<Record<"C" | "VC" | "CC", string>>;
-  }>;
+  masterTeams: ParsedTeam[];
   masterGames: Array<{
     key: string;
     region: SheetRegion;

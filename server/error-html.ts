@@ -10,7 +10,7 @@ function escapeHtml(value: string): string {
 
 export function renderErrorHtml(
   presentation: ErrorPresentation,
-  detail: string | null = null,
+  _detail: string | null = null,
 ): string {
   const paragraphs = [presentation.body, presentation.hint].filter(Boolean).join(" ");
   const link = presentation.link

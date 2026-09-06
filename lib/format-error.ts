@@ -6,9 +6,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function trpcCause(error: unknown): string | null {
   if (!isRecord(error)) return null;
-  const data = isRecord(error.data) ? error.data : null;
+  const data = isRecord(error["data"]) ? error["data"] : null;
   if (!data) return null;
-  return typeof data.cause === "string" && data.cause.length > 0 ? data.cause : null;
+  const cause = data["cause"];
+  return typeof cause === "string" && cause.length > 0 ? cause : null;
 }
 
 export function formatUnknownError(error: unknown): string {

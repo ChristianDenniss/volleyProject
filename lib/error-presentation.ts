@@ -64,11 +64,14 @@ function match(blob: string, pattern: RegExp): boolean {
 
 function trpcData(error: unknown): { code?: string; cause?: string } | null {
   if (!isRecord(error)) return null;
-  const data = isRecord(error.data) ? error.data : null;
+  const data = isRecord(error["data"]) ? error["data"] : null;
   if (!data) return null;
+  const code = typeof data["code"] === "string" ? data["code"] : undefined;
+  const cause = typeof data["cause"] === "string" ? data["cause"] : undefined;
+  if (code === undefined && cause === undefined) return null;
   return {
-    code: typeof data.code === "string" ? data.code : undefined,
-    cause: typeof data.cause === "string" ? data.cause : undefined,
+    ...(code !== undefined ? { code } : {}),
+    ...(cause !== undefined ? { cause } : {}),
   };
 }
 
