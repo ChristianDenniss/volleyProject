@@ -2,8 +2,8 @@
 
 // src/components/VectorGraphPage.tsx
 
-import React, { useState, useMemo, useRef, useEffect } from "react";
-import { Canvas, useThree } from "@react-three/fiber";
+import React, { useState, useMemo, useRef, useEffect, type ComponentRef } from "react";
+import { Canvas, useThree, type ThreeEvent } from "@react-three/fiber";
 import { OrbitControls, Html } from "@react-three/drei";
 import * as THREE from "three";
 import { buildSeasonVectors, computePCA3D, VECTOR_FEATURE_ORDER } from "@/lib/analytics/stats-vectorization";
@@ -317,18 +317,11 @@ function PlayerPoint({
     }
   };
 
-  const handleClick = (e: any) => {
-    // Stop propagation to prevent OrbitControls from handling the event
+  const handleClick = (e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation();
-    // Also stop on the original event if it exists
-    if (e.nativeEvent) {
-      e.nativeEvent.stopPropagation();
-    }
-    if (e.stopImmediatePropagation) {
-      e.stopImmediatePropagation();
-    }
-    // Prevent default to avoid any default behaviors
-    e.preventDefault?.();
+    e.nativeEvent.stopPropagation();
+    e.nativeEvent.stopImmediatePropagation();
+    e.nativeEvent.preventDefault();
     onClick();
   };
 
@@ -368,15 +361,7 @@ function PlayerPoint({
 }
 
 // 3D Graph component (inline)
-function VectorGraph3D({
-  vectorRows,
-  onPlayerHover,
-  onPlayerClick
-}: {
-  vectorRows: PlayerSeasonVectorRow[];
-  onPlayerHover?: (player: PlayerSeasonVectorRow | null) => void;
-  onPlayerClick?: (player: PlayerSeasonVectorRow | null) => void;
-}) {
+function VectorGraph3D({ vectorRows }: { vectorRows: PlayerSeasonVectorRow[] }) {
   // ALL HOOKS MUST BE CALLED FIRST - before any conditional returns
   const [hoveredPlayer, setHoveredPlayer] = useState<PlayerSeasonVectorRow | null>(null);
   const [clickedPlayer, setClickedPlayer] = useState<PlayerSeasonVectorRow | null>(null);
@@ -388,7 +373,7 @@ function VectorGraph3D({
   const [playerInfoCollapsed, setPlayerInfoCollapsed] = useState<boolean>(false);
   const [controlsCollapsed, setControlsCollapsed] = useState<boolean>(true);
   const [axesCollapsed, setAxesCollapsed] = useState<boolean>(true);
-  const controlsRef = useRef<any>(null);
+  const controlsRef = useRef<ComponentRef<typeof OrbitControls>>(null);
   const cameraRef = useRef<THREE.Camera | null>(null);
   // Track hovered points with their distances (using object instead of Map for React state)
   const [hoveredPoints, setHoveredPoints] = useState<Record<string, number>>({});
@@ -587,16 +572,10 @@ function VectorGraph3D({
     if (closestHoveredPlayerId) {
       const player = vectorRows.find(row => row.playerId === closestHoveredPlayerId);
       setHoveredPlayer(player || null);
-      if (onPlayerHover) {
-        onPlayerHover(player || null);
-      }
     } else {
       setHoveredPlayer(null);
-      if (onPlayerHover) {
-        onPlayerHover(null);
-      }
     }
-  }, [closestHoveredPlayerId, vectorRows, onPlayerHover, clickedPlayer]);
+  }, [closestHoveredPlayerId, vectorRows, clickedPlayer]);
 
   // Calculate Euclidean distance between two z-vectors
   const calculateDistance = (vec1: number[], vec2: number[]): number => {
@@ -651,17 +630,11 @@ function VectorGraph3D({
     if (clickedPlayer?.playerId === player.playerId) {
       setClickedPlayer(null);
       setSimilarPlayers({ closest: null, farthest: null });
-      if (onPlayerClick) {
-        onPlayerClick(null);
-      }
     } else {
       setClickedPlayer(player);
       // Calculate similar players when a player is selected
       const similar = findSimilarPlayers(player);
       setSimilarPlayers(similar);
-      if (onPlayerClick) {
-        onPlayerClick(player);
-      }
     }
   };
 
@@ -672,12 +645,6 @@ function VectorGraph3D({
     setHoveredPlayer(null); // Also clear hovered player when deselecting
     setHoveredPoints({}); // Clear all hovered points
     setSimilarPlayers({ closest: null, farthest: null }); // Clear similarity data
-    if (onPlayerClick) {
-      onPlayerClick(null);
-    }
-    if (onPlayerHover) {
-      onPlayerHover(null);
-    }
   };
 
   // Search functionality
@@ -1285,11 +1252,7 @@ export function VectorGraphPage({
       })()}
 
       <div className={vectorGraphContent}>
-        <VectorGraph3D
-          vectorRows={vectorRows}
-          onPlayerHover={() => {}} // Hover state managed internally by VectorGraph3D
-          onPlayerClick={() => {}} // Click state managed internally by VectorGraph3D
-        />
+        <VectorGraph3D vectorRows={vectorRows} />
       </div>
 
       <div className={vectorGraphFooter}>

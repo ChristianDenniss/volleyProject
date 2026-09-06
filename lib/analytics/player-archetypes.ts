@@ -1,4 +1,3 @@
-// @ts-nocheck
 import type { VectorFeatureKey } from "./stats-vectorization";
 
 type FeatureRow = Record<VectorFeatureKey, number>;

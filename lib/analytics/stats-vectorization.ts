@@ -1,4 +1,3 @@
-// @ts-nocheck
 // src/analytics/statsVectorization.ts
 
 export interface VectorGraphStatLine {
@@ -207,11 +206,12 @@ export interface ProjectionResult {
  * @returns Projected 3D coordinates and PCA model
  */
 export function computePCA3D(zVectors: number[][]): { projections: { x: number; y: number; z: number }[]; model: PCAModel } {
-  if (zVectors.length === 0) {
+  const firstVector = zVectors[0];
+  if (!firstVector) {
     return { projections: [], model: { components: [], explainedVariance: [], mean: [] } };
   }
 
-  const numFeatures = zVectors[0].length;
+  const numFeatures = firstVector.length;
   const numSamples = zVectors.length;
 
   // Step 1: Center the data (subtract mean from each feature)
@@ -219,13 +219,13 @@ export function computePCA3D(zVectors: number[][]): { projections: { x: number; 
   for (let i = 0; i < numFeatures; i++) {
     let sum = 0;
     for (let j = 0; j < numSamples; j++) {
-      sum += zVectors[j][i];
+      sum += zVectors[j]?.[i] ?? 0;
     }
     mean[i] = sum / numSamples;
   }
 
-  const centered: number[][] = zVectors.map(vec => 
-    vec.map((val, idx) => val - mean[idx])
+  const centered: number[][] = zVectors.map(vec =>
+    vec.map((val, idx) => val - (mean[idx] ?? 0))
   );
 
   // Step 2: Compute covariance matrix
@@ -235,9 +235,9 @@ export function computePCA3D(zVectors: number[][]): { projections: { x: number; 
     for (let j = 0; j < numFeatures; j++) {
       let sum = 0;
       for (let k = 0; k < numSamples; k++) {
-        sum += centered[k][i] * centered[k][j];
+        sum += (centered[k]?.[i] ?? 0) * (centered[k]?.[j] ?? 0);
       }
-      covariance[i][j] = sum / (numSamples - 1);
+      (covariance[i] as number[])[j] = sum / (numSamples - 1);
     }
   }
 
@@ -251,21 +251,24 @@ export function computePCA3D(zVectors: number[][]): { projections: { x: number; 
     .sort((a, b) => b.val - a.val)
     .slice(0, 3);
 
-  const components: number[][] = sorted.map(({ idx }) => {
+  const components: number[][] = sorted.flatMap(({ idx }) => {
     const eigenvector = eigenvectors[idx];
-    // Normalize the eigenvector
+    if (!eigenvector) return [];
     const norm = Math.sqrt(eigenvector.reduce((sum, v) => sum + v * v, 0));
-    return eigenvector.map(v => v / norm);
+    return [eigenvector.map(v => v / norm)];
   });
 
   const explainedVariance = sorted.map(({ val }) => val);
 
   // Step 5: Project each vector onto the first 3 principal components
+  const pc0 = components[0];
+  const pc1 = components[1];
+  const pc2 = components[2];
   const projections = zVectors.map(vec => {
-    const centeredVec = vec.map((val, idx) => val - mean[idx]);
-    const x = dotProduct(centeredVec, components[0]);
-    const y = components.length > 1 ? dotProduct(centeredVec, components[1]) : 0;
-    const z = components.length > 2 ? dotProduct(centeredVec, components[2]) : 0;
+    const centeredVec = vec.map((val, idx) => val - (mean[idx] ?? 0));
+    const x = pc0 ? dotProduct(centeredVec, pc0) : 0;
+    const y = pc1 ? dotProduct(centeredVec, pc1) : 0;
+    const z = pc2 ? dotProduct(centeredVec, pc2) : 0;
     return { x, y, z };
   });
 
@@ -318,8 +321,10 @@ function computeEigenDecomposition(matrix: number[][]): { eigenvalues: number[];
     // Deflate matrix for next iteration (Gram-Schmidt)
     if (i < 2) {
       for (let j = 0; j < n; j++) {
+        const row = matrix[j];
+        if (!row) continue;
         for (let k = 0; k < n; k++) {
-          matrix[j][k] -= eigenvalue * vector[j] * vector[k];
+          row[k] = (row[k] ?? 0) - eigenvalue * (vector[j] ?? 0) * (vector[k] ?? 0);
         }
       }
     }
@@ -485,7 +490,7 @@ function computeFeaturePopulationStats(
 
   // This computes mean and std from sums.
   const n = featureRows.length;
-  const out: Record<VectorFeatureKey, { mean: number; std: number }> = {} as any;
+  const out = {} as Record<VectorFeatureKey, { mean: number; std: number }>;
 
   for (const key of VECTOR_FEATURE_ORDER)
   {

@@ -1,6 +1,6 @@
 "use client";
 
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import Link from "next/link";
 import { VolleyballIcon } from "lucide-react";
 import {
@@ -14,9 +14,11 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { NavMain } from "@components/portal/nav-main";
-import { NavUser, type NavUserProps } from "@components/portal/nav-user";
 
-export function PortalSidebar({ user, ...props }: NavUserProps & ComponentProps<typeof Sidebar>) {
+export function PortalSidebar({
+  footer,
+  ...props
+}: { footer: ReactNode } & ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -39,9 +41,7 @@ export function PortalSidebar({ user, ...props }: NavUserProps & ComponentProps<
       <SidebarContent>
         <NavMain />
       </SidebarContent>
-      <SidebarFooter>
-        <NavUser user={user} />
-      </SidebarFooter>
+      <SidebarFooter>{footer}</SidebarFooter>
       <SidebarRail />
     </Sidebar>
   );
