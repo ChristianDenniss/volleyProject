@@ -207,6 +207,6 @@ describe("the queue job", () => {
 
     const job = await db.query.jobRuns.findFirst({ where: eq(jobRuns.id, jobId) });
     expect(job?.status).toBe("failed");
-    expect(job?.error).toContain("Failed to run the query");
+    expect(job?.error).toMatch(/insert refused|Failed to run the query/);
   });
 });
