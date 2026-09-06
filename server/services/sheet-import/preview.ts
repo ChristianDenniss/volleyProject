@@ -238,7 +238,15 @@ export async function assembleSheetImportPreview(
     : [];
 
   const activeGameKeys = new Set(games.filter((game) => game.included).map((game) => game.key));
-  const stats = matched.stats.filter((stat) => activeGameKeys.has(stat.gameKey));
+  const stats: typeof matched.stats = [];
+  const seenStat = new Set<string>();
+  for (const stat of matched.stats) {
+    if (!activeGameKeys.has(stat.gameKey)) continue;
+    const dedupeKey = `${stat.gameKey}::${stat.playerName.toLowerCase()}`;
+    if (seenStat.has(dedupeKey)) continue;
+    seenStat.add(dedupeKey);
+    stats.push(stat);
+  }
 
   if (includeTeams && includeGames) {
     const known = new Set(teams.map((team) => normalizeName(team.name)));
