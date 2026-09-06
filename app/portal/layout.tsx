@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { requireAdmin } from "@server/session";
 import { PortalBreadcrumb } from "@components/portal/portal-breadcrumb";
 import { PortalClientProviders } from "@components/portal/portal-client-providers";
+import { NavUser } from "@components/portal/nav-user";
 import { PortalSidebar } from "@components/portal/portal-sidebar";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -18,7 +19,7 @@ export default async function PortalLayout({ children }: { children: ReactNode }
     <PortalClientProviders>
       <TooltipProvider>
         <SidebarProvider defaultOpen={sidebarState !== "false"}>
-          <PortalSidebar user={user} />
+          <PortalSidebar footer={<NavUser user={user} />} />
           <SidebarInset className="bg-rvl-ground text-rvl-ink">
             <header className="flex h-16 shrink-0 items-center gap-2 border-b border-rvl-line bg-rvl-ground transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
               <div className="flex items-center gap-2 px-4">

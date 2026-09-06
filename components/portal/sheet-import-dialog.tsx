@@ -138,7 +138,18 @@ function ImportProgress({
   );
 }
 
+function useSheetUrls() {
+  const [masterUrl, setMasterUrl] = useState("");
+  const [naUrl, setNaUrl] = useState("");
+  const [euUrl, setEuUrl] = useState("");
+  const [asUrl, setAsUrl] = useState("");
+  return { masterUrl, setMasterUrl, naUrl, setNaUrl, euUrl, setEuUrl, asUrl, setAsUrl };
+}
+
+type SheetUrlState = ReturnType<typeof useSheetUrls>;
+
 function SheetUrlFields({
+  masterRequired,
   masterUrl,
   setMasterUrl,
   naUrl,
@@ -147,18 +158,7 @@ function SheetUrlFields({
   setEuUrl,
   asUrl,
   setAsUrl,
-  masterRequired,
-}: {
-  masterUrl: string;
-  setMasterUrl: (value: string) => void;
-  naUrl: string;
-  setNaUrl: (value: string) => void;
-  euUrl: string;
-  setEuUrl: (value: string) => void;
-  asUrl: string;
-  setAsUrl: (value: string) => void;
-  masterRequired: boolean;
-}) {
+}: SheetUrlState & { masterRequired: boolean }) {
   return (
     <div className="space-y-3">
       <div className="space-y-1.5">
@@ -402,10 +402,8 @@ export function SeasonSheetImport() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [theme, setTheme] = useState("");
-  const [masterUrl, setMasterUrl] = useState("");
-  const [naUrl, setNaUrl] = useState("");
-  const [euUrl, setEuUrl] = useState("");
-  const [asUrl, setAsUrl] = useState("");
+  const sheetUrls = useSheetUrls();
+  const { masterUrl, naUrl, euUrl, asUrl } = sheetUrls;
   const [preview, setPreview] = useState<Preview | null>(null);
   const [importSessionId, setImportSessionId] = useState<string | null>(null);
   const [excludedTeams, setExcludedTeams] = useState<Set<string>>(new Set());
@@ -551,17 +549,7 @@ export function SeasonSheetImport() {
                 />
               </div>
             </div>
-            <SheetUrlFields
-              masterUrl={masterUrl}
-              setMasterUrl={setMasterUrl}
-              naUrl={naUrl}
-              setNaUrl={setNaUrl}
-              euUrl={euUrl}
-              setEuUrl={setEuUrl}
-              asUrl={asUrl}
-              setAsUrl={setAsUrl}
-              masterRequired
-            />
+            <SheetUrlFields {...sheetUrls} masterRequired />
             <ImportProgress
               progress={progress}
               onViewError={
@@ -644,10 +632,8 @@ export function TeamsSheetImport({
   const [step, setStep] = useState<"form" | "preview">("form");
   const [mode, setMode] = useState<TeamMode>("teams_and_players");
   const [seasonId, setSeasonId] = useState(seasons[0] ? String(seasons[0].id) : "");
-  const [masterUrl, setMasterUrl] = useState("");
-  const [naUrl, setNaUrl] = useState("");
-  const [euUrl, setEuUrl] = useState("");
-  const [asUrl, setAsUrl] = useState("");
+  const sheetUrls = useSheetUrls();
+  const { masterUrl, naUrl, euUrl, asUrl } = sheetUrls;
   const [preview, setPreview] = useState<Preview | null>(null);
   const [importSessionId, setImportSessionId] = useState<string | null>(null);
   const [excludedTeams, setExcludedTeams] = useState<Set<string>>(new Set());
@@ -754,17 +740,7 @@ export function TeamsSheetImport({
                 />
               </div>
             </div>
-            <SheetUrlFields
-              masterUrl={masterUrl}
-              setMasterUrl={setMasterUrl}
-              naUrl={naUrl}
-              setNaUrl={setNaUrl}
-              euUrl={euUrl}
-              setEuUrl={setEuUrl}
-              asUrl={asUrl}
-              setAsUrl={setAsUrl}
-              masterRequired={false}
-            />
+            <SheetUrlFields {...sheetUrls} masterRequired={false} />
             <ImportProgress
               progress={progress}
               onViewError={
