@@ -1,8 +1,8 @@
+# Copy to .dev.vars for local development. Production secrets: wrangler secret put <NAME>
 BETTER_AUTH_SECRET=
 BETTER_AUTH_URL=http://localhost:3000
 ROBLOX_CLIENT_ID=
 ROBLOX_CLIENT_SECRET=
+# Comma-separated Roblox account IDs auto-promoted to superadmin on first login
 ROOT_ROBLOX_IDS=
 CHALLONGE_API_KEY=
-
-ROOT_ROBLOX_IDS=327211334
