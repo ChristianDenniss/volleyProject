@@ -1,22 +1,14 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { getAuth } from "./auth";
 import { isAdmin } from "./services/users";
+import type { SessionUser } from "./auth-user";
+import { getSessionUserFromHeaders } from "./session-resolve";
 
-export interface SessionUser {
-  id: string;
-  name: string;
-  email: string;
-  image: string | null;
-  role: string;
-}
+export type { SessionUser } from "./auth-user";
+export { getSessionUserFromHeaders } from "./session-resolve";
 
 export async function getSessionUser(): Promise<SessionUser | null> {
-  const session = await getAuth().api.getSession({ headers: await headers() });
-  if (!session?.user) return null;
-  const { id, name, email, image, role } = session.user as unknown as Partial<SessionUser> &
-    Pick<SessionUser, "id" | "name" | "email">;
-  return { id, name, email, image: image ?? null, role: role ?? "user" };
+  return getSessionUserFromHeaders(await headers());
 }
 
 export async function requireSession(returnTo: string): Promise<SessionUser> {

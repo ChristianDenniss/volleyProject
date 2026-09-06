@@ -222,6 +222,17 @@ export async function createMany(db: Db, input: PlayerInput[]) {
     name: player.name.toLowerCase(),
     position: player.position ?? "N/A",
   }));
+
+  for (const chunk of chunkValues(rows.map((row) => row.name))) {
+    const existing = await db
+      .select({ name: players.name })
+      .from(players)
+      .where(inArray(players.name, chunk));
+    if (existing.length > 0) {
+      throw new ConflictError(`Player "${existing[0]!.name}" already exists`);
+    }
+  }
+
   await insertMany(db, players, rows);
   const matched = [];
   for (const chunk of chunkValues(rows.map((row) => row.name))) {
