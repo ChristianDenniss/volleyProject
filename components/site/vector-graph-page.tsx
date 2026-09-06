@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client";
 
 // src/components/VectorGraphPage.tsx
@@ -604,7 +603,7 @@ function VectorGraph3D({
     if (vec1.length !== vec2.length) return Infinity;
     let sumSquaredDiffs = 0;
     for (let i = 0; i < vec1.length; i++) {
-      const diff = vec1[i] - vec2[i];
+      const diff = (vec1[i] ?? 0) - (vec2[i] ?? 0);
       sumSquaredDiffs += diff * diff;
     }
     return Math.sqrt(sumSquaredDiffs);
@@ -899,7 +898,7 @@ function VectorGraph3D({
             onClick={() => handlePlayerClick(row)}
             isSelected={clickedPlayer?.playerId === row.playerId}
             isClosestHovered={closestHoveredPlayerId === row.playerId}
-            archetype={archetypeAssignments.get(row.playerId)}
+            archetype={archetypeAssignments.get(row.playerId) ?? null}
           />
         ))}
         <OrbitControls
@@ -1022,9 +1021,9 @@ function VectorGraph3D({
                 <p>Z: Third Principal Component (PC3)</p>
                 {model && model.explainedVariance && model.explainedVariance.length > 0 && (
                   <p className={note}>
-                    Variance explained: PC1: {((model.explainedVariance[0] / model.explainedVariance.reduce((a: number, b: number) => a + b, 0)) * 100).toFixed(1)}%, 
-                    PC2: {((model.explainedVariance[1] / model.explainedVariance.reduce((a: number, b: number) => a + b, 0)) * 100).toFixed(1)}%, 
-                    PC3: {((model.explainedVariance[2] / model.explainedVariance.reduce((a: number, b: number) => a + b, 0)) * 100).toFixed(1)}%
+                    Variance explained: PC1: {(((model.explainedVariance[0] ?? 0) / model.explainedVariance.reduce((a: number, b: number) => a + b, 0)) * 100).toFixed(1)}%, 
+                    PC2: {(((model.explainedVariance[1] ?? 0) / model.explainedVariance.reduce((a: number, b: number) => a + b, 0)) * 100).toFixed(1)}%, 
+                    PC3: {(((model.explainedVariance[2] ?? 0) / model.explainedVariance.reduce((a: number, b: number) => a + b, 0)) * 100).toFixed(1)}%
                   </p>
                 )}
                 <p className={note}>Uses all 12 statistical dimensions via PCA.</p>
@@ -1221,9 +1220,9 @@ export function VectorGraphPage({
           });
         };
 
-        const pc1Features = getTopFeatures(model.components[0]);
-        const pc2Features = getTopFeatures(model.components[1]);
-        const pc3Features = getTopFeatures(model.components[2]);
+        const pc1Features = model.components[0] ? getTopFeatures(model.components[0]) : [];
+        const pc2Features = model.components[1] ? getTopFeatures(model.components[1]) : [];
+        const pc3Features = model.components[2] ? getTopFeatures(model.components[2]) : [];
 
         return (
           <div className={vectorGraphControlsPca}>
