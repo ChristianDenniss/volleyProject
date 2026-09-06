@@ -67,4 +67,22 @@ describe("home numbers cache", () => {
 
     expect(calls).toBe(unique * 2);
   });
+
+  it("caches na and eu payloads separately", async () => {
+    let calls = 0;
+    const avatarFor = async (name: string) => {
+      calls += 1;
+      return `https://avatars.test/${name}`;
+    };
+
+    await loadHomeNumbers(db, FIXTURES.seasonId, { avatarFor, region: "na" });
+    const afterNa = calls;
+    await loadHomeNumbers(db, FIXTURES.seasonId, { avatarFor, region: "eu" });
+    const afterEu = calls;
+    await loadHomeNumbers(db, FIXTURES.seasonId, { avatarFor, region: "na" });
+
+    expect(afterNa).toBeGreaterThan(0);
+    expect(afterEu).toBeGreaterThan(afterNa);
+    expect(calls).toBe(afterEu);
+  });
 });
