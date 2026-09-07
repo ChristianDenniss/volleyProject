@@ -41,6 +41,22 @@ describe("import game keys", () => {
       }),
     ).toBe("na|stats|teiko|tenjiku|3-1");
   });
+
+  it("reconstructs stored playoff keys from persisted round, not parse column index", () => {
+    const previewKey = masterGameKey("na", "playoffs", "CPO", "Magia Vanders", 3, 1, "Finals");
+    expect(
+      importKeyFromStoredGame({
+        region: "na",
+        phase: "playoffs",
+        round: "Finals",
+        date: "2026-07-20",
+        team1Name: "Magia Vanders",
+        team2Name: "CPO",
+        team1Score: 1,
+        team2Score: 3,
+      }),
+    ).toBe(previewKey);
+  });
 });
 
 describe("parseSheetNamesFromHtml", () => {
@@ -197,6 +213,19 @@ describe("parseMasterScheduleTab", () => {
     expect(tt9).toBeDefined();
     const tt9Sets = tt9!.team1Name === "TT9" ? tt9!.team1Score : tt9!.team2Score;
     expect(tt9Sets).toBe(2);
+    expect(tt9?.key).toBe(
+      importKeyFromStoredGame({
+        region: "na",
+        phase: "playoffs",
+        round: tt9!.round,
+        date: tt9!.date,
+        team1Name: tt9!.team1Name,
+        team2Name: tt9!.team2Name,
+        team1Score: tt9!.team1Score,
+        team2Score: tt9!.team2Score,
+      }),
+    );
+    expect(tt9?.key.includes("@")).toBe(false);
   });
 });
 

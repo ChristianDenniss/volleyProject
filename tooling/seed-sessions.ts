@@ -1,4 +1,7 @@
 import { execFileSync } from "node:child_process";
+import { join } from "node:path";
+
+const wranglerBin = join(process.cwd(), "node_modules/wrangler/bin/wrangler.js");
 
 const HOUR = 60 * 60 * 1000;
 
@@ -19,7 +22,7 @@ const statements = [
 ].join(" ");
 
 execFileSync(
-  "npx",
-  ["wrangler", "d1", "execute", "volley-project", "--local", "--command", statements],
+  process.execPath,
+  ["--no-warnings", wranglerBin, "d1", "execute", "volley-project", "--local", "--command", statements],
   { stdio: "inherit" },
 );

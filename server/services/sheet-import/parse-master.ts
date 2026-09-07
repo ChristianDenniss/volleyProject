@@ -361,7 +361,7 @@ export function parseMasterScheduleTab(
       const team1Name = displayName(top);
       const team2Name = displayName(bottom);
       games.push({
-        key: masterGameKey(region, phase, team1Name, team2Name, team1Wins, team2Wins, `${currentRound}@${index}`),
+        key: masterGameKey(region, phase, team1Name, team2Name, team1Wins, team2Wins, currentRound),
         region,
         phase,
         round: currentRound,
@@ -389,7 +389,18 @@ export function parseMasterScheduleTab(
     const gameTotal = (game.team1Score ?? 0) + (game.team2Score ?? 0);
     if (gameTotal > existingTotal) byPairRound.set(pair, game);
   }
-  const deduped = [...byPairRound.values()];
+  const deduped = [...byPairRound.values()].map((game) => ({
+    ...game,
+    key: masterGameKey(
+      game.region,
+      game.phase,
+      game.team1Name,
+      game.team2Name,
+      game.team1Score,
+      game.team2Score,
+      game.round,
+    ),
+  }));
 
   if (deduped.length === 0) {
     warnings.push(`No playoff games parsed for ${region.toUpperCase()}`);

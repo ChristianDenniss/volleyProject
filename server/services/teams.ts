@@ -215,6 +215,16 @@ export async function updateProfile(db: Db, id: number, input: TeamProfileInput)
 }
 
 export async function remove(db: Db, id: number) {
+  const linked = await db
+    .select({ gameId: teamsGames.gameId })
+    .from(teamsGames)
+    .where(eq(teamsGames.teamId, id));
+  const gameIds = [...new Set(linked.map((row) => row.gameId))];
+  if (gameIds.length > 0) {
+    for (const chunk of chunkValues(gameIds)) {
+      await db.delete(games).where(inArray(games.id, chunk));
+    }
+  }
   const [row] = await db.delete(teams).where(eq(teams.id, id)).returning({ id: teams.id });
   found(row, `Team ${id}`);
   return { id };
