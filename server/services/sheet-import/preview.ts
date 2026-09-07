@@ -3,8 +3,8 @@ import type { Db } from "@db";
 import { chunkValues } from "@db/insert";
 import { players, seasons } from "@db/schema";
 import { BadRequestError } from "../errors";
-import { matchStatsToGames, mergeTeamRosters, rosterSizeWarnings } from "./match";
-import { isPlaceholderTeamName, normalizeName } from "./names";
+import { matchStatsToGames, mergeTeamRosters, multiTeamPlayerWarnings, rosterSizeWarnings } from "./match";
+import { isPlaceholderTeamName, normalizeName, teamMatchKey } from "./names";
 import { loadMasterSource, loadRegionalSource } from "./sources";
 import type { FetchImpl } from "./fetch";
 import type {
@@ -170,6 +170,7 @@ export async function assembleSheetImportPreview(
       region: team.region as SheetRegion | null,
       playerNames: includePlayers ? team.playerNames : [],
       included: !excludeTeams.has(key.toLowerCase()),
+      fromMaster: team.fromMaster === true,
     };
     if (includePlayers && team.leadership) row.leadership = team.leadership;
     return row;
@@ -249,12 +250,12 @@ export async function assembleSheetImportPreview(
   }
 
   if (includeTeams && includeGames) {
-    const known = new Set(teams.map((team) => normalizeName(team.name)));
+    const known = new Set(teams.map((team) => teamMatchKey(team.name)));
     const stubTeamsFromGames: string[] = [];
     for (const game of games) {
       for (const name of [game.team1Name, game.team2Name]) {
         if (isPlaceholderTeamName(name)) continue;
-        if (!known.has(normalizeName(name))) {
+        if (!known.has(teamMatchKey(name))) {
           stubTeamsFromGames.push(name);
           const key = teamKey(name, game.region);
           teams.push({
@@ -264,7 +265,7 @@ export async function assembleSheetImportPreview(
             playerNames: [],
             included: !excludeTeams.has(key.toLowerCase()),
           });
-          known.add(normalizeName(name));
+          known.add(teamMatchKey(name));
         }
       }
     }
@@ -281,29 +282,13 @@ export async function assembleSheetImportPreview(
   warnings.push(...rosterSizeWarnings(teams));
 
   if (includePlayers) {
-    const teamsByPlayer = new Map<string, { label: string; teams: string[] }>();
-    for (const team of activeTeams) {
-      if (isPlaceholderTeamName(team.name)) continue;
-      for (const playerName of team.playerNames) {
-        const key = normalizeName(playerName);
-        const entry = teamsByPlayer.get(key) ?? { label: playerName, teams: [] };
-        if (!entry.teams.includes(team.name)) entry.teams.push(team.name);
-        teamsByPlayer.set(key, entry);
-      }
-    }
-    for (const entry of teamsByPlayer.values()) {
-      if (entry.teams.length > 1) {
-        warnings.push(
-          `Player "${entry.label}" appears on multiple teams: ${entry.teams.join(", ")}`,
-        );
-      }
-    }
+    warnings.push(...multiTeamPlayerWarnings(activeTeams));
   }
 
   if (includePlayers) {
     for (const team of teams.filter((row) => row.included)) {
       const roles = team.leadership ? Object.keys(team.leadership).length : 0;
-      if (team.playerNames.length > 0 && roles === 0) {
+      if (team.fromMaster && team.playerNames.length > 0 && roles === 0) {
         warnings.push(
           `No captaincy (C/VC/CC) found for "${team.name}" — master TEAMS header cell should list captains beside the title`,
         );

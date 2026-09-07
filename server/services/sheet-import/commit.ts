@@ -17,7 +17,7 @@ import { assembleSheetImportPreview, buildSheetImportPreview, assertPreviewCommi
 import { deleteSheetImportSession, requireSheetImportSession } from "./session";
 import type { FetchImpl } from "./fetch";
 import { importKeyFromStoredGame } from "./keys";
-import { normalizeName } from "./names";
+import { teamMatchKey } from "./names";
 import type {
   PreviewGame,
   PreviewTeam,
@@ -165,7 +165,7 @@ async function resolveTeamIds(
   names: string[],
   existing: Map<string, number>,
 ): Promise<number> {
-  const missing = names.filter((name) => !existing.has(normalizeName(name)));
+  const missing = names.filter((name) => !existing.has(teamMatchKey(name)));
   if (missing.length === 0) return 0;
 
   await insertManyIgnore(
@@ -179,7 +179,7 @@ async function resolveTeamIds(
       .select()
       .from(teams)
       .where(and(eq(teams.seasonId, seasonId), inArray(teams.name, chunk)));
-    for (const row of rows) existing.set(normalizeName(row.name), row.id);
+    for (const row of rows) existing.set(teamMatchKey(row.name), row.id);
   }
 
   return missing.length;
@@ -242,8 +242,8 @@ async function importGamesBatch(
   const teamGameLinks: GameTeamLink[] = [];
 
   for (const game of activeGames) {
-    const team1Id = teamIdByName.get(normalizeName(game.team1Name));
-    const team2Id = teamIdByName.get(normalizeName(game.team2Name));
+    const team1Id = teamIdByName.get(teamMatchKey(game.team1Name));
+    const team2Id = teamIdByName.get(teamMatchKey(game.team2Name));
     if (!team1Id || !team2Id) {
       warnings.push(`Skipped game ${game.team1Name} vs ${game.team2Name} (missing team ids)`);
       continue;
@@ -296,7 +296,7 @@ async function attachRostersAndLeadership(
   const teamIdsToClear = new Set<number>();
 
   for (const team of activeTeams) {
-    const teamId = teamIdByName.get(normalizeName(team.name));
+    const teamId = teamIdByName.get(teamMatchKey(team.name));
     if (!teamId) {
       if (input.mode === "players") {
         warnings.push(`Skipped players for missing team "${team.name}"`);
@@ -334,7 +334,7 @@ async function attachRostersAndLeadership(
         }
         roleAssignments.push({ teamId, playerId, role });
       }
-    } else if (team.playerNames.length > 0) {
+    } else if (team.fromMaster && team.playerNames.length > 0) {
       warnings.push(
         `No captaincy (C/VC/CC) found for "${team.name}" — check the master TEAMS header row`,
       );
@@ -454,7 +454,7 @@ export async function commitSheetImport(
   const teamIdByName = new Map<string, number>();
   const existingTeams = await db.select().from(teams).where(eq(teams.seasonId, seasonId));
   for (const team of existingTeams) {
-    teamIdByName.set(normalizeName(team.name), team.id);
+    teamIdByName.set(teamMatchKey(team.name), team.id);
   }
 
   const activeTeams = preview.teams.filter((team) => team.included);
@@ -518,7 +518,7 @@ export async function commitSheetImport(
       if (!playerId) continue;
 
       if (!includePlayers) {
-        const teamId = teamIdByName.get(normalizeName(row.teamName));
+        const teamId = teamIdByName.get(teamMatchKey(row.teamName));
         if (teamId) statRosterLinks.push({ teamId, playerId });
       }
 

@@ -19,7 +19,7 @@ export function displayName(value: string): string {
 }
 
 const SEASON_TEAMS_PREFIX =
-  /^(?:season|chapter)\s+[ivxlcdm\d]+\s*[-–]\s*(?:n\.?\s*a\.?|e\.?\s*u\.?|a\.?\s*s\.?)?\s*teams?\s+/i;
+  /^(?:(?:season|chapter)\s+[ivxlcdm\d]+\s*)+[-–|:\s]*(?:n\.?\s*a\.?|e\.?\s*u\.?|a\.?\s*s\.?)?\s*teams?\s+/i;
 
 /** Headers like `Teiko | 143 C VC` or `SEASON I - EU TEAMS Kaka | 11 C VC`. */
 export function parseTeamHeader(raw: string): string | null {
@@ -29,11 +29,12 @@ export function parseTeamHeader(raw: string): string | null {
   const pipe = cleaned.match(/^(.+?)\s*\|\s*\d+/);
   if (!pipe?.[1]) return null;
 
-  let name = displayName(pipe[1]);
-  // Master sheets often glue the region title onto the first team cell.
-  if (SEASON_TEAMS_PREFIX.test(name)) {
-    name = displayName(name.replace(SEASON_TEAMS_PREFIX, ""));
+  // Strip the glued region title before displayName turns leftover `|` into spaces.
+  let rawName = pipe[1];
+  if (SEASON_TEAMS_PREFIX.test(rawName)) {
+    rawName = rawName.replace(SEASON_TEAMS_PREFIX, "");
   }
+  const name = displayName(rawName);
   if (!name || name.length < 2 || name.length > 40) return null;
   if (/^\d+$/.test(name)) return null;
   // Reject bare section titles ("SEASON I - N.A TEAMS 00 | 112")
@@ -43,6 +44,15 @@ export function parseTeamHeader(raw: string): string | null {
 
 export function namesEqual(a: string, b: string): boolean {
   return normalizeName(a) === normalizeName(b);
+}
+
+/** Collapse spaces and treat 0/O as the same so FairyTail/Fairy Tail and CP0/CPO match. */
+export function teamMatchKey(value: string): string {
+  return normalizeName(value).replace(/\s+/g, "").replace(/0/g, "o");
+}
+
+export function teamNamesEqual(a: string, b: string): boolean {
+  return teamMatchKey(a) === teamMatchKey(b);
 }
 
 /** Bracket sheets use score-like placeholders (e.g. "0 0") instead of real team names. */

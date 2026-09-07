@@ -79,6 +79,15 @@ function isGroupDivider(value: string): boolean {
   return /^group\s+[a-z0-9)]+/i.test(value.trim());
 }
 
+/** Roster index in the team column (`3`…`12`). S2 restacks the next group at `3` with no Group label. */
+function rosterNumber(value: string): number | null {
+  const trimmed = value.trim();
+  if (!/^\d{1,2}$/.test(trimmed)) return null;
+  const parsed = Number.parseInt(trimmed, 10);
+  if (parsed < 1 || parsed > 20) return null;
+  return parsed;
+}
+
 function addUniquePlayer(players: string[], raw: string): void {
   for (const player of playersFromCell(raw)) {
     if (!players.some((existing) => normalizeName(existing) === normalizeName(player))) {
@@ -140,6 +149,7 @@ export function parseMasterTeamsTab(
   }
 
   for (const [index, team] of columns) {
+    let lastRosterNum = 0;
     for (let rowIndex = team.headerRow; rowIndex < team.endRow; rowIndex += 1) {
       const row = rows[rowIndex] ?? [];
       const value = cell(row, index);
@@ -161,6 +171,10 @@ export function parseMasterTeamsTab(
 
       if (parseTeamHeader(value)) break;
       if (isGroupDivider(value) || isGroupDivider(adjacent)) break;
+
+      const number = rosterNumber(value);
+      if (number != null && lastRosterNum >= 10 && number <= 3) break;
+      if (number != null) lastRosterNum = number;
 
       const nextIsTeamCol = columns.has(index + 1);
       const candidates = nextIsTeamCol ? [value] : [value, adjacent];

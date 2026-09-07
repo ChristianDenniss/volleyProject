@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { parseSheetNamesFromHtml } from "@server/services/sheet-import/fetch";
-import { matchStatsToGames, mergeTeamRosters, rosterSizeWarnings } from "@server/services/sheet-import/match";
-import { displayName, normalizeName, parseTeamHeader } from "@server/services/sheet-import/names";
+import { matchStatsToGames, mergeTeamRosters, multiTeamPlayerWarnings, rosterSizeWarnings } from "@server/services/sheet-import/match";
+import { displayName, normalizeName, parseTeamHeader, teamMatchKey, teamNamesEqual } from "@server/services/sheet-import/names";
 import { parseMasterScheduleTab, parseMasterTeamsTab } from "@server/services/sheet-import/parse-master";
 import { parseRegionalPlayersLeaderboard, parseRegionalTeamTab, parseRegionalWorkbook } from "@server/services/sheet-import/parse-regional";
 import { toClientPreview } from "@server/services/sheet-import/preview";
@@ -82,6 +82,16 @@ describe("sheet-import names", () => {
     expect(parseTeamHeader("not a header")).toBeNull();
     expect(parseTeamHeader("SEASON I - N.A TEAMS 00 | 112 C VC")).toBeNull();
     expect(parseTeamHeader("SEASON I - EU TEAMS Kaka | 11 C VC")).toBe("Kaka");
+    expect(parseTeamHeader("CHAPTER 2 SEASON 2 | NA TEAMS SSS | 220 C VC")).toBe("SSS");
+    expect(parseTeamHeader("CHAPTER 2 SEASON 2 | EU TEAMS Quincy | 11 C VC")).toBe("Quincy");
+    expect(parseTeamHeader("CHAPTER 2 SEASON 2 | AS TEAMS Order | 154 C VC")).toBe("Order");
+  });
+
+  it("treats compact and 0/O team spellings as the same team", () => {
+    expect(teamNamesEqual("FairyTail", "Fairy Tail")).toBe(true);
+    expect(teamNamesEqual("CP0", "CPO")).toBe(true);
+    expect(teamMatchKey("Fairy Tail")).toBe("fairytail");
+    expect(teamNamesEqual("Teiko", "Tenjiku")).toBe(false);
   });
 });
 
@@ -129,6 +139,30 @@ describe("parseMasterTeamsTab", () => {
     expect(sp8?.playerNames.length).toBeLessThanOrEqual(6);
     expect(warnings.some((warning) => /later groups/i.test(warning))).toBe(true);
   });
+
+  it("stops a column when the 3–12 roster numbering restarts without a Group label", () => {
+    const csv = [
+      `"","CHAPTER 2 SEASON 2 | NA TEAMS SSS | 220 C VC","cap_one cap_two","","","Teiko | 143 C VC","ace_one ace_two"`,
+      `"","3","sss_a","","","3","teiko_a"`,
+      `"","4","sss_b","","","4","teiko_b"`,
+      `"","12","sss_last","","","12","teiko_last"`,
+      `"","","sss_extra","","","","teiko_extra"`,
+      `"","3","group_b_sss","","","3","group_b_teiko"`,
+      `"","4","group_b_sss_2","","","4","group_b_teiko_2"`,
+    ].join("\n");
+
+    const { teams } = parseMasterTeamsTab(csv, "na");
+    const sss = teams.find((team) => team.name === "SSS");
+    const teiko = teams.find((team) => team.name === "Teiko");
+    expect(sss?.leadership).toEqual({ C: "cap_one", VC: "cap_two" });
+    expect(sss?.playerNames).toEqual(
+      expect.arrayContaining(["cap_one", "cap_two", "sss_a", "sss_b", "sss_last", "sss_extra"]),
+    );
+    expect(sss?.playerNames).not.toContain("group_b_sss");
+    expect(sss?.playerNames).not.toContain("group_b_sss_2");
+    expect(teiko?.playerNames).not.toContain("group_b_teiko");
+    expect(sss?.playerNames.length).toBeLessThanOrEqual(8);
+  });
 });
 
 describe("mergeTeamRosters", () => {
@@ -162,6 +196,44 @@ describe("mergeTeamRosters", () => {
     expect(merged[0]?.playerNames.map((name) => name.toLowerCase())).toEqual(
       expect.arrayContaining(["panchoxddd12", "enz0gamer_playyy", "sreggow", "roster_a", "roster_b"]),
     );
+  });
+
+  it("merges compact team spellings and keeps same-name teams in different regions apart", () => {
+    const merged = mergeTeamRosters(
+      [
+        { name: "FairyTail", region: "na", playerNames: ["leaked_a", "leaked_b"], leadership: { C: "cap" } },
+        { name: "Valhalla", region: "na", playerNames: ["na_one"] },
+        { name: "CP0", region: "as", playerNames: ["cp_one"] },
+      ],
+      [
+        { name: "Fairy Tail", region: "na", playerNames: ["natsu", "lucy"] },
+        { name: "Valhalla", region: "eu", playerNames: ["eu_one"] },
+        { name: "CPO", region: "as", playerNames: ["cp_two"] },
+      ],
+    );
+    const fairy = merged.find((team) => teamNamesEqual(team.name, "Fairy Tail"));
+    expect(fairy?.name).toBe("Fairy Tail");
+    expect(fairy?.playerNames).toEqual(expect.arrayContaining(["natsu", "lucy", "cap"]));
+    expect(fairy?.playerNames).not.toContain("leaked_a");
+    expect(fairy?.fromMaster).toBe(true);
+    expect(merged.filter((team) => teamNamesEqual(team.name, "Valhalla"))).toHaveLength(2);
+    const cp = merged.find((team) => team.region === "as");
+    expect(cp?.playerNames).toEqual(expect.arrayContaining(["cp_two"]));
+    const regionalOnly = mergeTeamRosters([], [{ name: "CCG", region: "na", playerNames: ["a", "b"] }]);
+    expect(regionalOnly[0]?.fromMaster).toBe(false);
+  });
+});
+
+describe("multiTeamPlayerWarnings", () => {
+  it("only flags the same player on two teams in the same region", () => {
+    const warnings = multiTeamPlayerWarnings([
+      { name: "CCG", region: "na", playerNames: ["seawansia", "local_only"] },
+      { name: "wolhaiksong", region: "eu", playerNames: ["seawansia"] },
+      { name: "Moebius", region: "as", playerNames: ["sssserafimmmm"] },
+      { name: "SOS Brigade", region: "as", playerNames: ["sssserafimmmm"] },
+    ]);
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toMatch(/sssserafimmmm.*AS teams: Moebius, SOS Brigade/);
   });
 });
 
@@ -356,7 +428,21 @@ describe("matchStatsToGames", () => {
         rows: [],
       },
     ]);
-    expect(matched.warnings[0]).toMatch(/Unmatched score block/);
+    expect(matched.warnings[0]).toMatch(/name no opponent/);
+  });
+
+  it("still warns when an unmatched block names an opponent", () => {
+    const matched = matchStatsToGames([], [
+      {
+        teamName: "Teiko",
+        region: "na",
+        winnerName: "Tenjiku",
+        teamScore: 1,
+        opponentScore: 3,
+        rows: [],
+      },
+    ]);
+    expect(matched.warnings[0]).toMatch(/Unmatched score block: Teiko/);
   });
 
   it("relaxes to the only schedule row for a team pair when set totals disagree", () => {
