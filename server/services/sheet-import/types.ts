@@ -65,6 +65,8 @@ export interface PreviewTeam {
   playerNames: string[];
   leadership?: Partial<Record<TeamLeadershipRole, string>> | undefined;
   included: boolean;
+  /** Master TEAMS tab had a header for this team — captaincy is expected. */
+  fromMaster?: boolean;
 }
 
 export interface PreviewPlayer {

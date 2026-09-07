@@ -1,4 +1,4 @@
-import { namesEqual, isPlaceholderTeamName, normalizeName } from "./names";
+import { isPlaceholderTeamName, normalizeName, teamMatchKey, teamNamesEqual } from "./names";
 import { syntheticGameKey } from "./keys";
 import type { ParsedGame, ParsedScoreBlock, PreviewStat, SheetStatCounts } from "./types";
 
@@ -28,8 +28,8 @@ function scoresMatch(
   const g2 = game.team2Score;
   if (g1 == null || g2 == null) return false;
 
-  const blockIsTeam1 = namesEqual(block.teamName, game.team1Name);
-  const blockIsTeam2 = namesEqual(block.teamName, game.team2Name);
+  const blockIsTeam1 = teamNamesEqual(block.teamName, game.team1Name);
+  const blockIsTeam2 = teamNamesEqual(block.teamName, game.team2Name);
   if (!blockIsTeam1 && !blockIsTeam2) return false;
 
   // Score line is always "left-right Winner" from that team's sheet perspective:
@@ -47,15 +47,15 @@ function scoresMatch(
 }
 
 function opponentFromBlock(block: ParsedScoreBlock): string | null {
-  if (!namesEqual(block.winnerName, block.teamName)) {
+  if (!teamNamesEqual(block.winnerName, block.teamName)) {
     return block.winnerName;
   }
   return null;
 }
 
 function gamePairKey(region: string, teamA: string, teamB: string): string {
-  const left = normalizeName(teamA);
-  const right = normalizeName(teamB);
+  const left = teamMatchKey(teamA);
+  const right = teamMatchKey(teamB);
   return `${region}|${left < right ? `${left}|${right}` : `${right}|${left}`}`;
 }
 
@@ -144,15 +144,15 @@ export function matchStatsToGames(
       if (block.region !== game.region) continue;
 
       const isSide =
-        namesEqual(block.teamName, game.team1Name) || namesEqual(block.teamName, game.team2Name);
+        teamNamesEqual(block.teamName, game.team1Name) || teamNamesEqual(block.teamName, game.team2Name);
       if (!isSide) continue;
 
       const opponent = opponentFromBlock(block);
       if (opponent) {
-        const expectedOpp = namesEqual(block.teamName, game.team1Name)
+        const expectedOpp = teamNamesEqual(block.teamName, game.team1Name)
           ? game.team2Name
           : game.team1Name;
-        if (!namesEqual(opponent, expectedOpp)) continue;
+        if (!teamNamesEqual(opponent, expectedOpp)) continue;
       }
 
       if (!scoresMatch(game, block)) continue;
@@ -211,13 +211,25 @@ export function matchStatsToGames(
     attachBlock(block, synthetic.key, stats, matchedCountByGameKey);
   }
 
+  const noOpponent: string[] = [];
   for (let index = 0; index < blocks.length; index += 1) {
     if (usedBlocks.has(index)) continue;
     const block = blocks[index];
     if (!block) continue;
     if (isPlaceholderTeamName(block.teamName)) continue;
+    if (!opponentFromBlock(block)) {
+      noOpponent.push(`${block.teamName} ${block.teamScore}-${block.opponentScore}`);
+      continue;
+    }
     warnings.push(
       `Unmatched score block: ${block.teamName} ${block.teamScore}-${block.opponentScore} (winner ${block.winnerName}, ${block.region})`,
+    );
+  }
+  if (noOpponent.length > 0) {
+    const sample = noOpponent.slice(0, 3).join(", ");
+    const extra = noOpponent.length > 3 ? `, +${noOpponent.length - 3} more` : "";
+    warnings.push(
+      `${noOpponent.length} score block(s) name no opponent (${sample}${extra}) — win lines like "Score: 2-0 Team" cannot be matched to a scheduled game`,
     );
   }
 
@@ -229,7 +241,14 @@ type RosterTeam = {
   region: string | null;
   playerNames: string[];
   leadership?: Partial<Record<"C" | "VC" | "CC", string>> | undefined;
+  /** True when a master TEAMS header existed — used to decide captaincy warnings. */
+  fromMaster?: boolean;
 };
+
+function rosterMatchKey(team: Pick<RosterTeam, "name" | "region">): string {
+  const region = team.region ?? "all";
+  return `${region}|${teamMatchKey(team.name)}`;
+}
 
 const LEADERSHIP_ROLES = ["C", "VC", "CC"] as const;
 
@@ -257,36 +276,40 @@ export function mergeTeamRosters(
   master: RosterTeam[],
   regional: RosterTeam[],
 ): RosterTeam[] {
-  const byName = new Map<string, RosterTeam & { fromRegional: boolean }>();
+  const byName = new Map<string, RosterTeam & { fromRegional: boolean; fromMaster: boolean }>();
 
   for (const team of master) {
     const keyed = ensureLeadershipOnRoster(team);
-    const entry: RosterTeam & { fromRegional: boolean } = {
+    const entry: RosterTeam & { fromRegional: boolean; fromMaster: boolean } = {
       name: keyed.name,
       region: keyed.region,
       playerNames: [...keyed.playerNames],
       fromRegional: false,
+      fromMaster: true,
     };
     if (keyed.leadership) entry.leadership = { ...keyed.leadership };
-    byName.set(normalizeName(team.name), entry);
+    byName.set(rosterMatchKey(team), entry);
   }
 
   for (const team of regional) {
-    const key = normalizeName(team.name);
+    const key = rosterMatchKey(team);
     const existing = byName.get(key);
     if (!existing) {
       const keyed = ensureLeadershipOnRoster(team);
-      const entry: RosterTeam & { fromRegional: boolean } = {
+      const entry: RosterTeam & { fromRegional: boolean; fromMaster: boolean } = {
         name: keyed.name,
         region: keyed.region,
         playerNames: [...keyed.playerNames],
         fromRegional: true,
+        fromMaster: false,
       };
       if (keyed.leadership) entry.leadership = { ...keyed.leadership };
       byName.set(key, entry);
       continue;
     }
     if (!existing.region && team.region) existing.region = team.region;
+    // Prefer the regional spelling when FairyTail / Fairy Tail collide.
+    existing.name = team.name;
     if (team.playerNames.length > 0) {
       // Prefer the regional roster, then re-apply master captaincy onto it.
       existing.playerNames = [...team.playerNames];
@@ -303,8 +326,8 @@ export function mergeTeamRosters(
   }
 
   return [...byName.values()]
-    .map(({ name, region, playerNames, leadership }) => {
-      const team: RosterTeam = { name, region, playerNames };
+    .map(({ name, region, playerNames, leadership, fromMaster }) => {
+      const team: RosterTeam = { name, region, playerNames, fromMaster };
       if (leadership && Object.keys(leadership).length > 0) team.leadership = leadership;
       return team;
     })
@@ -314,6 +337,42 @@ export function mergeTeamRosters(
 /** Soft limits for volleyball-style rosters — warn only, never block import. */
 export const ROSTER_WARN_MIN = 3;
 export const ROSTER_WARN_MAX = 14;
+
+/** Same-region dual rosters only — a handle on NA CCG and EU wolhaiksong is expected. */
+export function multiTeamPlayerWarnings(
+  teams: { name: string; region: string | null; playerNames: string[]; included?: boolean }[],
+): string[] {
+  const teamsByPlayer = new Map<string, { label: string; entries: { team: string; region: string | null }[] }>();
+  for (const team of teams) {
+    if (team.included === false) continue;
+    if (isPlaceholderTeamName(team.name)) continue;
+    for (const playerName of team.playerNames) {
+      const key = normalizeName(playerName);
+      const entry = teamsByPlayer.get(key) ?? { label: playerName, entries: [] };
+      if (!entry.entries.some((item) => item.team === team.name && item.region === team.region)) {
+        entry.entries.push({ team: team.name, region: team.region });
+      }
+      teamsByPlayer.set(key, entry);
+    }
+  }
+
+  const warnings: string[] = [];
+  for (const entry of teamsByPlayer.values()) {
+    const byRegion = new Map<string, string[]>();
+    for (const item of entry.entries) {
+      const region = item.region ?? "all";
+      const names = byRegion.get(region) ?? [];
+      if (!names.includes(item.team)) names.push(item.team);
+      byRegion.set(region, names);
+    }
+    for (const [region, names] of byRegion) {
+      if (names.length < 2) continue;
+      const label = region === "all" ? "" : `${region.toUpperCase()} `;
+      warnings.push(`Player "${entry.label}" appears on multiple ${label}teams: ${names.join(", ")}`);
+    }
+  }
+  return warnings;
+}
 
 export function rosterSizeWarnings(
   teams: { name: string; region: string | null; playerNames: string[]; included?: boolean }[],

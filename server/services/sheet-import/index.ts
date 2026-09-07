@@ -13,10 +13,10 @@ export {
   yearFromDate,
 } from "./preview";
 export { commitSheetImport } from "./commit";
-export { normalizeName, displayName, parseTeamHeader } from "./names";
+export { normalizeName, displayName, parseTeamHeader, teamMatchKey, teamNamesEqual } from "./names";
 export { parseMasterTeamsTab, parseMasterScheduleTab, parseMasterWorkbook } from "./parse-master";
 export { parseRegionalTeamTab, parseRegionalWorkbook } from "./parse-regional";
-export { matchStatsToGames, mergeTeamRosters, rosterSizeWarnings, ensureLeadershipOnRoster } from "./match";
+export { matchStatsToGames, mergeTeamRosters, rosterSizeWarnings, multiTeamPlayerWarnings, ensureLeadershipOnRoster } from "./match";
 export { extractSpreadsheetId, parseSheetNamesFromHtml } from "./fetch";
 export {
   loadMasterSource,
