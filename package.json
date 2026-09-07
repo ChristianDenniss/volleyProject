@@ -80,6 +80,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run",
+    "test:ci": "vitest run --exclude tests/node/reachability.test.ts --exclude tests/node/conformance.test.ts",
     "test:watch": "vitest",
     "cf-typegen": "wrangler types --include-runtime=false",
     "db:generate": "drizzle-kit generate",
