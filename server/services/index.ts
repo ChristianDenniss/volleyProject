@@ -11,5 +11,6 @@ export type { AssembledSources, SheetImportPreview } from "./sheet-import";
 export * as stats from "./stats";
 export * as teams from "./teams";
 export * as trivia from "./trivia";
+export * as uploads from "./uploads";
 export * as users from "./users";
 export * from "./errors";

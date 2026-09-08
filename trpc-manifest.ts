@@ -139,6 +139,21 @@ export const trpcManifest: TrpcManifestEntry[] = [
 
   { endpoint: "POST /api/trivia/guess", procedure: "trivia.checkGuess", access: "public", status: "done" },
 
+  {
+    endpoint: "POST /api/uploads/article-image",
+    procedure: "uploads.createArticleImage",
+    access: "protected",
+    status: "done",
+    rationale: "new surface with no legacy counterpart: article authors store images in R2 instead of pasting a URL",
+  },
+  {
+    endpoint: "POST /api/uploads/asset",
+    procedure: "uploads.createAsset",
+    access: "admin",
+    status: "done",
+    rationale: "new surface with no legacy counterpart: team and player artwork uploaded from the portal",
+  },
+
   { endpoint: "POST /api/users/login", procedure: null, access: "public", status: "removed", rationale: "better-auth owns sign-in through the Roblox provider" },
   { endpoint: "POST /api/users/register", procedure: null, access: "public", status: "removed", rationale: "better-auth creates the user record on first Roblox callback" },
 ];

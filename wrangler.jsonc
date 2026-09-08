@@ -35,6 +35,16 @@
 			"migrations_dir": "drizzle"
 		}
 	],
+	"r2_buckets": [
+		{
+			"binding": "UPLOADS",
+			"bucket_name": "volley-project-uploads",
+			"preview_bucket_name": "volley-project-uploads-preview"
+		}
+	],
+	"images": {
+		"binding": "IMAGES"
+	},
 	"queues": {
 		"producers": [
 			{

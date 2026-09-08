@@ -8,6 +8,13 @@ import {
   RECORD_TYPES,
   USER_ROLES,
 } from "@db/schema";
+import {
+  decodeBase64,
+  sniffImageMime,
+  UPLOAD_MAX_BASE64_LENGTH,
+  UPLOAD_MAX_BYTES,
+  UPLOAD_MIME_TYPES,
+} from "@/lib/uploads";
 import { articleContentSchema } from "@/lib/tiptap-doc";
 import {
   COMPARISON_OPERATORS,
@@ -443,6 +450,31 @@ export const articleCreate = z.object({
 export const articleUpdate = z.object({
   id,
   patch: articleCreate.partial().extend({ approved: z.boolean().nullable().optional() }),
+});
+
+export const imageUpload = z.object({
+  filename: z.string().min(1).max(200),
+  data: z
+    .string()
+    .min(1)
+    .max(UPLOAD_MAX_BASE64_LENGTH, `Image is larger than ${UPLOAD_MAX_BYTES} bytes`)
+    .superRefine((value, ctx) => {
+      const bytes = decodeBase64(value);
+      if (bytes === null) {
+        ctx.addIssue({ code: "custom", message: "Image data is not valid base64" });
+        return;
+      }
+      if (bytes.byteLength > UPLOAD_MAX_BYTES) {
+        ctx.addIssue({ code: "custom", message: `Image is larger than ${UPLOAD_MAX_BYTES} bytes` });
+        return;
+      }
+      if (sniffImageMime(bytes) === null) {
+        ctx.addIssue({
+          code: "custom",
+          message: `Image must be one of ${UPLOAD_MIME_TYPES.join(", ")}`,
+        });
+      }
+    }),
 });
 
 export const userSetRole = z.object({ id: z.string().min(1), role: z.enum(USER_ROLES) });
