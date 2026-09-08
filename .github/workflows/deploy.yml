@@ -41,6 +41,11 @@ jobs:
           workingDirectory: apps/web
           command: d1 migrations apply volley-project --remote
 
+      - name: Warn when migrations did not apply
+        if: steps.migrations.outcome == 'failure'
+        run: |
+          echo "::warning title=D1 migrations did not apply::The deploy continued, but the database schema may be behind the code."
+
       - name: Deploy images worker
         if: always()
         run: bun run images:deploy
