@@ -1,21 +1,27 @@
 import { uploads } from "@server/services";
 import { adminProcedure, protectedProcedure, router } from "../init";
-import { imageUpload } from "../schemas";
+import { byUploadId, uploadRequest } from "../schemas";
 
 export const uploadsRouter = router({
-  createArticleImage: protectedProcedure.input(imageUpload).mutation(({ ctx, input }) =>
-    uploads.store(ctx.db, {
-      data: input.data,
+  createArticleImageUrl: protectedProcedure.input(uploadRequest).mutation(({ ctx, input }) =>
+    uploads.createUploadUrl(ctx.db, {
       filename: input.filename,
+      contentType: input.contentType,
+      bytes: input.bytes,
       uploaderId: ctx.user.id,
-    }, ctx.uploads),
+    }),
   ),
 
-  createAsset: adminProcedure.input(imageUpload).mutation(({ ctx, input }) =>
-    uploads.store(ctx.db, {
-      data: input.data,
+  createAssetUrl: adminProcedure.input(uploadRequest).mutation(({ ctx, input }) =>
+    uploads.createUploadUrl(ctx.db, {
       filename: input.filename,
+      contentType: input.contentType,
+      bytes: input.bytes,
       uploaderId: ctx.user.id,
-    }, ctx.uploads),
+    }),
+  ),
+
+  status: protectedProcedure.input(byUploadId).query(({ ctx, input }) =>
+    uploads.state(ctx.db, input.id),
   ),
 });

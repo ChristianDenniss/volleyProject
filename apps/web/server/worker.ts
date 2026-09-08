@@ -4,6 +4,7 @@ import { errorDetail, presentUnknownError } from "@/lib/error-presentation";
 import { canonicalOrigin } from "./environment";
 import { errorHtmlResponse, errorJsonResponse } from "./error-html";
 import { handleRecordsBatch, type RecordsJobMessage } from "./queue";
+import { handleUploadsBatch, UPLOADS_QUEUE } from "./upload-queue";
 import { logError } from "./report";
 import { apiRateLimitBucket, checkRateLimit, clientRateLimitKey } from "./rate-limit";
 import { applyPreviewHeaders, canonicalRedirect } from "./preview-host";
@@ -50,8 +51,10 @@ export default {
   },
 
   async queue(batch: MessageBatch<RecordsJobMessage>, env: Env): Promise<void> {
-    await withQueryStats("queue", { messages: batch.messages.length }, () =>
-      handleRecordsBatch(batch, env),
+    await withQueryStats("queue", { queue: batch.queue, messages: batch.messages.length }, () =>
+      batch.queue === UPLOADS_QUEUE
+        ? handleUploadsBatch(batch as unknown as MessageBatch<unknown>, env)
+        : handleRecordsBatch(batch, env),
     );
   },
 } satisfies ExportedHandler<Env, RecordsJobMessage>;

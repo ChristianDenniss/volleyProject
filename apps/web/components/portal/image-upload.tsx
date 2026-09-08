@@ -10,11 +10,14 @@ import {
   UPLOAD_MIME_TYPES,
   type UploadMimeType,
 } from "@/lib/uploads";
-import type { StoredUpload } from "@server/services/uploads";
+import type { UploadState } from "@server/services/uploads";
 
 export type ImageUploadScope = "article" | "asset";
 
-type Phase = "idle" | "reading" | "uploading";
+type Phase = "idle" | "uploading" | "optimizing";
+
+const POLL_INTERVAL_MS = 1000;
+const POLL_TIMEOUT_MS = 60_000;
 
 const buttonClass =
   "inline-flex cursor-pointer items-center gap-2 border-none bg-rvl-accent-bg px-3 py-2 font-mono text-[0.68rem] font-bold uppercase tracking-[0.14em] text-rvl-on-accent transition-opacity hover:enabled:opacity-85 disabled:cursor-not-allowed disabled:opacity-50";
@@ -23,23 +26,26 @@ function megabytes(bytes: number): string {
   return `${Math.round((bytes / (1024 * 1024)) * 10) / 10} MB`;
 }
 
-function readAsBase64(file: File, onProgress: (fraction: number) => void): Promise<string> {
+function putToR2(
+  url: string,
+  file: File,
+  onProgress: (fraction: number) => void,
+): Promise<void> {
   return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onprogress = (event) => {
+    const request = new XMLHttpRequest();
+    request.open("PUT", url);
+    request.setRequestHeader("Content-Type", file.type);
+
+    request.upload.onprogress = (event) => {
       if (event.lengthComputable && event.total > 0) onProgress(event.loaded / event.total);
     };
-    reader.onerror = () => reject(reader.error ?? new Error("The file could not be read"));
-    reader.onload = () => {
-      const result = typeof reader.result === "string" ? reader.result : "";
-      const comma = result.indexOf(",");
-      if (comma === -1) {
-        reject(new Error("The file could not be read"));
-        return;
-      }
-      resolve(result.slice(comma + 1));
+    request.onerror = () => reject(new Error("The upload could not reach storage"));
+    request.onload = () => {
+      if (request.status >= 200 && request.status < 300) resolve();
+      else reject(new Error(`Storage rejected the upload (${request.status})`));
     };
-    reader.readAsDataURL(file);
+
+    request.send(file);
   });
 }
 
@@ -50,17 +56,18 @@ export function ImageUpload({
 }: {
   scope: ImageUploadScope;
   label?: string;
-  onUploaded: (upload: StoredUpload) => void;
+  onUploaded: (upload: UploadState) => void;
 }) {
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const { showErrorToast } = usePortalErrorToast();
-  const articleImage = trpc.uploads.createArticleImage.useMutation();
-  const asset = trpc.uploads.createAsset.useMutation();
+  const articleUrl = trpc.uploads.createArticleImageUrl.useMutation();
+  const assetUrl = trpc.uploads.createAssetUrl.useMutation();
+  const utils = trpc.useUtils();
   const [phase, setPhase] = useState<Phase>("idle");
-  const [readFraction, setReadFraction] = useState(0);
+  const [sentFraction, setSentFraction] = useState(0);
   const [localPreview, setLocalPreview] = useState<string | null>(null);
-  const [stored, setStored] = useState<StoredUpload | null>(null);
+  const [stored, setStored] = useState<UploadState | null>(null);
 
   useEffect(() => {
     if (localPreview === null) return;
@@ -71,11 +78,29 @@ export function ImageUpload({
   const previewSrc =
     stored?.variants.find((variant) => variant.name === "card")?.url ?? stored?.url ?? localPreview;
 
+  async function waitForOptimization(id: string): Promise<UploadState> {
+    const deadline = Date.now() + POLL_TIMEOUT_MS;
+
+    for (;;) {
+      const state = await utils.uploads.status.fetch({ id });
+      if (state.status === "ready") return state;
+      if (state.status === "failed") {
+        throw new Error(state.error ?? "The image could not be processed");
+      }
+      if (Date.now() > deadline) {
+        throw new Error("Timed out waiting for the image to be processed");
+      }
+      await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
+    }
+  }
+
   async function upload(file: File) {
     if (file.size > UPLOAD_MAX_BYTES) {
       showErrorToast(
         "Image too large",
-        new Error(`${file.name} is ${megabytes(file.size)}; the limit is ${megabytes(UPLOAD_MAX_BYTES)}`),
+        new Error(
+          `${file.name} is ${megabytes(file.size)}; the limit is ${megabytes(UPLOAD_MAX_BYTES)}`,
+        ),
       );
       return;
     }
@@ -89,16 +114,24 @@ export function ImageUpload({
 
     setStored(null);
     setLocalPreview(URL.createObjectURL(file));
-    setReadFraction(0);
-    setPhase("reading");
+    setSentFraction(0);
+    setPhase("uploading");
 
     try {
-      const data = await readAsBase64(file, setReadFraction);
-      setPhase("uploading");
-      const mutation = scope === "article" ? articleImage : asset;
-      const result = await mutation.mutateAsync({ filename: file.name, data });
-      setStored(result);
-      onUploaded(result);
+      const mutation = scope === "article" ? articleUrl : assetUrl;
+      const ticket = await mutation.mutateAsync({
+        filename: file.name,
+        contentType: file.type as UploadMimeType,
+        bytes: file.size,
+      });
+
+      await putToR2(ticket.url, file, setSentFraction);
+
+      setPhase("optimizing");
+      const ready = await waitForOptimization(ticket.id);
+
+      setStored(ready);
+      onUploaded(ready);
     } catch (error) {
       setLocalPreview(null);
       showErrorToast("Upload failed", error);
@@ -150,8 +183,8 @@ export function ImageUpload({
               {stored ? "Replace image" : "Choose image"}
             </button>
             <span className="truncate text-xs text-rvl-ink-2">
-              {stored
-                ? `${stored.filename} · ${stored.width}×${stored.height} · ${megabytes(stored.bytes)}`
+              {stored && stored.width !== null && stored.height !== null
+                ? `${stored.width}×${stored.height} · ${stored.variants.length} sizes`
                 : `jpeg, png, webp or gif up to ${megabytes(UPLOAD_MAX_BYTES)}`}
             </span>
           </div>
@@ -161,17 +194,21 @@ export function ImageUpload({
               <div className="h-1.5 w-full overflow-hidden bg-rvl-panel">
                 <div
                   className={
-                    phase === "reading"
+                    phase === "uploading"
                       ? "h-full bg-rvl-accent-bg transition-[width]"
                       : "h-full w-full animate-pulse bg-rvl-accent-bg"
                   }
-                  style={phase === "reading" ? { width: `${Math.round(readFraction * 100)}%` } : undefined}
+                  style={
+                    phase === "uploading"
+                      ? { width: `${Math.round(sentFraction * 100)}%` }
+                      : undefined
+                  }
                 />
               </div>
               <span className="font-mono text-[0.65rem] uppercase tracking-[0.14em] text-rvl-ink-2">
-                {phase === "reading"
-                  ? `Reading file ${Math.round(readFraction * 100)}%`
-                  : "Uploading and building thumbnails"}
+                {phase === "uploading"
+                  ? `Uploading ${Math.round(sentFraction * 100)}%`
+                  : "Building thumbnails"}
               </span>
             </div>
           ) : null}

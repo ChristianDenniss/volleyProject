@@ -143,6 +143,7 @@ describe("authorization sweep", () => {
     { procedure: "users.list", access: "admin" },
     { procedure: "users.count", access: "admin" },
     { procedure: "users.me", access: "protected" },
+    { procedure: "uploads.status", access: "protected" },
   ];
 
   it("rejects every guarded query for an anonymous caller", async () => {

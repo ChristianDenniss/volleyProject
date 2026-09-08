@@ -141,17 +141,24 @@ export const trpcManifest: TrpcManifestEntry[] = [
 
   {
     endpoint: "POST /api/uploads/article-image",
-    procedure: "uploads.createArticleImage",
+    procedure: "uploads.createArticleImageUrl",
     access: "protected",
     status: "done",
-    rationale: "new surface with no legacy counterpart: article authors store images in R2 instead of pasting a URL",
+    rationale: "new surface with no legacy counterpart: article authors presign a direct R2 upload instead of pasting a URL",
   },
   {
     endpoint: "POST /api/uploads/asset",
-    procedure: "uploads.createAsset",
+    procedure: "uploads.createAssetUrl",
     access: "admin",
     status: "done",
-    rationale: "new surface with no legacy counterpart: team and player artwork uploaded from the portal",
+    rationale: "new surface with no legacy counterpart: team and player artwork presigned from the portal",
+  },
+  {
+    endpoint: "GET /api/uploads/status",
+    procedure: "uploads.status",
+    access: "protected",
+    status: "done",
+    rationale: "new surface with no legacy counterpart: clients poll for the outcome of background optimisation",
   },
 
   { endpoint: "POST /api/users/login", procedure: null, access: "public", status: "removed", rationale: "better-auth owns sign-in through the Roblox provider" },

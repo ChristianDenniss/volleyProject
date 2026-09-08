@@ -9,7 +9,7 @@ import {
   text,
   uniqueIndex,
 } from "drizzle-orm/sqlite-core";
-import { UPLOAD_MIME_TYPES, type UploadVariant } from "../../lib/uploads";
+import { UPLOAD_MIME_TYPES, UPLOAD_STATUSES, type UploadVariant } from "../../lib/uploads";
 
 const now = () => new Date();
 
@@ -442,20 +442,28 @@ export const uploads = sqliteTable(
   "uploads",
   {
     id: text().primaryKey(),
-    key: text().notNull().unique(),
+    status: text({ enum: UPLOAD_STATUSES }).notNull().default("awaiting"),
+    stagingKey: text().notNull().unique(),
+    key: text(),
+    hash: text(),
     filename: text().notNull(),
-    mime: text({ enum: UPLOAD_MIME_TYPES }).notNull(),
-    bytes: integer().notNull(),
-    width: integer().notNull(),
-    height: integer().notNull(),
-    variants: text({ mode: "json" }).$type<UploadVariant[]>().notNull(),
+    declaredMime: text({ enum: UPLOAD_MIME_TYPES }).notNull(),
+    mime: text({ enum: UPLOAD_MIME_TYPES }),
+    declaredBytes: integer().notNull(),
+    bytes: integer(),
+    width: integer(),
+    height: integer(),
+    variants: text({ mode: "json" }).$type<UploadVariant[]>().notNull().default([]),
+    error: text(),
     uploadedBy: text().references(() => user.id, { onDelete: "set null" }),
-    createdAt: integer({ mode: "timestamp_ms" }).notNull().$defaultFn(now),
+    ...timestamps,
   },
   (table) => [
     index("uploads_uploaded_by_idx").on(table.uploadedBy),
-    check("uploads_mime_check", sql`${table.mime} in ${inList(UPLOAD_MIME_TYPES)}`),
-    check("uploads_bytes_check", sql`${table.bytes} > 0`),
+    index("uploads_status_idx").on(table.status),
+    index("uploads_hash_idx").on(table.hash),
+    check("uploads_status_check", sql`${table.status} in ${inList(UPLOAD_STATUSES)}`),
+    check("uploads_declared_bytes_check", sql`${table.declaredBytes} > 0`),
   ],
 );
 

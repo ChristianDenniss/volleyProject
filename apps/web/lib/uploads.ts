@@ -9,6 +9,12 @@ import {
 export const UPLOAD_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"] as const;
 export type UploadMimeType = (typeof UPLOAD_MIME_TYPES)[number];
 
+export const UPLOAD_STATUSES = ["awaiting", "processing", "ready", "failed"] as const;
+export type UploadStatus = (typeof UPLOAD_STATUSES)[number];
+
+export const UPLOAD_STAGING_PREFIX = "incoming/";
+export const UPLOAD_URL_TTL_SECONDS = 300;
+
 export const UPLOAD_ACCEPT = UPLOAD_MIME_TYPES.join(",");
 export const UPLOAD_MAX_BYTES = 5 * 1024 * 1024;
 export const UPLOAD_MAX_BASE64_LENGTH = Math.ceil(UPLOAD_MAX_BYTES / 3) * 4 + 4;

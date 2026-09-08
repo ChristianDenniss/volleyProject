@@ -51,6 +51,12 @@
 		],
 		"consumers": [
 			{
+				"queue": "volley-uploads",
+				"max_batch_size": 5,
+				"max_concurrency": 2,
+				"max_retries": 3
+			},
+			{
 				"queue": "volley-records",
 				"max_batch_size": 1,
 				"max_concurrency": 1,
