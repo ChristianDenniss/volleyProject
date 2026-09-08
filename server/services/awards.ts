@@ -1,9 +1,17 @@
-import { asc, eq, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import type { Db } from "@db";
 import { insertMany, chunkIds, chunkValues } from "@db/insert";
 import { type AWARD_TYPES, awards, awardsPlayers, players, seasons } from "@db/schema";
 import { found, inserted, NotFoundError } from "./errors";
 import type { PartialInput } from "./input";
+import {
+  emptyPage,
+  likePattern,
+  makePage,
+  pageBounds,
+  searchTerm,
+  type PageQuery,
+} from "./paging";
 
 export type AwardType = (typeof AWARD_TYPES)[number];
 
@@ -66,6 +74,65 @@ export async function list(db: Db) {
     .leftJoin(seasons, eq(awards.seasonId, seasons.id))
     .orderBy(asc(awards.type));
   return attachPlayers(db, rows);
+}
+
+export interface AwardListFilters extends PageQuery {
+  season?: number | undefined;
+  type?: AwardType | undefined;
+}
+
+function awardFilters(filters: AwardListFilters) {
+  const term = searchTerm(filters);
+  return and(
+    filters.season === undefined ? undefined : eq(seasons.seasonNumber, filters.season),
+    filters.type ? eq(awards.type, filters.type) : undefined,
+    term
+      ? sql`(
+          lower(${awards.type}) like ${likePattern(term)} escape '\\'
+          or lower(coalesce(${awards.description}, '')) like ${likePattern(term)} escape '\\'
+        )`
+      : undefined,
+  );
+}
+
+export async function listTypes(db: Db) {
+  const rows = await db.selectDistinct({ type: awards.type }).from(awards).orderBy(asc(awards.type));
+  return rows.map((row) => row.type);
+}
+
+export async function listSeasonNumbers(db: Db) {
+  const rows = await db
+    .selectDistinct({ seasonNumber: seasons.seasonNumber })
+    .from(awards)
+    .innerJoin(seasons, eq(awards.seasonId, seasons.id))
+    .orderBy(desc(seasons.seasonNumber));
+
+  return rows.map((row) => row.seasonNumber);
+}
+
+export async function listPage(db: Db, filters: AwardListFilters = {}) {
+  const bounds = pageBounds(filters);
+  const where = awardFilters(filters);
+
+  const [counted] = await db
+    .select({ total: sql<number>`count(*)` })
+    .from(awards)
+    .leftJoin(seasons, eq(awards.seasonId, seasons.id))
+    .where(where);
+
+  const total = Number(counted?.total ?? 0);
+  if (total === 0) return emptyPage<Awaited<ReturnType<typeof list>>[number]>(bounds);
+
+  const rows = await db
+    .select(columns)
+    .from(awards)
+    .leftJoin(seasons, eq(awards.seasonId, seasons.id))
+    .where(where)
+    .orderBy(asc(awards.type), asc(awards.id))
+    .limit(bounds.perPage)
+    .offset(bounds.offset);
+
+  return makePage(await attachPlayers(db, rows), total, bounds);
 }
 
 export async function listBySeason(db: Db, seasonId: number) {

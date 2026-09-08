@@ -7,6 +7,7 @@ import { revalidate } from "../revalidate";
 import {
   byId,
   optionalRegion,
+  recordGroupsPage,
   recordListPage,
   recordCreate,
   recordRecalculate,
@@ -26,6 +27,20 @@ export const recordsRouter = router({
       region: scopedRegion(ctx, input.region),
     }),
   ),
+
+  groupsPage: publicProcedure.input(recordGroupsPage).query(({ ctx, input }) =>
+    records.listGroupsPage(ctx.db, {
+      ...input,
+      region: scopedRegion(ctx, input.region),
+    }),
+  ),
+
+  types: publicProcedure.input(optionalRegion).query(({ ctx, input }) => {
+    const region = scopedRegion(ctx, input?.region);
+    return cachedQuery("records", ["types", region ?? null], () =>
+      records.listTypes(ctx.db, region),
+    );
+  }),
 
   byMetric: publicProcedure
     .input(recordsByMetric)

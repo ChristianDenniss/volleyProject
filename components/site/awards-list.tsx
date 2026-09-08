@@ -1,9 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
 import Link from "next/link";
 import { awardBanner } from "@/lib/award-banners";
-import { FilterSelect } from "./controls";
+import { UrlClearFilters, UrlFilterSelect, UrlPagination } from "./url-controls";
 
 export interface AwardListRow {
   id: number;
@@ -15,65 +14,62 @@ export interface AwardListRow {
   players: { id: number; name: string }[];
 }
 
-export function AwardsList({ awards }: { awards: AwardListRow[] }) {
-  const [season, setSeason] = useState("");
-  const [type, setType] = useState("");
+const FILTER_KEYS = ["season", "type"];
 
-  const seasons = useMemo(() => {
-    const values = new Set<number>();
-    awards.forEach((award) => {
-      if (award.seasonNumber != null) values.add(award.seasonNumber);
-    });
-    return [...values].sort((a, b) => b - a);
-  }, [awards]);
-
-  const types = useMemo(() => {
-    const values = new Set<string>();
-    for (const award of awards) values.add(award.type);
-    return [...values].sort((a, b) => a.localeCompare(b));
-  }, [awards]);
-
-  const visible = useMemo(
-    () =>
-      awards.filter(
-        (award) =>
-          (!season || String(award.seasonNumber) === season) && (!type || award.type === type),
-      ),
-    [awards, season, type],
-  );
-
+export function AwardsList({
+  awards,
+  seasons,
+  types,
+  total,
+  totalPages,
+}: {
+  awards: AwardListRow[];
+  seasons: number[];
+  types: string[];
+  total: number;
+  totalPages: number;
+}) {
   return (
     <>
       <div className="flex flex-wrap items-end gap-5 border-b border-rvl-line px-5 py-7 sm:px-8 xl:px-14">
-        <FilterSelect
+        <UrlFilterSelect
           id="award-season-filter"
           label="Season"
-          value={season}
-          onChange={setSeason}
+          paramKey="season"
           options={[
             { value: "", label: "All seasons" },
             ...seasons.map((value) => ({ value: String(value), label: `Season ${value}` })),
           ]}
         />
 
-        <FilterSelect
+        <UrlFilterSelect
           id="award-type-filter"
           label="Award"
-          value={type}
-          onChange={setType}
+          paramKey="type"
           options={[
             { value: "", label: "All awards" },
             ...types.map((value) => ({ value, label: value })),
           ]}
         />
 
+        <UrlClearFilters keys={FILTER_KEYS} />
+
         <span className="self-end pb-2.5 font-mono text-[0.68rem] uppercase tracking-[0.14em] text-rvl-dim">
-          {visible.length} awards
+          {total} awards
         </span>
+
+        <div className="ml-auto self-end">
+          <UrlPagination variant="compact" totalPages={totalPages} />
+        </div>
       </div>
 
+      {awards.length === 0 ? (
+        <div className="px-5 py-20 text-center font-mono text-[0.78rem] uppercase tracking-[0.14em] text-rvl-dim sm:px-8 xl:px-14">
+          No awards match those filters.
+        </div>
+      ) : (
       <div className="grid grid-cols-1 gap-6 px-5 py-12 sm:grid-cols-2 sm:px-8 lg:grid-cols-3 xl:px-14 2xl:grid-cols-4">
-        {visible.map((award) => {
+        {awards.map((award) => {
           const banner = awardBanner(award.type, award.imageUrl);
           return (
             <Link
@@ -124,6 +120,7 @@ export function AwardsList({ awards }: { awards: AwardListRow[] }) {
           );
         })}
       </div>
+      )}
     </>
   );
 }

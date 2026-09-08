@@ -9,6 +9,15 @@ import {
   USER_ROLES,
 } from "@db/schema";
 import { articleContentSchema } from "@/lib/tiptap-doc";
+import {
+  COMPARISON_OPERATORS,
+  FILTER_STAT_KEYS,
+  LEADERBOARD_SORT_KEYS,
+  MAX_FILTER_CONDITIONS,
+  MAX_FILTER_VALUE,
+  SORT_DIRECTIONS,
+  STAT_TYPES,
+} from "@/lib/stats/leaderboard-filters";
 
 export const PLAYER_POSITIONS = [
   "N/A",
@@ -503,6 +512,28 @@ export const recordListPage = pageQuery.extend({
   region: regionValue,
 });
 
+export const recordGroupsPage = pageQuery.extend({
+  region: regionValue,
+  type: z.enum(RECORD_TYPES).optional(),
+});
+
+export const awardListPage = pageQuery.extend({
+  season: seasonNumber.optional(),
+  type: z.enum(AWARD_TYPES).optional(),
+});
+
+export const schedulePage = pageQuery.extend({
+  seasonId: id.optional(),
+  region: regionValue,
+  status: z.enum(MATCH_STATUSES).optional(),
+  round: z.string().max(120).optional(),
+});
+
+export const scheduleFilterOptions = z.object({
+  seasonId: id.optional(),
+  region: regionValue,
+});
+
 export const statListPage = pageQuery
   .extend({
     season: seasonNumber.optional(),
@@ -515,6 +546,22 @@ export const leaderboardInput = z.object({
   seasonId: id.optional(),
   stageRound: z.enum(STAGE_ROUNDS).optional(),
   region: regionValue,
+});
+
+export const leaderboardCondition = z.object({
+  stat: z.enum(FILTER_STAT_KEYS),
+  operator: z.enum(COMPARISON_OPERATORS),
+  value: z.number().finite().min(-MAX_FILTER_VALUE).max(MAX_FILTER_VALUE),
+});
+
+export const leaderboardPage = pageQuery.extend({
+  seasonId: id.optional(),
+  stageRound: z.enum(STAGE_ROUNDS).optional(),
+  region: regionValue,
+  statType: z.enum(STAT_TYPES).optional(),
+  sort: z.enum(LEADERBOARD_SORT_KEYS).optional(),
+  dir: z.enum(SORT_DIRECTIONS).optional(),
+  conditions: z.array(leaderboardCondition).max(MAX_FILTER_CONDITIONS).optional(),
 });
 export const recordsByMetric = z.object({
   metric: z.enum(RECORD_METRICS),

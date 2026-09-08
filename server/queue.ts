@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { makeDb, type Db } from "@db";
 import { jobRuns } from "@db/schema";
+import { bumpCacheGeneration } from "./cache";
 import { explainError, logError } from "./report";
 import { recalculateRecords } from "./records-recalculation";
 import { invalidateHomeNumbers } from "./services/home-numbers";
@@ -50,6 +51,7 @@ export async function runRecordsJob(db: Db, message: RecordsJobMessage): Promise
   try {
     const { rowsWritten } = await recalculateRecords(db, { seasonId: message.seasonId });
     await invalidateHomeNumbers();
+    await bumpCacheGeneration(["records", "home"]);
     await db
       .update(jobRuns)
       .set({ status: "succeeded", finishedAt: new Date(), rowsWritten })

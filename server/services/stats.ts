@@ -1,8 +1,17 @@
-import { and, asc, desc, eq, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, or, sql, type SQL } from "drizzle-orm";
 import type { Db } from "@db";
-import { insertMany } from "@db/insert";
+import { chunkValues, insertMany } from "@db/insert";
 import { games, players, seasons, stats, teams, teamsPlayers } from "@db/schema";
 import type { VectorGraphPlayer } from "@/lib/analytics/stats-vectorization";
+import {
+  EQUALITY_EPSILON,
+  PERCENTAGE_STATS,
+  type FilterStatKey,
+  type LeaderboardSortKey,
+  type SortDirection,
+  type StatCondition,
+  type StatType,
+} from "@/lib/stats/leaderboard-filters";
 import { STAGE_ROUNDS, type StageRound } from "@/lib/stats/stage-rounds";
 import type { GameRegion } from "./games";
 import { ConflictError, found, NotFoundError } from "./errors";
@@ -13,6 +22,7 @@ import {
   makePage,
   pageBounds,
   searchTerm,
+  type Page,
   type PageQuery,
 } from "./paging";
 
@@ -241,36 +251,38 @@ function buildStageRoundFilter(stageRound: StageRound | undefined) {
   );
 }
 
+const leaderboardColumns = {
+  playerId: players.id,
+  playerName: players.name,
+  robloxUserId: players.robloxUserId,
+  position: players.position,
+  gamesPlayed: sql<number>`count(distinct ${stats.gameId})`,
+  totalSets: sql<number>`coalesce(sum(${games.team1Score} + ${games.team2Score}), 0)`,
+  spikeKills: sql<number>`sum(${stats.spikeKills})`,
+  spikeAttempts: sql<number>`sum(${stats.spikeAttempts})`,
+  apeKills: sql<number>`sum(${stats.apeKills})`,
+  apeAttempts: sql<number>`sum(${stats.apeAttempts})`,
+  totalKills,
+  totalAttempts,
+  spikingErrors: sql<number>`sum(${stats.spikingErrors})`,
+  totalErrors,
+  assists: sql<number>`sum(${stats.assists})`,
+  settingErrors: sql<number>`sum(${stats.settingErrors})`,
+  blocks: sql<number>`sum(${stats.blocks})`,
+  blockFollows: sql<number>`sum(${stats.blockFollows})`,
+  digs: sql<number>`sum(${stats.digs})`,
+  aces: sql<number>`sum(${stats.aces})`,
+  servingErrors: sql<number>`sum(${stats.servingErrors})`,
+  miscErrors: sql<number>`sum(${stats.miscErrors})`,
+  spikingPercentage: sql<number>`case when sum(${stats.spikeAttempts} + ${stats.apeAttempts}) = 0 then 0 else round(100.0 * sum(${stats.spikeKills} + ${stats.apeKills}) / sum(${stats.spikeAttempts} + ${stats.apeAttempts}), 2) end`,
+};
+
 export async function leaderboard(db: Db, options: LeaderboardOptions = {}) {
   const { seasonId, stageRound, region } = options;
   const stageFilter = buildStageRoundFilter(stageRound);
 
   const query = db
-    .select({
-      playerId: players.id,
-      playerName: players.name,
-      robloxUserId: players.robloxUserId,
-      position: players.position,
-      gamesPlayed: sql<number>`count(distinct ${stats.gameId})`,
-      totalSets: sql<number>`sum(${games.team1Score} + ${games.team2Score})`,
-      spikeKills: sql<number>`sum(${stats.spikeKills})`,
-      spikeAttempts: sql<number>`sum(${stats.spikeAttempts})`,
-      apeKills: sql<number>`sum(${stats.apeKills})`,
-      apeAttempts: sql<number>`sum(${stats.apeAttempts})`,
-      totalKills,
-      totalAttempts,
-      spikingErrors: sql<number>`sum(${stats.spikingErrors})`,
-      totalErrors,
-      assists: sql<number>`sum(${stats.assists})`,
-      settingErrors: sql<number>`sum(${stats.settingErrors})`,
-      blocks: sql<number>`sum(${stats.blocks})`,
-      blockFollows: sql<number>`sum(${stats.blockFollows})`,
-      digs: sql<number>`sum(${stats.digs})`,
-      aces: sql<number>`sum(${stats.aces})`,
-      servingErrors: sql<number>`sum(${stats.servingErrors})`,
-      miscErrors: sql<number>`sum(${stats.miscErrors})`,
-      spikingPercentage: sql<number>`case when sum(${stats.spikeAttempts} + ${stats.apeAttempts}) = 0 then 0 else round(100.0 * sum(${stats.spikeKills} + ${stats.apeKills}) / sum(${stats.spikeAttempts} + ${stats.apeAttempts}), 2) end`,
-    })
+    .select(leaderboardColumns)
     .from(stats)
     .innerJoin(players, eq(stats.playerId, players.id))
     .innerJoin(games, eq(stats.gameId, games.id))
@@ -316,6 +328,232 @@ export async function leaderboard(db: Db, options: LeaderboardOptions = {}) {
       teamLogoUrl: team?.teamLogoUrl ?? null,
     };
   });
+}
+
+const gamesPlayedExpr = sql`count(distinct ${stats.gameId})`;
+const totalSetsExpr = sql`coalesce(sum(${games.team1Score} + ${games.team2Score}), 0)`;
+
+const RAW_STAT_SQL: Record<FilterStatKey, SQL> = {
+  spikeKills: sql`coalesce(sum(${stats.spikeKills}), 0)`,
+  spikeAttempts: sql`coalesce(sum(${stats.spikeAttempts}), 0)`,
+  "Spike%": sql`case when coalesce(sum(${stats.spikeAttempts}), 0) = 0 then 0 else 100.0 * sum(${stats.spikeKills}) / sum(${stats.spikeAttempts}) end`,
+  apeKills: sql`coalesce(sum(${stats.apeKills}), 0)`,
+  apeAttempts: sql`coalesce(sum(${stats.apeAttempts}), 0)`,
+  "Ape%": sql`case when coalesce(sum(${stats.apeAttempts}), 0) = 0 then 0 else 100.0 * sum(${stats.apeKills}) / sum(${stats.apeAttempts}) end`,
+  totalKills: sql`coalesce(sum(${stats.spikeKills} + ${stats.apeKills}), 0)`,
+  totalAttempts: sql`coalesce(sum(${stats.spikeAttempts} + ${stats.apeAttempts}), 0)`,
+  "totalSpike%": sql`case when coalesce(sum(${stats.spikeAttempts} + ${stats.apeAttempts}), 0) = 0 then 0 else round(100.0 * sum(${stats.spikeKills} + ${stats.apeKills}) / sum(${stats.spikeAttempts} + ${stats.apeAttempts}), 2) end`,
+  spikingErrors: sql`coalesce(sum(${stats.spikingErrors}), 0)`,
+  blocks: sql`coalesce(sum(${stats.blocks}), 0)`,
+  assists: sql`coalesce(sum(${stats.assists}), 0)`,
+  settingErrors: sql`coalesce(sum(${stats.settingErrors}), 0)`,
+  digs: sql`coalesce(sum(${stats.digs}), 0)`,
+  blockFollows: sql`coalesce(sum(${stats.blockFollows}), 0)`,
+  totalReceives: sql`coalesce(sum(${stats.digs} + ${stats.blockFollows}), 0)`,
+  aces: sql`coalesce(sum(${stats.aces}), 0)`,
+  servingErrors: sql`coalesce(sum(${stats.servingErrors}), 0)`,
+  PRF: sql`coalesce(sum(${stats.spikeKills} + ${stats.apeKills} + ${stats.aces} + ${stats.assists}), 0)`,
+  plusMinus: sql`coalesce(sum(${stats.spikeKills} + ${stats.apeKills} + ${stats.aces} + ${stats.assists} - ${stats.spikingErrors} - ${stats.settingErrors} - ${stats.servingErrors} - ${stats.miscErrors}), 0)`,
+  totalErrors: sql`coalesce(sum(${stats.spikingErrors} + ${stats.settingErrors} + ${stats.servingErrors} + ${stats.miscErrors}), 0)`,
+  miscErrors: sql`coalesce(sum(${stats.miscErrors}), 0)`,
+  gamesPlayed: gamesPlayedExpr,
+};
+
+function scaledStat(stat: FilterStatKey, statType: StatType): SQL {
+  const raw = RAW_STAT_SQL[stat];
+  if (statType === "total" || PERCENTAGE_STATS.has(stat)) return raw;
+
+  const denominator = statType === "perGame" ? gamesPlayedExpr : totalSetsExpr;
+  return sql`coalesce((${raw}) * 1.0 / nullif(${denominator}, 0), 0)`;
+}
+
+function conditionSql(condition: StatCondition, statType: StatType): SQL {
+  const expression = scaledStat(condition.stat, statType);
+  const value = condition.value;
+
+  switch (condition.operator) {
+    case "==":
+      return sql`abs((${expression}) - ${value}) < ${EQUALITY_EPSILON}`;
+    case "!=":
+      return sql`abs((${expression}) - ${value}) >= ${EQUALITY_EPSILON}`;
+    case ">":
+      return sql`(${expression}) > ${value}`;
+    case ">=":
+      return sql`(${expression}) >= ${value}`;
+    case "<":
+      return sql`(${expression}) < ${value}`;
+    case "<=":
+      return sql`(${expression}) <= ${value}`;
+  }
+}
+
+function teamNameInSeason(seasonId: number): SQL {
+  return sql`(
+    select ${teams.name} from ${teamsPlayers}
+    inner join ${teams} on ${teams.id} = ${teamsPlayers.teamId}
+    where ${teamsPlayers.playerId} = ${players.id} and ${teams.seasonId} = ${seasonId}
+    limit 1
+  )`;
+}
+
+function leaderboardOrder(
+  sort: LeaderboardSortKey,
+  dir: SortDirection,
+  statType: StatType,
+  seasonId: number | undefined,
+): SQL {
+  const expression =
+    sort === "playerName"
+      ? sql`${players.name}`
+      : sort === "teamName"
+        ? seasonId === undefined
+          ? sql`${players.name}`
+          : teamNameInSeason(seasonId)
+        : scaledStat(sort, statType);
+
+  return dir === "asc" ? sql`${expression} asc` : sql`${expression} desc`;
+}
+
+export interface LeaderboardPageFilters extends PageQuery {
+  seasonId?: number | undefined;
+  stageRound?: StageRound | undefined;
+  region?: GameRegion | undefined;
+  statType?: StatType | undefined;
+  sort?: LeaderboardSortKey | undefined;
+  dir?: SortDirection | undefined;
+  conditions?: readonly StatCondition[] | undefined;
+}
+
+export interface LeaderboardPageRow {
+  playerId: number;
+  playerName: string;
+  robloxUserId: string | null;
+  position: string;
+  gamesPlayed: number;
+  totalSets: number;
+  spikeKills: number;
+  spikeAttempts: number;
+  apeKills: number;
+  apeAttempts: number;
+  totalKills: number;
+  totalAttempts: number;
+  spikingErrors: number;
+  totalErrors: number;
+  assists: number;
+  settingErrors: number;
+  blocks: number;
+  blockFollows: number;
+  digs: number;
+  aces: number;
+  servingErrors: number;
+  miscErrors: number;
+  spikingPercentage: number;
+  teamName: string | null;
+  teamLogoUrl: string | null;
+}
+
+function leaderboardWhere(filters: LeaderboardPageFilters) {
+  const term = searchTerm(filters);
+  return and(
+    filters.seasonId === undefined ? undefined : eq(games.seasonId, filters.seasonId),
+    buildStageRoundFilter(filters.stageRound),
+    filters.region ? eq(games.region, filters.region) : undefined,
+    term ? sql`lower(${players.name}) like ${likePattern(term)} escape '\\'` : undefined,
+  );
+}
+
+async function seasonTeams(db: Db, seasonId: number, playerIds: number[]) {
+  const byPlayer = new Map<number, { teamName: string; teamLogoUrl: string | null }>();
+  if (playerIds.length === 0) return byPlayer;
+
+  for (const chunk of chunkValues(playerIds)) {
+    const rows = await db
+      .select({
+        playerId: teamsPlayers.playerId,
+        teamName: teams.name,
+        teamLogoUrl: teams.logoUrl,
+      })
+      .from(teamsPlayers)
+      .innerJoin(teams, eq(teamsPlayers.teamId, teams.id))
+      .where(and(eq(teams.seasonId, seasonId), inArray(teamsPlayers.playerId, chunk)));
+
+    for (const row of rows) {
+      if (!byPlayer.has(row.playerId)) {
+        byPlayer.set(row.playerId, { teamName: row.teamName, teamLogoUrl: row.teamLogoUrl });
+      }
+    }
+  }
+
+  return byPlayer;
+}
+
+export async function leaderboardPage(
+  db: Db,
+  filters: LeaderboardPageFilters = {},
+): Promise<Page<LeaderboardPageRow>> {
+  const bounds = pageBounds(filters);
+  const statType = filters.statType ?? "total";
+  const sort = filters.sort ?? "totalKills";
+  const dir = filters.dir ?? (sort === "playerName" || sort === "teamName" ? "asc" : "desc");
+  const where = leaderboardWhere(filters);
+  const conditions = filters.conditions ?? [];
+  const having =
+    conditions.length === 0
+      ? undefined
+      : and(...conditions.map((condition) => conditionSql(condition, statType)));
+
+  const grouped = db
+    .select({ playerId: players.id })
+    .from(stats)
+    .innerJoin(players, eq(stats.playerId, players.id))
+    .innerJoin(games, eq(stats.gameId, games.id))
+    .where(where)
+    .groupBy(players.id)
+    .having(having)
+    .as("leaderboard_groups");
+
+  const [counted] = await db.select({ total: sql<number>`count(*)` }).from(grouped);
+  const total = Number(counted?.total ?? 0);
+  if (total === 0) return emptyPage<LeaderboardPageRow>(bounds);
+
+  const rows = await db
+    .select(leaderboardColumns)
+    .from(stats)
+    .innerJoin(players, eq(stats.playerId, players.id))
+    .innerJoin(games, eq(stats.gameId, games.id))
+    .where(where)
+    .groupBy(players.id)
+    .having(having)
+    .orderBy(leaderboardOrder(sort, dir, statType, filters.seasonId), asc(players.id))
+    .limit(bounds.perPage)
+    .offset(bounds.offset);
+
+  if (filters.seasonId === undefined) {
+    return makePage(
+      rows.map((row) => ({ ...row, teamName: null, teamLogoUrl: null })),
+      total,
+      bounds,
+    );
+  }
+
+  const byPlayer = await seasonTeams(
+    db,
+    filters.seasonId,
+    rows.map((row) => row.playerId),
+  );
+
+  return makePage(
+    rows.map((row) => {
+      const team = byPlayer.get(row.playerId);
+      return {
+        ...row,
+        teamName: team?.teamName ?? null,
+        teamLogoUrl: team?.teamLogoUrl ?? null,
+      };
+    }),
+    total,
+    bounds,
+  );
 }
 
 async function assertPair(db: Db, playerId: number, gameId: number) {
