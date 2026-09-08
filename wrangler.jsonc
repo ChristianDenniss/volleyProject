@@ -20,6 +20,13 @@
 	"observability": {
 		"enabled": true
 	},
+	"services": [
+		{
+			"binding": "IMAGES",
+			"service": "volley-images",
+			"entrypoint": "ImagesWorker"
+		}
+	],
 	"d1_databases": [
 		{
 			"binding": "DB",

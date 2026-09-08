@@ -28,6 +28,16 @@ export default defineConfig({
             miniflare: {
               compatibilityFlags: ["nodejs_compat"],
               bindings: { TEST_MIGRATIONS: await readD1Migrations(r("./drizzle")) },
+              workers: [
+                {
+                  name: "volley-images",
+                  modules: true,
+                  modulesRoot: r("./tests/helpers"),
+                  scriptPath: r("./tests/helpers/images-stub.mjs"),
+                  compatibilityDate: "2026-08-15",
+                  compatibilityFlags: ["nodejs_compat"],
+                },
+              ],
             },
           })),
         ],

@@ -1,0 +1,21 @@
+{
+	"$schema": "../../node_modules/wrangler/config-schema.json",
+	"name": "volley-images",
+	"account_id": "2232916f9106a5cdd66b87acd98613c3",
+	"compatibility_date": "2026-08-15",
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"main": "src/index.ts",
+	"workers_dev": false,
+	"observability": {
+		"enabled": true
+	},
+	"r2_buckets": [
+		{
+			"binding": "UPLOADS",
+			"bucket_name": "volley-project-uploads",
+			"preview_bucket_name": "volley-project-uploads-preview"
+		}
+	]
+}
