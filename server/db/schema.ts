@@ -9,6 +9,7 @@ import {
   text,
   uniqueIndex,
 } from "drizzle-orm/sqlite-core";
+import { UPLOAD_MIME_TYPES, type UploadVariant } from "../../lib/uploads";
 
 const now = () => new Date();
 
@@ -437,6 +438,27 @@ export const jobRuns = sqliteTable(
   ],
 );
 
+export const uploads = sqliteTable(
+  "uploads",
+  {
+    id: text().primaryKey(),
+    key: text().notNull().unique(),
+    filename: text().notNull(),
+    mime: text({ enum: UPLOAD_MIME_TYPES }).notNull(),
+    bytes: integer().notNull(),
+    width: integer().notNull(),
+    height: integer().notNull(),
+    variants: text({ mode: "json" }).$type<UploadVariant[]>().notNull(),
+    uploadedBy: text().references(() => user.id, { onDelete: "set null" }),
+    createdAt: integer({ mode: "timestamp_ms" }).notNull().$defaultFn(now),
+  },
+  (table) => [
+    index("uploads_uploaded_by_idx").on(table.uploadedBy),
+    check("uploads_mime_check", sql`${table.mime} in ${inList(UPLOAD_MIME_TYPES)}`),
+    check("uploads_bytes_check", sql`${table.bytes} > 0`),
+  ],
+);
+
 export const userRelations = relations(user, ({ many, one }) => ({
   sessions: many(session),
   accounts: many(account),
@@ -523,6 +545,10 @@ export const articleLikesRelations = relations(articleLikes, ({ one }) => ({
   user: one(user, { fields: [articleLikes.userId], references: [user.id] }),
 }));
 
+export const uploadsRelations = relations(uploads, ({ one }) => ({
+  uploader: one(user, { fields: [uploads.uploadedBy], references: [user.id] }),
+}));
+
 export const gameStaffRelations = relations(gameStaff, ({ one }) => ({
   game: one(games, { fields: [gameStaff.gameId], references: [games.id] }),
   user: one(user, { fields: [gameStaff.userId], references: [user.id] }),
@@ -539,3 +565,4 @@ export type Record_ = typeof records.$inferSelect;
 export type Article = typeof articles.$inferSelect;
 export type JobRun = typeof jobRuns.$inferSelect;
 export type GameStaff = typeof gameStaff.$inferSelect;
+export type Upload = typeof uploads.$inferSelect;

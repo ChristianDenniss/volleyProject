@@ -9,6 +9,7 @@ import { sheetImportRouter } from "./routers/sheet-import";
 import { statsRouter } from "./routers/stats";
 import { teamsRouter } from "./routers/teams";
 import { triviaRouter } from "./routers/trivia";
+import { uploadsRouter } from "./routers/uploads";
 import { usersRouter } from "./routers/users";
 
 export const appRouter = router({
@@ -22,6 +23,7 @@ export const appRouter = router({
   stats: statsRouter,
   teams: teamsRouter,
   trivia: triviaRouter,
+  uploads: uploadsRouter,
   users: usersRouter,
 });
 
