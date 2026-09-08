@@ -1,7 +1,7 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "volley-project",
-	"account_id": "ab7f2153b58fc90d9da754cdcccae5d0",
+	"account_id": "2232916f9106a5cdd66b87acd98613c3",
 	"compatibility_date": "2026-08-15",
 	"compatibility_flags": [
 		"nodejs_compat"
@@ -24,7 +24,7 @@
 		{
 			"binding": "DB",
 			"database_name": "volley-project",
-			"database_id": "6e1c6b80-d07b-4a8b-a80f-2c30ca9b2fa5",
+			"database_id": "20c0536f-7061-4a08-98ba-5261577ccd95",
 			"migrations_dir": "drizzle"
 		}
 	],
