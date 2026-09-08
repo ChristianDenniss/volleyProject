@@ -38,6 +38,7 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           packageManager: bun
+          workingDirectory: apps/web
           command: d1 migrations apply volley-project --remote
 
       - name: Deploy Worker

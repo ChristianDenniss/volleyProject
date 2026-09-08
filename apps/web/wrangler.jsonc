@@ -1,5 +1,5 @@
 {
-	"$schema": "node_modules/wrangler/config-schema.json",
+	"$schema": "../../node_modules/wrangler/config-schema.json",
 	"name": "volley-project",
 	"account_id": "2232916f9106a5cdd66b87acd98613c3",
 	"compatibility_date": "2026-08-15",

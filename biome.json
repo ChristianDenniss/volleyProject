@@ -8,14 +8,14 @@
   "files": {
     "includes": [
       "**",
-      "!dist",
-      "!.next",
-      "!.vinext",
-      "!.wrangler",
-      "!drizzle",
-      "!node_modules",
+      "!**/dist",
+      "!**/.next",
+      "!**/.vinext",
+      "!**/.wrangler",
+      "!**/drizzle",
+      "!**/node_modules",
       "!.claude",
-      "!components/ui",
+      "!**/components/ui",
       "!**/*.d.ts",
       "!**/*.css",
       "!tsconfig.tsbuildinfo"
@@ -94,7 +94,7 @@
   },
   "overrides": [
     {
-      "includes": ["tooling/**", "tests/node/**", "*.config.ts", "*.config.js"],
+      "includes": ["**/tooling/**", "**/tests/node/**", "**/*.config.ts", "**/*.config.js"],
       "linter": {
         "rules": {
           "style": {
