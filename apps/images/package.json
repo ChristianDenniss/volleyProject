@@ -1,5 +1,5 @@
 {
-  "name": "@volley/images-worker",
+  "name": "@volley/images",
   "private": true,
   "type": "module",
   "scripts": {

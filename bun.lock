@@ -8,6 +8,16 @@
         "@biomejs/biome": "^2.5.12",
       },
     },
+    "apps/images": {
+      "name": "@volley/images",
+      "dependencies": {
+        "@cf-wasm/photon": "0.4.0",
+        "@volley/media": "workspace:*",
+      },
+      "devDependencies": {
+        "wrangler": "^4.123.0",
+      },
+    },
     "apps/web": {
       "name": "@volley/web",
       "version": "0.1.0",
@@ -80,16 +90,6 @@
     "packages/media": {
       "name": "@volley/media",
       "version": "0.0.0",
-    },
-    "workers/images": {
-      "name": "@volley/images-worker",
-      "dependencies": {
-        "@cf-wasm/photon": "0.4.0",
-        "@volley/media": "workspace:*",
-      },
-      "devDependencies": {
-        "wrangler": "^4.123.0",
-      },
     },
   },
   "trustedDependencies": [
@@ -772,7 +772,7 @@
 
     "@vitest/utils": ["@vitest/utils@4.1.10", "", { "dependencies": { "@vitest/pretty-format": "4.1.10", "convert-source-map": "^2.0.0", "tinyrainbow": "^3.1.0" } }, "sha512-fy9am/HWxbaGt/Sawrp90vt6Y6jQwf1RX77cz3uwoJwJVMli/e1IEwRPnMNJ7vKfPTwo0diXifkpPvwH9v7nGA=="],
 
-    "@volley/images-worker": ["@volley/images-worker@workspace:workers/images"],
+    "@volley/images": ["@volley/images@workspace:apps/images"],
 
     "@volley/media": ["@volley/media@workspace:packages/media"],
 
