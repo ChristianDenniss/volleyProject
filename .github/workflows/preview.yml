@@ -1,0 +1,97 @@
+name: Preview
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+concurrency:
+  group: preview-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  preview:
+    name: Upload preview version
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install
+        run: bun install --frozen-lockfile
+
+      - name: Derive preview alias
+        id: alias
+        run: |
+          raw="${{ github.head_ref || github.ref_name }}"
+          alias=$(printf '%s' "$raw" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9' '-' | sed -e 's/-\+/-/g' -e 's/^-//' -e 's/-$//' | cut -c1-40)
+          alias=$(printf '%s' "$alias" | sed -e 's/-$//')
+          echo "alias=$alias" >> "$GITHUB_OUTPUT"
+
+      - name: Build
+        run: bun run build
+
+      - name: Upload version
+        id: upload
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          packageManager: bun
+          workingDirectory: apps/web
+          command: versions upload --config dist/server/wrangler.json --preview-alias ${{ steps.alias.outputs.alias }} --tag ${{ github.sha }}
+
+      - name: Comment the preview URL
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        env:
+          PREVIEW_ALIAS: ${{ steps.alias.outputs.alias }}
+        with:
+          script: |
+            const alias = process.env.PREVIEW_ALIAS;
+            const marker = '<!-- preview-url -->';
+            const body = [
+              marker,
+              `**Preview:** \`${alias}-volley-project.<account>.workers.dev\``,
+              '',
+              'This version is uploaded, not deployed — production traffic is untouched.',
+              '',
+              '> [!WARNING]',
+              '> The preview runs with the **production bindings**, including the live D1 database.',
+              '> Anything you write through this URL writes to real data. Treat it as read-only',
+              '> until a separate preview D1 is wired up.',
+            ].join('\n');
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find((comment) => comment.body?.includes(marker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }

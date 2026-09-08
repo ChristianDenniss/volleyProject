@@ -1,0 +1,283 @@
+import { and, asc, desc, eq, isNull, or, sql } from "drizzle-orm";
+import type { Db } from "@db";
+import { games, players, RECORD_METRICS, RECORD_TYPES, records, seasons } from "@db/schema";
+import { found, NotFoundError } from "./errors";
+import type { GameRegion } from "./games";
+import type { PartialInput } from "./input";
+import {
+  emptyPage,
+  likePattern,
+  makePage,
+  pageBounds,
+  searchTerm,
+  type Page,
+  type PageQuery,
+} from "./paging";
+
+export type RecordMetric = (typeof RECORD_METRICS)[number];
+export type RecordType = (typeof RECORD_TYPES)[number];
+
+export interface RecordInput {
+  metric: RecordMetric;
+  minAttempts?: number | null | undefined;
+  type: RecordType;
+  rank: number;
+  value: number;
+  date?: string | null | undefined;
+  seasonId: number;
+  playerId: number;
+  gameId?: number | null | undefined;
+}
+
+const columns = {
+  id: records.id,
+  metric: records.metric,
+  minAttempts: records.minAttempts,
+  type: records.type,
+  rank: records.rank,
+  value: records.value,
+  date: records.date,
+  seasonId: records.seasonId,
+  seasonNumber: seasons.seasonNumber,
+  playerId: records.playerId,
+  playerName: players.name,
+  gameId: records.gameId,
+  gameName: games.name,
+};
+
+const base = (db: Db) =>
+  db
+    .select(columns)
+    .from(records)
+    .innerJoin(players, eq(records.playerId, players.id))
+    .leftJoin(seasons, eq(records.seasonId, seasons.id))
+    .leftJoin(games, eq(records.gameId, games.id));
+
+export async function list(db: Db, region?: GameRegion) {
+  if (!region) {
+    return base(db).orderBy(asc(records.metric), asc(records.minAttempts), asc(records.rank));
+  }
+  return base(db)
+    .where(eq(games.region, region))
+    .orderBy(asc(records.metric), asc(records.minAttempts), asc(records.rank));
+}
+
+export interface RecordListFilters extends PageQuery {
+  region?: GameRegion | undefined;
+}
+
+export async function listPage(db: Db, filters: RecordListFilters = {}) {
+  const bounds = pageBounds(filters);
+  const term = searchTerm(filters);
+
+  const where = and(
+    filters.region ? eq(games.region, filters.region) : undefined,
+    term
+      ? sql`(
+          lower(${players.name}) like ${likePattern(term)} escape '\\'
+          or lower(${records.metric}) like ${likePattern(term)} escape '\\'
+        )`
+      : undefined,
+  );
+
+  const [counted] = await db
+    .select({ total: sql<number>`count(*)` })
+    .from(records)
+    .innerJoin(players, eq(records.playerId, players.id))
+    .leftJoin(seasons, eq(records.seasonId, seasons.id))
+    .leftJoin(games, eq(records.gameId, games.id))
+    .where(where);
+
+  const total = Number(counted?.total ?? 0);
+  if (total === 0) return emptyPage<Awaited<ReturnType<typeof list>>[number]>(bounds);
+
+  const rows = await base(db)
+    .where(where)
+    .orderBy(asc(records.metric), asc(records.minAttempts), asc(records.rank), asc(records.id))
+    .limit(bounds.perPage)
+    .offset(bounds.offset);
+
+  return makePage(rows, total, bounds);
+}
+
+export type RecordRow = Awaited<ReturnType<typeof list>>[number];
+
+export interface RecordGroup {
+  metric: string;
+  minAttempts: number | null;
+  rows: RecordRow[];
+}
+
+export interface RecordGroupFilters extends PageQuery {
+  region?: GameRegion | undefined;
+  type?: RecordType | undefined;
+}
+
+function recordScope(filters: RecordGroupFilters) {
+  return and(
+    filters.region ? eq(games.region, filters.region) : undefined,
+    filters.type ? eq(records.type, filters.type) : undefined,
+  );
+}
+
+export async function listTypes(db: Db, region?: GameRegion) {
+  const rows = await db
+    .selectDistinct({ type: records.type })
+    .from(records)
+    .leftJoin(games, eq(records.gameId, games.id))
+    .where(region ? eq(games.region, region) : undefined)
+    .orderBy(asc(records.type));
+
+  return rows.map((row) => row.type);
+}
+
+export async function listGroupsPage(
+  db: Db,
+  filters: RecordGroupFilters = {},
+): Promise<Page<RecordGroup>> {
+  const bounds = pageBounds(filters);
+  const where = recordScope(filters);
+
+  const distinctGroups = db
+    .selectDistinct({ metric: records.metric, minAttempts: records.minAttempts })
+    .from(records)
+    .leftJoin(games, eq(records.gameId, games.id))
+    .where(where)
+    .as("record_groups");
+
+  const [counted] = await db.select({ total: sql<number>`count(*)` }).from(distinctGroups);
+  const total = Number(counted?.total ?? 0);
+  if (total === 0) return emptyPage<RecordGroup>(bounds);
+
+  const groups = await db
+    .selectDistinct({ metric: records.metric, minAttempts: records.minAttempts })
+    .from(records)
+    .leftJoin(games, eq(records.gameId, games.id))
+    .where(where)
+    .orderBy(asc(records.metric), asc(records.minAttempts))
+    .limit(bounds.perPage)
+    .offset(bounds.offset);
+
+  if (groups.length === 0) return makePage<RecordGroup>([], total, bounds);
+
+  const rows = await base(db)
+    .where(
+      and(
+        where,
+        or(
+          ...groups.map((group) =>
+            and(
+              eq(records.metric, group.metric),
+              group.minAttempts === null
+                ? isNull(records.minAttempts)
+                : eq(records.minAttempts, group.minAttempts),
+            ),
+          ),
+        ),
+      ),
+    )
+    .orderBy(asc(records.metric), asc(records.minAttempts), asc(records.rank));
+
+  const byGroup = new Map<string, RecordRow[]>();
+  for (const row of rows) {
+    const key = `${row.metric}::${row.minAttempts ?? ""}`;
+    const bucket = byGroup.get(key) ?? [];
+    bucket.push(row);
+    byGroup.set(key, bucket);
+  }
+
+  return makePage(
+    groups.map((group) => ({
+      metric: group.metric,
+      minAttempts: group.minAttempts,
+      rows: byGroup.get(`${group.metric}::${group.minAttempts ?? ""}`) ?? [],
+    })),
+    total,
+    bounds,
+  );
+}
+
+export async function listBySeason(db: Db, seasonId: number) {
+  return base(db)
+    .where(eq(records.seasonId, seasonId))
+    .orderBy(asc(records.metric), asc(records.minAttempts), asc(records.rank));
+}
+
+// `rank` is assigned per season, so a metric holds one rank-1 row per season for
+// each of the "game" and "season" types. Callers that want the single best mark
+// have to narrow by type and order by value, not by rank.
+export async function listByMetric(
+  db: Db,
+  metric: RecordMetric,
+  minAttempts?: number | null,
+  type?: RecordType | null,
+  region?: GameRegion,
+) {
+  return base(db)
+    .where(
+      and(
+        eq(records.metric, metric),
+        minAttempts === undefined || minAttempts === null
+          ? isNull(records.minAttempts)
+          : eq(records.minAttempts, minAttempts),
+        ...(type ? [eq(records.type, type)] : []),
+        region ? eq(games.region, region) : undefined,
+      ),
+    )
+    .orderBy(desc(records.value), asc(records.rank));
+}
+
+export async function listByPlayer(db: Db, playerId: number) {
+  return base(db).where(eq(records.playerId, playerId)).orderBy(asc(records.rank));
+}
+
+export async function top10(
+  db: Db,
+  metric: RecordMetric,
+  seasonId: number,
+  minAttempts?: number | null | undefined,
+) {
+  return base(db)
+    .where(
+      and(
+        eq(records.metric, metric),
+        eq(records.seasonId, seasonId),
+        minAttempts === undefined || minAttempts === null
+          ? isNull(records.minAttempts)
+          : eq(records.minAttempts, minAttempts),
+      ),
+    )
+    .orderBy(asc(records.rank));
+}
+
+export async function getById(db: Db, id: number) {
+  const row = await base(db).where(eq(records.id, id)).get();
+  return row ?? null;
+}
+
+export async function count(db: Db) {
+  return db.$count(records);
+}
+
+export async function create(db: Db, input: RecordInput) {
+  const [season, player] = await Promise.all([
+    db.query.seasons.findFirst({ where: eq(seasons.id, input.seasonId) }),
+    db.query.players.findFirst({ where: eq(players.id, input.playerId) }),
+  ]);
+  if (!season) throw new NotFoundError(`Season ${input.seasonId}`);
+  if (!player) throw new NotFoundError(`Player ${input.playerId}`);
+
+  const [row] = await db.insert(records).values(input).returning();
+  return row;
+}
+
+export async function update(db: Db, id: number, input: PartialInput<RecordInput>) {
+  const [row] = await db.update(records).set(input).where(eq(records.id, id)).returning();
+  return found(row, `Record ${id}`);
+}
+
+export async function remove(db: Db, id: number) {
+  const [row] = await db.delete(records).where(eq(records.id, id)).returning({ id: records.id });
+  found(row, `Record ${id}`);
+  return { id };
+}

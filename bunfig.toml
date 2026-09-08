@@ -1,0 +1,6 @@
+[install]
+exact = false
+linker = "hoisted"
+
+[install.lockfile]
+save = true

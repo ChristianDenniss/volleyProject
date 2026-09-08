@@ -1,0 +1,67 @@
+{
+	"$schema": "../../node_modules/wrangler/config-schema.json",
+	"name": "volley-project",
+	"account_id": "2232916f9106a5cdd66b87acd98613c3",
+	"compatibility_date": "2026-08-15",
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"main": "server/worker.ts",
+	"workers_dev": true,
+	"preview_urls": true,
+	"assets": {
+		"directory": "dist/client",
+		"not_found_handling": "none",
+		"binding": "ASSETS"
+	},
+	"cache": {
+		"enabled": true
+	},
+	"observability": {
+		"enabled": true
+	},
+	"services": [
+		{
+			"binding": "IMAGES_RPC",
+			"service": "volley-images",
+			"entrypoint": "ImagesWorker"
+		}
+	],
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "volley-project",
+			"database_id": "20c0536f-7061-4a08-98ba-5261577ccd95",
+			"migrations_dir": "drizzle"
+		}
+	],
+	"r2_buckets": [
+		{
+			"binding": "UPLOADS",
+			"bucket_name": "volley-project-uploads",
+			"preview_bucket_name": "volley-project-uploads-preview"
+		}
+	],
+	"queues": {
+		"producers": [
+			{
+				"binding": "RECORDS_QUEUE",
+				"queue": "volley-records"
+			}
+		],
+		"consumers": [
+			{
+				"queue": "volley-uploads",
+				"max_batch_size": 5,
+				"max_concurrency": 2,
+				"max_retries": 3
+			},
+			{
+				"queue": "volley-records",
+				"max_batch_size": 1,
+				"max_concurrency": 1,
+				"max_retries": 3
+			}
+		]
+	}
+}
