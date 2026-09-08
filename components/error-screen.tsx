@@ -31,7 +31,7 @@ export function ErrorScreen({
   fullPage = false,
 }: ErrorScreenProps) {
   const showTechnical =
-    process.env.NODE_ENV === "development" &&
+    import.meta.env.DEV &&
     detail &&
     detail !== presentation.body &&
     detail !== presentation.summary;

@@ -1,6 +1,13 @@
 "use client";
 
-import { pick, ResourceView, optionalText, type ColumnSpec, type FieldSpec } from "./resource-view";
+import {
+  pick,
+  ResourceView,
+  optionalText,
+  type ColumnSpec,
+  type FieldSpec,
+  type PagingProps,
+} from "./resource-view";
 import { TeamsSheetImport } from "./sheet-import-dialog";
 import { trpc } from "@/lib/trpc";
 
@@ -31,9 +38,11 @@ const COLUMNS: ColumnSpec<Row>[] = [
 export function TeamsManager({
   rows,
   seasons,
+  paging,
 }: {
   rows: Row[];
   seasons: { id: number; label: string }[];
+  paging: PagingProps;
 }) {
   const create = trpc.teams.create.useMutation();
   const update = trpc.teams.update.useMutation();
@@ -67,6 +76,7 @@ export function TeamsManager({
     <ResourceView<Row>
       title="team"
       rows={rows}
+      paging={paging}
       columns={COLUMNS}
       fields={fields}
       extra={<TeamsSheetImport seasons={seasons} />}

@@ -1,9 +1,9 @@
 export class ServiceError extends Error {
-  constructor(
-    message: string,
-    readonly code: "NOT_FOUND" | "CONFLICT" | "BAD_REQUEST",
-  ) {
+  readonly code: "NOT_FOUND" | "CONFLICT" | "BAD_REQUEST";
+
+  constructor(message: string, code: "NOT_FOUND" | "CONFLICT" | "BAD_REQUEST") {
     super(message);
+    this.code = code;
     this.name = new.target.name;
   }
 }

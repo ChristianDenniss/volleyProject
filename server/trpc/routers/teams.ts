@@ -2,8 +2,10 @@ import { env } from "cloudflare:workers";
 import { TRPCError } from "@trpc/server";
 import { teams, sheetImport, type AssembledSources, type SheetImportPreview } from "@server/services";
 import { adminProcedure, protectedProcedure, publicProcedure, router, scopedRegion } from "../init";
+import { cachedQuery } from "../cached";
 import { revalidate } from "../revalidate";
 import {
+  teamListPage,
   bySeason,
   byTeamName,
   byId,
@@ -19,6 +21,20 @@ export const teamsRouter = router({
   list: publicProcedure
     .input(optionalRegion)
     .query(({ ctx, input }) => teams.list(ctx.db, scopedRegion(ctx, input?.region))),
+
+  listPage: publicProcedure.input(teamListPage).query(({ ctx, input }) =>
+    teams.listPage(ctx.db, {
+      ...input,
+      region: scopedRegion(ctx, input.region),
+    }),
+  ),
+
+  placements: publicProcedure.input(optionalRegion).query(({ ctx, input }) => {
+    const region = scopedRegion(ctx, input?.region);
+    return cachedQuery("teams", ["placements", region ?? null], () =>
+      teams.listPlacements(ctx.db, region),
+    );
+  }),
 
   byName: publicProcedure.input(byTeamName).query(async ({ ctx, input }) => {
     const team = await teams.getByName(ctx.db, input.name, scopedRegion(ctx));

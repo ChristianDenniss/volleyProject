@@ -19,6 +19,14 @@ import {
 import { ConflictError, found, inserted, NotFoundError } from "./errors";
 import type { GameRegion } from "./games";
 import type { PartialInput } from "./input";
+import {
+  emptyPage,
+  likePattern,
+  makePage,
+  pageBounds,
+  searchTerm,
+  type PageQuery,
+} from "./paging";
 
 export interface PlayerInput {
   name: string;
@@ -63,6 +71,110 @@ export async function list(db: Db, region?: GameRegion) {
   if (!region) return query.orderBy(asc(players.name));
 
   return query.where(playerInRegion(region)).orderBy(asc(players.name));
+}
+
+export interface PlayerListFilters extends PageQuery {
+  region?: GameRegion | undefined;
+  season?: number | undefined;
+  position?: string | undefined;
+}
+
+export interface PlayerMembership {
+  name: string;
+  seasonNumber: number | null;
+}
+
+function playerInSeason(seasonNumber: number) {
+  return sql`exists (
+    select 1 from ${teamsPlayers}
+    inner join ${teams} on ${teams.id} = ${teamsPlayers.teamId}
+    inner join ${seasons} on ${seasons.id} = ${teams.seasonId}
+    where ${teamsPlayers.playerId} = ${players.id} and ${seasons.seasonNumber} = ${seasonNumber}
+  )`;
+}
+
+function playerFilters(filters: PlayerListFilters) {
+  const term = searchTerm(filters);
+  return and(
+    filters.region ? playerInRegion(filters.region) : undefined,
+    filters.season !== undefined ? playerInSeason(filters.season) : undefined,
+    filters.position ? eq(players.position, filters.position) : undefined,
+    term ? sql`lower(${players.name}) like ${likePattern(term)} escape '\\'` : undefined,
+  );
+}
+
+async function membershipsFor(db: Db, playerIds: number[]) {
+  const byPlayer = new Map<number, PlayerMembership[]>();
+  if (playerIds.length === 0) return byPlayer;
+
+  for (const chunk of chunkValues(playerIds)) {
+    const rows = await db
+      .select({
+        playerId: teamsPlayers.playerId,
+        teamName: teams.name,
+        seasonNumber: seasons.seasonNumber,
+      })
+      .from(teamsPlayers)
+      .innerJoin(teams, eq(teamsPlayers.teamId, teams.id))
+      .leftJoin(seasons, eq(teams.seasonId, seasons.id))
+      .where(inArray(teamsPlayers.playerId, chunk))
+      .orderBy(asc(teams.name));
+
+    for (const row of rows) {
+      const bucket = byPlayer.get(row.playerId) ?? [];
+      bucket.push({ name: row.teamName, seasonNumber: row.seasonNumber ?? null });
+      byPlayer.set(row.playerId, bucket);
+    }
+  }
+
+  return byPlayer;
+}
+
+export async function listPage(db: Db, filters: PlayerListFilters = {}) {
+  const bounds = pageBounds(filters);
+  const where = playerFilters(filters);
+
+  const total = await db.$count(players, where);
+  if (total === 0) return emptyPage<PlayerListRow>(bounds);
+
+  const rows = await db
+    .select({
+      id: players.id,
+      name: players.name,
+      position: players.position,
+      teamCount,
+      gamesPlayed,
+    })
+    .from(players)
+    .where(where)
+    .orderBy(asc(players.name))
+    .limit(bounds.perPage)
+    .offset(bounds.offset);
+
+  const memberships = await membershipsFor(
+    db,
+    rows.map((row) => row.id),
+  );
+
+  return makePage(
+    rows.map((row) => ({ ...row, teams: memberships.get(row.id) ?? [] })),
+    total,
+    bounds,
+  );
+}
+
+export type PlayerListRow = Awaited<ReturnType<typeof list>>[number] & {
+  teams: PlayerMembership[];
+};
+
+export async function listPositions(db: Db, region?: GameRegion) {
+  const rows = await db
+    .selectDistinct({ position: players.position })
+    .from(players)
+    .where(region ? playerInRegion(region) : undefined)
+    .orderBy(asc(players.position));
+
+  return rows.flatMap((row) => (row.position ? [row.position] : []));
 }
 
 export async function listByTeam(db: Db, teamId: number) {

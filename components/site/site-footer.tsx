@@ -81,6 +81,7 @@ export function SiteFooter() {
                   >
                     <path d={social.path} />
                   </svg>
+                  <span className="sr-only">{social.label}</span>
                 </a>
               ))}
             </div>

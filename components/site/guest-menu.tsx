@@ -17,6 +17,7 @@ export function GuestMenu() {
     <div className="flex items-center gap-3 sm:gap-4">
       <span
         className="flex size-9 items-center justify-center rounded-xs border border-rvl-line text-rvl-dim"
+        role="img"
         aria-label="Signed out"
       >
         <UserRoundX className="size-4" />

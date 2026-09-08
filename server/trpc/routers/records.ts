@@ -2,10 +2,12 @@ import { env } from "cloudflare:workers";
 import { homeNumbers, records } from "@server/services";
 import { enqueueRecalculation, latestJob } from "@server/queue";
 import { adminProcedure, publicProcedure, router, scopedRegion } from "../init";
+import { cachedQuery } from "../cached";
 import { revalidate } from "../revalidate";
 import {
   byId,
   optionalRegion,
+  recordListPage,
   recordCreate,
   recordRecalculate,
   recordUpdate,
@@ -13,9 +15,17 @@ import {
 } from "../schemas";
 
 export const recordsRouter = router({
-  list: publicProcedure
-    .input(optionalRegion)
-    .query(({ ctx, input }) => records.list(ctx.db, scopedRegion(ctx, input?.region))),
+  list: publicProcedure.input(optionalRegion).query(({ ctx, input }) => {
+    const region = scopedRegion(ctx, input?.region);
+    return cachedQuery("records", ["list", region ?? null], () => records.list(ctx.db, region));
+  }),
+
+  listPage: publicProcedure.input(recordListPage).query(({ ctx, input }) =>
+    records.listPage(ctx.db, {
+      ...input,
+      region: scopedRegion(ctx, input.region),
+    }),
+  ),
 
   byMetric: publicProcedure
     .input(recordsByMetric)

@@ -1,8 +1,16 @@
-import { asc, desc, eq } from "drizzle-orm";
+import { asc, desc, eq, sql } from "drizzle-orm";
 import type { Db } from "@db";
 import { correlatedCount } from "@db/sqlx";
 import { articles, gameStaff, games, USER_ROLES, user } from "@db/schema";
 import { found } from "./errors";
+import {
+  emptyPage,
+  likePattern,
+  makePage,
+  pageBounds,
+  searchTerm,
+  type PageQuery,
+} from "./paging";
 import { ensureLinkedToUser, listTeams } from "./players";
 
 export type UserRole = (typeof USER_ROLES)[number];
@@ -20,6 +28,30 @@ const publicColumns = {
 
 export async function list(db: Db) {
   return db.select(publicColumns).from(user).orderBy(asc(user.name));
+}
+
+export async function listPage(db: Db, filters: PageQuery = {}) {
+  const bounds = pageBounds(filters);
+  const term = searchTerm(filters);
+  const where = term
+    ? sql`(
+        lower(${user.name}) like ${likePattern(term)} escape '\\'
+        or lower(${user.email}) like ${likePattern(term)} escape '\\'
+      )`
+    : undefined;
+
+  const total = await db.$count(user, where);
+  if (total === 0) return emptyPage<Awaited<ReturnType<typeof list>>[number]>(bounds);
+
+  const rows = await db
+    .select(publicColumns)
+    .from(user)
+    .where(where)
+    .orderBy(asc(user.name))
+    .limit(bounds.perPage)
+    .offset(bounds.offset);
+
+  return makePage(rows, total, bounds);
 }
 
 export async function getById(db: Db, id: string) {

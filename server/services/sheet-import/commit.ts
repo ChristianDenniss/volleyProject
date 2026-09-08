@@ -193,18 +193,18 @@ function applyPreviewExcludes(
   const excludeGames = new Set(input.excludeGameKeys?.map((key) => key.toLowerCase()) ?? []);
   if (excludeTeams.size === 0 && excludeGames.size === 0) return preview;
 
-  const teams = preview.teams.map((team) => ({
+  const nextTeams = preview.teams.map((team) => ({
     ...team,
     included: team.included && !excludeTeams.has(team.key.toLowerCase()),
   }));
-  const games = preview.games.map((game) => ({
+  const nextGames = preview.games.map((game) => ({
     ...game,
     included: game.included && !excludeGames.has(game.key.toLowerCase()),
   }));
-  const activeGameKeys = new Set(games.filter((game) => game.included).map((game) => game.key));
-  const stats = preview.stats.filter((stat) => activeGameKeys.has(stat.gameKey));
+  const activeGameKeys = new Set(nextGames.filter((game) => game.included).map((game) => game.key));
+  const nextStats = preview.stats.filter((stat) => activeGameKeys.has(stat.gameKey));
 
-  return { ...preview, teams, games, stats };
+  return { ...preview, teams: nextTeams, games: nextGames, stats: nextStats };
 }
 
 function gameInsertRow(game: PreviewGame, seasonId: number) {

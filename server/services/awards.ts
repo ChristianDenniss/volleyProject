@@ -1,7 +1,7 @@
 import { asc, eq, inArray } from "drizzle-orm";
 import type { Db } from "@db";
 import { insertMany, chunkIds, chunkValues } from "@db/insert";
-import { AWARD_TYPES, awards, awardsPlayers, players, seasons } from "@db/schema";
+import { type AWARD_TYPES, awards, awardsPlayers, players, seasons } from "@db/schema";
 import { found, inserted, NotFoundError } from "./errors";
 import type { PartialInput } from "./input";
 

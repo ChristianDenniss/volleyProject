@@ -306,7 +306,7 @@ function computeEigenDecomposition(matrix: number[][]): { eigenvalues: number[];
       vector = vector.map(v => v / norm);
 
       // Check convergence
-      const diff = Math.sqrt(prevVector.reduce((sum, v, idx) => sum + Math.pow(v - vector[idx], 2), 0));
+      const diff = Math.sqrt(prevVector.reduce((sum, v, idx) => sum + (v - vector[idx]) ** 2, 0));
       if (diff < 1e-6) break;
       iterations++;
     }

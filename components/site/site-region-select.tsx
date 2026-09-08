@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useTransition } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
-  SITE_REGIONS,
+  hrefWithParams,
   siteRegionCookie,
+  SITE_REGIONS,
+  withRegionParam,
   type SiteRegion,
 } from "@/lib/region";
 import { cn } from "@/lib/utils";
@@ -19,13 +21,14 @@ const LABELS: Record<SiteRegion, string> = {
 
 export function SiteRegionSelect({ value }: { value: SiteRegion }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [pending, startTransition] = useTransition();
-  const [selected, setSelected] = useState(value);
 
   return (
     <div className="flex gap-1.5" role="group" aria-label="Region" aria-busy={pending}>
       {SITE_REGIONS.map((region) => {
-        const active = region === selected;
+        const active = region === value;
         return (
           <button
             key={region}
@@ -33,11 +36,12 @@ export function SiteRegionSelect({ value }: { value: SiteRegion }) {
             aria-pressed={active}
             disabled={pending && !active}
             onClick={() => {
-              if (region === selected) return;
-              setSelected(region);
+              if (region === value) return;
               document.cookie = siteRegionCookie(region);
+              const next = withRegionParam(searchParams, region);
+              next.delete("page");
               startTransition(() => {
-                router.refresh();
+                router.push(hrefWithParams(pathname, next));
               });
             }}
             className={cn(

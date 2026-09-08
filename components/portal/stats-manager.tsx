@@ -5,7 +5,13 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { usePortalErrorToast } from "./portal-error-detail";
 import { PortalSelect } from "./portal-select";
-import { pick, ResourceView, type ColumnSpec, type FieldSpec } from "./resource-view";
+import {
+  pick,
+  ResourceView,
+  type ColumnSpec,
+  type FieldSpec,
+  type PagingProps,
+} from "./resource-view";
 import {
   Dialog,
   DialogContent,
@@ -158,10 +164,12 @@ export function StatsManager({
   rows,
   games,
   players,
+  paging,
 }: {
   rows: Row[];
   games: { id: number; label: string }[];
   players: string[];
+  paging: PagingProps;
 }) {
   const create = trpc.stats.createByName.useMutation();
   const update = trpc.stats.update.useMutation();
@@ -189,6 +197,7 @@ export function StatsManager({
     <ResourceView<Row>
       title="stat line"
       rows={rows}
+      paging={paging}
       columns={COLUMNS}
       fields={fields}
       extra={<CsvUpload games={games} />}

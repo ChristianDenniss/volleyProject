@@ -1,6 +1,7 @@
 import { env } from "cloudflare:workers";
 import { seasons, sheetImport, type AssembledSources, type SheetImportPreview } from "@server/services";
 import { adminProcedure, publicProcedure, router, scopedRegion } from "../init";
+import { cachedQuery } from "../cached";
 import { revalidate } from "../revalidate";
 import {
   byId,
@@ -12,9 +13,10 @@ import {
 } from "../schemas";
 
 export const seasonsRouter = router({
-  list: publicProcedure
-    .input(optionalRegion)
-    .query(({ ctx, input }) => seasons.list(ctx.db, scopedRegion(ctx, input?.region))),
+  list: publicProcedure.input(optionalRegion).query(({ ctx, input }) => {
+    const region = scopedRegion(ctx, input?.region);
+    return cachedQuery("seasons", ["list", region ?? null], () => seasons.list(ctx.db, region));
+  }),
 
   byId: publicProcedure
     .input(byId.extend({ region: regionValue }))

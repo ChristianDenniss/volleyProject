@@ -1,8 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ClearFiltersButton, FilterSelect, Pagination, SearchBar } from "./controls";
+import { UrlClearFilters, UrlFilterSelect, UrlPagination, UrlSearchBar } from "./url-controls";
 
 export interface GameListRow {
   id: number;
@@ -14,7 +13,7 @@ export interface GameListRow {
   team2Score: number;
 }
 
-const PER_PAGE = 25;
+const FILTER_KEYS = ["q", "season", "stage"];
 
 // A game date is a plain YYYY-MM-DD string, which Date parses as UTC midnight.
 // Formatting it in the viewer's zone would shift it a day west of UTC and disagree
@@ -31,108 +30,56 @@ function shortDate(value: string) {
       });
 }
 
-export function GamesList({ games }: { games: GameListRow[] }) {
-  const [search, setSearch] = useState("");
-  const [season, setSeason] = useState("");
-  const [stage, setStage] = useState("");
-  const [page, setPage] = useState(1);
-
-  const seasons = useMemo(() => {
-    const values = new Set<number>();
-    games.forEach((game) => {
-      if (game.seasonNumber != null) values.add(game.seasonNumber);
-    });
-    return [...values].sort((a, b) => b - a);
-  }, [games]);
-
-  const stages = useMemo(() => {
-    const values = new Set<string>();
-    games.forEach((game) => {
-      if (game.stage) values.add(game.stage);
-    });
-    return [...values].sort((a, b) => a.localeCompare(b));
-  }, [games]);
-
-  const filtered = useMemo(
-    () =>
-      games.filter((game) => {
-        const matchesSearch = game.name.toLowerCase().includes(search.toLowerCase());
-        const matchesSeason = !season || String(game.seasonNumber) === season;
-        const matchesStage = !stage || game.stage === stage;
-        return matchesSearch && matchesSeason && matchesStage;
-      }),
-    [games, search, season, stage],
-  );
-
-  const totalPages = Math.max(Math.ceil(filtered.length / PER_PAGE), 1);
-  const current = Math.min(page, totalPages);
-  const visible = filtered.slice((current - 1) * PER_PAGE, current * PER_PAGE);
-
-  const clearFilters = () => {
-    setSearch("");
-    setSeason("");
-    setStage("");
-    setPage(1);
-  };
-
+export function GamesList({
+  games,
+  totalPages,
+  seasons,
+  stages,
+}: {
+  games: GameListRow[];
+  totalPages: number;
+  seasons: number[];
+  stages: string[];
+}) {
   return (
     <>
       <div className="flex flex-col gap-6 border-b border-rvl-line px-5 py-7 sm:px-8 xl:px-14">
         <div className="flex flex-wrap items-end gap-5">
-          <FilterSelect
+          <UrlFilterSelect
             id="season-filter"
             label="Season"
-            value={season}
-            onChange={(value) => {
-              setSeason(value);
-              setPage(1);
-            }}
+            paramKey="season"
             options={[
               { value: "", label: "All seasons" },
-              ...seasons.map((value) => ({ value: String(value), label: `Season ${value}` })),
+              ...[...seasons]
+                .sort((a, b) => b - a)
+                .map((value) => ({ value: String(value), label: `Season ${value}` })),
             ]}
           />
 
-          <FilterSelect
+          <UrlFilterSelect
             id="stage-filter"
             label="Stage"
-            value={stage}
-            onChange={(value) => {
-              setStage(value);
-              setPage(1);
-            }}
+            paramKey="stage"
             options={[
               { value: "", label: "All stages" },
               ...stages.map((value) => ({ value, label: value })),
             ]}
           />
 
-          <SearchBar
-            className="max-w-[340px]"
-            value={search}
-            placeholder="Search games"
-            onSearch={(value) => {
-              setSearch(value);
-              setPage(1);
-            }}
-          />
+          <UrlSearchBar className="max-w-[340px]" placeholder="Search games" />
 
-          {search || season || stage ? <ClearFiltersButton onClick={clearFilters} /> : null}
+          <UrlClearFilters keys={FILTER_KEYS} />
 
           <div className="ml-auto self-end">
-            <Pagination
-              variant="compact"
-              currentPage={current}
-              totalPages={totalPages}
-              onPageChange={setPage}
-            />
+            <UrlPagination variant="compact" totalPages={totalPages} />
           </div>
         </div>
       </div>
 
       <div className="px-5 py-12 sm:px-8 xl:px-14">
         <div className="border-t border-rvl-line">
-          {visible.map((game) => (
+          {games.map((game) => (
             <Link
               key={game.id}
               href={`/games/${game.id}`}

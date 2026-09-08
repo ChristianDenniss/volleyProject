@@ -1,9 +1,17 @@
-import { and, asc, desc, eq, isNull } from "drizzle-orm";
+import { and, asc, desc, eq, isNull, sql } from "drizzle-orm";
 import type { Db } from "@db";
 import { games, players, RECORD_METRICS, RECORD_TYPES, records, seasons } from "@db/schema";
 import { found, NotFoundError } from "./errors";
 import type { GameRegion } from "./games";
 import type { PartialInput } from "./input";
+import {
+  emptyPage,
+  likePattern,
+  makePage,
+  pageBounds,
+  searchTerm,
+  type PageQuery,
+} from "./paging";
 
 export type RecordMetric = (typeof RECORD_METRICS)[number];
 export type RecordType = (typeof RECORD_TYPES)[number];
@@ -51,6 +59,44 @@ export async function list(db: Db, region?: GameRegion) {
   return base(db)
     .where(eq(games.region, region))
     .orderBy(asc(records.metric), asc(records.minAttempts), asc(records.rank));
+}
+
+export interface RecordListFilters extends PageQuery {
+  region?: GameRegion | undefined;
+}
+
+export async function listPage(db: Db, filters: RecordListFilters = {}) {
+  const bounds = pageBounds(filters);
+  const term = searchTerm(filters);
+
+  const where = and(
+    filters.region ? eq(games.region, filters.region) : undefined,
+    term
+      ? sql`(
+          lower(${players.name}) like ${likePattern(term)} escape '\\'
+          or lower(${records.metric}) like ${likePattern(term)} escape '\\'
+        )`
+      : undefined,
+  );
+
+  const [counted] = await db
+    .select({ total: sql<number>`count(*)` })
+    .from(records)
+    .innerJoin(players, eq(records.playerId, players.id))
+    .leftJoin(seasons, eq(records.seasonId, seasons.id))
+    .leftJoin(games, eq(records.gameId, games.id))
+    .where(where);
+
+  const total = Number(counted?.total ?? 0);
+  if (total === 0) return emptyPage<Awaited<ReturnType<typeof list>>[number]>(bounds);
+
+  const rows = await base(db)
+    .where(where)
+    .orderBy(asc(records.metric), asc(records.minAttempts), asc(records.rank))
+    .limit(bounds.perPage)
+    .offset(bounds.offset);
+
+  return makePage(rows, total, bounds);
 }
 
 export async function listBySeason(db: Db, seasonId: number) {

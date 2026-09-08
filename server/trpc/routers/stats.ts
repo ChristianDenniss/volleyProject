@@ -1,5 +1,6 @@
 import { homeNumbers, stats } from "@server/services";
 import { adminProcedure, publicProcedure, router, scopedRegion } from "../init";
+import { cachedQuery } from "../cached";
 import { revalidate } from "../revalidate";
 import {
   byId,
@@ -7,6 +8,7 @@ import {
   optionalRegion,
   statCreate,
   statCreateByName,
+  statListPage,
   statRows,
   statUpdate,
 } from "../schemas";
@@ -14,19 +16,30 @@ import {
 export const statsRouter = router({
   list: adminProcedure.query(({ ctx }) => stats.list(ctx.db)),
 
-  leaderboard: publicProcedure
-    .input(leaderboardInput)
-    .query(({ ctx, input }) =>
-      stats.leaderboard(ctx.db, {
-        seasonId: input.seasonId,
-        stageRound: input.stageRound,
-        region: scopedRegion(ctx, input.region),
-      }),
-    ),
+  leaderboard: publicProcedure.input(leaderboardInput).query(({ ctx, input }) => {
+    const region = scopedRegion(ctx, input.region);
+    return cachedQuery(
+      "stats",
+      ["leaderboard", input.seasonId ?? null, input.stageRound ?? null, region ?? null],
+      () =>
+        stats.leaderboard(ctx.db, {
+          seasonId: input.seasonId,
+          stageRound: input.stageRound,
+          region,
+        }),
+    );
+  }),
 
-  vectorGraph: publicProcedure
-    .input(optionalRegion)
-    .query(({ ctx, input }) => stats.vectorGraph(ctx.db, scopedRegion(ctx, input?.region))),
+  vectorGraph: publicProcedure.input(optionalRegion).query(({ ctx, input }) => {
+    const region = scopedRegion(ctx, input?.region);
+    return cachedQuery("stats", ["vector-graph", region ?? null], () =>
+      stats.vectorGraph(ctx.db, region),
+    );
+  }),
+
+  listPage: adminProcedure
+    .input(statListPage)
+    .query(({ ctx, input }) => stats.listPage(ctx.db, input ?? {})),
 
   count: adminProcedure.query(({ ctx }) => stats.count(ctx.db)),
 

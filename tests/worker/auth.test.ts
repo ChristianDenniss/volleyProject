@@ -65,7 +65,7 @@ describe("session", () => {
     const session = await auth.api.getSession({ headers });
 
     expect(session?.user.id).toBe(FIXTURES.adminId);
-    expect((session?.user as { role?: string }).role).toBe("admin");
+    expect((session?.user as { role?: string } | undefined)?.role).toBe("admin");
   });
 
   it("returns nothing without a cookie", async () => {

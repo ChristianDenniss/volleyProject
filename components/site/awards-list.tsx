@@ -29,7 +29,7 @@ export function AwardsList({ awards }: { awards: AwardListRow[] }) {
 
   const types = useMemo(() => {
     const values = new Set<string>();
-    awards.forEach((award) => values.add(award.type));
+    for (const award of awards) values.add(award.type);
     return [...values].sort((a, b) => a.localeCompare(b));
   }, [awards]);
 

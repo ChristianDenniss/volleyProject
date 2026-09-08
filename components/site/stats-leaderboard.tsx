@@ -254,9 +254,9 @@ export function StatsLeaderboard({
     pushQuery(seasonId ? String(seasonId) : "", "all");
   };
 
-  const toggleStatVisibility = (key: ColumnKey) => {
-    if (key === "playerName") return;
-    setVisibleStats((current) => ({ ...current, [key]: !current[key] }));
+  const toggleStatVisibility = (column: ColumnKey) => {
+    if (column === "playerName") return;
+    setVisibleStats((columns) => ({ ...columns, [column]: !columns[column] }));
   };
 
   const toggleAllStats = () => {

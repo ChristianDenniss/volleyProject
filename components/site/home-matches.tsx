@@ -174,6 +174,7 @@ export function HomeMatches({
             </button>
             <div
               ref={stripRef}
+              role="group"
               aria-label="Match dates"
               className="no-scrollbar flex min-w-0 flex-1 snap-x snap-mandatory gap-2.5 overflow-x-auto px-[calc(50%-3.25rem)]"
             >
@@ -223,6 +224,7 @@ export function HomeMatches({
       ) : null}
 
       <div
+        role="group"
         aria-label="Matches for selected day"
         className="flex min-h-[calc(var(--match-slots)*4.5rem+(var(--match-slots)-1)*1rem)] flex-col gap-4"
         style={{ "--match-slots": slots } as React.CSSProperties}

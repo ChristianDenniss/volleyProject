@@ -32,3 +32,5 @@ baselines/*.jpg
 *.njsproj
 *.sln
 *.sw?
+
+.claude/worktrees/

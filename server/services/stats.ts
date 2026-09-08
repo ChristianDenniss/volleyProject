@@ -7,6 +7,14 @@ import { STAGE_ROUNDS, type StageRound } from "@/lib/stats/stage-rounds";
 import type { GameRegion } from "./games";
 import { ConflictError, found, NotFoundError } from "./errors";
 import type { PartialInput } from "./input";
+import {
+  emptyPage,
+  likePattern,
+  makePage,
+  pageBounds,
+  searchTerm,
+  type PageQuery,
+} from "./paging";
 
 export interface StatInput {
   playerId: number;
@@ -60,6 +68,52 @@ export async function list(db: Db) {
     .innerJoin(players, eq(stats.playerId, players.id))
     .innerJoin(games, eq(stats.gameId, games.id))
     .orderBy(desc(games.date));
+}
+
+export interface StatListFilters extends PageQuery {
+  season?: number | undefined;
+}
+
+function statFilters(filters: StatListFilters) {
+  const term = searchTerm(filters);
+  return and(
+    filters.season !== undefined ? eq(seasons.seasonNumber, filters.season) : undefined,
+    term
+      ? sql`(
+          lower(${players.name}) like ${likePattern(term)} escape '\\'
+          or lower(coalesce(${games.name}, '')) like ${likePattern(term)} escape '\\'
+        )`
+      : undefined,
+  );
+}
+
+export async function listPage(db: Db, filters: StatListFilters = {}) {
+  const bounds = pageBounds(filters);
+  const where = statFilters(filters);
+
+  const [counted] = await db
+    .select({ total: sql<number>`count(*)` })
+    .from(stats)
+    .innerJoin(players, eq(stats.playerId, players.id))
+    .innerJoin(games, eq(stats.gameId, games.id))
+    .leftJoin(seasons, eq(games.seasonId, seasons.id))
+    .where(where);
+
+  const total = Number(counted?.total ?? 0);
+  if (total === 0) return emptyPage<Awaited<ReturnType<typeof list>>[number]>(bounds);
+
+  const rows = await db
+    .select(detail)
+    .from(stats)
+    .innerJoin(players, eq(stats.playerId, players.id))
+    .innerJoin(games, eq(stats.gameId, games.id))
+    .leftJoin(seasons, eq(games.seasonId, seasons.id))
+    .where(where)
+    .orderBy(desc(games.date))
+    .limit(bounds.perPage)
+    .offset(bounds.offset);
+
+  return makePage(rows, total, bounds);
 }
 
 export async function getById(db: Db, id: number) {

@@ -5,7 +5,14 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { usePortalErrorToast } from "./portal-error-detail";
 import { PortalSelect } from "./portal-select";
-import { pick, ResourceView, optionalText, type ColumnSpec, type FieldSpec } from "./resource-view";
+import {
+  pick,
+  ResourceView,
+  optionalText,
+  type ColumnSpec,
+  type FieldSpec,
+  type PagingProps,
+} from "./resource-view";
 import { Badge } from "@components/ui/badge";
 import {
   Dialog,
@@ -212,10 +219,12 @@ export function GamesManager({
   rows,
   seasons,
   teams,
+  paging,
 }: {
   rows: Row[];
   seasons: { id: number; label: string }[];
   teams: { id: number; name: string; seasonId: number | null }[];
+  paging: PagingProps;
 }) {
   const create = trpc.games.create.useMutation();
   const update = trpc.games.update.useMutation();
@@ -292,6 +301,7 @@ export function GamesManager({
     <ResourceView<Row>
       title="game"
       rows={rows}
+      paging={paging}
       columns={COLUMNS}
       fields={fields}
       extra={<ChallongeImport seasons={seasons} />}

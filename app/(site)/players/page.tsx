@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { api } from "@server/trpc/server";
 import { getSiteRegionQuery } from "@server/site-region";
+import { numberParam, pageParam, stringParam, type SearchParams } from "@/lib/search-params";
 import { EmptyState } from "@components/site/empty-state";
 import { PageHeader } from "@components/site/page-header";
 import { PlayersList, type PlayerListRow } from "@components/site/players-list";
@@ -12,27 +13,31 @@ export const metadata: Metadata = {
   description: "Every player in the Roblox Volleyball League with their teams and games played.",
 };
 
-export default async function PlayersPage() {
-  const [trpc, { query }] = await Promise.all([api(), getSiteRegionQuery()]);
-  const [rows, memberships] = await Promise.all([
-    trpc.players.list(query),
-    trpc.players.memberships(query),
+export default async function PlayersPage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
+  const params = await searchParams;
+  const [trpc, { query }] = await Promise.all([api(), getSiteRegionQuery(params)]);
+
+  const [page, positions, seasons] = await Promise.all([
+    trpc.players.listPage({
+      ...query,
+      page: pageParam(params),
+      search: stringParam(params, "q"),
+      season: numberParam(params, "season"),
+      position: stringParam(params, "position"),
+    }),
+    trpc.players.positions(query),
+    trpc.seasons.list(query),
   ]);
 
-  const teamsByPlayer = new Map<number, { name: string; seasonNumber: number | null }[]>();
-  for (const membership of memberships) {
-    const list = teamsByPlayer.get(membership.playerId) ?? [];
-    list.push({ name: membership.teamName, seasonNumber: membership.seasonNumber ?? null });
-    teamsByPlayer.set(membership.playerId, list);
-  }
-
-  const list: PlayerListRow[] = rows.map((player) => ({
+  const list: PlayerListRow[] = page.rows.map((player) => ({
     id: player.id,
     name: player.name,
     position: player.position,
-    teams: (teamsByPlayer.get(player.id) ?? []).sort(
-      (a, b) => (a.seasonNumber ?? 0) - (b.seasonNumber ?? 0),
-    ),
+    teams: [...player.teams].sort((a, b) => (a.seasonNumber ?? 0) - (b.seasonNumber ?? 0)),
   }));
 
   return (
@@ -43,12 +48,17 @@ export default async function PlayersPage() {
         description="Everyone tracked by the league. Open a row for positions and the teams they have played for."
       />
 
-      {list.length === 0 ? (
+      {page.total === 0 ? (
         <div className="px-5 py-14 sm:px-8 xl:px-14">
-          <EmptyState>No players have been added yet.</EmptyState>
+          <EmptyState>No players match those filters.</EmptyState>
         </div>
       ) : (
-        <PlayersList players={list} />
+        <PlayersList
+          players={list}
+          totalPages={page.totalPages}
+          seasons={seasons.map((season) => season.seasonNumber)}
+          positions={positions.filter((position) => position !== "N/A")}
+        />
       )}
     </div>
   );

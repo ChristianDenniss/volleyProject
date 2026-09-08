@@ -15,6 +15,14 @@ import {
 import { ConflictError, found } from "./errors";
 import type { GameRegion } from "./games";
 import type { PartialInput } from "./input";
+import {
+  emptyPage,
+  likePattern,
+  makePage,
+  pageBounds,
+  searchTerm,
+  type PageQuery,
+} from "./paging";
 import { isAdmin } from "./users";
 
 export type { TeamLeadershipRole };
@@ -66,6 +74,70 @@ export async function list(db: Db, region?: GameRegion) {
   if (!region) return query.orderBy(asc(teams.name));
 
   return query.where(teamInRegion(region)).orderBy(asc(teams.name));
+}
+
+export interface TeamListFilters extends PageQuery {
+  region?: GameRegion | undefined;
+  season?: number | undefined;
+  placement?: string | undefined;
+}
+
+function teamFilters(filters: TeamListFilters) {
+  const term = searchTerm(filters);
+  return and(
+    filters.region ? teamInRegion(filters.region) : undefined,
+    filters.season !== undefined
+      ? sql`exists (
+          select 1 from ${seasons}
+          where ${seasons.id} = ${teams.seasonId} and ${seasons.seasonNumber} = ${filters.season}
+        )`
+      : undefined,
+    filters.placement
+      ? sql`(
+          ${teams.placement} = ${filters.placement}
+          or ${teams.placement} like ${`${filters.placement} (%`} escape '\\'
+        )`
+      : undefined,
+    term ? sql`lower(${teams.name}) like ${likePattern(term)} escape '\\'` : undefined,
+  );
+}
+
+export async function listPage(db: Db, filters: TeamListFilters = {}) {
+  const bounds = pageBounds(filters);
+  const where = teamFilters(filters);
+
+  const total = await db.$count(teams, where);
+  if (total === 0) return emptyPage<Awaited<ReturnType<typeof list>>[number]>(bounds);
+
+  const rows = await db
+    .select(withSeason)
+    .from(teams)
+    .leftJoin(seasons, eq(teams.seasonId, seasons.id))
+    .where(where)
+    .orderBy(asc(teams.name))
+    .limit(bounds.perPage)
+    .offset(bounds.offset);
+
+  return makePage(rows, total, bounds);
+}
+
+const DIVISION_SUFFIX = /\s*\([Dd]\d\)$/;
+
+export function normalizePlacement(placement: string | null): string {
+  return (placement ?? "").replace(DIVISION_SUFFIX, "").trim();
+}
+
+export async function listPlacements(db: Db, region?: GameRegion) {
+  const rows = await db
+    .selectDistinct({ placement: teams.placement })
+    .from(teams)
+    .where(region ? teamInRegion(region) : undefined)
+    .orderBy(asc(teams.placement));
+
+  const values = new Set(
+    rows.map((row) => normalizePlacement(row.placement)).filter((value) => value !== ""),
+  );
+  return [...values].sort((a, b) => a.localeCompare(b));
 }
 
 export async function listBySeason(db: Db, seasonId: number) {
@@ -219,7 +291,7 @@ export async function remove(db: Db, id: number) {
     .select({ gameId: teamsGames.gameId })
     .from(teamsGames)
     .where(eq(teamsGames.teamId, id));
-  const gameIds = [...new Set(linked.map((row) => row.gameId))];
+  const gameIds = [...new Set(linked.map((link) => link.gameId))];
   if (gameIds.length > 0) {
     for (const chunk of chunkValues(gameIds)) {
       await db.delete(games).where(inArray(games.id, chunk));

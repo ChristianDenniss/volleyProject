@@ -4,6 +4,7 @@ export type MatchRegion = Exclude<SiteRegion, "all">;
 
 export const DEFAULT_SITE_REGION: SiteRegion = "na";
 export const SITE_REGION_COOKIE = "rvl-region";
+export const SITE_REGION_PARAM = "r";
 export const SITE_REGION_MAX_AGE = 60 * 60 * 24 * 365;
 /** Portal HTTP callers send this so the site region cookie does not hide other regions. */
 export const PORTAL_SKIP_REGION_HEADER = "x-rvl-skip-region";
@@ -26,6 +27,34 @@ export function regionQuery(region: SiteRegion): { region: MatchRegion } | Recor
 
 export function matchRegionOf(region: SiteRegion): MatchRegion | undefined {
   return region === "all" ? undefined : region;
+}
+
+export function regionParamValue(region: SiteRegion): string | null {
+  return region === DEFAULT_SITE_REGION ? null : region;
+}
+
+export function withRegionParam(
+  params: URLSearchParams | Record<string, string | undefined>,
+  region: SiteRegion,
+): URLSearchParams {
+  const next =
+    params instanceof URLSearchParams
+      ? new URLSearchParams(params)
+      : new URLSearchParams(
+          Object.entries(params).flatMap(([key, entry]) =>
+            entry === undefined ? [] : [[key, entry] as [string, string]],
+          ),
+        );
+
+  const value = regionParamValue(region);
+  if (value === null) next.delete(SITE_REGION_PARAM);
+  else next.set(SITE_REGION_PARAM, value);
+  return next;
+}
+
+export function hrefWithParams(pathname: string, params: URLSearchParams): string {
+  const query = params.toString();
+  return query === "" ? pathname : `${pathname}?${query}`;
 }
 
 export function regionFromCookieHeader(header: string | null | undefined): MatchRegion | undefined {

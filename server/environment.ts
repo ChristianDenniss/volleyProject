@@ -1,5 +1,13 @@
 import { env } from "cloudflare:workers";
 
+export function canonicalOrigin(): string | undefined {
+  try {
+    return new URL(env.BETTER_AUTH_URL).origin;
+  } catch {
+    return undefined;
+  }
+}
+
 /** True when running against a non-local deployment (production or staging). */
 export function isProductionDeployment(): boolean {
   try {

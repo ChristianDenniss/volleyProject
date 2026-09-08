@@ -1,9 +1,13 @@
 import handler from "vinext/server/fetch-handler";
+import { withQueryStats } from "@db";
 import { errorDetail, presentUnknownError } from "@/lib/error-presentation";
+import { canonicalOrigin } from "./environment";
 import { errorHtmlResponse, errorJsonResponse } from "./error-html";
 import { handleRecordsBatch, type RecordsJobMessage } from "./queue";
 import { logError } from "./report";
 import { apiRateLimitBucket, checkRateLimit, clientRateLimitKey } from "./rate-limit";
+import { applyPreviewHeaders, canonicalRedirect } from "./preview-host";
+import { applyResponseCache } from "./response-cache";
 import { applySecurityHeaders } from "./security-headers";
 function acceptsHtml(request: Request): boolean {
   const path = new URL(request.url).pathname;
@@ -38,45 +42,58 @@ async function maybeBrandErrorResponse(
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-    try {
-      const pathname = new URL(request.url).pathname;
-      const limitConfig = apiRateLimitBucket(pathname);
-      if (limitConfig) {
-        const bucket = pathname.startsWith("/api/auth")
-          ? "auth"
-          : pathname.startsWith("/api/roblox/avatar")
-            ? "roblox"
-            : "trpc";
-        const result = await checkRateLimit(clientRateLimitKey(request, bucket), limitConfig);
-        if (!result.allowed) {
-          return Response.json(
-            { error: "Too many requests. Try again shortly." },
-            {
-              status: 429,
-              headers: { "Retry-After": String(result.retryAfterSeconds) },
-            },
-          );
-        }
-      }
-
-      const response = await handler.fetch(request, env, ctx);
-      const branded = await maybeBrandErrorResponse(request, response);
-      return applySecurityHeaders(branded);
-    } catch (error) {
-      logError("worker.fetch", error, {
-        method: request.method,
-        path: new URL(request.url).pathname,
-      });
-
-      const presentation = presentUnknownError(error);
-      if (acceptsHtml(request)) {
-        return applySecurityHeaders(errorHtmlResponse(presentation, errorDetail(error), 500));
-      }
-      return applySecurityHeaders(errorJsonResponse(presentation, 500));
-    }
+    return withQueryStats(
+      "fetch",
+      { method: request.method, path: new URL(request.url).pathname },
+      () => serve(request, env, ctx),
+    );
   },
 
   async queue(batch: MessageBatch<RecordsJobMessage>, env: Env): Promise<void> {
-    await handleRecordsBatch(batch, env);
+    await withQueryStats("queue", { messages: batch.messages.length }, () =>
+      handleRecordsBatch(batch, env),
+    );
   },
 } satisfies ExportedHandler<Env, RecordsJobMessage>;
+
+async function serve(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+  try {
+    const canonical = canonicalRedirect(request, canonicalOrigin());
+    if (canonical) return canonical;
+
+    const pathname = new URL(request.url).pathname;
+    const limitConfig = apiRateLimitBucket(pathname);
+    if (limitConfig) {
+      const bucket = pathname.startsWith("/api/auth")
+        ? "auth"
+        : pathname.startsWith("/api/roblox/avatar")
+          ? "roblox"
+          : "trpc";
+      const result = await checkRateLimit(clientRateLimitKey(request, bucket), limitConfig);
+      if (!result.allowed) {
+        return Response.json(
+          { error: "Too many requests. Try again shortly." },
+          {
+            status: 429,
+            headers: { "Retry-After": String(result.retryAfterSeconds) },
+          },
+        );
+      }
+    }
+
+    const response = await handler.fetch(request, env, ctx);
+    const branded = await maybeBrandErrorResponse(request, response);
+    return applyPreviewHeaders(request, applySecurityHeaders(applyResponseCache(request, branded)));
+  } catch (error) {
+    logError("worker.fetch", error, {
+      method: request.method,
+      path: new URL(request.url).pathname,
+    });
+
+    const presentation = presentUnknownError(error);
+    if (acceptsHtml(request)) {
+      return applySecurityHeaders(errorHtmlResponse(presentation, errorDetail(error), 500));
+    }
+    return applySecurityHeaders(errorJsonResponse(presentation, 500));
+  }
+}

@@ -1,9 +1,16 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { pick, ResourceView, type ColumnSpec, type FieldSpec } from "./resource-view";
+import { useListQuery } from "@/hooks/use-list-query";
+import {
+  pick,
+  ResourceView,
+  type ColumnSpec,
+  type FieldSpec,
+  type PagingProps,
+} from "./resource-view";
 import { usePortalErrorToast } from "./portal-error-detail";
 import { ArticleDisplay } from "@components/site/article-display";
 import { cn } from "@/lib/utils";
@@ -60,13 +67,6 @@ const STATUS_FILTERS: { value: StatusFilter; label: string }[] = [
   { value: "all", label: "All" },
 ];
 
-function matchesStatus(row: ArticleRow, status: StatusFilter) {
-  if (status === "all") return true;
-  if (status === "pending") return row.approved === null;
-  if (status === "published") return row.approved === true;
-  return row.approved === false;
-}
-
 const FIELDS: FieldSpec[] = [
   { name: "title", label: "Title", type: "text", required: true },
   { name: "summary", label: "Summary", type: "text", required: true },
@@ -113,28 +113,24 @@ function ReviewButtons({
   );
 }
 
-export function ArticlesManager({ rows }: { rows: ArticleRow[] }) {
+export function ArticlesManager({
+  rows,
+  paging,
+  counts,
+  status,
+}: {
+  rows: ArticleRow[];
+  paging: PagingProps;
+  counts: Record<StatusFilter, number>;
+  status: StatusFilter;
+}) {
+  const { setParams } = useListQuery();
   const router = useRouter();
   const { showErrorToast } = usePortalErrorToast();
   const update = trpc.articles.update.useMutation();
   const remove = trpc.articles.delete.useMutation();
   const [preview, setPreview] = useState<ArticleRow | null>(null);
   const [reviewing, setReviewing] = useState<number | null>(null);
-  const [status, setStatus] = useState<StatusFilter>("pending");
-
-  const visible = useMemo(
-    () => rows.filter((row) => matchesStatus(row, status)),
-    [rows, status],
-  );
-
-  const counts = useMemo(
-    () => ({
-      pending: rows.filter((row) => row.approved === null).length,
-      published: rows.filter((row) => row.approved === true).length,
-      rejected: rows.filter((row) => row.approved === false).length,
-    }),
-    [rows],
-  );
 
   async function setApproved(row: ArticleRow, approved: boolean) {
     setReviewing(row.id);
@@ -154,7 +150,8 @@ export function ArticlesManager({ rows }: { rows: ArticleRow[] }) {
     <>
       <ResourceView<ArticleRow>
         title="article"
-        rows={visible}
+        rows={rows}
+        paging={paging}
         columns={COLUMNS}
         fields={FIELDS}
         filters={
@@ -164,17 +161,16 @@ export function ArticlesManager({ rows }: { rows: ArticleRow[] }) {
             </span>
             <div className="flex flex-wrap gap-1.5" role="group" aria-label="Status">
               {STATUS_FILTERS.map((option) => {
-                const count =
-                  option.value === "all"
-                    ? rows.length
-                    : counts[option.value];
+                const count = counts[option.value];
                 const active = status === option.value;
                 return (
                   <button
                     key={option.value}
                     type="button"
                     aria-pressed={active}
-                    onClick={() => setStatus(option.value)}
+                    onClick={() =>
+                      setParams({ status: option.value === "all" ? null : option.value })
+                    }
                     className={cn(
                       "cursor-pointer border px-3 py-2 font-mono text-[0.68rem] uppercase tracking-[0.14em]",
                       active

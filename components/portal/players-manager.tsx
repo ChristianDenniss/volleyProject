@@ -1,6 +1,13 @@
 "use client";
 
-import { pick, ResourceView, optionalText, type ColumnSpec, type FieldSpec } from "./resource-view";
+import {
+  pick,
+  ResourceView,
+  optionalText,
+  type ColumnSpec,
+  type FieldSpec,
+  type PagingProps,
+} from "./resource-view";
 import { trpc } from "@/lib/trpc";
 
 interface Row {
@@ -30,7 +37,15 @@ const COLUMNS: ColumnSpec<Row>[] = [
   { key: "gamesPlayed", label: "Games", align: "right", render: (row) => row.gamesPlayed },
 ];
 
-export function PlayersManager({ rows, teams }: { rows: Row[]; teams: string[] }) {
+export function PlayersManager({
+  rows,
+  teams,
+  paging,
+}: {
+  rows: Row[];
+  teams: string[];
+  paging: PagingProps;
+}) {
   const create = trpc.players.create.useMutation();
   const update = trpc.players.update.useMutation();
   const remove = trpc.players.delete.useMutation();
@@ -56,6 +71,7 @@ export function PlayersManager({ rows, teams }: { rows: Row[]; teams: string[] }
     <ResourceView<Row>
       title="player"
       rows={rows}
+      paging={paging}
       columns={COLUMNS}
       fields={fields}
       toValues={(row) => ({ name: row.name, position: row.position, teamName: "" })}

@@ -22,7 +22,7 @@ export interface RecordRow {
 export function RecordsBoard({ records }: { records: RecordRow[] }) {
   const types = useMemo(() => {
     const values = new Set<string>();
-    records.forEach((record) => values.add(record.type));
+    for (const record of records) values.add(record.type);
     return [...values].sort((a, b) => a.localeCompare(b));
   }, [records]);
 

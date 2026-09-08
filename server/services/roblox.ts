@@ -41,7 +41,6 @@ async function firstOkJson<T>(
       if (!response.ok) continue;
       return (await response.json()) as T;
     } catch {
-      continue;
     }
   }
   return null;

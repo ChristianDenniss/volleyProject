@@ -50,7 +50,7 @@ export function importMap(source: ts.SourceFile, fromFile: string): Map<string, 
   for (const statement of source.statements) {
     if (!ts.isImportDeclaration(statement)) continue;
     const specifier = stringOf(statement.moduleSpecifier);
-    if (!specifier || !specifier.startsWith(".")) continue;
+    if (!specifier?.startsWith(".")) continue;
     const resolved = resolveModule(path.dirname(fromFile), specifier);
     const clause = statement.importClause;
     if (!clause) continue;

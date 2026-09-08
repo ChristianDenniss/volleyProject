@@ -32,6 +32,9 @@ jobs:
       - name: Prepare local secrets
         run: cp tests/fixtures/ci.dev.vars .dev.vars
 
+      - name: Lint
+        run: pnpm run lint
+
       - name: Typecheck
         run: pnpm run typecheck
 

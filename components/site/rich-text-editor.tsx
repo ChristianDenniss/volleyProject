@@ -127,7 +127,7 @@ function UrlBar({
   return (
     <div className="flex items-center gap-2 border-b border-rvl-line bg-rvl-ground px-2 py-2">
       <input
-        autoFocus
+        ref={(node) => node?.focus()}
         type="url"
         placeholder={draft.kind === "link" ? "https://example.com" : "https://example.com/photo.jpg"}
         value={draft.value}

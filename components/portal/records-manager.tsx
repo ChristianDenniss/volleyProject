@@ -9,6 +9,7 @@ import {
   ResourceView,
   type ColumnSpec,
   type FieldSpec,
+  type PagingProps,
 } from "./resource-view";
 import { trpc } from "@/lib/trpc";
 
@@ -106,12 +107,14 @@ export function RecordsManager({
   players,
   games,
   job,
+  paging,
 }: {
   rows: Row[];
   seasons: { id: number; label: string }[];
   players: { id: number; name: string }[];
   games: { id: number; label: string }[];
   job: { status: string; rowsWritten: number | null; error: string | null } | null;
+  paging: PagingProps;
 }) {
   const create = trpc.records.create.useMutation();
   const update = trpc.records.update.useMutation();
@@ -225,6 +228,7 @@ export function RecordsManager({
       <ResourceView<Row>
         title="record"
         rows={rows}
+        paging={paging}
         columns={COLUMNS}
         fields={fields}
         toValues={(row) => ({

@@ -1,6 +1,12 @@
 "use client";
 
-import { pick, ResourceView, type ColumnSpec, type FieldSpec } from "./resource-view";
+import {
+  pick,
+  ResourceView,
+  type ColumnSpec,
+  type FieldSpec,
+  type PagingProps,
+} from "./resource-view";
 import { Badge } from "@components/ui/badge";
 import { trpc } from "@/lib/trpc";
 
@@ -38,13 +44,14 @@ const FIELDS: FieldSpec[] = [
   },
 ];
 
-export function UsersManager({ rows }: { rows: Row[] }) {
+export function UsersManager({ rows, paging }: { rows: Row[]; paging: PagingProps }) {
   const setRole = trpc.users.setRole.useMutation();
 
   return (
     <ResourceView<Row>
       title="role"
       rows={rows}
+      paging={paging}
       columns={COLUMNS}
       fields={FIELDS}
       toValues={(row) => ({ role: row.role })}

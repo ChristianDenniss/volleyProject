@@ -289,9 +289,9 @@ describe("stats", () => {
   });
 
   it("returns per-game stat lines with season scores for the vector graph", async () => {
-    const players = await stats.vectorGraph(db);
-    expect(players.length).toBeGreaterThan(0);
-    const first = players[0];
+    const graphPlayers = await stats.vectorGraph(db);
+    expect(graphPlayers.length).toBeGreaterThan(0);
+    const first = graphPlayers[0];
     expect(first?.stats.length).toBeGreaterThan(0);
     const line = first?.stats[0];
     expect(line?.game?.season?.seasonNumber).toBeGreaterThan(0);

@@ -2,9 +2,11 @@ import { env } from "cloudflare:workers";
 import { TRPCError } from "@trpc/server";
 import { games } from "@server/services";
 import { adminProcedure, publicProcedure, router, scopedRegion } from "../init";
+import { cachedQuery } from "../cached";
 import { revalidate } from "../revalidate";
 import {
   byId,
+  gameListPage,
   gameCreate,
   gameCreateByNames,
   gameCreateMany,
@@ -25,11 +27,31 @@ export const gamesRouter = router({
     .input(optionalRegion)
     .query(({ ctx, input }) => games.listPlayed(ctx.db, scopedRegion(ctx, input?.region))),
 
-  listSchedule: publicProcedure
-    .input(optionalSeason)
-    .query(({ ctx, input }) =>
-      games.listSchedule(ctx.db, input.seasonId, scopedRegion(ctx, input.region)),
-    ),
+  listPlayedPage: publicProcedure.input(gameListPage).query(({ ctx, input }) =>
+    games.listPlayedPage(ctx.db, {
+      ...input,
+      region: scopedRegion(ctx, input.region),
+    }),
+  ),
+
+  listPage: adminProcedure.input(gameListPage).query(({ ctx, input }) =>
+    games.listPage(ctx.db, {
+      ...input,
+      region: scopedRegion(ctx, input.region),
+    }),
+  ),
+
+  stages: publicProcedure.input(optionalRegion).query(({ ctx, input }) => {
+    const region = scopedRegion(ctx, input?.region);
+    return cachedQuery("games", ["stages", region ?? null], () => games.listStages(ctx.db, region));
+  }),
+
+  listSchedule: publicProcedure.input(optionalSeason).query(({ ctx, input }) => {
+    const region = scopedRegion(ctx, input.region);
+    return cachedQuery("games", ["schedule", input.seasonId ?? null, region ?? null], () =>
+      games.listSchedule(ctx.db, input.seasonId, region),
+    );
+  }),
 
   byId: publicProcedure
     .input(byId)

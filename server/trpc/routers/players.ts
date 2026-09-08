@@ -1,8 +1,10 @@
 import { players } from "@server/services";
 import { adminProcedure, publicProcedure, router, scopedRegion } from "../init";
+import { cachedQuery } from "../cached";
 import { revalidate } from "../revalidate";
 import {
   byId,
+  playerListPage,
   playerCreate,
   playerCreateByTeamName,
   playerCreateMany,
@@ -16,6 +18,20 @@ export const playersRouter = router({
   list: publicProcedure
     .input(optionalRegion)
     .query(({ ctx, input }) => players.list(ctx.db, scopedRegion(ctx, input?.region))),
+
+  listPage: publicProcedure.input(playerListPage).query(({ ctx, input }) =>
+    players.listPage(ctx.db, {
+      ...input,
+      region: scopedRegion(ctx, input.region),
+    }),
+  ),
+
+  positions: publicProcedure.input(optionalRegion).query(({ ctx, input }) => {
+    const region = scopedRegion(ctx, input?.region);
+    return cachedQuery("players", ["positions", region ?? null], () =>
+      players.listPositions(ctx.db, region),
+    );
+  }),
 
   byId: publicProcedure
     .input(byId)

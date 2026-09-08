@@ -467,6 +467,48 @@ export const optionalSeason = z.object({
   region: regionValue,
 });
 
+export const pageQuery = z.object({
+  page: z.number().int().positive().optional(),
+  perPage: z.number().int().positive().max(100).optional(),
+  search: z.string().max(120).optional(),
+});
+
+const seasonNumber = z.number().int().positive();
+
+export const playerListPage = pageQuery.extend({
+  region: regionValue,
+  season: seasonNumber.optional(),
+  position: z.string().max(60).optional(),
+});
+
+export const gameListPage = pageQuery.extend({
+  region: regionValue,
+  season: seasonNumber.optional(),
+  stage: z.string().max(120).optional(),
+});
+
+export const teamListPage = pageQuery.extend({
+  region: regionValue,
+  season: seasonNumber.optional(),
+  placement: z.string().max(60).optional(),
+});
+
+export const articleListPage = pageQuery.extend({
+  approvedOnly: z.boolean().optional(),
+  status: z.enum(["pending", "published", "rejected"]).optional(),
+  sort: z.enum(["newest", "oldest", "likes", "title"]).optional(),
+});
+
+export const recordListPage = pageQuery.extend({
+  region: regionValue,
+});
+
+export const statListPage = pageQuery
+  .extend({
+    season: seasonNumber.optional(),
+  })
+  .optional();
+
 export const STAGE_ROUNDS = ["R1", "R2", "R3", "R4", "R5", "R6", "all"] as const;
 
 export const leaderboardInput = z.object({

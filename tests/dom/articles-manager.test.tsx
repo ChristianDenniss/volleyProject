@@ -1,11 +1,13 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import * as navigation from "next/navigation";
 import { ArticlesManager, type ArticleRow } from "@components/portal/articles-manager";
 import { PortalErrorDetailProvider } from "@components/portal/portal-error-detail";
 
 const update = vi.fn();
 const remove = vi.fn();
+const replace = vi.fn();
 
 vi.mock("@/lib/trpc", () => ({
   trpc: {
@@ -46,10 +48,20 @@ function row(overrides: Partial<ArticleRow> = {}): ArticleRow {
   };
 }
 
-function mount(rows: ArticleRow[] = [row()]) {
+const COUNTS = { pending: 1, published: 1, rejected: 1, all: 3 };
+
+function mount(
+  rows: ArticleRow[] = [row()],
+  status: "pending" | "published" | "rejected" | "all" = "pending",
+) {
   return render(
     <PortalErrorDetailProvider>
-      <ArticlesManager rows={rows} />
+      <ArticlesManager
+        rows={rows}
+        status={status}
+        counts={COUNTS}
+        paging={{ total: rows.length, totalPages: 1 }}
+      />
     </PortalErrorDetailProvider>,
   );
 }
@@ -59,49 +71,61 @@ async function chooseStatus(user: ReturnType<typeof userEvent.setup>, name: stri
 }
 
 describe("ArticlesManager", () => {
-  it("defaults to pending articles and can switch status", async () => {
-    const user = userEvent.setup();
-    mount([
-      row({ id: 11, title: "Pending piece", approved: null }),
-      row({ id: 12, title: "Live story", approved: true }),
-      row({ id: 13, title: "Killed draft", approved: false }),
-    ]);
+  beforeEach(() => {
+    update.mockReset();
+    replace.mockReset();
+    vi.spyOn(navigation, "useRouter").mockReturnValue({
+      push: vi.fn(),
+      replace,
+      refresh: vi.fn(),
+      back: vi.fn(),
+      forward: vi.fn(),
+      prefetch: vi.fn(),
+      bfcacheId: "",
+    });
+    vi.spyOn(navigation, "usePathname").mockReturnValue("/portal/articles");
+    vi.spyOn(navigation, "useSearchParams").mockReturnValue(
+      new URLSearchParams() as ReturnType<typeof navigation.useSearchParams>,
+    );
+  });
+
+  it("renders the rows the server returned and counts every status", async () => {
+    mount([row({ id: 11, title: "Pending piece", approved: null })]);
 
     expect(screen.getByText("Pending piece")).toBeDefined();
-    expect(screen.queryByText("Live story")).toBeNull();
-    expect(screen.queryByText("Killed draft")).toBeNull();
+    expect(screen.getByRole("button", { name: "Published (1)" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "All (3)" })).toBeDefined();
+  });
+
+  it("moves the status filter into the url instead of filtering client side", async () => {
+    const user = userEvent.setup();
+    mount([row({ id: 11, title: "Pending piece", approved: null })]);
 
     await chooseStatus(user, "Published (1)");
-    expect(screen.getByText("Live story")).toBeDefined();
-    expect(screen.queryByText("Pending piece")).toBeNull();
-
-    await chooseStatus(user, "Rejected (1)");
-    expect(screen.getByText("Killed draft")).toBeDefined();
-    expect(screen.queryByText("Live story")).toBeNull();
+    expect(replace).toHaveBeenCalledWith("/portal/articles?status=published", { scroll: false });
 
     await chooseStatus(user, "All (3)");
-    expect(screen.getByText("Pending piece")).toBeDefined();
-    expect(screen.getByText("Live story")).toBeDefined();
-    expect(screen.getByText("Killed draft")).toBeDefined();
+    expect(replace).toHaveBeenLastCalledWith("/portal/articles", { scroll: false });
   });
 
   it("approves and rejects from labeled buttons on the row", async () => {
     const user = userEvent.setup();
     update.mockResolvedValue({});
-    mount([
-      row({ id: 11, title: "Pending piece", approved: null }),
-      row({ id: 12, title: "Live story", approved: true }),
-    ]);
+    mount([row({ id: 11, title: "Pending piece", approved: null })]);
 
     expect(screen.getByRole("button", { name: "Approve" })).toBeDefined();
     expect(screen.getByRole("button", { name: "Reject" })).toBeDefined();
     expect(screen.queryByRole("button", { name: "Approved" })).toBeNull();
-    expect(screen.queryByLabelText("Published")).toBeNull();
 
     await user.click(screen.getByRole("button", { name: "Approve" }));
     expect(update).toHaveBeenCalledWith({ id: 11, patch: { approved: true } });
+  });
 
-    await chooseStatus(user, "Published (1)");
+  it("rejects a published row from its own controls", async () => {
+    const user = userEvent.setup();
+    update.mockResolvedValue({});
+    mount([row({ id: 12, title: "Live story", approved: true })], "published");
+
     await user.click(screen.getByRole("button", { name: "Reject" }));
     expect(update).toHaveBeenCalledWith({ id: 12, patch: { approved: false } });
   });

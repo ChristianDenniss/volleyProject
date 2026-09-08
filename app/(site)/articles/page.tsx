@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getSessionUser } from "@server/session";
 import { api } from "@server/trpc/server";
+import { pageParam, stringParam, type SearchParams } from "@/lib/search-params";
 import { ArticlesList } from "@components/site/articles-list";
 import { EmptyState } from "@components/site/empty-state";
 import { PageHeader } from "@components/site/page-header";
@@ -13,9 +14,26 @@ export const metadata: Metadata = {
   description: "League news, match reports and highlights written by the community.",
 };
 
-export default async function ArticlesPage() {
+export default async function ArticlesPage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
+  const params = await searchParams;
   const trpc = await api();
-  const [rows, user] = await Promise.all([trpc.articles.list(), getSessionUser()]);
+  const sort = stringParam(params, "sort");
+
+  const [page, user] = await Promise.all([
+    trpc.articles.listPage({
+      page: pageParam(params),
+      search: stringParam(params, "q"),
+      sort:
+        sort === "oldest" || sort === "likes" || sort === "title" || sort === "newest"
+          ? sort
+          : undefined,
+    }),
+    getSessionUser(),
+  ]);
 
   return (
     <div className="font-display">
@@ -42,13 +60,16 @@ export default async function ArticlesPage() {
         }
       />
 
-      {rows.length === 0 ? (
+      {page.total === 0 ? (
         <div className="px-5 py-14 sm:px-8 xl:px-14">
-          <EmptyState>Nothing has been published yet.</EmptyState>
+          <EmptyState>Nothing matches that search.</EmptyState>
         </div>
       ) : (
         <ArticlesList
-          articles={rows.map((article) => ({
+          total={page.total}
+          totalPages={page.totalPages}
+          sort={sort ?? "newest"}
+          articles={page.rows.map((article) => ({
             id: article.id,
             title: article.title,
             summary: article.summary,

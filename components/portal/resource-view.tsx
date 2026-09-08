@@ -2,11 +2,13 @@
 
 import { useMemo, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import { createColumnHelper, tableFeatures, useTable } from "@tanstack/react-table";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { usePortalErrorToast } from "./portal-error-detail";
 import { cn } from "@/lib/utils";
 import { Pagination, SearchBar } from "@components/site/controls";
+import { UrlPagination, UrlSearchBar } from "@components/site/url-controls";
 import { RichTextEditor } from "@components/site/rich-text-editor";
 import {
   Dialog,
@@ -68,6 +70,18 @@ export interface ResourceViewProps<Row extends { id: number | string }> {
   extra?: ReactNode;
   filters?: ReactNode;
   emptyLabel?: string;
+  paging?: PagingProps;
+}
+
+export interface PagingProps {
+  total: number;
+  totalPages: number;
+}
+
+const tableSetup = tableFeatures({});
+
+function alignOf<Row>(columns: ColumnSpec<Row>[], id: string): "left" | "right" {
+  return columns.find((column) => column.key === id)?.align ?? "left";
 }
 
 const inputClass =
@@ -297,6 +311,7 @@ export function ResourceView<Row extends { id: number | string }>({
   extra,
   filters,
   emptyLabel = "No rows yet",
+  paging,
 }: ResourceViewProps<Row>) {
   const router = useRouter();
   const { showErrorToast } = usePortalErrorToast();
@@ -305,35 +320,63 @@ export function ResourceView<Row extends { id: number | string }>({
   const [page, setPage] = useState(1);
 
   const filtered = useMemo(() => {
+    if (paging) return rows;
     const query = search.trim().toLowerCase();
     if (query === "") return rows;
     return rows.filter((row) => searchableText(row).toLowerCase().includes(query));
-  }, [rows, search]);
+  }, [rows, search, paging]);
 
-  const totalPages = Math.max(Math.ceil(filtered.length / PER_PAGE), 1);
+  const totalPages = paging
+    ? paging.totalPages
+    : Math.max(Math.ceil(filtered.length / PER_PAGE), 1);
   const current = Math.min(page, totalPages);
-  const visible = filtered.slice((current - 1) * PER_PAGE, current * PER_PAGE);
+  const visible = paging ? rows : filtered.slice((current - 1) * PER_PAGE, current * PER_PAGE);
+  const shownTotal = paging ? paging.total : filtered.length;
+
+  const helper = useMemo(() => createColumnHelper<typeof tableSetup, Row>(), []);
+
+  const tableColumns = useMemo(
+    () =>
+      helper.columns(
+        columns.map((column) =>
+          helper.display({
+            id: column.key,
+            header: () => column.label,
+            cell: ({ row }) => column.render(row.original),
+          }),
+        ),
+      ),
+    [columns, helper],
+  );
+
+  const table = useTable({ features: tableSetup, columns: tableColumns, data: visible });
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-end gap-4">
         {filters}
-        <SearchBar
-          className="max-w-[320px]"
-          value={search}
-          placeholder={`Search ${title.toLowerCase()}`}
-          onSearch={(value) => {
-            setSearch(value);
-            setPage(1);
-          }}
-        />
+        {paging ? (
+          <UrlSearchBar className="max-w-[320px]" placeholder={`Search ${title.toLowerCase()}`} />
+        ) : (
+          <SearchBar
+            className="max-w-[320px]"
+            value={search}
+            placeholder={`Search ${title.toLowerCase()}`}
+            onSearch={(value) => {
+              setSearch(value);
+              setPage(1);
+            }}
+          />
+        )}
 
         <p className="m-0 font-mono text-[0.66rem] uppercase tracking-[0.14em] text-rvl-dim">
-          {filtered.length} {filtered.length === 1 ? "row" : "rows"}
-          {filtered.length !== rows.length ? ` of ${rows.length}` : ""}
+          {shownTotal} {shownTotal === 1 ? "row" : "rows"}
+          {!paging && filtered.length !== rows.length ? ` of ${rows.length}` : ""}
         </p>
 
-        {totalPages > 1 ? (
+        {paging ? (
+          <UrlPagination variant="compact" totalPages={totalPages} />
+        ) : totalPages > 1 ? (
           <Pagination
             variant="compact"
             currentPage={current}
@@ -366,24 +409,26 @@ export function ResourceView<Row extends { id: number | string }>({
       <div className="w-full overflow-x-auto border border-rvl-line">
         <table className="w-full min-w-[800px] border-collapse">
           <thead>
-            <tr>
-              {columns.map((column) => (
-                <th
-                  key={column.key}
-                  className={cn(
-                    "border-b border-rvl-line bg-rvl-panel px-4 py-3 text-left font-mono text-[0.58rem] font-bold uppercase tracking-[0.2em] text-rvl-dim",
-                    column.align === "right" && "text-right",
-                  )}
-                >
-                  {column.label}
-                </th>
-              ))}
-              {onUpdate || onDelete || rowActions ? (
-                <th className="border-b border-rvl-line bg-rvl-panel px-4 py-3 text-right font-mono text-[0.58rem] font-bold uppercase tracking-[0.2em] text-rvl-dim">
-                  Actions
-                </th>
-              ) : null}
-            </tr>
+            {table.getHeaderGroups().map((group) => (
+              <tr key={group.id}>
+                {group.headers.map((header) => (
+                  <th
+                    key={header.id}
+                    className={cn(
+                      "border-b border-rvl-line bg-rvl-panel px-4 py-3 text-left font-mono text-[0.58rem] font-bold uppercase tracking-[0.2em] text-rvl-dim",
+                      alignOf(columns, header.column.id) === "right" && "text-right",
+                    )}
+                  >
+                    {header.isPlaceholder ? null : <table.FlexRender header={header} />}
+                  </th>
+                ))}
+                {onUpdate || onDelete || rowActions ? (
+                  <th className="border-b border-rvl-line bg-rvl-panel px-4 py-3 text-right font-mono text-[0.58rem] font-bold uppercase tracking-[0.2em] text-rvl-dim">
+                    Actions
+                  </th>
+                ) : null}
+              </tr>
+            ))}
           </thead>
           <tbody>
             {visible.length === 0 ? (
@@ -396,7 +441,10 @@ export function ResourceView<Row extends { id: number | string }>({
                 </td>
               </tr>
             ) : null}
-            {visible.map((row) => (
+            {table.getRowModel().rows.map((tableRow) => {
+              const row = tableRow.original;
+
+              return (
               <tr
                 key={String(row.id)}
                 className={cn(
@@ -417,15 +465,16 @@ export function ResourceView<Row extends { id: number | string }>({
                     : undefined
                 }
               >
-                {columns.map((column) => (
+                {tableRow.getAllCells().map((cell) => (
                   <td
-                    key={column.key}
+                    key={cell.id}
                     className={cn(
                       "border-b border-rvl-line px-4 py-3 text-left text-[0.92rem]",
-                      column.align === "right" && "text-right font-mono tabular-nums",
+                      alignOf(columns, cell.column.id) === "right" &&
+                        "text-right font-mono tabular-nums",
                     )}
                   >
-                    {column.render(row)}
+                    <table.FlexRender cell={cell} />
                   </td>
                 ))}
                 {onUpdate || onDelete || rowActions ? (
@@ -476,7 +525,8 @@ export function ResourceView<Row extends { id: number | string }>({
                   </td>
                 ) : null}
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>

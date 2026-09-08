@@ -1,8 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
 import Link from "next/link";
-import { FilterSelect, SearchBar } from "./controls";
+import { UrlFilterSelect, UrlPagination, UrlSearchBar } from "./url-controls";
 
 export interface ArticleListRow {
   id: number;
@@ -13,8 +12,6 @@ export interface ArticleListRow {
   authorName: string;
   createdAt: string;
 }
-
-type SortKey = "newest" | "oldest" | "likes" | "title";
 
 // Formatted in UTC so the server render and the client hydration agree; a local
 // zone would flip the day for anything published near midnight UTC.
@@ -30,38 +27,32 @@ function shortDate(value: string) {
       });
 }
 
-export function ArticlesList({ articles }: { articles: ArticleListRow[] }) {
-  const [search, setSearch] = useState("");
-  const [sort, setSort] = useState<SortKey>("newest");
+const LEAD_LABELS: Record<string, string> = {
+  likes: "Most liked",
+  title: "First A–Z",
+  oldest: "Oldest",
+};
 
-  const visible = useMemo(() => {
-    const query = search.toLowerCase();
-    const filtered = articles.filter(
-      (article) =>
-        article.title.toLowerCase().includes(query) ||
-        article.summary.toLowerCase().includes(query) ||
-        article.authorName.toLowerCase().includes(query),
-    );
-
-    return [...filtered].sort((a, b) => {
-      if (sort === "likes") return b.likes - a.likes;
-      if (sort === "title") return a.title.localeCompare(b.title);
-      const left = new Date(a.createdAt).getTime();
-      const right = new Date(b.createdAt).getTime();
-      return sort === "oldest" ? left - right : right - left;
-    });
-  }, [articles, search, sort]);
-
-  const [lead, ...rest] = visible;
+export function ArticlesList({
+  articles,
+  total,
+  totalPages,
+  sort,
+}: {
+  articles: ArticleListRow[];
+  total: number;
+  totalPages: number;
+  sort: string;
+}) {
+  const [lead, ...rest] = articles;
 
   return (
     <>
       <div className="flex flex-wrap items-end gap-5 border-b border-rvl-line px-5 py-7 sm:px-8 xl:px-14">
-        <FilterSelect
+        <UrlFilterSelect
           id="articles-sort"
           label="Sort"
-          value={sort}
-          onChange={(value) => setSort(value as SortKey)}
+          paramKey="sort"
           options={[
             { value: "newest", label: "Newest" },
             { value: "oldest", label: "Oldest" },
@@ -70,16 +61,15 @@ export function ArticlesList({ articles }: { articles: ArticleListRow[] }) {
           ]}
         />
 
-        <SearchBar
-          className="max-w-[380px]"
-          value={search}
-          placeholder="Search titles, summaries, authors"
-          onSearch={setSearch}
-        />
+        <UrlSearchBar className="max-w-[380px]" placeholder="Search titles, summaries, authors" />
 
         <span className="self-end pb-2.5 font-mono text-[0.68rem] uppercase tracking-[0.14em] text-rvl-dim">
-          {visible.length} articles
+          {total} articles
         </span>
+
+        <div className="ml-auto self-end">
+          <UrlPagination variant="compact" totalPages={totalPages} />
+        </div>
       </div>
 
       {lead ? (
@@ -90,13 +80,7 @@ export function ArticlesList({ articles }: { articles: ArticleListRow[] }) {
           >
             <div>
               <span className="font-mono text-[0.62rem] uppercase tracking-[0.2em] text-rvl-accent">
-                {sort === "likes"
-                  ? "Most liked"
-                  : sort === "title"
-                    ? "First A–Z"
-                    : sort === "oldest"
-                      ? "Oldest"
-                      : "Latest"}
+                {LEAD_LABELS[sort] ?? "Latest"}
               </span>
               <h2 className="mt-5 mb-4 text-balance font-display text-[2rem] font-black uppercase leading-[0.95] tracking-[-0.035em] sm:text-[2.5rem]">
                 {lead.title}

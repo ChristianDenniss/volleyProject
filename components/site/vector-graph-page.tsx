@@ -693,7 +693,7 @@ function VectorGraph3D({ vectorRows }: { vectorRows: PlayerSeasonVectorRow[] }) 
         const elapsed = Date.now() - startTime;
         const progress = Math.min(elapsed / duration, 1);
         // Easing function (ease-out)
-        const eased = 1 - Math.pow(1 - progress, 3);
+        const eased = 1 - (1 - progress) ** 3;
         
         cameraRef.current!.position.lerpVectors(startPos, newCameraPos, eased);
         controlsRef.current!.update();
@@ -986,7 +986,7 @@ function VectorGraph3D({ vectorRows }: { vectorRows: PlayerSeasonVectorRow[] }) 
                 <p>X: First Principal Component (PC1)</p>
                 <p>Y: Second Principal Component (PC2)</p>
                 <p>Z: Third Principal Component (PC3)</p>
-                {model && model.explainedVariance && model.explainedVariance.length > 0 && (
+                {model?.explainedVariance && model.explainedVariance.length > 0 && (
                   <p className={note}>
                     Variance explained: PC1: {(((model.explainedVariance[0] ?? 0) / model.explainedVariance.reduce((a: number, b: number) => a + b, 0)) * 100).toFixed(1)}%, 
                     PC2: {(((model.explainedVariance[1] ?? 0) / model.explainedVariance.reduce((a: number, b: number) => a + b, 0)) * 100).toFixed(1)}%, 
@@ -1119,7 +1119,7 @@ export function VectorGraphPage({
         const zVectors = vectorRows.map(row => row.zVector);
         const { model } = vectorRows.length > 0 ? computePCA3D(zVectors) : { model: null };
         
-        if (!model || !model.components || model.components.length === 0) {
+        if (!model?.components || model.components.length === 0) {
           return null;
         }
 

@@ -36,6 +36,7 @@ export function TeamLeadershipBadge({
   return (
     <span
       title={meta.title}
+      role="img"
       aria-label={meta.title}
       className={cn(
         "inline-flex size-7 shrink-0 items-center justify-center border font-mono text-[0.62rem] font-bold uppercase tracking-[0.08em]",

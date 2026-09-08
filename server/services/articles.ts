@@ -1,8 +1,16 @@
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, isNull, sql } from "drizzle-orm";
 import type { Db } from "@db";
 import { articleLikes, articles, user } from "@db/schema";
 import { found, NotFoundError } from "./errors";
 import type { PartialInput } from "./input";
+import {
+  emptyPage,
+  likePattern,
+  makePage,
+  pageBounds,
+  searchTerm,
+  type PageQuery,
+} from "./paging";
 
 export interface ArticleInput {
   title: string;
@@ -34,6 +42,90 @@ export async function list(db: Db, options: { approvedOnly?: boolean } = {}) {
     .orderBy(desc(articles.createdAt));
 
   return options.approvedOnly ? query.where(eq(articles.approved, true)) : query;
+}
+
+export type ArticleSort = "newest" | "oldest" | "likes" | "title";
+
+export type ArticleStatus = "pending" | "published" | "rejected";
+
+export interface ArticleListFilters extends PageQuery {
+  approvedOnly?: boolean | undefined;
+  status?: ArticleStatus | undefined;
+  sort?: ArticleSort | undefined;
+}
+
+function statusFilter(status: ArticleStatus | undefined) {
+  if (status === "pending") return isNull(articles.approved);
+  if (status === "published") return eq(articles.approved, true);
+  if (status === "rejected") return eq(articles.approved, false);
+  return undefined;
+}
+
+export async function statusCounts(db: Db) {
+  const rows = await db
+    .select({
+      approved: articles.approved,
+      total: sql<number>`count(*)`,
+    })
+    .from(articles)
+    .groupBy(articles.approved);
+
+  const counts = { pending: 0, published: 0, rejected: 0, all: 0 };
+  for (const row of rows) {
+    const total = Number(row.total);
+    counts.all += total;
+    if (row.approved === null) counts.pending += total;
+    else if (row.approved) counts.published += total;
+    else counts.rejected += total;
+  }
+  return counts;
+}
+
+function articleFilters(filters: ArticleListFilters) {
+  const term = searchTerm(filters);
+  return and(
+    filters.approvedOnly ? eq(articles.approved, true) : undefined,
+    statusFilter(filters.status),
+    term
+      ? sql`(
+          lower(${articles.title}) like ${likePattern(term)} escape '\\'
+          or lower(${articles.summary}) like ${likePattern(term)} escape '\\'
+          or lower(${user.name}) like ${likePattern(term)} escape '\\'
+        )`
+      : undefined,
+  );
+}
+
+function articleOrder(sort: ArticleSort | undefined) {
+  if (sort === "oldest") return asc(articles.createdAt);
+  if (sort === "likes") return desc(articles.likes);
+  if (sort === "title") return asc(articles.title);
+  return desc(articles.createdAt);
+}
+
+export async function listPage(db: Db, filters: ArticleListFilters = {}) {
+  const bounds = pageBounds(filters);
+  const where = articleFilters(filters);
+
+  const [counted] = await db
+    .select({ total: sql<number>`count(*)` })
+    .from(articles)
+    .innerJoin(user, eq(articles.authorId, user.id))
+    .where(where);
+
+  const total = Number(counted?.total ?? 0);
+  if (total === 0) return emptyPage<Awaited<ReturnType<typeof list>>[number]>(bounds);
+
+  const rows = await db
+    .select(columns)
+    .from(articles)
+    .innerJoin(user, eq(articles.authorId, user.id))
+    .where(where)
+    .orderBy(articleOrder(filters.sort))
+    .limit(bounds.perPage)
+    .offset(bounds.offset);
+
+  return makePage(rows, total, bounds);
 }
 
 export async function listByAuthor(db: Db, authorId: string) {

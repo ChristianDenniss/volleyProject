@@ -3,7 +3,7 @@ import { articles } from "@server/services";
 import { isAdmin } from "@server/services/users";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "../init";
 import { revalidate } from "../revalidate";
-import { articleCreate, articleUpdate, byId } from "../schemas";
+import { articleCreate, articleListPage, articleUpdate, byId } from "../schemas";
 
 async function assertMayEdit(ctx: { db: Parameters<typeof articles.getById>[0]; user: { id: string; role: string } }, id: number) {
   const article = await articles.getById(ctx.db, id);
@@ -17,7 +17,17 @@ async function assertMayEdit(ctx: { db: Parameters<typeof articles.getById>[0]; 
 export const articlesRouter = router({
   list: publicProcedure.query(({ ctx }) => articles.list(ctx.db, { approvedOnly: true })),
 
+  listPage: publicProcedure
+    .input(articleListPage)
+    .query(({ ctx, input }) => articles.listPage(ctx.db, { ...input, approvedOnly: true })),
+
   listAll: adminProcedure.query(({ ctx }) => articles.list(ctx.db)),
+
+  listAllPage: adminProcedure
+    .input(articleListPage)
+    .query(({ ctx, input }) => articles.listPage(ctx.db, input)),
+
+  statusCounts: adminProcedure.query(({ ctx }) => articles.statusCounts(ctx.db)),
 
   byId: publicProcedure.input(byId).query(async ({ ctx, input }) => {
     const article = await articles.getById(ctx.db, input.id);

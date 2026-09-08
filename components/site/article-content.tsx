@@ -22,22 +22,42 @@ function applyMarks(text: ReactNode, marks: TiptapMark[] | undefined): ReactNode
   return marks.reduce<ReactNode>((node, mark) => {
     switch (mark.type) {
       case "bold":
-        return <strong className="font-bold">{node}</strong>;
+        return (
+          <strong key={mark.type} className="font-bold">
+            {node}
+          </strong>
+        );
       case "italic":
-        return <em className="italic">{node}</em>;
+        return (
+          <em key={mark.type} className="italic">
+            {node}
+          </em>
+        );
       case "underline":
-        return <u className="underline">{node}</u>;
+        return (
+          <u key={mark.type} className="underline">
+            {node}
+          </u>
+        );
       case "strike":
-        return <s className="line-through">{node}</s>;
+        return (
+          <s key={mark.type} className="line-through">
+            {node}
+          </s>
+        );
       case "code":
         return (
-          <code className="rounded-xs bg-rvl-panel px-1.5 py-0.5 font-code text-[0.88em]">
+          <code
+            key={mark.type}
+            className="rounded-xs bg-rvl-panel px-1.5 py-0.5 font-code text-[0.88em]"
+          >
             {node}
           </code>
         );
       case "link":
         return (
           <a
+            key={mark.type}
             href={mark.attrs.href}
             target="_blank"
             rel="noopener noreferrer nofollow"

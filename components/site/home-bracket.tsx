@@ -74,6 +74,7 @@ function Podium({ rows }: { rows: StandingRow[] }) {
 
   return (
     <div
+      role="group"
       aria-label="Top three teams"
       className="grid grid-cols-3 items-end gap-2 sm:gap-6"
     >

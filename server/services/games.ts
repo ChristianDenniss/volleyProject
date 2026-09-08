@@ -18,6 +18,14 @@ import {
 } from "@db/schema";
 import { BadRequestError, found, inserted, NotFoundError } from "./errors";
 import type { PartialInput } from "./input";
+import {
+  emptyPage,
+  likePattern,
+  makePage,
+  pageBounds,
+  searchTerm,
+  type PageQuery,
+} from "./paging";
 
 export type GameStatus = (typeof MATCH_STATUSES)[number];
 export type GamePhase = (typeof MATCH_PHASES)[number];
@@ -190,6 +198,79 @@ export async function listPlayed(db: Db, region?: GameRegion) {
     .where(and(eq(games.status, "completed"), matchRegion(region)))
     .orderBy(desc(games.date));
   return attachTeams(db, rows);
+}
+
+export interface GameListFilters extends PageQuery {
+  region?: GameRegion | undefined;
+  season?: number | undefined;
+  stage?: string | undefined;
+}
+
+function gameMatchesSearch(term: string) {
+  const pattern = likePattern(term);
+  return sql`(
+    lower(coalesce(${games.name}, '')) like ${pattern} escape '\\'
+    or lower(coalesce(${games.matchNumber}, '')) like ${pattern} escape '\\'
+    or exists (
+      select 1 from ${teamsGames}
+      inner join ${teams} on ${teams.id} = ${teamsGames.teamId}
+      where ${teamsGames.gameId} = ${games.id}
+        and lower(${teams.name}) like ${pattern} escape '\\'
+    )
+  )`;
+}
+
+function gameFilters(filters: GameListFilters, onlyCompleted: boolean) {
+  const term = searchTerm(filters);
+  return and(
+    onlyCompleted ? eq(games.status, "completed") : undefined,
+    matchRegion(filters.region),
+    filters.season !== undefined
+      ? sql`exists (
+          select 1 from ${seasons}
+          where ${seasons.id} = ${games.seasonId} and ${seasons.seasonNumber} = ${filters.season}
+        )`
+      : undefined,
+    filters.stage ? eq(games.stage, filters.stage) : undefined,
+    term ? gameMatchesSearch(term) : undefined,
+  );
+}
+
+export async function listPlayedPage(db: Db, filters: GameListFilters = {}) {
+  return gamesPage(db, filters, true);
+}
+
+export async function listPage(db: Db, filters: GameListFilters = {}) {
+  return gamesPage(db, filters, false);
+}
+
+async function gamesPage(db: Db, filters: GameListFilters, onlyCompleted: boolean) {
+  const bounds = pageBounds(filters);
+  const where = gameFilters(filters, onlyCompleted);
+
+  const total = await db.$count(games, where);
+  if (total === 0) return emptyPage<Awaited<ReturnType<typeof listPlayed>>[number]>(bounds);
+
+  const rows = await db
+    .select(listColumns)
+    .from(games)
+    .leftJoin(seasons, eq(games.seasonId, seasons.id))
+    .where(where)
+    .orderBy(desc(games.date))
+    .limit(bounds.perPage)
+    .offset(bounds.offset);
+
+  return makePage(await attachTeams(db, rows), total, bounds);
+}
+
+export async function listStages(db: Db, region?: GameRegion) {
+  const rows = await db
+    .selectDistinct({ stage: games.stage })
+    .from(games)
+    .where(and(eq(games.status, "completed"), matchRegion(region)))
+    .orderBy(asc(games.stage));
+
+  return rows.flatMap((row) => (row.stage ? [row.stage] : []));
 }
 
 export async function listSchedule(db: Db, seasonId?: number, region?: GameRegion) {
@@ -365,8 +446,8 @@ function teamIdsFromInput(
   return teamIds ?? [team1Id, team2Id].filter((id): id is number => !!id);
 }
 
-function assertTeamRequirement(status: GameStatus, count: number) {
-  if (status === "completed" && count < 2) {
+function assertTeamRequirement(status: GameStatus, teamCount: number) {
+  if (status === "completed" && teamCount < 2) {
     throw new BadRequestError("Completed games require both teams");
   }
 }

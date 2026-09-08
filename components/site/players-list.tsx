@@ -1,10 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { ClearFiltersButton, FilterSelect, Pagination, SearchBar } from "./controls";
+import { UrlClearFilters, UrlFilterSelect, UrlPagination, UrlSearchBar } from "./url-controls";
 
 export interface PlayerListRow {
   id: number;
@@ -13,114 +13,58 @@ export interface PlayerListRow {
   teams: { name: string; seasonNumber: number | null }[];
 }
 
-const PER_PAGE = 25;
+const FILTER_KEYS = ["q", "season", "position"];
 
-export function PlayersList({ players }: { players: PlayerListRow[] }) {
+export function PlayersList({
+  players,
+  totalPages,
+  seasons,
+  positions,
+}: {
+  players: PlayerListRow[];
+  totalPages: number;
+  seasons: number[];
+  positions: string[];
+}) {
   const [expanded, setExpanded] = useState<number | null>(null);
-  const [search, setSearch] = useState("");
-  const [season, setSeason] = useState("");
-  const [position, setPosition] = useState("");
-  const [page, setPage] = useState(1);
-
-  const seasons = useMemo(() => {
-    const values = new Set<number>();
-    players.forEach((player) =>
-      player.teams.forEach((team) => {
-        if (team.seasonNumber != null) values.add(team.seasonNumber);
-      }),
-    );
-    return [...values].sort((a, b) => a - b);
-  }, [players]);
-
-  const positions = useMemo(() => {
-    const values = new Set<string>();
-    players.forEach((player) => {
-      if (player.position && player.position !== "N/A") values.add(player.position);
-    });
-    return [...values].sort();
-  }, [players]);
-
-  const filtered = useMemo(
-    () =>
-      players.filter((player) => {
-        const matchesSearch = player.name.toLowerCase().includes(search.toLowerCase());
-        const matchesSeason =
-          !season || player.teams.some((team) => String(team.seasonNumber) === season);
-        const matchesPosition = !position || player.position === position;
-        return matchesSearch && matchesSeason && matchesPosition;
-      }),
-    [players, search, season, position],
-  );
-
-  const totalPages = Math.max(Math.ceil(filtered.length / PER_PAGE), 1);
-  const current = Math.min(page, totalPages);
-  const visible = filtered.slice((current - 1) * PER_PAGE, current * PER_PAGE);
-
-  const clearFilters = () => {
-    setSearch("");
-    setSeason("");
-    setPosition("");
-    setPage(1);
-  };
 
   return (
     <>
       <div className="flex flex-col gap-6 border-b border-rvl-line px-5 py-7 sm:px-8 xl:px-14">
         <div className="flex flex-wrap items-end gap-5">
-          <FilterSelect
+          <UrlFilterSelect
             id="season-filter"
             label="Season"
-            value={season}
-            onChange={(value) => {
-              setSeason(value);
-              setPage(1);
-            }}
+            paramKey="season"
             options={[
               { value: "", label: "All seasons" },
               ...seasons.map((value) => ({ value: String(value), label: `Season ${value}` })),
             ]}
           />
 
-          <FilterSelect
+          <UrlFilterSelect
             id="position-filter"
             label="Position"
-            value={position}
-            onChange={(value) => {
-              setPosition(value);
-              setPage(1);
-            }}
+            paramKey="position"
             options={[
               { value: "", label: "All positions" },
               ...positions.map((value) => ({ value, label: value })),
             ]}
           />
 
-          <SearchBar
-            className="max-w-[340px]"
-            value={search}
-            placeholder="Search players"
-            onSearch={(value) => {
-              setSearch(value);
-              setPage(1);
-            }}
-          />
+          <UrlSearchBar className="max-w-[340px]" placeholder="Search players" />
 
-          {search || season || position ? <ClearFiltersButton onClick={clearFilters} /> : null}
+          <UrlClearFilters keys={FILTER_KEYS} />
 
           <div className="ml-auto self-end">
-            <Pagination
-              variant="compact"
-              currentPage={current}
-              totalPages={totalPages}
-              onPageChange={setPage}
-            />
+            <UrlPagination variant="compact" totalPages={totalPages} />
           </div>
         </div>
       </div>
 
       <div className="px-5 py-12 sm:px-8 xl:px-14">
         <div className="border-t border-rvl-line">
-          {visible.map((player) => {
+          {players.map((player) => {
             const open = expanded === player.id;
 
             return (
