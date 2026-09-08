@@ -47,7 +47,7 @@ export async function listPage(db: Db, filters: PageQuery = {}) {
     .select(publicColumns)
     .from(user)
     .where(where)
-    .orderBy(asc(user.name))
+    .orderBy(asc(user.name), asc(user.id))
     .limit(bounds.perPage)
     .offset(bounds.offset);
 

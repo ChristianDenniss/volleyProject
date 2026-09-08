@@ -114,7 +114,7 @@ export async function listPage(db: Db, filters: TeamListFilters = {}) {
     .from(teams)
     .leftJoin(seasons, eq(teams.seasonId, seasons.id))
     .where(where)
-    .orderBy(asc(teams.name))
+    .orderBy(asc(teams.name), asc(teams.id))
     .limit(bounds.perPage)
     .offset(bounds.offset);
 

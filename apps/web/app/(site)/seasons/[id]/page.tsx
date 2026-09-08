@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { api } from "@server/trpc/server";
+import type { SearchParams } from "@/lib/search-params";
 import { getSiteRegion } from "@server/site-region";
 import { cn } from "@/lib/utils";
 import { regionQuery, type SiteRegion } from "@/lib/region";
@@ -11,6 +12,7 @@ export const dynamic = "force-dynamic";
 
 interface Params {
   params: Promise<{ id: string }>;
+  searchParams: Promise<SearchParams>;
 }
 
 // Cached so generateMetadata and the page share one fetch per request.
@@ -20,9 +22,9 @@ const load = cache(async (id: string, region: SiteRegion) => {
   return (await api()).seasons.byId({ id: parsed, ...regionQuery(region) });
 });
 
-export async function generateMetadata({ params }: Params): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: Params): Promise<Metadata> {
   const { id } = await params;
-  const region = await getSiteRegion();
+  const region = await getSiteRegion(await searchParams);
   const season = await load(id, region);
   if (!season) return { title: "Season not found" };
 
@@ -63,9 +65,9 @@ function isPodium(placement: string) {
   return /champion|1st|2nd|3rd|runner/i.test(placement);
 }
 
-export default async function SeasonPage({ params }: Params) {
+export default async function SeasonPage({ params, searchParams }: Params) {
   const { id } = await params;
-  const region = await getSiteRegion();
+  const region = await getSiteRegion(await searchParams);
   const season = await load(id, region);
   if (!season) notFound();
 

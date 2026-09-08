@@ -41,6 +41,13 @@ jobs:
           workingDirectory: apps/web
           command: d1 migrations apply volley-project --remote
 
+      - name: Deploy images worker
+        if: always()
+        run: bun run images:deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
       - name: Deploy Worker
         if: always()
         run: bun run deploy

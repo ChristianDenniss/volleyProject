@@ -93,7 +93,7 @@ export async function listPage(db: Db, filters: RecordListFilters = {}) {
 
   const rows = await base(db)
     .where(where)
-    .orderBy(asc(records.metric), asc(records.minAttempts), asc(records.rank))
+    .orderBy(asc(records.metric), asc(records.minAttempts), asc(records.rank), asc(records.id))
     .limit(bounds.perPage)
     .offset(bounds.offset);
 
@@ -157,6 +157,8 @@ export async function listGroupsPage(
     .orderBy(asc(records.metric), asc(records.minAttempts))
     .limit(bounds.perPage)
     .offset(bounds.offset);
+
+  if (groups.length === 0) return makePage<RecordGroup>([], total, bounds);
 
   const rows = await base(db)
     .where(

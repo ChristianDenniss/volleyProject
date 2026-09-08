@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { api } from "@server/trpc/server";
 import { getSiteRegionQuery } from "@server/site-region";
+import type { SearchParams } from "@/lib/search-params";
 import { EmptyState } from "@components/site/empty-state";
 import { PageHeader } from "@components/site/page-header";
 
@@ -21,8 +22,13 @@ const formatDate = (value: string | null) =>
       })
     : "Present";
 
-export default async function SeasonsPage() {
-  const [trpc, { query }] = await Promise.all([api(), getSiteRegionQuery()]);
+export default async function SeasonsPage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
+  const params = await searchParams;
+  const [trpc, { query }] = await Promise.all([api(), getSiteRegionQuery(params)]);
   const rows = await trpc.seasons.list(query);
 
   return (

@@ -97,10 +97,10 @@ function articleFilters(filters: ArticleListFilters) {
 }
 
 function articleOrder(sort: ArticleSort | undefined) {
-  if (sort === "oldest") return asc(articles.createdAt);
-  if (sort === "likes") return desc(articles.likes);
-  if (sort === "title") return asc(articles.title);
-  return desc(articles.createdAt);
+  if (sort === "oldest") return [asc(articles.createdAt), asc(articles.id)];
+  if (sort === "likes") return [desc(articles.likes), asc(articles.id)];
+  if (sort === "title") return [asc(articles.title), asc(articles.id)];
+  return [desc(articles.createdAt), asc(articles.id)];
 }
 
 export async function listPage(db: Db, filters: ArticleListFilters = {}) {
@@ -121,7 +121,7 @@ export async function listPage(db: Db, filters: ArticleListFilters = {}) {
     .from(articles)
     .innerJoin(user, eq(articles.authorId, user.id))
     .where(where)
-    .orderBy(articleOrder(filters.sort))
+    .orderBy(...articleOrder(filters.sort))
     .limit(bounds.perPage)
     .offset(bounds.offset);
 

@@ -3,6 +3,7 @@ import { getDb } from "@db";
 import { api } from "@server/trpc/server";
 import { homeNumbers } from "@server/services";
 import { getSiteRegionQuery } from "@server/site-region";
+import type { SearchParams } from "@/lib/search-params";
 import { HomeBracket } from "@components/site/home-bracket";
 import { HomeMatches } from "@components/site/home-matches";
 import { HomeSpotlightRail, type SpotlightCard } from "@components/site/home-spotlight-rail";
@@ -53,8 +54,13 @@ function setLine(match: {
     .join(" · ");
 }
 
-export default async function HomePage() {
-  const [trpc, { selected, query }] = await Promise.all([api(), getSiteRegionQuery()]);
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
+  const params = await searchParams;
+  const [trpc, { selected, query }] = await Promise.all([api(), getSiteRegionQuery(params)]);
 
   const [seasonRows, articleRows, playerCount] = await Promise.all([
     trpc.seasons.list(query),

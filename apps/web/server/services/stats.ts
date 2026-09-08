@@ -119,7 +119,7 @@ export async function listPage(db: Db, filters: StatListFilters = {}) {
     .innerJoin(games, eq(stats.gameId, games.id))
     .leftJoin(seasons, eq(games.seasonId, seasons.id))
     .where(where)
-    .orderBy(desc(games.date))
+    .orderBy(desc(games.date), asc(stats.id))
     .limit(bounds.perPage)
     .offset(bounds.offset);
 

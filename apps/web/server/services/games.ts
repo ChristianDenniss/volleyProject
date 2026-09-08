@@ -257,7 +257,7 @@ async function gamesPage(db: Db, filters: GameListFilters, onlyCompleted: boolea
     .from(games)
     .leftJoin(seasons, eq(games.seasonId, seasons.id))
     .where(where)
-    .orderBy(desc(games.date))
+    .orderBy(desc(games.date), asc(games.id))
     .limit(bounds.perPage)
     .offset(bounds.offset);
 
