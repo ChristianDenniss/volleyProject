@@ -22,7 +22,7 @@
 	},
 	"services": [
 		{
-			"binding": "IMAGES",
+			"binding": "IMAGES_RPC",
 			"service": "volley-images",
 			"entrypoint": "ImagesWorker"
 		}

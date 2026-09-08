@@ -7,8 +7,8 @@ import type {
 } from "@volley/media";
 
 function service(): ImagesRpc {
-  const binding = (env as unknown as { IMAGES?: ImagesRpc }).IMAGES;
-  if (!binding) throw new Error("the IMAGES service binding is not configured");
+  const binding = (env as unknown as { IMAGES_RPC?: ImagesRpc }).IMAGES_RPC;
+  if (!binding) throw new Error("the IMAGES_RPC service binding is not configured");
   return binding;
 }
 
