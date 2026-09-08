@@ -24,6 +24,7 @@ import {
   makePage,
   pageBounds,
   searchTerm,
+  type Page,
   type PageQuery,
 } from "./paging";
 
@@ -282,6 +283,110 @@ export async function listSchedule(db: Db, seasonId?: number, region?: GameRegio
     .orderBy(asc(games.date));
   const withTeams = await attachTeams(db, rows);
   return withTeams.map(toScheduleRow);
+}
+
+const scheduleRoundExpr = sql<string>`coalesce(${games.round}, ${games.status})`;
+const scheduleMatchNumberExpr = sql<string>`coalesce(${games.matchNumber}, 'Game ' || ${games.id})`;
+
+export interface ScheduleFilters extends PageQuery {
+  seasonId?: number | undefined;
+  region?: GameRegion | undefined;
+  status?: GameStatus | undefined;
+  round?: string | undefined;
+}
+
+export interface ScheduleDay {
+  date: string;
+  matches: ScheduleRow[];
+}
+
+function scheduleMatchesSearch(term: string) {
+  const pattern = likePattern(term);
+  return sql`(
+    lower(${scheduleMatchNumberExpr}) like ${pattern} escape '\\'
+    or exists (
+      select 1 from ${teamsGames}
+      inner join ${teams} on ${teams.id} = ${teamsGames.teamId}
+      where ${teamsGames.gameId} = ${games.id}
+        and lower(${teams.name}) like ${pattern} escape '\\'
+    )
+  )`;
+}
+
+function scheduleWhere(filters: ScheduleFilters) {
+  const term = searchTerm(filters);
+  return and(
+    scheduleFilter(filters.seasonId, filters.region),
+    filters.status ? eq(games.status, filters.status) : undefined,
+    filters.round ? sql`${scheduleRoundExpr} = ${filters.round}` : undefined,
+    term ? scheduleMatchesSearch(term) : undefined,
+  );
+}
+
+export async function listScheduleStatuses(db: Db, seasonId?: number, region?: GameRegion) {
+  const rows = await db
+    .selectDistinct({ status: games.status })
+    .from(games)
+    .where(scheduleFilter(seasonId, region))
+    .orderBy(asc(games.status));
+
+  return rows.map((row) => row.status);
+}
+
+export async function listScheduleRounds(db: Db, seasonId?: number, region?: GameRegion) {
+  const rows = await db
+    .selectDistinct({ round: scheduleRoundExpr })
+    .from(games)
+    .where(scheduleFilter(seasonId, region))
+    .orderBy(asc(scheduleRoundExpr));
+
+  return rows.flatMap((row) => (row.round ? [row.round] : []));
+}
+
+export async function listSchedulePage(
+  db: Db,
+  filters: ScheduleFilters = {},
+): Promise<Page<ScheduleDay>> {
+  const bounds = pageBounds(filters);
+  const where = scheduleWhere(filters);
+
+  const [counted] = await db
+    .select({ total: sql<number>`count(distinct ${games.date})` })
+    .from(games)
+    .where(where);
+
+  const total = Number(counted?.total ?? 0);
+  if (total === 0) return emptyPage<ScheduleDay>(bounds);
+
+  const days = await db
+    .selectDistinct({ date: games.date })
+    .from(games)
+    .where(where)
+    .orderBy(asc(games.date))
+    .limit(bounds.perPage)
+    .offset(bounds.offset);
+
+  const dates = days.map((day) => day.date);
+  const rows = await db
+    .select(listColumns)
+    .from(games)
+    .leftJoin(seasons, eq(games.seasonId, seasons.id))
+    .where(and(where, inArray(games.date, dates)))
+    .orderBy(asc(games.date), asc(games.id));
+
+  const matches = (await attachTeams(db, rows)).map(toScheduleRow);
+  const byDate = new Map<string, ScheduleRow[]>();
+  for (const match of matches) {
+    const bucket = byDate.get(match.date) ?? [];
+    bucket.push(match);
+    byDate.set(match.date, bucket);
+  }
+
+  return makePage(
+    dates.map((date) => ({ date, matches: byDate.get(date) ?? [] })),
+    total,
+    bounds,
+  );
 }
 
 export async function listBySeason(db: Db, seasonId: number, region?: GameRegion) {

@@ -1,43 +1,15 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import type { LeaderboardRow } from "./stats-leaderboard";
+import {
+  PERCENTAGE_STATS,
+  type ComparisonOperator,
+  type FilterCondition,
+  type FilterStatKey,
+  type StatType,
+} from "@/lib/stats/leaderboard-filters";
 
-export type StatType = "total" | "perGame" | "perSet";
-
-export type ComparisonOperator = "==" | "!=" | ">" | ">=" | "<" | "<=";
-
-export type FilterStatKey =
-  | "spikeKills"
-  | "spikeAttempts"
-  | "Spike%"
-  | "apeKills"
-  | "apeAttempts"
-  | "Ape%"
-  | "totalKills"
-  | "totalAttempts"
-  | "totalSpike%"
-  | "spikingErrors"
-  | "blocks"
-  | "assists"
-  | "settingErrors"
-  | "digs"
-  | "blockFollows"
-  | "totalReceives"
-  | "aces"
-  | "servingErrors"
-  | "PRF"
-  | "plusMinus"
-  | "totalErrors"
-  | "miscErrors"
-  | "gamesPlayed";
-
-export interface FilterCondition {
-  id: string;
-  stat: FilterStatKey;
-  operator: ComparisonOperator;
-  value: number;
-}
+export type { ComparisonOperator, FilterCondition, FilterStatKey, StatType };
 
 export const FILTER_STAT_OPTIONS: { key: FilterStatKey; label: string }[] = [
   { key: "spikeKills", label: "Spike Kills" },
@@ -64,70 +36,6 @@ export const FILTER_STAT_OPTIONS: { key: FilterStatKey; label: string }[] = [
   { key: "miscErrors", label: "Misc Errors" },
   { key: "gamesPlayed", label: "Games Played" },
 ];
-
-const PERCENTAGE_STATS = new Set<FilterStatKey>(["Spike%", "Ape%", "totalSpike%"]);
-const RATE_STATS = PERCENTAGE_STATS;
-
-function rawStatValue(row: LeaderboardRow, stat: FilterStatKey): number {
-  switch (stat) {
-    case "Spike%":
-      return row.spikeAttempts === 0 ? 0 : (row.spikeKills / row.spikeAttempts) * 100;
-    case "Ape%":
-      return row.apeAttempts === 0 ? 0 : (row.apeKills / row.apeAttempts) * 100;
-    case "totalSpike%":
-      return row.spikingPercentage;
-    case "totalReceives":
-      return row.digs + row.blockFollows;
-    case "PRF":
-      return row.totalKills + row.aces + row.assists;
-    case "plusMinus":
-      return row.totalKills + row.aces + row.assists - row.totalErrors;
-    default:
-      return row[stat];
-  }
-}
-
-export function getRowStatValue(
-  row: LeaderboardRow,
-  stat: FilterStatKey,
-  statType: StatType = "total",
-): number {
-  const raw = rawStatValue(row, stat);
-  if (RATE_STATS.has(stat) || statType === "total") return raw;
-  if (statType === "perGame") {
-    return row.gamesPlayed === 0 ? 0 : raw / row.gamesPlayed;
-  }
-  return row.totalSets === 0 ? 0 : raw / row.totalSets;
-}
-
-export function passesFilterConditions(
-  row: LeaderboardRow,
-  conditions: FilterCondition[],
-  statType: StatType = "total",
-): boolean {
-  if (conditions.length === 0) return true;
-
-  return conditions.every((condition) => {
-    const statValue = getRowStatValue(row, condition.stat, statType);
-
-    switch (condition.operator) {
-      case "==":
-        return Math.abs(statValue - condition.value) < 0.001;
-      case "!=":
-        return Math.abs(statValue - condition.value) >= 0.001;
-      case ">":
-        return statValue > condition.value;
-      case ">=":
-        return statValue >= condition.value;
-      case "<":
-        return statValue < condition.value;
-      case "<=":
-        return statValue <= condition.value;
-      default:
-        return true;
-    }
-  });
-}
 
 const fieldClass =
   "rounded-xs border border-rvl-line bg-transparent px-2.5 py-2 font-mono text-[0.76rem] text-rvl-ink transition-colors focus:border-rvl-accent-soft focus:outline-none";

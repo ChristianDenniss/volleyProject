@@ -5,6 +5,7 @@ import { revalidate } from "../revalidate";
 import {
   byId,
   leaderboardInput,
+  leaderboardPage,
   optionalRegion,
   statCreate,
   statCreateByName,
@@ -29,6 +30,13 @@ export const statsRouter = router({
         }),
     );
   }),
+
+  leaderboardPage: publicProcedure.input(leaderboardPage).query(({ ctx, input }) =>
+    stats.leaderboardPage(ctx.db, {
+      ...input,
+      region: scopedRegion(ctx, input.region),
+    }),
+  ),
 
   vectorGraph: publicProcedure.input(optionalRegion).query(({ ctx, input }) => {
     const region = scopedRegion(ctx, input?.region);

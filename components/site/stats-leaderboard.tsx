@@ -1,19 +1,23 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { STAGE_ROUND_OPTIONS, type StageRound } from "@/lib/stats/stage-rounds";
-import { ClearFiltersButton, FilterSelect, Pagination, SearchBar } from "./controls";
+import { useListQuery } from "@/hooks/use-list-query";
 import {
+  decodeFilterConditions,
+  defaultSortDirection,
+  encodeFilterConditions,
   getRowStatValue,
-  passesFilterConditions,
-  StatsAdvancedFilter,
   type FilterCondition,
   type FilterStatKey,
+  type LeaderboardSortKey,
+  type SortDirection,
   type StatType,
-} from "./stats-advanced-filter";
+} from "@/lib/stats/leaderboard-filters";
+import { STAGE_ROUND_OPTIONS } from "@/lib/stats/stage-rounds";
+import { UrlClearFilters, UrlFilterSelect, UrlPagination, UrlSearchBar } from "./url-controls";
+import { StatsAdvancedFilter } from "./stats-advanced-filter";
 
 export type { StatType };
 
@@ -44,7 +48,7 @@ export interface LeaderboardRow {
   totalErrors: number;
 }
 
-type ColumnKey = FilterStatKey | "playerName" | "teamName";
+type ColumnKey = LeaderboardSortKey;
 
 type Column = {
   key: ColumnKey;
@@ -108,20 +112,17 @@ const DEFAULT_VISIBLE: Record<ColumnKey, boolean> = {
   miscErrors: false,
 };
 
-const PER_PAGE = 25;
+const FILTER_KEYS = ["q", "type", "f", "round"];
+const CONDITION_DEBOUNCE_MS = 300;
 
 const teamPillClass =
   "inline-flex max-w-full items-center gap-2 rounded-full border border-rvl-line bg-rvl-panel px-3 py-1.5 text-[0.88rem] font-semibold capitalize text-rvl-ink no-underline transition-colors hover:border-rvl-accent-soft hover:text-rvl-accent";
 
-function formatCellValue(
-  row: LeaderboardRow,
-  column: Column,
-  statType: StatType,
-): string {
+function formatCellValue(row: LeaderboardRow, column: Column, statType: StatType): string {
   if (column.key === "playerName") return row.playerName;
   if (column.key === "teamName") return row.teamName ?? "";
 
-  const value = getRowStatValue(row, column.key, statType);
+  const value = getRowStatValue(row, column.key as FilterStatKey, statType);
   if (column.isPercentage) return `${value.toFixed(2)}%`;
   if (Number.isInteger(value)) return value.toString();
   return value.toFixed(2);
@@ -133,30 +134,67 @@ function statTypeSuffix(statType: StatType): string {
   return "";
 }
 
+function useUrlConditions() {
+  const { get, setParams } = useListQuery();
+  const encoded = get("f");
+  const [conditions, setConditions] = useState<FilterCondition[]>(() =>
+    decodeFilterConditions(encoded),
+  );
+  const latest = useRef(encoded);
+
+  useEffect(() => {
+    if (encoded !== latest.current) {
+      latest.current = encoded;
+      setConditions(decodeFilterConditions(encoded));
+    }
+  }, [encoded]);
+
+  useEffect(() => {
+    const next = encodeFilterConditions(conditions);
+    if (next === latest.current) return;
+
+    const timer = setTimeout(() => {
+      latest.current = next;
+      setParams({ f: next === "" ? null : next });
+    }, CONDITION_DEBOUNCE_MS);
+
+    return () => clearTimeout(timer);
+  }, [conditions, setParams]);
+
+  return { conditions, setConditions };
+}
+
 export function StatsLeaderboard({
   rows,
   seasons,
   seasonId,
-  stageRound = "all",
+  statType,
+  sort,
+  dir,
+  page,
+  perPage,
+  total,
+  totalPages,
 }: {
   rows: LeaderboardRow[];
   seasons: { id: number; seasonNumber: number }[];
   seasonId?: number | undefined;
-  stageRound?: StageRound | undefined;
+  statType: StatType;
+  sort: LeaderboardSortKey;
+  dir: SortDirection;
+  page: number;
+  perPage: number;
+  total: number;
+  totalPages: number;
 }) {
-  const router = useRouter();
+  const { setParams } = useListQuery();
   const filterButtonRef = useRef<HTMLButtonElement>(null);
   const filterMenuRef = useRef<HTMLDivElement>(null);
-  const [search, setSearch] = useState("");
-  const [statType, setStatType] = useState<StatType>("total");
   const [showFilterMenu, setShowFilterMenu] = useState(false);
   const [showAdvancedFilter, setShowAdvancedFilter] = useState(false);
-  const [filterConditions, setFilterConditions] = useState<FilterCondition[]>([]);
   const [visibleStats, setVisibleStats] = useState(DEFAULT_VISIBLE);
-  const [sortKey, setSortKey] = useState<ColumnKey>("totalKills");
-  const [ascending, setAscending] = useState(false);
-  const [page, setPage] = useState(1);
   const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
+  const { conditions, setConditions } = useUrlConditions();
 
   useEffect(() => {
     if (!showFilterMenu || !filterButtonRef.current) return;
@@ -195,64 +233,14 @@ export function StatsLeaderboard({
     return withTeam;
   }, [visibleStats, seasonId]);
 
-  const hasFilters =
-    search !== "" ||
-    filterConditions.length > 0 ||
-    stageRound !== "all" ||
-    statType !== "total";
-
-  const sorted = useMemo(() => {
-    const filtered = rows.filter((row) => {
-      const matchesSearch = row.playerName.toLowerCase().includes(search.toLowerCase());
-      const matchesAdvanced = passesFilterConditions(row, filterConditions, statType);
-      return matchesSearch && matchesAdvanced;
-    });
-
-    return [...filtered].sort((a, b) => {
-      if (sortKey === "playerName") {
-        const comparison = a.playerName.localeCompare(b.playerName);
-        return ascending ? comparison : -comparison;
-      }
-
-      if (sortKey === "teamName") {
-        const comparison = (a.teamName ?? "").localeCompare(b.teamName ?? "");
-        return ascending ? comparison : -comparison;
-      }
-
-      const left = getRowStatValue(a, sortKey, statType);
-      const right = getRowStatValue(b, sortKey, statType);
-      return ascending ? left - right : right - left;
-    });
-  }, [rows, search, filterConditions, statType, sortKey, ascending]);
-
-  const totalPages = Math.max(Math.ceil(sorted.length / PER_PAGE), 1);
-  const current = Math.min(page, totalPages);
-  const visible = sorted.slice((current - 1) * PER_PAGE, current * PER_PAGE);
-
-  const toggleSort = (key: ColumnKey) => {
-    if (key === sortKey) {
-      setAscending((value) => !value);
-      return;
-    }
-    setSortKey(key);
-    setAscending(key === "playerName" || key === "teamName");
-  };
-
-  const pushQuery = (nextSeason: string, nextRound: StageRound) => {
-    const params = new URLSearchParams();
-    if (nextSeason) params.set("season", nextSeason);
-    if (nextRound !== "all") params.set("round", nextRound);
-    const query = params.toString();
-    router.push(query ? `/stats?${query}` : "/stats");
-  };
-
-  const clearFilters = () => {
-    setSearch("");
-    setStatType("total");
-    setFilterConditions([]);
-    setPage(1);
-    pushQuery(seasonId ? String(seasonId) : "", "all");
-  };
+  const toggleSort = useCallback(
+    (key: ColumnKey) => {
+      const nextDir: SortDirection =
+        key === sort ? (dir === "asc" ? "desc" : "asc") : defaultSortDirection(key);
+      setParams({ sort: key, dir: nextDir });
+    },
+    [sort, dir, setParams],
+  );
 
   const toggleStatVisibility = (column: ColumnKey) => {
     if (column === "playerName") return;
@@ -271,6 +259,7 @@ export function StatsLeaderboard({
   };
 
   const typeSuffix = statTypeSuffix(statType);
+  const firstRank = (page - 1) * perPage + 1;
 
   return (
     <>
@@ -298,11 +287,10 @@ export function StatsLeaderboard({
 
         <div className="flex flex-col gap-4">
           <div className="flex flex-wrap items-end gap-3">
-            <FilterSelect
+            <UrlFilterSelect
               id="stats-season-filter"
               label="Season"
-              value={seasonId ? String(seasonId) : ""}
-              onChange={(value) => pushQuery(value, stageRound)}
+              paramKey="season"
               options={[
                 { value: "", label: "All seasons" },
                 ...seasons.map((season) => ({
@@ -312,29 +300,22 @@ export function StatsLeaderboard({
               ]}
             />
 
-            <FilterSelect
+            <UrlFilterSelect
               id="stats-round-filter"
               label="Round"
-              value={stageRound}
-              onChange={(value) =>
-                pushQuery(seasonId ? String(seasonId) : "", (value || "all") as StageRound)
-              }
+              paramKey="round"
               options={STAGE_ROUND_OPTIONS.map((option) => ({
-                value: option.value,
+                value: option.value === "all" ? "" : option.value,
                 label: option.label,
               }))}
             />
 
-            <FilterSelect
+            <UrlFilterSelect
               id="stats-type-filter"
               label="Stat type"
-              value={statType}
-              onChange={(value) => {
-                setStatType((value || "total") as StatType);
-                setPage(1);
-              }}
+              paramKey="type"
               options={[
-                { value: "total", label: "Totals" },
+                { value: "", label: "Totals" },
                 { value: "perGame", label: "Per game" },
                 { value: "perSet", label: "Per set" },
               ]}
@@ -368,53 +349,34 @@ export function StatsLeaderboard({
                 onClick={() => setShowAdvancedFilter((value) => !value)}
                 className={cn(
                   "cursor-pointer rounded-xs border px-3.5 py-2.5 font-mono text-[0.68rem] uppercase tracking-[0.14em] transition-colors",
-                  showAdvancedFilter || filterConditions.length > 0
+                  showAdvancedFilter || conditions.length > 0
                     ? "border-rvl-accent-soft bg-rvl-accent-soft text-rvl-accent"
                     : "border-rvl-line bg-transparent text-rvl-ink hover:border-rvl-line-strong",
                 )}
               >
                 Advanced filters
-                {filterConditions.length > 0 ? ` (${filterConditions.length})` : ""}
+                {conditions.length > 0 ? ` (${conditions.length})` : ""}
               </button>
             </div>
 
-            {hasFilters ? <ClearFiltersButton onClick={clearFilters} /> : null}
+            <UrlClearFilters keys={FILTER_KEYS} />
           </div>
 
           <div className="flex flex-wrap items-end gap-3">
-            <SearchBar
-              className="min-w-[220px] flex-1"
-              value={search}
-              placeholder="Search players"
-              onSearch={(value) => {
-                setSearch(value);
-                setPage(1);
-              }}
-            />
+            <UrlSearchBar className="min-w-[220px] flex-1" placeholder="Search players" />
 
             <div className="flex items-center gap-4">
               <span className="font-mono text-[0.68rem] uppercase tracking-[0.14em] text-rvl-dim">
-                {sorted.length} players
+                {total} players
               </span>
-              <Pagination
-                variant="compact"
-                currentPage={current}
-                totalPages={totalPages}
-                onPageChange={setPage}
-              />
+              <UrlPagination variant="compact" totalPages={totalPages} />
             </div>
           </div>
         </div>
 
         {showAdvancedFilter ? (
           <div className="mt-6">
-            <StatsAdvancedFilter
-              conditions={filterConditions}
-              onConditionsChange={(conditions) => {
-                setFilterConditions(conditions);
-                setPage(1);
-              }}
-            />
+            <StatsAdvancedFilter conditions={conditions} onConditionsChange={setConditions} />
           </div>
         ) : null}
       </header>
@@ -426,7 +388,11 @@ export function StatsLeaderboard({
           style={menuStyle}
         >
           <label className="mb-3 flex items-center gap-2 pb-1 font-mono text-[0.68rem] uppercase tracking-[0.12em] text-rvl-ink">
-            <input type="checkbox" checked={visibleColumns.length === ALL_COLUMNS.length} onChange={toggleAllStats} />
+            <input
+              type="checkbox"
+              checked={visibleColumns.length === ALL_COLUMNS.length}
+              onChange={toggleAllStats}
+            />
             All stats
           </label>
           <div className="grid max-h-[320px] grid-cols-1 gap-2 overflow-y-auto sm:grid-cols-2">
@@ -447,6 +413,11 @@ export function StatsLeaderboard({
         </div>
       ) : null}
 
+      {rows.length === 0 ? (
+        <div className="px-5 pb-20 text-center font-mono text-[0.78rem] uppercase tracking-[0.14em] text-rvl-dim sm:px-8 xl:px-14">
+          No players match those filters.
+        </div>
+      ) : (
       <div className="overflow-x-auto px-5 pb-12 sm:px-8 xl:px-14">
         <table className="w-full min-w-[820px] border-collapse">
           <thead>
@@ -463,27 +434,27 @@ export function StatsLeaderboard({
                     column.key === "playerName" || column.key === "teamName"
                       ? "text-left"
                       : "text-right",
-                    sortKey === column.key
-                      ? "text-rvl-accent"
-                      : "text-rvl-dim hover:text-rvl-ink",
+                    sort === column.key ? "text-rvl-accent" : "text-rvl-dim hover:text-rvl-ink",
                   )}
                 >
                   {column.label}
                   {column.key !== "playerName" && typeSuffix ? (
-                    <span className="ml-1 normal-case tracking-normal text-rvl-dim">{typeSuffix}</span>
+                    <span className="ml-1 normal-case tracking-normal text-rvl-dim">
+                      {typeSuffix}
+                    </span>
                   ) : null}
-                  {sortKey === column.key ? (
-                    <span className="ml-1.5">{ascending ? "▲" : "▼"}</span>
+                  {sort === column.key ? (
+                    <span className="ml-1.5">{dir === "asc" ? "▲" : "▼"}</span>
                   ) : null}
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {visible.map((row, index) => (
+            {rows.map((row, index) => (
               <tr key={row.playerId} className="transition-colors hover:bg-rvl-panel">
                 <td className="py-3.5 pr-4 font-mono text-[0.72rem] tabular-nums text-rvl-dim">
-                  {(current - 1) * PER_PAGE + index + 1}
+                  {firstRank + index}
                 </td>
                 {visibleColumns.map((column) => (
                   <td
@@ -495,7 +466,7 @@ export function StatsLeaderboard({
                         : column.key === "teamName"
                           ? "text-left"
                           : "text-right font-mono text-[0.88rem] tabular-nums",
-                      sortKey === column.key &&
+                      sort === column.key &&
                         column.key !== "playerName" &&
                         column.key !== "teamName"
                         ? "font-bold text-rvl-accent"
@@ -537,6 +508,7 @@ export function StatsLeaderboard({
           </tbody>
         </table>
       </div>
+      )}
     </>
   );
 }

@@ -14,6 +14,8 @@ import {
   gameUpdate,
   optionalRegion,
   optionalSeason,
+  scheduleFilterOptions,
+  schedulePage,
 } from "../schemas";
 
 const schedulePaths = ["/schedules", "/portal/games", "/"];
@@ -50,6 +52,28 @@ export const gamesRouter = router({
     const region = scopedRegion(ctx, input.region);
     return cachedQuery("games", ["schedule", input.seasonId ?? null, region ?? null], () =>
       games.listSchedule(ctx.db, input.seasonId, region),
+    );
+  }),
+
+  schedulePage: publicProcedure.input(schedulePage).query(({ ctx, input }) =>
+    games.listSchedulePage(ctx.db, {
+      ...input,
+      region: scopedRegion(ctx, input.region),
+    }),
+  ),
+
+  scheduleFilters: publicProcedure.input(scheduleFilterOptions).query(async ({ ctx, input }) => {
+    const region = scopedRegion(ctx, input.region);
+    return cachedQuery(
+      "games",
+      ["schedule-filters", input.seasonId ?? null, region ?? null],
+      async () => {
+        const [statuses, rounds] = await Promise.all([
+          games.listScheduleStatuses(ctx.db, input.seasonId, region),
+          games.listScheduleRounds(ctx.db, input.seasonId, region),
+        ]);
+        return { statuses, rounds };
+      },
     );
   }),
 

@@ -2,10 +2,24 @@ import { awards } from "@server/services";
 import { adminProcedure, publicProcedure, router } from "../init";
 import { cachedQuery } from "../cached";
 import { revalidate } from "../revalidate";
-import { awardCreate, awardCreateWithNames, awardUpdate, byId } from "../schemas";
+import { awardCreate, awardCreateWithNames, awardListPage, awardUpdate, byId } from "../schemas";
 
 export const awardsRouter = router({
   list: publicProcedure.query(({ ctx }) => cachedQuery("awards", ["list"], () => awards.list(ctx.db))),
+
+  listPage: publicProcedure
+    .input(awardListPage)
+    .query(({ ctx, input }) => awards.listPage(ctx.db, input)),
+
+  filters: publicProcedure.query(({ ctx }) =>
+    cachedQuery("awards", ["filters"], async () => {
+      const [types, seasons] = await Promise.all([
+        awards.listTypes(ctx.db),
+        awards.listSeasonNumbers(ctx.db),
+      ]);
+      return { types, seasons };
+    }),
+  ),
 
   byId: publicProcedure.input(byId).query(({ ctx, input }) => awards.getById(ctx.db, input.id)),
 

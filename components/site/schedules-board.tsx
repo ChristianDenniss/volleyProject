@@ -1,10 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { ClearFiltersButton, FilterSelect, Pagination, SearchBar } from "./controls";
+import { UrlClearFilters, UrlFilterSelect, UrlPagination, UrlSearchBar } from "./url-controls";
 
 export interface ScheduleMatch {
   id: number;
@@ -22,7 +21,12 @@ export interface ScheduleMatch {
   setScores: (string | null)[];
 }
 
-const DAYS_PER_PAGE = 12;
+export interface ScheduleDayView {
+  date: string;
+  matches: ScheduleMatch[];
+}
+
+const FILTER_KEYS = ["q", "status", "round"];
 
 // The match date is a plain YYYY-MM-DD string, which Date parses as UTC midnight.
 // Formatting it in the viewer's zone would shift it a day west of UTC and disagree
@@ -129,51 +133,21 @@ function MatchCard({ match }: { match: ScheduleMatch }) {
 }
 
 export function SchedulesBoard({
-  matches,
+  days,
   seasons,
-  seasonId,
+  statuses,
+  rounds,
+  totalDays,
+  totalPages,
 }: {
-  matches: ScheduleMatch[];
+  days: ScheduleDayView[];
   seasons: { id: number; seasonNumber: number }[];
-  seasonId?: number | undefined;
+  statuses: string[];
+  rounds: string[];
+  totalDays: number;
+  totalPages: number;
 }) {
-  const router = useRouter();
-  const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("");
-  const [round, setRound] = useState("");
-  const [page, setPage] = useState(1);
   const [collapsedDays, setCollapsedDays] = useState<Set<string>>(new Set());
-
-  const statuses = useMemo(
-    () => [...new Set(matches.map((match) => match.status))].sort(),
-    [matches],
-  );
-  const rounds = useMemo(() => [...new Set(matches.map((match) => match.round))].sort(), [matches]);
-
-  const filtered = useMemo(
-    () =>
-      matches.filter((match) => {
-        const haystack = `${match.team1Name ?? ""} ${match.team2Name ?? ""} ${match.matchNumber}`;
-        return (
-          haystack.toLowerCase().includes(search.toLowerCase()) &&
-          (!status || match.status === status) &&
-          (!round || match.round === round)
-        );
-      }),
-    [matches, search, status, round],
-  );
-
-  const byDate = useMemo(() => {
-    const map = new Map<string, ScheduleMatch[]>();
-    filtered.forEach((match) => {
-      map.set(match.date, [...(map.get(match.date) ?? []), match]);
-    });
-    return [...map.entries()].sort(([a], [b]) => a.localeCompare(b));
-  }, [filtered]);
-
-  const totalPages = Math.max(Math.ceil(byDate.length / DAYS_PER_PAGE), 1);
-  const current = Math.min(page, totalPages);
-  const visibleDays = byDate.slice((current - 1) * DAYS_PER_PAGE, current * DAYS_PER_PAGE);
 
   const toggleDay = (date: string) => {
     setCollapsedDays((prev) => {
@@ -184,22 +158,14 @@ export function SchedulesBoard({
     });
   };
 
-  const clearFilters = () => {
-    setSearch("");
-    setStatus("");
-    setRound("");
-    setPage(1);
-  };
-
   return (
     <>
       <div className="flex flex-col gap-6 border-b border-rvl-line px-5 py-7 sm:px-8 xl:px-14">
         <div className="flex flex-wrap items-end gap-5">
-          <FilterSelect
+          <UrlFilterSelect
             id="schedule-season"
             label="Season"
-            value={seasonId ? String(seasonId) : ""}
-            onChange={(value) => router.push(value ? `/schedules?season=${value}` : "/schedules")}
+            paramKey="season"
             options={[
               { value: "", label: "All seasons" },
               ...seasons.map((season) => ({
@@ -209,70 +175,50 @@ export function SchedulesBoard({
             ]}
           />
 
-          <FilterSelect
+          <UrlFilterSelect
             id="schedule-status"
             label="Status"
-            value={status}
-            onChange={(value) => {
-              setStatus(value);
-              setPage(1);
-            }}
+            paramKey="status"
             options={[
               { value: "", label: "All statuses" },
               ...statuses.map((value) => ({ value, label: value })),
             ]}
           />
 
-          <FilterSelect
+          <UrlFilterSelect
             id="schedule-round"
             label="Round"
-            value={round}
-            onChange={(value) => {
-              setRound(value);
-              setPage(1);
-            }}
+            paramKey="round"
             options={[
               { value: "", label: "All rounds" },
               ...rounds.map((value) => ({ value, label: value })),
             ]}
           />
 
-          {search || status || round ? (
-            <ClearFiltersButton onClick={clearFilters} />
-          ) : null}
+          <UrlClearFilters keys={FILTER_KEYS} />
         </div>
 
         <div className="flex flex-wrap items-center gap-5">
-          <SearchBar
+          <UrlSearchBar
             className="max-w-[380px]"
-            value={search}
             placeholder="Search matches, teams, match numbers"
-            onSearch={(value) => {
-              setSearch(value);
-              setPage(1);
-            }}
           />
           <span className="font-mono text-[0.68rem] uppercase tracking-[0.14em] text-rvl-dim">
-            {filtered.length} matches
+            {totalDays} {totalDays === 1 ? "day" : "days"}
           </span>
           <div className="ml-auto">
-            <Pagination
-              variant="compact"
-              currentPage={current}
-              totalPages={totalPages}
-              onPageChange={setPage}
-            />
+            <UrlPagination variant="compact" totalPages={totalPages} />
           </div>
         </div>
       </div>
 
-      {visibleDays.length === 0 ? (
+      {days.length === 0 ? (
         <div className="px-5 py-20 text-center font-mono text-[0.78rem] uppercase tracking-[0.14em] text-rvl-dim sm:px-8 xl:px-14">
           No matches match those filters.
         </div>
       ) : (
         <div className="flex flex-col gap-6 px-5 py-12 sm:px-8 xl:px-14">
-          {visibleDays.map(([date, entries]) => {
+          {days.map(({ date, matches: entries }) => {
             const collapsed = collapsedDays.has(date);
 
             return (

@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, isNull, sql } from "drizzle-orm";
+import { and, asc, desc, eq, isNull, or, sql } from "drizzle-orm";
 import type { Db } from "@db";
 import { games, players, RECORD_METRICS, RECORD_TYPES, records, seasons } from "@db/schema";
 import { found, NotFoundError } from "./errors";
@@ -10,6 +10,7 @@ import {
   makePage,
   pageBounds,
   searchTerm,
+  type Page,
   type PageQuery,
 } from "./paging";
 
@@ -97,6 +98,101 @@ export async function listPage(db: Db, filters: RecordListFilters = {}) {
     .offset(bounds.offset);
 
   return makePage(rows, total, bounds);
+}
+
+export type RecordRow = Awaited<ReturnType<typeof list>>[number];
+
+export interface RecordGroup {
+  metric: string;
+  minAttempts: number | null;
+  rows: RecordRow[];
+}
+
+export interface RecordGroupFilters extends PageQuery {
+  region?: GameRegion | undefined;
+  type?: RecordType | undefined;
+}
+
+function recordScope(filters: RecordGroupFilters) {
+  return and(
+    filters.region ? eq(games.region, filters.region) : undefined,
+    filters.type ? eq(records.type, filters.type) : undefined,
+  );
+}
+
+export async function listTypes(db: Db, region?: GameRegion) {
+  const rows = await db
+    .selectDistinct({ type: records.type })
+    .from(records)
+    .leftJoin(games, eq(records.gameId, games.id))
+    .where(region ? eq(games.region, region) : undefined)
+    .orderBy(asc(records.type));
+
+  return rows.map((row) => row.type);
+}
+
+export async function listGroupsPage(
+  db: Db,
+  filters: RecordGroupFilters = {},
+): Promise<Page<RecordGroup>> {
+  const bounds = pageBounds(filters);
+  const where = recordScope(filters);
+
+  const distinctGroups = db
+    .selectDistinct({ metric: records.metric, minAttempts: records.minAttempts })
+    .from(records)
+    .leftJoin(games, eq(records.gameId, games.id))
+    .where(where)
+    .as("record_groups");
+
+  const [counted] = await db.select({ total: sql<number>`count(*)` }).from(distinctGroups);
+  const total = Number(counted?.total ?? 0);
+  if (total === 0) return emptyPage<RecordGroup>(bounds);
+
+  const groups = await db
+    .selectDistinct({ metric: records.metric, minAttempts: records.minAttempts })
+    .from(records)
+    .leftJoin(games, eq(records.gameId, games.id))
+    .where(where)
+    .orderBy(asc(records.metric), asc(records.minAttempts))
+    .limit(bounds.perPage)
+    .offset(bounds.offset);
+
+  const rows = await base(db)
+    .where(
+      and(
+        where,
+        or(
+          ...groups.map((group) =>
+            and(
+              eq(records.metric, group.metric),
+              group.minAttempts === null
+                ? isNull(records.minAttempts)
+                : eq(records.minAttempts, group.minAttempts),
+            ),
+          ),
+        ),
+      ),
+    )
+    .orderBy(asc(records.metric), asc(records.minAttempts), asc(records.rank));
+
+  const byGroup = new Map<string, RecordRow[]>();
+  for (const row of rows) {
+    const key = `${row.metric}::${row.minAttempts ?? ""}`;
+    const bucket = byGroup.get(key) ?? [];
+    bucket.push(row);
+    byGroup.set(key, bucket);
+  }
+
+  return makePage(
+    groups.map((group) => ({
+      metric: group.metric,
+      minAttempts: group.minAttempts,
+      rows: byGroup.get(`${group.metric}::${group.minAttempts ?? ""}`) ?? [],
+    })),
+    total,
+    bounds,
+  );
 }
 
 export async function listBySeason(db: Db, seasonId: number) {
