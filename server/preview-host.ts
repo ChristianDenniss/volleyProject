@@ -18,6 +18,8 @@ export function canonicalRedirect(request: Request, canonicalOrigin: string | un
   if (!isBareProductionHost(url.hostname)) return null;
 
   const target = new URL(url.pathname + url.search, canonicalOrigin);
+  if (target.origin === url.origin) return null;
+
   return Response.redirect(target.toString(), 301);
 }
 
