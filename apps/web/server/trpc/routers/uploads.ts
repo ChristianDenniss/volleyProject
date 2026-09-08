@@ -8,7 +8,7 @@ export const uploadsRouter = router({
       data: input.data,
       filename: input.filename,
       uploaderId: ctx.user.id,
-    }),
+    }, ctx.uploads),
   ),
 
   createAsset: adminProcedure.input(imageUpload).mutation(({ ctx, input }) =>
@@ -16,6 +16,6 @@ export const uploadsRouter = router({
       data: input.data,
       filename: input.filename,
       uploaderId: ctx.user.id,
-    }),
+    }, ctx.uploads),
   ),
 });

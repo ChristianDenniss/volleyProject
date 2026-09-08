@@ -7,18 +7,15 @@ import {
   originalKey,
   sniffImageMime,
   uploadUrl,
-  variantKey,
   UPLOAD_CACHE_CONTROL,
   UPLOAD_KEY_PATTERN,
   UPLOAD_MAX_BASE64_LENGTH,
   UPLOAD_MAX_BYTES,
   UPLOAD_MIME_TYPES,
-  UPLOAD_VARIANTS,
-  UPLOAD_VARIANT_FORMAT,
-  UPLOAD_VARIANT_QUALITY,
   type UploadMimeType,
   type UploadVariant,
 } from "@/lib/uploads";
+import type { ImagesRpc } from "@volley/media";
 import { BadRequestError, NotFoundError } from "./errors";
 
 export interface StoredUploadVariant extends UploadVariant {
@@ -40,7 +37,7 @@ export interface StoredUpload {
 
 export interface UploadBindings {
   bucket: R2Bucket;
-  images: ImagesBinding;
+  images: ImagesRpc;
 }
 
 export interface StoreUploadInput {
@@ -61,16 +58,9 @@ interface UploadRow {
 }
 
 export function uploadBindings(): UploadBindings {
-  return { bucket: env.UPLOADS, images: env.IMAGES };
-}
-
-function bytesStream(bytes: Uint8Array): ReadableStream<Uint8Array> {
-  return new ReadableStream<Uint8Array>({
-    start(controller) {
-      controller.enqueue(bytes);
-      controller.close();
-    },
-  });
+  const images = (env as unknown as { IMAGES_RPC?: ImagesRpc }).IMAGES_RPC;
+  if (!images) throw new Error("the IMAGES_RPC service binding is not configured");
+  return { bucket: env.UPLOADS, images };
 }
 
 async function sha256Hex(bytes: Uint8Array<ArrayBuffer>): Promise<string> {
@@ -78,15 +68,6 @@ async function sha256Hex(bytes: Uint8Array<ArrayBuffer>): Promise<string> {
   return Array.from(new Uint8Array(digest))
     .map((byte) => byte.toString(16).padStart(2, "0"))
     .join("");
-}
-
-async function measure(
-  images: ImagesBinding,
-  bytes: Uint8Array,
-): Promise<{ width: number; height: number }> {
-  const info = await images.info(bytesStream(bytes));
-  if (!("width" in info)) throw new BadRequestError("Vector images are not accepted");
-  return { width: info.width, height: info.height };
 }
 
 function present(row: UploadRow, deduped: boolean): StoredUpload {
@@ -107,39 +88,6 @@ function present(row: UploadRow, deduped: boolean): StoredUpload {
 async function findById(db: Db, id: string): Promise<UploadRow | null> {
   const [row] = await db.select().from(uploads).where(eq(uploads.id, id)).limit(1);
   return row ?? null;
-}
-
-async function deriveVariants(
-  bindings: UploadBindings,
-  hash: string,
-  bytes: Uint8Array,
-): Promise<UploadVariant[]> {
-  const derived: UploadVariant[] = [];
-
-  for (const size of UPLOAD_VARIANTS) {
-    const result = await bindings.images
-      .input(bytesStream(bytes))
-      .transform({ width: size.width, fit: "scale-down" })
-      .output({ format: UPLOAD_VARIANT_FORMAT, quality: UPLOAD_VARIANT_QUALITY });
-
-    const output = new Uint8Array(await result.response().arrayBuffer());
-    const dimensions = await measure(bindings.images, output);
-    const key = variantKey(hash, size.name);
-
-    await bindings.bucket.put(key, output, {
-      httpMetadata: { contentType: UPLOAD_VARIANT_FORMAT, cacheControl: UPLOAD_CACHE_CONTROL },
-    });
-
-    derived.push({
-      name: size.name,
-      key,
-      width: dimensions.width,
-      height: dimensions.height,
-      bytes: output.byteLength,
-    });
-  }
-
-  return derived;
 }
 
 export async function store(
@@ -167,14 +115,14 @@ export async function store(
   const existing = await findById(db, hash);
   if (existing) return present(existing, true);
 
-  const dimensions = await measure(bindings.images, bytes);
   const key = originalKey(hash);
 
   await bindings.bucket.put(key, bytes, {
     httpMetadata: { contentType: mime, cacheControl: UPLOAD_CACHE_CONTROL },
   });
 
-  const variants = await deriveVariants(bindings, hash, bytes);
+  const derived = await bindings.images.derive(hash);
+  const variants: UploadVariant[] = derived.variants;
 
   const [written] = await db
     .insert(uploads)
@@ -184,8 +132,8 @@ export async function store(
       filename: input.filename,
       mime,
       bytes: bytes.byteLength,
-      width: dimensions.width,
-      height: dimensions.height,
+      width: derived.width,
+      height: derived.height,
       variants,
       uploadedBy: input.uploaderId,
     })

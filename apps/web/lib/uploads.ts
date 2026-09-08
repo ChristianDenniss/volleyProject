@@ -1,3 +1,11 @@
+import {
+  IMAGE_VARIANTS,
+  UPLOAD_KEY_PATTERN as MEDIA_KEY_PATTERN,
+  VARIANT_CACHE_CONTROL,
+  VARIANT_FORMAT,
+  VARIANT_QUALITY,
+} from "@volley/media";
+
 export const UPLOAD_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"] as const;
 export type UploadMimeType = (typeof UPLOAD_MIME_TYPES)[number];
 
@@ -5,16 +13,11 @@ export const UPLOAD_ACCEPT = UPLOAD_MIME_TYPES.join(",");
 export const UPLOAD_MAX_BYTES = 5 * 1024 * 1024;
 export const UPLOAD_MAX_BASE64_LENGTH = Math.ceil(UPLOAD_MAX_BYTES / 3) * 4 + 4;
 
-export const UPLOAD_VARIANTS = [
-  { name: "thumb", width: 160 },
-  { name: "card", width: 480 },
-  { name: "wide", width: 1280 },
-] as const;
-
-export const UPLOAD_VARIANT_FORMAT = "image/webp";
-export const UPLOAD_VARIANT_QUALITY = 82;
-export const UPLOAD_CACHE_CONTROL = "public, max-age=31536000, immutable";
-export const UPLOAD_KEY_PATTERN = /^[0-9a-f]{64}\/(?:original|[a-z]+\.webp)$/;
+export const UPLOAD_VARIANTS = IMAGE_VARIANTS;
+export const UPLOAD_VARIANT_FORMAT = VARIANT_FORMAT;
+export const UPLOAD_VARIANT_QUALITY = VARIANT_QUALITY;
+export const UPLOAD_CACHE_CONTROL = VARIANT_CACHE_CONTROL;
+export const UPLOAD_KEY_PATTERN = MEDIA_KEY_PATTERN;
 
 export interface UploadVariant {
   name: string;
@@ -24,13 +27,7 @@ export interface UploadVariant {
   bytes: number;
 }
 
-export function originalKey(hash: string): string {
-  return `${hash}/original`;
-}
-
-export function variantKey(hash: string, name: string): string {
-  return `${hash}/${name}.webp`;
-}
+export { originalKey, variantKey } from "@volley/media";
 
 export function uploadUrl(key: string): string {
   return `/api/uploads/${key}`;

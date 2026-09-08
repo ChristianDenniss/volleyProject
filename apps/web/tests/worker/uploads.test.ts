@@ -7,7 +7,12 @@ import type { Context } from "@server/trpc/init";
 import { GET } from "@/app/api/uploads/[...key]/route";
 import { UPLOAD_CACHE_CONTROL, UPLOAD_MAX_BASE64_LENGTH, UPLOAD_VARIANTS } from "@/lib/uploads";
 import { GIF_120X90, JPEG_500X300, PDF_BYTES, PNG_500X300 } from "../fixtures/images";
+import { localImages } from "../helpers/images-local";
 import { FIXTURES, seed } from "../fixtures/seed";
+
+function testUploadBindings() {
+  return { bucket: env.UPLOADS, images: localImages(env.UPLOADS) };
+}
 
 let db: Db;
 
@@ -20,6 +25,7 @@ function userCaller() {
   return createCaller({
     db,
     user: { id: FIXTURES.userId, name: "fixtureplayer", email: "fixtureplayer", role: "user" },
+    uploads: testUploadBindings(),
   } satisfies Context);
 }
 
@@ -27,11 +33,12 @@ function adminCaller() {
   return createCaller({
     db,
     user: { id: FIXTURES.adminId, name: "fixtureadmin", email: "fixtureadmin", role: "admin" },
+    uploads: testUploadBindings(),
   } satisfies Context);
 }
 
 function anonymousCaller() {
-  return createCaller({ db, user: null } satisfies Context);
+  return createCaller({ db, user: null, uploads: testUploadBindings() } satisfies Context);
 }
 
 function serve(key: string, headers?: HeadersInit): Promise<Response> {

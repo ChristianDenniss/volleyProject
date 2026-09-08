@@ -6,6 +6,7 @@ import type { MatchRegion } from "@/lib/region";
 import { errorDetail, explainError, logError } from "../report";
 import { isProductionDeployment } from "../environment";
 import { ServiceError } from "../services/errors";
+import type { UploadBindings } from "../services/uploads";
 import { isAdmin } from "../services/users";
 
 export interface TrpcUser {
@@ -20,6 +21,8 @@ export interface Context {
   user: TrpcUser | null;
   /** Set on public site requests. Undefined means ALL, or a portal/admin caller. */
   region?: MatchRegion | undefined;
+  /** Injected by tests. Undefined resolves the real R2 and images bindings. */
+  uploads?: UploadBindings | undefined;
 }
 
 export function scopedRegion(ctx: Context, explicit?: MatchRegion | undefined): MatchRegion | undefined {

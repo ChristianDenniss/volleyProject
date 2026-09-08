@@ -1,108 +1,100 @@
 import { WorkerEntrypoint } from "cloudflare:workers";
 import { PhotonImage, SamplingFilter, resize } from "@cf-wasm/photon";
 import {
+  HASH_PATTERN,
   IMAGE_VARIANTS,
   isVariantName,
+  originalKey,
   scaledHeight,
-  VARIANT_CACHE_CONTROL,
-  VARIANT_CONTENT_TYPE,
-  VARIANT_NAMES,
   variantKey,
+  VARIANT_CACHE_CONTROL,
+  VARIANT_FORMAT,
   type DeriveOptions,
-  type DerivedVariant,
   type DeriveResult,
   type ImageProbe,
-  type VariantName,
+  type ImageVariant,
 } from "@volley/media";
 
 interface Env {
   UPLOADS: R2Bucket;
 }
 
-function decodeVariants(requested: string[] | undefined): VariantName[] {
-  if (!requested || requested.length === 0) return VARIANT_NAMES;
+function requestedVariants(requested: string[] | undefined) {
+  if (!requested || requested.length === 0) return IMAGE_VARIANTS;
 
-  const names = requested.filter(isVariantName);
-  if (names.length === 0) throw new Error("no known variant names were requested");
-  return [...new Set(names)];
+  const wanted = new Set(requested.filter(isVariantName));
+  if (wanted.size === 0) throw new Error("no known variant names were requested");
+  return IMAGE_VARIANTS.filter((variant) => wanted.has(variant.name));
+}
+
+async function loadOriginal(bucket: R2Bucket, hash: string): Promise<Uint8Array> {
+  if (!HASH_PATTERN.test(hash)) throw new Error(`${hash} is not a content hash`);
+
+  const stored = await bucket.get(originalKey(hash));
+  if (!stored) throw new Error(`no original stored for ${hash}`);
+
+  return new Uint8Array(await stored.arrayBuffer());
 }
 
 export class ImagesWorker extends WorkerEntrypoint<Env> {
-  async derive(key: string, options: DeriveOptions = {}): Promise<DeriveResult> {
-    const wanted = decodeVariants(options.variants);
-
-    const original = await this.env.UPLOADS.get(key);
-    if (!original) throw new Error(`no object stored at ${key}`);
-
-    const source = new Uint8Array(await original.arrayBuffer());
+  async derive(hash: string, options: DeriveOptions = {}): Promise<DeriveResult> {
+    const wanted = requestedVariants(options.variants);
+    const source = await loadOriginal(this.env.UPLOADS, hash);
     const decoded = PhotonImage.new_from_byteslice(source);
 
     try {
       const width = decoded.get_width();
       const height = decoded.get_height();
-      const derived: DerivedVariant[] = [];
+      const variants: ImageVariant[] = [];
 
       for (const variant of wanted) {
-        const target = IMAGE_VARIANTS[variant];
-        const objectKey = variantKey(key, variant);
+        const key = variantKey(hash, variant.name);
 
         if (!options.force) {
-          const existing = await this.env.UPLOADS.head(objectKey);
+          const existing = await this.env.UPLOADS.head(key);
           if (existing) {
-            derived.push({
-              variant,
-              key: objectKey,
+            variants.push({
+              name: variant.name,
+              key,
               width: Number(existing.customMetadata?.["width"] ?? 0),
               height: Number(existing.customMetadata?.["height"] ?? 0),
               bytes: existing.size,
-              reused: true,
             });
             continue;
           }
         }
 
-        const targetWidth = Math.min(target, width);
+        const targetWidth = Math.min(variant.width, width);
         const targetHeight = scaledHeight(width, height, targetWidth);
         const resized = resize(decoded, targetWidth, targetHeight, SamplingFilter.Lanczos3);
 
         try {
           const bytes = resized.get_bytes_webp();
-          await this.env.UPLOADS.put(objectKey, bytes, {
-            httpMetadata: {
-              contentType: VARIANT_CONTENT_TYPE,
-              cacheControl: VARIANT_CACHE_CONTROL,
-            },
-            customMetadata: {
-              width: String(targetWidth),
-              height: String(targetHeight),
-              source: key,
-            },
+          await this.env.UPLOADS.put(key, bytes, {
+            httpMetadata: { contentType: VARIANT_FORMAT, cacheControl: VARIANT_CACHE_CONTROL },
+            customMetadata: { width: String(targetWidth), height: String(targetHeight) },
           });
 
-          derived.push({
-            variant,
-            key: objectKey,
+          variants.push({
+            name: variant.name,
+            key,
             width: targetWidth,
             height: targetHeight,
             bytes: bytes.byteLength,
-            reused: false,
           });
         } finally {
           resized.free();
         }
       }
 
-      return { key, width, height, variants: derived };
+      return { hash, width, height, variants };
     } finally {
       decoded.free();
     }
   }
 
-  async probe(key: string): Promise<ImageProbe> {
-    const original = await this.env.UPLOADS.get(key);
-    if (!original) throw new Error(`no object stored at ${key}`);
-
-    const source = new Uint8Array(await original.arrayBuffer());
+  async probe(hash: string): Promise<ImageProbe> {
+    const source = await loadOriginal(this.env.UPLOADS, hash);
     const decoded = PhotonImage.new_from_byteslice(source);
 
     try {

@@ -12,10 +12,10 @@ function service(): ImagesRpc {
   return binding;
 }
 
-export function deriveVariants(key: string, options: DeriveOptions = {}): Promise<DeriveResult> {
-  return service().derive(key, options);
+export function deriveVariants(hash: string, options: DeriveOptions = {}): Promise<DeriveResult> {
+  return service().derive(hash, options);
 }
 
-export function probeImage(key: string): Promise<ImageProbe> {
-  return service().probe(key);
+export function probeImage(hash: string): Promise<ImageProbe> {
+  return service().probe(hash);
 }

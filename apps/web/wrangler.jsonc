@@ -42,9 +42,6 @@
 			"preview_bucket_name": "volley-project-uploads-preview"
 		}
 	],
-	"images": {
-		"binding": "IMAGES"
-	},
 	"queues": {
 		"producers": [
 			{

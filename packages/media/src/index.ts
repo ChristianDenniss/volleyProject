@@ -1,31 +1,33 @@
-export const IMAGE_VARIANTS = {
-  thumb: 160,
-  card: 480,
-  hero: 1200,
-} as const;
+export const IMAGE_VARIANTS = [
+  { name: "thumb", width: 160 },
+  { name: "card", width: 480 },
+  { name: "wide", width: 1280 },
+] as const;
 
-export type VariantName = keyof typeof IMAGE_VARIANTS;
+export type VariantName = (typeof IMAGE_VARIANTS)[number]["name"];
 
-export const VARIANT_NAMES = Object.keys(IMAGE_VARIANTS) as VariantName[];
+export const VARIANT_NAMES = IMAGE_VARIANTS.map((variant) => variant.name) as VariantName[];
 
-export const VARIANT_CONTENT_TYPE = "image/webp";
-
+export const VARIANT_FORMAT = "image/webp";
+export const VARIANT_QUALITY = 82;
 export const VARIANT_CACHE_CONTROL = "public, max-age=31536000, immutable";
 
-export interface DerivedVariant {
-  variant: VariantName;
+export const HASH_PATTERN = /^[0-9a-f]{64}$/;
+export const UPLOAD_KEY_PATTERN = /^[0-9a-f]{64}\/(?:original|[a-z]+\.webp)$/;
+
+export interface ImageVariant {
+  name: string;
   key: string;
   width: number;
   height: number;
   bytes: number;
-  reused: boolean;
 }
 
 export interface DeriveResult {
-  key: string;
+  hash: string;
   width: number;
   height: number;
-  variants: DerivedVariant[];
+  variants: ImageVariant[];
 }
 
 export interface DeriveOptions {
@@ -40,16 +42,20 @@ export interface ImageProbe {
 }
 
 export interface ImagesRpc {
-  derive(key: string, options?: DeriveOptions): Promise<DeriveResult>;
-  probe(key: string): Promise<ImageProbe>;
+  derive(hash: string, options?: DeriveOptions): Promise<DeriveResult>;
+  probe(hash: string): Promise<ImageProbe>;
 }
 
 export function isVariantName(value: string): value is VariantName {
-  return Object.hasOwn(IMAGE_VARIANTS, value);
+  return VARIANT_NAMES.includes(value as VariantName);
 }
 
-export function variantKey(originalKey: string, variant: VariantName): string {
-  return `${originalKey}/${variant}.webp`;
+export function originalKey(hash: string): string {
+  return `${hash}/original`;
+}
+
+export function variantKey(hash: string, name: string): string {
+  return `${hash}/${name}.webp`;
 }
 
 export function scaledHeight(width: number, height: number, target: number): number {
