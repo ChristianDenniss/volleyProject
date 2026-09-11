@@ -47,12 +47,29 @@ async function promoteRootUser(db: Db, userId: string, rootIds: string[]): Promi
   await db.update(schema.user).set({ role: "superadmin" }).where(eq(schema.user.id, userId));
 }
 
+export function buildTrustedOrigins(baseURL: string): string[] {
+  const origins = new Set<string>();
+
+  try {
+    const url = new URL(baseURL);
+    origins.add(url.origin);
+    if (url.hostname === "localhost" || url.hostname === "127.0.0.1") {
+      origins.add("http://localhost:*");
+      origins.add("http://127.0.0.1:*");
+    }
+  } catch {}
+
+  origins.add("https://*volley-project*.workers.dev");
+  return [...origins];
+}
+
 export function buildAuthOptions(db: Db, environment: AuthEnvironment): BetterAuthOptions {
   const rootIds = parseRootRobloxIds(environment.ROOT_ROBLOX_IDS);
 
   return {
     appName: "volley-project",
     baseURL: environment.BETTER_AUTH_URL,
+    trustedOrigins: buildTrustedOrigins(environment.BETTER_AUTH_URL),
     secret: environment.BETTER_AUTH_SECRET,
     database: drizzleAdapter(db, {
       provider: "sqlite",

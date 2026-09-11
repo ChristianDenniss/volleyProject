@@ -67,7 +67,7 @@ async function serve(request: Request, env: Env, ctx: ExecutionContext): Promise
     const pathname = new URL(request.url).pathname;
     const limitConfig = apiRateLimitBucket(pathname);
     if (limitConfig) {
-      const bucket = pathname.startsWith("/api/auth")
+      const bucket = pathname.startsWith("/api/auth") || pathname.startsWith("/api/login")
         ? "auth"
         : pathname.startsWith("/api/roblox/avatar")
           ? "roblox"
