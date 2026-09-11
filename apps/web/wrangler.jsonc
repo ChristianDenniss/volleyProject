@@ -9,6 +9,16 @@
 	"main": "server/worker.ts",
 	"workers_dev": true,
 	"preview_urls": true,
+	"routes": [
+		{
+			"pattern": "volleyball4-2.com",
+			"custom_domain": true
+		},
+		{
+			"pattern": "www.volleyball4-2.com",
+			"custom_domain": true
+		}
+	],
 	"assets": {
 		"directory": "dist/client",
 		"not_found_handling": "none",

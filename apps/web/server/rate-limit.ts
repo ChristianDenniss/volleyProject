@@ -84,7 +84,7 @@ export function clientRateLimitKey(request: Request, bucket: string): string {
 }
 
 export function apiRateLimitBucket(pathname: string): RateLimitConfig | null {
-  if (pathname.startsWith("/api/auth")) {
+  if (pathname.startsWith("/api/auth") || pathname.startsWith("/api/login")) {
     return { limit: 60, windowSeconds: 60 };
   }
   if (pathname.startsWith("/api/roblox/avatar")) {

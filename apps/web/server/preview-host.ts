@@ -11,11 +11,18 @@ export function isBareProductionHost(hostname: string): boolean {
   return label === PRODUCTION_WORKER;
 }
 
+export function isWwwSiblingOf(hostname: string, canonicalHostname: string): boolean {
+  return hostname === `www.${canonicalHostname}` || `www.${hostname}` === canonicalHostname;
+}
+
 export function canonicalRedirect(request: Request, canonicalOrigin: string | undefined): Response | null {
   if (!canonicalOrigin) return null;
 
   const url = new URL(request.url);
-  if (!isBareProductionHost(url.hostname)) return null;
+  const canonical = new URL(canonicalOrigin);
+  if (!isBareProductionHost(url.hostname) && !isWwwSiblingOf(url.hostname, canonical.hostname)) {
+    return null;
+  }
 
   const target = new URL(url.pathname + url.search, canonicalOrigin);
   if (target.origin === url.origin) return null;
