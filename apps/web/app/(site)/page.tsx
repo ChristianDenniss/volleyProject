@@ -221,7 +221,7 @@ export default async function HomePage({
 
       <HomeBracket phase={phase} standings={standings} />
 
-        <section className="relative h-[200px] min-h-[200px] overflow-hidden">
+<section className="relative h-[120px] sm:h-[160px] md:h-[200px] w-full overflow-hidden">
   <a
     href="https://discord.gg/volleyball"
     target="_blank"
@@ -230,7 +230,7 @@ export default async function HomePage({
     aria-label="Join RVL on Discord"
   >
     <img
-      src="/images/new_calltoaction_banner_rvl.png"
+      src="/images/new_calltoaction_banner_rvl.svg"
       alt="Never miss a moment of RO-VBL. Join RVL now."
       className="size-full object-cover object-center"
     />
