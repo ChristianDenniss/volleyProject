@@ -5,8 +5,7 @@ import {
   SITE_REGION_COOKIE,
   SITE_REGION_PARAM,
 } from "@/lib/region";
-
-const SESSION_COOKIE = "better-auth.session_token";
+import { hasSessionCookie, isClientRouterNavigation } from "@/lib/session-cookie";
 
 const REGION_AWARE_PATHS = [
   "/",
@@ -35,13 +34,18 @@ function isRegionAware(pathname: string): boolean {
 
 export function middleware(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
-  const hasSession = request.cookies.has(SESSION_COOKIE);
+  const hasSession = hasSessionCookie(request.headers.get("cookie"));
+  const clientNav = isClientRouterNavigation(request.headers);
 
-  if (pathname.startsWith("/portal") && !hasSession) {
+  if (pathname.startsWith("/portal") && !hasSession && !clientNav) {
     return redirectToLogin(request, pathname);
   }
 
-  if ((pathname.startsWith("/profile") || pathname.startsWith("/articles/create")) && !hasSession) {
+  if (
+    (pathname.startsWith("/profile") || pathname.startsWith("/articles/create")) &&
+    !hasSession &&
+    !clientNav
+  ) {
     return redirectToLogin(request, pathname);
   }
 
