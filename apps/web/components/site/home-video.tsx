@@ -29,7 +29,14 @@ export function HomeVideo({ videoId }: { videoId: string }) {
       if (!window.YT?.Player) return;
       playerRef.current = new window.YT.Player("yt-player", {
         videoId,
-        playerVars: { modestbranding: 1, rel: 0, controls: 1, showinfo: 0, autoplay: 0, mute: 1 },
+        playerVars: { 
+          modestbranding: 1, 
+          rel: 0, 
+          iv_load_policy: 3, 
+          controls: 0, 
+          autoplay: 0, 
+          mute: 1 
+        },
         events: { onReady: () => setReady(true) },
       });
     };
@@ -76,12 +83,20 @@ export function HomeVideo({ videoId }: { videoId: string }) {
   }, [ready]);
 
   return (
-    <section
-      ref={containerRef}
-      aria-label="Volleyball promotional video"
-      className="relative w-full overflow-hidden pt-[56.25%]"
-    >
-      <div id="yt-player" className="absolute! inset-0 h-full! w-full!" />
-    </section>
+    <div className="mx-auto w-full max-w-[1800px] px-4 py-6 sm:px-6 md:px-8">
+      {/* Outer Yellow Border Layer (Active on mobile, hidden on PC via md: prefix) */}
+      <div className="rounded-2xl border-4 md:border-0 bg-[#e69b13] md:bg-transparent p-1 md:p-0 shadow-xl md:shadow-none">
+        {/* Inner Black Border Layer (Active on mobile, hidden on PC via md: prefix) */}
+        <div className="rounded-xl border-4 md:border-0 overflow-hidden">
+          <section
+            ref={containerRef}
+            aria-label="Volleyball promotional video"
+            className="relative w-full pt-[56.25%]"
+          >
+            <div id="yt-player" className="absolute! inset-0 h-full! w-full!" />
+          </section>
+        </div>
+      </div>
+    </div>
   );
 }
