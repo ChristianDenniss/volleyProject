@@ -58,6 +58,8 @@ export function SiteNavProgress() {
   useEffect(() => subscribeSiteNav(setActive), []);
 
   useEffect(() => {
+    void pathname;
+    void searchKey;
     endSiteNav();
   }, [pathname, searchKey]);
 
