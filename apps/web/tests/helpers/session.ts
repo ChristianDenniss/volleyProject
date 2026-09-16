@@ -6,9 +6,10 @@ export const SESSION_COOKIE = "better-auth.session_token";
 const algorithm = { name: "HMAC", hash: "SHA-256" } as const;
 
 export async function signedSessionCookie(token: string, secret: string): Promise<string> {
+  const effectiveSecret = (secret ?? "").trim() || "local-development-secret-not-for-production";
   const key = await crypto.subtle.importKey(
     "raw",
-    new TextEncoder().encode(secret),
+    new TextEncoder().encode(effectiveSecret),
     algorithm,
     false,
     ["sign"],

@@ -16,6 +16,12 @@ beforeEach(async () => {
 });
 
 describe("banned users", () => {
+  it("signs cookies with a development fallback when the configured secret is blank", async () => {
+    const { headers } = await createSessionFor(db, FIXTURES.userId, "");
+    expect(headers.get("cookie") ?? "").toContain("better-auth.session_token=");
+    expect(headers.get("cookie") ?? "").toContain("token-user-1");
+  });
+
   it("treats banned users as signed out in session helpers", async () => {
     await db.update(user).set({ banned: true }).where(eq(user.id, FIXTURES.userId));
 
