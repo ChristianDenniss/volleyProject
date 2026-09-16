@@ -18,6 +18,7 @@
       "!**/components/ui",
       "!**/*.d.ts",
       "!**/*.css",
+      "!**/*.svg",
       "!tsconfig.tsbuildinfo"
     ]
   },
