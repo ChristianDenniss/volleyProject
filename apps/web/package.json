@@ -71,6 +71,7 @@
   },
   "scripts": {
     "dev": "bun run db:migrate:local && vinext dev",
+    "mock-dev": "bun run db:migrate:local && bun run db:seed:local && vinext dev",
     "build": "vinext build",
     "start": "wrangler dev --config dist/server/wrangler.json",
     "deploy": "vinext-cloudflare deploy --config dist/server/wrangler.json",
