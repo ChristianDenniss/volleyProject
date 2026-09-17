@@ -204,7 +204,7 @@ function FieldInput({
         id={field.name}
         value={value}
         onChange={onChange}
-        required={field.required}
+        required={field.required === true}
         className={inputClass}
         tbhLabel={field.emptyOption}
       />

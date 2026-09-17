@@ -35,6 +35,7 @@ function mount(
     theme: string | null;
     teamCount: number;
     gameCount: number;
+    regionStats?: Record<string, { teamCount: number; gameCount: number }>;
   }> = [],
 ) {
   return render(

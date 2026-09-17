@@ -364,7 +364,7 @@ export const routeManifest: RouteManifestEntry[] = [
   {
     path: "/portal/applications",
     origin: "new",
-    source: null,
+    source: "portal applications manager",
     target: "app/portal/applications/page.tsx",
     rendering: "ssr",
     auth: "admin",
