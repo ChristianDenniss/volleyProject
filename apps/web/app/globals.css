@@ -42,6 +42,8 @@
   --chevron-down-white: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2314161b'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
   --color-scroll-thumb-on-dark: #5a5a5a;
   --color-scroll-thumb-on-dark-hover: #7a7a7a;
+  --rvl-scroll-thumb: #c9cfd8;
+  --rvl-scroll-thumb-hover: #b3bac6;
 
   /* The shadcn semantic tokens are aliases onto the Open Deck palette above.
      Every primitive in components/ui (and therefore the whole admin portal)
@@ -189,6 +191,8 @@
   --rvl-on-accent: #08090b;
   --rvl-mint: #46d0a0;
   --chevron-down-white: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23e9ebee'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
+  --rvl-scroll-thumb: #5a5a5a;
+  --rvl-scroll-thumb-hover: #7a7a7a;
 
   /* Redefining the palette is enough. The semantic aliases in :root resolve
      against these on the same element, so background/card/popover/sidebar and
@@ -240,5 +244,54 @@ html.nav-pending {
   }
   100% {
     transform: translateX(350%);
+  }
+}
+
+/* Thumb only: no track or Windows increment/decrement carets.
+   Do not set scrollbar-width here on Chromium — that keeps the native
+   Windows bar (and its arrows). Firefox gets the standard properties below. */
+.thumb-scrollbar::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+  background: transparent;
+}
+
+.thumb-scrollbar::-webkit-scrollbar-track,
+.thumb-scrollbar::-webkit-scrollbar-track-piece,
+.thumb-scrollbar::-webkit-scrollbar-corner {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.thumb-scrollbar::-webkit-scrollbar-button,
+.thumb-scrollbar::-webkit-scrollbar-button:single-button,
+.thumb-scrollbar::-webkit-scrollbar-button:start,
+.thumb-scrollbar::-webkit-scrollbar-button:end,
+.thumb-scrollbar::-webkit-scrollbar-button:vertical:start:decrement,
+.thumb-scrollbar::-webkit-scrollbar-button:vertical:end:increment,
+.thumb-scrollbar::-webkit-scrollbar-button:vertical:start:increment,
+.thumb-scrollbar::-webkit-scrollbar-button:vertical:end:decrement {
+  display: none;
+  width: 0;
+  height: 0;
+  background: transparent;
+  border: none;
+}
+
+.thumb-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--rvl-scroll-thumb);
+  border: none;
+  border-radius: 999px;
+}
+
+.thumb-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--rvl-scroll-thumb-hover);
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  .thumb-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: var(--rvl-scroll-thumb) transparent;
   }
 }

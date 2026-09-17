@@ -23,6 +23,7 @@
   },
   "scripts": {
     "dev": "bun --filter @volley/web dev",
+    "mock-dev": "bun --filter @volley/web mock-dev",
     "build": "bun --filter @volley/web build",
     "deploy": "bun --filter @volley/web deploy",
     "start": "bun --filter @volley/web start",
