@@ -1,5 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import {
   DateOrTbhField,
@@ -12,10 +12,10 @@ import { useState } from "react";
 function Harness({ initial = SEASON_END_TBH }: { initial?: string }) {
   const [value, setValue] = useState(initial);
   return (
-    <label>
-      End date
+    <>
+      <label htmlFor="end">End date</label>
       <DateOrTbhField id="end" value={value} onChange={setValue} />
-    </label>
+    </>
   );
 }
 
