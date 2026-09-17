@@ -172,7 +172,7 @@ export default async function SeasonPage({ params, searchParams }: Params) {
                   </div>
                 </div>
 
-                <ul className="pointer-events-none relative z-1 m-0 flex-1 list-none overflow-y-auto p-0">
+                <ul className="thumb-scrollbar relative z-1 m-0 flex-1 list-none overflow-y-auto p-0">
                   {players.length === 0 ? (
                     <li className="px-4 py-3 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-rvl-dim">
                       No roster
