@@ -461,7 +461,7 @@ function VectorGraph3D({ vectorRows }: { vectorRows: PlayerSeasonVectorRow[] }) 
   const [popupPosition, setPopupPosition] = useState<{ left: number; top: number } | null>(null);
   const [legendHidden, setLegendHidden] = useState<boolean>(false);
   const legendRef = useRef<HTMLDivElement>(null);
-  const itemRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const itemRefs = useRef<Map<string, HTMLElement>>(new Map());
   
   // Update popup position when clicked archetype changes
   useEffect(() => {
@@ -786,28 +786,26 @@ function VectorGraph3D({ vectorRows }: { vectorRows: PlayerSeasonVectorRow[] }) 
             className={`${archetypeLegend} ${legendHidden ? "[transform:translateX(calc(-100%_+_40px))]" : "[transform:translateX(0)]"}`}
             ref={legendRef}
           >
-            {!legendHidden && (
-              <>
-                {archetypeCounts.map(({ archetype, count }) => (
-                  <div
-                    key={archetype.id}
-                    ref={(el) => {
-                      if (el) itemRefs.current.set(archetype.id, el);
-                      else itemRefs.current.delete(archetype.id);
-                    }}
-                    className={archetypeLegendItem}
-                    onClick={() => setClickedArchetype(clickedArchetype === archetype.id ? null : archetype.id)}
-                  >
-                    <span
-                      className={archetypeLegendColor}
-                      style={{ backgroundColor: archetype.color }}
-                    />
-                    <span className={archetypeLegendName}>{archetype.name}</span>
-                    <span className={archetypeLegendCount}>({count})</span>
-                  </div>
-                ))}
-              </>
-            )}
+            {!legendHidden &&
+              archetypeCounts.map(({ archetype, count }) => (
+                <button
+                  key={archetype.id}
+                  type="button"
+                  ref={(el) => {
+                    if (el) itemRefs.current.set(archetype.id, el);
+                    else itemRefs.current.delete(archetype.id);
+                  }}
+                  className={`${archetypeLegendItem} border-0 bg-transparent p-0 text-left`}
+                  onClick={() => setClickedArchetype(clickedArchetype === archetype.id ? null : archetype.id)}
+                >
+                  <span
+                    className={archetypeLegendColor}
+                    style={{ backgroundColor: archetype.color }}
+                  />
+                  <span className={archetypeLegendName}>{archetype.name}</span>
+                  <span className={archetypeLegendCount}>({count})</span>
+                </button>
+              ))}
           </div>
           <button
             className={`${archetypeLegendToggle} ${legendHidden ? "left-[0.75rem]" : "left-[calc(1rem_+_224px_+_1.5rem)]"}`}
@@ -891,13 +889,15 @@ function VectorGraph3D({ vectorRows }: { vectorRows: PlayerSeasonVectorRow[] }) 
           </button>
           
           <div className={infoSection}>
-            <div 
-              className={`${infoSectionHeader} ${playerInfoCollapsed ? "mb-0" : "mb-[0.5rem]"}`}
+            <button
+              type="button"
+              className={`${infoSectionHeader} ${playerInfoCollapsed ? "mb-0" : "mb-[0.5rem]"} w-full appearance-none border-0 bg-transparent p-0 text-left`}
               onClick={() => setPlayerInfoCollapsed(!playerInfoCollapsed)}
+              aria-expanded={!playerInfoCollapsed}
             >
               <h4 className={infoSectionHeaderTitle}>Player Info</h4>
               <span className={collapseIcon}>{playerInfoCollapsed ? '▶' : '▼'}</span>
-            </div>
+            </button>
             {!playerInfoCollapsed && (() => {
               // Prioritize clicked player over hovered player
               const displayPlayer = clickedPlayer || hoveredPlayer;
@@ -955,13 +955,15 @@ function VectorGraph3D({ vectorRows }: { vectorRows: PlayerSeasonVectorRow[] }) 
           </div>
           
           <div className={infoSection}>
-            <div 
-              className={`${infoSectionHeader} ${controlsCollapsed ? "mb-0" : "mb-[0.5rem]"}`}
+            <button
+              type="button"
+              className={`${infoSectionHeader} ${controlsCollapsed ? "mb-0" : "mb-[0.5rem]"} w-full appearance-none border-0 bg-transparent p-0 text-left`}
               onClick={() => setControlsCollapsed(!controlsCollapsed)}
+              aria-expanded={!controlsCollapsed}
             >
               <h4 className={infoSectionHeaderTitle}>Controls</h4>
               <span className={collapseIcon}>{controlsCollapsed ? '▶' : '▼'}</span>
-            </div>
+            </button>
             {!controlsCollapsed && (
               <ul>
                 <li>Rotate: Left Click + Drag</li>
@@ -974,13 +976,15 @@ function VectorGraph3D({ vectorRows }: { vectorRows: PlayerSeasonVectorRow[] }) 
           </div>
           
           <div className={infoSection}>
-            <div 
-              className={`${infoSectionHeader} ${axesCollapsed ? "mb-0" : "mb-[0.5rem]"}`}
+            <button
+              type="button"
+              className={`${infoSectionHeader} ${axesCollapsed ? "mb-0" : "mb-[0.5rem]"} w-full appearance-none border-0 bg-transparent p-0 text-left`}
               onClick={() => setAxesCollapsed(!axesCollapsed)}
+              aria-expanded={!axesCollapsed}
             >
               <h4 className={infoSectionHeaderTitle}>Axes (PCA)</h4>
               <span className={collapseIcon}>{axesCollapsed ? '▶' : '▼'}</span>
-            </div>
+            </button>
             {!axesCollapsed && (
               <>
                 <p>X: First Principal Component (PC1)</p>

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { SiteNavProgress } from "./site-nav-progress";
 
 const DIRECTION_GAP = 8;
 
@@ -59,6 +60,7 @@ export function SiteHeaderChrome({
     >
       {utility}
       {nav}
+      <SiteNavProgress />
     </header>
   );
 }

@@ -12,6 +12,7 @@ import {
   type SiteRegion,
 } from "@/lib/region";
 import { cn } from "@/lib/utils";
+import { beginSiteNav } from "./site-nav-progress";
 
 const LABELS: Record<SiteRegion, string> = {
   all: "ALL",
@@ -49,6 +50,7 @@ export function SiteRegionSelect({ value }: { value: SiteRegion }) {
               document.cookie = siteRegionCookie(region);
               const next = withRegionParam(searchParams, region);
               next.delete("page");
+              beginSiteNav();
               startTransition(() => {
                 router.push(hrefWithParams(pathname, next));
               });

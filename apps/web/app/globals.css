@@ -229,3 +229,16 @@
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+html.nav-pending {
+  cursor: progress;
+}
+
+@keyframes site-nav-indeterminate {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(350%);
+  }
+}

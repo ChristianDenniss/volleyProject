@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { RobloxSignIn } from "@components/site/roblox-sign-in";
+import { getSessionUser } from "@server/session";
 import { safeInternalPath } from "@/lib/safe-redirect";
 
 export const metadata: Metadata = {
@@ -14,6 +16,8 @@ export default async function LoginPage({
 }) {
   const { next } = await searchParams;
   const callbackURL = safeInternalPath(next);
+  const user = await getSessionUser();
+  if (user) redirect(callbackURL === "/login" ? "/" : callbackURL);
 
   return (
     <div className="flex justify-center px-5 py-20 font-display sm:px-8">
