@@ -2,6 +2,7 @@ import { revalidatePath } from "next/cache";
 import { bumpCacheGeneration, CACHE_DOMAINS, type CacheDomain } from "@server/cache";
 import { domainsForPath, pathHead } from "@server/cache-tags";
 import { logError } from "@server/report";
+import { invalidateSiteReads } from "@server/services/site-read-cache";
 
 async function purgeTags(domains: CacheDomain[], heads: string[]): Promise<void> {
   const tags = [
@@ -22,6 +23,7 @@ async function purgeTags(domains: CacheDomain[], heads: string[]): Promise<void>
 }
 
 export function revalidate(...paths: string[]): void {
+  void invalidateSiteReads();
   for (const path of paths) {
     revalidatePath(path);
   }

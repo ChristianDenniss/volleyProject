@@ -5,6 +5,7 @@ import { getSiteRegionQuery } from "@server/site-region";
 import type { SearchParams } from "@/lib/search-params";
 import { EmptyState } from "@components/site/empty-state";
 import { PageHeader } from "@components/site/page-header";
+import { seasonBanner } from "@/lib/season-banners";
 
 export const dynamic = "force-dynamic";
 
@@ -52,7 +53,7 @@ export default async function SeasonsPage({
               className="group flex flex-col border border-rvl-line text-inherit no-underline transition-colors hover:border-rvl-accent-soft"
             >
               <img
-                src={season.image ?? "/images/callToAction.png"}
+                src={seasonBanner(season.seasonNumber, season.image)}
                 alt=""
                 className="aspect-16/6 w-full border-b border-rvl-line object-cover"
               />

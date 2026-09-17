@@ -7,6 +7,7 @@ import type { SearchParams } from "@/lib/search-params";
 import { getSiteRegion } from "@server/site-region";
 import { cn } from "@/lib/utils";
 import { regionQuery, type SiteRegion } from "@/lib/region";
+import { seasonBanner } from "@/lib/season-banners";
 
 export const dynamic = "force-dynamic";
 
@@ -36,7 +37,7 @@ export async function generateMetadata({ params, searchParams }: Params): Promis
   return {
     title,
     description,
-    openGraph: { title, description, images: season.image ? [season.image] : undefined },
+    openGraph: { title, description, images: [seasonBanner(season.seasonNumber, season.image)] },
   };
 }
 
@@ -102,8 +103,14 @@ export default async function SeasonPage({ params, searchParams }: Params) {
       </h1>
 
       <p className="m-0 mb-6 text-center font-mono text-[0.95rem] tabular-nums text-rvl-accent">
-        {shortDate(season.startDate)} - {season.endDate ? shortDate(season.endDate) : "present"}
+        {shortDate(season.startDate)} - {season.endDate ? shortDate(season.endDate) : "TBH"}
       </p>
+
+      <img
+        src={seasonBanner(season.seasonNumber, season.image)}
+        alt=""
+        className="mx-auto mb-8 aspect-16/6 w-full max-w-5xl object-cover"
+      />
 
       <div className="mb-8 flex flex-wrap items-center justify-center gap-4">
         {season.theme ? <span className={pillClass}>Theme: {season.theme}</span> : null}

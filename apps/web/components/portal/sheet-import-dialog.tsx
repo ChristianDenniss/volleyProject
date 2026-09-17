@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { usePortalErrorToast } from "./portal-error-detail";
 import { PortalSelect } from "./portal-select";
+import { DateOrTbhField, SEASON_END_TBH, seasonEndDateFromForm } from "./date-or-tbh-field";
 import {
   Dialog,
   DialogContent,
@@ -400,7 +401,7 @@ export function SeasonSheetImport() {
   const [step, setStep] = useState<"form" | "preview">("form");
   const [seasonNumber, setSeasonNumber] = useState("");
   const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [endDate, setEndDate] = useState(SEASON_END_TBH);
   const [theme, setTheme] = useState("");
   const sheetUrls = useSheetUrls();
   const { masterUrl, naUrl, euUrl, asUrl } = sheetUrls;
@@ -430,7 +431,7 @@ export function SeasonSheetImport() {
       mode: "full" as const,
       seasonNumber: Number.parseInt(seasonNumber, 10),
       startDate,
-      endDate: endDate || null,
+      endDate: seasonEndDateFromForm(endDate),
       theme: theme || null,
       ...(importSessionId
         ? { sessionId: importSessionId }
@@ -487,7 +488,7 @@ export function SeasonSheetImport() {
                   mode: "full",
                   seasonNumber: Number.parseInt(seasonNumber, 10),
                   startDate,
-                  endDate: endDate || null,
+                  endDate: seasonEndDateFromForm(endDate),
                   theme: theme || null,
                   masterUrl,
                   regionalUrls: regionalPayload(naUrl, euUrl, asUrl),
@@ -540,11 +541,10 @@ export function SeasonSheetImport() {
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="sheet-end">End date</Label>
-                <Input
+                <DateOrTbhField
                   id="sheet-end"
-                  type="date"
                   value={endDate}
-                  onChange={(event) => setEndDate(event.target.value)}
+                  onChange={setEndDate}
                   disabled={busy}
                 />
               </div>

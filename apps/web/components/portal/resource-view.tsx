@@ -7,6 +7,7 @@ import { Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { usePortalErrorToast } from "./portal-error-detail";
 import { cn } from "@/lib/utils";
+import { DateOrTbhField } from "./date-or-tbh-field";
 import { Pagination, SearchBar } from "@components/site/controls";
 import { UrlPagination, UrlSearchBar } from "@components/site/url-controls";
 import { RichTextEditor } from "@components/site/rich-text-editor";
@@ -44,6 +45,7 @@ export interface FieldSpec {
   required?: boolean;
   options?: { value: string; label: string }[];
   placeholder?: string;
+  emptyOption?: string;
 }
 
 export interface ColumnSpec<Row> {
@@ -101,7 +103,7 @@ const PER_PAGE = 25;
 const CLEAR_SELECT = "__none";
 
 function emptyValues(fields: FieldSpec[]): Values {
-  return Object.fromEntries(fields.map((field) => [field.name, ""]));
+  return Object.fromEntries(fields.map((field) => [field.name, field.emptyOption ?? ""]));
 }
 
 // Rows carry nested relations (a game's teams, an award's players) that are
@@ -192,6 +194,19 @@ function FieldInput({
         checked={value === "true"}
         onChange={(event) => onChange(String(event.target.checked))}
         className="size-4 rounded-xs border border-rvl-line accent-rvl-accent-bg"
+      />
+    );
+  }
+
+  if (field.type === "date" && field.emptyOption) {
+    return (
+      <DateOrTbhField
+        id={field.name}
+        value={value}
+        onChange={onChange}
+        required={field.required}
+        className={inputClass}
+        tbhLabel={field.emptyOption}
       />
     );
   }
