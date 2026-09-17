@@ -17,12 +17,19 @@ const roles = {
   superadmin: accessControl.newRole(adminAc.statements),
 };
 
+export const DEFAULT_AUTH_SECRET = "local-development-secret-not-for-production";
+
 export interface AuthEnvironment {
   BETTER_AUTH_SECRET: string;
   BETTER_AUTH_URL: string;
   ROBLOX_CLIENT_ID: string;
   ROBLOX_CLIENT_SECRET: string;
   ROOT_ROBLOX_IDS?: string | undefined;
+}
+
+export function resolveAuthSecret(secret: string | undefined | null): string {
+  const normalized = (secret ?? "").trim();
+  return normalized.length > 0 ? normalized : DEFAULT_AUTH_SECRET;
 }
 
 export function parseRootRobloxIds(raw: string | undefined): string[] {
@@ -70,7 +77,7 @@ export function buildAuthOptions(db: Db, environment: AuthEnvironment): BetterAu
     appName: "volley-project",
     baseURL: environment.BETTER_AUTH_URL,
     trustedOrigins: buildTrustedOrigins(environment.BETTER_AUTH_URL),
-    secret: environment.BETTER_AUTH_SECRET,
+    secret: resolveAuthSecret(environment.BETTER_AUTH_SECRET),
     database: drizzleAdapter(db, {
       provider: "sqlite",
       usePlural: false,
@@ -128,7 +135,7 @@ let cached: Auth | undefined;
 export function getAuth(): Auth {
   if (!cached) {
     cached = makeAuth(makeDb(env.DB), {
-      BETTER_AUTH_SECRET: env.BETTER_AUTH_SECRET,
+      BETTER_AUTH_SECRET: resolveAuthSecret(env.BETTER_AUTH_SECRET),
       BETTER_AUTH_URL: env.BETTER_AUTH_URL,
       ROBLOX_CLIENT_ID: env.ROBLOX_CLIENT_ID,
       ROBLOX_CLIENT_SECRET: env.ROBLOX_CLIENT_SECRET,
