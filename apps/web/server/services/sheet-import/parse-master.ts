@@ -96,6 +96,115 @@ function addUniquePlayer(players: string[], raw: string): void {
   }
 }
 
+function isNumericOnlyRow(row: string[]): boolean {
+  let numbers = 0;
+  for (const raw of row) {
+    const value = raw.trim();
+    if (!value) continue;
+    if (!/^\d+$/.test(value)) return false;
+    numbers += 1;
+  }
+  return numbers >= 2;
+}
+
+function isRosterRow(row: string[]): boolean {
+  let rosterCells = 0;
+  for (const raw of row) {
+    if (rosterNumber(raw) != null) rosterCells += 1;
+  }
+  return rosterCells >= 2;
+}
+
+/** C2S3 TEAMS tabs put the name above a ranking-number row instead of `Name | 220 C VC`. */
+function extractStackedTeamName(raw: string): string | null {
+  const piped = parseTeamHeader(raw);
+  if (piped) return piped;
+
+  const chunks = raw
+    .replace(/[\t\u00a0]/g, " ")
+    .split(/\s{2,}/)
+    .map((chunk) => chunk.trim())
+    .filter(Boolean);
+  const candidate = chunks[chunks.length - 1] ?? "";
+  if (/timezone|division|default\s*=/i.test(candidate)) return null;
+  const name = displayName(candidate);
+  if (!name || name.length > 40) return null;
+  if (/^\d+$/.test(name)) return null;
+  if (/\b(season|chapter|teams|group|qualifiers?|playoffs?|roblox volleyball)\b/i.test(name)) return null;
+  return name;
+}
+
+function parseStackedTeamsTab(
+  rows: string[][],
+  region: SheetRegion,
+): { teams: ParsedTeam[]; warnings: string[] } {
+  const warnings: string[] = [];
+  const rankingRows: number[] = [];
+  for (let rowIndex = 0; rowIndex < rows.length; rowIndex += 1) {
+    if (isNumericOnlyRow(rows[rowIndex] ?? [])) rankingRows.push(rowIndex);
+  }
+
+  const teams: ParsedTeam[] = [];
+  let unnamedBlocks = 0;
+
+  for (let block = 0; block < rankingRows.length; block += 1) {
+    const rankRowIndex = rankingRows[block] ?? 0;
+    const nextRank = rankingRows[block + 1] ?? rows.length;
+    const rankRow = rows[rankRowIndex] ?? [];
+    const nameRowIndex = rankRowIndex - 1;
+    const nameRow =
+      nameRowIndex >= 0 && !isRosterRow(rows[nameRowIndex] ?? []) ? (rows[nameRowIndex] ?? []) : [];
+
+    for (let col = 0; col < rankRow.length; col += 1) {
+      const rank = cell(rankRow, col);
+      if (!/^\d+$/.test(rank)) continue;
+
+      const name = extractStackedTeamName(cell(nameRow, col));
+      if (!name) {
+        unnamedBlocks += 1;
+        continue;
+      }
+
+      const players: string[] = [];
+      const leadership: Partial<Record<TeamLeadershipRole, string>> = {};
+      let leaderSlot = 0;
+
+      for (let rowIndex = rankRowIndex + 1; rowIndex < nextRank; rowIndex += 1) {
+        const row = rows[rowIndex] ?? [];
+        const indexCell = cell(row, col);
+        const playerCell = cell(row, col + 1);
+        const roster = rosterNumber(indexCell);
+        if (roster != null) {
+          if (playerCell) addUniquePlayer(players, playerCell);
+          continue;
+        }
+        if (playerCell && leaderSlot < LEADERSHIP_SLOTS.length) {
+          const captain = displayName(playerCell);
+          const role = LEADERSHIP_SLOTS[leaderSlot];
+          if (captain && role) leadership[role] = captain;
+          addUniquePlayer(players, playerCell);
+          leaderSlot += 1;
+        }
+      }
+
+      const team: ParsedTeam = { name, region, playerNames: players };
+      if (Object.keys(leadership).length > 0) team.leadership = leadership;
+      teams.push(team);
+    }
+  }
+
+  if (unnamedBlocks > 0) {
+    warnings.push(
+      `${region.toUpperCase()} TEAMS tab skipped ${unnamedBlocks} team column${unnamedBlocks === 1 ? "" : "s"} whose names did not export`,
+    );
+  }
+  if (teams.length === 0) {
+    warnings.push(`No teams parsed from ${region.toUpperCase()} TEAMS tab`);
+  }
+
+  return { teams, warnings };
+}
+
 /**
  * Master TEAMS tabs lay out several groups stacked vertically in the same columns.
  * Each team header only owns players until the next Group divider (or another header
@@ -197,8 +306,14 @@ export function parseMasterTeamsTab(
   });
 
   if (teams.length === 0) {
-    warnings.push(`No teams parsed from ${region.toUpperCase()} TEAMS tab`);
-  } else if (groupStarts.length > 1 && teams.length <= 4) {
+    const stacked = parseStackedTeamsTab(rows, region);
+    return {
+      teams: stacked.teams,
+      warnings: [...warnings, ...stacked.warnings],
+    };
+  }
+
+  if (groupStarts.length > 1 && teams.length <= 4) {
     warnings.push(
       `${region.toUpperCase()} TEAMS tab only yielded ${teams.length} teams across ${groupStarts.length} groups — later groups often lack exportable headers; regional sheets are the better roster source`,
     );

@@ -43,7 +43,10 @@ export const PORTAL_NAV: PortalNavSection[] = [
     title: "Admin",
     url: "/portal/users",
     icon: "admin",
-    items: [{ title: "Users", url: "/portal/users" }],
+    items: [
+      { title: "Users", url: "/portal/users" },
+      { title: "Applications", url: "/portal/applications" },
+    ],
   },
 ];
 

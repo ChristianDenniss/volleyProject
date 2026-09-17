@@ -5,6 +5,7 @@ import { makeDb, type Db } from "@db";
 import { players as playerRows } from "@db/schema";
 import {
   articles,
+  applications,
   awards,
   games,
   players,
@@ -490,6 +491,42 @@ describe("users", () => {
     const updated = await users.setRole(db, FIXTURES.userId, "superadmin");
     expect(updated.role).toBe("superadmin");
     expect(users.isAdmin(updated.role)).toBe(true);
+  });
+});
+
+describe("applications", () => {
+  it("seeds the default forms when the table is empty", async () => {
+    const rows = await applications.list(db);
+    expect(rows.map((row) => row.slug)).toEqual([
+      "staff",
+      "media",
+      "referee",
+      "moderator",
+      "game-moderator",
+      "stats",
+      "host",
+    ]);
+    expect(rows.every((row) => row.status === "closed")).toBe(true);
+  });
+
+  it("opens a form and stores its URL", async () => {
+    const updated = await applications.updateBySlug(db, "referee", {
+      status: "open",
+      url: "https://forms.gle/example",
+    });
+    expect(updated.status).toBe("open");
+    expect(updated.url).toBe("https://forms.gle/example");
+  });
+
+  it("clears an empty URL to null", async () => {
+    const updated = await applications.updateBySlug(db, "staff", { url: "" });
+    expect(updated.url).toBeNull();
+  });
+
+  it("rejects an unknown slug", async () => {
+    await expect(applications.updateBySlug(db, "missing", { status: "open" })).rejects.toThrow(
+      "Application missing not found",
+    );
   });
 });
 

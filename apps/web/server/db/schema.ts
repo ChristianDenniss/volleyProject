@@ -70,6 +70,10 @@ export type ContributionRole = (typeof CONTRIBUTION_ROLES)[number];
 /** Team leadership: Captain, Vice Captain, Co-Captain. */
 export const TEAM_LEADERSHIP_ROLES = ["C", "VC", "CC"] as const;
 export type TeamLeadershipRole = (typeof TEAM_LEADERSHIP_ROLES)[number];
+export const APPLICATION_STATUSES = ["open", "closed"] as const;
+export type ApplicationStatus = (typeof APPLICATION_STATUSES)[number];
+export const APPLICATION_CATEGORIES = ["staff", "media", "game-officials", "management"] as const;
+export type ApplicationCategory = (typeof APPLICATION_CATEGORIES)[number];
 
 export const user = sqliteTable("user", {
   id: text().primaryKey(),
@@ -214,6 +218,8 @@ export const games = sqliteTable(
   },
   (table) => [
     index("games_season_id_idx").on(table.seasonId),
+    index("games_region_idx").on(table.region),
+    index("games_season_region_idx").on(table.seasonId, table.region),
     index("games_date_idx").on(table.date),
     index("games_round_idx").on(table.round),
     check("games_status_check", sql`${table.status} in ${inList(MATCH_STATUSES)}`),
@@ -419,6 +425,30 @@ export const articleLikes = sqliteTable(
   ],
 );
 
+export const applications = sqliteTable(
+  "applications",
+  {
+    id: integer().primaryKey({ autoIncrement: true }),
+    slug: text().notNull(),
+    name: text().notNull(),
+    type: text().notNull(),
+    description: text().notNull(),
+    url: text(),
+    status: text({ enum: APPLICATION_STATUSES }).notNull().default("closed"),
+    category: text({ enum: APPLICATION_CATEGORIES }).notNull(),
+    sortOrder: integer().notNull().default(0),
+    ...timestamps,
+  },
+  (table) => [
+    uniqueIndex("applications_slug_idx").on(table.slug),
+    check("applications_status_check", sql`${table.status} in ${inList(APPLICATION_STATUSES)}`),
+    check(
+      "applications_category_check",
+      sql`${table.category} in ${inList(APPLICATION_CATEGORIES)}`,
+    ),
+  ],
+);
+
 export const jobRuns = sqliteTable(
   "job_runs",
   {
@@ -571,6 +601,7 @@ export type Stat = typeof stats.$inferSelect;
 export type Award = typeof awards.$inferSelect;
 export type Record_ = typeof records.$inferSelect;
 export type Article = typeof articles.$inferSelect;
+export type Application = typeof applications.$inferSelect;
 export type JobRun = typeof jobRuns.$inferSelect;
 export type GameStaff = typeof gameStaff.$inferSelect;
 export type Upload = typeof uploads.$inferSelect;

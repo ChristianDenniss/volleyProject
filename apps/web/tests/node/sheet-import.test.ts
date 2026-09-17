@@ -163,6 +163,30 @@ describe("parseMasterTeamsTab", () => {
     expect(teiko?.playerNames).not.toContain("group_b_teiko");
     expect(sss?.playerNames.length).toBeLessThanOrEqual(8);
   });
+
+  it("reads C2S3 stacked headers with ranking on the next row", () => {
+    const csv = [
+      `"banner","NA Division Timezone Default = EST          Inception","","","","OBSESSION","","","","O"`,
+      `"","140","","","","154","","","","43"`,
+      `"","","cap_inception","","","","cap_obsession","","","","cap_o"`,
+      `"","","vc_inception","","","","vc_obsession","","","","vc_o"`,
+      `"","3","inception_3","","","3","obsession_3","","","3","o_3"`,
+      `"","12","inception_12","","","12","obsession_12","","","12","o_12"`,
+      `"","327","","","","224","","","","212"`,
+      `"","","later_cap","","","","later_cap_b"`,
+      `"","3","later_3","","","3","later_b_3"`,
+    ].join("\n");
+
+    const { teams, warnings } = parseMasterTeamsTab(csv, "na");
+    expect(teams.map((team) => team.name).sort()).toEqual(["Inception", "O", "OBSESSION"]);
+    const inception = teams.find((team) => team.name === "Inception");
+    expect(inception?.leadership).toEqual({ C: "cap_inception", VC: "vc_inception" });
+    expect(inception?.playerNames).toEqual(
+      expect.arrayContaining(["cap_inception", "vc_inception", "inception_3", "inception_12"]),
+    );
+    expect(inception?.playerNames).not.toContain("later_3");
+    expect(warnings.some((warning) => /skipped \d+ team/i.test(warning))).toBe(true);
+  });
 });
 
 describe("mergeTeamRosters", () => {

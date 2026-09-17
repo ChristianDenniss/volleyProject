@@ -137,6 +137,8 @@ export const trpcManifest: TrpcManifestEntry[] = [
     rationale: "commit teams-only, teams+players, or players-only sheet imports",
   },
 
+  { endpoint: "PATCH /api/applications/:slug", procedure: "applications.update", access: "admin", status: "done" },
+
   { endpoint: "POST /api/trivia/guess", procedure: "trivia.checkGuess", access: "public", status: "done" },
 
   {

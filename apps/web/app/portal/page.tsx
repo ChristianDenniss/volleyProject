@@ -16,6 +16,7 @@ const RESOURCES = [
   { key: "awards", label: "Awards", href: "/portal/awards" },
   { key: "articles", label: "Articles", href: "/portal/articles" },
   { key: "users", label: "Users", href: "/portal/users" },
+  { key: "applications", label: "Applications", href: "/portal/applications" },
 ] as const;
 
 export default async function PortalDashboard() {
@@ -30,6 +31,7 @@ export default async function PortalDashboard() {
     awardCount,
     articleCount,
     userCount,
+    applicationCount,
     scheduleRows,
     allArticles,
   ] = await Promise.all([
@@ -42,6 +44,7 @@ export default async function PortalDashboard() {
     trpc.awards.count(),
     trpc.articles.count(),
     trpc.users.count(),
+    trpc.applications.count(),
     trpc.games.listSchedule({}),
     trpc.articles.listAll(),
   ]);
@@ -56,6 +59,7 @@ export default async function PortalDashboard() {
     awards: awardCount,
     articles: articleCount,
     users: userCount,
+    applications: applicationCount,
   };
 
   const infoTiles = [
