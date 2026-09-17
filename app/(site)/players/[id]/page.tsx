@@ -50,18 +50,10 @@ export default async function PlayerPage({ params }: Params) {
   if (!player) notFound();
 
   const trpc = await api();
-  const [avatarUrl, seasons] = await Promise.all([
+  const [avatarUrl, currentSeason] = await Promise.all([
     loadAvatar(player.name, player.robloxUserId),
-    trpc.seasons.list(),
+    trpc.seasons.latest(),
   ]);
-
-  const currentSeason =
-    seasons.find((season) => season.endDate == null) ??
-    seasons.reduce<(typeof seasons)[number] | null>(
-      (latest, season) =>
-        !latest || season.seasonNumber > latest.seasonNumber ? season : latest,
-      null,
-    );
 
   return (
     <PlayerProfile

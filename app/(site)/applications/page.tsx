@@ -1,96 +1,26 @@
 import type { Metadata } from "next";
+import { api } from "@server/trpc/server";
 import { PageHeader } from "@components/site/page-header";
+import {
+  APPLICATION_CATEGORY_LABELS,
+  APPLICATION_CATEGORY_ORDER,
+} from "@/lib/applications";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Applications",
   description: "Staff, media, officiating and management positions in the Roblox Volleyball League.",
 };
 
-type Status = "open" | "closed";
+export default async function ApplicationsPage() {
+  const rows = await (await api()).applications.list();
+  const groups = APPLICATION_CATEGORY_ORDER.map((category) => ({
+    category,
+    label: APPLICATION_CATEGORY_LABELS[category],
+    applications: rows.filter((row) => row.category === category),
+  })).filter((group) => group.applications.length > 0);
 
-interface Application {
-  name: string;
-  type: string;
-  description: string;
-  url?: string;
-  status: Status;
-}
-
-const GROUPS: { category: string; applications: Application[] }[] = [
-  {
-    category: "Staff positions",
-    applications: [
-      {
-        name: "Staff application",
-        type: "General staff position",
-        description:
-          "Apply to become a staff member of the Roblox Volleyball League. Help manage the community and keep each season running.",
-        url: "https://forms.gle/TgpFMdP8zVmyqKjk6",
-        status: "closed",
-      },
-    ],
-  },
-  {
-    category: "Media and content",
-    applications: [
-      {
-        name: "Media team application",
-        type: "Content creation and streaming",
-        description:
-          "Create content, stream RVL matches, manage social media and help promote the league.",
-        url: "https://forms.gle/L6QFsuztCaJMRQyp8",
-        status: "closed",
-      },
-    ],
-  },
-  {
-    category: "Game officials",
-    applications: [
-      {
-        name: "Referee application",
-        type: "Game officiating",
-        description:
-          "Officiate volleyball matches, keep play fair and hold the game to its rules.",
-        status: "closed",
-      },
-      {
-        name: "Game moderator application",
-        type: "Game officiating",
-        description:
-          "Moderate ranked Volleyball 4.2 games, act on rule violations and keep play fair for everyone.",
-        status: "closed",
-      },
-    ],
-  },
-  {
-    category: "Management and support",
-    applications: [
-      {
-        name: "Server moderator application",
-        type: "Community management",
-        description:
-          "Moderate our Discord spaces, enforce the rules and keep the environment positive.",
-        status: "closed",
-      },
-      {
-        name: "Stats team application",
-        type: "Data management",
-        description:
-          "Track player statistics and game data, and keep the records accurate through the playoffs.",
-        status: "closed",
-      },
-      {
-        name: "Host application",
-        type: "Event management",
-        description:
-          "Organise events outside Volleyball 4.2 and keep the community active with casual pickup matches.",
-        status: "closed",
-      },
-    ],
-  },
-];
-
-export default function ApplicationsPage() {
   return (
     <div className="font-display">
       <PageHeader
@@ -100,14 +30,14 @@ export default function ApplicationsPage() {
       />
 
       <div>
-        {GROUPS.map((group) => (
+        {groups.map((group) => (
           <section
             key={group.category}
             className="grid grid-cols-1 gap-8 border-b border-rvl-line px-5 py-12 sm:px-8 md:grid-cols-[210px_1fr] md:gap-14 xl:px-14"
           >
             <div>
               <h2 className="m-0 mb-3 font-mono text-[0.72rem] font-bold uppercase tracking-[0.24em] text-rvl-accent">
-                {group.category}
+                {group.label}
               </h2>
               <p className="m-0 font-mono text-[0.64rem] uppercase tracking-[0.14em] text-rvl-dim">
                 {group.applications.length}{" "}
@@ -120,7 +50,7 @@ export default function ApplicationsPage() {
                 const closed = application.status !== "open" || !application.url;
 
                 return (
-                  <div key={application.name} className="flex flex-col border border-rvl-line p-6">
+                  <div key={application.slug} className="flex flex-col border border-rvl-line p-6">
                     <div className="flex flex-1 flex-col">
                       <div className="flex items-start justify-between gap-3">
                         <h3 className="m-0 flex-1 text-[1.1rem] font-bold leading-tight">
@@ -151,7 +81,7 @@ export default function ApplicationsPage() {
                         </span>
                       ) : (
                         <a
-                          href={application.url}
+                          href={application.url ?? undefined}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="mt-5 self-start border-b border-rvl-line pb-0.5 font-mono text-[0.64rem] uppercase tracking-[0.14em] text-rvl-ink-2 no-underline transition-colors hover:border-rvl-accent-soft hover:text-rvl-accent"

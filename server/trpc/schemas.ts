@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+  APPLICATION_STATUSES,
   AWARD_TYPES,
   MATCH_PHASES,
   MATCH_REGIONS,
@@ -437,6 +438,12 @@ export const articleUpdate = z.object({
 });
 
 export const userSetRole = z.object({ id: z.string().min(1), role: z.enum(USER_ROLES) });
+
+export const applicationUpdate = z.object({
+  slug: z.string().min(1),
+  url: z.union([z.string().url(), z.literal(""), z.null()]).optional(),
+  status: z.enum(APPLICATION_STATUSES).optional(),
+});
 
 export const triviaGuess = z.object({
   type: z.enum(["player", "team", "season"]),

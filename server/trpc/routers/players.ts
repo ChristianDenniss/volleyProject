@@ -41,7 +41,7 @@ export const playersRouter = router({
           position: input.position,
           teamId: input.teamId,
         });
-    revalidate("/players", "/portal/players");
+    await revalidate("/players", "/portal/players");
     return row;
   }),
 
@@ -49,13 +49,13 @@ export const playersRouter = router({
     .input(playerCreateByTeamName)
     .mutation(async ({ ctx, input }) => {
       const row = await players.createByTeamName(ctx.db, input);
-      revalidate("/players", "/portal/players");
+      await revalidate("/players", "/portal/players");
       return row;
     }),
 
   createMany: adminProcedure.input(playerCreateMany).mutation(async ({ ctx, input }) => {
     const rows = await players.createMany(ctx.db, input.players);
-    revalidate("/players", "/portal/players");
+    await revalidate("/players", "/portal/players");
     return rows;
   }),
 
@@ -63,25 +63,25 @@ export const playersRouter = router({
     .input(playerCreateManyByTeamName)
     .mutation(async ({ ctx, input }) => {
       const rows = await players.createManyByTeamName(ctx.db, input);
-      revalidate("/players", "/teams", "/portal/players");
+      await revalidate("/players", "/teams", "/portal/players");
       return rows;
     }),
 
   update: adminProcedure.input(playerUpdate).mutation(async ({ ctx, input }) => {
     const row = await players.update(ctx.db, input.id, input.patch);
-    revalidate("/players", `/players/${input.id}`, "/portal/players");
+    await revalidate("/players", `/players/${input.id}`, "/portal/players");
     return row;
   }),
 
   delete: adminProcedure.input(byId).mutation(async ({ ctx, input }) => {
     const row = await players.remove(ctx.db, input.id);
-    revalidate("/players", "/portal/players");
+    await revalidate("/players", "/portal/players");
     return row;
   }),
 
   merge: adminProcedure.input(playerMerge).mutation(async ({ ctx, input }) => {
     const row = await players.merge(ctx.db, input.targetId, input.mergedId);
-    revalidate("/players", `/players/${input.targetId}`, "/portal/players");
+    await revalidate("/players", `/players/${input.targetId}`, "/portal/players");
     return row;
   }),
 });

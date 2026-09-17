@@ -138,6 +138,7 @@ describe("authorization sweep", () => {
     { procedure: "users.list", access: "admin" },
     { procedure: "users.count", access: "admin" },
     { procedure: "users.me", access: "protected" },
+    { procedure: "applications.count", access: "admin" },
   ];
 
   it("rejects every guarded query for an anonymous caller", async () => {
@@ -169,6 +170,7 @@ describe("authorization sweep", () => {
       "articles.list",
       "articles.byId",
       "articles.likeStatus",
+      "applications.list",
       "awards.list",
       "awards.byId",
       "games.list",
@@ -182,6 +184,8 @@ describe("authorization sweep", () => {
       "records.list",
       "records.byMetric",
       "seasons.list",
+      "seasons.listMeta",
+      "seasons.latest",
       "seasons.byId",
       "stats.leaderboard",
       "stats.vectorGraph",

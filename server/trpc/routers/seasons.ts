@@ -16,6 +16,10 @@ export const seasonsRouter = router({
     .input(optionalRegion)
     .query(({ ctx, input }) => seasons.list(ctx.db, scopedRegion(ctx, input?.region))),
 
+  listMeta: publicProcedure.query(({ ctx }) => seasons.listMeta(ctx.db)),
+
+  latest: publicProcedure.query(({ ctx }) => seasons.latest(ctx.db)),
+
   byId: publicProcedure
     .input(byId.extend({ region: regionValue }))
     .query(({ ctx, input }) => seasons.getById(ctx.db, input.id, scopedRegion(ctx, input.region))),
@@ -24,19 +28,19 @@ export const seasonsRouter = router({
 
   create: adminProcedure.input(seasonCreate).mutation(async ({ ctx, input }) => {
     const row = await seasons.create(ctx.db, input);
-    revalidate("/seasons", "/portal/seasons");
+    await revalidate("/seasons", "/portal/seasons");
     return row;
   }),
 
   update: adminProcedure.input(seasonUpdate).mutation(async ({ ctx, input }) => {
     const row = await seasons.update(ctx.db, input.id, input.patch);
-    revalidate("/seasons", `/seasons/${input.id}`, "/portal/seasons");
+    await revalidate("/seasons", `/seasons/${input.id}`, "/portal/seasons");
     return row;
   }),
 
   delete: adminProcedure.input(byId).mutation(async ({ ctx, input }) => {
     const row = await seasons.remove(ctx.db, input.id);
-    revalidate("/seasons", "/portal/seasons");
+    await revalidate("/seasons", "/portal/seasons");
     return row;
   }),
 
@@ -77,7 +81,7 @@ export const seasonsRouter = router({
         d1: env.DB,
       },
     );
-    revalidate(
+    await revalidate(
       "/",
       "/seasons",
       "/portal/seasons",

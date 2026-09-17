@@ -19,13 +19,15 @@ Install dependencies:
 pnpm install
 ```
 
-Prepare the local database, including migrations and fixture data:
+Start the development server with mock league data in one step:
 
 ```bash
-pnpm t3:prepare
+pnpm mock-dev
 ```
 
-Start the development server:
+That applies local migrations, loads the seeded dataset, and starts vinext.
+
+To start without reseeding:
 
 ```bash
 pnpm dev
@@ -37,6 +39,7 @@ migrations automatically. Previously applied migrations are skipped.
 
 ## Scripts
 
+- `pnpm mock-dev` applies pending local D1 migrations, loads mock league data, then starts the vinext development server.
 - `pnpm dev` applies pending local D1 migrations, then starts the vinext development server.
 - `pnpm test` runs the test suite.
 - `pnpm lint` checks the project for linting issues.

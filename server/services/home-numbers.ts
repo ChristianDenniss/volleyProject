@@ -1,12 +1,10 @@
 import type { Db } from "@db";
-import { cacheDelete, cacheRead, cacheWrite } from "../cache";
 import type { GameRegion } from "./games";
 import { avatarHeadshotByUsername } from "./roblox";
+import { cachedSiteRead, invalidateSiteReads, SITE_READ_TTL } from "./site-read-cache";
 import * as stats from "./stats";
 
-export const HOME_NUMBERS_TTL = 60 * 60 * 24;
-const HOME_NUMBERS_GENERATION_KEY = "https://volley.internal/cache/home-numbers-generation";
-const LEGACY_HOME_NUMBERS_KEY = "https://volley.internal/cache/home-numbers-season-v4";
+export const HOME_NUMBERS_TTL = SITE_READ_TTL;
 
 const SEASON_METRICS = [
   { key: "totalKills", metric: "Kills · season" },
@@ -33,19 +31,6 @@ export interface HomeNumbersPayload {
 }
 
 export type AvatarLookup = (name: string) => Promise<string | null>;
-
-async function homeNumbersGeneration(): Promise<number> {
-  const cached = await cacheRead<number>(HOME_NUMBERS_GENERATION_KEY);
-  return cached ?? 0;
-}
-
-function homeNumbersCacheKey(
-  generation: number,
-  seasonId: number | null,
-  region: GameRegion | null,
-): string {
-  return `https://volley.internal/cache/home-numbers-v4/${generation}/${seasonId ?? "none"}/${region ?? "all"}`;
-}
 
 async function defaultAvatar(name: string) {
   try {
@@ -102,23 +87,11 @@ export async function loadHomeNumbers(
   options: { avatarFor?: AvatarLookup; region?: GameRegion | undefined } = {},
 ): Promise<HomeNumbersPayload> {
   const region = options.region ?? null;
-  const generation = await homeNumbersGeneration();
-  const cacheKey = homeNumbersCacheKey(generation, seasonId, region);
-  const cached = await cacheRead<HomeNumbersPayload>(cacheKey);
-  if (cached) return cached;
-
-  const payload = await computeHomeNumbers(
-    db,
-    seasonId,
-    options.avatarFor ?? defaultAvatar,
-    options.region,
+  return cachedSiteRead("home-numbers", [seasonId, region], () =>
+    computeHomeNumbers(db, seasonId, options.avatarFor ?? defaultAvatar, options.region),
   );
-  await cacheWrite(cacheKey, payload, HOME_NUMBERS_TTL);
-  return payload;
 }
 
 export async function invalidateHomeNumbers() {
-  const nextGeneration = (await homeNumbersGeneration()) + 1;
-  await cacheWrite(HOME_NUMBERS_GENERATION_KEY, nextGeneration, HOME_NUMBERS_TTL * 30);
-  await cacheDelete(LEGACY_HOME_NUMBERS_KEY);
+  await invalidateSiteReads();
 }

@@ -6,6 +6,7 @@ import { api } from "@server/trpc/server";
 import { getSiteRegion } from "@server/site-region";
 import { cn } from "@/lib/utils";
 import { regionQuery, type SiteRegion } from "@/lib/region";
+import { seasonBanner } from "@/lib/season-banners";
 
 export const dynamic = "force-dynamic";
 
@@ -34,7 +35,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   return {
     title,
     description,
-    openGraph: { title, description, images: season.image ? [season.image] : undefined },
+    openGraph: { title, description, images: [seasonBanner(season.seasonNumber, season.image)] },
   };
 }
 
@@ -100,8 +101,14 @@ export default async function SeasonPage({ params }: Params) {
       </h1>
 
       <p className="m-0 mb-6 text-center font-mono text-[0.95rem] tabular-nums text-rvl-accent">
-        {shortDate(season.startDate)} - {season.endDate ? shortDate(season.endDate) : "present"}
+        {shortDate(season.startDate)} - {season.endDate ? shortDate(season.endDate) : "TBH"}
       </p>
+
+      <img
+        src={seasonBanner(season.seasonNumber, season.image)}
+        alt=""
+        className="mx-auto mb-8 aspect-16/6 w-full max-w-5xl object-cover"
+      />
 
       <div className="mb-8 flex flex-wrap items-center justify-center gap-4">
         {season.theme ? <span className={pillClass}>Theme: {season.theme}</span> : null}
@@ -170,7 +177,7 @@ export default async function SeasonPage({ params }: Params) {
                   </div>
                 </div>
 
-                <ul className="pointer-events-none relative z-1 m-0 flex-1 list-none overflow-y-auto p-0">
+                <ul className="thumb-scrollbar relative z-1 m-0 flex-1 list-none overflow-y-auto p-0">
                   {players.length === 0 ? (
                     <li className="px-4 py-3 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-rvl-dim">
                       No roster

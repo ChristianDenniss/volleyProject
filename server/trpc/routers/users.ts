@@ -12,7 +12,7 @@ export const usersRouter = router({
 
   setRole: adminProcedure.input(userSetRole).mutation(async ({ ctx, input }) => {
     const row = await users.setRole(ctx.db, input.id, input.role);
-    revalidate("/portal/users");
+    await revalidate("/portal/users");
     return row;
   }),
 });

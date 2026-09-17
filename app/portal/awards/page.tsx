@@ -8,7 +8,7 @@ export const metadata = { title: "Awards · Portal" };
 
 export default async function PortalAwardsPage() {
   const trpc = await portalApi();
-  const [rows, seasonList] = await Promise.all([trpc.awards.list(), trpc.seasons.list()]);
+  const [rows, seasonList] = await Promise.all([trpc.awards.list(), trpc.seasons.listMeta()]);
 
   return (
     <PortalPage

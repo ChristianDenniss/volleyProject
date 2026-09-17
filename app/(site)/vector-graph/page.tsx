@@ -15,7 +15,7 @@ export default async function VectorGraphRoute() {
   const [trpc, { query }] = await Promise.all([api(), getSiteRegionQuery()]);
   const [players, seasons] = await Promise.all([
     trpc.stats.vectorGraph(query),
-    trpc.seasons.list(query),
+    trpc.seasons.listMeta(),
   ]);
 
   return (

@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { displayRound, PortalResourceFilters, uniqueRounds } from "./portal-filters";
 import { usePortalErrorToast } from "./portal-error-detail";
 import { PortalSelect } from "./portal-select";
 import { pick, ResourceView, type ColumnSpec, type FieldSpec } from "./resource-view";
@@ -27,6 +28,10 @@ interface Row {
   gameId: number;
   gameName: string | null;
   gameDate: string;
+  seasonId: number | null;
+  region: string;
+  round: string | null;
+  stage: string | null;
   spikeKills: number;
   spikeAttempts: number;
   apeKills: number;
@@ -158,14 +163,43 @@ export function StatsManager({
   rows,
   games,
   players,
+  seasons,
 }: {
   rows: Row[];
   games: { id: number; label: string }[];
   players: string[];
+  seasons: { id: number; label: string }[];
 }) {
   const create = trpc.stats.createByName.useMutation();
   const update = trpc.stats.update.useMutation();
   const remove = trpc.stats.delete.useMutation();
+  const [region, setRegion] = useState("");
+  const [season, setSeason] = useState("");
+  const [round, setRound] = useState("");
+
+  const scoped = useMemo(
+    () =>
+      rows.filter((row) => {
+        if (region && row.region !== region) return false;
+        if (season && String(row.seasonId ?? "") !== season) return false;
+        return true;
+      }),
+    [rows, region, season],
+  );
+
+  const rounds = useMemo(
+    () => uniqueRounds(scoped.map((row) => displayRound(row.round, row.stage))),
+    [scoped],
+  );
+
+  const visible = useMemo(
+    () =>
+      scoped.filter((row) => {
+        if (!round) return true;
+        return displayRound(row.round, row.stage) === round;
+      }),
+    [scoped, round],
+  );
 
   const fields: FieldSpec[] = [
     {
@@ -188,10 +222,23 @@ export function StatsManager({
   return (
     <ResourceView<Row>
       title="stat line"
-      rows={rows}
+      rows={visible}
       columns={COLUMNS}
       fields={fields}
+      emptyLabel={rows.length === 0 ? "No rows yet" : "No stat lines match these filters"}
       extra={<CsvUpload games={games} />}
+      filters={
+        <PortalResourceFilters
+          region={region}
+          onRegionChange={setRegion}
+          season={season}
+          onSeasonChange={setSeason}
+          seasons={seasons}
+          round={round}
+          onRoundChange={setRound}
+          rounds={rounds}
+        />
+      }
       toValues={(row) => ({
         playerName: row.playerName,
         gameId: String(row.gameId),

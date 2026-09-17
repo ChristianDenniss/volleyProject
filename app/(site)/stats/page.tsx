@@ -25,7 +25,7 @@ export default async function StatsPage({
 
   const [rows, allSeasons] = await Promise.all([
     trpc.stats.leaderboard({ seasonId, stageRound, ...query }),
-    trpc.seasons.list(query),
+    trpc.seasons.listMeta(),
   ]);
 
   return (

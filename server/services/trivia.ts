@@ -12,6 +12,7 @@ import {
   teamsPlayers,
 } from "@db/schema";
 import { BadRequestError, NotFoundError } from "./errors";
+import { cachedSiteRead } from "./site-read-cache";
 
 export type Difficulty = "easy" | "medium" | "hard" | "impossible";
 export type TriviaKind = "player" | "team" | "season";
@@ -62,22 +63,28 @@ function pick<T>(candidates: T[], random: () => number): T {
   return chosen;
 }
 
+async function scoredPlayers(db: Db) {
+  return cachedSiteRead("trivia-players", [], () =>
+    db
+      .select({
+        id: players.id,
+        name: players.name,
+        position: players.position,
+        relationCount: correlatedSum(
+          [
+            '(select count(*) from "teams_players" where "teams_players"."player_id" = "players"."id")',
+            '(select count(*) from "awards_players" where "awards_players"."player_id" = "players"."id")',
+            '(select count(*) from "stats" where "stats"."player_id" = "players"."id")',
+            '(select count(*) from "records" where "records"."player_id" = "players"."id")',
+          ].join(" + "),
+        ),
+      })
+      .from(players),
+  );
+}
+
 export async function randomPlayer(db: Db, difficulty: Difficulty, random: () => number = Math.random) {
-  const scored = await db
-    .select({
-      id: players.id,
-      name: players.name,
-      position: players.position,
-      relationCount: correlatedSum(
-        [
-          '(select count(*) from "teams_players" where "teams_players"."player_id" = "players"."id")',
-          '(select count(*) from "awards_players" where "awards_players"."player_id" = "players"."id")',
-          '(select count(*) from "stats" where "stats"."player_id" = "players"."id")',
-          '(select count(*) from "records" where "records"."player_id" = "players"."id")',
-        ].join(" + "),
-      ),
-    })
-    .from(players);
+  const scored = await scoredPlayers(db);
 
   const candidates = scored.filter((row) => playerDifficulty(row.relationCount) === difficulty);
   if (candidates.length === 0) throw new NotFoundError(`A ${difficulty} player`);
@@ -107,22 +114,28 @@ export async function randomPlayer(db: Db, difficulty: Difficulty, random: () =>
   };
 }
 
+async function scoredTeams(db: Db) {
+  return cachedSiteRead("trivia-teams", [], () =>
+    db
+      .select({
+        id: teams.id,
+        name: teams.name,
+        placement: teams.placement,
+        logoUrl: teams.logoUrl,
+        seasonId: teams.seasonId,
+        relationCount: correlatedSum(
+          [
+            '(select count(*) from "teams_players" where "teams_players"."team_id" = "teams"."id")',
+            '(select count(*) from "teams_games" where "teams_games"."team_id" = "teams"."id")',
+          ].join(" + "),
+        ),
+      })
+      .from(teams),
+  );
+}
+
 export async function randomTeam(db: Db, difficulty: Difficulty, random: () => number = Math.random) {
-  const scored = await db
-    .select({
-      id: teams.id,
-      name: teams.name,
-      placement: teams.placement,
-      logoUrl: teams.logoUrl,
-      seasonId: teams.seasonId,
-      relationCount: correlatedSum(
-        [
-          '(select count(*) from "teams_players" where "teams_players"."team_id" = "teams"."id")',
-          '(select count(*) from "teams_games" where "teams_games"."team_id" = "teams"."id")',
-        ].join(" + "),
-      ),
-    })
-    .from(teams);
+  const scored = await scoredTeams(db);
 
   const candidates = scored.filter(
     (row) => teamDifficulty(row.relationCount, row.placement) === difficulty,

@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { displayRound, PortalResourceFilters, uniqueRounds } from "./portal-filters";
 import { usePortalErrorToast } from "./portal-error-detail";
 import { PortalSelect } from "./portal-select";
 import { pick, ResourceView, optionalText, type ColumnSpec, type FieldSpec } from "./resource-view";
@@ -57,7 +58,7 @@ const COLUMNS: ColumnSpec<Row>[] = [
     label: "Match",
     render: (row) => row.matchNumber ?? row.name ?? `#${row.id}`,
   },
-  { key: "round", label: "Round", render: (row) => row.round ?? row.stage ?? "—" },
+  { key: "round", label: "Round", render: (row) => displayRound(row.round, row.stage) || "—" },
   {
     key: "teams",
     label: "Teams",
@@ -220,6 +221,33 @@ export function GamesManager({
   const create = trpc.games.create.useMutation();
   const update = trpc.games.update.useMutation();
   const remove = trpc.games.delete.useMutation();
+  const [region, setRegion] = useState("");
+  const [season, setSeason] = useState("");
+  const [round, setRound] = useState("");
+
+  const scoped = useMemo(
+    () =>
+      rows.filter((row) => {
+        if (region && row.region !== region) return false;
+        if (season && String(row.seasonId ?? "") !== season) return false;
+        return true;
+      }),
+    [rows, region, season],
+  );
+
+  const rounds = useMemo(
+    () => uniqueRounds(scoped.map((row) => displayRound(row.round, row.stage))),
+    [scoped],
+  );
+
+  const visible = useMemo(
+    () =>
+      scoped.filter((row) => {
+        if (!round) return true;
+        return displayRound(row.round, row.stage) === round;
+      }),
+    [scoped, round],
+  );
 
   const teamOptions = [
     { value: "", label: "TBD" },
@@ -291,10 +319,23 @@ export function GamesManager({
   return (
     <ResourceView<Row>
       title="game"
-      rows={rows}
+      rows={visible}
       columns={COLUMNS}
       fields={fields}
+      emptyLabel={rows.length === 0 ? "No rows yet" : "No games match these filters"}
       extra={<ChallongeImport seasons={seasons} />}
+      filters={
+        <PortalResourceFilters
+          region={region}
+          onRegionChange={setRegion}
+          season={season}
+          onSeasonChange={setSeason}
+          seasons={seasons}
+          round={round}
+          onRoundChange={setRound}
+          rounds={rounds}
+        />
+      }
       toValues={(row) => ({
         matchNumber: row.matchNumber ?? "",
         round: row.round ?? "",

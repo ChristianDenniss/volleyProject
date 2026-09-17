@@ -5,6 +5,7 @@ import { makeDb, type Db } from "@db";
 import { players as playerRows } from "@db/schema";
 import {
   articles,
+  applications,
   awards,
   games,
   players,
@@ -30,6 +31,19 @@ describe("seasons", () => {
     expect(rows.map((row) => row.seasonNumber)).toEqual([2, 1]);
     expect(rows.find((row) => row.seasonNumber === 1)?.teamCount).toBe(2);
     expect(rows.find((row) => row.seasonNumber === 1)?.gameCount).toBe(2);
+    expect(rows.find((row) => row.seasonNumber === 1)?.regionStats).toEqual({
+      na: { teamCount: 3, gameCount: 2 },
+    });
+  });
+
+  it("lists season metadata without counts and picks the open season", async () => {
+    const rows = await seasons.listMeta(db);
+    expect(rows.map((row) => row.seasonNumber)).toEqual([2, 1]);
+    expect(rows[0]).not.toHaveProperty("teamCount");
+
+    const current = await seasons.latest(db);
+    expect(current?.seasonNumber).toBe(2);
+    expect(current?.endDate).toBeNull();
   });
 
   it("counts and hydrates one region at a time", async () => {
@@ -101,6 +115,20 @@ describe("players", () => {
     expect(na.length).toBeGreaterThan(0);
     expect(eu.length).toBeGreaterThan(0);
     expect(eu.every((row) => na.some((player) => player.id === row.id))).toBe(true);
+  });
+
+  it("counts region players without scanning the players table", async () => {
+    const [all, na, eu] = await Promise.all([
+      players.count(db),
+      players.count(db, "na"),
+      players.count(db, "eu"),
+    ]);
+    const listedNa = await players.list(db, "na");
+    const listedEu = await players.list(db, "eu");
+    expect(all).toBe(8);
+    expect(na).toBe(listedNa.length);
+    expect(eu).toBe(listedEu.length);
+    expect(eu).toBeLessThan(na);
   });
 
   it("hydrates a player with teams, stats, awards and records", async () => {
@@ -490,6 +518,42 @@ describe("users", () => {
     const updated = await users.setRole(db, FIXTURES.userId, "superadmin");
     expect(updated.role).toBe("superadmin");
     expect(users.isAdmin(updated.role)).toBe(true);
+  });
+});
+
+describe("applications", () => {
+  it("seeds the default forms when the table is empty", async () => {
+    const rows = await applications.list(db);
+    expect(rows.map((row) => row.slug)).toEqual([
+      "staff",
+      "media",
+      "referee",
+      "moderator",
+      "game-moderator",
+      "stats",
+      "host",
+    ]);
+    expect(rows.every((row) => row.status === "closed")).toBe(true);
+  });
+
+  it("opens a form and stores its URL", async () => {
+    const updated = await applications.updateBySlug(db, "referee", {
+      status: "open",
+      url: "https://forms.gle/example",
+    });
+    expect(updated.status).toBe("open");
+    expect(updated.url).toBe("https://forms.gle/example");
+  });
+
+  it("clears an empty URL to null", async () => {
+    const updated = await applications.updateBySlug(db, "staff", { url: "" });
+    expect(updated.url).toBeNull();
+  });
+
+  it("rejects an unknown slug", async () => {
+    await expect(applications.updateBySlug(db, "missing", { status: "open" })).rejects.toThrow(
+      "Application missing not found",
+    );
   });
 });
 

@@ -1,4 +1,5 @@
 import { createCallerFactory, router } from "./init";
+import { applicationsRouter } from "./routers/applications";
 import { articlesRouter } from "./routers/articles";
 import { awardsRouter } from "./routers/awards";
 import { gamesRouter } from "./routers/games";
@@ -12,6 +13,7 @@ import { triviaRouter } from "./routers/trivia";
 import { usersRouter } from "./routers/users";
 
 export const appRouter = router({
+  applications: applicationsRouter,
   articles: articlesRouter,
   awards: awardsRouter,
   games: gamesRouter,

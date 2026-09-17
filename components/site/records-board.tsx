@@ -19,6 +19,15 @@ export interface RecordRow {
   gameName: string | null;
 }
 
+export const RECORD_BOARD_SIZE = 10;
+
+export function recordBoardSlots(rows: RecordRow[]): Array<RecordRow | null> {
+  const top = [...rows]
+    .sort((a, b) => b.value - a.value || a.rank - b.rank || a.id - b.id)
+    .slice(0, RECORD_BOARD_SIZE);
+  return Array.from({ length: RECORD_BOARD_SIZE }, (_, index) => top[index] ?? null);
+}
+
 export function RecordsBoard({ records }: { records: RecordRow[] }) {
   const types = useMemo(() => {
     const values = new Set<string>();
@@ -38,9 +47,7 @@ export function RecordsBoard({ records }: { records: RecordRow[] }) {
           : record.metric;
         map.set(label, [...(map.get(label) ?? []), record]);
       });
-    return [...map.entries()].map(
-      ([label, rows]) => [label, [...rows].sort((a, b) => a.rank - b.rank)] as const,
-    );
+    return [...map.entries()].map(([label, rows]) => [label, recordBoardSlots(rows)] as const);
   }, [records, type]);
 
   return (
@@ -67,14 +74,8 @@ export function RecordsBoard({ records }: { records: RecordRow[] }) {
       </div>
 
       <div className="grid grid-cols-1 gap-x-12 gap-y-14 px-5 py-12 sm:px-8 lg:grid-cols-2 xl:grid-cols-3 xl:px-14">
-        {groups.map(([label, rows]) => {
-          // Ranks are computed per season, so a group holds one rank-1 row per
-          // season. The best mark is the highest value, not whatever the list
-          // happens to start with.
-          const topMark = rows.reduce<RecordRow | undefined>(
-            (best, row) => (best === undefined || row.value > best.value ? row : best),
-            undefined,
-          );
+        {groups.map(([label, slots]) => {
+          const topMark = slots.find((row): row is RecordRow => row !== null);
 
           return (
             <section key={label}>
@@ -82,56 +83,72 @@ export function RecordsBoard({ records }: { records: RecordRow[] }) {
                 {label}
               </h2>
 
-              <ol className="m-0 flex list-none flex-col p-0">
-                {rows.map((record) => (
-                  <li
-                    key={record.id}
-                    className="flex items-baseline gap-4 border-b border-rvl-line py-3"
-                  >
-                    <span
-                      className={cn(
-                        "w-6 shrink-0 font-mono text-[0.72rem] tabular-nums",
-                        record.rank === 1 ? "font-bold text-rvl-accent" : "text-rvl-dim",
-                      )}
-                    >
-                      {record.rank}
-                    </span>
+              <ol className="m-0 grid list-none grid-rows-10 p-0">
+                {slots.map((record, index) => {
+                  const rank = index + 1;
 
-                    <Link
-                      href={`/players/${record.playerId}`}
-                      className="text-[0.95rem] font-semibold capitalize text-rvl-ink no-underline transition-colors hover:text-rvl-accent"
-                    >
-                      {record.playerName}
-                    </Link>
-
-                    {/* Where the mark was set. Without it the repeated per-season
-                        ranks are indistinguishable from one another. */}
-                    {record.gameId !== null ? (
-                      <Link
-                        href={`/games/${record.gameId}`}
-                        className="truncate font-mono text-[0.6rem] uppercase tracking-[0.14em] text-rvl-dim no-underline transition-colors hover:text-rvl-accent"
+                  if (!record) {
+                    return (
+                      <li
+                        key={`${label}-empty-${rank}`}
+                        className="flex min-h-12 items-baseline gap-4 border-b border-rvl-line py-3"
                       >
-                        {record.gameName ?? `Game ${record.gameId}`}
-                      </Link>
-                    ) : record.seasonId !== null ? (
-                      <Link
-                        href={`/seasons/${record.seasonId}`}
-                        className="truncate font-mono text-[0.6rem] uppercase tracking-[0.14em] text-rvl-dim no-underline transition-colors hover:text-rvl-accent"
-                      >
-                        S{record.seasonNumber ?? record.seasonId}
-                      </Link>
-                    ) : null}
+                        <span className="w-6 shrink-0 font-mono text-[0.72rem] tabular-nums text-rvl-dim">
+                          {rank}
+                        </span>
+                        <span className="text-[0.95rem] font-semibold text-rvl-dim">N/A</span>
+                      </li>
+                    );
+                  }
 
-                    <span
-                      className={cn(
-                        "ml-auto font-mono text-[1.05rem] tabular-nums",
-                        record.rank === 1 ? "font-bold text-rvl-accent" : "text-rvl-ink-2",
-                      )}
+                  return (
+                    <li
+                      key={record.id}
+                      className="flex min-h-12 items-baseline gap-4 border-b border-rvl-line py-3"
                     >
-                      {record.value}
-                    </span>
-                  </li>
-                ))}
+                      <span
+                        className={cn(
+                          "w-6 shrink-0 font-mono text-[0.72rem] tabular-nums",
+                          rank === 1 ? "font-bold text-rvl-accent" : "text-rvl-dim",
+                        )}
+                      >
+                        {rank}
+                      </span>
+
+                      <Link
+                        href={`/players/${record.playerId}`}
+                        className="text-[0.95rem] font-semibold capitalize text-rvl-ink no-underline transition-colors hover:text-rvl-accent"
+                      >
+                        {record.playerName}
+                      </Link>
+
+                      {record.gameId !== null ? (
+                        <Link
+                          href={`/games/${record.gameId}`}
+                          className="truncate font-mono text-[0.6rem] uppercase tracking-[0.14em] text-rvl-dim no-underline transition-colors hover:text-rvl-accent"
+                        >
+                          {record.gameName ?? `Game ${record.gameId}`}
+                        </Link>
+                      ) : record.seasonId !== null ? (
+                        <Link
+                          href={`/seasons/${record.seasonId}`}
+                          className="truncate font-mono text-[0.6rem] uppercase tracking-[0.14em] text-rvl-dim no-underline transition-colors hover:text-rvl-accent"
+                        >
+                          S{record.seasonNumber ?? record.seasonId}
+                        </Link>
+                      ) : null}
+
+                      <span
+                        className={cn(
+                          "ml-auto font-mono text-[1.05rem] tabular-nums",
+                          rank === 1 ? "font-bold text-rvl-accent" : "text-rvl-ink-2",
+                        )}
+                      >
+                        {record.value}
+                      </span>
+                    </li>
+                  );
+                })}
               </ol>
 
               <p className="m-0 mt-3 font-mono text-[0.6rem] uppercase tracking-[0.14em] text-rvl-dim">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   SITE_REGIONS,
@@ -8,6 +8,7 @@ import {
   type SiteRegion,
 } from "@/lib/region";
 import { cn } from "@/lib/utils";
+import { beginSiteNav, endSiteNav } from "./site-nav-progress";
 
 const LABELS: Record<SiteRegion, string> = {
   all: "ALL",
@@ -21,6 +22,13 @@ export function SiteRegionSelect({ value }: { value: SiteRegion }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [selected, setSelected] = useState(value);
+  const startedNav = useRef(false);
+
+  useEffect(() => {
+    if (pending || !startedNav.current) return;
+    startedNav.current = false;
+    endSiteNav();
+  }, [pending]);
 
   return (
     <div className="flex gap-1.5" role="group" aria-label="Region" aria-busy={pending}>
@@ -36,6 +44,8 @@ export function SiteRegionSelect({ value }: { value: SiteRegion }) {
               if (region === selected) return;
               setSelected(region);
               document.cookie = siteRegionCookie(region);
+              startedNav.current = true;
+              beginSiteNav();
               startTransition(() => {
                 router.refresh();
               });

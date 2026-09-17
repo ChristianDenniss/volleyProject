@@ -7,6 +7,7 @@ import { STAGE_ROUNDS, type StageRound } from "@/lib/stats/stage-rounds";
 import type { GameRegion } from "./games";
 import { ConflictError, found, NotFoundError } from "./errors";
 import type { PartialInput } from "./input";
+import { cachedSiteRead } from "./site-read-cache";
 
 export interface StatInput {
   playerId: number;
@@ -38,6 +39,9 @@ const detail = {
   gameName: games.name,
   gameDate: games.date,
   seasonId: games.seasonId,
+  region: games.region,
+  round: games.round,
+  stage: games.stage,
   spikeKills: stats.spikeKills,
   spikeAttempts: stats.spikeAttempts,
   spikingErrors: stats.spikingErrors,
@@ -98,6 +102,10 @@ export async function count(db: Db) {
 }
 
 export async function vectorGraph(db: Db, region?: GameRegion): Promise<VectorGraphPlayer[]> {
+  return cachedSiteRead("stats-vector-graph", [region], () => loadVectorGraph(db, region));
+}
+
+async function loadVectorGraph(db: Db, region?: GameRegion): Promise<VectorGraphPlayer[]> {
   const rows = await db
     .select({
       playerId: players.id,
@@ -188,6 +196,13 @@ function buildStageRoundFilter(stageRound: StageRound | undefined) {
 }
 
 export async function leaderboard(db: Db, options: LeaderboardOptions = {}) {
+  const { seasonId, stageRound, region } = options;
+  return cachedSiteRead("stats-leaderboard", [seasonId, stageRound, region], () =>
+    loadLeaderboard(db, options),
+  );
+}
+
+async function loadLeaderboard(db: Db, options: LeaderboardOptions) {
   const { seasonId, stageRound, region } = options;
   const stageFilter = buildStageRoundFilter(stageRound);
 

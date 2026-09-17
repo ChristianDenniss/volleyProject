@@ -8,10 +8,11 @@ export const metadata = { title: "Stats · Portal" };
 
 export default async function PortalStatsPage() {
   const trpc = await portalApi();
-  const [rows, gameList, playerList] = await Promise.all([
+  const [rows, gameList, playerList, seasonList] = await Promise.all([
     trpc.stats.list(),
     trpc.games.list(),
     trpc.players.list(),
+    trpc.seasons.listMeta(),
   ]);
 
   return (
@@ -26,6 +27,10 @@ export default async function PortalStatsPage() {
           label: `${game.name ?? `Game ${game.id}`} · ${game.date}`,
         }))}
         players={playerList.map((player) => player.name)}
+        seasons={seasonList.map((season) => ({
+          id: season.id,
+          label: `Season ${season.seasonNumber}`,
+        }))}
       />
     </PortalPage>
   );

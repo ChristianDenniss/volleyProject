@@ -6,3 +6,4 @@ ROBLOX_CLIENT_SECRET=
 # Comma-separated Roblox account IDs auto-promoted to superadmin on first login
 ROOT_ROBLOX_IDS=
 CHALLONGE_API_KEY=
+REDIS_URL=

@@ -24,7 +24,7 @@ export default async function SchedulesPage({
 
   const [rows, allSeasons] = await Promise.all([
     trpc.games.listSchedule({ seasonId, ...query }),
-    trpc.seasons.list(query),
+    trpc.seasons.listMeta(),
   ]);
 
   return (

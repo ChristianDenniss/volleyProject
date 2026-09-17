@@ -1,3 +1,4 @@
+export * as applications from "./applications";
 export * as articles from "./articles";
 export * as awards from "./awards";
 export * as games from "./games";

@@ -86,7 +86,7 @@ export default async function TriviaPage({
         clues: [
           { label: "Theme", value: season.theme ?? "none" },
           { label: "Started", value: season.startDate },
-          { label: "Ended", value: season.endDate ?? "in progress" },
+          { label: "Ended", value: season.endDate ?? "TBH" },
           { label: "Teams", value: String(season.teams.length) },
           { label: "Records", value: String(season.records.length) },
         ],

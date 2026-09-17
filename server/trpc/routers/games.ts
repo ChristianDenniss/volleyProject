@@ -39,31 +39,31 @@ export const gamesRouter = router({
 
   create: adminProcedure.input(gameCreate).mutation(async ({ ctx, input }) => {
     const row = await games.create(ctx.db, input);
-    revalidate("/games", "/portal/games", "/profile", ...schedulePaths);
+    await revalidate("/games", "/portal/games", "/profile", ...schedulePaths);
     return row;
   }),
 
   createMany: adminProcedure.input(gameCreateMany).mutation(async ({ ctx, input }) => {
     const rows = await games.createMany(ctx.db, input.games);
-    revalidate("/games", "/portal/games", "/profile", ...schedulePaths);
+    await revalidate("/games", "/portal/games", "/profile", ...schedulePaths);
     return rows;
   }),
 
   createByNames: adminProcedure.input(gameCreateByNames).mutation(async ({ ctx, input }) => {
     const row = await games.createByNames(ctx.db, input);
-    revalidate("/games", "/portal/games", "/profile", ...schedulePaths);
+    await revalidate("/games", "/portal/games", "/profile", ...schedulePaths);
     return row;
   }),
 
   update: adminProcedure.input(gameUpdate).mutation(async ({ ctx, input }) => {
     const row = await games.update(ctx.db, input.id, input.patch);
-    revalidate("/games", `/games/${input.id}`, "/portal/games", "/profile", ...schedulePaths);
+    await revalidate("/games", `/games/${input.id}`, "/portal/games", "/profile", ...schedulePaths);
     return row;
   }),
 
   delete: adminProcedure.input(byId).mutation(async ({ ctx, input }) => {
     const row = await games.remove(ctx.db, input.id);
-    revalidate("/games", "/portal/games", "/profile", ...schedulePaths);
+    await revalidate("/games", "/portal/games", "/profile", ...schedulePaths);
     return row;
   }),
 
@@ -78,7 +78,7 @@ export const gamesRouter = router({
         });
       }
       const result = await games.importFromChallonge(ctx.db, { ...input, apiKey });
-      revalidate(...schedulePaths);
+      await revalidate(...schedulePaths);
       return result;
     }),
 });

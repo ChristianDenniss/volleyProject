@@ -10,7 +10,7 @@ export default async function PortalRecordsPage() {
   const trpc = await portalApi();
   const [rows, seasonList, playerList, gameList, job] = await Promise.all([
     trpc.records.list(),
-    trpc.seasons.list(),
+    trpc.seasons.listMeta(),
     trpc.players.list(),
     trpc.games.list(),
     trpc.records.latestJob(),

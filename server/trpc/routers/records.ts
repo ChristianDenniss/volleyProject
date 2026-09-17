@@ -1,5 +1,5 @@
 import { env } from "cloudflare:workers";
-import { homeNumbers, records } from "@server/services";
+import { records } from "@server/services";
 import { enqueueRecalculation, latestJob } from "@server/queue";
 import { adminProcedure, publicProcedure, router, scopedRegion } from "../init";
 import { revalidate } from "../revalidate";
@@ -35,22 +35,19 @@ export const recordsRouter = router({
 
   create: adminProcedure.input(recordCreate).mutation(async ({ ctx, input }) => {
     const row = await records.create(ctx.db, input);
-    await homeNumbers.invalidateHomeNumbers();
-    revalidate("/", "/records");
+    await revalidate("/", "/records");
     return row;
   }),
 
   update: adminProcedure.input(recordUpdate).mutation(async ({ ctx, input }) => {
     const row = await records.update(ctx.db, input.id, input.patch);
-    await homeNumbers.invalidateHomeNumbers();
-    revalidate("/", "/records");
+    await revalidate("/", "/records");
     return row;
   }),
 
   delete: adminProcedure.input(byId).mutation(async ({ ctx, input }) => {
     const row = await records.remove(ctx.db, input.id);
-    await homeNumbers.invalidateHomeNumbers();
-    revalidate("/", "/records");
+    await revalidate("/", "/records");
     return row;
   }),
 

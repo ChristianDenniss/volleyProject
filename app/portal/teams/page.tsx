@@ -8,7 +8,7 @@ export const metadata = { title: "Teams · Portal" };
 
 export default async function PortalTeamsPage() {
   const trpc = await portalApi();
-  const [rows, seasonList] = await Promise.all([trpc.teams.list(), trpc.seasons.list()]);
+  const [rows, seasonList] = await Promise.all([trpc.teams.list(), trpc.seasons.listMeta()]);
 
   return (
     <PortalPage title="Teams" description="A team name has to be unique inside its season.">

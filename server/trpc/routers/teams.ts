@@ -37,7 +37,7 @@ export const teamsRouter = router({
 
   create: adminProcedure.input(teamCreate).mutation(async ({ ctx, input }) => {
     const row = await teams.create(ctx.db, input);
-    revalidate("/teams", "/portal/teams");
+    await revalidate("/teams", "/portal/teams");
     return row;
   }),
 
@@ -45,13 +45,13 @@ export const teamsRouter = router({
     .input(z.object({ teams: z.array(teamCreate).min(1) }))
     .mutation(async ({ ctx, input }) => {
       const rows = await teams.createMany(ctx.db, input.teams);
-      revalidate("/teams", "/portal/teams");
+      await revalidate("/teams", "/portal/teams");
       return rows;
     }),
 
   update: adminProcedure.input(teamUpdate).mutation(async ({ ctx, input }) => {
     const row = await teams.update(ctx.db, input.id, input.patch);
-    revalidate("/teams", `/teams/${row.name}`, "/portal/teams");
+    await revalidate("/teams", `/teams/${row.name}`, "/portal/teams");
     return row;
   }),
 
@@ -59,13 +59,13 @@ export const teamsRouter = router({
     const allowed = await teams.canManageProfile(ctx.db, input.id, ctx.user);
     if (!allowed) throw new TRPCError({ code: "FORBIDDEN" });
     const row = await teams.updateProfile(ctx.db, input.id, input.patch);
-    revalidate("/teams", `/teams/${row.name}`, "/portal/teams");
+    await revalidate("/teams", `/teams/${row.name}`, "/portal/teams");
     return row;
   }),
 
   delete: adminProcedure.input(byId).mutation(async ({ ctx, input }) => {
     const row = await teams.remove(ctx.db, input.id);
-    revalidate("/teams", "/portal/teams");
+    await revalidate("/teams", "/portal/teams");
     return row;
   }),
 
@@ -96,7 +96,7 @@ export const teamsRouter = router({
       },
       { d1: env.DB },
     );
-    revalidate("/teams", "/portal/teams", "/players", "/portal/players");
+    await revalidate("/teams", "/portal/teams", "/players", "/portal/players");
     return result;
   }),
 });

@@ -56,13 +56,11 @@ function setLine(match: {
 export default async function HomePage() {
   const [trpc, { selected, query }] = await Promise.all([api(), getSiteRegionQuery()]);
 
-  const [seasonRows, articleRows, playerCount] = await Promise.all([
-    trpc.seasons.list(query),
+  const [season, articleRows, playerCount] = await Promise.all([
+    trpc.seasons.latest(),
     trpc.articles.list(),
     trpc.players.count(query),
   ]);
-
-  const season = seasonRows[0] ?? null;
 
   const [matchRows, { numbers, avatars }, teamRows] = await Promise.all([
     season ? trpc.games.listSchedule({ seasonId: season.id, ...query }) : Promise.resolve([]),

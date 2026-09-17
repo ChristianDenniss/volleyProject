@@ -1,6 +1,5 @@
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import type { Db } from "@db";
-import { correlatedCount } from "@db/sqlx";
 import { insertMany, chunkValues } from "@db/insert";
 import {
   games,
@@ -15,6 +14,7 @@ import {
 import { ConflictError, found } from "./errors";
 import type { GameRegion } from "./games";
 import type { PartialInput } from "./input";
+import { cachedSiteRead } from "./site-read-cache";
 import { isAdmin } from "./users";
 
 export type { TeamLeadershipRole };
@@ -37,42 +37,72 @@ const ROLE_ORDER = Object.fromEntries(
   TEAM_LEADERSHIP_ROLES.map((role, index) => [role, index]),
 ) as Record<TeamLeadershipRole, number>;
 
-const withSeason = {
-  id: teams.id,
-  name: teams.name,
-  logoUrl: teams.logoUrl,
-  description: teams.description,
-  placement: teams.placement,
-  seasonId: teams.seasonId,
-  seasonNumber: seasons.seasonNumber,
-  playerCount: correlatedCount("teams_players", "team_id", "teams", "id"),
-  gameCount: correlatedCount("teams_games", "team_id", "teams", "id"),
-};
-
 function teamInRegion(region: GameRegion) {
-  return sql`${teams.id} in (
-    select distinct ${teamsGames.teamId} from ${teamsGames}
+  return sql`exists (
+    select 1 from ${teamsGames}
     inner join ${games} on ${teamsGames.gameId} = ${games.id}
-    where ${games.region} = ${region}
+    where ${teamsGames.teamId} = ${teams.id} and ${games.region} = ${region}
   )`;
 }
 
+function teamListSelect(db: Db) {
+  const playerCounts = db
+    .select({
+      teamId: teamsPlayers.teamId,
+      playerCount: sql<number>`count(*)`.as("player_count"),
+    })
+    .from(teamsPlayers)
+    .groupBy(teamsPlayers.teamId)
+    .as("team_player_counts");
+  const gameCounts = db
+    .select({
+      teamId: teamsGames.teamId,
+      gameCount: sql<number>`count(*)`.as("game_count"),
+    })
+    .from(teamsGames)
+    .groupBy(teamsGames.teamId)
+    .as("team_game_counts");
+
+  return {
+    columns: {
+      id: teams.id,
+      name: teams.name,
+      logoUrl: teams.logoUrl,
+      description: teams.description,
+      placement: teams.placement,
+      seasonId: teams.seasonId,
+      seasonNumber: seasons.seasonNumber,
+      playerCount: sql<number>`coalesce(${playerCounts.playerCount}, 0)`,
+      gameCount: sql<number>`coalesce(${gameCounts.gameCount}, 0)`,
+    },
+    playerCounts,
+    gameCounts,
+  };
+}
+
 export async function list(db: Db, region?: GameRegion) {
-  const query = db
-    .select(withSeason)
-    .from(teams)
-    .leftJoin(seasons, eq(teams.seasonId, seasons.id));
+  return cachedSiteRead("teams-list", [region], async () => {
+    const { columns, playerCounts, gameCounts } = teamListSelect(db);
+    const query = db
+      .select(columns)
+      .from(teams)
+      .leftJoin(seasons, eq(teams.seasonId, seasons.id))
+      .leftJoin(playerCounts, eq(playerCounts.teamId, teams.id))
+      .leftJoin(gameCounts, eq(gameCounts.teamId, teams.id));
 
-  if (!region) return query.orderBy(asc(teams.name));
-
-  return query.where(teamInRegion(region)).orderBy(asc(teams.name));
+    if (!region) return query.orderBy(asc(teams.name));
+    return query.where(teamInRegion(region)).orderBy(asc(teams.name));
+  });
 }
 
 export async function listBySeason(db: Db, seasonId: number) {
+  const { columns, playerCounts, gameCounts } = teamListSelect(db);
   return db
-    .select(withSeason)
+    .select(columns)
     .from(teams)
     .leftJoin(seasons, eq(teams.seasonId, seasons.id))
+    .leftJoin(playerCounts, eq(playerCounts.teamId, teams.id))
+    .leftJoin(gameCounts, eq(gameCounts.teamId, teams.id))
     .where(eq(teams.seasonId, seasonId))
     .orderBy(asc(teams.name));
 }

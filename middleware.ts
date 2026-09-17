@@ -1,6 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-
-const SESSION_COOKIE = "better-auth.session_token";
+import { hasSessionCookie, isClientRouterNavigation } from "@/lib/session-cookie";
 
 function redirectToLogin(request: NextRequest, returnTo: string) {
   const login = new URL("/login", request.url);
@@ -10,13 +9,16 @@ function redirectToLogin(request: NextRequest, returnTo: string) {
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const hasSession = request.cookies.has(SESSION_COOKIE);
+  const hasSession = hasSessionCookie(request.headers.get("cookie"));
+  if (hasSession || isClientRouterNavigation(request.headers)) {
+    return NextResponse.next();
+  }
 
-  if (pathname.startsWith("/portal") && !hasSession) {
+  if (pathname.startsWith("/portal")) {
     return redirectToLogin(request, pathname);
   }
 
-  if ((pathname.startsWith("/profile") || pathname.startsWith("/articles/create")) && !hasSession) {
+  if (pathname.startsWith("/profile") || pathname.startsWith("/articles/create")) {
     return redirectToLogin(request, pathname);
   }
 

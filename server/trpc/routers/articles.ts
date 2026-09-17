@@ -35,7 +35,7 @@ export const articlesRouter = router({
 
   create: protectedProcedure.input(articleCreate).mutation(async ({ ctx, input }) => {
     const row = await articles.create(ctx.db, ctx.user.id, input);
-    revalidate("/", "/articles", "/portal/articles");
+    await revalidate("/", "/articles", "/portal/articles");
     return row;
   }),
 
@@ -47,26 +47,26 @@ export const articlesRouter = router({
         : input.patch;
 
     const row = await articles.update(ctx.db, input.id, patch);
-    revalidate("/", "/articles", `/articles/${input.id}`, "/portal/articles");
+    await revalidate("/", "/articles", `/articles/${input.id}`, "/portal/articles");
     return row;
   }),
 
   delete: protectedProcedure.input(byId).mutation(async ({ ctx, input }) => {
     await assertMayEdit(ctx, input.id);
     const row = await articles.remove(ctx.db, input.id);
-    revalidate("/", "/articles", "/portal/articles");
+    await revalidate("/", "/articles", "/portal/articles");
     return row;
   }),
 
   like: protectedProcedure.input(byId).mutation(async ({ ctx, input }) => {
     const result = await articles.like(ctx.db, input.id, ctx.user.id);
-    revalidate(`/articles/${input.id}`);
+    await revalidate(`/articles/${input.id}`);
     return result;
   }),
 
   unlike: protectedProcedure.input(byId).mutation(async ({ ctx, input }) => {
     const result = await articles.unlike(ctx.db, input.id, ctx.user.id);
-    revalidate(`/articles/${input.id}`);
+    await revalidate(`/articles/${input.id}`);
     return result;
   }),
 });

@@ -1,6 +1,5 @@
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import type { Db } from "@db";
-import { correlatedCount } from "@db/sqlx";
 import { insertMany, chunkValues } from "@db/insert";
 import {
   account,
@@ -19,50 +18,71 @@ import {
 import { ConflictError, found, inserted, NotFoundError } from "./errors";
 import type { GameRegion } from "./games";
 import type { PartialInput } from "./input";
+import { cachedSiteRead, invalidateSiteReads } from "./site-read-cache";
 
 export interface PlayerInput {
   name: string;
   position?: string | undefined;
 }
 
-const teamCount = correlatedCount("teams_players", "player_id", "players", "id");
-const gamesPlayed = correlatedCount("stats", "player_id", "players", "id");
-
 function playerInRegion(region: GameRegion) {
-  return sql`${players.id} in (
-    select ${stats.playerId} from ${stats}
-    inner join ${games} on ${stats.gameId} = ${games.id}
-    where ${games.region} = ${region}
-    union
-    select ${teamsPlayers.playerId} from ${teamsPlayers}
-    inner join ${teamsGames} on ${teamsPlayers.teamId} = ${teamsGames.teamId}
-    inner join ${games} on ${teamsGames.gameId} = ${games.id}
-    where ${games.region} = ${region}
+  return sql`(
+    exists (
+      select 1 from ${stats}
+      inner join ${games} on ${stats.gameId} = ${games.id}
+      where ${stats.playerId} = ${players.id} and ${games.region} = ${region}
+    )
+    or exists (
+      select 1 from ${teamsPlayers}
+      inner join ${teamsGames} on ${teamsPlayers.teamId} = ${teamsGames.teamId}
+      inner join ${games} on ${teamsGames.gameId} = ${games.id}
+      where ${teamsPlayers.playerId} = ${players.id} and ${games.region} = ${region}
+    )
   )`;
 }
 
 function teamInRegion(region: GameRegion) {
-  return sql`${teams.id} in (
-    select distinct ${teamsGames.teamId} from ${teamsGames}
+  return sql`exists (
+    select 1 from ${teamsGames}
     inner join ${games} on ${teamsGames.gameId} = ${games.id}
-    where ${games.region} = ${region}
+    where ${teamsGames.teamId} = ${teams.id} and ${games.region} = ${region}
   )`;
 }
 
 export async function list(db: Db, region?: GameRegion) {
-  const query = db
-    .select({
-      id: players.id,
-      name: players.name,
-      position: players.position,
-      teamCount,
-      gamesPlayed,
-    })
-    .from(players);
+  return cachedSiteRead("players-list", [region], async () => {
+    const teamCounts = db
+      .select({
+        playerId: teamsPlayers.playerId,
+        teamCount: sql<number>`count(*)`.as("team_count"),
+      })
+      .from(teamsPlayers)
+      .groupBy(teamsPlayers.playerId)
+      .as("player_team_counts");
+    const gameCounts = db
+      .select({
+        playerId: stats.playerId,
+        gamesPlayed: sql<number>`count(*)`.as("games_played"),
+      })
+      .from(stats)
+      .groupBy(stats.playerId)
+      .as("player_game_counts");
 
-  if (!region) return query.orderBy(asc(players.name));
+    const query = db
+      .select({
+        id: players.id,
+        name: players.name,
+        position: players.position,
+        teamCount: sql<number>`coalesce(${teamCounts.teamCount}, 0)`,
+        gamesPlayed: sql<number>`coalesce(${gameCounts.gamesPlayed}, 0)`,
+      })
+      .from(players)
+      .leftJoin(teamCounts, eq(teamCounts.playerId, players.id))
+      .leftJoin(gameCounts, eq(gameCounts.playerId, players.id));
 
-  return query.where(playerInRegion(region)).orderBy(asc(players.name));
+    if (!region) return query.orderBy(asc(players.name));
+    return query.where(playerInRegion(region)).orderBy(asc(players.name));
+  });
 }
 
 export async function listByTeam(db: Db, teamId: number) {
@@ -75,6 +95,10 @@ export async function listByTeam(db: Db, teamId: number) {
 }
 
 export async function getById(db: Db, id: number, region?: GameRegion) {
+  return cachedSiteRead("players-by-id", [id, region], () => loadById(db, id, region));
+}
+
+async function loadById(db: Db, id: number, region?: GameRegion) {
   const player = await db.query.players.findFirst({ where: eq(players.id, id) });
   if (!player) return null;
 
@@ -176,24 +200,40 @@ export async function listTeamNamesByPlayerName(db: Db, playerName: string) {
 }
 
 export async function listAllMemberships(db: Db, region?: GameRegion) {
-  const query = db
-    .select({
-      playerId: teamsPlayers.playerId,
-      teamName: teams.name,
-      seasonNumber: seasons.seasonNumber,
-    })
-    .from(teamsPlayers)
-    .innerJoin(teams, eq(teamsPlayers.teamId, teams.id))
-    .leftJoin(seasons, eq(teams.seasonId, seasons.id));
+  return cachedSiteRead("players-memberships", [region], async () => {
+    const query = db
+      .select({
+        playerId: teamsPlayers.playerId,
+        teamName: teams.name,
+        seasonNumber: seasons.seasonNumber,
+      })
+      .from(teamsPlayers)
+      .innerJoin(teams, eq(teamsPlayers.teamId, teams.id))
+      .leftJoin(seasons, eq(teams.seasonId, seasons.id));
 
-  if (!region) return query.orderBy(asc(teams.name));
-
-  return query.where(teamInRegion(region)).orderBy(asc(teams.name));
+    if (!region) return query.orderBy(asc(teams.name));
+    return query.where(teamInRegion(region)).orderBy(asc(teams.name));
+  });
 }
 
 export async function count(db: Db, region?: GameRegion) {
-  if (!region) return db.$count(players);
-  return db.$count(players, playerInRegion(region));
+  return cachedSiteRead("players-count", [region], async () => {
+    if (!region) return db.$count(players);
+
+    const row = await db.get<{ c: number }>(sql`
+      select count(*) as c from (
+        select ${stats.playerId} as player_id from ${stats}
+        inner join ${games} on ${stats.gameId} = ${games.id}
+        where ${games.region} = ${region}
+        union
+        select ${teamsPlayers.playerId} as player_id from ${teamsPlayers}
+        inner join ${teamsGames} on ${teamsPlayers.teamId} = ${teamsGames.teamId}
+        inner join ${games} on ${teamsGames.gameId} = ${games.id}
+        where ${games.region} = ${region}
+      )
+    `);
+    return Number(row?.c ?? 0);
+  });
 }
 
 export async function create(db: Db, input: PlayerInput & { teamId?: number | null | undefined }) {
@@ -208,6 +248,7 @@ export async function create(db: Db, input: PlayerInput & { teamId?: number | nu
 
   const row = inserted(created, "Player");
   if (input.teamId) await attachToTeam(db, row.id, input.teamId);
+  await invalidateSiteReads();
   return row;
 }
 
@@ -234,6 +275,7 @@ export async function createMany(db: Db, input: PlayerInput[]) {
   }
 
   await insertMany(db, players, rows);
+  await invalidateSiteReads();
   const matched = [];
   for (const chunk of chunkValues(rows.map((row) => row.name))) {
     const part = await db.select().from(players).where(inArray(players.name, chunk));
@@ -255,6 +297,7 @@ export async function createManyByTeamName(
     teamsPlayers,
     created.map((player) => ({ teamId: team.id, playerId: player.id })),
   );
+  await invalidateSiteReads();
   return created;
 }
 
@@ -267,12 +310,15 @@ async function attachToTeam(db: Db, playerId: number, teamId: number) {
 export async function update(db: Db, id: number, input: PartialInput<PlayerInput>) {
   const values = input.name ? { ...input, name: input.name.toLowerCase() } : input;
   const [row] = await db.update(players).set(values).where(eq(players.id, id)).returning();
-  return found(row, `Player ${id}`);
+  const updated = found(row, `Player ${id}`);
+  await invalidateSiteReads();
+  return updated;
 }
 
 export async function remove(db: Db, id: number) {
   const [row] = await db.delete(players).where(eq(players.id, id)).returning({ id: players.id });
   found(row, `Player ${id}`);
+  await invalidateSiteReads();
   return { id };
 }
 
@@ -390,6 +436,7 @@ export async function merge(db: Db, targetId: number, mergedId: number) {
 
   await db.update(records).set({ playerId: targetId }).where(eq(records.playerId, mergedId));
   await db.delete(players).where(eq(players.id, mergedId));
+  await invalidateSiteReads();
 
   return { id: targetId };
 }
