@@ -461,7 +461,7 @@ function VectorGraph3D({ vectorRows }: { vectorRows: PlayerSeasonVectorRow[] }) 
   const [popupPosition, setPopupPosition] = useState<{ left: number; top: number } | null>(null);
   const [legendHidden, setLegendHidden] = useState<boolean>(false);
   const legendRef = useRef<HTMLDivElement>(null);
-  const itemRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const itemRefs = useRef<Map<string, HTMLElement>>(new Map());
   
   // Update popup position when clicked archetype changes
   useEffect(() => {
