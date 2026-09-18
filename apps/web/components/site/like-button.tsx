@@ -5,21 +5,21 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { trpc } from "@/lib/trpc";
+import { useLiveSession } from "./use-live-session";
 
 export function LikeButton({
   articleId,
-  initialLiked,
   initialLikes,
-  signedIn,
 }: {
   articleId: number;
-  initialLiked: boolean;
   initialLikes: number;
-  signedIn: boolean;
 }) {
   const router = useRouter();
-  const [liked, setLiked] = useState(initialLiked);
+  const live = useLiveSession();
+  const signedIn = live.isSignedIn === true;
+  const status = trpc.articles.likeStatus.useQuery({ id: articleId }, { enabled: signedIn });
   const [likes, setLikes] = useState(initialLikes);
+  const liked = status.data?.liked ?? false;
 
   const like = trpc.articles.like.useMutation();
   const unlike = trpc.articles.unlike.useMutation();
@@ -30,7 +30,7 @@ export function LikeButton({
       <button
         type="button"
         aria-label={liked ? "Unlike this article" : "Like this article"}
-        disabled={pending}
+        disabled={pending || live.isPending}
         onClick={async () => {
           if (!signedIn) {
             router.push(`/login?next=${encodeURIComponent(`/articles/${articleId}`)}`);
@@ -40,8 +40,8 @@ export function LikeButton({
             const result = liked
               ? await unlike.mutateAsync({ id: articleId })
               : await like.mutateAsync({ id: articleId });
-            setLiked(result.liked);
             setLikes(result.likes);
+            await status.refetch();
           } catch {
             toast.error("That like did not go through.");
           }

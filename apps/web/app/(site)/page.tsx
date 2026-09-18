@@ -1,8 +1,7 @@
-import Link from "next/link";
+import { SiteLink as Link } from "@components/site/site-link";
 import { getDb } from "@db";
-import { api } from "@server/trpc/server";
+import { publicSite } from "@server/trpc/server";
 import { homeNumbers } from "@server/services";
-import { getSiteRegionQuery } from "@server/site-region";
 import type { SearchParams } from "@/lib/search-params";
 import { HomeBracket } from "@components/site/home-bracket";
 import { HomeMatches } from "@components/site/home-matches";
@@ -10,7 +9,7 @@ import { HomeSpotlightRail, type SpotlightCard } from "@components/site/home-spo
 import { HomeVideo } from "@components/site/home-video";
 import { rankStandings } from "@/lib/standings";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export const metadata = {
   title: "Volleyball 4-2 - Official Roblox Volleyball League",
@@ -60,7 +59,7 @@ export default async function HomePage({
   searchParams: Promise<SearchParams>;
 }) {
   const params = await searchParams;
-  const [trpc, { selected, query }] = await Promise.all([api(), getSiteRegionQuery(params)]);
+  const { selected, query, trpc } = publicSite(params);
 
   const [seasonRows, articleRows, playerCount] = await Promise.all([
     trpc.seasons.list(query),

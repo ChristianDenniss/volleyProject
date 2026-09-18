@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
+import { SiteLink as Link } from "@components/site/site-link";
 import { RefreshCw } from "lucide-react";
 import type { ErrorPresentation } from "@/lib/error-presentation";
 import { Button } from "@components/ui/button";

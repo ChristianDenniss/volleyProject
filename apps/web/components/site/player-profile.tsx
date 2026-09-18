@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
+import { SiteLink as Link } from "./site-link";
 import type { LucideIcon } from "lucide-react";
 import {
   Award,

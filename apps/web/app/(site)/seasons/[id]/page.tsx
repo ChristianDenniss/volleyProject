@@ -1,32 +1,32 @@
 import { cache } from "react";
 import type { Metadata } from "next";
-import Link from "next/link";
+import { SiteLink as Link } from "@components/site/site-link";
 import { notFound } from "next/navigation";
-import { api } from "@server/trpc/server";
+import { publicSite, siteApi } from "@server/trpc/server";
 import type { SearchParams } from "@/lib/search-params";
-import { getSiteRegion } from "@server/site-region";
 import { cn } from "@/lib/utils";
-import { regionQuery, type SiteRegion } from "@/lib/region";
 import { seasonBanner } from "@/lib/season-banners";
+import type { MatchRegion } from "@/lib/region";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 interface Params {
   params: Promise<{ id: string }>;
   searchParams: Promise<SearchParams>;
 }
 
-// Cached so generateMetadata and the page share one fetch per request.
-const load = cache(async (id: string, region: SiteRegion) => {
+const load = cache(async (id: string, region?: MatchRegion) => {
   const parsed = Number.parseInt(id, 10);
   if (!Number.isInteger(parsed) || parsed <= 0) return null;
-  return (await api()).seasons.byId({ id: parsed, ...regionQuery(region) });
+  return siteApi(region).seasons.byId({
+    id: parsed,
+    ...(region === undefined ? {} : { region }),
+  });
 });
 
 export async function generateMetadata({ params, searchParams }: Params): Promise<Metadata> {
-  const { id } = await params;
-  const region = await getSiteRegion(await searchParams);
-  const season = await load(id, region);
+  const [{ id }, search] = await Promise.all([params, searchParams]);
+  const season = await load(id, publicSite(search).region);
   if (!season) return { title: "Season not found" };
 
   const title = `Season ${season.seasonNumber}`;
@@ -67,14 +67,14 @@ function isPodium(placement: string) {
 }
 
 export default async function SeasonPage({ params, searchParams }: Params) {
-  const { id } = await params;
-  const region = await getSiteRegion(await searchParams);
+  const [{ id }, search] = await Promise.all([params, searchParams]);
+  const { region, query, trpc } = publicSite(search);
   const season = await load(id, region);
   if (!season) notFound();
 
-  const roster = await (await api()).teams.playersBySeason({
+  const roster = await trpc.teams.playersBySeason({
     seasonId: season.id,
-    ...regionQuery(region),
+    ...query,
   });
   const byTeam = new Map<number, { id: number; name: string; position: string }[]>();
   for (const row of roster) {

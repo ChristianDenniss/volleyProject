@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { SiteLink as Link } from "./site-link";
 import { Menu, UserRoundX } from "lucide-react";
 import { Button } from "@components/ui/button";
 import {

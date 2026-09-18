@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { SiteLink as Link } from "./site-link";
 import { usePathname } from "next/navigation";
 import { ChevronDown, ExternalLink, Menu } from "lucide-react";
 import { Button } from "@components/ui/button";
@@ -61,21 +61,17 @@ function accountLinks(isSignedIn: boolean) {
     : [{ href: "/login", label: "Login" }];
 }
 
-export function SiteTopbarNav({
-  isAdmin: initialAdmin,
-  isSignedIn: initialSignedIn,
-}: {
-  isAdmin: boolean;
-  isSignedIn: boolean;
-}) {
+const PREFETCH = new Set(["/", "/stats"]);
+
+export function SiteTopbarNav() {
   const live = useLiveSession();
-  const isSignedIn = live.isSignedIn ?? initialSignedIn;
-  const isAdmin = live.isAdmin ?? initialAdmin;
+  const isSignedIn = live.isSignedIn === true;
+  const isAdmin = live.isAdmin === true;
   const pathname = usePathname();
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
 
-  const account = accountLinks(isSignedIn);
+  const account = live.isPending ? [] : accountLinks(isSignedIn);
   const moreHrefs = [...LEAGUE, ...SITE, ...account, ...(isAdmin ? [{ href: "/portal" }] : [])];
   const moreActive = moreHrefs.some((link) => isActive(link.href));
 
@@ -98,11 +94,17 @@ export function SiteTopbarNav({
         ))}
         <DropdownMenuSeparator />
         <DropdownMenuLabel>Account</DropdownMenuLabel>
-        {account.map((link) => (
-          <DropdownMenuItem key={link.href} asChild>
-            <Link href={link.href}>{link.label}</Link>
-          </DropdownMenuItem>
-        ))}
+        {live.isPending ? (
+          <div className="px-2 py-1.5" aria-hidden>
+            <span className="block h-4 w-20 animate-pulse bg-rvl-line" />
+          </div>
+        ) : (
+          account.map((link) => (
+            <DropdownMenuItem key={link.href} asChild>
+              <Link href={link.href}>{link.label}</Link>
+            </DropdownMenuItem>
+          ))
+        )}
         {isAdmin ? (
           <DropdownMenuItem asChild>
             <Link href="/portal">Admin</Link>
@@ -151,6 +153,7 @@ export function SiteTopbarNav({
           <li key={link.href}>
             <Link
               href={link.href}
+              prefetch={PREFETCH.has(link.href)}
               className={cn(
                 linkClass,
                 isActive(link.href) &&

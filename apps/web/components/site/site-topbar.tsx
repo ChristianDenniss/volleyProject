@@ -1,20 +1,15 @@
-import Link from "next/link";
-import { getSessionUser } from "@server/session";
-import { getSiteRegion } from "@server/site-region";
-import { isAdmin } from "@server/services/users";
+import { SiteLink as Link } from "./site-link";
 import { SiteAccount } from "./site-account";
 import { SiteHeaderChrome } from "./site-header-chrome";
 import { SiteRegionSelect } from "./site-region-select";
 import { SiteTopbarNav } from "./site-topbar-nav";
 
-export async function SiteTopbar() {
-  const [user, region] = await Promise.all([getSessionUser(), getSiteRegion()]);
-
+export function SiteTopbar() {
   return (
     <SiteHeaderChrome
       utility={
         <div className="flex h-[var(--site-utility-h)] w-full items-center gap-4 border-b border-rvl-line bg-rvl-panel px-5 sm:px-8 xl:px-14">
-          <SiteRegionSelect value={region} />
+          <SiteRegionSelect />
 
           <div className="ml-auto flex shrink-0 items-center gap-3 sm:gap-4">
             <a
@@ -26,9 +21,7 @@ export async function SiteTopbar() {
               Play Now
             </a>
 
-            <SiteAccount
-              initialUser={user ? { name: user.name, image: user.image } : null}
-            />
+            <SiteAccount />
           </div>
         </div>
       }
@@ -36,6 +29,7 @@ export async function SiteTopbar() {
         <div className="flex h-14 w-full items-center gap-3 border-b border-rvl-line bg-rvl-ground px-5 sm:gap-5 sm:px-8 xl:px-14">
           <Link
             href="/"
+            prefetch
             className="flex shrink-0 items-center gap-2.5 font-mono text-[1.02rem] font-bold uppercase tracking-[-0.02em] text-rvl-ink no-underline"
           >
             <img src="/rvlLogo.png" alt="" className="size-8 shrink-0 object-contain" />
@@ -44,10 +38,7 @@ export async function SiteTopbar() {
             </span>
           </Link>
 
-          <SiteTopbarNav
-            isAdmin={user !== null && isAdmin(user.role)}
-            isSignedIn={user !== null}
-          />
+          <SiteTopbarNav />
         </div>
       }
     />

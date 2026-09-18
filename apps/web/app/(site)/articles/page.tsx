@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { getSessionUser } from "@server/session";
-import { api } from "@server/trpc/server";
+import { siteApi } from "@server/trpc/server";
 import { pageParam, stringParam, type SearchParams } from "@/lib/search-params";
 import { ArticlesList } from "@components/site/articles-list";
+import { ArticlesWriteLink } from "@components/site/articles-write-link";
 import { EmptyState } from "@components/site/empty-state";
 import { PageHeader } from "@components/site/page-header";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Articles",
@@ -20,20 +19,17 @@ export default async function ArticlesPage({
   searchParams: Promise<SearchParams>;
 }) {
   const params = await searchParams;
-  const trpc = await api();
+  const trpc = siteApi();
   const sort = stringParam(params, "sort");
 
-  const [page, user] = await Promise.all([
-    trpc.articles.listPage({
-      page: pageParam(params),
-      search: stringParam(params, "q"),
-      sort:
-        sort === "oldest" || sort === "likes" || sort === "title" || sort === "newest"
-          ? sort
-          : undefined,
-    }),
-    getSessionUser(),
-  ]);
+  const page = await trpc.articles.listPage({
+    page: pageParam(params),
+    search: stringParam(params, "q"),
+    sort:
+      sort === "oldest" || sort === "likes" || sort === "title" || sort === "newest"
+        ? sort
+        : undefined,
+  });
 
   return (
     <div className="font-display">
@@ -41,23 +37,7 @@ export default async function ArticlesPage({
         eyebrow="League desk"
         title="Articles"
         description="Match reports, roster news and explainers written by the community."
-        actions={
-          user ? (
-            <Link
-              href="/articles/create"
-              className="bg-rvl-accent-bg px-5 py-3 font-mono text-[0.7rem] font-bold uppercase tracking-[0.14em] text-rvl-on-accent no-underline transition-opacity hover:opacity-85"
-            >
-              Write an article
-            </Link>
-          ) : (
-            <Link
-              href="/login"
-              className="border border-rvl-line px-5 py-3 font-mono text-[0.7rem] uppercase tracking-[0.14em] text-rvl-ink-2 no-underline transition-colors hover:border-rvl-accent-soft hover:text-rvl-accent"
-            >
-              Sign in to write
-            </Link>
-          )
-        }
+        actions={<ArticlesWriteLink />}
       />
 
       {page.total === 0 ? (

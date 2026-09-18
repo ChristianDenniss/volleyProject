@@ -18,6 +18,7 @@ import {
 } from "@db/schema";
 import { BadRequestError, found, inserted, NotFoundError } from "./errors";
 import type { PartialInput } from "./input";
+import { cachedSiteRead } from "./site-read-cache";
 import {
   emptyPage,
   likePattern,
@@ -182,23 +183,27 @@ function toScheduleRow(
 }
 
 export async function list(db: Db, region?: GameRegion) {
-  const rows = await db
-    .select(listColumns)
-    .from(games)
-    .leftJoin(seasons, eq(games.seasonId, seasons.id))
-    .where(matchRegion(region))
-    .orderBy(desc(games.date));
-  return attachTeams(db, rows);
+  return cachedSiteRead("games-list", [region], async () => {
+    const rows = await db
+      .select(listColumns)
+      .from(games)
+      .leftJoin(seasons, eq(games.seasonId, seasons.id))
+      .where(matchRegion(region))
+      .orderBy(desc(games.date));
+    return attachTeams(db, rows);
+  });
 }
 
 export async function listPlayed(db: Db, region?: GameRegion) {
-  const rows = await db
-    .select(listColumns)
-    .from(games)
-    .leftJoin(seasons, eq(games.seasonId, seasons.id))
-    .where(and(eq(games.status, "completed"), matchRegion(region)))
-    .orderBy(desc(games.date));
-  return attachTeams(db, rows);
+  return cachedSiteRead("games-list-played", [region], async () => {
+    const rows = await db
+      .select(listColumns)
+      .from(games)
+      .leftJoin(seasons, eq(games.seasonId, seasons.id))
+      .where(and(eq(games.status, "completed"), matchRegion(region)))
+      .orderBy(desc(games.date));
+    return attachTeams(db, rows);
+  });
 }
 
 export interface GameListFilters extends PageQuery {
@@ -246,22 +251,36 @@ export async function listPage(db: Db, filters: GameListFilters = {}) {
 }
 
 async function gamesPage(db: Db, filters: GameListFilters, onlyCompleted: boolean) {
-  const bounds = pageBounds(filters);
-  const where = gameFilters(filters, onlyCompleted);
+  return cachedSiteRead(
+    "games-page",
+    [
+      onlyCompleted,
+      filters.region,
+      filters.season,
+      filters.stage,
+      filters.page,
+      filters.perPage,
+      filters.search,
+    ],
+    async () => {
+      const bounds = pageBounds(filters);
+      const where = gameFilters(filters, onlyCompleted);
 
-  const total = await db.$count(games, where);
-  if (total === 0) return emptyPage<Awaited<ReturnType<typeof listPlayed>>[number]>(bounds);
+      const total = await db.$count(games, where);
+      if (total === 0) return emptyPage<Awaited<ReturnType<typeof listPlayed>>[number]>(bounds);
 
-  const rows = await db
-    .select(listColumns)
-    .from(games)
-    .leftJoin(seasons, eq(games.seasonId, seasons.id))
-    .where(where)
-    .orderBy(desc(games.date), asc(games.id))
-    .limit(bounds.perPage)
-    .offset(bounds.offset);
+      const rows = await db
+        .select(listColumns)
+        .from(games)
+        .leftJoin(seasons, eq(games.seasonId, seasons.id))
+        .where(where)
+        .orderBy(desc(games.date), asc(games.id))
+        .limit(bounds.perPage)
+        .offset(bounds.offset);
 
-  return makePage(await attachTeams(db, rows), total, bounds);
+      return makePage(await attachTeams(db, rows), total, bounds);
+    },
+  );
 }
 
 export async function listStages(db: Db, region?: GameRegion) {
@@ -275,14 +294,16 @@ export async function listStages(db: Db, region?: GameRegion) {
 }
 
 export async function listSchedule(db: Db, seasonId?: number, region?: GameRegion) {
-  const rows = await db
-    .select(listColumns)
-    .from(games)
-    .leftJoin(seasons, eq(games.seasonId, seasons.id))
-    .where(scheduleFilter(seasonId, region))
-    .orderBy(asc(games.date));
-  const withTeams = await attachTeams(db, rows);
-  return withTeams.map(toScheduleRow);
+  return cachedSiteRead("games-list-schedule", [seasonId, region], async () => {
+    const rows = await db
+      .select(listColumns)
+      .from(games)
+      .leftJoin(seasons, eq(games.seasonId, seasons.id))
+      .where(scheduleFilter(seasonId, region))
+      .orderBy(asc(games.date));
+    const withTeams = await attachTeams(db, rows);
+    return withTeams.map(toScheduleRow);
+  });
 }
 
 const scheduleRoundExpr = sql<string>`coalesce(${games.round}, ${games.status})`;
@@ -347,6 +368,14 @@ export async function listSchedulePage(
   db: Db,
   filters: ScheduleFilters = {},
 ): Promise<Page<ScheduleDay>> {
+  return cachedSiteRead(
+    "games-schedule-page",
+    [filters.seasonId, filters.region, filters.status, filters.round, filters.page, filters.perPage, filters.search],
+    () => loadSchedulePage(db, filters),
+  );
+}
+
+async function loadSchedulePage(db: Db, filters: ScheduleFilters): Promise<Page<ScheduleDay>> {
   const bounds = pageBounds(filters);
   const where = scheduleWhere(filters);
 
@@ -390,13 +419,15 @@ export async function listSchedulePage(
 }
 
 export async function listBySeason(db: Db, seasonId: number, region?: GameRegion) {
-  const rows = await db
-    .select(listColumns)
-    .from(games)
-    .leftJoin(seasons, eq(games.seasonId, seasons.id))
-    .where(and(eq(games.seasonId, seasonId), matchRegion(region)))
-    .orderBy(asc(games.date));
-  return attachTeams(db, rows);
+  return cachedSiteRead("games-list-by-season", [seasonId, region], async () => {
+    const rows = await db
+      .select(listColumns)
+      .from(games)
+      .leftJoin(seasons, eq(games.seasonId, seasons.id))
+      .where(and(eq(games.seasonId, seasonId), matchRegion(region)))
+      .orderBy(asc(games.date));
+    return attachTeams(db, rows);
+  });
 }
 
 export async function listByRound(db: Db, seasonId: number, round: string, region?: GameRegion) {
@@ -581,6 +612,10 @@ function defaultName(teamsLinked: TeamRef[], fallback = "TBD vs TBD") {
 }
 
 export async function getById(db: Db, id: number, region?: GameRegion) {
+  return cachedSiteRead("games-by-id", [id, region], () => loadById(db, id, region));
+}
+
+async function loadById(db: Db, id: number, region?: GameRegion) {
   const game = await db.query.games.findFirst({
     where: and(eq(games.id, id), matchRegion(region)),
   });

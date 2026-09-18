@@ -4,6 +4,7 @@ import { insertMany, chunkIds, chunkValues } from "@db/insert";
 import { type AWARD_TYPES, awards, awardsPlayers, players, seasons } from "@db/schema";
 import { found, inserted, NotFoundError } from "./errors";
 import type { PartialInput } from "./input";
+import { cachedSiteRead } from "./site-read-cache";
 import {
   emptyPage,
   likePattern,
@@ -68,12 +69,14 @@ async function attachPlayers<T extends { id: number }>(db: Db, rows: T[]) {
 }
 
 export async function list(db: Db) {
-  const rows = await db
-    .select(columns)
-    .from(awards)
-    .leftJoin(seasons, eq(awards.seasonId, seasons.id))
-    .orderBy(asc(awards.type));
-  return attachPlayers(db, rows);
+  return cachedSiteRead("awards-list", [], async () => {
+    const rows = await db
+      .select(columns)
+      .from(awards)
+      .leftJoin(seasons, eq(awards.seasonId, seasons.id))
+      .orderBy(asc(awards.type));
+    return attachPlayers(db, rows);
+  });
 }
 
 export interface AwardListFilters extends PageQuery {
@@ -111,6 +114,14 @@ export async function listSeasonNumbers(db: Db) {
 }
 
 export async function listPage(db: Db, filters: AwardListFilters = {}) {
+  return cachedSiteRead(
+    "awards-list-page",
+    [filters.season, filters.type, filters.page, filters.perPage, filters.search],
+    () => loadListPage(db, filters),
+  );
+}
+
+async function loadListPage(db: Db, filters: AwardListFilters) {
   const bounds = pageBounds(filters);
   const where = awardFilters(filters);
 
@@ -173,15 +184,17 @@ export async function listByPlayer(db: Db, playerId: number) {
 }
 
 export async function getById(db: Db, id: number) {
-  const row = await db
-    .select(columns)
-    .from(awards)
-    .leftJoin(seasons, eq(awards.seasonId, seasons.id))
-    .where(eq(awards.id, id))
-    .get();
-  if (!row) return null;
-  const [hydrated] = await attachPlayers(db, [row]);
-  return hydrated;
+  return cachedSiteRead("awards-by-id", [id], async () => {
+    const row = await db
+      .select(columns)
+      .from(awards)
+      .leftJoin(seasons, eq(awards.seasonId, seasons.id))
+      .where(eq(awards.id, id))
+      .get();
+    if (!row) return null;
+    const [hydrated] = await attachPlayers(db, [row]);
+    return hydrated;
+  });
 }
 
 export async function count(db: Db) {

@@ -1,12 +1,11 @@
 import { cache } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getSessionUser } from "@server/session";
-import { api } from "@server/trpc/server";
+import { siteApi } from "@server/trpc/server";
 import { LikeButton } from "@components/site/like-button";
 import { ArticleDisplay } from "@components/site/article-display";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 interface Params {
   params: Promise<{ id: string }>;
@@ -16,7 +15,7 @@ interface Params {
 const load = cache(async (id: string) => {
   const parsed = Number.parseInt(id, 10);
   if (!Number.isInteger(parsed) || parsed <= 0) return null;
-  return (await api()).articles.byId({ id: parsed });
+  return siteApi().articles.byId({ id: parsed });
 });
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
@@ -42,20 +41,10 @@ export default async function ArticlePage({ params }: Params) {
   const article = await load(id);
   if (!article) notFound();
 
-  const user = await getSessionUser();
-  const status = await (await api()).articles.likeStatus({ id: article.id });
-
   return (
     <ArticleDisplay
       article={article}
-      footer={
-        <LikeButton
-          articleId={article.id}
-          initialLiked={status.liked}
-          initialLikes={article.likes}
-          signedIn={user !== null}
-        />
-      }
+      footer={<LikeButton articleId={article.id} initialLikes={article.likes} />}
     />
   );
 }

@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { api } from "@server/trpc/server";
+import { siteApi } from "@server/trpc/server";
 import { EmptyState } from "@components/site/empty-state";
 import { PageHeader } from "@components/site/page-header";
 import { TriviaBoard } from "@components/site/trivia-board";
 import type { Difficulty, TriviaKind } from "@server/services/trivia";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Trivia",
@@ -34,7 +34,7 @@ export default async function TriviaPage({
   const pick = Number.parseInt(query.pick ?? "0", 10);
   const offset = Number.isFinite(pick) ? Math.abs(pick) : 0;
 
-  const trpc = await api();
+  const trpc = siteApi();
   const seed = (offset % 1_000_000) / 1_000_000;
 
   let subject:

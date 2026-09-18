@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
-import { api } from "@server/trpc/server";
-import { getSiteRegionQuery } from "@server/site-region";
+import { publicSite } from "@server/trpc/server";
 import { numberParam, pageParam, stringParam, type SearchParams } from "@/lib/search-params";
 import { EmptyState } from "@components/site/empty-state";
 import { PageHeader } from "@components/site/page-header";
 import { TeamsList } from "@components/site/teams-list";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Teams",
@@ -21,7 +20,7 @@ export default async function TeamsPage({
   searchParams: Promise<SearchParams>;
 }) {
   const params = await searchParams;
-  const [trpc, { query }] = await Promise.all([api(), getSiteRegionQuery(params)]);
+  const { query, trpc } = publicSite(params);
 
   const [page, placements, seasons] = await Promise.all([
     trpc.teams.listPage({

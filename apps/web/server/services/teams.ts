@@ -23,6 +23,7 @@ import {
   searchTerm,
   type PageQuery,
 } from "./paging";
+import { cachedSiteRead } from "./site-read-cache";
 import { isAdmin } from "./users";
 
 export type { TeamLeadershipRole };
@@ -156,9 +157,11 @@ export async function getById(db: Db, id: number, region?: GameRegion) {
 }
 
 export async function getByName(db: Db, name: string, region?: GameRegion) {
-  const team = await db.query.teams.findFirst({ where: eq(teams.name, name) });
-  if (!team) return null;
-  return hydrate(db, team, region);
+  return cachedSiteRead("teams-by-name", [name, region], async () => {
+    const team = await db.query.teams.findFirst({ where: eq(teams.name, name) });
+    if (!team) return null;
+    return hydrate(db, team, region);
+  });
 }
 
 async function hydrate(db: Db, team: typeof teams.$inferSelect, region?: GameRegion) {
@@ -196,24 +199,26 @@ export async function listPlayers(db: Db, teamId: number) {
 }
 
 export async function listPlayersBySeason(db: Db, seasonId: number, region?: GameRegion) {
-  const filters = [eq(teams.seasonId, seasonId)];
-  if (region) {
-    filters.push(teamInRegion(region));
-  }
+  return cachedSiteRead("teams-players-by-season", [seasonId, region], async () => {
+    const filters = [eq(teams.seasonId, seasonId)];
+    if (region) {
+      filters.push(teamInRegion(region));
+    }
 
-  const rows = await db
-    .select({
-      teamId: teamsPlayers.teamId,
-      id: players.id,
-      name: players.name,
-      position: players.position,
-      role: teamsPlayers.role,
-    })
-    .from(teamsPlayers)
-    .innerJoin(players, eq(teamsPlayers.playerId, players.id))
-    .innerJoin(teams, eq(teamsPlayers.teamId, teams.id))
-    .where(and(...filters));
-  return sortRoster(rows);
+    const rows = await db
+      .select({
+        teamId: teamsPlayers.teamId,
+        id: players.id,
+        name: players.name,
+        position: players.position,
+        role: teamsPlayers.role,
+      })
+      .from(teamsPlayers)
+      .innerJoin(players, eq(teamsPlayers.playerId, players.id))
+      .innerJoin(teams, eq(teamsPlayers.teamId, teams.id))
+      .where(and(...filters));
+    return sortRoster(rows);
+  });
 }
 
 export async function listPlayersByTeamName(db: Db, name: string) {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import { SiteLink as Link } from "./site-link";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { UrlClearFilters, UrlFilterSelect, UrlPagination, UrlSearchBar } from "./url-controls";

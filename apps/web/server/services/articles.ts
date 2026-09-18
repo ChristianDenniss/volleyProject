@@ -3,6 +3,7 @@ import type { Db } from "@db";
 import { articleLikes, articles, user } from "@db/schema";
 import { found, NotFoundError } from "./errors";
 import type { PartialInput } from "./input";
+import { cachedSiteRead } from "./site-read-cache";
 import {
   emptyPage,
   likePattern,
@@ -35,13 +36,21 @@ const columns = {
 };
 
 export async function list(db: Db, options: { approvedOnly?: boolean } = {}) {
-  const query = db
-    .select(columns)
-    .from(articles)
-    .innerJoin(user, eq(articles.authorId, user.id))
-    .orderBy(desc(articles.createdAt));
-
-  return options.approvedOnly ? query.where(eq(articles.approved, true)) : query;
+  if (!options.approvedOnly) {
+    return db
+      .select(columns)
+      .from(articles)
+      .innerJoin(user, eq(articles.authorId, user.id))
+      .orderBy(desc(articles.createdAt));
+  }
+  return cachedSiteRead("articles-list-approved", [], () =>
+    db
+      .select(columns)
+      .from(articles)
+      .innerJoin(user, eq(articles.authorId, user.id))
+      .where(eq(articles.approved, true))
+      .orderBy(desc(articles.createdAt)),
+  );
 }
 
 export type ArticleSort = "newest" | "oldest" | "likes" | "title";
@@ -104,6 +113,18 @@ function articleOrder(sort: ArticleSort | undefined) {
 }
 
 export async function listPage(db: Db, filters: ArticleListFilters = {}) {
+  const load = () => loadListPage(db, filters);
+  if (filters.approvedOnly && filters.status === undefined) {
+    return cachedSiteRead(
+      "articles-list-page",
+      [filters.page, filters.perPage, filters.search, filters.sort],
+      load,
+    );
+  }
+  return load();
+}
+
+async function loadListPage(db: Db, filters: ArticleListFilters) {
   const bounds = pageBounds(filters);
   const where = articleFilters(filters);
 
@@ -138,13 +159,15 @@ export async function listByAuthor(db: Db, authorId: string) {
 }
 
 export async function getById(db: Db, id: number) {
-  const row = await db
-    .select(columns)
-    .from(articles)
-    .innerJoin(user, eq(articles.authorId, user.id))
-    .where(eq(articles.id, id))
-    .get();
-  return row ?? null;
+  return cachedSiteRead("articles-by-id", [id], async () => {
+    const row = await db
+      .select(columns)
+      .from(articles)
+      .innerJoin(user, eq(articles.authorId, user.id))
+      .where(eq(articles.id, id))
+      .get();
+    return row ?? null;
+  });
 }
 
 export async function likeStatus(db: Db, articleId: number, userId: string | null) {

@@ -1,11 +1,11 @@
 import { cache } from "react";
 import type { Metadata } from "next";
-import Link from "next/link";
+import { SiteLink as Link } from "@components/site/site-link";
 import { notFound } from "next/navigation";
 import { awardBanner } from "@/lib/award-banners";
-import { api } from "@server/trpc/server";
+import { siteApi } from "@server/trpc/server";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 interface Params {
   params: Promise<{ id: string }>;
@@ -15,7 +15,7 @@ interface Params {
 const load = cache(async (id: string) => {
   const parsed = Number.parseInt(id, 10);
   if (!Number.isInteger(parsed) || parsed <= 0) return null;
-  return (await api()).awards.byId({ id: parsed });
+  return siteApi().awards.byId({ id: parsed });
 });
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {

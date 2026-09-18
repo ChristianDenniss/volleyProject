@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { api } from "@server/trpc/server";
-import { getSiteRegionQuery } from "@server/site-region";
+import { publicSite } from "@server/trpc/server";
 import { numberParam, pageParam, stringParam, type SearchParams } from "@/lib/search-params";
 import {
   decodeFilterConditions,
@@ -15,7 +14,7 @@ import {
 import { StatsLeaderboard } from "@components/site/stats-leaderboard";
 import { isStageRound } from "@/lib/stats/stage-rounds";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Stat leaders",
@@ -28,7 +27,7 @@ export default async function StatsPage({
   searchParams: Promise<SearchParams>;
 }) {
   const params = await searchParams;
-  const [trpc, { query }] = await Promise.all([api(), getSiteRegionQuery(params)]);
+  const { query, trpc } = publicSite(params);
 
   const seasonId = numberParam(params, "season");
   const round = stringParam(params, "round");

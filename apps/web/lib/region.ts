@@ -25,6 +25,14 @@ export function regionQuery(region: SiteRegion): { region: MatchRegion } | Recor
   return region === "all" ? {} : { region };
 }
 
+export function siteRegionFromSearchParam(
+  value: string | string[] | undefined | null,
+): { selected: SiteRegion; region: MatchRegion | undefined; query: ReturnType<typeof regionQuery> } {
+  const raw = Array.isArray(value) ? value[0] : value;
+  const selected = parseSiteRegion(raw);
+  return { selected, region: matchRegionOf(selected), query: regionQuery(selected) };
+}
+
 export function matchRegionOf(region: SiteRegion): MatchRegion | undefined {
   return region === "all" ? undefined : region;
 }

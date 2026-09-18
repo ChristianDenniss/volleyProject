@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
-import { api } from "@server/trpc/server";
-import { getSiteRegionQuery } from "@server/site-region";
+import { publicSite } from "@server/trpc/server";
 import { RECORD_TYPES } from "@db/schema";
 import { pageParam, stringParam, type SearchParams } from "@/lib/search-params";
 import { EmptyState } from "@components/site/empty-state";
 import { PageHeader } from "@components/site/page-header";
 import { RecordsBoard } from "@components/site/records-board";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 const GROUPS_PER_PAGE = 9;
 
@@ -26,7 +25,7 @@ export default async function RecordsPage({
   searchParams: Promise<SearchParams>;
 }) {
   const params = await searchParams;
-  const [trpc, { query }] = await Promise.all([api(), getSiteRegionQuery(params)]);
+  const { query, trpc } = publicSite(params);
 
   const types = await trpc.records.types(query);
   const selected = recordType(stringParam(params, "type")) ?? recordType(types[0]);

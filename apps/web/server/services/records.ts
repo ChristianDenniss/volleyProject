@@ -4,6 +4,7 @@ import { games, players, RECORD_METRICS, RECORD_TYPES, records, seasons } from "
 import { found, NotFoundError } from "./errors";
 import type { GameRegion } from "./games";
 import type { PartialInput } from "./input";
+import { cachedSiteRead } from "./site-read-cache";
 import {
   emptyPage,
   likePattern,
@@ -54,12 +55,14 @@ const base = (db: Db) =>
     .leftJoin(games, eq(records.gameId, games.id));
 
 export async function list(db: Db, region?: GameRegion) {
-  if (!region) {
-    return base(db).orderBy(asc(records.metric), asc(records.minAttempts), asc(records.rank));
-  }
-  return base(db)
-    .where(eq(games.region, region))
-    .orderBy(asc(records.metric), asc(records.minAttempts), asc(records.rank));
+  return cachedSiteRead("records-list", [region], async () => {
+    if (!region) {
+      return base(db).orderBy(asc(records.metric), asc(records.minAttempts), asc(records.rank));
+    }
+    return base(db)
+      .where(eq(games.region, region))
+      .orderBy(asc(records.metric), asc(records.minAttempts), asc(records.rank));
+  });
 }
 
 export interface RecordListFilters extends PageQuery {
@@ -134,6 +137,17 @@ export async function listTypes(db: Db, region?: GameRegion) {
 export async function listGroupsPage(
   db: Db,
   filters: RecordGroupFilters = {},
+): Promise<Page<RecordGroup>> {
+  return cachedSiteRead(
+    "records-groups-page",
+    [filters.region, filters.type, filters.page, filters.perPage],
+    () => loadGroupsPage(db, filters),
+  );
+}
+
+async function loadGroupsPage(
+  db: Db,
+  filters: RecordGroupFilters,
 ): Promise<Page<RecordGroup>> {
   const bounds = pageBounds(filters);
   const where = recordScope(filters);
