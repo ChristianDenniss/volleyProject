@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { SiteLink as Link } from "@components/site/site-link";
 import { PageHeader } from "@components/site/page-header";
 
 export const metadata: Metadata = {

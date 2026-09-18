@@ -1,18 +1,21 @@
 import { cache } from "react";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import Link from "next/link";
+import { SiteLink as Link } from "@components/site/site-link";
 import { notFound } from "next/navigation";
 import { ChevronDown } from "lucide-react";
-import { api } from "@server/trpc/server";
+import { publicSite, siteApi } from "@server/trpc/server";
 import { PageMetric } from "@components/site/page-header";
 import { TeamLeadershipBadge } from "@components/site/team-leadership-badge";
-import { TeamProfileEditor } from "@components/site/team-profile-editor";
+import { TeamProfileEditorGate } from "@components/site/team-profile-editor-gate";
+import type { SearchParams } from "@/lib/search-params";
+import type { MatchRegion } from "@/lib/region";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 interface Params {
   params: Promise<{ teamName: string }>;
+  searchParams: Promise<SearchParams>;
 }
 
 function decode(value: string): string {
@@ -24,13 +27,13 @@ function decode(value: string): string {
 }
 
 // Cached so generateMetadata and the page share one fetch per request.
-const load = cache(async (teamName: string) =>
-  (await api()).teams.byName({ name: decode(teamName) }),
+const load = cache(async (teamName: string, region?: MatchRegion) =>
+  siteApi(region).teams.byName({ name: decode(teamName) }),
 );
 
-export async function generateMetadata({ params }: Params): Promise<Metadata> {
-  const { teamName } = await params;
-  const team = await load(teamName);
+export async function generateMetadata({ params, searchParams }: Params): Promise<Metadata> {
+  const [{ teamName }, search] = await Promise.all([params, searchParams]);
+  const team = await load(teamName, publicSite(search).region);
   if (!team) return { title: "Team not found" };
 
   const description =
@@ -70,9 +73,9 @@ function CollapsibleSection({
   );
 }
 
-export default async function TeamPage({ params }: Params) {
-  const { teamName } = await params;
-  const team = await load(teamName);
+export default async function TeamPage({ params, searchParams }: Params) {
+  const [{ teamName }, search] = await Promise.all([params, searchParams]);
+  const team = await load(teamName, publicSite(search).region);
   if (!team) notFound();
 
   return (
@@ -110,14 +113,12 @@ export default async function TeamPage({ params }: Params) {
             </p>
           ) : null}
 
-          {team.canEdit ? (
-            <TeamProfileEditor
-              teamId={team.id}
-              teamName={team.name}
-              logoUrl={team.logoUrl}
-              description={team.description}
-            />
-          ) : null}
+          <TeamProfileEditorGate
+            teamId={team.id}
+            teamName={team.name}
+            logoUrl={team.logoUrl}
+            description={team.description}
+          />
         </div>
 
         <div className="flex flex-wrap gap-8 font-mono lg:ml-auto">

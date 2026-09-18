@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { api } from "@server/trpc/server";
-import { getSiteRegionQuery } from "@server/site-region";
+import { SiteLink as Link } from "@components/site/site-link";
+import { publicSite } from "@server/trpc/server";
 import type { SearchParams } from "@/lib/search-params";
 import { EmptyState } from "@components/site/empty-state";
 import { PageHeader } from "@components/site/page-header";
 import { seasonBanner } from "@/lib/season-banners";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Seasons",
@@ -29,7 +28,7 @@ export default async function SeasonsPage({
   searchParams: Promise<SearchParams>;
 }) {
   const params = await searchParams;
-  const [trpc, { query }] = await Promise.all([api(), getSiteRegionQuery(params)]);
+  const { query, trpc } = publicSite(params);
   const rows = await trpc.seasons.list(query);
 
   return (

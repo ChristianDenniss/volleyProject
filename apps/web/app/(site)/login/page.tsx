@@ -4,6 +4,8 @@ import { RobloxSignIn } from "@components/site/roblox-sign-in";
 import { getSessionUser } from "@server/session";
 import { safeInternalPath } from "@/lib/safe-redirect";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Sign in",
   description: "Sign in to the Volleyball 4-2 league with your Roblox account.",

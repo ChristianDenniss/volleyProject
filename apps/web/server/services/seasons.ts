@@ -115,8 +115,9 @@ export async function list(db: Db, region?: GameRegion) {
 }
 
 export async function getById(db: Db, id: number, region?: GameRegion) {
-  const season = await db.query.seasons.findFirst({ where: eq(seasons.id, id) });
-  if (!season) return null;
+  return cachedSiteRead("seasons-by-id", [id, region], async () => {
+    const season = await db.query.seasons.findFirst({ where: eq(seasons.id, id) });
+    if (!season) return null;
 
   const regionClause = region ? eq(games.region, region) : undefined;
 
@@ -159,6 +160,7 @@ export async function getById(db: Db, id: number, region?: GameRegion) {
   ]);
 
   return { ...season, teams: seasonTeams, games: seasonGames, awards: seasonAwards, schedule: seasonSchedule };
+  });
 }
 
 export async function getBySeasonNumber(db: Db, seasonNumber: number) {

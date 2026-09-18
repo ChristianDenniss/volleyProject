@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
-import { api } from "@server/trpc/server";
-import { getSiteRegionQuery } from "@server/site-region";
+import { publicSite } from "@server/trpc/server";
 import { numberParam, pageParam, stringParam, type SearchParams } from "@/lib/search-params";
 import { EmptyState } from "@components/site/empty-state";
 import { GamesList } from "@components/site/games-list";
 import { PageHeader } from "@components/site/page-header";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Games",
@@ -19,7 +18,7 @@ export default async function GamesPage({
   searchParams: Promise<SearchParams>;
 }) {
   const params = await searchParams;
-  const [trpc, { query }] = await Promise.all([api(), getSiteRegionQuery(params)]);
+  const { query, trpc } = publicSite(params);
 
   const [page, stages, seasons] = await Promise.all([
     trpc.games.listPlayedPage({

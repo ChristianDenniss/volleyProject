@@ -1,20 +1,23 @@
 import { cache } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { api } from "@server/trpc/server";
+import { publicSite, siteApi } from "@server/trpc/server";
 import { roblox } from "@server/services";
 import { PlayerProfile } from "@components/site/player-profile";
+import type { SearchParams } from "@/lib/search-params";
+import type { MatchRegion } from "@/lib/region";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 interface Params {
   params: Promise<{ id: string }>;
+  searchParams: Promise<SearchParams>;
 }
 
-const load = cache(async (id: string) => {
+const load = cache(async (id: string, region?: MatchRegion) => {
   const parsed = Number.parseInt(id, 10);
   if (!Number.isInteger(parsed) || parsed <= 0) return null;
-  return (await api()).players.byId({ id: parsed });
+  return siteApi(region).players.byId({ id: parsed });
 });
 
 const loadAvatar = cache(async (name: string, robloxUserId: string | null) => {
@@ -25,9 +28,9 @@ const loadAvatar = cache(async (name: string, robloxUserId: string | null) => {
   }
 });
 
-export async function generateMetadata({ params }: Params): Promise<Metadata> {
-  const { id } = await params;
-  const player = await load(id);
+export async function generateMetadata({ params, searchParams }: Params): Promise<Metadata> {
+  const [{ id }, search] = await Promise.all([params, searchParams]);
+  const player = await load(id, publicSite(search).region);
   if (!player) return { title: "Player not found" };
 
   const description = `${player.name} is a ${player.position} in the Roblox Volleyball League. View stats, teams, awards, and career highlights.`;
@@ -44,12 +47,12 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   };
 }
 
-export default async function PlayerPage({ params }: Params) {
-  const { id } = await params;
-  const player = await load(id);
+export default async function PlayerPage({ params, searchParams }: Params) {
+  const [{ id }, search] = await Promise.all([params, searchParams]);
+  const { region, trpc } = publicSite(search);
+  const player = await load(id, region);
   if (!player) notFound();
 
-  const trpc = await api();
   const [avatarUrl, seasons] = await Promise.all([
     loadAvatar(player.name, player.robloxUserId),
     trpc.seasons.list(),

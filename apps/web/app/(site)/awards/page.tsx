@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { api } from "@server/trpc/server";
+import { siteApi } from "@server/trpc/server";
 import { AWARD_TYPES } from "@db/schema";
 import { numberParam, pageParam, stringParam, type SearchParams } from "@/lib/search-params";
 import { AwardsList } from "@components/site/awards-list";
 import { EmptyState } from "@components/site/empty-state";
 import { PageHeader } from "@components/site/page-header";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Awards",
@@ -23,7 +23,7 @@ export default async function AwardsPage({
   searchParams: Promise<SearchParams>;
 }) {
   const params = await searchParams;
-  const trpc = await api();
+  const trpc = siteApi();
 
   const season = numberParam(params, "season");
   const type = awardType(stringParam(params, "type"));

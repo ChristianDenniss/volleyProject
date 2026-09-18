@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { api } from "@server/trpc/server";
+import { siteApi } from "@server/trpc/server";
 import { PageHeader } from "@components/site/page-header";
 import {
   APPLICATION_CATEGORY_LABELS,
   APPLICATION_CATEGORY_ORDER,
 } from "@/lib/applications";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Applications",
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 };
 
 export default async function ApplicationsPage() {
-  const rows = await (await api()).applications.list();
+  const rows = await siteApi().applications.list();
   const groups = APPLICATION_CATEGORY_ORDER.map((category) => ({
     category,
     label: APPLICATION_CATEGORY_LABELS[category],

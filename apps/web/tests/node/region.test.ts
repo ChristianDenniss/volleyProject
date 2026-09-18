@@ -6,6 +6,7 @@ import {
   regionQuery,
   SITE_REGION_COOKIE,
   siteRegionCookie,
+  siteRegionFromSearchParam,
 } from "@/lib/region";
 
 describe("parseSiteRegion", () => {
@@ -37,6 +38,22 @@ describe("siteRegionCookie", () => {
     expect(siteRegionCookie("eu")).toContain(`${SITE_REGION_COOKIE}=eu`);
     expect(siteRegionCookie("eu")).toContain("path=/");
     expect(siteRegionCookie("eu")).toContain("samesite=lax");
+  });
+});
+
+describe("siteRegionFromSearchParam", () => {
+  it("reads the URL region without touching cookies", () => {
+    expect(siteRegionFromSearchParam("eu")).toEqual({
+      selected: "eu",
+      region: "eu",
+      query: { region: "eu" },
+    });
+    expect(siteRegionFromSearchParam("all")).toEqual({
+      selected: "all",
+      region: undefined,
+      query: {},
+    });
+    expect(siteRegionFromSearchParam(undefined).selected).toBe(DEFAULT_SITE_REGION);
   });
 });
 

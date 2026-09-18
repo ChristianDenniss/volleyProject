@@ -1,30 +1,32 @@
 import { cache, Fragment } from "react";
 import type { Metadata } from "next";
-import Link from "next/link";
+import { SiteLink as Link } from "@components/site/site-link";
 import { notFound } from "next/navigation";
 import { Calendar, Layers, Video, Volleyball } from "lucide-react";
-import { api } from "@server/trpc/server";
+import { publicSite, siteApi } from "@server/trpc/server";
 import { cn } from "@/lib/utils";
+import type { SearchParams } from "@/lib/search-params";
+import type { MatchRegion } from "@/lib/region";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 interface Params {
   params: Promise<{ id: string }>;
+  searchParams: Promise<SearchParams>;
 }
 
 type GameDetail = NonNullable<Awaited<ReturnType<typeof load>>>;
 type StatLine = GameDetail["stats"][number];
 
-// Cached so generateMetadata and the page share one fetch per request.
-const load = cache(async (id: string) => {
+const load = cache(async (id: string, region?: MatchRegion) => {
   const parsed = Number.parseInt(id, 10);
   if (!Number.isInteger(parsed) || parsed <= 0) return null;
-  return (await api()).games.byId({ id: parsed });
+  return siteApi(region).games.byId({ id: parsed });
 });
 
-export async function generateMetadata({ params }: Params): Promise<Metadata> {
-  const { id } = await params;
-  const game = await load(id);
+export async function generateMetadata({ params, searchParams }: Params): Promise<Metadata> {
+  const [{ id }, search] = await Promise.all([params, searchParams]);
+  const game = await load(id, publicSite(search).region);
   if (!game) return { title: "Game not found" };
 
   const title = game.name ?? `Game ${game.id}`;
@@ -128,9 +130,9 @@ function ScoreColumn({
   );
 }
 
-export default async function GamePage({ params }: Params) {
-  const { id } = await params;
-  const game = await load(id);
+export default async function GamePage({ params, searchParams }: Params) {
+  const [{ id }, search] = await Promise.all([params, searchParams]);
+  const game = await load(id, publicSite(search).region);
   if (!game) notFound();
 
   const team1 = game.teams[0] ?? null;

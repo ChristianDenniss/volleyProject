@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { ArticleForm } from "@components/site/article-form";
 import { PageHeader } from "@components/site/page-header";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Write an article",
   description: "Submit a match report or league news article for review.",

@@ -24,9 +24,6 @@
 		"not_found_handling": "none",
 		"binding": "ASSETS"
 	},
-	"cache": {
-		"enabled": true
-	},
 	"observability": {
 		"enabled": true
 	},

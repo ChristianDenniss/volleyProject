@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
+import { SiteLink as Link } from "./site-link";
 import { cn } from "@/lib/utils";
 import { useListQuery } from "@/hooks/use-list-query";
 import {

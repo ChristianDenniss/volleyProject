@@ -7,6 +7,7 @@ import {
   parseSiteRegion,
   siteRegionCookie,
   SITE_REGIONS,
+  SITE_REGION_COOKIE,
   SITE_REGION_PARAM,
   withRegionParam,
   type SiteRegion,
@@ -22,18 +23,43 @@ const LABELS: Record<SiteRegion, string> = {
   sa: "SA",
 };
 
-export function SiteRegionSelect({ value }: { value: SiteRegion }) {
+function regionFromDocumentCookie(): SiteRegion {
+  const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${SITE_REGION_COOKIE}=([^;]+)`));
+  return parseSiteRegion(match?.[1] ? decodeURIComponent(match[1]) : undefined);
+}
+
+export function SiteRegionSelect({ value }: { value?: SiteRegion }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [pending, startTransition] = useTransition();
-  const [selected, setSelected] = useState<SiteRegion>(value);
+  const [ready, setReady] = useState(value !== undefined);
+  const [selected, setSelected] = useState<SiteRegion>(value ?? "na");
 
   const fromUrl = searchParams.get(SITE_REGION_PARAM);
 
   useEffect(() => {
-    setSelected(fromUrl === null ? value : parseSiteRegion(fromUrl));
+    if (value !== undefined) {
+      setSelected(fromUrl === null ? value : parseSiteRegion(fromUrl));
+      setReady(true);
+      return;
+    }
+    setSelected(fromUrl === null ? regionFromDocumentCookie() : parseSiteRegion(fromUrl));
+    setReady(true);
   }, [fromUrl, value]);
+
+  if (!ready) {
+    return (
+      <div className="flex gap-1.5" role="group" aria-label="Region" aria-busy="true">
+        {SITE_REGIONS.map((region) => (
+          <span
+            key={region}
+            className="h-[1.9rem] w-10 animate-pulse border border-rvl-line bg-rvl-panel"
+          />
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="flex gap-1.5" role="group" aria-label="Region" aria-busy={pending}>

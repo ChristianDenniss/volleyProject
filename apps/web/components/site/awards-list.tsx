@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { SiteLink as Link } from "./site-link";
 import { awardBanner } from "@/lib/award-banners";
 import { UrlClearFilters, UrlFilterSelect, UrlPagination } from "./url-controls";
 

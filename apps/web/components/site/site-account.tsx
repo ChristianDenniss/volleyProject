@@ -1,18 +1,22 @@
 "use client";
 
-import Link from "next/link";
+import { SiteLink as Link } from "./site-link";
 import { GuestMenu } from "./guest-menu";
 import { useLiveSession } from "./use-live-session";
 
-export interface SiteAccountUser {
-  name: string;
-  image: string | null;
-}
-
-export function SiteAccount({ initialUser }: { initialUser: SiteAccountUser | null }) {
+export function SiteAccount() {
   const live = useLiveSession();
-  const user = live.isPending ? initialUser : live.user;
 
+  if (live.isPending) {
+    return (
+      <div className="flex items-center gap-3" aria-busy="true" aria-label="Loading account">
+        <span className="hidden h-3 w-24 animate-pulse bg-rvl-line lg:inline-block" />
+        <span className="size-8 animate-pulse rounded-xs border border-rvl-line bg-rvl-panel" />
+      </div>
+    );
+  }
+
+  const user = live.user;
   if (!user) return <GuestMenu />;
 
   return (

@@ -1,3 +1,5 @@
+import { cacheRead, cacheWrite } from "../cache";
+
 interface UsernameLookup {
   data?: { id: number }[] | undefined;
 }
@@ -99,18 +101,46 @@ export async function avatarByUsername(
   return avatarByUserId(String(userId), fetchImpl, type);
 }
 
+const AVATAR_TTL = 60 * 60 * 24;
+
+async function cachedAvatar(
+  key: string,
+  load: () => Promise<string | null>,
+  fetchImpl: typeof fetch,
+): Promise<string | null> {
+  if (fetchImpl !== fetch) return load();
+  const cached = await cacheRead<{ url: string | null }>(key);
+  if (cached) return cached.url;
+  const url = await load();
+  await cacheWrite(key, { url }, AVATAR_TTL);
+  return url;
+}
+
 export async function avatarHeadshotByUsername(
   username: string,
   fetchImpl: typeof fetch = fetch,
 ): Promise<string | null> {
-  return avatarByUsername(username, fetchImpl, "headshot");
+  const trimmed = username.trim();
+  if (!trimmed) return null;
+  return cachedAvatar(
+    `https://volley.internal/cache/roblox-headshot/${trimmed.toLowerCase()}`,
+    () => avatarByUsername(trimmed, fetchImpl, "headshot"),
+    fetchImpl,
+  );
 }
 
 export async function avatarFor(
   input: { name: string; robloxUserId?: string | null | undefined },
   fetchImpl: typeof fetch = fetch,
 ): Promise<string | null> {
-  const byId = await avatarByUserId(input.robloxUserId ?? "", fetchImpl);
-  if (byId) return byId;
-  return avatarByUsername(input.name, fetchImpl);
+  const id = numericRobloxUserId(input.robloxUserId) ?? "";
+  return cachedAvatar(
+    `https://volley.internal/cache/roblox-avatar/${id}/${input.name.trim().toLowerCase()}`,
+    async () => {
+      const byId = await avatarByUserId(input.robloxUserId ?? "", fetchImpl);
+      if (byId) return byId;
+      return avatarByUsername(input.name, fetchImpl);
+    },
+    fetchImpl,
+  );
 }

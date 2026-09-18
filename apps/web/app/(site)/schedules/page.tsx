@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
-import { api } from "@server/trpc/server";
-import { getSiteRegionQuery } from "@server/site-region";
+import { publicSite } from "@server/trpc/server";
 import { MATCH_STATUSES } from "@db/schema";
 import { numberParam, pageParam, stringParam, type SearchParams } from "@/lib/search-params";
 import { PageHeader } from "@components/site/page-header";
 import { SchedulesBoard } from "@components/site/schedules-board";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 const DAYS_PER_PAGE = 12;
 
@@ -25,7 +24,7 @@ export default async function SchedulesPage({
   searchParams: Promise<SearchParams>;
 }) {
   const params = await searchParams;
-  const [trpc, { query }] = await Promise.all([api(), getSiteRegionQuery(params)]);
+  const { query, trpc } = publicSite(params);
 
   const seasonId = numberParam(params, "season");
   const status = matchStatus(stringParam(params, "status"));
