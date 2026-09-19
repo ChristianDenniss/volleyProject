@@ -1,9 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { parseSheetNamesFromHtml, parseSheetTabsFromHtml, masterTabFilter } from "@server/services/sheet-import/fetch";
+import {
+  parseSheetNamesFromHtml,
+  parseSheetTabsFromHtml,
+  masterTabFilter,
+  loadWorkbook,
+  type FetchImpl,
+} from "@server/services/sheet-import/fetch";
 import { matchStatsToGames, mergeTeamRosters, multiTeamPlayerWarnings, rosterSizeWarnings } from "@server/services/sheet-import/match";
 import { displayName, normalizeName, parseTeamHeader, teamMatchKey, teamNamesEqual } from "@server/services/sheet-import/names";
 import { parseMasterScheduleTab, parseMasterTeamsTab } from "@server/services/sheet-import/parse-master";
-import { waffleHtmlToCsv } from "@server/services/sheet-import/parse-waffle";
+import { parseWaffleRows, waffleHtmlToCsv, waffleHtmlToLines } from "@server/services/sheet-import/parse-waffle";
 import { parseRegionalPlayersLeaderboard, parseRegionalTeamTab, parseRegionalWorkbook } from "@server/services/sheet-import/parse-regional";
 import { toClientPreview } from "@server/services/sheet-import/preview";
 import {
@@ -82,6 +88,7 @@ describe("master tab names", () => {
     expect(masterTabFilter("NA - QUALIFIERS")).toBe(true);
     expect(masterTabFilter("EU - PLAYOFFS")).toBe(true);
     expect(masterTabFilter("NA - PFS")).toBe(true);
+    expect(masterTabFilter("AS - QUALI")).toBe(true);
     expect(masterTabFilter("MAIN")).toBe(false);
   });
 });
@@ -207,10 +214,10 @@ describe("parseMasterTeamsTab", () => {
   it("reads later C2S3 team rows from htmlview waffle cells that CSV omits", () => {
     const html = `
       <table class="waffle">
-        <tr><td></td><td colspan="3">Inception</td><td></td><td colspan="3">OBSESSION</td></tr>
-        <tr><td></td><td colspan="3">140</td><td></td><td colspan="3">154</td></tr>
-        <tr><td></td><td>C</td><td>cap_inception</td><td></td><td></td><td>C</td><td>cap_obsession</td></tr>
-        <tr><td></td><td>3</td><td>inception_3</td><td></td><td></td><td>3</td><td>obsession_3</td></tr>
+        <tr><td></td><td colspan="3">Chapter X</td><td></td><td colspan="3">HARMONY</td></tr>
+        <tr><td></td><td colspan="3">36</td><td></td><td colspan="3">1024</td></tr>
+        <tr><td></td><td>C</td><td>chapter_cap</td><td></td><td></td><td>C</td><td>harmony_cap</td></tr>
+        <tr><td></td><td>3</td><td>chapter_3</td><td></td><td></td><td>3</td><td>harmony_3</td></tr>
         <tr><td></td><td colspan="3">THE ODYSSEY</td><td></td><td colspan="3">REQUIEM</td></tr>
         <tr><td></td><td colspan="3">327</td><td></td><td colspan="3">224</td></tr>
         <tr><td></td><td>C</td><td>odyssey_cap</td><td></td><td></td><td>C</td><td>requiem_cap</td></tr>
@@ -219,8 +226,8 @@ describe("parseMasterTeamsTab", () => {
     `;
     const { teams } = parseMasterTeamsTab(waffleHtmlToCsv(html), "na");
     expect(teams.map((team) => team.name).sort()).toEqual([
-      "Inception",
-      "OBSESSION",
+      "Chapter X",
+      "HARMONY",
       "REQUIEM",
       "THE ODYSSEY",
     ]);
@@ -258,6 +265,65 @@ describe("parseMasterTeamsTab", () => {
     expect(interstellar?.playerNames).toEqual(["inter_cap", "inter_3", "inter_12"]);
     expect(interstellar?.playerNames).not.toContain("conj_cap");
     expect(teams.find((team) => team.name === "Kraken")?.playerNames).toEqual(["kraken_cap", "kraken_3"]);
+  });
+});
+
+describe("parseWaffleRows", () => {
+  it("expands colspan and decodes entities into CSV columns the stacked parser expects", () => {
+    const html = `
+      <table>
+        <tr><th>A</th><th>B</th></tr>
+        <tr><td></td><td colspan="3">Inception &amp; Co</td><td></td><td colspan="3">OBSESSION</td></tr>
+        <tr><td></td><td colspan="3">140</td><td></td><td colspan="3">154</td></tr>
+      </table>
+    `;
+    const rows = parseWaffleRows(html);
+    expect(rows[0]?.[1]).toBe("Inception & Co");
+    expect(rows[0]?.[2]).toBe("");
+    expect(rows[0]?.[3]).toBe("");
+    expect(rows[0]?.[5]).toBe("OBSESSION");
+    expect(waffleHtmlToLines("")).toEqual([]);
+    expect(waffleHtmlToCsv("<table><tr><td>a,b</td></tr></table>")).toBe('"a,b"');
+  });
+});
+
+describe("loadWorkbook", () => {
+  it("loads master TEAMS tabs from htmlview waffle and falls back to CSV when waffle is empty", async () => {
+    const htmlview = `items.push({name: "NA TEAMS", pageUrl: "https:\\/\\/docs.google.com\\/spreadsheets\\/d\\/abc\\/htmlview", gid: "11"});
+items.push({name: "EU TEAMS", pageUrl: "https:\\/\\/docs.google.com\\/spreadsheets\\/d\\/abc\\/htmlview", gid: "22"});`;
+    const waffle = `
+      <table>
+        <tr><td></td><td colspan="3">Inception</td></tr>
+        <tr><td></td><td colspan="3">140</td></tr>
+        <tr><td></td><td>C</td><td>cap_one</td></tr>
+      </table>
+    `;
+    const csv = `"","Aura | 43 C VC","captain_one"`;
+    const fetchImpl: FetchImpl = async (input) => {
+      const url = String(input);
+      if (url.includes("/htmlview/sheet") && url.includes("gid=11")) {
+        return new Response(waffle, { status: 200 });
+      }
+      if (url.includes("/htmlview/sheet") && url.includes("gid=22")) {
+        return new Response("<html></html>", { status: 200 });
+      }
+      if (url.includes("/htmlview") && !url.includes("/htmlview/sheet")) {
+        return new Response(htmlview, { status: 200 });
+      }
+      if (url.includes("gviz/tq") && url.includes("EU%20TEAMS")) {
+        return new Response(csv, { status: 200 });
+      }
+      return new Response("missing", { status: 404 });
+    };
+
+    const { tabs } = await loadWorkbook(
+      "https://docs.google.com/spreadsheets/d/abc123/edit",
+      fetchImpl,
+      masterTabFilter,
+    );
+    expect([...tabs.keys()].sort()).toEqual(["EU TEAMS", "NA TEAMS"]);
+    expect(tabs.get("NA TEAMS")?.some((line) => line.includes("Inception"))).toBe(true);
+    expect(tabs.get("EU TEAMS")?.some((line) => line.includes("Aura | 43 C VC"))).toBe(true);
   });
 });
 

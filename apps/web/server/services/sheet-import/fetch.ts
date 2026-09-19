@@ -161,7 +161,7 @@ function isMasterTeamsTab(name: string): boolean {
 export type TabFilter = (name: string) => boolean;
 
 export const masterTabFilter: TabFilter = (name) =>
-  /^(NA|EU|AS)\s*-?\s*(TEAMS|QUALIFIERS|PLAYOFFS|PFS)$/i.test(name.trim());
+  /^(NA|EU|AS)\s*-?\s*(TEAMS|QUALIFIERS|QUALI|PLAYOFFS|PFS)$/i.test(name.trim());
 
 export const regionalTabFilter: TabFilter = (name) => {
   const normalized = name.trim().toLowerCase().replace(/\s+/g, " ");

@@ -3,7 +3,7 @@ import { masterGameKey } from "./keys";
 import { displayName, isPlaceholderTeamName, normalizeName, parseTeamHeader } from "./names";
 import type { ParsedGame, ParsedTeam, SheetRegion, TeamLeadershipRole } from "./types";
 
-const REGION_TAB = /^(NA|EU|AS)\s*-?\s*(TEAMS|QUALIFIERS|PLAYOFFS|PFS)$/i;
+const REGION_TAB = /^(NA|EU|AS)\s*-?\s*(TEAMS|QUALIFIERS|QUALI|PLAYOFFS|PFS)$/i;
 const LEADERSHIP_SLOTS: TeamLeadershipRole[] = ["C", "VC", "CC"];
 const MONTHS: Record<string, number> = {
   jan: 1,
@@ -134,7 +134,12 @@ function extractStackedTeamName(raw: string): string | null {
   if (!name || name.length > 40) return null;
   if (/^\d+$/.test(name)) return null;
   if (/^(placeholder|vacant|tbd|c|vc|cc)$/i.test(name)) return null;
-  if (/\b(season|chapter|teams|group|qualifiers?|playoffs?|roblox volleyball)\b/i.test(name)) return null;
+  if (
+    name.length > 20 &&
+    /\b(season|chapter|teams|group|qualifiers?|playoffs?|roblox volleyball)\b/i.test(name)
+  ) {
+    return null;
+  }
   return name;
 }
 
@@ -561,7 +566,7 @@ export function parseMasterWorkbook(
       const parsed = parseMasterTeamsTab(csv, region);
       teams.push(...parsed.teams);
       warnings.push(...parsed.warnings);
-    } else if (kind === "QUALIFIERS") {
+    } else if (kind === "QUALIFIERS" || kind === "QUALI") {
       const parsed = parseMasterScheduleTab(csv, region, "qualifiers", fallbackYear);
       games.push(...parsed.games);
       warnings.push(...parsed.warnings);
