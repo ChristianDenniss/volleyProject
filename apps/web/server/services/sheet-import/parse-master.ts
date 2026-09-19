@@ -3,7 +3,7 @@ import { masterGameKey } from "./keys";
 import { displayName, isPlaceholderTeamName, normalizeName, parseTeamHeader } from "./names";
 import type { ParsedGame, ParsedTeam, SheetRegion, TeamLeadershipRole } from "./types";
 
-const REGION_TAB = /^(NA|EU|AS)\s+(TEAMS|QUALIFIERS|PLAYOFFS)$/i;
+const REGION_TAB = /^(NA|EU|AS)\s*-?\s*(TEAMS|QUALIFIERS|PLAYOFFS|PFS)$/i;
 const LEADERSHIP_SLOTS: TeamLeadershipRole[] = ["C", "VC", "CC"];
 const MONTHS: Record<string, number> = {
   jan: 1,
@@ -96,23 +96,26 @@ function addUniquePlayer(players: string[], raw: string): void {
   }
 }
 
-function isNumericOnlyRow(row: string[]): boolean {
-  let numbers = 0;
-  for (const raw of row) {
-    const value = raw.trim();
-    if (!value) continue;
-    if (!/^\d+$/.test(value)) return false;
-    numbers += 1;
-  }
-  return numbers >= 2;
-}
-
 function isRosterRow(row: string[]): boolean {
   let rosterCells = 0;
-  for (const raw of row) {
-    if (rosterNumber(raw) != null) rosterCells += 1;
+  for (let index = 0; index < row.length; index += 1) {
+    if (rosterNumber(cell(row, index)) != null && cell(row, index + 1)) rosterCells += 1;
   }
   return rosterCells >= 2;
+}
+
+/** Ranking numbers sit alone in the merged name columns and are league ranks, not 1–20 roster indexes. */
+function isRankingRow(row: string[], previous?: string[]): boolean {
+  if (isRosterRow(row)) return false;
+  let ranks = 0;
+  for (let index = 0; index < row.length; index += 1) {
+    const value = cell(row, index);
+    if (!/^\d+$/.test(value) || cell(row, index + 1)) continue;
+    if (Number.parseInt(value, 10) > 20) ranks += 1;
+  }
+  if (ranks >= 2) return true;
+  if (ranks !== 1 || !previous || isRosterRow(previous)) return false;
+  return previous.some((value) => extractStackedTeamName(value) != null);
 }
 
 /** C2S3 TEAMS tabs put the name above a ranking-number row instead of `Name | 220 C VC`. */
@@ -130,6 +133,7 @@ function extractStackedTeamName(raw: string): string | null {
   const name = displayName(candidate);
   if (!name || name.length > 40) return null;
   if (/^\d+$/.test(name)) return null;
+  if (/^(placeholder|vacant|tbd|c|vc|cc)$/i.test(name)) return null;
   if (/\b(season|chapter|teams|group|qualifiers?|playoffs?|roblox volleyball)\b/i.test(name)) return null;
   return name;
 }
@@ -141,7 +145,7 @@ function parseStackedTeamsTab(
   const warnings: string[] = [];
   const rankingRows: number[] = [];
   for (let rowIndex = 0; rowIndex < rows.length; rowIndex += 1) {
-    if (isNumericOnlyRow(rows[rowIndex] ?? [])) rankingRows.push(rowIndex);
+    if (isRankingRow(rows[rowIndex] ?? [], rows[rowIndex - 1])) rankingRows.push(rowIndex);
   }
 
   const teams: ParsedTeam[] = [];
@@ -561,7 +565,7 @@ export function parseMasterWorkbook(
       const parsed = parseMasterScheduleTab(csv, region, "qualifiers", fallbackYear);
       games.push(...parsed.games);
       warnings.push(...parsed.warnings);
-    } else if (kind === "PLAYOFFS") {
+    } else if (kind === "PLAYOFFS" || kind === "PFS") {
       const parsed = parseMasterScheduleTab(csv, region, "playoffs", fallbackYear);
       games.push(...parsed.games);
       warnings.push(...parsed.warnings);
