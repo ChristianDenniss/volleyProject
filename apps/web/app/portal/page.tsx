@@ -83,8 +83,42 @@ export default async function PortalDashboard() {
     },
   ] as const;
 
+  const needsSeed = seasonCount === 0 || teamCount === 0;
+
   return (
     <PortalPage title="Dashboard" description="What is in the database right now.">
+      {needsSeed ? (
+        <div className="border border-rvl-accent-soft bg-rvl-panel px-5 py-4">
+          <p className="m-0 font-mono text-[0.58rem] font-bold uppercase tracking-[0.22em] text-rvl-accent">
+            Empty database
+          </p>
+          <p className="m-0 mt-2 text-[0.92rem] text-rvl-ink-2">
+            Load a season from Google Sheets before the public site has schedules,
+            teams, or stats. Challonge import fills brackets after teams exist.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <Link
+              href="/portal/seasons"
+              className="font-mono text-[0.68rem] font-bold uppercase tracking-[0.14em] text-rvl-accent no-underline hover:underline"
+            >
+              Import seasons →
+            </Link>
+            <Link
+              href="/portal/teams"
+              className="font-mono text-[0.68rem] font-bold uppercase tracking-[0.14em] text-rvl-dim no-underline hover:text-rvl-accent hover:underline"
+            >
+              Import teams →
+            </Link>
+            <Link
+              href="/portal/games"
+              className="font-mono text-[0.68rem] font-bold uppercase tracking-[0.14em] text-rvl-dim no-underline hover:text-rvl-accent hover:underline"
+            >
+              Challonge games →
+            </Link>
+          </div>
+        </div>
+      ) : null}
+
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {RESOURCES.map((resource) => (
           <Link
