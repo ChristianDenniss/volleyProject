@@ -51,5 +51,6 @@ migrations automatically. Previously applied migrations are skipped.
 
 ## Documentation
 
-- [Rebuild plan](docs/REBUILD_PLAN.md)
-- [Bootstrap admin](tooling/bootstrap-admin.md)
+- [Rebuild plan](apps/web/docs/REBUILD_PLAN.md)
+- [Load league data](apps/web/docs/DATA_LOAD.md)
+- [Bootstrap admin](apps/web/tooling/bootstrap-admin.md)
