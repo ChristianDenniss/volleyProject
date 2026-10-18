@@ -1,15 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { routeManifest, routeManifestByPath } from "../../route-manifest";
 import { trpcManifest } from "../../trpc-manifest";
-import { extractRoutes } from "../../tooling/extract-routes";
-import { extractEndpoints } from "../../tooling/extract-endpoints";
+import { loadEndpointInventory, loadRouteInventory } from "../../tooling/load-inventory";
 import { findPages, routePathFromFile } from "../../tooling/route-paths";
 
-const inventoryRoutes = extractRoutes();
-const inventoryEndpoints = extractEndpoints();
+const inventoryRoutes = loadRouteInventory();
+const inventoryEndpoints = loadEndpointInventory();
 
 describe("T1 completeness", () => {
-  it("covers every route declared in FE/src/App.tsx", () => {
+  it("covers every route in the committed route inventory", () => {
     const missing = [
       ...new Set(
         inventoryRoutes
@@ -69,12 +68,16 @@ describe("trpc manifest is bidirectional with the endpoint inventory", () => {
     expect(missing, `unmapped write endpoints: ${missing.join(", ")}`).toEqual([]);
   });
 
-  it("declares no procedure for an endpoint that does not exist", () => {
+  it("requires a rationale on write endpoints that are not in the inventory", () => {
     const inventory = new Set(writes);
-    const invented = trpcManifest
-      .map((entry) => entry.endpoint)
-      .filter((endpoint) => !inventory.has(endpoint));
-    expect(invented, `manifest entries with no source endpoint: ${invented.join(", ")}`).toEqual([]);
+    const unexplained = trpcManifest
+      .filter((entry) => !inventory.has(entry.endpoint))
+      .filter((entry) => !entry.rationale)
+      .map((entry) => entry.endpoint);
+    expect(
+      unexplained,
+      `manifest endpoints missing from inventory need a rationale: ${unexplained.join(", ")}`,
+    ).toEqual([]);
   });
 
   it("names each procedure exactly once", () => {

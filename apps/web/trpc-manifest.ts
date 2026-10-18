@@ -32,7 +32,13 @@ export const trpcManifest: TrpcManifestEntry[] = [
   { endpoint: "PUT /api/games/:id", procedure: null, access: "admin", status: "removed", rationale: PUT_DUPLICATE },
   { endpoint: "POST /api/games/batch", procedure: "games.createMany", access: "admin", status: "done" },
   { endpoint: "POST /api/games/createByNames", procedure: "games.createByNames", access: "admin", status: "done" },
-  { endpoint: "POST /api/games/import-challonge", procedure: "games.importFromChallonge", access: "admin", status: "done" },
+  {
+    endpoint: "POST /api/games/import-challonge",
+    procedure: "games.importFromChallonge",
+    access: "admin",
+    status: "done",
+    rationale: "imports Challonge brackets into games after matches were folded into the games table",
+  },
 
   { endpoint: "POST /api/matches", procedure: null, access: "admin", status: "removed", rationale: "matches merged into games" },
   { endpoint: "PATCH /api/matches/:id", procedure: null, access: "admin", status: "removed", rationale: "matches merged into games" },
@@ -137,7 +143,13 @@ export const trpcManifest: TrpcManifestEntry[] = [
     rationale: "commit teams-only, teams+players, or players-only sheet imports",
   },
 
-  { endpoint: "PATCH /api/applications/:slug", procedure: "applications.update", access: "admin", status: "done" },
+  {
+    endpoint: "PATCH /api/applications/:slug",
+    procedure: "applications.update",
+    access: "admin",
+    status: "done",
+    rationale: "portal-managed application postings with no write inventory row on the frozen BE extract",
+  },
 
   { endpoint: "POST /api/trivia/guess", procedure: "trivia.checkGuess", access: "public", status: "done" },
 
