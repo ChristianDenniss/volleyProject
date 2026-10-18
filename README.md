@@ -51,5 +51,6 @@ migrations automatically. Previously applied migrations are skipped.
 
 ## Documentation
 
-- [Rebuild plan](docs/REBUILD_PLAN.md)
-- [Bootstrap admin](tooling/bootstrap-admin.md)
+- [Rebuild plan](apps/web/docs/REBUILD_PLAN.md)
+- [Go-live auth checklist](apps/web/docs/GO_LIVE_AUTH.md)
+- [Bootstrap admin](apps/web/tooling/bootstrap-admin.md)
